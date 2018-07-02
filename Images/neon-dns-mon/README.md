@@ -42,7 +42,7 @@ docker service create \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \
-    neoncluster/neon-dns-mon
+    nhive/neon-dns-mon
 ````
 &nbsp;
 **NOTE:** This service may be deployed anywhere on the hive but we constrain it to manager nodes as a convention.

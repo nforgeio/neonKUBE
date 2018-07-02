@@ -54,7 +54,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Identifies the <b>Elasticsearch</b> container image to be deployed on the hive to persist
-        /// hive log events.  This defaults to <b>neoncluster/elasticsearch:latest</b>.
+        /// hive log events.  This defaults to <b>nhive/elasticsearch:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "EsImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultEsImage)]
@@ -99,7 +99,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Identifies the <b>Kibana</b> container image to be deployed on the hive to present
-        /// the hive logging user interface.  This defaults to <b>neoncluster/kibana:latest</b>.
+        /// the hive logging user interface.  This defaults to <b>nhive/kibana:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "KibanaImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultKibanaImage)]
@@ -107,7 +107,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Identifies the <b>td-agent</b> service image to be run locally on every manager and worker node.  This container
-        /// acts as the entrypoint to the hive's log aggregation pipeline.  This defaults to <b>neoncluster/neon-log-host:latest</b>.
+        /// acts as the entrypoint to the hive's log aggregation pipeline.  This defaults to <b>nhive/neon-log-host:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "HostImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultHostImage)]
@@ -115,7 +115,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Identifies the <b>td-agent</b> container image to be run on the hive, acting as the downstream event 
-        /// aggregator for all of the hive nodes.  This defaults to <b>neoncluster/neon-log-collector:latest</b>.
+        /// aggregator for all of the hive nodes.  This defaults to <b>nhive/neon-log-collector:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "CollectorImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultCollectorImage)]
@@ -123,7 +123,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Identifies the <b>Elastic Metricbeat</b> container image to be run on each node of the hive to capture
-        /// Docker host node metrics.  This defaults to <b>neoncluster/metricbeat:latest</b>.
+        /// Docker host node metrics.  This defaults to <b>nhive/metricbeat:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "MetricbeatImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultMetricbeatImage)]

@@ -30,7 +30,7 @@ namespace NeonDns
 {
     /// <summary>
     /// Implements the <b>neon-dns</b> service.  See 
-    /// <a href="https://hub.docker.com/r/neoncluster/neon-dns/">neoncluster/neon-dns</a>
+    /// <a href="https://hub.docker.com/r/nhive/neon-dns/">nhive/neon-dns</a>
     /// for more information.
     /// </summary>
     public static class Program

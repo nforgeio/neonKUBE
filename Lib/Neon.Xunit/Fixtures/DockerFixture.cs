@@ -347,13 +347,13 @@ namespace Neon.Xunit
                 //      services:
                 //
                 //        service1:
-                //          image: neoncluster/test
+                //          image: nhive/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 1
                 //
                 //        service2:
-                //          image: neoncluster/test
+                //          image: nhive/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 2

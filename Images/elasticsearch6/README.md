@@ -89,7 +89,7 @@ docker run --detach --name es-node-0 \
     --env ELASTICSEARCH_QUORUM=2 \
     --env ELASTICSEARCH_BOOTSTRAP_NODES=10.0.0.2,10.0.0.3,10.0.0.4 \
     --network host \
-    neoncluster/elasticsearch
+    nhive/elasticsearch
 
 docker run --detach --name es-node-1 \
     --restart always \
@@ -102,7 +102,7 @@ docker run --detach --name es-node-1 \
     --env ELASTICSEARCH_QUORUM=2 \
     --env ELASTICSEARCH_BOOTSTRAP_NODES=10.0.0.2,10.0.0.3,10.0.0.4 \
     --network host \
-    neoncluster/elasticsearch
+    nhive/elasticsearch
 
 docker run --detach --name es-node-2 \
     --restart always \
@@ -115,7 +115,7 @@ docker run --detach --name es-node-2 \
     --env ELASTICSEARCH_QUORUM=2 \
     --env ELASTICSEARCH_BOOTSTRAP_NODES=10.0.0.2,10.0.0.3,10.0.0.4 \
     --network host \
-    neoncluster/elasticsearch
+    nhive/elasticsearch
 
 ````
 &nbsp;

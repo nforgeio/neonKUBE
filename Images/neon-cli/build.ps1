@@ -20,7 +20,7 @@ param
 "======================================="
 
 $appname  = "neon"
-$registry = "neoncluster/neon-cli"
+$registry = "nhive/neon-cli"
 $branch   = GitBranch
 
 # Build and publish the app to a local [bin] folder.

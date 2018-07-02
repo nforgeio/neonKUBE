@@ -5,7 +5,7 @@
 //
 // This project is simply used to hold the [neon-volume] GOLANG source files and
 // project post-build events are used to actually build the golang SOURCE using
-// the [neoncluster/golang] container.
+// the [nhive/golang] container.
 //
 // The compiled [neon-volume] binary will be written to the [bin] project subfolder.
 //

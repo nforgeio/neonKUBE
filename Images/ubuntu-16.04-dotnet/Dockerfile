@@ -10,7 +10,7 @@
 #
 #   VERSION     - The version of the .NET runtime to install (e.g. "2.0.0")
 
-FROM        neoncluster/ubuntu-16.04
+FROM        nhive/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

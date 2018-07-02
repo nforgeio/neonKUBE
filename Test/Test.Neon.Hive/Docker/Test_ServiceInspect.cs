@@ -75,7 +75,7 @@ namespace TestNeonCluster
             // Deploy a very simple service and then verify that the
             // service details were parsed correctly.
 
-            fixture.CreateService("test", "neoncluster/test");
+            fixture.CreateService("test", "nhive/test");
 
             var info = fixture.ListServices().Single(s => s.Name == "test");
             var details = fixture.InspectService("test", strict);
@@ -98,7 +98,7 @@ namespace TestNeonCluster
 
             // Spec.TaskTemplate.ContainerSpec
 
-            Assert.Equal("neoncluster/test:latest", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            Assert.Equal("nhive/test:latest", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
             Assert.Equal(10000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
             Assert.Equal(ServiceIsolationMode.Default, details.Spec.TaskTemplate.ContainerSpec.Isolation);
 
@@ -180,7 +180,7 @@ namespace TestNeonCluster
         {
             // Verify that we can deploy and parse service labels.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs: 
                     new string[]
                     {
@@ -202,7 +202,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify environment variables.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                     new string[]
                     {
@@ -226,7 +226,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify DNS configuration.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                     new string[]
                     {
@@ -249,7 +249,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify the container command and arguments.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                     new string[]
                     {
@@ -274,7 +274,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify misc container properties.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                     new string[]
                     {
@@ -307,7 +307,7 @@ namespace TestNeonCluster
         {
             // Verify that we can customize health checks.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                     new string[]
                     {
@@ -331,7 +331,7 @@ namespace TestNeonCluster
 
             fixture.ClearServices();
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                     new string[]
                     {
@@ -350,7 +350,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify service secrets.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                     new string[]
                     {
@@ -378,7 +378,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify service configs.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                     new string[]
                     {
@@ -406,7 +406,7 @@ namespace TestNeonCluster
         {
             // Deploy a service in GLOBAL (not replicated mode) and verify.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs: 
                 new string[]
                     {
@@ -426,7 +426,7 @@ namespace TestNeonCluster
         {
             // Deploy a service in DNSRR mode and verify.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                 new string[]
                     {
@@ -446,7 +446,7 @@ namespace TestNeonCluster
         {
             // Deploy a service with port mappings and verify.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                 new string[]
                     {
@@ -506,7 +506,7 @@ namespace TestNeonCluster
                 // Volume mount (note that we're not verifying some properties 
                 // like volume drivers, labels, etc.):
 
-                fixture.CreateService("test", "neoncluster/test",
+                fixture.CreateService("test", "nhive/test",
                     dockerArgs:
                     new string[]
                         {
@@ -527,7 +527,7 @@ namespace TestNeonCluster
 
                 fixture.ClearServices();
 
-                fixture.CreateService("test", "neoncluster/test",
+                fixture.CreateService("test", "nhive/test",
                     dockerArgs:
                     new string[]
                         {
@@ -553,7 +553,7 @@ namespace TestNeonCluster
 
                 var tempPath = tempFolder.Path.Replace("\\", "/");
 
-                fixture.CreateService("test", "neoncluster/test",
+                fixture.CreateService("test", "nhive/test",
                     dockerArgs:
                     new string[]
                         {
@@ -583,7 +583,7 @@ namespace TestNeonCluster
 
                 fixture.ClearServices();
 
-                fixture.CreateService("test", "neoncluster/test",
+                fixture.CreateService("test", "nhive/test",
                     dockerArgs:
                     new string[]
                         {
@@ -619,7 +619,7 @@ namespace TestNeonCluster
 
             // Deploy a simple test service.
 
-            fixture.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "nhive/test",
                 dockerArgs:
                     new string[]
                     {

@@ -45,7 +45,7 @@ namespace TestNeonCluster
                         () => hive.CreateConfig("config_text", "hello"),
                         () => hive.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }),
                         () => hive.CreateNetwork("test-network"),
-                        () => hive.CreateService("test-service", "neoncluster/test"),
+                        () => hive.CreateService("test-service", "nhive/test"),
                         () =>
                         {
                             var composeText =
@@ -53,7 +53,7 @@ namespace TestNeonCluster
 
 services:
   sleeper:
-    image: neoncluster/test
+    image: nhive/test
     deploy:
       replicas: 2
 ";

@@ -92,5 +92,5 @@ docker service create \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \
-    neoncluster/neon-cluster-manager
+    nhive/neon-cluster-manager
 ````

@@ -26,8 +26,8 @@ namespace TestNeonCluster
 {
     public partial class Test_AnsibleDockerService : IClassFixture<HiveFixture>
     {
-        private const string serviceName = "test";
-        private const string serviceImage = "neoncluster/test:0";
+        private const string serviceName  = "test";
+        private const string serviceImage = "nhive/test:0";
 
         private HiveFixture hive;
 

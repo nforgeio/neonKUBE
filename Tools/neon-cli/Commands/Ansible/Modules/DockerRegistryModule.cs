@@ -83,7 +83,7 @@ namespace NeonCli.Ansible
         // secret       see comment                         anti-spoofing secret string
         //                                                  required if [state=present]
         //
-        // image        no          neoncluster/neon-registry the Docker image to deploy
+        // image        no          nhive/neon-registry     the Docker image to deploy
         //
         // Check Mode:
         // -----------

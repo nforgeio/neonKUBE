@@ -33,7 +33,7 @@ namespace NeonDnsMon
 {
     /// <summary>
     /// Implements the <b>neon-dns-mon</b> service.  See 
-    /// <a href="https://hub.docker.com/r/neoncluster/neon-dns-mon/">neoncluster/neon-dns-mon</a>
+    /// <a href="https://hub.docker.com/r/nhive/neon-dns-mon/">nhive/neon-dns-mon</a>
     /// for more information.
     /// </summary>
     public static class Program

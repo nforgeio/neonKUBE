@@ -52,7 +52,7 @@ docker service create \
     --env SHARD_COUNT=5 \
     --env REPLICA_COUNT=0 \
     --log-driver json-file \
-    neoncluster/neon-log-collector
+    nhive/neon-log-collector
 ````
 &nbsp;
 # Extending or Replacing this Image

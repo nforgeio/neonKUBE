@@ -94,10 +94,10 @@ USAGE:
     //  hive level services.  The reasonable default values for each are
     //  shown on the right.
     //
-    //  ProxyImage              neoncluster/neon-proxy:latest
-    //  ProxyVaultImage         neoncluster/neon-proxy-vault:latest
-    //  ProxyManagerImage       neoncluster/neon-proxy-manager:latest
-    //  ClusterManagerImage     neoncluster/neon-cluster-manager:latest
+    //  ProxyImage              nhive/neon-proxy:latest
+    //  ProxyVaultImage         nhive/neon-proxy-vault:latest
+    //  ProxyManagerImage       nhive/neon-proxy-manager:latest
+    //  ClusterManagerImage     nhive/neon-cluster-manager:latest
 
     ""Name"": ""my-hive"",
     ""Datacenter"": ""Seattle"",
@@ -461,7 +461,7 @@ USAGE:
         //
         //  EsImage               The [Elasticsearch] Docker image to be used
         //                        to persist hive log events.  This defaults to 
-        //                        [neoncluster/elasticsearch:latest].
+        //                        [nhive/elasticsearch:latest].
         //
         //  EsMemory              The amount of RAM to dedicate to each hive log
         //                        related Elasticsearch container.  This can be expressed
@@ -470,17 +470,17 @@ USAGE:
         //
         //  KibanaImage           The [Kibana] Docker image to be used to present the
         //                        hive log user interface.  This defaults to
-        //                        [neoncluster/kibana:latest].
+        //                        [nhive/kibana:latest].
         //
         //  HostImage             The Docker image to be run as a local container on
         //                        every node to forward host log events to the hive
         //                        log aggregator.  This defaults to
-        //                        [neoncluster/neon-log-host:latest].
+        //                        [nhive/neon-log-host:latest].
         //
         //  CollectorImage        The Docker image to be run as a service on the 
         //                        hive that aggregates log events from the node
         //                        log forwarders and pushes them into Elasticsearch.
-        //                        This defaults to  [neoncluster/neon-log-collector:latest].
+        //                        This defaults to  [nhive/neon-log-collector:latest].
         //
         //  CollectorInstances    The number of TD-Agent based collectors to be deployed
         //                        to receive, transform, and persist events collected by
@@ -494,7 +494,7 @@ USAGE:
         //  MetricBeatImage       Identifies the [Elastic Metricbeat] container image 
         //                        to be run as a service on every node of the hive to
         ///                       capture Docker host node metrics.  This defaults to
-        //                        [neoncluster/metricbeat:latest].
+        //                        [nhive/metricbeat:latest].
 
         // IMPORTANT: At least one node must have [Labels.LogEsData=true]
         //            when logging is enabled.  This specifies where hive
@@ -730,8 +730,8 @@ USAGE:
     //
     //                  node.labels[custom name (lowercase)]
     //
-    //            Note that the prefix The [node.labels.io.neoncluster] prefix
-    //            is reserved for neonHIVE related labels.
+    //            Note that the [io.neonhive] prefix is reserved for
+    //            neonHIVE related labels.
 
     ""Nodes"": {
 

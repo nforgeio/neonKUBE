@@ -6,7 +6,7 @@
 # This base image deploys a simple container/or service used
 # for neonHIVE unit tests.
 
-FROM        neoncluster/alpine
+FROM        nhive/alpine
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

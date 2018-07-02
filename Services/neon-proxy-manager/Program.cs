@@ -38,8 +38,8 @@ namespace NeonProxyManager
     /// Implements the <b>neon-proxy-manager</b> service which is responsible for dynamically generating the HAProxy 
     /// configurations for the <c>neon-proxy-public</c>, <c>neon-proxy-private</c>, <c>neon-proxy-public-bridge</c>,
     /// and <c>neon-proxy-private-bridge</c> services from the load balancer rules persisted in Consul and the TLS certificates
-    /// persisted in Vault.  See <a href="https://hub.docker.com/r/neoncluster/neon-proxy-manager/">neoncluster/neon-proxy-manager</a>  
-    /// and <a href="https://hub.docker.com/r/neoncluster/neon-proxy/">neoncluster/neon-proxy</a> for more information.
+    /// persisted in Vault.  See <a href="https://hub.docker.com/r/nhive/neon-proxy-manager/">neoncluster/neon-proxy-manager</a>  
+    /// and <a href="https://hub.docker.com/r/nhive/neon-proxy/">neoncluster/neon-proxy</a> for more information.
     /// </summary>
     public static class Program
     {

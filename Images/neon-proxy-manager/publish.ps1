@@ -28,7 +28,7 @@ function Build
 	)
 
 
-	$registry = "neoncluster/neon-proxy-manager"
+	$registry = "nhive/neon-proxy-manager"
 	$tag      = ImageTag
 	$branch   = GitBranch
 

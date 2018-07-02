@@ -27,17 +27,17 @@ namespace TestNeonCluster
     public static class TestHelper
     {
         /// <summary>
-        /// <b>neoncluster/test</b> image test user name.
+        /// <b>nhive/test</b> image test user name.
         /// </summary>
         public const string TestUsername = "test";
 
         /// <summary>
-        /// <b>neoncluster/test</b> image test user ID.
+        /// <b>nhive/test</b> image test user ID.
         /// </summary>
         public const string TestUID = "5555";
 
         /// <summary>
-        /// <b>neoncluster/test</b> image test group ID.
+        /// <b>nhive/test</b> image test group ID.
         /// </summary>
         public const string TestGID = "6666";
 

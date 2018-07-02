@@ -62,13 +62,13 @@ docker run \
     --volume /proc:/hostfs/proc:ro \
     --volume /:/hostfs:ro \
     --log-driver json-file \
-    neoncluster/metricbeat
+    nhive/metricbeat
 
 # Install the dashboards.
     
 docker run --rm --name neon-log-metricbeat-dash \
     --volume=/etc/neon/env-host:/etc/neon/env-host:ro \
-    neoncluster/metricbeat import-dashboards
+    nhive/metricbeat import-dashboards
 ````
 &nbsp;
 # Additional Packages
@@ -82,7 +82,7 @@ This image includes the following packages:
 To upgrade to the latest version of Metricbeat, run these commands on every cluster node:
 
 ````
-docker pull neoncluster/metricbeat
+docker pull nhive/metricbeat
 docker rm neon-log-metricbeat
 
 docker run \
@@ -94,13 +94,13 @@ docker run \
     --volume /proc:/hostfs/proc:ro \
     --volume /:/hostfs:ro \
     --log-driver json-file \
-    neoncluster/metricbeat
+    nhive/metricbeat
 ````
 &nbsp;
 and then run this command on a single node to upgrade the dashboards:
 ````
 docker run --rm --name neon-log-metricbeat-dash \
     --volume=/etc/neon/env-host:/etc/neon/env-host:ro \
-    neoncluster/metricbeat import-dashboards
+    nhive/metricbeat import-dashboards
 ````
 &nbsp;

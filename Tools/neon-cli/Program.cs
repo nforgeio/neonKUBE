@@ -179,11 +179,11 @@ OPTIONS:
 NOTES:
 
 Optionally by specifying the [--shim] option, this tool may run a 
-[neoncluster/neon-cli] image as a Docker container, passing the 
-command line and any files into the container such that the command
-is actually executed there.  Ideally, this would be the default 
-option but this is disabled due to some Docker for Windows issues.
-This means that currently [--noshim] is currently the default option.
+[nhive/neon-cli] image as a Docker container, passing the command 
+line and any files into the container such that the command is 
+actually executed there.  Ideally, this would be the default option
+but this is disabled due to some Docker for Windows issues.  This 
+means that currently [--noshim] is currently the default option.
 
 Note that some commands still need to be shimmed regardless and also
 that we may make [--shim] the default for a future release once the
@@ -457,7 +457,7 @@ Docker issues are corrected.
 
                         shim.WriteScript();
 
-                        // Run the [neoncluster/neon-cli] Docker image, passing the modified command line 
+                        // Run the [nhive/neon-cli] Docker image, passing the modified command line 
                         // arguments and mounting the following read/write volumes:
                         //
                         //      /neoncluster    - the root folder for this workstation's hive logins
@@ -539,7 +539,7 @@ Docker issues are corrected.
                             {
                                 "image",
                                 "ls",
-                                "--filter", $"reference=neoncluster/neon-cli:{imageTag}"
+                                "--filter", $"reference=nhive/neon-cli:{imageTag}"
                             });
 
                         if (result.ExitCode != 0)
@@ -554,7 +554,7 @@ $@"*** ERROR: Cannot list Docker images.
                         // The Docker image list output should look something like this:
                         //
                         //      REPOSITORY                  TAG                 IMAGE ID            CREATED             SIZE
-                        //      neoncluster/neon-registry   jeff-latest         b0d1d9c21ee1        20 hours ago        34.2MB
+                        //      nhive/neon-registry         jeff-latest         b0d1d9c21ee1        20 hours ago        34.2MB
                         //
                         // We're just going to look to see there's a line of text that specifies
                         // the repo and tag we're looking for.
@@ -587,7 +587,7 @@ $@"*** ERROR: Cannot list Docker images.
                             if (result.ExitCode != 0)
                             {
                                 Console.Error.WriteLine(
-$@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
+$@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
 {result.AllText}");
                                 Program.Exit(1);

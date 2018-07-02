@@ -7,7 +7,7 @@
 # for forwarding requests to the HashiCorp Vault instances running on the hive's
 # manager nodes.
 
-FROM        neoncluster/haproxy
+FROM        nhive/haproxy
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

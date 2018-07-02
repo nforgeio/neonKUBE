@@ -153,7 +153,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Optionally specifies the Docker image to be used to deploy the registry cache.
-        /// This defaults to <b>neoncluster/neon-registry-cache:latest</b>.
+        /// This defaults to <b>nhive/neon-registry-cache:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "RegistryCacheImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultRegistryCacheImage)]

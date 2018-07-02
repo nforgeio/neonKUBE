@@ -30,7 +30,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "neoncluster/varnish"
+	$registry = "nhive/varnish"
 	$date     = UtcDate
 	$branch   = GitBranch
 

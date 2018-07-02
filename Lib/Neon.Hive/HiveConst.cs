@@ -211,6 +211,6 @@ namespace Neon.Hive
         /// <summary>
         /// Identifies the neonHIVE public Docker registry.
         /// </summary>
-        public const string NeonPublicRegistry = "neoncluster";
+        public const string NeonPublicRegistry = "nhive";
     }
 }

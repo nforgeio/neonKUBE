@@ -605,12 +605,12 @@ namespace TestNeonCluster
 
                 // Ensure that any test images are removed from previous test runs.
 
-                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "neoncluster/test:latest");
+                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "nhive/test:latest");
                 manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "xunit-registry.neonforge.net/test-image:latest");
 
                 // Pull a test image from the Docker public registry.
 
-                var response = manager.DockerCommand(RunOptions.None, "docker", "pull", "neoncluster/test:latest");
+                var response = manager.DockerCommand(RunOptions.None, "docker", "pull", "nhive/test:latest");
 
                 if (response.ExitCode != 0)
                 {
@@ -619,7 +619,7 @@ namespace TestNeonCluster
 
                 // Tag the image for the new registry.
 
-                response = manager.DockerCommand(RunOptions.None, "docker", "tag", "neoncluster/test:latest", "xunit-registry.neonforge.net/test-image:latest");
+                response = manager.DockerCommand(RunOptions.None, "docker", "tag", "nhive/test:latest", "xunit-registry.neonforge.net/test-image:latest");
 
                 if (response.ExitCode != 0)
                 {
@@ -637,13 +637,13 @@ namespace TestNeonCluster
 
                 // Remove the two local images and verify that they are no longer present.
 
-                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "neoncluster/test:latest");
+                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "nhive/test:latest");
                 manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "xunit-registry.neonforge.net/test-image:latest");
 
                 response = manager.DockerCommand(RunOptions.None, "docker", "image", "ls");
 
                 Assert.Equal(0, response.ExitCode);
-                Assert.DoesNotContain("neoncluster/test", response.AllText);
+                Assert.DoesNotContain("nhive/test", response.AllText);
                 Assert.DoesNotContain("xunit-registry.neonforge.net/test-image", response.AllText);
 
                 // Pull the image from new registry and verify.
@@ -759,12 +759,12 @@ namespace TestNeonCluster
 
                 // Ensure that any test images are removed from previous test runs.
 
-                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "neoncluster/test:latest");
+                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "nhive/test:latest");
                 manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "xunit-registry.neonforge.net/test-image:latest");
 
                 // Pull a test image from the Docker public registry.
 
-                var response = manager.DockerCommand(RunOptions.None, "docker", "pull", "neoncluster/test:latest");
+                var response = manager.DockerCommand(RunOptions.None, "docker", "pull", "nhive/test:latest");
 
                 if (response.ExitCode != 0)
                 {
@@ -773,7 +773,7 @@ namespace TestNeonCluster
 
                 // Tag the image for the new registry.
 
-                response = manager.DockerCommand(RunOptions.None, "docker", "tag", "neoncluster/test:latest", "xunit-registry.neonforge.net/test-image:latest");
+                response = manager.DockerCommand(RunOptions.None, "docker", "tag", "nhive/test:latest", "xunit-registry.neonforge.net/test-image:latest");
 
                 if (response.ExitCode != 0)
                 {
@@ -791,13 +791,13 @@ namespace TestNeonCluster
 
                 // Remove the two local images and verify that they are no longer present.
 
-                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "neoncluster/test:latest");
+                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "nhive/test:latest");
                 manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "xunit-registry.neonforge.net/test-image:latest");
 
                 response = manager.DockerCommand(RunOptions.None, "docker", "image", "ls");
 
                 Assert.Equal(0, response.ExitCode);
-                Assert.DoesNotContain("neoncluster/test", response.AllText);
+                Assert.DoesNotContain("nhive/test", response.AllText);
                 Assert.DoesNotContain("xunit-registry.neonforge.net/test-image", response.AllText);
 
                 // Pull the image from new registry and verify.

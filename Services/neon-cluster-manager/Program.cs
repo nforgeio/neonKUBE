@@ -29,7 +29,7 @@ namespace NeonClusterManager
 {
     /// <summary>
     /// Implements the <b>neon-cluster-manager</b> service.  See 
-    /// <a href="https://hub.docker.com/r/neoncluster/neon-cluster-manager/">neoncluster/neon-cluster-manager</a>
+    /// <a href="https://hub.docker.com/r/nhive/neon-cluster-manager/">nhive/neon-cluster-manager</a>
     /// for more information.
     /// </summary>
     public static class Program

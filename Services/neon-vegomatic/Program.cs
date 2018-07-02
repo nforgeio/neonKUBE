@@ -28,7 +28,7 @@ namespace NeonVegomatic
 {
     /// <summary>
     /// Implements the <b>neon-vegomatic</b> service/container.  See 
-    /// <a href="https://hub.docker.com/r/neoncluster/neon-vegomaticr/">neoncluster/neon-vegomatic</a>
+    /// <a href="https://hub.docker.com/r/nhive/neon-vegomaticr/">nhive/neon-vegomatic</a>
     /// for more information.
     /// </summary>
     public static class Program

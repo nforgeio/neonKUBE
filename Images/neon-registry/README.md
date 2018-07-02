@@ -68,7 +68,7 @@ docker service create \
     --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
     --network neon-public \
     --restart-delay 10s \
-    neoncluster/neon-registry
+    nhive/neon-registry
 ```
 &nbsp;
 Next, you'll need to save your TLS certificate to neonHIVE:
@@ -113,7 +113,7 @@ docker run \
     --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
     --publish 6000:5000 \
     --restart always \
-    neoncluster/neon-registry
+    nhive/neon-registry
 ```
 &nbsp;
 Next, you'll need to save your TLS certificate to neonHIVE:
@@ -160,7 +160,7 @@ docker run \
    --name neon-registry-prune \
    --restart-condition=none \
    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
-   neoncluster/neon-registry garbage-collect
+   nhive/neon-registry garbage-collect
 
 docker service update --env READ_ONLY=false neon-registry
 ```

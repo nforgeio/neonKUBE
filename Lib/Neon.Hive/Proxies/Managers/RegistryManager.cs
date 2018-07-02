@@ -397,7 +397,7 @@ fi
         /// <param name="password">The registry password.</param>
         /// <param name="secret">The registry secret.</param>
         /// <param name="certificate">The certificate used to secure the registry.</param>
-        /// <param name="image">Optionally specifies the Docker image to be deployed (defaults to <b>neoncluster/neon-registry</b>).</param>
+        /// <param name="image">Optionally specifies the Docker image to be deployed (defaults to <b>nhive/neon-registry</b>).</param>
         /// <param name="progress">Optional action that will be called with a progress message.</param>
         /// <exception cref="HiveException">Thrown if a registry is already deployed or deployment failed.</exception>
         /// <exception cref="NotSupportedException">Thrown if the hive does not support local registries.</exception>
@@ -600,7 +600,7 @@ docker run \
    --name neon-registry-prune \
    --restart-condition=none \
    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
-   neoncluster/neon-registry garbage-collect
+   nhive/neon-registry garbage-collect
 
 # Restore [neon-registry] to READ/WRITE mode:
 

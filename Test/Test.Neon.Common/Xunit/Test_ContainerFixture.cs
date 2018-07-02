@@ -36,7 +36,7 @@ namespace TestCommon
 
                     fixture.RunContainer(
                         name: "couchbase",
-                        image: "neoncluster/test",
+                        image: "nhive/test",
                         dockerArgs: new string[] { "--detach" });
                 });
         }

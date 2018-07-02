@@ -22,7 +22,7 @@ namespace TestNeonCluster
     public partial class Test_AnsibleDockerService : IClassFixture<HiveFixture>
     {
         /// <summary>
-        /// Deploys <b>neoncluster/test:0</b> with default options.
+        /// Deploys <b>nhive/test:0</b> with default options.
         /// </summary>
         private void DeployTestService()
         {
@@ -46,7 +46,7 @@ $@"
       neon_docker_service:
         name: {serviceName}
         state: present
-        image: neoncluster/test:1
+        image: nhive/test:1
 ";
             var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
@@ -58,7 +58,7 @@ $@"
             var details = hive.InspectService(serviceName);
 
             Assert.Equal(serviceName, details.Spec.Name);
-            Assert.Equal("neoncluster/test:1", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            Assert.Equal("nhive/test:1", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
 
             //-----------------------------------------------------------------
             // Verify that update reports when no change is detected.

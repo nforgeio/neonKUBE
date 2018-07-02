@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "neoncluster/golang"
+	$registry = "nhive/golang"
 	$date     = UtcDate
 	$branch   = GitBranch
 

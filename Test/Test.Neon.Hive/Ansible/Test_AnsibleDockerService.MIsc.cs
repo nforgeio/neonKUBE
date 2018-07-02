@@ -190,7 +190,7 @@ $@"
       neon_docker_service:
         name: {serviceName}
         state: absent
-        image: neoncluster/test
+        image: nhive/test
 ";
             var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
@@ -215,7 +215,7 @@ $@"
       neon_docker_service:
         name: {serviceName}
         state: present
-        image: neoncluster/test:0
+        image: nhive/test:0
 ";
             var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
@@ -226,7 +226,7 @@ $@"
 
             var details = hive.InspectService(serviceName);
 
-            Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            Assert.Equal("nhive/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
 
             // Verify that rolling back a service with no previous state
             // changes nothing.
@@ -250,7 +250,7 @@ $@"
 
             details = hive.InspectService(serviceName);
 
-            Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            Assert.Equal("nhive/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
 
             // Update the service to use a new image.
 
@@ -263,7 +263,7 @@ $@"
       neon_docker_service:
         name: {serviceName}
         state: present
-        image: neoncluster/test:1
+        image: nhive/test:1
 ";
             results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("manage service");
@@ -274,7 +274,7 @@ $@"
 
             details = hive.InspectService(serviceName);
 
-            Assert.Equal("neoncluster/test:1", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            Assert.Equal("nhive/test:1", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
 
             // Rollback the service and verify the original image.
 
@@ -297,7 +297,7 @@ $@"
 
             details = hive.InspectService(serviceName);
 
-            Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            Assert.Equal("nhive/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
         }
     }
 }

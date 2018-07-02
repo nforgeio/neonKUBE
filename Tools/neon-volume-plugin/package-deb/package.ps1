@@ -161,8 +161,8 @@ exec { unix-text "$binPath\\package.sh" }
 
 # Build the Debian package using an Ubuntu container.
 
-docker pull neoncluster/ubuntu-16.04
-docker run --rm -v "${binPath}:/src" neoncluster/ubuntu-16.04 bash /src/package.sh $packageName
+docker pull nhive/ubuntu-16.04
+docker run --rm -v "${binPath}:/src" nhive/ubuntu-16.04 bash /src/package.sh $packageName
 
 # Copy the package to the solution build folder.
 

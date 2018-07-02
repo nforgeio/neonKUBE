@@ -8,7 +8,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-This service dynamically generates HAProxy configurations from load balancer rules and certificates persisted to Consul and Vault for neonHIVE proxies based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image.
+This service dynamically generates HAProxy configurations from load balancer rules and certificates persisted to Consul and Vault for neonHIVE proxies based on the [neon-proxy](https://hub.docker.com/r/nhive/neon-proxy/) image.
 
 neonHIVEs deploy two general purpose reverse HTTP/TCP proxy services:
 
@@ -16,7 +16,7 @@ neonHIVEs deploy two general purpose reverse HTTP/TCP proxy services:
 
 * **neon-proxy-private** which implements the private load balancer is used for internal routing for the scenarios the Docker overlay ingress network doesn't address out-of-the-box (e.g. load balancing and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
 
-These proxy services are based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image which deploys [HAProxy](http://haproxy.org) that actually handles the routing, along with some scripts that can dynamically download the proxy configuration from HashiCorp Consul and TLS certificates from HashiCorp Vault.
+These proxy services are based on the [neon-proxy](https://hub.docker.com/r/nhive/neon-proxy/) image which deploys [HAProxy](http://haproxy.org) that actually handles the routing, along with some scripts that can dynamically download the proxy configuration from HashiCorp Consul and TLS certificates from HashiCorp Vault.
 
 The **neon-proxy-manager** image handles the generation and updating of the proxy service configuration in Consul based on proxy definitions and TLS certificates loaded into Consul by the **neon-cli**.
 
@@ -142,6 +142,6 @@ docker service create \
     --replicas 1 \
     --restart-delay 10s \
     --log-driver fluentd \
-    neoncluster/neon-proxy-manager
+    nhive/neon-proxy-manager
 ````
 &nbsp;

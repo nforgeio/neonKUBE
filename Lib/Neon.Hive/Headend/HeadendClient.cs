@@ -80,12 +80,12 @@ namespace Neon.Hive
 
             foreach (var container in systemContainers)
             {
-                versions.Images[container] = $"neoncluster/{container}:latest";
+                versions.Images[container] = $"nhive/{container}:latest";
             }
 
             foreach (var service in systemServices)
             {
-                versions.Images[service] = $"neoncluster/{service}:latest";
+                versions.Images[service] = $"nhive/{service}:latest";
             }
 
             return versions;

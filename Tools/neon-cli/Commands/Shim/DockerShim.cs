@@ -130,7 +130,7 @@ namespace NeonCli
             // IMPORTANT:
             //
             // Do not change this without also updating the path in the
-            // [neoncluster/neon-cli] container scripts.
+            // [nhive/neon-cli] container scripts.
 
             get { return "/shim"; }
         }

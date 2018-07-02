@@ -129,7 +129,7 @@ docker service create \
     --mode global \
     --restart-delay 10s \
     --network neon-public \
-    neoncluster/neon-proxy
+    nhive/neon-proxy
 
 docker service create \
     --name neon-proxy-private \
@@ -147,7 +147,7 @@ docker service create \
     --mode global \
     --restart-delay 10s \
     --network neon-private \
-    neoncluster/neon-proxy
+    nhive/neon-proxy
 ````
 &nbsp;
 **NOTE:** You can modify the scheduling constraints using standard Docker service commands.

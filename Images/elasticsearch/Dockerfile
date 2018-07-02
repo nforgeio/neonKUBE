@@ -41,7 +41,7 @@
 #
 #       /mnt/esdata
 
-FROM        neoncluster/openjdk:8
+FROM        nhive/openjdk:8
 MAINTAINER  jeff@lilltek.com
 ARG         VERSION
 

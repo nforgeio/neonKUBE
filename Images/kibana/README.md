@@ -56,7 +56,7 @@ docker service create \
 &nbsp;
 You can also run this as a container to get JSON formatted information about the Kibana package:
 ````
-docker run --rm neoncluster/kibana version
+docker run --rm nhive/kibana version
 ````
 &nbsp;
 This will return something like:

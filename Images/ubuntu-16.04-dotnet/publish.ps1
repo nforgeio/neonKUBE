@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "neoncluster/ubuntu-16.04-dotnet"
+	$registry = "nhive/ubuntu-16.04-dotnet"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "${dotnetVersion}-${date}"

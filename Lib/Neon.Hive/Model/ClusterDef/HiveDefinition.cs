@@ -69,7 +69,7 @@ namespace Neon.Hive
         /// <summary>
         /// The prefix reserved for neonHIVE related Docker daemon, image, and container labels.
         /// </summary>
-        public const string ReservedLabelPrefix = "io.neon";
+        public const string ReservedLabelPrefix = "io.neonhive";
 
         /// <summary>
         /// Parses a hive definition from JSON text.
@@ -488,7 +488,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The Docker image to be used to provision public and private proxies and proxy bridges.
-        /// This defaults to <b>neoncluster/neon-proxy:latest</b>.
+        /// This defaults to <b>nhive/neon-proxy:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ProxyImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultProxyImage)]
@@ -496,7 +496,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The Docker image to be used to provision HashiCorp Vault proxies.
-        /// This defaults to <b>neoncluster/neon-proxy-vault:latest</b>.
+        /// This defaults to <b>nhive/neon-proxy-vault:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ProxyVaultImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultProxyVaultImage)]
@@ -504,7 +504,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The Docker image to be used to provision the <b>neon-proxy-manager</b>
-        /// service.   This defaults to <b>neoncluster/neon-proxy-manager:latest</b>.
+        /// service.   This defaults to <b>nhive/neon-proxy-manager:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ProxyManagerImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultProxyManagerImage)]
@@ -512,7 +512,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The Docker image to be used to provision the <b>neon-cluster-manager</b>
-        /// service.   This defaults to <b>neoncluster/neon-cluster-manager:latest</b>.
+        /// service.   This defaults to <b>nhive/neon-cluster-manager:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterManagerImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultClusterManagerImage)]
@@ -520,7 +520,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The Docker image to be used to provision the <b>neon-dns</b> service.
-        /// This defaults to <b>neoncluster/neon-dns:latest</b>.
+        /// This defaults to <b>nhive/neon-dns:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "DnsImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultDnsImage)]
@@ -528,7 +528,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The Docker image to be used to provision the <b>neon-dns-mon</b> service.
-        /// This defaults to <b>neoncluster/neon-dns-mon:latest</b>.
+        /// This defaults to <b>nhive/neon-dns-mon:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "DnsMonImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultDnsMonImage)]

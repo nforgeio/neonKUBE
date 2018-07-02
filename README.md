@@ -217,8 +217,8 @@ Then you need to create credentials the **neon-cli** will use to authenticate wi
 5. Create the **neon-cli** application in the Azure Active Directory, specifying the new **PASSWORD** the **neon-cli** will use to log into Azure (you can use neon create password to generate a secure password):
 
   `azure ad app create -n neon-cli \`<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;`--home-page http://neoncluster.com \`<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;`--identifier-uris http://neoncloud.com/neon-cli \`<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;`--home-page http://neonhive.io \`<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;`--identifier-uris http://neonhive.io/neon-cli \`<br/>
   &nbsp;&nbsp;&nbsp;&nbsp;`-p PASSWORD`
 
 6. Save the **Password** and **AppId** to the credentials file.

@@ -69,7 +69,7 @@ To upgrade the registry cache, you'll need to run the script below on each of yo
 ````
 docker rm -f neon-registry-cache
 
-docker pull neoncluster/neon-registry-cache:latest
+docker pull nhive/neon-registry-cache:latest
 
 docker run \
     --name neon-registry-cache \
@@ -79,6 +79,6 @@ docker run \
     --env HOST=<MANAGER-NAME>.neon-registry-cache.hive \
     --volume /etc/neon-registry-cache:/etc/neon-registry-cache:ro \
     --volume neon-registry-cache:/var/lib/neon-registry-cache \
-    neoncluster/neon-registry-cache
+    nhive/neon-registry-cache
 ````
 &nbsp;

@@ -314,7 +314,7 @@ namespace NeonCli.Ansible
     //        neon_docker_service:
     //          name: test
     //          state: present
-    //          image: neoncluster/test:0
+    //          image: nhive/test:0
     //
     // This example creates or upgrades a service by updating the
     // container image, adding a network and publishing a TCP port:
@@ -326,7 +326,7 @@ namespace NeonCli.Ansible
     //        neon_docker_service:
     //          name: test
     //          state: present
-    //          image: neoncluster/test:1
+    //          image: nhive/test:1
     //          network: foo-network
     //          mount:
     //            - type: volume

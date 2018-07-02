@@ -43,6 +43,6 @@ docker run --detach \
     --name cb-test \
     -p 8091-8094:8091-8094 \
     -p 11210:11210 \
-    neoncluster/couchbase-test
+    nhive/couchbase-test
 ````
 &nbsp;

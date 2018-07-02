@@ -18,7 +18,7 @@ via the following commands:
 
 # Start the GOLANG container, mounting the project directory:
 
-docker run -it --rm --entrypoint=bash -v %NF_ROOT%\Tools:/src neoncluster/golang
+docker run -it --rm --entrypoint=bash -v %NF_ROOT%\Tools:/src nhive/golang
 
 # Run these commands inside the container.
 

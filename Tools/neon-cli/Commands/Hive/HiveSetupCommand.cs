@@ -1647,8 +1647,8 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
                 {
                     var images = new List<string>()
                     {
-                        Program.ResolveDockerImage("neoncluster/ubuntu-16.04"),
-                        Program.ResolveDockerImage("neoncluster/ubuntu-16.04-dotnet"),
+                        Program.ResolveDockerImage("nhive/ubuntu-16.04"),
+                        Program.ResolveDockerImage("nhive/ubuntu-16.04-dotnet"),
                         Program.ResolveDockerImage(hive.Definition.ProxyImage),
                         Program.ResolveDockerImage(hive.Definition.ProxyVaultImage)
                     };
@@ -3238,7 +3238,7 @@ systemctl start neon-volume-plugin
 @"
 # Generate a 2048-bit key without a passphrase (the -N """" option).
 
-ssh-keygen -t rsa -b 2048 -N """" -C ""neoncluster"" -f /run/ssh-key
+ssh-keygen -t rsa -b 2048 -N """" -C ""neonhive"" -f /run/ssh-key
 
 # Relax permissions so we can download the key parts.
 

@@ -60,7 +60,7 @@ namespace Neon.Hive
         /// <summary>
         /// Maps the unqualified name of a neonHIVE image like <b>neon-log-collector</b> to the
         /// full path to the image including the Docker Hub organization, registry hostname and
-        /// image tag, like <b>neoncluster/neon-log-collector:latest</b> of the latest image that
+        /// image tag, like <b>nhive/neon-log-collector:latest</b> of the latest image that
         /// is compatible with a specific hive deployment.
         /// </summary>
         [JsonProperty(PropertyName = "Vault", Required = Required.Always)]

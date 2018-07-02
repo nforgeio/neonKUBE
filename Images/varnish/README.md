@@ -39,7 +39,7 @@ Here's a simple stack that deploys a Varnish cache listening on the port 8080 on
 version: "3.2"
 services:
   cache:
-    image: neoncluster/varnish
+    image: nhive/varnish
     ports:
       - published: 8080
         target: 80
@@ -50,5 +50,5 @@ services:
       - "BACKEND_PORT: 80"
       - "MEMORY_LIMIT: 200M"
   web:
-    image: neoncluster/node
+    image: nhive/node
 ```

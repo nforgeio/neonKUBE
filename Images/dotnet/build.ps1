@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds a [neoncluster/dotnet] image.
+# Builds a [nhive/dotnet] image.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 

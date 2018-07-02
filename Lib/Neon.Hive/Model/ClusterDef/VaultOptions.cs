@@ -43,7 +43,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// The version of the <b>neoncluster/vault</b> image to be installed.  
+        /// The version of the <b>nhive/vault</b> image to be installed.  
         /// This defaults to a reasonable recent version.
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

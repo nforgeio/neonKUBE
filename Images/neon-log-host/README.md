@@ -43,7 +43,7 @@ docker run \
     --volume /var/log:/hostfs/var/log \
     --network host \
     --log-driver json-file \
-    neoncluster/neon-log-host
+    nhive/neon-log-host
 ````
 &nbsp;
 # Extending or Replacing this Image
@@ -55,7 +55,7 @@ You can modify or extend this by creating a new image that derives from this one
 ````
 docker rm -f neon-log-host
 
-docker pull neoncluster/neon-log-host
+docker pull nhive/neon-log-host
 
 docker run \
     --name neon-log-host \
@@ -66,5 +66,5 @@ docker run \
     --volume /var/log:/hostfs/var/log \
     --network host \
     --log-driver json-file \
-    neoncluster/neon-log-host
+    nhive/neon-log-host
 ````

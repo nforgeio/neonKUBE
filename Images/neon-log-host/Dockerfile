@@ -6,7 +6,7 @@
 # TD-Agent deployed on each neonHIVE node that forwards log events to the
 # cluster log aggregator.
 
-FROM        neoncluster/td-agent
+FROM        nhive/td-agent
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

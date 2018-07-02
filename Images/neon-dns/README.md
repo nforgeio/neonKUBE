@@ -39,7 +39,7 @@ docker service create \
     --constraint node.role==manager \
     --mode global \
     --restart-delay 10s \
-    neoncluster/neon-dns
+    nhive/neon-dns
 ````
 &nbsp;
 # Remarks

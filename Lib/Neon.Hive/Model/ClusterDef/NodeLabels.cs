@@ -628,7 +628,7 @@ namespace Neon.Hive
         /// Use this property to define custom host node labels.
         /// </para>
         /// <note>
-        /// The <b>io.neoncluster</b> label prefix is reserved.
+        /// The <b>io.neonhive</b> label prefix is reserved.
         /// </note>
         /// <note>
         /// Labels names will be converted to lowercase when the Docker daemon is started

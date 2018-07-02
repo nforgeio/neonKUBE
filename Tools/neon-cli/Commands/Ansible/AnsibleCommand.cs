@@ -34,7 +34,7 @@ namespace NeonCli
     /// on Mac OSX, we don't want to require it as a dependency to make the experience
     /// the same on Windows and Mac and also to simplify neonHIVE setup.  The <b>neon-cli</b>
     /// implements the <b>neon ansible...</b> commands to map files from the host operating
-    /// system into a <b>neoncluster/neon-cli</b> container where Ansible is installed so any
+    /// system into a <b>nhive/neon-cli</b> container where Ansible is installed so any
     /// operations can be executed there.
     /// </para>
     /// <para>

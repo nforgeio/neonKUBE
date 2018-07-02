@@ -10,7 +10,7 @@
 #
 #   VERSION     - The Metricbeat version (e.g. "5.0.0")
 
-FROM        neoncluster/ubuntu-16.04
+FROM        nhive/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

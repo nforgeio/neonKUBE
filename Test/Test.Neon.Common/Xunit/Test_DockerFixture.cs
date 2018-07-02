@@ -26,19 +26,19 @@ namespace TestCommon
                     this.fixture.CreateConfig("config_text", "hello");
                     this.fixture.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
-                    this.fixture.CreateService("test-service", "neoncluster/test");
+                    this.fixture.CreateService("test-service", "nhive/test");
 
                     var composeText =
 @"version: '3'
 
 services:
   sleeper:
-    image: neoncluster/test
+    image: nhive/test
     deploy:
       replicas: 2
 ";
                     this.fixture.DeployStack("test-stack", composeText);
-                    this.fixture.RunContainer("test-container", "neoncluster/test");
+                    this.fixture.RunContainer("test-container", "nhive/test");
                     this.fixture.CreateNetwork("test-network");
                 });
         }
