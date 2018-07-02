@@ -1403,7 +1403,7 @@ backend http:{httpRule.Name}
                 }
                 else
                 {
-                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{loadBalancerName}/hash", cancellationToken);
+                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", cancellationToken);
                 }
 
                 if (publish)
@@ -1716,7 +1716,7 @@ listen tcp:port-{port}
                 }
                 else
                 {
-                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{proxyBridgeName}/hash", cancellationToken);
+                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", cancellationToken);
                 }
 
                 if (publish)

@@ -115,7 +115,7 @@ namespace Neon.Hive
         /// </summary>
         public void Build()
         {
-            hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/hash", Convert.ToBase64String(new byte[16])).Wait();
+            hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/proxy-hash", Convert.ToBase64String(new byte[16])).Wait();
             hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
         }
 
