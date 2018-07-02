@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "neoncluster/alpine"
+	$registry = "nhive/alpine"
 	$date     = UtcDate
 	$branch   = GitBranch
 

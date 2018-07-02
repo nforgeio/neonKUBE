@@ -32,7 +32,7 @@ namespace Neon.Xunit
     /// <b>IMPORTANT:</b> The Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
     /// support parallel test execution because fixtures may impact global machine state
     /// like starting a Couchbase Docker container, modifying the local DNS <b>hosts</b>
-    /// file or managing a Docker Swarm or neonCLUSTER.
+    /// file or managing a Docker Swarm or neonHIVE.
     /// </para>
     /// <para>
     /// You should explicitly disable parallel execution in all test assemblies that
@@ -49,8 +49,8 @@ namespace Neon.Xunit
     /// </para>
     /// <note>
     /// This fixture works only for local Docker instances that <b>ARE NOT</b>
-    /// members of a multi-node cluster as a safety measure to help avoid the
-    /// possiblity of accidentially wiping out a production cluster.
+    /// members of a multi-node hive as a safety measure to help avoid the
+    /// possiblity of accidentially wiping out a production hive.
     /// </note>
     /// <note>
     /// The fixture <see cref="Reset"/> method does not purge images from the target
@@ -65,10 +65,10 @@ namespace Neon.Xunit
     /// that accepts a <see cref="DockerFixture"/> as the only argument.  Then
     /// you can call it's <see cref="TestFixture.Initialize(Action)"/> method
     /// within the constructor and optionally have your custom <see cref="Action"/>
-    /// use the fixture to initialize cluster services, networks, secrets, etc.
+    /// use the fixture to initialize hive services, networks, secrets, etc.
     /// </para>
     /// <para>
-    /// This fixture provides several methods for managing the cluster state.
+    /// This fixture provides several methods for managing the hive state.
     /// These may be called within the test class constructor's action method,
     /// within the test constructor but outside of tha action, or within
     /// the test methods:
@@ -169,12 +169,12 @@ namespace Neon.Xunit
     ///     <term><b>initialize once</b></term>
     ///     <description>
     ///     <para>
-    ///     The basic idea here is to have your test class initialize the cluster
+    ///     The basic idea here is to have your test class initialize the hive
     ///     once within the test class constructor inside of the initialize action
     ///     with common state and services that all of the tests can access.
     ///     </para>
     ///     <para>
-    ///     This will be quite a bit faster than reconfiguring the cluster at the
+    ///     This will be quite a bit faster than reconfiguring the hive at the
     ///     beginning of every test and can work well for many situations but it
     ///     assumes that your test methods guarantee that running any test in 
     ///     any order will not impact the results of subsequent tests.  A good 
@@ -186,10 +186,10 @@ namespace Neon.Xunit
     /// <item>
     ///     <term><b>initialize every test</b></term>
     ///     <description>
-    ///     For common scenarios where the cluster must be reset before every test,
+    ///     For common scenarios where the hive must be reset before every test,
     ///     you can call <see cref="Reset()"/> within the test class constructor
     ///     (but outside of the custom initialization <see cref="Action"/> to
-    ///     reset the cluster state before the next test method is invoked.
+    ///     reset the hive state before the next test method is invoked.
     ///     </description>
     /// </item>
     /// </list>
@@ -347,13 +347,13 @@ namespace Neon.Xunit
                 //      services:
                 //
                 //        service1:
-                //          image: neoncluster/test
+                //          image: nhive/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 1
                 //
                 //        service2:
-                //          image: neoncluster/test
+                //          image: nhive/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 2
@@ -538,9 +538,9 @@ namespace Neon.Xunit
         /// </para>
         /// <note>
         /// This method is defined as <c>virtual</c> so that derived classes
-        /// can modify how Docker is called.  For example, the <c>ClusterFixture</c>
+        /// can modify how Docker is called.  For example, the <c>HiveFixture</c>
         /// class implemented in another assembly will override this to run
-        /// the <b>docker</b> within a neonCLUSTER using <b>neon-cli</b>.
+        /// the <b>docker</b> within a neonHIVE using <b>neon-cli</b>.
         /// </note>
         /// </remarks>
         public virtual ExecuteResult DockerExecute(params object[] args)
@@ -563,9 +563,9 @@ namespace Neon.Xunit
         /// </para>
         /// <note>
         /// This method is defined as <c>virtual</c> so that derived classes
-        /// can modify how Docker is called.  For example, the <c>ClusterFixture</c>
+        /// can modify how Docker is called.  For example, the <c>HiveFixture</c>
         /// class implemented in another assembly will override this to run
-        /// the <b>docker</b> within a neonCLUSTER using <b>neon-cli</b>.
+        /// the <b>docker</b> within a neonHIVE using <b>neon-cli</b>.
         /// </note>
         /// </remarks>
         public virtual ExecuteResult DockerExecute(string argString)
@@ -620,7 +620,7 @@ namespace Neon.Xunit
 
             if (result.OutputText.Contains("Swarm: active"))
             {
-                // Ensure that this is a single node cluster.
+                // Ensure that this is a single node hive.
 
                 var isSingleNode = false;
 
@@ -638,7 +638,7 @@ namespace Neon.Xunit
 
                 if (!isSingleNode)
                 {
-                    throw new InvalidOperationException("Cannot reset the cluster because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production cluster.");
+                    throw new InvalidOperationException("Cannot reset the hive because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production hive.");
                 }
 
                 // Leave the swarm, effectively reseting all swarm state.
@@ -778,7 +778,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm services.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER services whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonHIVE services whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ServiceInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<ServiceInfo> ListServices(bool includeSystem = false)
@@ -803,7 +803,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonCLUSTER services.
+                        continue;   // Ignore built-in neonHIVE services.
                     }
 
                     services.Add(
@@ -950,7 +950,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="removeSystem">Optionally remove system services as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonCLUSTER system services
+        /// By default, this method will not remove neonHIVE system services
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1018,7 +1018,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current Docker containers.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ContainerInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<ContainerInfo> ListContainers(bool includeSystem = false)
@@ -1042,7 +1042,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonCLUSTER containers.
+                        continue;   // Ignore built-in neonHIVE containers.
                     }
 
                     containers.Add(
@@ -1091,7 +1091,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="removeSystem">Optionally remove system services as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonCLUSTER system containers
+        /// By default, this method will not remove neonHIVE system containers
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1212,7 +1212,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm stacks.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER stacks whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonHIVE stacks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="StackInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<StackInfo> ListStacks(bool includeSystem = false)
@@ -1236,7 +1236,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonCLUSTER stacks.
+                        continue;   // Ignore built-in neonHIVE stacks.
                     }
 
                     stacks.Add(
@@ -1282,7 +1282,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="removeSystem">Optionally remove system stacks as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonCLUSTER system stacks
+        /// By default, this method will not remove neonHIVE system stacks
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1367,7 +1367,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm secrets.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER secrets whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonHIVE secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="SecretInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<SecretInfo> ListSecrets(bool includeSystem = false)
@@ -1391,7 +1391,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonCLUSTER secrets.
+                        continue;   // Ignore built-in neonHIVE secrets.
                     }
 
                     secrets.Add(
@@ -1433,7 +1433,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="removeSystem">Optionally remove system secrets as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonCLUSTER system secrets
+        /// By default, this method will not remove neonHIVE system secrets
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1518,7 +1518,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm configs.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER configs whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonHIVE configs whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ConfigInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<ConfigInfo> ListConfigs(bool includeSystem = false)
@@ -1542,7 +1542,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonCLUSTER configs.
+                        continue;   // Ignore built-in neonHIVE configs.
                     }
 
                     configs.Add(
@@ -1584,7 +1584,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="removeSystem">Optionally remove system configs as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonCLUSTER system configs
+        /// By default, this method will not remove neonHIVE system configs
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1630,7 +1630,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm networks.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER networks whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonHIVE networks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="NetworkInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <remarks>
@@ -1666,7 +1666,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonCLUSTER networks.
+                        continue;   // Ignore built-in neonHIVE networks.
                     }
 
                     networks.Add(
@@ -1721,7 +1721,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="removeSystem">Optionally remove system networks as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonCLUSTER system networks
+        /// By default, this method will not remove neonHIVE system networks
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1744,11 +1744,11 @@ namespace Neon.Xunit
         // Volumes
 
         /// <summary>
-        /// Removes all cluster volumes.
+        /// Removes all hive volumes.
         /// </summary>
         /// <param name="removeSystem">Optionally remove system volumes as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonCLUSTER system volumes
+        /// By default, this method will not remove neonHIVE system volumes
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>

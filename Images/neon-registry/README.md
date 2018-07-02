@@ -1,4 +1,4 @@
-This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonCLUSTER.
+This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonHIVE.
 
 # Image Tags
 
@@ -10,11 +10,11 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonCLUSTER.
+This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonHIVE.
 
-**neon-registry** is intended to be deployed as a Docker service or container on a neonCLUSTER with the **Ceph Filesystem** enabled.  **CephFS** implements a shared file system that is available on all cluster nodes as well as to Docker services and containers using the **neon volume driver**.  Registry service instances or containers will all mount the same shared **neon** volume to store the Docker images.  CephFS ensures that all registry instances see the same data and it also provides for data redundancy.
+**neon-registry** is intended to be deployed as a Docker service or container on a neonHIVE with the **Ceph Filesystem** enabled.  **CephFS** implements a shared file system that is available on all hive nodes as well as to Docker services and containers using the **neon volume driver**.  Registry service instances or containers will all mount the same shared **neon** volume to store the Docker images.  CephFS ensures that all registry instances see the same data and it also provides for data redundancy.
 
-**neon-registry** is provisioned without integrated TLS support as it expects to be deployed behind a neonCLUSTER HTTPS proxy route using a TLS certificate to encrypt traffic.
+**neon-registry** is provisioned without integrated TLS support as it expects to be deployed behind a neonHIVE HTTPS proxy route using a TLS certificate to encrypt traffic.
 
 # Environment Variables
 
@@ -22,7 +22,7 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 * **PASSWORD** (*required*) - password that clients will use to authenticate with the registry.
 
-* **SECRET** (*required*) - a cryptographically random string used to persist state to clients to prevent tampering.  You must specify the same value for every registry instance in your cluster.
+* **SECRET** (*required*) - a cryptographically random string used to persist state to clients to prevent tampering.  You must specify the same value for every registry instance in your hive.
 
 * **READ_ONLY** (*optional*) - indicates that the registry should be started as read-only.  This is useful for making the registry read-only during garbage collection.  Possible values are `true` and `false`.  This defaults to `false`.
 
@@ -38,7 +38,7 @@ The **neon-registry** image may be deployed as a Docker container or service.  W
 
 In either case, you'll generally need the following:
 
-1. A DNS hostname with the IP address of the registry, like: `REGISTRY.MY-CLUSTER.COM`.  This will need to be public if you need to push images from outside your cluster.
+1. A DNS hostname with the IP address of the registry, like: `REGISTRY.MY-CLUSTER.COM`.  This will need to be public if you need to push images from outside your hive.
 
 2. A TLS certificate for the registry hostname.  This should be a real certificate (not self-signed).  [namecheap.com](http://namecheap.com) sells single site certificates for less than $10, so just bite the bullet and purchase one.
 
@@ -46,7 +46,7 @@ In either case, you'll generally need the following:
 
 4. A crytographically generated secret.  You can generate one using `neon create password`.  Note that you'll need to retain this secret somewhere in case you'll need to redeploy the registry container or service in the future.
 
-You'll typically want to have the registry listen on the default port **5000** which is reserved for this purpose on neonCLUSTER hosts.
+You'll typically want to have the registry listen on the default port **5000** which is reserved for this purpose on neonHIVE hosts.
 
 ## Deploy as a Service
 
@@ -68,10 +68,10 @@ docker service create \
     --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
     --network neon-public \
     --restart-delay 10s \
-    neoncluster/neon-registry
+    nhive/neon-registry
 ```
 &nbsp;
-Next, you'll need to save your TLS certificate to neonCLUSTER:
+Next, you'll need to save your TLS certificate to neonHIVE:
 
 ```
 neon proxy public put MY-CERT-NAME PATH-TO-CERT
@@ -83,7 +83,7 @@ Finally, you'll need to deploy a proxy route that will direct traffic from the h
 name: neon-registry
 mode: http
 frontends:
-- host: REGISTRY.MY-CLUSTER.COM
+- host: REGISTRY.MY-HIVE.COM
   certname: MY-CERT-NAME
 backends:
 - server: neon-registry
@@ -91,7 +91,7 @@ backends:
 ```
 &nbsp;
 
-This route accepts HTTPS requests on the standard public SSL port on all of the cluster hosts, handles TLS termination and then forwards the requests to the **neon-registry** service as unencrypted HTTP on service port 5000.
+This route accepts HTTPS requests on the standard public SSL port on all of the hive hosts, handles TLS termination and then forwards the requests to the **neon-registry** service as unencrypted HTTP on service port 5000.
 
 ## Deploy as a Container
 
@@ -113,10 +113,10 @@ docker run \
     --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
     --publish 6000:5000 \
     --restart always \
-    neoncluster/neon-registry
+    nhive/neon-registry
 ```
 &nbsp;
-Next, you'll need to save your TLS certificate to neonCLUSTER:
+Next, you'll need to save your TLS certificate to neonHIVE:
 
 ```
 neon proxy public put MY-CERT-NAME PATH-TO-CERT
@@ -128,7 +128,7 @@ Finally, you'll need to deploy a proxy route that will direct traffic from PORT 
 name: neon-registry
 mode: http
 frontends:
-- host: REGISTRY.MY-CLUSTER.COM
+- host: REGISTRY.MY-HIVE.COM
   certname: MY-CERT-NAME
   proxyport: 5000
 backends:
@@ -141,13 +141,13 @@ backends:
 ```
 &nbsp;
 
-This example route assumes that you've deployed **neon-registry** as a container to three nodes whose IP addresses are NODE1-IP, NODE2-IP, and NODE3-ip.  The route accepts HTTPS requests on port 5000 on all of the cluster hosts, handles TLS termination and then load balances the requests across the three containers as unencrypted HTTP to port 6000 published by the containers and Docker will forward these to port 5000 inside the container.
+This example route assumes that you've deployed **neon-registry** as a container to three nodes whose IP addresses are NODE1-IP, NODE2-IP, and NODE3-ip.  The route accepts HTTPS requests on port 5000 on all of the hive hosts, handles TLS termination and then load balances the requests across the three containers as unencrypted HTTP to port 6000 published by the containers and Docker will forward these to port 5000 inside the container.
 
 # Garbage Collection
 
 **neon-registry** service instances or containers don't automatically prune unreferenced image layers.  This means that deleting an image manifest **does not** delete the referenced images.  Image layers can accumulate until you fill up the file system.
 
-Production clusters should perform garbage collection from time-to-time to address this.  This can be accomplished by running the image with the `garbage-collect` command.  The only constraint is that all of the **neon-registry** instances must be stopped or running as **read-only**.
+Production hives should perform garbage collection from time-to-time to address this.  This can be accomplished by running the image with the `garbage-collect` command.  The only constraint is that all of the **neon-registry** instances must be stopped or running as **read-only**.
 
 **WARNING: ** Performing garbage collection with read/write registries risks image corruption.
 
@@ -160,7 +160,7 @@ docker run \
    --name neon-registry-prune \
    --restart-condition=none \
    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
-   neoncluster/neon-registry garbage-collect
+   nhive/neon-registry garbage-collect
 
 docker service update --env READ_ONLY=false neon-registry
 ```

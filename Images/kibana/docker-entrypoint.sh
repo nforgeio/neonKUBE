@@ -17,17 +17,17 @@ PATH=${PATH}:/
 
 # Load the Docker host node environment variables.
 
-if [ ! -f /etc/neoncluster/env-host ] ; then
-    . log-critical.sh "The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container."
+if [ ! -f /etc/neon/env-host ] ; then
+    . log-critical.sh "The [/etc/neon/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container."
     exit 1
 fi
 
-. /etc/neoncluster/env-host
+. /etc/neon/env-host
 
-# Load the [/etc/neoncluster/env-container] environment variables if present.
+# Load the [/etc/neon/env-container] environment variables if present.
 
-if [ -f /etc/neoncluster/env-container ] ; then
-    . /etc/neoncluster/env-container
+if [ -f /etc/neon/env-container ] ; then
+    . /etc/neon/env-container
 fi
 
 # Generate the configuration file.

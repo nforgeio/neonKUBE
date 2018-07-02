@@ -13,8 +13,8 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.IO;
 using Neon.Net;
 
@@ -127,63 +127,63 @@ namespace NeonCli
         /// Generates the PowerDNS Recursor hosts file for a node.  This will be uploaded
         /// to <b>/etc/powerdns/hosts</b>.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="nodeDefinition">The target node definition.</param>
         /// <returns>The host definitions.</returns>
-        private static string GetPowerDnsHosts(ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
+        private static string GetPowerDnsHosts(HiveDefinition hiveDefinition, NodeDefinition nodeDefinition)
         {
             var sbHosts = new StringBuilder();
 
-            sbHosts.AppendLineLinux("# PowerDNS Recursor authoritatively answers for [*.cluster] hostnames.");
+            sbHosts.AppendLineLinux("# PowerDNS Recursor authoritatively answers for [*.hive] hostnames.");
             sbHosts.AppendLineLinux("# on the local node using these mappings.");
             sbHosts.AppendLineLinux();
 
-            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {NeonHosts.Consul}");
+            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {HiveHostNames.Consul}");
 
             sbHosts.AppendLineLinux();
-            sbHosts.AppendLineLinux("# Internal cluster Vault mappings:");
+            sbHosts.AppendLineLinux("# Internal hive Vault mappings:");
             sbHosts.AppendLineLinux();
-            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {NeonHosts.Vault}");
+            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {HiveHostNames.Vault}");
 
-            foreach (var manager in clusterDefinition.Managers)
+            foreach (var manager in hiveDefinition.Managers)
             {
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{NeonHosts.Vault}");
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{HiveHostNames.Vault}");
             }
 
-            if (clusterDefinition.Docker.RegistryCache)
+            if (hiveDefinition.Docker.RegistryCache)
             {
                 sbHosts.AppendLineLinux();
-                sbHosts.AppendLineLinux("# Internal cluster registry cache related mappings:");
+                sbHosts.AppendLineLinux("# Internal hive registry cache related mappings:");
                 sbHosts.AppendLineLinux();
 
-                foreach (var manager in clusterDefinition.Managers)
+                foreach (var manager in hiveDefinition.Managers)
                 {
-                    sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{NeonHosts.RegistryCache}");
+                    sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{HiveHostNames.RegistryCache}");
                 }
             }
 
-            if (clusterDefinition.Log.Enabled)
+            if (hiveDefinition.Log.Enabled)
             {
                 sbHosts.AppendLineLinux();
-                sbHosts.AppendLineLinux("# Internal cluster log pipeline related mappings:");
+                sbHosts.AppendLineLinux("# Internal hive log pipeline related mappings:");
                 sbHosts.AppendLineLinux();
 
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {NeonHosts.LogEsData}");
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {HiveHostNames.LogEsData}");
             }
 
             return sbHosts.ToString();
         }
 
         /// <summary>
-        /// Sets cluster definition related variables for a <see cref="PreprocessReader"/>.
+        /// Sets hive definition related variables for a <see cref="PreprocessReader"/>.
         /// </summary>
         /// <param name="preprocessReader">The reader.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="nodeDefinition">The target node definition.</param>
-        private static void SetClusterVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
+        private static void SetClusterVariables(PreprocessReader preprocessReader, HiveDefinition hiveDefinition, NodeDefinition nodeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(preprocessReader != null);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             // Generate the manager node variables in sorted order.  The variable 
             // names will be formatted as:
@@ -212,7 +212,7 @@ namespace NeonCli
             sbManagerAddressesArray.Append("(");
             sbPeerManagerAddressesArray.Append("(");
 
-            foreach (var manager in clusterDefinition.SortedManagers)
+            foreach (var manager in hiveDefinition.SortedManagers)
             {
                 sbManagers.Append($"declare -x -A NEON_MANAGER_{index}\n");
                 sbManagers.Append($"NEON_MANAGER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
@@ -234,7 +234,7 @@ namespace NeonCli
             sbManagerAddressesArray.Append(" )");
             sbPeerManagerAddressesArray.Append(" )");
 
-            foreach (var manager in clusterDefinition.SortedManagers)
+            foreach (var manager in hiveDefinition.SortedManagers)
             {
                 var nameField = manager.Name;
 
@@ -244,7 +244,7 @@ namespace NeonCli
                 }
 
                 // The blanks below are just enough so that the "=" sign lines up
-                // with the summary output from [cluster.conf.sh].
+                // with the summary output from [hive.conf.sh].
 
                 if (sbManagerNodesSummary.Length == 0)
                 {
@@ -256,7 +256,7 @@ namespace NeonCli
                 }
             }
 
-            foreach (var manager in clusterDefinition.SortedManagers)
+            foreach (var manager in hiveDefinition.SortedManagers)
             {
                 sbManagers.Append($"declare -x -A NEON_MANAGER_{index}\n");
                 sbManagers.Append($"NEON_MANAGER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
@@ -269,7 +269,7 @@ namespace NeonCli
 
             sbManagers.Append("\n");
 
-            if (clusterDefinition.Managers.Count() > 1)
+            if (hiveDefinition.Managers.Count() > 1)
             {
                 sbManagers.Append($"declare -x NEON_MANAGER_PEERS={sbPeerManagerAddressesArray}\n");
             }
@@ -283,9 +283,9 @@ namespace NeonCli
             var managerTimeSources = string.Empty;
             var workerTimeSources  = string.Empty;
 
-            if (clusterDefinition.TimeSources != null)
+            if (hiveDefinition.TimeSources != null)
             {
-                foreach (var source in clusterDefinition.TimeSources)
+                foreach (var source in hiveDefinition.TimeSources)
                 {
                     if (string.IsNullOrWhiteSpace(source))
                     {
@@ -301,7 +301,7 @@ namespace NeonCli
                 }
             }
 
-            foreach (var manager in clusterDefinition.SortedManagers)
+            foreach (var manager in hiveDefinition.SortedManagers)
             {
                 if (workerTimeSources.Length > 0)
                 {
@@ -326,11 +326,11 @@ namespace NeonCli
             {
                 sbDockerOptions.AppendWithSeparator($"-H unix:///var/run/docker.sock");
 
-                if (clusterDefinition.Log.Enabled)
+                if (hiveDefinition.Log.Enabled)
                 {
                     // Metricbeat needs Docker API access.
 
-                    sbDockerOptions.AppendWithSeparator($"-H {NeonClusterConst.DockerApiInternalEndpoint}");
+                    sbDockerOptions.AppendWithSeparator($"-H {HiveConst.DockerApiInternalEndpoint}");
                 }
             }
             else
@@ -338,9 +338,9 @@ namespace NeonCli
                 throw new NotImplementedException();
             }
 
-            if (clusterDefinition.DebugMode)
+            if (hiveDefinition.DebugMode)
             {
-                // Expose the Docker Swarm REST API on the node's internal cluster IP address so it
+                // Expose the Docker Swarm REST API on the node's internal hive IP address so it
                 // can be reached by apps like [neon-proxy-manager] running off the manager node
                 // (potentially in the debugger).
 
@@ -353,7 +353,7 @@ namespace NeonCli
 
             var consulOptions = string.Empty;
 
-            if (clusterDefinition.Dashboard.Consul)
+            if (hiveDefinition.Dashboard.Consul)
             {
                 if (consulOptions.Length > 0)
                 {
@@ -369,35 +369,35 @@ namespace NeonCli
             //
             // Note that manager nodes will recurse to upstream (external) DNS 
             // servers and workers/pets will recurse to the managers so they can
-            // dynamically pickup cluster DNS changes.
+            // dynamically pickup hive DNS changes.
 
-            if (clusterDefinition.Network?.Nameservers == null)
+            if (hiveDefinition.Network?.Nameservers == null)
             {
                 // $hack(jeff.lill): 
                 //
                 // [Network] will be null if we're just preparing servers, not doing full setup
                 // so we'll set this to the defaults to avoid null references below.
 
-                clusterDefinition.Network = new NetworkOptions();
+                hiveDefinition.Network = new NetworkOptions();
             }
 
             var nameservers = string.Empty;
 
             if (nodeDefinition.Role == NodeRole.Manager)
             {
-                for (int i = 0; i < clusterDefinition.Network.Nameservers.Length; i++)
+                for (int i = 0; i < hiveDefinition.Network.Nameservers.Length; i++)
                 {
                     if (i > 0)
                     {
                         nameservers += ";";
                     }
 
-                    nameservers += clusterDefinition.Network.Nameservers[i].Trim();
+                    nameservers += hiveDefinition.Network.Nameservers[i].Trim();
                 }
             }
             else
             {
-                foreach (var manager in clusterDefinition.SortedManagers)
+                foreach (var manager in hiveDefinition.SortedManagers)
                 {
                     if (nameservers.Length > 0)
                     {
@@ -410,37 +410,37 @@ namespace NeonCli
 
             // Set the variables.
 
-            preprocessReader.Set("load-cluster-config", NeonHostFolders.Config + "/cluster.conf.sh --echo-summary");
-            preprocessReader.Set("load-cluster-config-quiet", NeonHostFolders.Config + "/cluster.conf.sh");
+            preprocessReader.Set("load-cluster-config", HiveHostFolders.Config + "/hive.conf.sh --echo-summary");
+            preprocessReader.Set("load-cluster-config-quiet", HiveHostFolders.Config + "/hive.conf.sh");
 
-            SetBashVariable(preprocessReader, "cluster.provisioner", clusterDefinition.Provisioner);
+            SetBashVariable(preprocessReader, "cluster.provisioner", hiveDefinition.Provisioner);
             SetBashVariable(preprocessReader, "cluster.rootuser", Program.MachineUsername);
 
-            SetBashVariable(preprocessReader, "node.driveprefix", clusterDefinition.DrivePrefix);
+            SetBashVariable(preprocessReader, "node.driveprefix", hiveDefinition.DrivePrefix);
 
-            SetBashVariable(preprocessReader, "neon.folders.config", NeonHostFolders.Config);
-            SetBashVariable(preprocessReader, "neon.folders.secrets", NeonHostFolders.Secrets);
-            SetBashVariable(preprocessReader, "neon.folders.setup", NeonHostFolders.Setup);
-            SetBashVariable(preprocessReader, "neon.folders.tools", NeonHostFolders.Tools);
-            SetBashVariable(preprocessReader, "neon.folders.state", NeonHostFolders.State);
-            SetBashVariable(preprocessReader, "neon.folders.secrets", NeonHostFolders.Secrets);
-            SetBashVariable(preprocessReader, "neon.folders.scripts", NeonHostFolders.Scripts);
-            SetBashVariable(preprocessReader, "neon.folders.archive", NeonHostFolders.Archive);
-            SetBashVariable(preprocessReader, "neon.folders.exec", NeonHostFolders.Exec);
+            SetBashVariable(preprocessReader, "neon.folders.config", HiveHostFolders.Config);
+            SetBashVariable(preprocessReader, "neon.folders.secrets", HiveHostFolders.Secrets);
+            SetBashVariable(preprocessReader, "neon.folders.setup", HiveHostFolders.Setup);
+            SetBashVariable(preprocessReader, "neon.folders.tools", HiveHostFolders.Tools);
+            SetBashVariable(preprocessReader, "neon.folders.state", HiveHostFolders.State);
+            SetBashVariable(preprocessReader, "neon.folders.secrets", HiveHostFolders.Secrets);
+            SetBashVariable(preprocessReader, "neon.folders.scripts", HiveHostFolders.Scripts);
+            SetBashVariable(preprocessReader, "neon.folders.archive", HiveHostFolders.Archive);
+            SetBashVariable(preprocessReader, "neon.folders.exec", HiveHostFolders.Exec);
 
-            preprocessReader.Set("neon.hosts.neon-log-es-data", NeonHosts.LogEsData);
+            preprocessReader.Set("neon.hosts.neon-log-es-data", HiveHostNames.LogEsData);
 
-            SetBashVariable(preprocessReader, "nodes.manager.count", clusterDefinition.Managers.Count());
+            SetBashVariable(preprocessReader, "nodes.manager.count", hiveDefinition.Managers.Count());
             preprocessReader.Set("nodes.managers", sbManagers);
             preprocessReader.Set("nodes.manager.summary", sbManagerNodesSummary);
 
             SetBashVariable(preprocessReader, "ntp.manager.sources", managerTimeSources);
             SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
 
-            if (!clusterDefinition.BareDocker)
+            if (!hiveDefinition.BareDocker)
             {
                 // When we're not deploying bare Docker, the manager nodes will use the 
-                // configured name servers as the cluster's upstream DNS and the worker
+                // configured name servers as the hive's upstream DNS and the worker
                 // nodes will be configured to query the name servers.
 
                 if (nodeDefinition.IsManager)
@@ -451,7 +451,7 @@ namespace NeonCli
                 {
                     var managerNameservers = string.Empty;
 
-                    foreach (var manager in clusterDefinition.Managers)
+                    foreach (var manager in hiveDefinition.Managers)
                     {
                         if (managerNameservers.Length > 0)
                         {
@@ -472,29 +472,29 @@ namespace NeonCli
                 preprocessReader.Set("net.nameservers", nameservers);
             }
 
-            SetBashVariable(preprocessReader, "net.powerdns.recursor.package.uri", clusterDefinition.Network.PdnsRecursorPackageUri);
-            preprocessReader.Set("net.powerdns.recursor.hosts", GetPowerDnsHosts(clusterDefinition, nodeDefinition));
+            SetBashVariable(preprocessReader, "net.powerdns.recursor.package.uri", hiveDefinition.Network.PdnsRecursorPackageUri);
+            preprocessReader.Set("net.powerdns.recursor.hosts", GetPowerDnsHosts(hiveDefinition, nodeDefinition));
 
-            SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
+            SetBashVariable(preprocessReader, "docker.version", hiveDefinition.Docker.PackageVersion);
 
-            SetBashVariable(preprocessReader, "consul.version", clusterDefinition.Consul.Version);
+            SetBashVariable(preprocessReader, "consul.version", hiveDefinition.Consul.Version);
             SetBashVariable(preprocessReader, "consul.options", consulOptions);
-            SetBashVariable(preprocessReader, "consul.address", $"{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
-            SetBashVariable(preprocessReader, "consul.fulladdress", $"http://{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
-            SetBashVariable(preprocessReader, "consul.hostname", NeonHosts.Consul);
-            SetBashVariable(preprocessReader, "consul.port", clusterDefinition.Consul.Port);
+            SetBashVariable(preprocessReader, "consul.address", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            SetBashVariable(preprocessReader, "consul.fulladdress", $"http://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            SetBashVariable(preprocessReader, "consul.hostname", HiveHostNames.Consul);
+            SetBashVariable(preprocessReader, "consul.port", hiveDefinition.Consul.Port);
             SetBashVariable(preprocessReader, "consul.tlsdisabled", true);
 
-            SetBashVariable(preprocessReader, "vault.version", clusterDefinition.Vault.Version);
+            SetBashVariable(preprocessReader, "vault.version", hiveDefinition.Vault.Version);
 
-            SetBashVariable(preprocessReader, "vault.download", $"https://releases.hashicorp.com/vault/{clusterDefinition.Vault.Version}/vault_{clusterDefinition.Vault.Version}_linux_amd64.zip");
-            SetBashVariable(preprocessReader, "vault.hostname", NeonHosts.Vault);
-            SetBashVariable(preprocessReader, "vault.port", clusterDefinition.Vault.Port);
+            SetBashVariable(preprocessReader, "vault.download", $"https://releases.hashicorp.com/vault/{hiveDefinition.Vault.Version}/vault_{hiveDefinition.Vault.Version}_linux_amd64.zip");
+            SetBashVariable(preprocessReader, "vault.hostname", HiveHostNames.Vault);
+            SetBashVariable(preprocessReader, "vault.port", hiveDefinition.Vault.Port);
             SetBashVariable(preprocessReader, "vault.consulpath", "vault/");
-            SetBashVariable(preprocessReader, "vault.maximumlease", clusterDefinition.Vault.MaximimLease);
-            SetBashVariable(preprocessReader, "vault.defaultlease", clusterDefinition.Vault.DefaultLease);
+            SetBashVariable(preprocessReader, "vault.maximumlease", hiveDefinition.Vault.MaximimLease);
+            SetBashVariable(preprocessReader, "vault.defaultlease", hiveDefinition.Vault.DefaultLease);
 
-            SetBashVariable(preprocessReader, "log.enabled", clusterDefinition.Log.Enabled);
+            SetBashVariable(preprocessReader, "log.enabled", hiveDefinition.Log.Enabled);
         }
 
         /// <summary>
@@ -502,10 +502,10 @@ namespace NeonCli
         /// </summary>
         /// <typeparam name="TMetadata">The node metadata type.</typeparam>
         /// <param name="node">The remote node.</param>
-        /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
+        /// <param name="hiveDefinition">The hive definition or <c>null</c>.</param>
         /// <param name="file">The resource file.</param>
         /// <param name="targetPath">The target path on the remote server.</param>
-        private static void UploadFile<TMetadata>(this SshProxy<TMetadata> node, ClusterDefinition clusterDefinition, ResourceFiles.File file, string targetPath)
+        private static void UploadFile<TMetadata>(this SshProxy<TMetadata> node, HiveDefinition hiveDefinition, ResourceFiles.File file, string targetPath)
             where TMetadata : class
         {
             using (var input = file.ToStream())
@@ -513,7 +513,7 @@ namespace NeonCli
                 if (file.HasVariables)
                 {
                     // We need to expand any variables.  Note that if we don't have a
-                    // cluster definition or for undefined variables, we're going to 
+                    // hive definition or for undefined variables, we're going to 
                     // have the variables expand to the empty string.
 
                     using (var msExpanded = new MemoryStream())
@@ -529,9 +529,9 @@ namespace NeonCli
                                     StripComments   = false
                                 };
 
-                            if (clusterDefinition != null)
+                            if (hiveDefinition != null)
                             {
-                                SetClusterVariables(preprocessReader, clusterDefinition, node.Metadata as NodeDefinition);
+                                SetClusterVariables(preprocessReader, hiveDefinition, node.Metadata as NodeDefinition);
                             }
 
                             foreach (var line in preprocessReader.Lines())
@@ -558,16 +558,16 @@ namespace NeonCli
         /// </summary>
         /// <typeparam name="Metadata">The node metadata type.</typeparam>
         /// <param name="node">The remote node.</param>
-        /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
-        public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, ClusterDefinition clusterDefinition = null)
+        /// <param name="hiveDefinition">The hive definition or <c>null</c>.</param>
+        public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, HiveDefinition hiveDefinition = null)
             where Metadata : class
         {
             Covenant.Requires<ArgumentNullException>(node != null);
 
             // Clear the contents of the configuration folder.
 
-            node.Status = $"clear: {NeonHostFolders.Config}";
-            node.SudoCommand($"rm -rf {NeonHostFolders.Config}/*.*");
+            node.Status = $"clear: {HiveHostFolders.Config}";
+            node.SudoCommand($"rm -rf {HiveHostFolders.Config}/*.*");
 
             // Upload the files.
 
@@ -575,13 +575,13 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("conf").Files())
             {
-                node.UploadFile(clusterDefinition, file, $"{NeonHostFolders.Config}/{file.Name}");
+                node.UploadFile(hiveDefinition, file, $"{HiveHostFolders.Config}/{file.Name}");
             }
 
             // Secure the files and make the scripts executable.
 
-            node.SudoCommand($"chmod 600 {NeonHostFolders.Config}/*.*");
-            node.SudoCommand($"chmod 700 {NeonHostFolders.Config}/*.sh");
+            node.SudoCommand($"chmod 600 {HiveHostFolders.Config}/*.*");
+            node.SudoCommand($"chmod 700 {HiveHostFolders.Config}/*.sh");
 
             node.Status = "copied";
         }
@@ -591,8 +591,8 @@ namespace NeonCli
         /// </summary>
         /// <typeparam name="TMetadata">The server's metadata type.</typeparam>
         /// <param name="server">The remote server.</param>
-        /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
-        public static void UploadTools<TMetadata>(this SshProxy<TMetadata> server, ClusterDefinition clusterDefinition = null)
+        /// <param name="hiveDefinition">The hive definition or <c>null</c>.</param>
+        public static void UploadTools<TMetadata>(this SshProxy<TMetadata> server, HiveDefinition hiveDefinition = null)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(server != null);
@@ -600,8 +600,8 @@ namespace NeonCli
             //-----------------------------------------------------------------
             // Clear the contents of the setup scripts folder.
 
-            server.Status = $"clear: {NeonHostFolders.Setup}";
-            server.SudoCommand($"rm -rf {NeonHostFolders.Setup}/*.*");
+            server.Status = $"clear: {HiveHostFolders.Setup}";
+            server.SudoCommand($"rm -rf {HiveHostFolders.Setup}/*.*");
 
             // Upload the setup files.
 
@@ -609,18 +609,18 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("setup").Files())
             {
-                server.UploadFile(clusterDefinition, file, $"{NeonHostFolders.Setup}/{file.Name}");
+                server.UploadFile(hiveDefinition, file, $"{HiveHostFolders.Setup}/{file.Name}");
             }
 
             // Make the scripts executable.
 
-            server.SudoCommand($"chmod 700 {NeonHostFolders.Setup}/*");
+            server.SudoCommand($"chmod 700 {HiveHostFolders.Setup}/*");
 
             //-----------------------------------------------------------------
             // Clear the contents of the tools folder.
 
-            server.Status = $"clear: {NeonHostFolders.Tools}";
-            server.SudoCommand($"rm -rf {NeonHostFolders.Tools}/*.*");
+            server.Status = $"clear: {HiveHostFolders.Tools}";
+            server.SudoCommand($"rm -rf {HiveHostFolders.Tools}/*.*");
 
             // Upload the tool files.  Note that we're going to strip out the [.sh] 
             // file type to make these easier to run.
@@ -629,12 +629,12 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
             {
-                server.UploadFile(clusterDefinition, file, $"{NeonHostFolders.Tools}/{file.Name.Replace(".sh", string.Empty)}");
+                server.UploadFile(hiveDefinition, file, $"{HiveHostFolders.Tools}/{file.Name.Replace(".sh", string.Empty)}");
             }
 
             // Make the scripts executable.
 
-            server.SudoCommand($"chmod 700 {NeonHostFolders.Tools}/*");
+            server.SudoCommand($"chmod 700 {HiveHostFolders.Tools}/*");
         }
     }
 }

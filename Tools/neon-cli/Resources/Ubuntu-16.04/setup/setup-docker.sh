@@ -23,7 +23,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-DOCKER                             **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the cluster configuration and setup utilities.
+# Load the hive configuration and setup utilities.
 
 . $<load-cluster-config>
 . setup-utility.sh
@@ -73,7 +73,7 @@ fi
 #
 # Production clusters should install Docker with a specific version number
 # to ensure that you'll be able to deploy additional hosts with the
-# same Docker release as the rest of the cluster.  This also prevents 
+# same Docker release as the rest of the hive.  This also prevents 
 # the package manager from inadvertently upgrading Docker.
 
 docker_version=

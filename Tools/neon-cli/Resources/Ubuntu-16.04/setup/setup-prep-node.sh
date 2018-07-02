@@ -10,7 +10,7 @@
 #       using a [PreprocessReader].
 #
 # This script handles the configuration of a near-virgin Ubuntu 14.04 server 
-# install into one suitable for deploying a neonCLUSTER cluster upon.  This
+# install into one suitable for deploying a neonHIVE cluster to.  This
 # script requires that:
 #
 #       * OpenSSH was installed
@@ -24,7 +24,7 @@
 #
 # NOTE: I'm not using [-u] here to avoid failing for undefined
 #       environment variables because some won't be initialized
-#       when prepping nodes without a full cluster definition.
+#       when prepping nodes without a full hive definition.
 
 set -eo pipefail
 
@@ -38,7 +38,7 @@ echo
 # Disable the [apt-daily] service.  We're doing this for two reasons:
 #
 #   1. This service interferes with with [apt-get] usage during
-#      cluster setup and is also likely to interfere with end-user
+#      hive setup and is also likely to interfere with end-user
 #      configuration activities as well.
 #
 #   2. Automatic updates for production and even test clusters is

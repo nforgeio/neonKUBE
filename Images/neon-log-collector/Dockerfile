@@ -7,7 +7,7 @@
 # from the node [neon-log-host] containers, perform any transformations
 # and then persist them to Elasticsearch.
 
-FROM        neoncluster/td-agent
+FROM        nhive/td-agent
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

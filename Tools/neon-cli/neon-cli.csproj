@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Lib\Neon.Cluster\Neon.Cluster.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Hive\Neon.Hive.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Docker\Neon.Docker.csproj" />
@@ -40,7 +40,7 @@
     <None Update="Resources\Elasticsearch\logstash-template.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\conf\cluster.conf.sh">
+    <None Update="Resources\Ubuntu-16.04\conf\hive.conf.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\conf\cluster.conf.sh.txt">

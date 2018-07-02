@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -27,7 +27,7 @@ namespace NeonCli
     public class ScpCommand : CommandBase
     {
         private const string usage = @"
-Opens a WinSCP connection to the named node in the current cluster
+Opens a WinSCP connection to the named node in the current hive
 or the first manager node if no node is specified.
 
 USAGE:
@@ -36,7 +36,7 @@ USAGE:
 
 ARGUMENTS:
 
-    NODE        - Optionally names the target cluster node.
+    NODE        - Optionally names the target hive node.
                   Otherwise, the first manager node will be opened.
 
 OPTIONS:
@@ -70,19 +70,19 @@ OPTIONS:
                 Program.Exit(0);
             }
 
-            var clusterLogin = Program.ConnectCluster();
+            var hiveLogin = Program.ConnectHive();
 
             NodeDefinition node;
 
             if (commandLine.Arguments.Length == 0)
             {
-                node = NeonClusterHelper.Cluster.GetHealthyManager().Metadata;
+                node = HiveHelper.Hive.GetHealthyManager().Metadata;
             }
             else
             {
                 var name = commandLine.Arguments[0];
 
-                node = clusterLogin.Definition.Nodes.SingleOrDefault(n => n.Name == name);
+                node = hiveLogin.Definition.Nodes.SingleOrDefault(n => n.Name == name);
 
                 if (node == null)
                 {
@@ -106,33 +106,33 @@ OPTIONS:
             int             startPos;
             int             endPos;
 
-            endPos = clusterLogin.SshClusterHostKeyFingerprint.IndexOf(' ');
+            endPos = hiveLogin.SshClusterHostKeyFingerprint.IndexOf(' ');
 
-            if (!int.TryParse(clusterLogin.SshClusterHostKeyFingerprint.Substring(0, endPos), out bitCount) || bitCount <= 0)
+            if (!int.TryParse(hiveLogin.SshClusterHostKeyFingerprint.Substring(0, endPos), out bitCount) || bitCount <= 0)
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshClusterHostKeyFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{hiveLogin.SshClusterHostKeyFingerprint}].");
                 Program.Exit(1);
             }
 
-            startPos = clusterLogin.SshClusterHostKeyFingerprint.IndexOf(md5Pattern);
+            startPos = hiveLogin.SshClusterHostKeyFingerprint.IndexOf(md5Pattern);
 
             if (startPos == -1)
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshClusterHostKeyFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{hiveLogin.SshClusterHostKeyFingerprint}].");
                 Program.Exit(1);
             }
 
             startPos += md5Pattern.Length;
 
-            endPos = clusterLogin.SshClusterHostKeyFingerprint.IndexOf(' ', startPos);
+            endPos = hiveLogin.SshClusterHostKeyFingerprint.IndexOf(' ', startPos);
 
             if (endPos == -1)
             {
-                md5 = clusterLogin.SshClusterHostKeyFingerprint.Substring(startPos).Trim();
+                md5 = hiveLogin.SshClusterHostKeyFingerprint.Substring(startPos).Trim();
             }
             else
             {
-                md5 = clusterLogin.SshClusterHostKeyFingerprint.Substring(startPos, endPos - startPos).Trim();
+                md5 = hiveLogin.SshClusterHostKeyFingerprint.Substring(startPos, endPos - startPos).Trim();
             }
 
             fingerprint = $"ssh-rsa {bitCount} {md5}";
@@ -145,40 +145,40 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            switch (clusterLogin.Definition.HostNode.SshAuth)
+            switch (hiveLogin.Definition.HostNode.SshAuth)
             {
                 case AuthMethods.Tls:
 
-                    // We're going write the private key to the cluster temp folder.  For Windows
+                    // We're going write the private key to the hive temp folder.  For Windows
                     // workstations, this is probably encrypted and hopefully Linux/OSX is configured
                     // to encrypt user home directories.  We want to try to avoid persisting unencrypted
-                    // cluster credentials.
+                    // hive credentials.
 
                     // $todo(jeff.lill):
                     //
                     // On Linux/OSX, investigate using the [/dev/shm] tmpfs volume.
 
-                    if (string.IsNullOrEmpty(clusterLogin.SshClientKey.PrivatePPK))
+                    if (string.IsNullOrEmpty(hiveLogin.SshClientKey.PrivatePPK))
                     {
-                        // The cluster must have been setup from a non-Windows workstation because
+                        // The hive must have been setup from a non-Windows workstation because
                         // there's no PPK formatted key that PuTTY/WinSCP require.  We'll use
                         // WinSCP] to do the conversion.
 
-                        clusterLogin.SshClientKey.PrivatePPK = Program.ConvertPUBtoPPK(clusterLogin, clusterLogin.SshClientKey.PrivatePEM);
-                        clusterLogin.Path                    = Program.GetClusterLoginPath(clusterLogin.Username, clusterLogin.Definition.Name);
+                        hiveLogin.SshClientKey.PrivatePPK = Program.ConvertPUBtoPPK(hiveLogin, hiveLogin.SshClientKey.PrivatePEM);
+                        hiveLogin.Path                    = Program.GetHiveLoginPath(hiveLogin.Username, hiveLogin.Definition.Name);
 
                         // Update the login information.
 
-                        clusterLogin.Save();
+                        hiveLogin.Save();
                     }
 
-                    var keyPath = Path.Combine(Program.ClusterTempFolder, $"{clusterLogin.ClusterName}.key");
+                    var keyPath = Path.Combine(Program.HiveTempFolder, $"{hiveLogin.HiveName}.key");
 
-                    File.WriteAllText(keyPath, clusterLogin.SshClientKey.PrivatePPK);
+                    File.WriteAllText(keyPath, hiveLogin.SshClientKey.PrivatePPK);
 
                     try
                     {
-                        Process.Start(Program.WinScpPath, $@"scp://{clusterLogin.SshUsername}@{node.PrivateAddress}:22 /privatekey=""{keyPath}"" /hostkey=""{fingerprint}"" /newinstance {consoleOption} /rawsettings Shell=""sudo%20-s"" compression=1");
+                        Process.Start(Program.WinScpPath, $@"scp://{hiveLogin.SshUsername}@{node.PrivateAddress}:22 /privatekey=""{keyPath}"" /hostkey=""{fingerprint}"" /newinstance {consoleOption} /rawsettings Shell=""sudo%20-s"" compression=1");
                     }
                     finally
                     {
@@ -214,12 +214,12 @@ OPTIONS:
 
                 case AuthMethods.Password:
 
-                    Process.Start(Program.WinScpPath, $@"scp://{clusterLogin.SshUsername}:{clusterLogin.SshPassword}@{node.PrivateAddress}:22 /hostkey=""{fingerprint}"" /newinstance {consoleOption} /rawsettings Shell=""sudo%20-s"" compression=1");
+                    Process.Start(Program.WinScpPath, $@"scp://{hiveLogin.SshUsername}:{hiveLogin.SshPassword}@{node.PrivateAddress}:22 /hostkey=""{fingerprint}"" /newinstance {consoleOption} /rawsettings Shell=""sudo%20-s"" compression=1");
                     break;
 
                 default:
 
-                    throw new NotSupportedException($"Unsupported SSH authentication method [{clusterLogin.Definition.HostNode.SshAuth}].");
+                    throw new NotSupportedException($"Unsupported SSH authentication method [{hiveLogin.Definition.HostNode.SshAuth}].");
             }
         }
 

@@ -15,15 +15,15 @@ cat <<EOF > /usr/share/elasticsearch/config/elasticsearch.yml
 # Docker container.  For this to work, the following environment
 # variables must be specified when the container is first started:
 #
-#   ELASTICSEARCH_CLUSTER         - Identifies the cluster to be joined.
+#   ELASTICSEARCH_CLUSTER         - Identifies the hive to be joined.
 #   ELASTICSEARCH_NODE_NAME       - Name of the Elasticsearch node
 #   ELASTICSEARCH_NODE_MASTER     - Indicates that this will be a master (true/false)
 #   ELASTICSEARCH_NODE_DATA       - Indicates that this node will host data vs.
 #                                   being a dedicated master or just a router (true/false)
-#   ELASTICSEARCH_NODE_COUNT      - Number of nodes in the cluster
+#   ELASTICSEARCH_NODE_COUNT      - Number of nodes in the hive
 #   ELASTICSEARCH_SHARD_COUNT     - The shard count
 #   ELASTICSEARCH_QUORUM          - The minimum number of master nodes to be
-#                                   present for the cluster to be considered
+#                                   present for the hive to be considered
 #                                   healthy.
 #   ELASTICSEARCH_BOOTSTRAP_NODES - A comma separated list of one or more IP addresses
 #                                   or DNS names of nodes that will be used for 
@@ -94,7 +94,7 @@ path.data: /mnt/esdata
 
 # Elasticsearch performs poorly when JVM starts swapping.  If we were running on
 # bare metal, we'd enable memory locking but I couldn't get this to work on
-# Docker.  Instead, we're going to rely on the fact that neonCLUSTER nodes are
+# Docker.  Instead, we're going to rely on the fact that neonHIVE nodes are
 # configured with [swappiness=0] and that we'll reserve memory for our
 # Elasticsearch service instance.
 
@@ -118,13 +118,13 @@ http.max_content_length: 100mb
 
 # --------------------------------- Discovery ----------------------------------
 
-# Discovery infrastructure ensures nodes can be found within a cluster
+# Discovery infrastructure ensures nodes can be found within a hive
 # and master node is elected.  Elasticsearch 5.0 supports only unicast 
 # discovery.
 
 # Set to ensure a node sees N other master eligible nodes to be considered
-# operational within the cluster. This should be set to a quorum/majority of 
-# the master-eligible nodes in the cluster.
+# operational within the hive. This should be set to a quorum/majority of 
+# the master-eligible nodes in the hive.
 
 discovery.zen.minimum_master_nodes: ${ELASTICSEARCH_QUORUM}
 
@@ -136,7 +136,7 @@ discovery.zen.ping_timeout: 15s
 
 # The ELASTICSEARCH_BOOTSTRAP_NODES environment variable is expected to have been
 # set to the IP addresses or DNS hostnames of one or more of the Elasticsearch nodes 
-# that will coordinate the mutual discovery of the cluster nodes.
+# that will coordinate the mutual discovery of the hive nodes.
 #
 #   ELASTICSEARCH_BOOTSTRAP_NODES=node0:port,node1:port",...
 
@@ -144,16 +144,16 @@ discovery.zen.ping.unicast.hosts: ${ELASTICSEARCH_BOOTSTRAP_NODES}
 
 # ---------------------------------- Gateway -----------------------------------
 
-# The gateway allows for persisting the cluster state between full cluster
+# The gateway allows for persisting the hive state between full cluster
 # restarts. Every change to the state (such as adding an index) will be stored
-# in the gateway, and when the cluster starts up for the first time,
+# in the gateway, and when the hive starts up for the first time,
 # it will read its state from the gateway.
 
 # Settings below control how and when to start the initial recovery process on
 # a full cluster restart (to reuse as much local data as possible when using shared
 # gateway).
 
-# Allow recovery process after N nodes in a cluster are up:
+# Allow recovery process after N nodes in a hive are up:
 
 gateway.recover_after_nodes: ${ELASTICSEARCH_NODE_COUNT}
 

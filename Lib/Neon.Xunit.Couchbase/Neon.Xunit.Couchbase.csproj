@@ -5,8 +5,8 @@
     <Authors>Jeff Lill</Authors>
     <Version>6.3.19.0</Version>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonCLUSTER</Product>
-    <Description>Couchbase unit testing helpers.</Description>
+    <Product>neonHIVE</Product>
+    <Description>neonFORGE Couchbase Xunit testing helpers.</Description>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

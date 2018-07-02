@@ -22,10 +22,10 @@ using Newtonsoft.Json.Linq;
 
 using ICSharpCode.SharpZipLib.Zip;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli.Ansible

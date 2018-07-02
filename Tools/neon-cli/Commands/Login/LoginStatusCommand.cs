@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -27,7 +27,7 @@ namespace NeonCli
     public class LoginStatusCommand : CommandBase
     {
         private const string usage = @"
-Displays status about the current cluster login.
+Displays status about the current hive login.
 
 USAGE:
 
@@ -49,7 +49,7 @@ USAGE:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            ClusterProxy    clusterProxy;
+            HiveProxy    hive;
 
             if (commandLine.HasHelpOption)
             {
@@ -57,24 +57,24 @@ USAGE:
                 Program.Exit(0);
             }
 
-            var clusterLogin = Program.ClusterLogin;
+            var hiveLogin = Program.HiveLogin;
 
-            // Print the current login status if no cluster name was passed.
+            // Print the current login status if no hive name was passed.
 
-            if (clusterLogin == null)
+            if (hiveLogin == null)
             {
                 Console.Error.WriteLine("*** You are not logged in.");
                 Program.Exit(1);
             }
 
-            Console.WriteLine(clusterLogin.LoginName);
+            Console.WriteLine(hiveLogin.LoginName);
 
-            // Parse and validate the cluster definition.
+            // Parse and validate the hive definition.
 
-            clusterProxy = new ClusterProxy(clusterLogin,
+            hive = new HiveProxy(hiveLogin,
                 (nodeName, publicAddress, privateAddress) =>
                 {
-                    return new SshProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, clusterLogin.GetSshCredentials(), TextWriter.Null);
+                    return new SshProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, hiveLogin.GetSshCredentials(), TextWriter.Null);
                 });
 
             // Verify the credentials by logging into a manager node.
@@ -82,11 +82,11 @@ USAGE:
             var verifyCredentials = true;
 
             Console.Error.WriteLine();
-            Console.Error.WriteLine($"Checking login [{clusterLogin.LoginName}]...");
+            Console.Error.WriteLine($"Checking login [{hiveLogin.LoginName}]...");
 
-            if (clusterLogin.ViaVpn)
+            if (hiveLogin.ViaVpn)
             {
-                var vpnClient = NeonClusterHelper.VpnGetClient(clusterLogin.ClusterName);
+                var vpnClient = HiveHelper.VpnGetClient(hiveLogin.HiveName);
 
                 if (vpnClient == null)
                 {
@@ -96,17 +96,17 @@ USAGE:
                 {
                     switch (vpnClient.State)
                     {
-                        case NeonClusterHelper.VpnState.Connecting:
+                        case HiveHelper.VpnState.Connecting:
 
                             Console.Error.WriteLine("VPN is connecting");
                             break;
 
-                        case NeonClusterHelper.VpnState.Healthy:
+                        case HiveHelper.VpnState.Healthy:
 
                             Console.Error.WriteLine("VPN connection is healthy");
                             break;
 
-                        case NeonClusterHelper.VpnState.Unhealthy:
+                        case HiveHelper.VpnState.Unhealthy:
 
                             Console.Error.WriteLine("*** ERROR: VPN connection is not healthy");
                             verifyCredentials = false;
@@ -121,12 +121,12 @@ USAGE:
 
                 try
                 {
-                    clusterProxy.GetHealthyManager().Connect();
+                    hive.GetHealthyManager().Connect();
                     Console.Error.WriteLine("Authenticated");
                 }
                 catch (Exception e)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Cluster authentication failed: {NeonHelper.ExceptionError(e)}");
+                    Console.Error.WriteLine($"*** ERROR: Hive authentication failed: {NeonHelper.ExceptionError(e)}");
                 }
             }
 

@@ -14,7 +14,7 @@
 #
 # Kibana listens internally on the default port 5601.
 
-FROM        neoncluster/ubuntu-16.04
+FROM        nhive/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 ARG         VERSION
 

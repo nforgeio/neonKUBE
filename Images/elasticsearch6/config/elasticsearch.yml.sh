@@ -90,7 +90,7 @@ path.data: /mnt/esdata
 
 # Elasticsearch performs poorly when JVM starts swapping.  If we were running on
 # bare metal, we'd enable memory locking but I couldn't get this to work on
-# Docker.  Instead, we're going to rely on the fact that neonCLUSTER nodes are
+# Docker.  Instead, we're going to rely on the fact that neonHIVE nodes are
 # configured with [swappiness=0] and that we'll reserve memory for our
 # Elasticsearch service instance.
 
@@ -114,7 +114,7 @@ http.max_content_length: 100mb
 
 # --------------------------------- Discovery ----------------------------------
 
-# Discovery infrastructure ensures nodes can be found within a cluster
+# Discovery infrastructure ensures nodes can be found within a hive
 # and master node is elected.  Elasticsearch 5.0 supports only unicast 
 # discovery.
 
@@ -149,7 +149,7 @@ discovery.zen.ping.unicast.hosts: ${ELASTICSEARCH_BOOTSTRAP_NODES}
 # a full cluster restart (to reuse as much local data as possible when using shared
 # gateway).
 
-# Allow recovery process after N nodes in a cluster are up:
+# Allow recovery process after N nodes in a hive are up:
 
 gateway.recover_after_nodes: ${ELASTICSEARCH_NODE_COUNT}
 

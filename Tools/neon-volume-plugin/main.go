@@ -58,7 +58,7 @@ func fsReady() (bool, error) {
 
 func fsNotReady() error {
 
-	return toError("Cluster distributed filesystem [/mnt/neonfs] is not ready.")
+	return toError("Hive distributed filesystem [/mnt/neonfs] is not ready.")
 }
 
 func stub(err error) {

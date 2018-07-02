@@ -28,7 +28,7 @@ function Build
 	)
 
 
-	$registry = "neoncluster/neon-vegomatic"
+	$registry = "nhive/neon-vegomatic"
 	$tag      = ImageTag
 	$branch   = GitBranch
 

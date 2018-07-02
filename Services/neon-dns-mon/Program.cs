@@ -20,12 +20,12 @@ using DNS.Client;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.DnsTools;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Hive;
 using Neon.Net;
 using Neon.Time;
 
@@ -33,7 +33,7 @@ namespace NeonDnsMon
 {
     /// <summary>
     /// Implements the <b>neon-dns-mon</b> service.  See 
-    /// <a href="https://hub.docker.com/r/neoncluster/neon-dns-mon/">neoncluster/neon-dns-mon</a>
+    /// <a href="https://hub.docker.com/r/nhive/neon-dns-mon/">nhive/neon-dns-mon</a>
     /// for more information.
     /// </summary>
     public static class Program
@@ -47,7 +47,7 @@ namespace NeonDnsMon
         private static TimeSpan             pingTimeout;
         private static TimeSpan             pollInterval;
         private static TimeSpan             warnInterval;
-        private static ClusterDefinition    clusterDefinition;
+        private static HiveDefinition       hiveDefinition;
         private static PolledTimer          warnTimer;
         private static HealthResolver       healthResolver;
 
@@ -87,22 +87,22 @@ namespace NeonDnsMon
 
             try
             {
-                // Establish the cluster connections.
+                // Establish the hive connections.
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.OpenRemoteCluster();
+                    HiveHelper.OpenHiveRemote();
                 }
                 else
                 {
-                    NeonClusterHelper.OpenCluster();
+                    HiveHelper.OpenHive();
                 }
 
                 // Open Consul and then start the main service task.
 
                 log.LogDebug(() => $"Connecting Consul");
 
-                using (consul = NeonClusterHelper.OpenConsul())
+                using (consul = HiveHelper.OpenConsul())
                 {
                     await RunAsync();
                 }
@@ -114,7 +114,7 @@ namespace NeonDnsMon
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 
@@ -178,24 +178,24 @@ namespace NeonDnsMon
 
                     var hostAddresses = new HostAddresses();
 
-                    // Retrieve the current cluster definition from Consul if we don't already
+                    // Retrieve the current hive definition from Consul if we don't already
                     // have it or if it's different from what we've cached.
 
-                    clusterDefinition = await NeonClusterHelper.GetDefinitionAsync(clusterDefinition, terminator.CancellationToken);
+                    hiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, terminator.CancellationToken);
 
-                    log.LogDebug(() => $"Cluster has [{clusterDefinition.NodeDefinitions.Count}] nodes.");
+                    log.LogDebug(() => $"Hive has [{hiveDefinition.NodeDefinitions.Count}] nodes.");
 
-                    // Add the [NAME.cluster] definitions for each cluster node.
+                    // Add the [NAME.hive] definitions for each cluster node.
 
-                    foreach (var node in clusterDefinition.Nodes)
+                    foreach (var node in hiveDefinition.Nodes)
                     {
-                        hostAddresses.Add($"{node.Name}.cluster", IPAddress.Parse(node.PrivateAddress));
+                        hostAddresses.Add($"{node.Name}.hive", IPAddress.Parse(node.PrivateAddress));
                     }
 
                     // Read the DNS entry definitions from Consul and add the appropriate 
                     // host/addresses based on health checks, etc.
 
-                    var targetsResult = (await consul.KV.ListOrDefault<DnsEntry>(NeonClusterConst.ConsulDnsEntriesKey + "/", terminator.CancellationToken));
+                    var targetsResult = (await consul.KV.ListOrDefault<DnsEntry>(HiveConst.ConsulDnsEntriesKey + "/", terminator.CancellationToken));
 
                     List<DnsEntry> targets;
 
@@ -254,7 +254,7 @@ namespace NeonDnsMon
 
                     var hostsTxt   = sbHosts.ToString();
                     var hostsMD5   = NeonHelper.ComputeMD5(hostsTxt);
-                    var currentMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
+                    var currentMD5 = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
 
                     if (currentMD5 == null)
                     {
@@ -270,8 +270,8 @@ namespace NeonDnsMon
 
                         var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp(NeonClusterConst.ConsulDnsHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
-                        new KVTxnOp(NeonClusterConst.ConsulDnsHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
+                        new KVTxnOp(HiveConst.ConsulDnsHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
+                        new KVTxnOp(HiveConst.ConsulDnsHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
                     };
 
                         await consul.KV.Txn(operations, terminator.CancellationToken);
@@ -315,13 +315,13 @@ namespace NeonDnsMon
             // each of those tasks will create a task for each endpoint that
             // requires a health check.
 
-            var nodeGroups = clusterDefinition.GetNodeGroups();
+            var nodeGroups = hiveDefinition.GetNodeGroups();
             var entryTasks = new List<Task>();
             var warnings   = new List<string>();
 
             foreach (var target in targets)
             {
-                var targetWarnings = target.Validate(clusterDefinition, nodeGroups);
+                var targetWarnings = target.Validate(hiveDefinition, nodeGroups);
 
                 if (targetWarnings.Count > 0)
                 {

@@ -7,7 +7,7 @@
 # NOTE: Variables formatted like $<name> will be expanded by [neon-cli]
 #       using a [PreprocessReader].
 #
-# Installs the HashiCorp Vault client on a cluster's worker nodes.
+# Installs the HashiCorp Vault client on a hive's worker nodes.
 
 # Configure Bash strict mode so that the entire script will fail if 
 # any of the commands fail.
@@ -21,7 +21,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-VAULT-CLIENT                       **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the cluster configuration and setup utilities.
+# Load the hive configuration and setup utilities.
 
 . $<load-cluster-config>
 . setup-utility.sh

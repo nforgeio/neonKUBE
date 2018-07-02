@@ -18,9 +18,9 @@ using Newtonsoft.Json;
 
 using ICSharpCode.SharpZipLib.Zip;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli
@@ -32,9 +32,9 @@ namespace NeonCli
     /// <para>
     /// Ansible is not supported on Windows and although it's possible to deploy Ansible
     /// on Mac OSX, we don't want to require it as a dependency to make the experience
-    /// the same on Windows and Mac and also to simplify neonCLUSTER setup.  The <b>neon-cli</b>
+    /// the same on Windows and Mac and also to simplify neonHIVE setup.  The <b>neon-cli</b>
     /// implements the <b>neon ansible...</b> commands to map files from the host operating
-    /// system into a <b>neoncluster/neon-cli</b> container where Ansible is installed so any
+    /// system into a <b>nhive/neon-cli</b> container where Ansible is installed so any
     /// operations can be executed there.
     /// </para>
     /// <para>
@@ -69,7 +69,7 @@ USAGE:
 
     neon ansible config   ZIP-PATH          - returns Ansible configuration files to ZIP archive
     neon ansible password CMD ...           - password management
-    neon ansible module   MODULE ARGS       - implements built-in neonCLUSTER Ansible modules
+    neon ansible module   MODULE ARGS       - implements built-in neonHIVE Ansible modules
 
 ARGUMENTS:
 
@@ -127,10 +127,11 @@ container, mapping the current directory (or the [--cwd=FOLDER] directory)
 into the container as the current directory there.  Any installed Ansible
 roles or vault passwords are also mapped into the container.
 
-The Ansible hosts will be set to the nodes in the current cluster.  These
+The Ansible hosts will be set to the nodes in the current hive.  These
 are organized into these predefined host groups:
 
-    all             - all cluster nodes
+    all             - all hive nodes
+    hive            - all hive nodes
     managers        - manager nodes
     workers         - worker nodes
     swarm           - manager or worker nodes
@@ -143,9 +144,9 @@ are organized into these predefined host groups:
 The special reserved [swarm-manager] hostname can be used to target 
 Docker Swarm related tasks as a healthy Swarm manager node.
 
-Host variables will be generated for each cluster node.  These will include
+Host variables will be generated for each hive node.  These will include
 the variables used by Ansible to establish the SSH connections as well as
-all of the node labels specified in the cluster configuration.  The node
+all of the node labels specified in the hive configuration.  The node
 label names will be prefixed by ""neon_"" and will have all embedded periods
 converted to underscores.
 ";
@@ -170,10 +171,10 @@ Docker  container, mapping the current directory (or the [--cwd=FOLDER]
 directory) into the container as the current directory there.  Any installed
 Ansible roles or vault passwords are also mapped into the container.
 
-The Ansible hosts will be set to the nodes in the current cluster.  These
+The Ansible hosts will be set to the nodes in the current hive.  These
 are organized into four groups:
 
-    all             - all cluster nodes
+    all             - all hive nodes
     managers        - manager nodes
     workers         - worker nodes
     swarm           - manager or worker nodes
@@ -186,9 +187,9 @@ are organized into four groups:
 The special reserved [swarm-manager] hostname can be used to target 
 Docker Swarm related tasks as a healthy Swarm manager node.
 
-Host variables will be generated for each cluster node.  These will include
+Host variables will be generated for each hive node.  These will include
 the variables used by Ansible to establish the SSH connections as well as
-all of the node labels specified in the cluster configuration.  The node
+all of the node labels specified in the hive configuration.  The node
 label names will be prefixed by ""neon_"" and will have all embedded periods
 converted to underscores.
 ";
@@ -246,7 +247,7 @@ on your workstation and must be referenced without specifying a path:
 ";
 
         private const string passwordHelp = @"
-Manages Ansible Vault passwords for neonCLUSTER.
+Manages Ansible Vault passwords for neonHIVE.
 
 USAGE:
 
@@ -282,7 +283,7 @@ are stored in a user-specific folder at:
 
         private const string configHelp = @"
 Writes the Ansible configuration, inventory, and variables files generated for 
-the current cluster to a ZIP archive.
+the current hive to a ZIP archive.
 
 USAGE:
 
@@ -293,9 +294,9 @@ ARGUMENTS:
     ZIP-PATH            - Path to the output ZIP archive
 
 This command is handy when you're developing Ansible playbooks and scripts
-for a cluster.  Use this command to write a ZIP archive including the
+for a hive.  Use this command to write a ZIP archive including the
 inventory and variable files that will be used when Ansible commands
-will be run on the cluster.
+will be run on the hive.
 
 You can open the returned ZIP archive to inspect these file.
 ";
@@ -304,9 +305,9 @@ You can open the returned ZIP archive to inspect these file.
         private const string moduleHelp = @"
 WARNING: FOR INTERNAL USE ONLY
 
-Implements built-in neonCLUSTER Ansible modules that can be invoked via
+Implements built-in neonHIVE Ansible modules that can be invoked via
 [neon ansible exec -- ARGS] or [neon ansible play -- ARGS].  This command
-should never need to be called directly by cluster operators.
+should never need to be called directly by hive operators.
 
 USAGE:
 
@@ -319,18 +320,18 @@ ARGUMENTS:
 
 MODULES:
 
-    neon_certificate        - Manages cluster TLS certificates
+    neon_certificate        - Manages hive TLS certificates
     neon_couchbase_import   - Imports Couchbase data
     neon_couchbase_index    - Manages Couchbase indexes
     neon_couchbase_query    - Executes a Couchbase query
-    neon_dashboard          - Manages cluster dashboards
+    neon_dashboard          - Manages hive dashboards
     neon_docker_config      - Manages Docker configs
     neon_docker_login       - Manages Docker registry logins
     neon_docker_secret      - Manages Docker secrets
     neon_docker_service     - Manages Docker services
-    neon_dns_hosts          - Manages cluster DNS host overrides
-    neon-globals            - Manages cluster global settings
-    neon_load_balancer      - Manager cluster load balancers  
+    neon_dns_hosts          - Manages hive DNS host overrides
+    neon-globals            - Manages hive global settings
+    neon_load_balancer      - Manager hive load balancers  
 ";
 
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)
@@ -373,7 +374,7 @@ MODULES:
                 Program.Exit(0);
             }
 
-            var login            = Program.ClusterLogin;
+            var login            = Program.HiveLogin;
             var commandSplit     = commandLine.Split(SplitItem);
             var leftCommandLine  = commandSplit.Left;
             var rightCommandLine = commandSplit.Right;
@@ -397,7 +398,7 @@ MODULES:
                     Program.Exit(0);
                 }
 
-                string  passwordsFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
+                string  passwordsFolder = HiveHelper.GetAnsiblePasswordsFolder();
                 string  passwordCommand = passwordCommandLine.Arguments.ElementAtOrDefault(0);
                 string  passwordName    = passwordCommandLine.Arguments.ElementAtOrDefault(1);
                 string  passwordValue   = passwordCommandLine.Arguments.ElementAtOrDefault(2);
@@ -659,7 +660,7 @@ MODULES:
 
             // Implement the rest of the commands.
 
-            if (!NeonClusterHelper.InToolContainer)
+            if (!HiveHelper.InToolContainer)
             {
                 Console.Error.WriteLine($"*** ERROR: [neon ansible {command}] does not support [--noshim] mode.");
                 Program.Exit(1);
@@ -837,7 +838,7 @@ MODULES:
 
                     if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
                     {
-                        Console.Error.WriteLine($"*** ERROR: The [ansible exec] command requires that the cluster nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
+                        Console.Error.WriteLine($"*** ERROR: The [ansible exec] command requires that the hive nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
                         Program.Exit(1);
                     }
 
@@ -874,7 +875,7 @@ MODULES:
 
                     if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
                     {
-                        Console.Error.WriteLine($"*** ERROR: The [ansible play] command requires that the cluster nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
+                        Console.Error.WriteLine($"*** ERROR: The [ansible play] command requires that the hive nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
                         Program.Exit(1);
                     }
 
@@ -978,8 +979,8 @@ MODULES:
 
             // ...and also map the external Ansible roles and vault folders into the container.
 
-            shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
-            shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsiblePasswordsFolder(), mappedPasswordsPath, isReadOnly: false));
+            shim.AddMappedFolder(new DockerShimFolder(HiveHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
+            shim.AddMappedFolder(new DockerShimFolder(HiveHelper.GetAnsiblePasswordsFolder(), mappedPasswordsPath, isReadOnly: false));
 
             // ...finally, we need to verify that any password files specified by [--vault-password-file PATH] 
             // actually exist in the [neon-cli] ansible passwords folder.
@@ -989,7 +990,7 @@ MODULES:
             //      --vault-password-file=NAME
             //      --vault-password-file NAME
 
-            var localPasswordFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
+            var localPasswordFolder = HiveHelper.GetAnsiblePasswordsFolder();
 
             for (int index = 0; index < shim.CommandLine.Items.Length; index++)
             {
@@ -1019,7 +1020,7 @@ MODULES:
             }
 
             // Note that we don't shim the [password] command and that also doesn't need
-            // a cluster connection.
+            // a hive connection.
 
             if (shim.CommandLine.Arguments.ElementAtOrDefault(1) == "password")
             {
@@ -1054,7 +1055,7 @@ MODULES:
                 }
             }
 
-            // Determine which commands don't require cluster connections.
+            // Determine which commands don't require hive connections.
 
             var ensureConnection = true;
 
@@ -1089,7 +1090,7 @@ MODULES:
                 Program.Exit(1);
             }
 
-            if (!File.Exists(Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName)))
+            if (!File.Exists(Path.Combine(HiveHelper.GetAnsiblePasswordsFolder(), passwordName)))
             {
                 Console.Error.WriteLine($"*** ERROR: Password [{passwordName}] does not exist.");
                 Program.Exit(1);
@@ -1598,11 +1599,11 @@ retries = 4
         /// Generates Ansible files including host inventory related files, modfying <b>/etc/hosts</b>
         /// and writing the private TLS client key.
         /// </summary>
-        /// <param name="login">The cluster login.</param>
-        private void GenerateAnsibleFiles(ClusterLogin login)
+        /// <param name="login">The hive login.</param>
+        private void GenerateAnsibleFiles(HiveLogin login)
         {
-            var clusterLogin = Program.ConnectCluster();
-            var cluster      = new ClusterProxy(clusterLogin);
+            var hiveLogin = Program.ConnectHive();
+            var hive      = new HiveProxy(hiveLogin);
 
             // IMPLEMENTATION NOTE:
             //
@@ -1617,19 +1618,19 @@ retries = 4
             // targeting the unhealthy first manager will fail with a timeout, which
             // is what the operator should expect.
 
-            var swarmManager = cluster.FirstManager;
+            var swarmManager = hive.FirstManager;
 
             try
             {
-                swarmManager = cluster.GetHealthyManager();
+                swarmManager = hive.GetHealthyManager();
             }
-            catch (ClusterException)
+            catch (HiveException)
             {
                 // We didn't find a healthy manager so we'll just fallback
                 // to the first manager as initialized above.
             }
 
-            // Write the cluster's SSH client private key to [/dev/shm/ssh-client.key],
+            // Write the hive's SSH client private key to [/dev/shm/ssh-client.key],
             // which is on the container RAM drive for security.  Note that the key file
             // must be restricted to the ROOT account to be accepted by Ansible.
 
@@ -1642,7 +1643,7 @@ retries = 4
 
             Environment.CurrentDirectory = mappedCurrentDirectory;
 
-            // Generate the Ansible inventory and variable files.  We're going to use the cluster node
+            // Generate the Ansible inventory and variable files.  We're going to use the hive node
             // name for each host and then generate some standard Ansible variables and then generate a
             // variable for each host label.  These label variables will be prefixed by "label_" with the
             // label name appended and with any embedded periods converted to underscores.
@@ -1668,7 +1669,7 @@ retries = 4
             {
                 // Special-case the implicit Docker Swarm manager node (not in a group).
 
-                writer.WriteLine(ClusterDefinition.VirtualSwarmManagerName);
+                writer.WriteLine(HiveDefinition.VirtualSwarmManagerName);
 
                 // Write the groups.
 
@@ -1683,12 +1684,12 @@ retries = 4
                     }
                 }
 
-                // Write the implicit [cluster] group with all of the cluster nodes.
+                // Write the implicit [hive] group with all of the hive nodes.
 
                 writer.WriteLine();
-                writer.WriteLine($"[cluster]");
+                writer.WriteLine($"[hive]");
 
-                foreach (var node in cluster.Definition.SortedNodes)
+                foreach (var node in hive.Definition.SortedNodes)
                 {
                     writer.WriteLine(node.Name);
                 }
@@ -1700,8 +1701,8 @@ retries = 4
             var swarmManagerNode    = NeonHelper.JsonClone(swarmManager.Metadata);
             var swarmManagerAddress = swarmManagerNode.PrivateAddress;
 
-            swarmManagerNode.Name           = ClusterDefinition.VirtualSwarmManagerName;
-            swarmManagerNode.PrivateAddress = ClusterDefinition.VirtualSwarmManagerName;  // This references a record we'll add to [/etc/hosts] below.
+            swarmManagerNode.Name           = HiveDefinition.VirtualSwarmManagerName;
+            swarmManagerNode.PrivateAddress = HiveDefinition.VirtualSwarmManagerName;  // This references a record we'll add to [/etc/hosts] below.
 
             swarmManagerNodes.Add(swarmManagerNode);
 
@@ -1789,7 +1790,7 @@ retries = 4
                 }
             }
 
-            // Generate the [/etc/ssh/ssh_known_hosts] file with the public SSH key of the cluster
+            // Generate the [/etc/ssh/ssh_known_hosts] file with the public SSH key of the hive
             // nodes so Ansible will be able to verify host identity when connecting via SSH.  
             // Note that all nodes share the same key.  This documented here:
             //
@@ -1816,7 +1817,7 @@ retries = 4
 $@"
 # Identifies a (hopefully) healthy swarm manager node.
 
-{swarmManagerAddress} {ClusterDefinition.VirtualSwarmManagerName}
+{swarmManagerAddress} {HiveDefinition.VirtualSwarmManagerName}
 "));
         }
     }

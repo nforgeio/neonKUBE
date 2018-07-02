@@ -17,8 +17,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -81,7 +81,7 @@ This can be easily accomplished with a custom script.
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            if (NeonClusterHelper.InToolContainer)
+            if (HiveHelper.InToolContainer)
             {
                 Console.Error.WriteLine("*** ERROR: [file] commands cannot be run inside a Docker container.");
                 Program.Exit(1);
@@ -189,7 +189,7 @@ This can be easily accomplished with a custom script.
 
             Covenant.Assert(!string.IsNullOrEmpty(passwordName));
 
-            if (!File.Exists(Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName)))
+            if (!File.Exists(Path.Combine(HiveHelper.GetAnsiblePasswordsFolder(), passwordName)))
             {
                 Console.Error.WriteLine($"*** ERROR: Password file for [{passwordName}] does not exist.");
                 Program.Exit(1);

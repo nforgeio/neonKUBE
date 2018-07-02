@@ -3,13 +3,13 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Creates the base [neoncluster/td-agent] image used by neonCLUSTER.
+# Creates the base [nhive/td-agent] image used by neonHIVE.
 #
 # ARGUMENTS:
 #
 #   VERSION         - The TD-AGENT version (e.g. "3")
 
-FROM        neoncluster/ubuntu-16.04
+FROM        nhive/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

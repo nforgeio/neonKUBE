@@ -10,24 +10,24 @@ PATH=${PATH}:/
 
 # Load the Docker host node environment variables if present.
 
-if [ -f /etc/neoncluster/env-host ] ; then
-    . /etc/neoncluster/env-host
+if [ -f /etc/neon/env-host ] ; then
+    . /etc/neon/env-host
 fi
 
-# Load the [/etc/neoncluster/env-container] environment variables if present.
+# Load the [/etc/neon/env-container] environment variables if present.
 
-if [ -f /etc/neoncluster/env-container ] ; then
-    . /etc/neoncluster/env-container
+if [ -f /etc/neon/env-container ] ; then
+    . /etc/neon/env-container
 fi
 
-# Load the neonCLUSTER constants.
+# Load the neonHIVE constants.
 
-. /neoncluster.sh
+. /neonhive.sh
 
 # Initialize the configuration defaults.
 
 if [ "${ELASTICSEARCH_URL}" == "" ] ; then
-    export ELASTICSEARCH_URL=http://${NeonHosts_LogEsData}:${NeonHostPorts_ProxyPrivateHttpLogEsData}
+    export ELASTICSEARCH_URL=http://${HiveHostnames_LogEsData}:${HiveHostPorts_ProxyPrivateHttpLogEsData}
 fi
 
 if [ "${PERIOD}" == "" ] ; then

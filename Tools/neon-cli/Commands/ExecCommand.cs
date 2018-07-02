@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.IO;
 
 // $todo(jeff.lill):
@@ -33,7 +33,7 @@ namespace NeonCli
     public class ExecCommand : CommandBase
     {
         private const string usage = @"
-Executes a Bash command or script on one or more cluster nodes.
+Executes a Bash command or script on one or more hive nodes.
 
 USAGE:
 
@@ -47,9 +47,9 @@ OPTIONS:
 
     --node          - Zero are more target node names (separated by commas)
                       or a plus (+) symbol to target to all nodes.  Executes 
-                      on the first cluster manager if no node is specified.
+                      on the first hive manager if no node is specified.
 
-    --group=GROUP   - Runs the command on the nodes in a cluster node
+    --group=GROUP   - Runs the command on the nodes in a hive node
                       group like: managers, workers, pets,...
 
     --text=PATH     - Text file to be uploaded to the node(s) before
@@ -90,15 +90,15 @@ NOTES:
       command.
 
     * Use [--group=NAME] to run the command on the nodes in the named
-      node group.  neonCLUSTER builds-in the following node groups
-      and it's possible to define custom groups in your cluster definition:
+      node group.  neonHIVE builds-in the following node groups
+      and it's possible to define custom groups in your hive definition:
 
-            cluster, swarm, managers, workers, pets, 
+            hive, swarm, managers, workers, pets, 
             ceph, ceph-mon, ceph-mds, ceph-osd
 
 EXAMPLES:
 
-List the Docker nodes on a cluster manager:
+List the Docker nodes on a hive manager:
 
     neon exec docker node ls
 
@@ -158,9 +158,9 @@ does this on the first manager node:
                 Program.Exit(0);
             }
 
-            Program.ConnectCluster();
+            Program.ConnectHive();
 
-            var cluster = NeonClusterHelper.Cluster;
+            var hive = HiveHelper.Hive;
 
             // Process the nodes.
 
@@ -171,17 +171,17 @@ does this on the first manager node:
             {
                 if (nodeOption == "+")
                 {
-                    foreach (var manager in cluster.Definition.SortedManagers)
+                    foreach (var manager in hive.Definition.SortedManagers)
                     {
                         nodeDefinitions.Add(manager);
                     }
 
-                    foreach (var worker in cluster.Definition.SortedWorkers)
+                    foreach (var worker in hive.Definition.SortedWorkers)
                     {
                         nodeDefinitions.Add(worker);
                     }
 
-                    foreach (var pet in cluster.Definition.SortedPets)
+                    foreach (var pet in hive.Definition.SortedPets)
                     {
                         nodeDefinitions.Add(pet);
                     }
@@ -194,9 +194,9 @@ does this on the first manager node:
 
                         NodeDefinition node;
 
-                        if (!cluster.Definition.NodeDefinitions.TryGetValue(trimmedName, out node))
+                        if (!hive.Definition.NodeDefinitions.TryGetValue(trimmedName, out node))
                         {
-                            Console.Error.WriteLine($"*** ERROR: Node [{trimmedName}] is not present in the cluster.");
+                            Console.Error.WriteLine($"*** ERROR: Node [{trimmedName}] is not present in the hive.");
                             Program.Exit(1);
                         }
 
@@ -209,11 +209,11 @@ does this on the first manager node:
 
             if (!string.IsNullOrEmpty(groupName))
             {
-                var nodeGroups = cluster.Definition.GetNodeGroups();
+                var nodeGroups = hive.Definition.GetNodeGroups();
 
                 if (!nodeGroups.TryGetValue(groupName, out var group))
                 {
-                    Console.Error.WriteLine($"*** ERROR: Node group [{groupName}] is not defined for the cluster.");
+                    Console.Error.WriteLine($"*** ERROR: Node group [{groupName}] is not defined for the hive.");
                     Program.Exit(1);
                 }
 
@@ -233,7 +233,7 @@ does this on the first manager node:
             {
                 // Default to a healthy manager.
 
-                nodeDefinitions.Add(cluster.GetHealthyManager().Metadata);
+                nodeDefinitions.Add(hive.GetHealthyManager().Metadata);
             }
 
             // Create the command bundle by appending the right command.
@@ -290,7 +290,7 @@ does this on the first manager node:
             {
                 // Run the command on a single node and return the output and exit code.
 
-                var node     = cluster.GetNode(nodeDefinitions.First().Name);
+                var node     = hive.GetNode(nodeDefinitions.First().Name);
                 var response = node.SudoCommand(bundle);
 
                 Console.WriteLine(response.OutputText);
@@ -302,7 +302,7 @@ does this on the first manager node:
                 // Run the command on multiple nodes and return an overall exit code.
 
                 var operation = 
-                    new SetupController<NodeDefinition>(Program.SafeCommandLine, cluster.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
+                    new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
                     {
                         ShowStatus  = !Program.Quiet,
                         MaxParallel = Program.MaxParallel

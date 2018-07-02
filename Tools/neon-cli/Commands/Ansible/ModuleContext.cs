@@ -23,10 +23,10 @@ using Newtonsoft.Json.Linq;
 
 using ICSharpCode.SharpZipLib.Zip;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli.Ansible
@@ -64,10 +64,10 @@ namespace NeonCli.Ansible
         public bool CheckMode { get; set; }
 
         /// <summary>
-        /// The cluster login.
+        /// The hive login.
         /// </summary>
         [JsonIgnore]
-        public ClusterLogin Login { get; set; }
+        public HiveLogin Login { get; set; }
 
         /// <summary>
         /// Initializes the Ansible module arguments.

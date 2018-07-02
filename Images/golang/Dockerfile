@@ -9,7 +9,7 @@
 #
 #   VERSION         - The GOLANG version (e.g. "1.9.4")
 
-FROM        neoncluster/ubuntu-16.04
+FROM        nhive/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

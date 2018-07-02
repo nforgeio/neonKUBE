@@ -25,11 +25,11 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 using NeonCli.Ansible.Couchbase;
@@ -63,8 +63,8 @@ namespace NeonCli.Ansible
         //
         // servers      yes                                 array specifying one or more target
         //                                                  Couchbase servers.  Each element can 
-        //                                                  be an IP address, a FQDN, cluster
-        //                                                  node name or cluster node group name
+        //                                                  be an IP address, a FQDN, hive
+        //                                                  node name or hive node group name
         //
         // port         no          8091                    Couchbase server port
         //                          18902 (for SSL)
@@ -238,8 +238,8 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster       = NeonClusterHelper.Cluster;
-            var nodeGroups    = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
+            var hive          = HiveHelper.Hive;
+            var nodeGroups    = hive.Definition.GetNodeGroups(excludeAllGroup: true);
 
             //-----------------------------------------------------------------
             // Parse the module arguments.

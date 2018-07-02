@@ -18,14 +18,14 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.IO;
 
 namespace NeonCli
 {
     /// <summary>
-    /// Implements cluster VPN commands.
+    /// Implements hive VPN commands.
     /// </summary>
     public class VpnCommand : CommandBase
     {
@@ -47,18 +47,18 @@ namespace NeonCli
         // Implementation
 
         private const string usage = @"
-Manages a cluster's VPN.
+Manages a hive's VPN.
 
 USAGE:
 
-    neon vpn ca CLUSTER-DEF CA-FOLDER
-    ---------------------------------
+    neon vpn ca HIVE-DEF CA-FOLDER
+    ------------------------------
     Generates the certificate authority and server certificate 
     files as well as the root client certificate to be used 
-    for securing a neonCLUSTER VPN.  This command is generally
-    executed internally during cluster setup.
+    for securing a neonHIVE VPN.  This command is generally
+    executed internally during hive setup.
 
-    CLUSTER-DEF - Path to the cluster definition file.
+    HIVE-DEF    - Path to the hive definition file.
 
     CA-FOLDER   - Folder path where the VPN certificates and 
                   authority will be created or accessed.
@@ -70,7 +70,7 @@ USAGE:
     
     neon vpn user create [--root] [--days=365] USER
     -----------------------------------------------
-    Creates a new login for the currently logged in cluster.
+    Creates a new login for the currently logged in hive.
     The new login file will be written to the current
     directory.
 
@@ -86,7 +86,7 @@ USAGE:
     neon vpn user list 
     ------------------
     Lists the currently valid users for the currently
-    logged in cluster.
+    logged in hive.
 
     neon vpn user revoke [--restart-vpn] THUMBPRINT
     -----------------------------------------------
@@ -96,18 +96,18 @@ USAGE:
 
     THUMBPRINT      - Thumbprint (serial number) for the certificate.
 
-    --restart-vpn   - Restarts the cluster's OpenVPN servers to ensure
+    --restart-vpn   - Restarts the hive's OpenVPN servers to ensure
                       that any existing connections for the user are 
                       immediately closed.  Otherwise by default, it can
                       take up to an hour for revoked users to be dropped.
 ";
 
-        private const string MustHaveRootPrivileges = "*** ERROR: Root cluster privileges are required.";
-        private const string VpnNotEnabled          = "*** ERROR: VPN is not enabled for this cluster.";
+        private const string MustHaveRootPrivileges = "*** ERROR: Root hive privileges are required.";
+        private const string VpnNotEnabled          = "*** ERROR: VPN is not enabled for this hive.";
 
         private string          caFolder;
-        private ClusterLogin    clusterLogin;
-        private ClusterProxy    cluster;
+        private HiveLogin       hiveLogin;
+        private HiveProxy       hive;
 
         /// <summary>
         /// Default constructor.
@@ -116,7 +116,7 @@ USAGE:
         {
             // These commands are designed to only run in a Docker Ubuntu container.
             // This means that the [/dev/shm] tmpfs file system is available with
-            // up to 64MB of storage.  We're going to manage the cluster CA files
+            // up to 64MB of storage.  We're going to manage the hive CA files
             // there for better security since this storage is volatile.
 
             caFolder = "/dev/shm/ca";
@@ -157,7 +157,7 @@ USAGE:
             // This command cannot run in [--noshim] mode because OpenSSL
             // has issues with Windows style file paths.
 
-            if (!NeonClusterHelper.InToolContainer)
+            if (!HiveHelper.InToolContainer)
             {
                 Console.Error.WriteLine("*** ERROR: This VPN command cannot be run in [--noshim] mode.");
                 Program.Exit(1);
@@ -255,9 +255,9 @@ USAGE:
         {
             var commandLine = shim.CommandLine;
 
-            // Shim command: neon vpn ca CLUSTER-DEF CA-FOLDER
+            // Shim command: neon vpn ca HIVE-DEF CA-FOLDER
             //
-            // We need to copy the [CLUSTER-DEF] and the contents of the 
+            // We need to copy the [HIVE-DEF] and the contents of the 
             // [CA-FOLDER] into a shim subfolder, update the command line 
             // and execute it, and then copy the file contents back out 
             // to the original folder when the command completes.
@@ -296,7 +296,7 @@ USAGE:
 
             // Shim command: neon vpn cert user create USER
             //
-            // We need to copy the new cluster login file to the current directory
+            // We need to copy the new hive login file to the current directory
             // after the command runs in Docker.  Note that the shimmed command
             // writes the file name for the new login to [new-login.txt].
 
@@ -336,11 +336,11 @@ USAGE:
         /// Returns the OpenSSL client certificate configuration for a named user.
         /// </summary>
         /// <param></param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="user">The user name.</param>
-        /// <param name="rootPrivileges">Indicates whether the user has root cluster priviledges.</param>
+        /// <param name="rootPrivileges">Indicates whether the user has root hive priviledges.</param>
         /// <returns>The configuration file text.</returns>
-        private string GetClientConfig(ClusterDefinition clusterDefinition, string user, bool rootPrivileges)
+        private string GetClientConfig(HiveDefinition hiveDefinition, string user, bool rootPrivileges)
         {
             // Make sure the user name is reasonable and doesn't conflict with
             // any of the other ca/cert file names.
@@ -396,10 +396,10 @@ req_extensions          = req_cert_extensions
 # attributes            = req_attributes
 
 [ client1_distinguished_name ]
-countryName             = {clusterDefinition.Vpn.CertCountryCode}
+countryName             = {hiveDefinition.Vpn.CertCountryCode}
 #stateOrProvinceName    = Utrecht
 #localityName           = HomeTown
-organizationName        = {clusterDefinition.Vpn.CertOrganization}
+organizationName        = {hiveDefinition.Vpn.CertOrganization}
 #organizationalUnitName = My Department Name
 commonName              = {user}{rootSuffix}
 
@@ -414,13 +414,13 @@ subjectAltName          = email:nobody@nowhere.com
         /// Initializes the VPN certificate authority, and creates the OpenVPN server and 
         /// root client certificates.
         /// </summary>
-        /// <param name="defPath">Path to the cluster definition file.</param>
+        /// <param name="defPath">Path to the hive definition file.</param>
         /// <param name="targetFolder">The output folder.</param>
         private void InitializeCA(string defPath, string targetFolder)
         {
             DirectNotAllowed();
 
-            var clusterDefinition = ClusterDefinition.FromFile(defPath, strict: true);
+            var hiveDefinition = HiveDefinition.FromFile(defPath, strict: true);
 
             // This implements the steps described here:
             // 
@@ -449,10 +449,10 @@ subjectAltName          = email:nobody@nowhere.com
             var serverKeyPath = Path.Combine(caFolder, "server.key");
             var serverReqPath = Path.Combine(caFolder, "server.req");
             var serverCrtPath = Path.Combine(caFolder, "server.crt");
-            var rootCnfPath   = Path.Combine(caFolder, $"{NeonClusterConst.RootUser}.cnf");
-            var rootReqPath   = Path.Combine(caFolder, $"{NeonClusterConst.RootUser}.req");
-            var rootKeyPath   = Path.Combine(caFolder, $"{NeonClusterConst.RootUser}.key");
-            var rootCrtPath   = Path.Combine(caFolder, $"{NeonClusterConst.RootUser}.crt");
+            var rootCnfPath   = Path.Combine(caFolder, $"{HiveConst.RootUser}.cnf");
+            var rootReqPath   = Path.Combine(caFolder, $"{HiveConst.RootUser}.req");
+            var rootKeyPath   = Path.Combine(caFolder, $"{HiveConst.RootUser}.key");
+            var rootCrtPath   = Path.Combine(caFolder, $"{HiveConst.RootUser}.crt");
             var taKeyPath     = Path.Combine(caFolder, "ta.key");
             var crlnumberPath = Path.Combine(caFolder, "crlnumber");
             var crlPath       = Path.Combine(caFolder, "crl.pem");
@@ -575,10 +575,10 @@ req_extensions          = req_cert_extensions
 
 [ ca_distinguished_name ]
 # root certificate name
-countryName             = {clusterDefinition.Vpn.CertCountryCode}
+countryName             = {hiveDefinition.Vpn.CertCountryCode}
 #stateOrProvinceName    = Utrecht
 #localityName           = Hometown
-organizationName        = {clusterDefinition.Vpn.CertOrganization}
+organizationName        = {hiveDefinition.Vpn.CertOrganization}
 #organizationalUnitName = My Department Name
 commonName              = ca
 #emailAddress           = nobody@nowhere.org   # email in DN is deprecated, use subjectAltName
@@ -638,10 +638,10 @@ req_extensions          = req_cert_extensions
 #attributes             = req_attributes
 
 [ server_distinguished_name ]
-countryName             = {clusterDefinition.Vpn.CertCountryCode}
+countryName             = {hiveDefinition.Vpn.CertCountryCode}
 #stateOrProvinceName    = 
 #localityName           = 
-organizationName        = {clusterDefinition.Vpn.CertOrganization}
+organizationName        = {hiveDefinition.Vpn.CertOrganization}
 #organizationalUnitName = My Department Name
 commonName              = server
 #emailAddress           = 
@@ -671,7 +671,7 @@ nsCertType              = server
 
             try
             {
-                File.WriteAllText(rootCnfPath, GetClientConfig(clusterDefinition, NeonClusterConst.RootUser, rootPrivileges: true));
+                File.WriteAllText(rootCnfPath, GetClientConfig(hiveDefinition, HiveConst.RootUser, rootPrivileges: true));
 
                 Program.Execute("openssl", "req", "-new",
                     "-config", rootCnfPath,
@@ -720,36 +720,36 @@ nsCertType              = server
         }
 
         /// <summary>
-        /// Initializes the cluster login and cluster proxy and verifies that the
-        /// current user has root privileges and the cluster enables a VPN.
+        /// Initializes the hive login and hive proxy and verifies that the
+        /// current user has root privileges and the hive enables a VPN.
         /// </summary>
         private void RootLogin()
         {
-            clusterLogin = Program.ConnectCluster();
+            hiveLogin = Program.ConnectHive();
 
-            if (!clusterLogin.Definition.Vpn.Enabled)
+            if (!hiveLogin.Definition.Vpn.Enabled)
             {
                 Console.Error.WriteLine(VpnNotEnabled);
                 Program.Exit(1);
             }
 
-            if (string.IsNullOrEmpty(clusterLogin.VpnCredentials.CaZipKey))
+            if (string.IsNullOrEmpty(hiveLogin.VpnCredentials.CaZipKey))
             {
                 Console.Error.WriteLine(MustHaveRootPrivileges);
                 Program.Exit(1);
             }
 
-            cluster = NeonClusterHelper.OpenCluster(clusterLogin);
+            hive = HiveHelper.OpenHive(hiveLogin);
         }
 
         /// <summary>
-        /// Retrieves the VPN's certificate authority files from the cluster Vault.
+        /// Retrieves the VPN's certificate authority files from the hive Vault.
         /// </summary>
         /// <returns>The <see cref="VpnCaFiles"/>.</returns>
         private VpnCaFiles GetVpnCaFiles()
         {
-            var manager  = cluster.GetHealthyManager();
-            var response = manager.SudoCommand($"export VAULT_TOKEN={clusterLogin.VaultCredentials.RootToken} && vault read -format=json /neon-secret/vpn/ca.zip.encrypted", RunOptions.Redact);
+            var manager  = hive.GetHealthyManager();
+            var response = manager.SudoCommand($"export VAULT_TOKEN={hiveLogin.VaultCredentials.RootToken} && vault read -format=json /neon-secret/vpn/ca.zip.encrypted", RunOptions.Redact);
 
             if (response.ExitCode != 0)
             {
@@ -761,7 +761,7 @@ nsCertType              = server
             var dObject  = (JObject)rObject.GetValue("data");
             var zipBytes = Convert.FromBase64String((string)dObject.GetValue("value"));
 
-            return VpnCaFiles.LoadZip(zipBytes, clusterLogin.VpnCredentials.CaZipKey);
+            return VpnCaFiles.LoadZip(zipBytes, hiveLogin.VpnCredentials.CaZipKey);
         }
 
         /// <summary>
@@ -862,7 +862,7 @@ nsCertType              = server
         }
 
         /// <summary>
-        /// Creates a new cluster login.
+        /// Creates a new hive login.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
         private void UserCreate(CommandLine commandLine)
@@ -900,7 +900,7 @@ nsCertType              = server
                 case "dhparam":
                 case "server":
 
-                    Console.WriteLine($"***ERROR: USER [{username}] is reserved by neonCLUSTER.  Please choose another name.");
+                    Console.WriteLine($"***ERROR: USER [{username}] is reserved by neonHIVE.  Please choose another name.");
                     Program.Exit(1);
                     break;
             }
@@ -925,8 +925,8 @@ nsCertType              = server
                 // Retrieve the VPN certificate authority ZIP archive from Vault and extract
                 // its contents to a temporary folder.
 
-                var caZipBytes = cluster.Vault.Client.ReadBytesAsync("neon-secret/vpn/ca.zip.encrypted").Result;
-                var vpnCaFiles = VpnCaFiles.LoadZip(caZipBytes, clusterLogin.VpnCredentials.CaZipKey);
+                var caZipBytes = hive.Vault.Client.ReadBytesAsync("neon-secret/vpn/ca.zip.encrypted").Result;
+                var vpnCaFiles = VpnCaFiles.LoadZip(caZipBytes, hiveLogin.VpnCredentials.CaZipKey);
 
                 vpnCaFiles.Extract(caFolder);
 
@@ -958,7 +958,7 @@ nsCertType              = server
 
                 // Build the new user client login.
 
-                File.WriteAllText(userCnfPath, GetClientConfig(cluster.Definition, username, rootPrivileges));
+                File.WriteAllText(userCnfPath, GetClientConfig(hive.Definition, username, rootPrivileges));
 
                 Program.Execute("openssl", "req", "-new",
                     "-config", userCnfPath,
@@ -971,10 +971,10 @@ nsCertType              = server
                     "-out", userCrtPath,
                     "-in", userReqPath);
 
-                // Generate the new cluster login file and also write its name 
+                // Generate the new hive login file and also write its name 
                 // to [new-login.txt] so the outer shim will know what it is.
 
-                var newLogin = clusterLogin.Clone();
+                var newLogin = hiveLogin.Clone();
 
                 newLogin.Username                = username;
                 newLogin.VpnCredentials.UserCert = VpnCaFiles.NormalizePem(File.ReadAllText(userCrtPath));
@@ -985,20 +985,20 @@ nsCertType              = server
                     newLogin.ClearRootSecrets();
                 }
 
-                File.WriteAllText($"{username}@{newLogin.ClusterName}.login.json", NeonHelper.JsonSerialize(newLogin, Formatting.Indented));
-                File.WriteAllText("new-login.txt", $"{username}@{newLogin.ClusterName}.login.json");
+                File.WriteAllText($"{username}@{newLogin.HiveName}.login.json", NeonHelper.JsonSerialize(newLogin, Formatting.Indented));
+                File.WriteAllText("new-login.txt", $"{username}@{newLogin.HiveName}.login.json");
 
-                // ZIP the CA files and store them to the cluster Vault.
+                // ZIP the CA files and store them to the hive Vault.
 
                 vpnCaFiles = VpnCaFiles.LoadFolder(caFolder);
 
                 vpnCaFiles.Clean();
-                cluster.Vault.Client.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes()).Wait();
+                hive.Vault.Client.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes()).Wait();
             }
             finally
             {
                 Directory.Delete(caFolder, recursive: true);
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
             }
         }
 
@@ -1051,7 +1051,7 @@ nsCertType              = server
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
             }
         }
 
@@ -1135,11 +1135,11 @@ nsCertType              = server
                     "-gencrl",
                     "-out", crlPath);
 
-                // Save the CA files back the the cluster Vault.
+                // Save the CA files back the the hive Vault.
 
                 vpnCaFiles = VpnCaFiles.LoadFolder(caFolder);
 
-                cluster.Vault.Client.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes()).Wait();
+                hive.Vault.Client.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes()).Wait();
 
                 // Write the updated CRL to each manager.
 
@@ -1147,7 +1147,7 @@ nsCertType              = server
 
                 Console.WriteLine();
 
-                foreach (var manager in cluster.Managers)
+                foreach (var manager in hive.Managers)
                 {
                     Console.WriteLine($"*** {manager.Name}: Revoking");
                     manager.UploadText("/etc/openvpn/crl.pem", crlText);
@@ -1160,7 +1160,7 @@ nsCertType              = server
                 {
                     Console.WriteLine();
 
-                    foreach (var manager in cluster.Managers)
+                    foreach (var manager in hive.Managers)
                     {
                         Console.WriteLine($"*** {manager.Name}: Restarting OpenVPN");
                         manager.SudoCommand("systemctl restart openvpn");
@@ -1170,7 +1170,7 @@ nsCertType              = server
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
             }
         }
 
@@ -1217,7 +1217,7 @@ nsCertType              = server
 
                 Console.WriteLine();
 
-                foreach (var manager in cluster.Managers)
+                foreach (var manager in hive.Managers)
                 {
                     Console.WriteLine($"*** {manager.Name}: Updating");
                     manager.UploadText("/etc/openvpn/crl.pem", crlText);
@@ -1226,7 +1226,7 @@ nsCertType              = server
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
             }
         }
     }

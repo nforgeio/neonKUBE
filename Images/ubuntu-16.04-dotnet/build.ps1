@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds a neonCLUSTER Ubuntu image with the specified .NET Core packages.
+# Builds a neonHIVE Ubuntu image with the specified .NET Core packages.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 

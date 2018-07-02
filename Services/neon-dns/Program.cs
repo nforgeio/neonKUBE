@@ -17,11 +17,11 @@ using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Hive;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
@@ -30,7 +30,7 @@ namespace NeonDns
 {
     /// <summary>
     /// Implements the <b>neon-dns</b> service.  See 
-    /// <a href="https://hub.docker.com/r/neoncluster/neon-dns/">neoncluster/neon-dns</a>
+    /// <a href="https://hub.docker.com/r/nhive/neon-dns/">nhive/neon-dns</a>
     /// for more information.
     /// </summary>
     public static class Program
@@ -68,36 +68,36 @@ namespace NeonDns
 
             try
             {
-                // Establish the cluster connections.
+                // Establish the hive connections.
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.OpenRemoteCluster();
+                    HiveHelper.OpenHiveRemote();
 
                     // For testing and development, we're going to write a test
                     // hosts file to [%NF_TEMP\neon-dns-hosts.txt] so we can see
-                    // what's happening outside of a cluster.
+                    // what's happening outside of a hive.
 
                     powerDnsHostsPath = Environment.ExpandEnvironmentVariables("%NF_TEMP%\\neon-dns-hosts.txt");
 
                     File.WriteAllText(powerDnsHostsPath,
-@"# PowerDNS Recursor authoritatively answers for [*.cluster] hostnames.
+@"# PowerDNS Recursor authoritatively answers for [*.hive] hostnames.
 # on the local node using these mappings.
 
-10.0.0.30       neon-consul.cluster
+10.0.0.30       neon-consul.hive
 
-# Internal cluster Vault mappings:
+# Internal hive Vault mappings:
 
-10.0.0.30       neon-vault.cluster
-10.0.0.30       manager-0.neon-vault.cluster
+10.0.0.30       neon-vault.hive
+10.0.0.30       manager-0.neon-vault.hive
 
-# Internal cluster registry cache related mappings:
+# Internal hive registry cache related mappings:
 
-10.0.0.30       manager-0.neon-registry-cache.cluster
+10.0.0.30       manager-0.neon-registry-cache.hive
 
-# Internal cluster log pipeline related mappings:
+# Internal hive log pipeline related mappings:
 
-10.0.0.30       neon-log-esdata.cluster
+10.0.0.30       neon-log-esdata.hive
 ");
                     // We're also going to create a temporary folder for the reload signal.
 
@@ -107,7 +107,7 @@ namespace NeonDns
                 }
                 else
                 {
-                    NeonClusterHelper.OpenCluster();
+                    HiveHelper.OpenHive();
                 }
 
                 // Ensure that we're running on a manager node.  This is required because
@@ -118,13 +118,13 @@ namespace NeonDns
 
                 if (string.IsNullOrEmpty(nodeRole))
                 {
-                    log.LogCritical(() => "Service does not appear to be running on a neonCLUSTER.");
+                    log.LogCritical(() => "Service does not appear to be running on a neonHIVE.");
                     Program.Exit(1);
                 }
 
                 if (!string.Equals(nodeRole, NodeRole.Manager, StringComparison.OrdinalIgnoreCase))
                 {
-                    log.LogCritical(() => $"[neon-dns] service is running on a [{nodeRole}] cluster node.  Only [{NodeRole.Manager}] nodes are supported.");
+                    log.LogCritical(() => $"[neon-dns] service is running on a [{nodeRole}] hive node.  Only [{NodeRole.Manager}] nodes are supported.");
                     Program.Exit(1);
                 }
 
@@ -140,7 +140,7 @@ namespace NeonDns
 
                 log.LogDebug(() => $"Connecting Consul");
 
-                using (consul = NeonClusterHelper.OpenConsul())
+                using (consul = HiveHelper.OpenConsul())
                 {
                     await RunAsync();
                 }
@@ -152,7 +152,7 @@ namespace NeonDns
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 
@@ -217,7 +217,7 @@ namespace NeonDns
                 {
                     log.LogDebug(() => "Fetching DNS answers MD5 from Consul.");
 
-                    remoteMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
+                    remoteMD5 = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
 
                     if (remoteMD5 == null)
                     {
@@ -259,7 +259,7 @@ namespace NeonDns
 
                         log.LogDebug(() => "Fetching DNS answers.");
 
-                        var hostsTxt = await consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsKey, terminator.CancellationToken);
+                        var hostsTxt = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsKey, terminator.CancellationToken);
 
                         if (hostsTxt == null)
                         {

@@ -43,7 +43,7 @@ overridePort "ssl_proxy_upstream_port"
 #
 # We're going to launch the [init-cluster.sh] script that will run wait in
 # the background for Couchbase to be started below and become ready.  Once
-# this happens, the script will initialize the cluster and bucket.
+# this happens, the script will initialize the hive and bucket.
 
 /init-cluster.sh &
 

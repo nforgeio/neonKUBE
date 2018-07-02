@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the neonCLUSTER [neon-dns] image.
+# Builds the neonHIVE [neon-dns] image.
 #
 # Usage: powershell -file REGISTRY TAG
 

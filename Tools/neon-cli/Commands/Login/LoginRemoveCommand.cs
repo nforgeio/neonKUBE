@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -27,17 +27,17 @@ namespace NeonCli
     public class LoginRemoveCommand : CommandBase
     {
         private const string usage = @"
-Removes a cluster login from the local computer.
+Removes a hive login from the local computer.
 
 USAGE:
 
-    neon login rm       [--force] USER@CLUSTER
-    neon login remove   [--force] USER@CLUSTER
+    neon login rm       [--force] USER@HIVE
+    neon login remove   [--force] USER@HIVE
 
 ARGUMENTS:
 
     USER        - The operator's user name.
-    CLUSTER     - The cluster name.
+    CLUSTER     - The hive name.
 
 OPTIONS:
 
@@ -73,35 +73,35 @@ OPTIONS:
         {
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: USER@CLUSTER is required.");
+                Console.Error.WriteLine("*** ERROR: USER@HIVE is required.");
                 Program.Exit(1);
             }
 
-            var login = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
+            var login = HiveHelper.SplitLogin(commandLine.Arguments[0]);
 
             if (!login.IsOK)
             {
-                Console.Error.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
+                Console.Error.WriteLine($"*** ERROR: Invalid username/hive [{commandLine.Arguments[0]}].  Expected something like: USER@HIVE");
                 Program.Exit(1);
             }
 
-            var username         = login.Username;
-            var clusterName      = login.ClusterName;
-            var clusterLoginPath = Program.GetClusterLoginPath(username, clusterName);
+            var username      = login.Username;
+            var hiveName      = login.HiveName;
+            var hiveLoginPath = Program.GetHiveLoginPath(username, hiveName);
 
-            if (File.Exists(clusterLoginPath))
+            if (File.Exists(hiveLoginPath))
             {
-                if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to remove the [{username}@{clusterName}] login?"))
+                if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to remove the [{username}@{hiveName}] login?"))
                 {
                     return;
                 }
 
-                File.Delete(clusterLoginPath);
+                File.Delete(hiveLoginPath);
 
-                // Delete the backup and cached cluster definition files if present.
+                // Delete the backup and cached hive definition files if present.
 
-                var backupPath     = clusterLoginPath + ".bak";
-                var definitionPath = NeonClusterHelper.GetCachedDefinitionPath(username, clusterName);
+                var backupPath     = hiveLoginPath + ".bak";
+                var definitionPath = HiveHelper.GetCachedDefinitionPath(username, hiveName);
 
                 if (File.Exists(backupPath))
                 {
@@ -113,21 +113,21 @@ OPTIONS:
                     File.Delete(definitionPath);
                 }
 
-                // Remove the [.current] file if this is the logged-in cluster.
+                // Remove the [.current] file if this is the logged-in hive.
 
-                if (Program.ClusterLogin != null && 
-                    string.Equals(Program.ClusterLogin.Username, username, StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(Program.ClusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase))
+                if (Program.HiveLogin != null && 
+                    string.Equals(Program.HiveLogin.Username, username, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(Program.HiveLogin.HiveName, hiveName, StringComparison.OrdinalIgnoreCase))
                 {
-                    CurrentClusterLogin.Delete();
-                    NeonClusterHelper.VpnClose(clusterName);
+                    CurrentHiveLogin.Delete();
+                    HiveHelper.VpnClose(hiveName);
                 }
 
-                Console.WriteLine($"Removed [{username}@{clusterName}]");
+                Console.WriteLine($"Removed [{username}@{hiveName}]");
             }
             else
             {
-                Console.Error.WriteLine($"*** ERROR: Login [{username}@{clusterName}] does not exist.");
+                Console.Error.WriteLine($"*** ERROR: Login [{username}@{hiveName}] does not exist.");
                 return;
             }
 

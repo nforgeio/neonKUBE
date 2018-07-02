@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "neoncluster/openjdk"
+	$registry = "nhive/openjdk"
 	$date     = UtcDate
 	$branch   = GitBranch
 

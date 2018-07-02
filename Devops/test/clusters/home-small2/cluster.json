@@ -1,6 +1,6 @@
 
 {
-  "Name": "home2-small",
+  "Name": "home-small2",
   "Datacenter": "woodinville",
   "Environment": "development",
   "TimeSources": [ "pool.ntp.org" ],
@@ -28,7 +28,7 @@
     //"Version": "17.12.0-ce",
     //"Version": "17.09.1-ce",
     //"Version": "17.06.1-ce",
-    //"Version": "17.03.2-ce",
+    ////"Version": "17.03.2-ce",
     //"Version": "latest",
     //"Version": "test",
     //"Version": "experimental",

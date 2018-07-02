@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -27,7 +27,7 @@ namespace NeonCli
     public class FolderCommand : CommandBase
     {
         private const string usage = @"
-Prints the fully qualified path to the specified neonCLUSTER workstation
+Prints the fully qualified path to the specified neonHIVE workstation
 folder or optionally opens the folder on your desktop.
 
 USAGE:
@@ -83,32 +83,32 @@ OPTIONS:
             {
                 case "ansible-roles":
 
-                    path = NeonClusterHelper.GetAnsibleRolesFolder();
+                    path = HiveHelper.GetAnsibleRolesFolder();
                     break;
 
                 case "ansible-vault":
 
-                    path = NeonClusterHelper.GetAnsiblePasswordsFolder();
+                    path = HiveHelper.GetAnsiblePasswordsFolder();
                     break;
 
                 case "logins":
 
-                    path = NeonClusterHelper.GetLoginFolder();
+                    path = HiveHelper.GetLoginFolder();
                     break;
 
                 case "setup":
 
-                    path = NeonClusterHelper.GetVmTemplatesFolder();
+                    path = HiveHelper.GetVmTemplatesFolder();
                     break;
 
                 case "temp":
 
-                    path = Program.ClusterTempFolder;
+                    path = Program.HiveTempFolder;
                     break;
 
                 case "vpn":
 
-                    path = NeonClusterHelper.GetVpnFolder();
+                    path = HiveHelper.GetVpnFolder();
                     break;
 
                 default:

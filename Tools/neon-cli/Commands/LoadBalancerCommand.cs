@@ -19,9 +19,9 @@ using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -34,7 +34,7 @@ namespace NeonCli
         private const string vaultCertPrefix    = "neon-secret/cert";
 
         private const string usage = @"
-Manages the cluster's public and private proxies.
+Manages the hive's public and private proxies.
 
 USAGE:
 
@@ -85,12 +85,12 @@ OPTIONS:
 
         private const string ruleHelp =
 @"
-neonCLUSTER proxies support two types of load balancer rules: HTTP/S and TCP.
+neonHIVE proxies support two types of load balancer rules: HTTP/S and TCP.
 Each rule defines one or more frontend and backends.
 
 HTTP/S frontends handle requests for a hostname for one or more hostname
 and port combinations.  HTTPS is enabled by specifying the name of a
-certificate loaded into the cluster.  The port defaults to 80 for HTTP
+certificate loaded into the hive.  The port defaults to 80 for HTTP
 and 443 for HTTPS.   The [https_redirect] option indicates that clients
 making HTTP requests should be redirected with the HTTPS scheme.  HTTP/S
 rules for the PUBLIC load balancer are exposed on the hosting environment's
@@ -126,7 +126,7 @@ Traffic is routed to the Swarm [foo_service] on port 80.
     }
 
 Here's an example public TCP rule that forwards TCP connections to
-port 1000 on the cluster's Internet-facing load balancer to the internal
+port 1000 on the hive's Internet-facing load balancer to the internal
 HAProxy server listening on Docker ingress port 5305 port which then
 load balances the traffic to the backend servers listening on port 1000:
 
@@ -192,7 +192,7 @@ See the documentation for more load balancer rule and setting details.
                 Program.Exit(0);
             }
 
-            Program.ConnectCluster();
+            Program.ConnectHive();
 
             // Process the command arguments.
 
@@ -213,12 +213,12 @@ See the documentation for more load balancer rule and setting details.
 
                 case "public":
 
-                    loadBalancer = NeonClusterHelper.Cluster.PublicLoadBalancer;
+                    loadBalancer = HiveHelper.Hive.PublicLoadBalancer;
                     break;
 
                 case "private":
 
-                    loadBalancer = NeonClusterHelper.Cluster.PrivateLoadBalancer;
+                    loadBalancer = HiveHelper.Hive.PrivateLoadBalancer;
                     break;
 
                 default:
@@ -254,7 +254,7 @@ See the documentation for more load balancer rule and setting details.
                         Program.Exit(1);
                     }
 
-                    if (!ClusterDefinition.IsValidName(ruleName))
+                    if (!HiveDefinition.IsValidName(ruleName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{ruleName}] is not a valid rule name.");
                         Program.Exit(1);
@@ -278,7 +278,7 @@ See the documentation for more load balancer rule and setting details.
                     // We're going to download the load balancer's ZIP archive containing 
                     // the [haproxy.cfg] file, extract and write it to the console.
 
-                    using (var consul = NeonClusterHelper.OpenConsul())
+                    using (var consul = HiveHelper.OpenConsul())
                     {
                         var confKey      = $"neon/service/neon-proxy-manager/proxies/{loadBalancerName}/conf";
                         var confZipBytes = consul.KV.GetBytesOrDefault(confKey).Result;
@@ -371,7 +371,7 @@ See the documentation for more load balancer rule and setting details.
                         Program.Exit(1);
                     }
 
-                    if (!ClusterDefinition.IsValidName(ruleName))
+                    if (!HiveDefinition.IsValidName(ruleName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{ruleName}] is not a valid rule name.");
                         Program.Exit(1);
@@ -395,10 +395,10 @@ See the documentation for more load balancer rule and setting details.
                     // It would be really nice to download the existing rules and verify that
                     // adding the new rule won't cause conflicts.  Currently errors will be
                     // detected only by the [neon-proxy-manager] which will log them and cease
-                    // updating the cluster until the errors are corrected.
+                    // updating the hive until the errors are corrected.
                     //
                     // An alternative would be to have some kind of service available in the
-                    // cluster to do this for us or perhaps having [neon-proxy-manager] generate
+                    // hive to do this for us or perhaps having [neon-proxy-manager] generate
                     // a summary of all of the certificates (names, covered hostnames, and 
                     // expiration dates) and save this to Consul so it would be easy to
                     // download.  Perhaps do the same for the rules?
@@ -436,7 +436,7 @@ See the documentation for more load balancer rule and setting details.
 
                     ruleName = loadbalancerRule.Name;
 
-                    if (!ClusterDefinition.IsValidName(ruleName))
+                    if (!HiveDefinition.IsValidName(ruleName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{ruleName}] is not a valid rule name.");
                         Program.Exit(1);
@@ -504,7 +504,7 @@ See the documentation for more load balancer rule and setting details.
 
                 case "status":
 
-                    using (var consul = NeonClusterHelper.OpenConsul())
+                    using (var consul = HiveHelper.OpenConsul())
                     {
                         var statusJson  = consul.KV.GetStringOrDefault($"neon/service/neon-proxy-manager/status/{loadBalancerName}").Result;
 

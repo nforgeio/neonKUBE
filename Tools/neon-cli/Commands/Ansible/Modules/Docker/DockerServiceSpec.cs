@@ -1213,7 +1213,7 @@ namespace NeonCli.Ansible.Docker
             // use the network map passed to the method to try to associate the
             // network names.
             //
-            // Note that it's possible (but unlikely) for the set of cluster networks
+            // Note that it's possible (but unlikely) for the set of hive networks
             // to have changed between listing them and inspecting the service, so
             // we might not be able to map a network ID to a name.
             //

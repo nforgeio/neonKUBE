@@ -160,7 +160,7 @@ Developers will generally have one or more branches prefixed by their first name
 
 ## Docker Image Tags
 
-The neonCLUSTER Docker registry stores to catageories of of images: **Application** and **Base** images.
+The neonHIVE Docker registry stores to catageories of of images: **Application** and **Base** images.
 
 Application images host custom services and other code that will tend to be modified and redeployed relatively frequently and it is important to be able to identify the source branch and commit where the application was built.  These are tagged with the branch, and UTC date, short Git commit hash like:
 
@@ -182,7 +182,7 @@ Here's the underlying software version is **2.0.3** which was built on **12-08-2
 
 ## Continuous Integration
 
-These conventions make automating builds and deployment relatively straightforward.  The basic approach is to have a CI infrastructure monitoring the **prod**, **stage**, **test**, and any other interesting branches for changes.  When a change is detected, the CI environment pulls and builds the branch including building, tagging and pushing any Docker images using the tagging conventions and then deploying the images to cluster(s) as required.
+These conventions make automating builds and deployment relatively straightforward.  The basic approach is to have a CI infrastructure monitoring the **prod**, **stage**, **test**, and any other interesting branches for changes.  When a change is detected, the CI environment pulls and builds the branch including building, tagging and pushing any Docker images using the tagging conventions and then deploying the images to hive(s) as required.
 
 For example to publish a production change, a developer would:
 
@@ -194,11 +194,11 @@ For example to publish a production change, a developer would:
 
 ## Cloud Environments
 
-neonCLUSTERs can currently be deployed to Microsoft Azure.  To test this, you'll need an Azure subscription and then gather the required authentication information.  The following sections describe how to accomplish this.
+neonHIVEs can currently be deployed to Microsoft Azure.  To test this, you'll need an Azure subscription and then gather the required authentication information.  The following sections describe how to accomplish this.
 
 ## Microsoft Azure
 
-Follow the steps below to enable an Azure account for neonCLUSTER deployments using the **neon-cli**.  You’ll need to sign up for an Azure account [here](https://azure.microsoft.com/en-us/free/), if you don’t already have one.
+Follow the steps below to enable an Azure account for neonHIVE deployments using the **neon-cli**.  You’ll need to sign up for an Azure account [here](https://azure.microsoft.com/en-us/free/), if you don’t already have one.
 
 Then you need to create credentials the **neon-cli** will use to authenticate with Azure.  The steps below are somewhat simplified from Microsoft’s [documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal).  The instructions below assume that you have full administrative rights to the Azure subscription.
 
@@ -210,15 +210,15 @@ Then you need to create credentials the **neon-cli** will use to authenticate wi
 
   `azure login`
 
-4. Run the command below to list your Azure subscriptions.  Save the **Subscription ID** where you’ll be provisioning your neonCLUSTER to the credentials file.
+4. Run the command below to list your Azure subscriptions.  Save the **Subscription ID** where you’ll be provisioning your neonHIVE to the credentials file.
 
   `azure account list`
 
 5. Create the **neon-cli** application in the Azure Active Directory, specifying the new **PASSWORD** the **neon-cli** will use to log into Azure (you can use neon create password to generate a secure password):
 
   `azure ad app create -n neon-cli \`<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;`--home-page http://neoncluster.com \`<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;`--identifier-uris http://neoncloud.com/neon-cli \`<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;`--home-page http://neonhive.io \`<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;`--identifier-uris http://neonhive.io/neon-cli \`<br/>
   &nbsp;&nbsp;&nbsp;&nbsp;`-p PASSWORD`
 
 6. Save the **Password** and **AppId** to the credentials file.

@@ -1,4 +1,4 @@
-Base neonCLUSTER **node.js** image.
+Base neonHIVE **node.js** image.
 
 # Image Tags
 

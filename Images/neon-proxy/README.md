@@ -1,4 +1,4 @@
-This is the standard neonCLUSTER network proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.  This can be deployed as a Docker container or service.
+This is the standard neonHIVE network proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.  This can be deployed as a Docker container or service.
 
 # Image Tags
 
@@ -64,10 +64,10 @@ For example, the configuration fragment below specifies that certificate authori
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`ca-base "${HAPROXY_CONFIG_FOLDER}"`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`crt-base "${HAPROXY_CONFIG_FOLDER}"`
 
-You should also specify a DNS resolvers section that points to the embedded Docker DNS server so you'll be able to resolve Docker service names.  You can use the **NeonClusterConst_DockerDnsEndpoint** environment variable for this (which is set to `127.0.0.11:53`), like:
+You should also specify a DNS resolvers section that points to the embedded Docker DNS server so you'll be able to resolve Docker service names.  You can use the **HiveConst_DockerDnsEndpoint** environment variable for this (which is set to `127.0.0.11:53`), like:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`resolvers docker`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`nameserver docker "${NeonClusterConst_DockerDnsEndpoint}"`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`nameserver docker "${HiveConst_DockerDnsEndpoint}"`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`resolve_retries 3`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`timeout retry 1s`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`hold valid 10s`
@@ -100,13 +100,13 @@ Two types of credentials are currently supported: **vault-token** and **vault-ap
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`"VaultSecretId": "6a174c20-f6de-a53c-74d2-6018fcceff64"`
 &nbsp;&nbsp;&nbsp;&nbsp;`}`
 
-**NOTE:** This container relies on an external agent to touch the Consul configuration key whenever one or more Vault secrets has changed, for example when a TLS certificate is renewed.  This is typically handled by the **neon-cli** cluster management tool.
+**NOTE:** This container relies on an external agent to touch the Consul configuration key whenever one or more Vault secrets has changed, for example when a TLS certificate is renewed.  This is typically handled by the **neon-cli** hive management tool.
 
 **NOTE:** By default, the image will use HAProxy's graceful stop (`-sf` option) when loading a new configuration.  This nearly eliminates the change of dropping active connections during the transition.  There can be scenarios though, where older instances of HAProxy cannot be terminated due to long-lived TCP connections.  You can enable HAProxy hard stop (`-st` option) by including a `.hardstop` file in the configuration archive (the contents don't matter).  Hard stop terminates the existing HAProxy process before starting the new one, dropping any active connections.
 
 **NOTE:** The Consul limit for key values is 512KB.  This could become a limitation for very complex clusters that include TLS certificates in the configuration ZIP archive.  This can be mitigated by persisting certificates in Vault instead (which a better security practice anyway).
 
-**NOTE**: Note that this image will load environment variables from `/etc/neoncluster/env-host` and `/etc/neoncluster/env-container` if either of these files have been mounted mapped to the container.
+**NOTE**: Note that this image will load environment variables from `/etc/neon/env-host` and `/etc/neon/env-container` if either of these files have been mounted mapped to the container.
 
 # Deployment
 
@@ -116,7 +116,7 @@ Proxies are deployed  by default to non-manager nodes (if there are any) as a Do
 docker service create \
     --name neon-proxy-public \
     --detach=false \
-    --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
+    --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/public/conf \
     --env VAULT_CREDENTIALS=neon-proxy-public-credentials \
@@ -129,12 +129,12 @@ docker service create \
     --mode global \
     --restart-delay 10s \
     --network neon-public \
-    neoncluster/neon-proxy
+    nhive/neon-proxy
 
 docker service create \
     --name neon-proxy-private \
     --detach=false \
-    --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
+    --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/private/conf \
     --env VAULT_CREDENTIALS=neon-proxy-private-credentials \
@@ -147,7 +147,7 @@ docker service create \
     --mode global \
     --restart-delay 10s \
     --network neon-private \
-    neoncluster/neon-proxy
+    nhive/neon-proxy
 ````
 &nbsp;
 **NOTE:** You can modify the scheduling constraints using standard Docker service commands.

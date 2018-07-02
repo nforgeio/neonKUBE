@@ -28,7 +28,7 @@ namespace Neon.Docker
         // Implements Docker Node related operations.
 
         /// <summary>
-        /// Lists the cluster nodes.
+        /// Lists the hive nodes.
         /// </summary>
         /// <returns>The node list.</returns>
         public async Task<List<DockerNode>> NodeListAsync()

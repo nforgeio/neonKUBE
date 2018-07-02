@@ -51,33 +51,26 @@ do
 
         # Scan STDOUT for (hopefully transient) fetch errors.
 
-        if grep -q "^W: Failed to fetch" $STDERR_PATH
-        then
-            break       # Looks like there were no fetch problems.
+        ERROR=$false
+
+        if grep -q "^W: Failed to fetch" $STDERR_PATH ; then
+            ERROR=$true
+        elif grep -q "^gpg: no valid OpenPGP data found" $STDERR_PATH ; then
+
+            # Fetching the repo key from the key server can also fail.
+
+            ERROR=$true
         else
-            if [ "$i" == "$RETRY_COUNT" ] ; then
-                break;  # That was the last attempt.
-            fi
-
-            DELAY=$(shuf -i $RETRY_MIN_SECONDS-$RETRY_MAX_SECONDS -n 1)
-            echo "*** WARNING: safe-apt-get: retrying after fetch failure (delay=${DELAY}s)." >&2
-            sleep $DELAY
+            break # Looks like there were no fetch problems.
         fi
-    else
-        # It looks like fetching the repo key from the key server can
-        # also fail.
 
-        if grep -q "^gpg: no valid OpenPGP data found" $STDERR_PATH
-        then
-            DELAY=$(shuf -i $RETRY_MIN_SECONDS-$RETRY_MAX_SECONDS -n 1)
-            echo "*** WARNING: safe-apt-get: retrying after keyserver fetch failure (delay=${DELAY}s)." >&2
-            sleep $DELAY
-        else
-            # Looks like a hard failure.
-
-            EXIT_CODE=$?
-            break
+        if [ "$i" == "$RETRY_COUNT" ] ; then
+            exit $EXIT_CODE     # That was the last attempt.
         fi
+
+        DELAY=$(shuf -i $RETRY_MIN_SECONDS-$RETRY_MAX_SECONDS -n 1)
+        echo "*** WARNING: safe-apt-get: retrying after fetch failure (delay=${DELAY}s)." >&2
+        sleep $DELAY
     fi
 done
 

@@ -6,10 +6,10 @@
     <LangVersion>latest</LangVersion>
     <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
-    <Description>Couchbase Mobile SyncGateway classes.</Description>
+    <Description>neonFORGE Couchbase Mobile SyncGateway classes.</Description>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
-    <Product>neonCLUSTER</Product>
+    <Product>neonHIVE</Product>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

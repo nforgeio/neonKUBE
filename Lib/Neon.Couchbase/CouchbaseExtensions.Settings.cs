@@ -70,7 +70,7 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Returns a Couchbase bucket connection using specified settings and the cluster credentials.
+        /// Returns a Couchbase bucket connection using specified settings and the hive credentials.
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="username">The username.</param>

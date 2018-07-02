@@ -5,4 +5,4 @@ Priority: optional
 Architecture: amd64
 Depends: 
 Maintainer: Jeff Lill <jeff@lilltek.com>
-Description: Docker volume plugin driver for neonCLUSTER integrated CephFS.
+Description: Docker volume plugin driver for neonHIVE integrated CephFS.

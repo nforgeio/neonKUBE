@@ -17,8 +17,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -50,7 +50,7 @@ namespace NeonCli
             // Note that we're also generating a unique folder name so that multiple commands
             // may be running in parallel.
 
-            ShimExternalFolder = Path.Combine(Program.ClusterTempFolder, $"shim-{Guid.NewGuid().ToString("D")}");
+            ShimExternalFolder = Path.Combine(Program.HiveTempFolder, $"shim-{Guid.NewGuid().ToString("D")}");
 
             Directory.CreateDirectory(ShimExternalFolder);
 
@@ -130,7 +130,7 @@ namespace NeonCli
             // IMPORTANT:
             //
             // Do not change this without also updating the path in the
-            // [neoncluster/neon-cli] container scripts.
+            // [nhive/neon-cli] container scripts.
 
             get { return "/shim"; }
         }

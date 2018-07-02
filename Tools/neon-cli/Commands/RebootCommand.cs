@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.IO;
 
 namespace NeonCli
@@ -28,7 +28,7 @@ namespace NeonCli
     public class RebootCommand : CommandBase
     {
         private const string usage = @"
-Reboots one or more cluster host nodes.
+Reboots one or more hive host nodes.
 
 USAGE:
 
@@ -71,7 +71,7 @@ command.
                 Program.Exit(0);
             }
 
-            var clusterLogin = Program.ConnectCluster();
+            var hiveLogin = Program.ConnectHive();
 
             // Process the command arguments.
 
@@ -85,12 +85,12 @@ command.
 
             if (commandLine.Arguments.Length == 1 && commandLine.Arguments[0] == "+")
             {
-                foreach (var manager in clusterLogin.Definition.SortedManagers)
+                foreach (var manager in hiveLogin.Definition.SortedManagers)
                 {
                     nodeDefinitions.Add(manager);
                 }
 
-                foreach (var worker in clusterLogin.Definition.SortedWorkers)
+                foreach (var worker in hiveLogin.Definition.SortedWorkers)
                 {
                     nodeDefinitions.Add(worker);
                 }
@@ -101,9 +101,9 @@ command.
                 {
                     NodeDefinition node;
 
-                    if (!clusterLogin.Definition.NodeDefinitions.TryGetValue(name, out node))
+                    if (!hiveLogin.Definition.NodeDefinitions.TryGetValue(name, out node))
                     {
-                        Console.Error.WriteLine($"*** Error: Node [{name}] is not present in the cluster.");
+                        Console.Error.WriteLine($"*** Error: Node [{name}] is not present in the hive.");
                         Program.Exit(1);
                     }
 
@@ -113,9 +113,9 @@ command.
 
             // Perform the reboots.
 
-            var cluster   = new ClusterProxy(clusterLogin);
+            var hive      = new HiveProxy(hiveLogin);
             var operation = 
-                new SetupController<NodeDefinition>(Program.SafeCommandLine, cluster.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
+                new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
                 {
                     ShowStatus  = !Program.Quiet,
                     MaxParallel = Program.MaxParallel

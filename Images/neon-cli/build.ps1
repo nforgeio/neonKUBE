@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the neonCLUSTER [neon-cli] image.
+# Builds the neonHIVE [neon-cli] image.
 #
 # Usage: powershell -file build.ps1 [-latest]
 #
@@ -20,7 +20,7 @@ param
 "======================================="
 
 $appname  = "neon"
-$registry = "neoncluster/neon-cli"
+$registry = "nhive/neon-cli"
 $branch   = GitBranch
 
 # Build and publish the app to a local [bin] folder.

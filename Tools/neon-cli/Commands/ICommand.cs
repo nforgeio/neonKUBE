@@ -12,8 +12,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -60,7 +60,7 @@ namespace NeonCli
         /// <summary>
         /// Returns <c>true</c> if the command requires server SSH credentials to be
         /// specified on the command line via the <b>-u/--user</b> and <b>-p/--password</b>
-        /// options vs. obtaining them from the currently logged in cluster secrets or
+        /// options vs. obtaining them from the currently logged in hive secrets or
         /// not needing credentials at all.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
@@ -92,7 +92,7 @@ namespace NeonCli
         /// </summary>
         /// <returns>
         /// A <see cref="DockerShimInfo"/> that indicates whether the command should be shimmed
-        /// and also whether the cluster should be connected before executing the command
+        /// and also whether the hive should be connected before executing the command
         /// in the <b>neon-cli</b> container.
         /// </returns>
         /// <remarks>

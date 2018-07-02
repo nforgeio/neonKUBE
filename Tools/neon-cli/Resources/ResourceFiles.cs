@@ -12,8 +12,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -40,7 +40,7 @@ namespace NeonCli
             /// </summary>
             /// <param name="name">The local file name.</param>
             /// <param name="hasVariables">
-            /// Indicates whether the file references variables from a <see cref="ClusterDefinition"/>
+            /// Indicates whether the file references variables from a <see cref="HiveDefinition"/>
             /// that need to be expanded.
             /// </param>
             public File(string name, bool hasVariables = false)
@@ -79,7 +79,7 @@ namespace NeonCli
             }
 
             /// <summary>
-            /// Indicates whether the file references variables from a <see cref="ClusterDefinition"/>
+            /// Indicates whether the file references variables from a <see cref="HiveDefinition"/>
             /// that need to be expanded.
             /// </summary>
             public bool HasVariables { get; private set; }
@@ -256,7 +256,7 @@ namespace NeonCli
                             new Folder("conf",
                                 files: new List<File>()
                                 {
-                                    new File("cluster.conf.sh", hasVariables: true),
+                                    new File("hive.conf.sh", hasVariables: true),
                                 }),
                             new Folder("setup",
                                 files: new List<File>()

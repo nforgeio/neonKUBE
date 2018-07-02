@@ -17,18 +17,18 @@ using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonVegomatic
 {
     /// <summary>
     /// Implements the <b>neon-vegomatic</b> service/container.  See 
-    /// <a href="https://hub.docker.com/r/neoncluster/neon-vegomaticr/">neoncluster/neon-vegomatic</a>
+    /// <a href="https://hub.docker.com/r/nhive/neon-vegomaticr/">nhive/neon-vegomatic</a>
     /// for more information.
     /// </summary>
     public static class Program
@@ -55,15 +55,15 @@ namespace NeonVegomatic
 
             try
             {
-                // Establish the cluster connections.
+                // Establish the hive connections.
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.OpenRemoteCluster();
+                    HiveHelper.OpenHiveRemote();
                 }
                 else
                 {
-                    NeonClusterHelper.OpenCluster();
+                    HiveHelper.OpenHive();
                 }
 
                 var commandLine = new CommandLine(args);
@@ -96,7 +96,7 @@ namespace NeonVegomatic
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 

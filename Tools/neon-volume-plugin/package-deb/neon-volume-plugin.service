@@ -1,5 +1,5 @@
 [Unit]
-Description=neonCLUSTER Docker Volume Plugin
+Description=neonHIVE Docker Volume Plugin
 Before=docker.service
 Wants=docker.service
 

@@ -16,9 +16,9 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -28,7 +28,7 @@ namespace NeonCli
     public class UploadCommand : CommandBase
     {
         private const string usage = @"
-Uploads a file to one or more cluster hosts.
+Uploads a file to one or more hive hosts.
 
 USAGE:
 
@@ -80,7 +80,7 @@ NOTES:
                 Program.Exit(0);
             }
 
-            var clusterLogin = Program.ConnectCluster();
+            var hiveLogin = Program.ConnectHive();
 
             // Process the command options.
 
@@ -127,16 +127,16 @@ NOTES:
 
             if (commandLine.Arguments.Length == 2)
             {
-                nodeDefinitions.Add(clusterLogin.Definition.Managers.First());
+                nodeDefinitions.Add(hiveLogin.Definition.Managers.First());
             }
             else if (commandLine.Arguments.Length == 3 && commandLine.Arguments[2] == "+")
             {
-                foreach (var manager in clusterLogin.Definition.SortedManagers)
+                foreach (var manager in hiveLogin.Definition.SortedManagers)
                 {
                     nodeDefinitions.Add(manager);
                 }
 
-                foreach (var worker in clusterLogin.Definition.SortedWorkers)
+                foreach (var worker in hiveLogin.Definition.SortedWorkers)
                 {
                     nodeDefinitions.Add(worker);
                 }
@@ -147,9 +147,9 @@ NOTES:
                 {
                     NodeDefinition node;
 
-                    if (!clusterLogin.Definition.NodeDefinitions.TryGetValue(name, out node))
+                    if (!hiveLogin.Definition.NodeDefinitions.TryGetValue(name, out node))
                     {
-                        Console.Error.WriteLine($"*** ERROR: Node [{name}] is not present in the cluster.");
+                        Console.Error.WriteLine($"*** ERROR: Node [{name}] is not present in the hive.");
                         Program.Exit(1);
                     }
 
@@ -165,9 +165,9 @@ NOTES:
 
             // Perform the upload.
 
-            var cluster   = new ClusterProxy(clusterLogin);
+            var hive      = new HiveProxy(hiveLogin);
             var operation = 
-                new SetupController<NodeDefinition>(Program.SafeCommandLine, cluster.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
+                new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
                 {
                     ShowStatus  = !Program.Quiet,
                     MaxParallel = Program.MaxParallel

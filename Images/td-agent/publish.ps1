@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "neoncluster/td-agent"
+	$registry = "nhive/td-agent"
 	$date     = UtcDate
 	$branch   = GitBranch
 

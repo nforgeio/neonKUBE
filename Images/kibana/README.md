@@ -23,7 +23,7 @@ Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined
 
 # Description
 
-[Kibana](https://www.elastic.co/guide/en/kibana/current/introduction.html) provides a dashboard interface over an Elasticsearch database.  This is typically deployed within a neonCLUSTER so that operators can examine events emitted by cluster nodes and services as well as monitor cluster status by analyzing the host and container information captured by Metricbeat.
+[Kibana](https://www.elastic.co/guide/en/kibana/current/introduction.html) provides a dashboard interface over an Elasticsearch database.  This is typically deployed within a neonHIVE so that operators can examine events emitted by cluster nodes and services as well as monitor cluster status by analyzing the host and container information captured by Metricbeat.
 
 # Configuration
 
@@ -49,14 +49,14 @@ docker service create \
     --network neon-private \
     --constraint "node.role==manager" \
     --publish 5001:5601 \
-    --mount type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true \
-    --env ELASTICSEARCH_URL=http://neon-log-esdata.cluster:5303 \
+    --mount type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true \
+    --env ELASTICSEARCH_URL=http://neon-log-esdata.hive:5303 \
     --log-driver json-file
 ````
 &nbsp;
 You can also run this as a container to get JSON formatted information about the Kibana package:
 ````
-docker run --rm neoncluster/kibana version
+docker run --rm nhive/kibana version
 ````
 &nbsp;
 This will return something like:

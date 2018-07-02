@@ -17,8 +17,8 @@ using Couchbase;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Xunit;
-using Neon.Xunit.Cluster;
 using Neon.Xunit.Couchbase;
+using Neon.Xunit.Hive;
 
 using Xunit;
 
@@ -83,7 +83,7 @@ namespace TestSamples
 
             // Spin up a sleeping container and verify that it's running.
 
-            fixture.RunContainer("sleeping-container", "neoncluster/test");
+            fixture.RunContainer("sleeping-container", "nhive/test");
             Assert.Single(fixture.ListContainers().Where(s => s.Name == "sleeping-container"));
         }
 
@@ -97,7 +97,7 @@ namespace TestSamples
 
             // Spin up a sleeping service and verify that it's running.
 
-            fixture.CreateService("sleeping-service", "neoncluster/test");
+            fixture.CreateService("sleeping-service", "nhive/test");
             Assert.Single(fixture.ListServices().Where(s => s.Name == "sleeping-service"));
         }
 
@@ -188,7 +188,7 @@ namespace TestSamples
 
 services:
   web:
-    image: neoncluster/node
+    image: nhive/node
     ports:
       - ""8080:80""
     environment:
@@ -201,7 +201,7 @@ services:
 
 services:
   web:
-    image: neoncluster/node
+    image: nhive/node
     ports:
       - ""8081:80""
     environment:
@@ -258,8 +258,8 @@ services:
             // Spin up a couple of NodeJS as stacks configuring them to return
             // different text using the OUTPUT environment variable.
 
-            fixture.CreateService("foo", "neoncluster/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
-            fixture.CreateService("bar", "neoncluster/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
+            fixture.CreateService("foo", "nhive/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
+            fixture.CreateService("bar", "nhive/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
 
             // Verify that each of the services are returning the expected output.
 

@@ -19,9 +19,9 @@ using Consul;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -77,7 +77,7 @@ namespace NeonCli
         // Implementation
 
         private const string usage = @"
-Manages cluster TLS certificiates.
+Manages hive TLS certificiates.
 
 USAGE:
 
@@ -91,30 +91,30 @@ USAGE:
 
 ARGUMENTS:
 
-    NAME        - Identifies the certificate in the cluster
+    NAME        - Identifies the certificate in the hive
     PATH        - Local file system path
     PATH-CERT   - Certificate path (without the private key)
     PATH-KEY    = Private key path
 
 DETAILS:
 
-neonCLUSTER standardizes on HAProxy compatible PEM-encoded certificates.
+neonHIVE standardizes on HAProxy compatible PEM-encoded certificates.
 These include both the public certificate and private key into a single
 file.  The certificate appears first, followed by any intermediate
 certificates, and then finally the private key.
 
-    get         Retrieves a named cluster certificate.
+    get         Retrieves a named hive certificate.
     join        Combines a certificate and key into a single file.
 
-    list|ls     Lists the cluster certificates by name including
+    list|ls     Lists the hive certificates by name including
                 the expiration dates and covered hosts.
 
                 --expired   lists ceritficates that have expired.
                 --expiring  lists certificates that have expired
                             or will expire within 30 days.
 
-    remove|rm   Removes a named cluster certificate.
-    set         Saves or updates a named cluster certificate.
+    remove|rm   Removes a named hive certificate.
+    set         Saves or updates a named hive certificate.
     split       Splits a certificate into its parts.
     verify      Verifies a local certificate file.
 
@@ -171,7 +171,7 @@ certificates, and then finally the private key.
             {
                 case "get":
 
-                    Program.ConnectCluster();
+                    Program.ConnectHive();
 
                     certName = commandLine.Arguments.FirstOrDefault();
 
@@ -181,13 +181,13 @@ certificates, and then finally the private key.
                         Program.Exit(1);
                     }
 
-                    if (!ClusterDefinition.IsValidName(certName))
+                    if (!HiveDefinition.IsValidName(certName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
                         Program.Exit(1);
                     }
 
-                    certificate = NeonClusterHelper.Cluster.Certificate.Get(certName);
+                    certificate = HiveHelper.Hive.Certificate.Get(certName);
 
                     if (certificate == null)
                     {
@@ -214,7 +214,7 @@ certificates, and then finally the private key.
                 case "list":
                 case "ls":
 
-                    Program.ConnectCluster();
+                    Program.ConnectHive();
 
                     var certList = new List<CertInfo>();
 
@@ -235,9 +235,9 @@ certificates, and then finally the private key.
                     // to capture details like the expiration date and covered
                     // hostnames.
 
-                    foreach (var name in NeonClusterHelper.Cluster.Certificate.List())
+                    foreach (var name in HiveHelper.Hive.Certificate.List())
                     {
-                        certificate = NeonClusterHelper.Cluster.Certificate.Get(name);
+                        certificate = HiveHelper.Hive.Certificate.Get(name);
 
                         if (checkDate.HasValue && certificate.IsValidDate(checkDate))
                         {
@@ -284,7 +284,7 @@ certificates, and then finally the private key.
                 case "remove":
                 case "rm":
 
-                    Program.ConnectCluster();
+                    Program.ConnectHive();
 
                     certName = commandLine.Arguments.FirstOrDefault();
 
@@ -294,15 +294,15 @@ certificates, and then finally the private key.
                         Program.Exit(1);
                     }
 
-                    if (!ClusterDefinition.IsValidName(certName))
+                    if (!HiveDefinition.IsValidName(certName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
                         Program.Exit(1);
                     }
 
-                    if (NeonClusterHelper.Cluster.Certificate.Get(certName) != null)
+                    if (HiveHelper.Hive.Certificate.Get(certName) != null)
                     {
-                        NeonClusterHelper.Cluster.Certificate.Remove(certName);
+                        HiveHelper.Hive.Certificate.Remove(certName);
                         Console.WriteLine($"Certificate [{certName}] was removed.");
                     }
                     else
@@ -314,9 +314,9 @@ certificates, and then finally the private key.
 
                 case "set":
 
-                    Program.ConnectCluster();
+                    Program.ConnectHive();
 
-                    using (var vault = NeonClusterHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
+                    using (var vault = HiveHelper.OpenVault(Program.HiveLogin.VaultCredentials.RootToken))
                     {
                         if (commandLine.Arguments.Length != 2)
                         {
@@ -332,7 +332,7 @@ certificates, and then finally the private key.
                             Program.Exit(1);
                         }
 
-                        if (!ClusterDefinition.IsValidName(certName))
+                        if (!HiveDefinition.IsValidName(certName))
                         {
                             Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
                             Program.Exit(1);
@@ -342,14 +342,14 @@ certificates, and then finally the private key.
 
                         certificate.Parse();
 
-                        if (NeonClusterHelper.Cluster.Certificate.Get(certName) == null)
+                        if (HiveHelper.Hive.Certificate.Get(certName) == null)
                         {
-                            NeonClusterHelper.Cluster.Certificate.Set(certName, certificate);
+                            HiveHelper.Hive.Certificate.Set(certName, certificate);
                             Console.WriteLine($"Certificate [{certName}] was added.");
                         }
                         else
                         {
-                            NeonClusterHelper.Cluster.Certificate.Set(certName, certificate);
+                            HiveHelper.Hive.Certificate.Set(certName, certificate);
                             Console.WriteLine($"Certificate [{certName}] was updated.");
                         }
                     }
@@ -459,7 +459,7 @@ certificates, and then finally the private key.
             var tempCaPath   = Path.GetTempFileName();
             var tool         = "openssl";
 
-            if (NeonHelper.IsLinux && NeonClusterHelper.InToolContainer)
+            if (NeonHelper.IsLinux && HiveHelper.InToolContainer)
             {
                 // Choose nicer looking temporary file names when we're running the
                 // tool container and don't need to worry about conflicting files.

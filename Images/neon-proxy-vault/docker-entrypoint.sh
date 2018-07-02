@@ -16,27 +16,27 @@ PATH=${PATH}:/
 
 # Load the Docker host node environment variables if present.
 
-if [ -f /etc/neoncluster/env-host ] ; then
-    . /etc/neoncluster/env-host
+if [ -f /etc/neon/env-host ] ; then
+    . /etc/neon/env-host
 else
 
     # Initialize NEON_NODE_IP to the loopback address if host environment
     # variables weren't mapped.  We're doing this so the SYSLOG log line 
-    # below will be valid when event when no [/etc/neoncluster/env-host] 
+    # below will be valid when event when no [/etc/neon/env-host] 
     # file is mounted.
 
     NEON_NODE_IP=127.0.0.1
 fi
 
-# Load the [/etc/neoncluster/env-container] environment variables if present.
+# Load the [/etc/neon/env-container] environment variables if present.
 
-if [ -f /etc/neoncluster/env-container ] ; then
-    . /etc/neoncluster/env-container
+if [ -f /etc/neon/env-container ] ; then
+    . /etc/neon/env-container
 fi
 
-# Load the neonCLUSTER definitions.
+# Load the neonHIVE definitions.
 
-. /neoncluster.sh
+. /neonhive.sh
 
 # Generate the static part of the HAProxy configuration file.  The config is
 # pretty simple, some global defaults, the frontend definition followed by the
@@ -73,9 +73,9 @@ global
     external-check
 
     # Enable logging to syslog on the local Docker host under the
-    # NeonSysLogFacility_VaultLB facility.
+    # HiveSysLogFacility_VaultLB facility.
 
-    log                 ${NEON_NODE_IP}:${NeonHostPorts_LogHostSysLog} len 65535 ${NeonSysLogFacility_ProxyName}
+    log                 ${NEON_NODE_IP}:${HiveHostPorts_LogHostSysLog} len 65535 ${HiveSysLogFacility_ProxyName}
 
 defaults
 
@@ -92,7 +92,7 @@ defaults
 
     option tcplog
 
-    # Timeouts are relatively brief because Vault is cluster local and should be fast.
+    # Timeouts are relatively brief because Vault is hive local and should be fast.
 
     timeout             connect 5s
     timeout             client 10s
@@ -118,7 +118,7 @@ defaults
 frontend tcp:vault-static
     bind                *:${NetworkPorts_Vault}
     unique-id-header    X-Activity-ID
-    unique-id-format    ${NeonClusterConst_HAProxyUidFormat}
+    unique-id-format    ${HiveConst_HAProxyUidFormat}
     log                 global
     log-format          "traffic�tcp-v1�neon-proxy-vault�%t�%ci�%b�%s�%si�%sp�%sslv�%sslc�%U�%B�%Tw�%Tc�%Tt�%ts�%ac�%fc�%bc�%sc�%rc�%sq�%bq"
     option              dontlognull
@@ -145,7 +145,7 @@ do
     ip=$(echo ${endpoint} | cut -d':' -f 2)
     port=$(echo ${endpoint} | cut -d':' -f 3)
 
-    echo "    server              ${name}.${NeonHosts_Vault} ${ip}:${port} init-addr none check" >> ${configPath}
+    echo "    server              ${name}.${HiveHostnames_Vault} ${ip}:${port} init-addr none check" >> ${configPath}
 done
 
 # Validate the configuration file and then launch HAProxy.

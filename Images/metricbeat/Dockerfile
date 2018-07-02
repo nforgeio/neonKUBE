@@ -4,13 +4,13 @@
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # This is a template of the docker image definition file to be used to generate
-# the Elastic Metricbeat image to be used to monitor neonCLUSTER hosts.
+# the Elastic Metricbeat image to be used to monitor neonHIVE hosts.
 #
 # ARGUMENTS:
 #
 #   VERSION     - The Metricbeat version (e.g. "5.0.0")
 
-FROM        neoncluster/ubuntu-16.04
+FROM        nhive/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

@@ -16,11 +16,11 @@ using System.Threading.Tasks;
 using Couchbase;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
 using Neon.Diagnostics;
+using Neon.Hive;
 using Neon.Retry;
 
 namespace CouchbaseTest
@@ -47,15 +47,15 @@ namespace CouchbaseTest
 
             try
             {
-                // Establish the cluster connections.
+                // Establish the hive connections.
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.OpenRemoteCluster();
+                    HiveHelper.OpenHiveRemote();
                 }
                 else
                 {
-                    NeonClusterHelper.OpenCluster();
+                    HiveHelper.OpenHive();
                 }
 
                 await RunAsync();
@@ -67,7 +67,7 @@ namespace CouchbaseTest
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 

@@ -22,19 +22,19 @@ PATH=${PATH}:/
 
 # Load the Docker host node environment variables if present.
 
-if [ -f /etc/neoncluster/env-host ] ; then
-    . /etc/neoncluster/env-host
+if [ -f /etc/neon/env-host ] ; then
+    . /etc/neon/env-host
 fi
 
-# Load the [/etc/neoncluster/env-container] environment variables if present.
+# Load the [/etc/neon/env-container] environment variables if present.
 
-if [ -f /etc/neoncluster/env-container ] ; then
-    . /etc/neoncluster/env-container
+if [ -f /etc/neon/env-container ] ; then
+    . /etc/neon/env-container
 fi
 
-# Load the neonCLUSTER constants.
+# Load the neonHIVE constants.
 
-. /neoncluster.sh
+. /neonhive.sh
 
 # Verify that a CONFIG_KEY was passed.
 
@@ -83,7 +83,7 @@ fi
 # be set to an empty string resulting in the container being unable to pull
 # TLS certificates from Vault.  This mode is used for deploying the 
 # [neon-proxy-public-bridge] and [neon-proxy-private-bridge] containers on 
-# pet nodes to forward traffic from the pets to thw cluster's Swarm.  This
+# pet nodes to forward traffic from the pets to thw hive's Swarm.  This
 # works because these proxies handle only TCP traffic.
 
 if [ "${VAULT_CREDENTIALS}" != "" ] ; then

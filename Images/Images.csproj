@@ -126,6 +126,16 @@
     <None Include="neon-dns\publish.ps1" />
     <None Include="neon-dns\README.md" />
     <None Include="neon-log-collector\geoip\MaxMind.readme" />
+    <Content Include="neon-proxy-cache\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-proxy-cache\build.ps1" />
+    <None Include="neon-proxy-cache\docker-entrypoint.sh" />
+    <None Include="neon-proxy-cache\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-proxy-cache\publish.ps1" />
+    <None Include="neon-proxy-cache\README.md" />
     <None Include="test\docker-entrypoint.sh" />
     <None Include="test\Dockerfile" />
     <Content Include="_artifacts\README.txt" />
@@ -233,6 +243,16 @@
     </None>
     <None Include="ubuntu-16.04-dotnet\publish.ps1" />
     <None Include="ubuntu-16.04-dotnet\README.md" />
+    <Content Include="varnish\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="varnish\build.ps1" />
+    <None Include="varnish\docker-entrypoint.sh" />
+    <None Include="varnish\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="varnish\publish.ps1" />
+    <None Include="varnish\README.md" />
     <None Include="_common\log-debug.sh" />
     <None Include="_common\log-critical.sh" />
     <None Include="_common\log-info.sh" />
@@ -279,7 +299,7 @@
     <None Include="_common\log-serror.sh" />
     <None Include="_common\log-sinfo.sh" />
     <None Include="_common\log-warn.sh" />
-    <None Include="_common\neoncluster.sh" />
+    <None Include="_common\neonhive.sh" />
     <None Include="elasticsearch\docker-entrypoint.sh" />
     <None Include="elasticsearch\publish.ps1" />
     <None Include="elasticsearch\build.ps1" />

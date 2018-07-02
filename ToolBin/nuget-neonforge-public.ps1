@@ -45,11 +45,11 @@ function Publish
 
 # Update the project version numbers first.
 
-SetVersion Neon.Cluster
 SetVersion Neon.Common
 SetVersion Neon.Couchbase
 SetVersion Neon.Docker
 SetVersion Neon.RabbitMQ
+SetVersion Neon.Hive
 SetVersion Neon.Web
 SetVersion Neon.Xunit
 SetVersion Neon.Xunit.Cluster
@@ -57,10 +57,10 @@ SetVersion Neon.Xunit.Couchbase
 
 # Then build and publish the projects.
 
-Publish Neon.Cluster
 Publish Neon.Common
 Publish Neon.Couchbase
 Publish Neon.Docker
+Publish Neon.Hive
 Publish Neon.RabbitMQ
 Publish Neon.Web
 Publish Neon.Xunit

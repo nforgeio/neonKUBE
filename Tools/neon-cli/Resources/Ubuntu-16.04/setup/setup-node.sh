@@ -28,15 +28,16 @@ echo "**********************************************" 1>&2
 echo "** SETUP-NODE                               **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the cluster configuration and setup utilities.
+# Load the hive configuration and setup utilities.
 
 . $<load-cluster-config>
 . setup-utility.sh
 
 # Verify that the node has been prepared.
 
-if [ ! -f ${NEON_STATE_FOLDER}/setup/setup-prep-node ] ; then
+if [ ! -f ${NEON_STATE_FOLDER}/setup/prepared ] ; then
     echo "*** ERROR: This node has not been prepared." 1>&2
+    exit 1
 fi
 
 # Ensure that setup is idempotent.
@@ -64,7 +65,7 @@ safe-apt-get install -yq jq aptitude gdebi-core mmv
 # NOTE: This assumes that the hostname was originally configured 
 #       configured to be "ubuntu" as described in:
 #
-#       [Ubuntu-16.04 neonCLUSTER Template.docx]
+#       [Ubuntu-16.04 neonHIVE Template.docx]
 
 hostname ${NEON_NODE_NAME}
 echo ${NEON_NODE_NAME} > /etc/hostname
@@ -223,7 +224,7 @@ net.ipv4.tcp_tw_reuse = 1
 net.ipv4.ip_forward=1
 
 ###################################################################
-# neonCLUSTER settings
+# neonHIVE settings
 
 # Disable the Linux OOM Killer 
 vm.oom-kill = 0
@@ -270,7 +271,7 @@ update-grub
 
 if ! ${NEON_NODE_SWAP} ; then
 
-    if ! grep neonCLUSTER /etc/sysctl.conf ; then
+    if ! grep neonHIVE /etc/sysctl.conf ; then
 
         cat <<EOF >> /etc/sysctl.conf
 
@@ -324,7 +325,7 @@ systemctl restart neon-disable-thp
 # packets hitting ports 80 and 443 on any of the [eth#] network interfaces
 # to the [neon-proxy-public] on ports 5100 and 5101.
 #
-# This allows the cluster to handle standard HTTP and HTTPS traffic without
+# This allows the hive to handle standard HTTP and HTTPS traffic without
 # having to bind to the protected system ports.  This is especially usefuly
 # for deployments with brain-dead consumer quality routers that cannot forward
 # packets to a different port.
@@ -332,7 +333,7 @@ systemctl restart neon-disable-thp
 # $todo(jeff.lill):
 #
 # For now, this is hardcoded for just ports 80 & 443.  Eventually, it might be
-# handy to make this a cluster configuration setting or perhaps a [neon-cli]
+# handy to make this a hive configuration setting or perhaps a [neon-cli]
 # command so SMTP or other traffic can also be handled.
 
 # $hack(jeff.lill):
@@ -463,7 +464,7 @@ systemctl restart neon-iptables
 # We're also setting [MaxRetentionSec=86400] which limits log local retention 
 # to one day.  This overrides the default policy which will consume up to 10%
 # of the local file system while still providing enough time for operators
-# to manually review local logs when something bad happened to cluster logging.
+# to manually review local logs when something bad happened to hive logging.
 
 cat <<EOF >> /etc/systemd/journald.conf
 #------------------------------------------------------------------------------
@@ -473,13 +474,13 @@ cat <<EOF >> /etc/systemd/journald.conf
 #
 # Configure the systemd journal to perist the journal to the file system at
 # [/var/log/journal].  We need this so the node's [neon-log-host] service
-# will be able to forward the system logs to the cluster log aggregation
+# will be able to forward the system logs to the hive log aggregation
 # pipeline.
 #
 # We're also setting [MaxRetentionSec=86400] which limits log local retention 
 # to one day.  This overrides the default policy which will consume up to 10%
 # of the local file system while still providing enough time for operators
-# to manually review local logs when something bad happened to cluster logging.
+# to manually review local logs when something bad happened to hive logging.
 # 
 # See: https://www.freedesktop.org/software/systemd/man/journald.conf.html
 
@@ -540,7 +541,7 @@ cat <<EOF > /usr/local/bin/neon-cleaner
 #      sensitive information such as credentials, etc.
 #
 #   2. Purge temporary Neon command files uploaded by SshProxy.  These
-#      are located within folder beneath [/dev/shm/neoncluster/cmd].  Although
+#      are located within folder beneath [/dev/shm/neon/cmd].  Although
 #      SshProxy removes these files after commands finish executing, it
 #      is possible to see these accumulate if the session was interrupted.
 #      We'll purge folders and files older than one day.
@@ -575,9 +576,9 @@ do
 
     # Clean the [SshProxy] temporary command files.
 
-    if [ -d /dev/shm/neoncluster/cmd ] ; then
-        echo "[INFO] Cleaning: /dev/shm/neoncluster/cmd"
-        find /dev/shm/neoncluster/cmd ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+    if [ -d /dev/shm/neon/cmd ] ; then
+        echo "[INFO] Cleaning: /dev/shm/neon/cmd"
+        find /dev/shm/neon/cmd ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
     fi
 
     # Clean the [SshProxy] temporary upload files.
@@ -596,9 +597,9 @@ do
 
     # Clean the [SshProxy] temporary exec files.
 
-    if [ -d /var/lib/neoncluster/exec ] ; then
-        echo "[INFO] Cleaning: /var/lib/neoncluster/exec"
-        find /var/lib/neoncluster/exec ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+    if [ -d /var/lib/neon/exec ] ; then
+        echo "[INFO] Cleaning: /var/lib/neon/exec"
+        find /var/lib/neon/exec ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
     fi
 
     # Sleep for a while before trying again.
@@ -659,7 +660,7 @@ EOF
 
 cat <<EOF > /etc/powerdns/recursor.conf
 ###############################################################################
-# neonCLUSTER custom PowerDNS Recursor Server configuration.
+# neonHIVE custom PowerDNS Recursor Server configuration.
 
 #################################
 # Allow requests only from well-known Internet private subnets as well as
@@ -1354,7 +1355,7 @@ cat <<EOF > /etc/cron.d/neon-host-maintenance
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Daily neonCLUSTER related host maintenance scheduled for 9:15pm system time (UTC)
+# Daily neonHIVE related host maintenance scheduled for 9:15pm system time (UTC)
 # or the middle of the night Pacific time.
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin

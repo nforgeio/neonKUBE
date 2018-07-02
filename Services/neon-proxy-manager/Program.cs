@@ -25,11 +25,11 @@ using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Hive;
 using Neon.Time;
 
 namespace NeonProxyManager
@@ -38,8 +38,8 @@ namespace NeonProxyManager
     /// Implements the <b>neon-proxy-manager</b> service which is responsible for dynamically generating the HAProxy 
     /// configurations for the <c>neon-proxy-public</c>, <c>neon-proxy-private</c>, <c>neon-proxy-public-bridge</c>,
     /// and <c>neon-proxy-private-bridge</c> services from the load balancer rules persisted in Consul and the TLS certificates
-    /// persisted in Vault.  See <a href="https://hub.docker.com/r/neoncluster/neon-proxy-manager/">neoncluster/neon-proxy-manager</a>  
-    /// and <a href="https://hub.docker.com/r/neoncluster/neon-proxy/">neoncluster/neon-proxy</a> for more information.
+    /// persisted in Vault.  See <a href="https://hub.docker.com/r/nhive/neon-proxy-manager/">neoncluster/neon-proxy-manager</a>  
+    /// and <a href="https://hub.docker.com/r/nhive/neon-proxy/">neoncluster/neon-proxy</a> for more information.
     /// </summary>
     public static class Program
     {
@@ -63,8 +63,8 @@ namespace NeonProxyManager
         private static TimeSpan                 pollInterval;
         private static TimeSpan                 fallbackPollInterval;
         private static TimeSpan                 certWarnTime;
-        private static ClusterDefinition        clusterDefinition;
-        private static bool                     clusterDefinitionChanged;
+        private static HiveDefinition           hiveDefinition;
+        private static bool                     hiveDefinitionChanged;
         private static Task                     monitorTask;
         private static List<DockerNode>         swarmNodes;
 
@@ -83,7 +83,7 @@ namespace NeonProxyManager
 
             terminator = new ProcessTerminator(log);
 
-            // Establish the cluster connections.
+            // Establish the hive connections.
 
             if (NeonHelper.IsDevWorkstation)
             {
@@ -91,12 +91,12 @@ namespace NeonProxyManager
 
                 Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
 
-                NeonClusterHelper.OpenRemoteCluster(
+                HiveHelper.OpenHiveRemote(
                     new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
             }
             else
             {
-                NeonClusterHelper.OpenCluster();
+                HiveHelper.OpenHive();
             }
 
             try
@@ -111,7 +111,7 @@ namespace NeonProxyManager
                     Program.Exit(1);
                 }
 
-                var vaultCredentials = ClusterCredentials.ParseJson(NeonClusterHelper.GetSecret(vaultCredentialsSecret));
+                var vaultCredentials = HiveCredentials.ParseJson(HiveHelper.GetSecret(vaultCredentialsSecret));
 
                 if (vaultCredentials == null)
                 {
@@ -119,17 +119,17 @@ namespace NeonProxyManager
                     Program.Exit(1);
                 }
 
-                // Open the cluster data services and then start the main service task.
+                // Open the hive data services and then start the main service task.
 
                 log.LogInfo(() => $"Connecting Vault");
 
-                using (vault = NeonClusterHelper.OpenVault(vaultCredentials))
+                using (vault = HiveHelper.OpenVault(vaultCredentials))
                 {
                     log.LogInfo(() => $"Connecting Consul");
 
-                    using (consul = NeonClusterHelper.OpenConsul())
+                    using (consul = HiveHelper.OpenConsul())
                     {
-                        using (docker = NeonClusterHelper.OpenDocker())
+                        using (docker = HiveHelper.OpenDocker())
                         {
                             await RunAsync();
                             terminator.ReadyToExit();
@@ -144,7 +144,7 @@ namespace NeonProxyManager
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 
@@ -231,7 +231,7 @@ namespace NeonProxyManager
             // The implementation is pretty straight forward: We're going to watch
             // the [neon/service/neon-proxy-manager/conf/reload] hash for changes 
             // with the timeout set to [pollTime].  This key will be updated to a 
-            // new UUID whenever [neon-cli] modifies a cluster certificate or any 
+            // new UUID whenever [neon-cli] modifies a hive certificate or any 
             // of the rules or settings for a load balancer.
             //
             // Whenever the reload key changes, the code will rebuild the load balancer
@@ -327,12 +327,12 @@ namespace NeonProxyManager
                                 log.LogInfo("Potential load balancer rule or certificate change detected.");
                             }
 
-                            // Load and check the cluster certificates.
+                            // Load and check the hive certificates.
 
-                            var clusterCerts = new ClusterCerts();
+                            var clusterCerts = new HiveCerts();
                             var utcNow       = DateTime.UtcNow;
 
-                            log.LogInfo(() => "Reading cluster certificates.");
+                            log.LogInfo(() => "Reading hive certificates.");
 
                             try
                             {
@@ -361,13 +361,13 @@ namespace NeonProxyManager
                                 continue;
                             }
 
-                            // Fetch the cluster definition and detect whether it changed since the
+                            // Fetch the hive definition and detect whether it changed since the
                             // previous run.
 
-                            var currentClusterDefinition = await NeonClusterHelper.GetDefinitionAsync(clusterDefinition, cts.Token);
+                            var currentHiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, cts.Token);
 
-                            clusterDefinitionChanged = clusterDefinition == null || !NeonHelper.JsonEquals(clusterDefinition, currentClusterDefinition);
-                            clusterDefinition        = currentClusterDefinition;
+                            hiveDefinitionChanged = hiveDefinition == null || !NeonHelper.JsonEquals(hiveDefinition, currentHiveDefinition);
+                            hiveDefinition        = currentHiveDefinition;
 
                             // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
                             // proxy bridge configurations.
@@ -378,7 +378,7 @@ namespace NeonProxyManager
                             // Consul to make it available for the [neon proxy public|private status]
                             // command.  Note that we're going to build the [neon-proxy-public-bridge]
                             // and [neon-proxy-private-bridge] configurations as well for use by any 
-                            // cluster pet nodes.
+                            // hive pet nodes.
 
                             var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, ct);
                             var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
@@ -447,13 +447,13 @@ namespace NeonProxyManager
         /// persists them to Consul if they differ from the previous version.
         /// </summary>
         /// <param name="loadBalancerName">The load balancer name: <b>public</b> or <b>private</b>.</param>
-        /// <param name="clusterCerts">The cluster certificate information.</param>
+        /// <param name="hiveCerts">The hive certificate information.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>
         /// A tuple including the load balancer's rule dictionary and publication status details.
         /// </returns>
         private static async Task<(Dictionary<string, LoadBalancerRule> Rules, string Status)> 
-            BuildProxyConfigAsync(string loadBalancerName, ClusterCerts clusterCerts, CancellationToken cancellationToken)
+            BuildProxyConfigAsync(string loadBalancerName, HiveCerts hiveCerts, CancellationToken cancellationToken)
         {
             var proxyDisplayName       = loadBalancerName.ToUpperInvariant();
             var proxyBridgeName        = $"{loadBalancerName}-bridge";
@@ -465,13 +465,13 @@ namespace NeonProxyManager
 
             // We need to track which certificates are actually referenced by load balancer rules.
 
-            clusterCerts.ClearReferences();
+            hiveCerts.ClearReferences();
 
             // Load the load balancer's settings and rules.
 
             string                  proxyPrefix = $"{proxyConfKey}/{loadBalancerName}";
             var                     rules       = new Dictionary<string, LoadBalancerRule>();
-            var                     hostGroups  = clusterDefinition.GetNodeGroups(excludeAllGroup: false);
+            var                     hostGroups  = hiveDefinition.GetNodeGroups(excludeAllGroup: false);
             LoadBalancerSettings    settings;
 
             try
@@ -489,14 +489,14 @@ namespace NeonProxyManager
                     {
                         case "public":
 
-                            firstProxyPort = NeonHostPorts.ProxyPublicFirst;
-                            lastProxyPort  = NeonHostPorts.ProxyPublicLast;
+                            firstProxyPort = HiveHostPorts.ProxyPublicFirst;
+                            lastProxyPort  = HiveHostPorts.ProxyPublicLast;
                             break;
 
                         case "private":
 
-                            firstProxyPort = NeonHostPorts.ProxyPrivateFirst;
-                            lastProxyPort  = NeonHostPorts.ProxyPrivateLast;
+                            firstProxyPort = HiveHostPorts.ProxyPrivateFirst;
+                            lastProxyPort  = HiveHostPorts.ProxyPrivateLast;
                             break;
 
                         default:
@@ -629,7 +629,7 @@ namespace NeonProxyManager
                 Rules    = rules
             };
 
-            var validationContext = loadBalancerDefinition.Validate(clusterCerts.ToTlsCertificateDictionary(), addImplicitFrontends: true);
+            var validationContext = loadBalancerDefinition.Validate(hiveCerts.ToTlsCertificateDictionary(), addImplicitFrontends: true);
 
             if (validationContext.HasErrors)
             {
@@ -659,9 +659,9 @@ global
     maxconn             {settings.MaxConnections}
 
 # Enable logging to syslog on the local Docker host under the
-# [NeonSysLogFacility_ProxyPublic] facility.
+# [HiveSysLogFacility_ProxyPublic] facility.
 
-    log                 ""${{NEON_NODE_IP}}:{NeonHostPorts.LogHostSysLog}"" len 65535 {NeonSysLogFacility.ProxyName}
+    log                 ""${{NEON_NODE_IP}}:{HiveHostPorts.LogHostSysLog}"" len 65535 {HiveSysLogFacility.ProxyName}
 
 # Certificate Authority and Certificate file locations:
 
@@ -704,15 +704,15 @@ resolvers {resolver.Name}
             // [neon-private] network the proxy serves.
             //
             // HAProxy statistics pages are not intended to be viewed directly by
-            // by cluster operators.  Instead, the statistics from multiple HAProxy
-            // instances will be aggregated by the cluster Dashboard.
+            // by hive operators.  Instead, the statistics from multiple HAProxy
+            // instances will be aggregated by the hive Dashboard.
 
             sbHaProxy.AppendLine($@"
 #------------------------------------------------------------------------------
 # Enable HAProxy statistics pages.
 
 frontend haproxy_stats
-    bind                *:{NeonClusterConst.HAProxyStatsPort}
+    bind                *:{HiveConst.HAProxyStatsPort}
     mode                http
     log                 global
     option              httplog
@@ -723,7 +723,7 @@ backend haproxy_stats
     mode                http
     stats               enable
     stats               scope .
-    stats               uri {NeonClusterConst.HaProxyStatsUri}
+    stats               uri {HiveConst.HaProxyStatsUri}
     stats               refresh 5s
 ");
             //-----------------------------------------------------------------
@@ -981,7 +981,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                     if (tcpRule.Log)
                     {
                         sbHaProxy.AppendLine($"    log                 global");
-                        sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: true)}");
+                        sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: true)}");
                     }
 
                     if (tcpRule.LogChecks)
@@ -1011,10 +1011,10 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
             //
             //      1. We need to generate an HAProxy frontend for each IP/port combination 
             //         and then use HOST header or SNI rules in addition to an optional path
-            //         prefix to map the correct backend.   This means that neonCLUSTER proxy
+            //         prefix to map the correct backend.   This means that neonHIVE proxy
             //         frontends don't map directly to HAProxy frontends.
             //
-            //      2. We need to generate an HAProxy backend for each neonCLUSTER proxy backend.
+            //      2. We need to generate an HAProxy backend for each neonHIVE proxy backend.
             //
             //      3. For TLS frontends, we're going to persist all of the referenced certificates 
             //         into frontend specific folders and then reference the folder in the bind
@@ -1099,7 +1099,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
 
                         if (frontend.Tls)
                         {
-                            if (!clusterCerts.TryGetValue(frontend.CertName, out CertInfo certInfo))
+                            if (!hiveCerts.TryGetValue(frontend.CertName, out CertInfo certInfo))
                             {
                                 log.LogError(() => $"Rule [{httpRule.Name}] references certificate [{frontend.CertName}] which does not exist.");
                                 configError = true;
@@ -1150,7 +1150,7 @@ frontend {haProxyFrontend.Name}
     mode                http
     bind                *:{haProxyFrontend.Port}{certArg}
     unique-id-header    {LogActivity.HttpHeader}
-    unique-id-format    {NeonClusterConst.HAProxyUidFormat}
+    unique-id-format    {HiveConst.HAProxyUidFormat}
     option              forwardfor
     option              http-server-close
     http-request        set-header X-Forwarded-Proto https if {{ ssl_fc }}
@@ -1161,7 +1161,7 @@ frontend {haProxyFrontend.Name}
                         sbHaProxy.AppendLine($"    capture             request header Host len 255");
                         sbHaProxy.AppendLine($"    capture             request header User-Agent len 2048");
                         sbHaProxy.AppendLine($"    log                 global");
-                        sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: false)}");
+                        sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: false)}");
                     }
 
                     // Generate the backend mappings for frontends without path prefixes first.
@@ -1373,12 +1373,12 @@ backend http:{httpRule.Name}
             var     hasher = MD5.Create();
             string  combinedHash;
 
-            if (clusterCerts.HasReferences)
+            if (hiveCerts.HasReferences)
             {
                 using (var ms = new MemoryStream())
                 {
                     ms.Write(hasher.ComputeHash(zipBytes));
-                    ms.Write(clusterCerts.HashReferenced());
+                    ms.Write(hiveCerts.HashReferenced());
 
                     ms.Position  = 0;
                     combinedHash = Convert.ToBase64String(hasher.ComputeHash(ms));
@@ -1396,14 +1396,14 @@ backend http:{httpRule.Name}
 
             try
             {
-                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/hash", cancellationToken) || 
-                    !await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/conf", cancellationToken))
+                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", cancellationToken) || 
+                    !await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/proxy-conf", cancellationToken))
                 {
                     publish = true; // Nothing published yet.
                 }
                 else
                 {
-                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{loadBalancerName}/hash", cancellationToken);
+                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", cancellationToken);
                 }
 
                 if (publish)
@@ -1421,8 +1421,8 @@ backend http:{httpRule.Name}
 
                     var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
-                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/conf", KVTxnVerb.Set) { Value = zipBytes }
+                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
+                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/proxy-conf", KVTxnVerb.Set) { Value = zipBytes }
                     };
 
                     await consul.KV.Txn(operations, cancellationToken);
@@ -1446,16 +1446,16 @@ backend http:{httpRule.Name}
             // generated above.  We won't treat HTTP/S specially and we don't need to worry 
             // about TLS termination or generate fancy health checks.
             //
-            // The bridge proxy is typically deployed as a standalone Docker container on cluster
-            // pet nodes and will expose internal cluster services on the pets using the same
+            // The bridge proxy is typically deployed as a standalone Docker container on hive
+            // pet nodes and will expose internal hive services on the pets using the same
             // ports where they are deployed on the internal Swarm nodes.  This means that containersl
-            // running on pet nodes can consume cluster services the same way as they do on the manager
+            // running on pet nodes can consume hive services the same way as they do on the manager
             // and worker nodes.
             //
             // This was initially used as a way to route pet node logging traffic from the
             // [neon-log-host] containers to the [neon-log-collector] service to handle
             // upstream log processing and persistance to the Elasticsearch cluster but
-            // the bridges could also be used in the future to access any cluster service
+            // the bridges could also be used in the future to access any hive service
             // with a public or private load balancer rule defined.
             //
             // The code below generally assumes that the bridge target proxy is exposed 
@@ -1466,7 +1466,7 @@ backend http:{httpRule.Name}
             //
             // The code below starts by examining the list of active Docker Swarm nodes captured
             // before we started generating proxy configs.  If there are 5 (the default) or fewer 
-            // worker nodes, the configuration will use all cluster nodes (including managers) as 
+            // worker nodes, the configuration will use all hive nodes (including managers) as 
             // target endpoints.  If there are more than 5 worker nodes, the code will randomly 
             // select 5 of them as endpoints.
             //
@@ -1477,7 +1477,7 @@ backend http:{httpRule.Name}
             // banging away with health checks.  One way to mitigate this is to target
             // specific Swarm nodes in the [ProxySettings] by IP address.
 
-            // Determine which cluster Swarm nodes will be targeted by the bridge.  The
+            // Determine which hive Swarm nodes will be targeted by the bridge.  The
             // target nodes may have been specified explicitly by IP address in the 
             // proxy settings or we may need to select them here.
             // 
@@ -1502,7 +1502,7 @@ backend http:{httpRule.Name}
 
                     if (!addressToSwarmNode.ContainsKey(targetAddress.ToString()))
                     {
-                        log.LogWarn(() => $"Proxy bridge target [{targetAddress}] does not reference a known cluster Swarm node.");
+                        log.LogWarn(() => $"Proxy bridge target [{targetAddress}] does not reference a known hive Swarm node.");
                     }
                 }
             }
@@ -1518,7 +1518,7 @@ backend http:{httpRule.Name}
                 {
                     // There are enough workers to select targets from, so we'll just do that.
                     // The idea here is to try to keep the managers from doing as much routing 
-                    // work as possible because they may be busy handling global cluster activities,
+                    // work as possible because they may be busy handling global hive activities,
                     // especially for large clusters.
 
                     foreach (var worker in workers.SelectRandom(settings.BridgeTargetCount))
@@ -1566,7 +1566,7 @@ global
 # should probably specify a different SYSLOG facility so we can distinguish 
 # between problems with bridges and normal proxies. 
 
-#   log                 ""${{NEON_NODE_IP}}:{NeonHostPorts.LogHostSysLog}"" len 65535 {NeonSysLogFacility.ProxyName}
+#   log                 ""${{NEON_NODE_IP}}:{HiveHostPorts.LogHostSysLog}"" len 65535 {HiveSysLogFacility.ProxyName}
 
 # Certificate Authority and Certificate file locations:
 
@@ -1590,15 +1590,15 @@ defaults
             // [neon-private] network the proxy serves.
             //
             // HAProxy statistics pages are not intended to be viewed directly by
-            // by cluster operators.  Instead, the statistics from multiple HAProxy
-            // instances will be aggregated by the cluster Dashboard.
+            // by hive operators.  Instead, the statistics from multiple HAProxy
+            // instances will be aggregated by the hive Dashboard.
 
             sbHaProxy.AppendLine($@"
 #------------------------------------------------------------------------------
 # Enable HAProxy statistics pages.
 
 frontend haproxy_stats
-    bind                *:{NeonClusterConst.HAProxyStatsPort}
+    bind                *:{HiveConst.HAProxyStatsPort}
     mode                http
     log                 global
     option              httplog
@@ -1609,7 +1609,7 @@ backend haproxy_stats
     mode                http
     stats               enable
     stats               scope .
-    stats               uri {NeonClusterConst.HaProxyStatsUri}
+    stats               uri {HiveConst.HaProxyStatsUri}
     stats               refresh 5s
 ");
             // Generate the TCP bridge rules.
@@ -1709,14 +1709,14 @@ listen tcp:port-{port}
 
             try
             {
-                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/hash", cancellationToken) ||
-                    !await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/conf", cancellationToken))
+                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", cancellationToken) ||
+                    !await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-conf", cancellationToken))
                 {
                     publish = true; // Nothing published yet.
                 }
                 else
                 {
-                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{proxyBridgeName}/hash", cancellationToken);
+                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", cancellationToken);
                 }
 
                 if (publish)
@@ -1734,8 +1734,8 @@ listen tcp:port-{port}
 
                     var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
-                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/conf", KVTxnVerb.Set) { Value = zipBytes }
+                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
+                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-conf", KVTxnVerb.Set) { Value = zipBytes }
                     };
 
                     await consul.KV.Txn(operations, cancellationToken);
@@ -1760,7 +1760,7 @@ listen tcp:port-{port}
         }
 
         /// <summary>
-        /// Updates the cluster's public load balancer and network security rules so they
+        /// Updates the hive's public load balancer and network security rules so they
         /// are consistent with the public load balancer rules passed.
         /// </summary>
         /// <param name="publicRules">The public proxy rules.</param>
@@ -1770,17 +1770,17 @@ listen tcp:port-{port}
         {
             try
             {
-                // Clone the cached cluster definition and add the hosting options
-                // acquired from Vault to create a cluster proxy.
+                // Clone the cached hive definition and add the hosting options
+                // acquired from Vault to create a hive proxy.
 
-                var cloneClusterDefinition = NeonHelper.JsonClone<ClusterDefinition>(clusterDefinition);
+                var clonedHiveDefinition = NeonHelper.JsonClone<HiveDefinition>(hiveDefinition);
 
-                cloneClusterDefinition.Hosting = await vault.ReadJsonAsync<HostingOptions>("neon-secret/hosting/options", cancellationToken: cancellationToken);
+                clonedHiveDefinition.Hosting = await vault.ReadJsonAsync<HostingOptions>("neon-secret/hosting/options", cancellationToken: cancellationToken);
 
-                var cluster = new ClusterProxy(cloneClusterDefinition);
+                var hive = new HiveProxy(clonedHiveDefinition);
 
                 // Retrieve the current public load balancer rules and then compare
-                // these with the public rules defined for the cluster to determine
+                // these with the public rules defined for the hive to determine
                 // whether we need to update the load balancer and network security
                 // rules.
 
@@ -1796,7 +1796,7 @@ listen tcp:port-{port}
                 // This could be considered a feature.  For example, this allows
                 // the operator temporarily block a port manually.
 
-                var hostingManager = HostingManager.GetManager(cluster);
+                var hostingManager = HostingManager.GetManager(hive);
 
                 if (!hostingManager.CanUpdatePublicEndpoints)
                 {
@@ -1834,7 +1834,7 @@ listen tcp:port-{port}
                 }
 
                 // Determine if the latest rule port mappings differ from the current
-                // cluster load balancer rules.
+                // hive load balancer rules.
 
                 var changed = false;
 
@@ -1862,19 +1862,19 @@ listen tcp:port-{port}
 
                 if (!changed)
                 {
-                    log.LogInfo(() => $"Public cluster load balancer configuration matches current rules. [endpoint-count={publicEndpoints.Count}]");
+                    log.LogInfo(() => $"Public hive load balancer configuration matches current rules. [endpoint-count={publicEndpoints.Count}]");
                     return;
                 }
 
-                // The endpoints have changed so update the cluster.
+                // The endpoints have changed so update the hive.
 
-                log.LogInfo(() => $"Updating: public cluster load balancer and security. [endpoint-count={publicEndpoints.Count}]");
+                log.LogInfo(() => $"Updating: public hive load balancer and security. [endpoint-count={publicEndpoints.Count}]");
                 hostingManager.UpdatePublicEndpoints(latestEndpoints);
-                log.LogInfo(() => $"Update Completed: public cluster load balancer and security. [endpoint-count={publicEndpoints.Count}]");
+                log.LogInfo(() => $"Update Completed: public hive load balancer and security. [endpoint-count={publicEndpoints.Count}]");
             }
             catch (Exception e)
             {
-                log.LogError($"Unable to update cluster load balancer and/or network security configuration.", e);
+                log.LogError($"Unable to update hive load balancer and/or network security configuration.", e);
             }
         }
     }

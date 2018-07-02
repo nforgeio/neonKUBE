@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -27,15 +27,15 @@ namespace NeonCli
     public class LoginExportCommand : CommandBase
     {
         private const string usage = @"
-Exports a cluster login to the current directory.
+Exports a hive login to the current directory.
 
 USAGE:
 
-    neon login export USER@CLUSTER
+    neon login export USER@HIVE
 
 ARGUMENTS:
 
-    USER@CLUSTER    - Specifies a cluster login username and cluster.
+    USER@HIVE       - Specifies a hive login username and hive.
 ";
 
         /// <inheritdoc/>
@@ -55,33 +55,33 @@ ARGUMENTS:
         {
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: USER@CLUSTER is required.");
+                Console.Error.WriteLine("*** ERROR: USER@HIVE is required.");
                 Program.Exit(1);
             }
 
-            var login = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
+            var login = HiveHelper.SplitLogin(commandLine.Arguments[0]);
 
             if (!login.IsOK)
             {
-                Console.Error.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
+                Console.Error.WriteLine($"*** ERROR: Invalid username/hive [{commandLine.Arguments[0]}].  Expected something like: USER@HIVE");
                 Program.Exit(1);
             }
 
-            var username         = login.Username;
-            var clusterName      = login.ClusterName;
-            var clusterLoginPath = Program.GetClusterLoginPath(username, clusterName);
+            var username      = login.Username;
+            var hiveName      = login.HiveName;
+            var hiveLoginPath = Program.GetHiveLoginPath(username, hiveName);
 
-            if (File.Exists(clusterLoginPath))
+            if (File.Exists(hiveLoginPath))
             {
-                var outputPath = Path.GetFullPath(Path.GetFileName(clusterLoginPath));
-                var loginJson  = File.ReadAllText(clusterLoginPath);
+                var outputPath = Path.GetFullPath(Path.GetFileName(hiveLoginPath));
+                var loginJson  = File.ReadAllText(hiveLoginPath);
 
                 File.WriteAllText(outputPath, loginJson);
                 Console.Error.WriteLine($"Login exported to: {outputPath}");
             }
             else
             {
-                Console.Error.WriteLine($"*** ERROR: Login [{login.Username}@{login.ClusterName}] does not exist.");
+                Console.Error.WriteLine($"*** ERROR: Login [{login.Username}@{login.HiveName}] does not exist.");
                 return;
             }
         }

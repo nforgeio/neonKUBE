@@ -8,15 +8,15 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-This service dynamically generates HAProxy configurations from load balancer rules and certificates persisted to Consul and Vault for neonCLUSTER proxies based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image.
+This service dynamically generates HAProxy configurations from load balancer rules and certificates persisted to Consul and Vault for neonHIVE proxies based on the [neon-proxy](https://hub.docker.com/r/nhive/neon-proxy/) image.
 
-neonCLUSTERs deploy two general purpose reverse HTTP/TCP proxy services:
+neonHIVEs deploy two general purpose reverse HTTP/TCP proxy services:
 
-* **neon-proxy-public** which implements the public load balancer and is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to cluster services.
+* **neon-proxy-public** which implements the public load balancer and is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to hive services.
 
 * **neon-proxy-private** which implements the private load balancer is used for internal routing for the scenarios the Docker overlay ingress network doesn't address out-of-the-box (e.g. load balancing and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
 
-These proxy services are based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image which deploys [HAProxy](http://haproxy.org) that actually handles the routing, along with some scripts that can dynamically download the proxy configuration from HashiCorp Consul and TLS certificates from HashiCorp Vault.
+These proxy services are based on the [neon-proxy](https://hub.docker.com/r/nhive/neon-proxy/) image which deploys [HAProxy](http://haproxy.org) that actually handles the routing, along with some scripts that can dynamically download the proxy configuration from HashiCorp Consul and TLS certificates from HashiCorp Vault.
 
 The **neon-proxy-manager** image handles the generation and updating of the proxy service configuration in Consul based on proxy definitions and TLS certificates loaded into Consul by the **neon-cli**.
 
@@ -28,7 +28,7 @@ The **neon-proxy-manager** image handles the generation and updating of the prox
 
 # Secrets
 
-**neon-proxy-manager** needs to be able to read the TLS certificates stored in Vault and also be able to read/write Consul neonCLUSTER service keys for itself as well as **neon-proxy-public** and **neon-proxy-private**.  The credentials are serialized as JSON to the `/run/secrets/${VAULT_CREDENTIALS}` file using the Docker secrets feature.
+**neon-proxy-manager** needs to be able to read the TLS certificates stored in Vault and also be able to read/write Consul neonHIVE service keys for itself as well as **neon-proxy-public** and **neon-proxy-private**.  The credentials are serialized as JSON to the `/run/secrets/${VAULT_CREDENTIALS}` file using the Docker secrets feature.
 
 Two types of credentials are currently supported: **vault-token** and **vault-approle**.
 
@@ -45,11 +45,11 @@ Two types of credentials are currently supported: **vault-token** and **vault-ap
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`"VaultSecretId": "6a174c20-f6de-a53c-74d2-6018fcceff64"`
 &nbsp;&nbsp;&nbsp;&nbsp;`}`
 
-This service also requires Consul read/write access to `neon/service/neon-proxy-manager/*`, `neon/service/neon-proxy-public` and `neon/service/neon-proxy-private`.  neonCLUSTER does not currently enforce security on Consul, so there's no authentication necessary for this yet.
+This service also requires Consul read/write access to `neon/service/neon-proxy-manager/*`, `neon/service/neon-proxy-public` and `neon/service/neon-proxy-private`.  neonHIVE does not currently enforce security on Consul, so there's no authentication necessary for this yet.
 
 # Consul Settings
 
-**neon-proxy-manager** retrieves its settings from Consul as well as the active route definitions for the **public** and **private** cluster proxies.  Consul also holds the generated HAProxy configurations that the **neon-proxy** service instances serve.
+**neon-proxy-manager** retrieves its settings from Consul as well as the active route definitions for the **public** and **private** hive proxies.  Consul also holds the generated HAProxy configurations that the **neon-proxy** service instances serve.
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon/service:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-proxy-manager:`
@@ -62,11 +62,15 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
         
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxies:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`public:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`conf: haproxy.zip`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`hash: <MD5 hash of conf+certs>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cache-conf: varnish.vcl`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cache-hash: <MD5 hash of cache-conf + certs>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxy-conf: haproxy.zip`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxy-hash: <MD5 hash of proxy-conf + certs>`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`private:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`conf: haproxy.zip`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`hash: <MD5 hash of conf+certs>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cache-conf: varnish.vcl`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cache-hash: <MD5 hash of cache-conf + certs>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxy-conf: haproxy.zip`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxy-hash: <MD5 hash of proxy-conf + certs>`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`conf:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`reload`
@@ -91,11 +95,15 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 * **cert-warn-days** (*double*) - number of days in advance to begin warning of certificate expirations.
 
-* **proxies/.../conf** - public or private proxy's generated HAProxy configuration as a ZIP archive.
+* **proxies/*/cache-conf** - Holds public or private proxy�s generated Varnish Cache VCL configuration file as plain text.
 
-* **proxies/.../hash** - MD5 hash of the public or private load balancer's conf archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
+* **proxies/*/cache-hash** - MD5 hash of the public or private proxy�s **cache-conf**.  This is used by **neon-proxy-cache** service instances to detect when the caching configuration has changed.
 
-* **status/...** (*json*) - proxy rule status at the time the **neon-proxy-manager** last processed cluster rules for the named load balancer.
+* **proxies/.../proxy-conf** - public or private proxy's generated HAProxy configuration as a ZIP archive.
+
+* **proxies/.../proxy-hash** - MD5 hash of the public or private load balancer's **-proxy-conf** archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
+
+* **status/...** (*json*) - proxy rule status at the time the **neon-proxy-manager** last processed hive rules for the named load balancer.
 
 * **conf** - root key for proxy settings that need to be monitored for changes.
 
@@ -119,13 +127,13 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 **neon-proxy-manager** is typically deployed only to manager nodes.  The best practice is to deploy this as a Docker swarm mode service with one replica constrained to manager nodes with **mode=global**.  This relies on Docker to ensure that only one instance is running.
 
-**neon-cli** deploys **neon-proxy-manager** when the cluster is provisioned using this Docker command:
+**neon-cli** deploys **neon-proxy-manager** when the hive is provisioned using this Docker command:
 
 ````
 docker service create \
     --name neon-proxy-manager \
     --detach=false \
-    --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
+    --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --env VAULT_CREDENTIALS=neon-proxy-manager-credentials \
     --env LOG_LEVEL=INFO \
@@ -134,6 +142,6 @@ docker service create \
     --replicas 1 \
     --restart-delay 10s \
     --log-driver fluentd \
-    neoncluster/neon-proxy-manager
+    nhive/neon-proxy-manager
 ````
 &nbsp;

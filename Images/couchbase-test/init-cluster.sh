@@ -2,7 +2,7 @@
 
 # This script is invoked just before the main image entrypoint
 # script starts Couchbase.  This script will attempt to initialize 
-# the cluster, retrying until the Couchbase is ready.
+# the hive, retrying until the Couchbase is ready.
 
 # Set default cluster parameters if these environment variables
 # were not passed into the container.
@@ -42,7 +42,7 @@ fi
 while : 
 do
     # Give Couchbase a bit of a chance to start and then attempt
-    # to initialize the cluster.
+    # to initialize the hive.
 
     sleep 1
     couchbase-cli cluster-init --cluster-name ${CLUSTER_NAME} \

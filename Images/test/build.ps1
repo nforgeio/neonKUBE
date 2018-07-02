@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the neonCLUSTER Alpine base images.
+# Builds the neonHIVE Alpine base images.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 

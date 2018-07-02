@@ -50,7 +50,7 @@ metricbeat.modules:
 metricbeat.modules:
 - module: docker
   metricsets: ["cpu", "info", "memory", "network", "diskio", "container"]
-  hosts: ["${NeonClusterConst_DockerApiInternalEndpoint}"]
+  hosts: ["${HiveConst_DockerApiInternalEndpoint}"]
   enabled: true
   period: ${PERIOD}
 
@@ -72,7 +72,7 @@ output.elasticsearch:
 #================================ Kibana ======================================
 
 setup.kibana:
-  host: "${NEON_NODE_IP}:${NeonHostPorts_Kibana}"
+  host: "${NEON_NODE_IP}:${HiveHostPorts_Kibana}"
 
 #================================ Logging =====================================
 

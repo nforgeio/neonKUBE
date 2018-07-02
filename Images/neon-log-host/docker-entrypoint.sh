@@ -13,12 +13,12 @@ PATH=${PATH}:/
 
 # Load the Docker host node environment variables.
 
-if [ ! -f /etc/neoncluster/env-host ] ; then
-    . log-critical.sh "The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container."
+if [ ! -f /etc/neon/env-host ] ; then
+    . log-critical.sh "The [/etc/neon/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container."
     exit 1
 fi
 
-. /etc/neoncluster/env-host
+. /etc/neon/env-host
 
 # Ensure that [/hostfs/var/log] was mounted and that the [neon-log-host]
 # subdirectory exists for the journald position file.
@@ -30,9 +30,9 @@ fi
 
 mkdir -p /hostfs/var/log/neon-log-host
 
-# Load the neonCLUSTER constants.
+# Load the neonHIVE constants.
 
-. /neoncluster.sh
+. /neonhive.sh
 
 # Launch TD-Agent.
 

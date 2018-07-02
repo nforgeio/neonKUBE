@@ -24,7 +24,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-VAULT-SERVER                       **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the cluster configuration and setup utilities.
+# Load the hive configuration and setup utilities.
 
 . $<load-cluster-config>
 . setup-utility.sh
@@ -168,7 +168,7 @@ cat <<EOF > /usr/local/bin/vault-direct
 #------------------------------------------------------------------------------
 # Provides direct access to a Vault instance running on a manager node
 # without relying on the [neon-proxy-vault] load balancer service.  This
-# is intended for cluster management purposes.
+# is intended for hive management purposes.
 #
 # This is a wrapper over the standard [vault] CLI and supports the
 # same commands.
