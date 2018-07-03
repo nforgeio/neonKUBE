@@ -29,6 +29,7 @@ RETRY_MAX_SECONDS=30
 
 STDOUT_PATH=/tmp/safe-apt-get-out
 STDERR_PATH=/tmp/safe-apt-get-err
+STDALL_PATH=/tmp/safe-apt-get-all
 EXIT_CODE=0
 
 # Delete any output files from any previous run.
@@ -41,6 +42,10 @@ if [ -f $STDERR_PATH ] ; then
     rm $STDERR_PATH
 fi
 
+if [ -f $STDALL_PATH ] ; then
+    rm $STDALL_PATH
+fi
+
 # Peform the operation.
 
 for i in {1..$RETRY_COUNT}
@@ -49,19 +54,26 @@ do
     then
         EXIT_CODE=$?
 
+        # Combine STDOUT and STDERR into a single file so we can
+        # check both streams for transient errors.
+
+        cat $STDOUT_PATH >  $STDALL_PATH
+        cat $STDERR_PATH >> $STDALL_PATH
+
         # Scan STDOUT for (hopefully transient) fetch errors.
 
-        ERROR=$false
+        TRANSIENT_ERROR=$false
 
-        if grep -q "^W: Failed to fetch" $STDERR_PATH ; then
-            ERROR=$true
-        elif grep -q "^gpg: no valid OpenPGP data found" $STDERR_PATH ; then
+        if grep -q "^W: Failed to fetch" $STDALL_PATH ; then
+            $TRANSIENT_ERROR=$true
+        elif grep -q "^gpg: no valid OpenPGP data found" $STDALL_PATH ; then
+            $TRANSIENT_ERROR=$true
+        fi
 
-            # Fetching the repo key from the key server can also fail.
-
-            ERROR=$true
-        else
-            break # Looks like there were no fetch problems.
+        if ! $TRANSIENT_ERROR ; then
+            # Looks like the operation failed dur to a non-transient
+            # problem so we'll break out of the retry loop.
+            break
         fi
 
         if [ "$i" == "$RETRY_COUNT" ] ; then
@@ -83,5 +95,6 @@ cat $STDERR_PATH >&2
 
 rm $STDOUT_PATH
 rm $STDERR_PATH
+rm $STDALL_PATH
         
 exit $EXIT_CODE
