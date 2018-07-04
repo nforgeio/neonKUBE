@@ -2,7 +2,7 @@
 # Configures the TEST workload neonHIVE hive from scratch including provisioning
 # the XenServer virtual machines and intializing the pets, databases, and services.
 #
-# usage: powershell -file setup.ps1 hiveName [imageTag] [OPTIONS]
+# usage: powershell -file setup-all.ps1 hiveName [imageTag] [OPTIONS]
 #
 # ARGUMENTS:
 #
@@ -89,7 +89,7 @@ if ($skipServices)
 $env:SETUP_ALL = "true"
 
 neon run --vault-password-file=$env:SECRETS_PASS "$env:SECRETS_GLOBAL" "$env:SECRETS_LOCAL" "$env:VARS_GLOBAL" "$env:VARS_LOCAL" -- `
-	powershell -f setup-cluster.ps1 "$env:CLUSTER_SETUP_PATH\clusters\$env:CLUSTER\cluster.json"
+	powershell -f setup-hive.ps1 "$env:CLUSTER_SETUP_PATH\hives\$env:CLUSTER\hive.json"
 
 if (-not $?)
 {

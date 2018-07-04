@@ -10,7 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\Cheats.txt = Doc\Cheats.txt
 		Doc\Hive Load Balancers.docx = Doc\Hive Load Balancers.docx
 		Doc\Hive Notes.docx = Doc\Hive Notes.docx
-		Doc\neon-cluster-manager.docx = Doc\neon-cluster-manager.docx
 		Doc\PUBLISH.md = Doc\PUBLISH.md
 		Doc\Secrets.docx = Doc\Secrets.docx
 		Doc\SUDO and WinSCP.docx = Doc\SUDO and WinSCP.docx
@@ -138,8 +137,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A7E3360B-C
 		Devops\test\README.md = Devops\test\README.md
 		Devops\test\secrets.yaml = Devops\test\secrets.yaml
 		Devops\test\setup-all.ps1 = Devops\test\setup-all.ps1
-		Devops\test\setup-cluster.ps1 = Devops\test\setup-cluster.ps1
 		Devops\test\setup-core-services.ps1 = Devops\test\setup-core-services.ps1
+		Devops\test\setup-hive.ps1 = Devops\test\setup-hive.ps1
 		Devops\test\setup-registry.ps1 = Devops\test\setup-registry.ps1
 		Devops\test\setup-registry.yaml = Devops\test\setup-registry.yaml
 		Devops\test\vars.yaml = Devops\test\vars.yaml
@@ -150,39 +149,39 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-volume-plugin", "Tools
 		{66229C6D-EC7E-4340-8BC0-6C9E6EF830C6} = {66229C6D-EC7E-4340-8BC0-6C9E6EF830C6}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "clusters", "clusters", "{F035D81E-A73A-40D6-82EE-98C63FDFCE04}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hives", "hives", "{F035D81E-A73A-40D6-82EE-98C63FDFCE04}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-azure", "home-azure", "{F8E42BB5-2D02-4038-B59B-D14D2BD5C1E6}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\test\clusters\home-azure\cluster.json = Devops\test\clusters\home-azure\cluster.json
+		Devops\test\clusters\home-azure\hive.json = Devops\test\clusters\home-azure\hive.json
 		Devops\test\clusters\home-azure\secrets.yaml = Devops\test\clusters\home-azure\secrets.yaml
 		Devops\test\clusters\home-azure\vars.yaml = Devops\test\clusters\home-azure\vars.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-bare", "home-bare", "{7FD9A60B-8F2B-4ECB-A850-34005D11104A}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\test\clusters\home-bare\cluster.json = Devops\test\clusters\home-bare\cluster.json
+		Devops\test\clusters\home-bare\hive.json = Devops\test\clusters\home-bare\hive.json
 		Devops\test\clusters\home-bare\secrets.yaml = Devops\test\clusters\home-bare\secrets.yaml
 		Devops\test\clusters\home-bare\vars.yaml = Devops\test\clusters\home-bare\vars.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-large", "home-large", "{1FCA8640-5CCE-4CD5-9B0A-B03DCDA57F46}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\test\clusters\home-large\cluster.json = Devops\test\clusters\home-large\cluster.json
+		Devops\test\clusters\home-large\hive.json = Devops\test\clusters\home-large\hive.json
 		Devops\test\clusters\home-large\secrets.yaml = Devops\test\clusters\home-large\secrets.yaml
 		Devops\test\clusters\home-large\vars.yaml = Devops\test\clusters\home-large\vars.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small", "home-small", "{CDCCEE29-B726-4AA1-BB06-F44156BE1E7E}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\test\clusters\home-small\cluster.json = Devops\test\clusters\home-small\cluster.json
+		Devops\test\clusters\home-small\hive.json = Devops\test\clusters\home-small\hive.json
 		Devops\test\clusters\home-small\secrets.yaml = Devops\test\clusters\home-small\secrets.yaml
 		Devops\test\clusters\home-small\vars.yaml = Devops\test\clusters\home-small\vars.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-xen", "home-xen", "{A4590FB6-213E-4C56-B771-F11C8D1D2868}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\test\clusters\home-xen\cluster.json = Devops\test\clusters\home-xen\cluster.json
+		Devops\test\clusters\home-xen\hive.json = Devops\test\clusters\home-xen\hive.json
 		Devops\test\clusters\home-xen\secrets.yaml = Devops\test\clusters\home-xen\secrets.yaml
 		Devops\test\clusters\home-xen\vars.yaml = Devops\test\clusters\home-xen\vars.yaml
 	EndProjectSection
@@ -223,7 +222,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "neon-cli", "neon-cli", "{17
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small2", "home-small2", "{18973726-A5D3-4706-8658-9ED658C631CE}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\test\clusters\home-small2\cluster.json = Devops\test\clusters\home-small2\cluster.json
+		Devops\test\clusters\home-small2\hive.json = Devops\test\clusters\home-small2\hive.json
 		Devops\test\clusters\home-small2\secrets.yaml = Devops\test\clusters\home-small2\secrets.yaml
 		Devops\test\clusters\home-small2\vars.yaml = Devops\test\clusters\home-small2\vars.yaml
 	EndProjectSection

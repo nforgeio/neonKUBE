@@ -3,7 +3,7 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
-#define NOSHIM      // Undefine this to default to [--shim] mode.
+#define NOSHIM_DEFAULT      // Undefine this to default to [--shim] mode.
 
 using System;
 using System.Collections.Generic;
@@ -329,8 +329,8 @@ Docker issues are corrected.
                 //      * Docker container networking is often screwed up.
                 //
                 // Both of these issues may require resetting or reinstalling Docker.d
-#if NOSHIM
-                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--shim") == null;
+#if NOSHIM_DEFAULT
+                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--shim") != null;
 #else
                 NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--noshim") != null;
 #endif

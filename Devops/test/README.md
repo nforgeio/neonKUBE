@@ -26,8 +26,8 @@ This file defines the variables described below.  These variables can be referen
 
 ## Default credentials for virtual machine templates. 
 
-`CLUSTER_NODE_TEMPLATE_USERNAME`
-`CLUSTER_NODE_TEMPLATE_PASSWORD`
+`HIVE_NODE_TEMPLATE_USERNAME`
+`HIVE_NODE_TEMPLATE_PASSWORD`
 
 ## XenServer host credentials.
 
