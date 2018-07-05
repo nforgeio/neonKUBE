@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterServices.cs
+// FILE:	    HiveServices.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -38,7 +38,7 @@ namespace NeonCli
     /// <b>neon-proxy-public-bridge</b> and <b>neon-proxy-private-bridge</b>
     /// containers on any pet nodes.
     /// </summary>
-    public class ClusterServices
+    public class HiveServices
     {
         private HiveProxy hive;
 
@@ -46,7 +46,7 @@ namespace NeonCli
         /// Constructor.
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
-        public ClusterServices(HiveProxy hive)
+        public HiveServices(HiveProxy hive)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 

@@ -286,7 +286,7 @@ namespace NeonCli
                 {
                     firstManager.Status = "kibana dashboard";
 
-                    var kibanaDashboard = new ClusterDashboard()
+                    var kibanaDashboard = new HiveDashboard()
                     {
                         Name        = "kibana",
                         Title       = "Kibana",

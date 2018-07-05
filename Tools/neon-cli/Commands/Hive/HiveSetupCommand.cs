@@ -405,7 +405,7 @@ OPTIONS:
                         InitializeSecrets();
                     });
 
-                var clusterServices = new ClusterServices(hive);
+                var clusterServices = new HiveServices(hive);
 
                 controller.AddGlobalStep("hive services", () => clusterServices.Configure(hive.FirstManager));
 
@@ -439,7 +439,7 @@ OPTIONS:
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
-                        ClusterDiagnostics.CheckManager(node, hive.Definition);
+                        HiveDiagnostics.CheckManager(node, hive.Definition);
                     }, 
                     node => node.Metadata.IsManager);
 
@@ -447,13 +447,13 @@ OPTIONS:
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
-                        ClusterDiagnostics.CheckWorkersOrPet(node, hive.Definition);
+                        HiveDiagnostics.CheckWorkersOrPet(node, hive.Definition);
                     }, 
                     node => node.Metadata.IsWorker || node.Metadata.IsPet);
 
                 if (hive.Definition.Log.Enabled)
                 {
-                    controller.AddGlobalStep("check logging", () => ClusterDiagnostics.CheckLogServices(hive));
+                    controller.AddGlobalStep("check logging", () => HiveDiagnostics.CheckLogServices(hive));
                 }
             }
 
@@ -3500,7 +3500,7 @@ systemctl restart sshd
                     {
                         firstManager.Status = "ceph dashboard";
 
-                        var cephDashboard = new ClusterDashboard()
+                        var cephDashboard = new HiveDashboard()
                         {
                             Name        = "ceph",
                             Title       = "Ceph File System",
@@ -3562,7 +3562,7 @@ systemctl restart sshd
                     {
                         firstManager.Status = "kibana dashboard";
 
-                        var kibanaDashboard = new ClusterDashboard()
+                        var kibanaDashboard = new HiveDashboard()
                         {
                             Name        = "kibana",
                             Title       = "Kibana",
@@ -3581,7 +3581,7 @@ systemctl restart sshd
                     {
                         firstManager.Status = "consul dashboard";
 
-                        var consulDashboard = new ClusterDashboard()
+                        var consulDashboard = new HiveDashboard()
                         {
                             Name        = "consul",
                             Title       = "Consul",

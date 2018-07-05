@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterDashboard.cs
+// FILE:	    HiveDashboard.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -22,7 +22,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes a hive dashboard.
     /// </summary>
-    public class ClusterDashboard
+    public class HiveDashboard
     {
         private string title;
 
@@ -84,12 +84,12 @@ namespace Neon.Hive
 
             if (string.IsNullOrEmpty(Name))
             {
-                warnings.Add($"Invalid [{nameof(ClusterDashboard)}.{nameof(Name)}={Name}].");
+                warnings.Add($"Invalid [{nameof(HiveDashboard)}.{nameof(Name)}={Name}].");
             }
 
             if (string.IsNullOrEmpty(Url) || !Uri.TryCreate(Url, UriKind.Absolute, out var uri))
             {
-                warnings.Add($"Invalid [{nameof(ClusterDashboard)}.{nameof(Url)}={Url}].");
+                warnings.Add($"Invalid [{nameof(HiveDashboard)}.{nameof(Url)}={Url}].");
             }
 
             return warnings;

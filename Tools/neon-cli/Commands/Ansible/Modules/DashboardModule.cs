@@ -212,7 +212,7 @@ namespace NeonCli.Ansible
 
                     // Build the dashboard definition from the arguments.
 
-                    var newDashboard = new ClusterDashboard()
+                    var newDashboard = new HiveDashboard()
                     {
                         Name        = name,
                         Title       = title,

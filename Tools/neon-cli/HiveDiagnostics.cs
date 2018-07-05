@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterDiagnostics.cs
+// FILE:	    HiveDiagnostics.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -30,7 +30,7 @@ namespace NeonCli
     /// <summary>
     /// Methods to verify that hive nodes are configured and functioning properly.
     /// </summary>
-    public static class ClusterDiagnostics
+    public static class HiveDiagnostics
     {
         /// <summary>
         /// Verifies that a hive manager node is healthy.

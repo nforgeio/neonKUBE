@@ -58,11 +58,11 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="name">The dashboard name.</param>
         /// <returns>The dashboard if present or <c>null</c> if it doesn't exist.</returns>
-        public ClusterDashboard Get(string name)
+        public HiveDashboard Get(string name)
         {
             Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(name));
 
-            return hive.Consul.Client.KV.GetObjectOrDefault<ClusterDashboard>(GetDashboardConsulKey(name)).Result;
+            return hive.Consul.Client.KV.GetObjectOrDefault<HiveDashboard>(GetDashboardConsulKey(name)).Result;
 
         }
 
@@ -70,13 +70,13 @@ namespace Neon.Hive
         /// Lists the hive dashboards.
         /// </summary>
         /// <returns>The hive dashboards.</returns>
-        public List<ClusterDashboard> List()
+        public List<HiveDashboard> List()
         {
-            var result = hive.Consul.Client.KV.ListOrDefault<ClusterDashboard>(HiveConst.ConsulDashboardsKey).Result;
+            var result = hive.Consul.Client.KV.ListOrDefault<HiveDashboard>(HiveConst.ConsulDashboardsKey).Result;
 
             if (result == null)
             {
-                return new List<ClusterDashboard>();
+                return new List<HiveDashboard>();
             }
             else
             {
@@ -89,7 +89,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="dashboard">The dashboard.</param>
         /// <exception cref="HiveDefinitionException">Thrown if the dashboard is not valid.</exception>
-        public void Set(ClusterDashboard dashboard)
+        public void Set(HiveDashboard dashboard)
         {
             Covenant.Requires<ArgumentNullException>(dashboard != null);
 

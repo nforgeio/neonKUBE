@@ -254,7 +254,7 @@ dashboard names are reserved for use as commands:
             var folder      = commandLine.GetOption("--folder");
             var description = commandLine.GetOption("--description");
 
-            var dashboard = new ClusterDashboard()
+            var dashboard = new HiveDashboard()
             {
                 Name        = name,
                 Title       = title,
