@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GoogleHostingManager.cs
+// FILE:	    HyperVHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -31,9 +31,10 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Manages hive provisioning on the Google Cloud Platform.
+    /// Manages hive provisioning on remote Hyper-V servers.
     /// </summary>
-    public class GoogleHostingManager : HostingManager
+    [HostingProvider(HostingEnvironments.HyperV)]
+    public class HyperVHostingManager : HostingManager
     {
         private HiveProxy hive;
 
@@ -45,7 +46,7 @@ namespace Neon.Hive
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public GoogleHostingManager(HiveProxy hive, string logFolder = null)
+        public HyperVHostingManager(HiveProxy hive, string logFolder = null)
         {
             hive.HostingManager = this;
 
@@ -68,7 +69,10 @@ namespace Neon.Hive
 
             if (hive.Definition.Ceph.Enabled)
             {
-                throw new NotImplementedException("$todo(jeff.lill): Implement this.");
+                foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
+                {
+                    node.Labels.CephOSDDevice = "/dev/sdb";
+                }
             }
         }
 

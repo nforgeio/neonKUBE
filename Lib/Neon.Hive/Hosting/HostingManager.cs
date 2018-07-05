@@ -14,6 +14,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,44 +48,46 @@ namespace Neon.Hive
         /// empty if logging is disabled.
         /// </param>
         /// <returns>The <see cref="HostingManager"/>.</returns>
+        /// <exception cref="HiveException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
+        /// <exception cref="NotImplementedException">Thrown if no hosting manager could be located for the environment.</exception>
         public static HostingManager GetManager(HiveProxy hive, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 
-            switch (hive.Definition.Hosting.Environment)
+            // We're going to reflected all loaded assemblies for classes that implement
+            // [IHostingManager] and are decorated with an [HostingProviderAttribute],
+            // end then use the environment specified in the attributes to determine
+            // which manager class to instantiate and return.
+
+            var enviromentToManager = new Dictionary<HostingEnvironments, Type>();
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                case HostingEnvironments.Aws:
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (type.IsSubclassOf(typeof(HostingManager)))
+                    {
+                        var providerAttribute = type.GetCustomAttribute<HostingProviderAttribute>();
 
-                    return new AwsHostingManager(hive, logFolder);
+                        if (providerAttribute != null)
+                        {
+                            if (enviromentToManager.TryGetValue(providerAttribute.Environment, out var existingProviderType))
+                            {
+                                throw new HiveException($"Hosting provider types [{existingProviderType.FullName}] and [{type.FullName}] cannot both implement the [{providerAttribute.Environment}] hosting environment.");
+                            }
+                        }
 
-                case HostingEnvironments.Azure:
-
-                    return new AzureHostingManager(hive, logFolder);
-
-                case HostingEnvironments.Google:
-
-                    return new GoogleHostingManager(hive, logFolder);
-
-                case HostingEnvironments.HyperV:
-
-                    return new HyperVHostingManager(hive, logFolder);
-
-                case HostingEnvironments.LocalHyperV:
-
-                    return new LocalHyperVHostingManager(hive, logFolder);
-
-                case HostingEnvironments.Machine:
-
-                    return new MachineHostingManager(hive, logFolder);
-
-                case HostingEnvironments.XenServer:
-
-                    return new XenServerHostingManager(hive, logFolder);
-
-                default:
-
-                    throw new NotImplementedException($"Hosting manager for [{hive.Definition.Hosting.Environment}] is not implemented.");
+                        enviromentToManager.Add(providerAttribute.Environment, type);
+                    }
+                }
             }
+
+            if (!enviromentToManager.TryGetValue(hive.Definition.Hosting.Environment, out var managerType))
+            {
+                throw new NotImplementedException($"Cannot locate an [{nameof(IHostingManager)}] for the [{hive.Definition.Hosting.Environment}] environment.");
+            }
+
+            return (HostingManager)Activator.CreateInstance(managerType, hive, logFolder);
         }
 
         /// <summary>
@@ -119,7 +122,7 @@ namespace Neon.Hive
                     return true;
 
                 case HostingEnvironments.HyperV:
-                case HostingEnvironments.LocalHyperV:
+                case HostingEnvironments.HyperVDev:
                 case HostingEnvironments.Machine:
                 case HostingEnvironments.XenServer:
 

@@ -50,6 +50,13 @@ SetVersion Neon.Couchbase
 SetVersion Neon.Docker
 SetVersion Neon.RabbitMQ
 SetVersion Neon.Hive
+SetVersion Neon.Hive.Aws
+SetVersion Neon.Hive.Azure
+SetVersion Neon.Hive.Google
+SetVersion Neon.Hive.HyperV
+SetVersion Neon.Hive.HyperVDev
+SetVersion Neon.Hive.Machine
+SetVersion Neon.Hive.Xen
 SetVersion Neon.Web
 SetVersion Neon.Xunit
 SetVersion Neon.Xunit.Cluster
@@ -61,6 +68,13 @@ Publish Neon.Common
 Publish Neon.Couchbase
 Publish Neon.Docker
 Publish Neon.Hive
+Publish Neon.Hive.Aws
+Publish Neon.Hive.Azure
+Publish Neon.Hive.Google
+Publish Neon.Hive.HyperV
+Publish Neon.Hive.HyperVDev
+Publish Neon.Hive.Machine
+Publish Neon.Hive.Xen
 Publish Neon.RabbitMQ
 Publish Neon.Web
 Publish Neon.Xunit

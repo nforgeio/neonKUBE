@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LocalHyperVHostingManager.cs
+// FILE:	    HyperVDevHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -37,7 +37,8 @@ namespace Neon.Hive
     /// Manages hive provisioning on the local workstation using Microsoft Hyper-V virtual machines.
     /// This is typically used for development and test purposes.
     /// </summary>
-    public partial class LocalHyperVHostingManager : HostingManager
+    [HostingProvider(HostingEnvironments.HyperVDev)]
+    public class HyperVDevHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
         // Private types
@@ -83,7 +84,7 @@ namespace Neon.Hive
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public LocalHyperVHostingManager(HiveProxy hive, string logFolder = null)
+        public HyperVDevHostingManager(HiveProxy hive, string logFolder = null)
         {
             hive.HostingManager = this;
 

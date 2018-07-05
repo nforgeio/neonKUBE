@@ -45,7 +45,8 @@ namespace Neon.Hive
     /// neonHIVE's name.
     /// </para>
     /// </remarks>
-    public partial class AzureHostingManager : HostingManager
+    [HostingProvider(HostingEnvironments.Azure)]
+    public class AzureHostingManager : HostingManager
     {
         // IMPLEMENTATION NOTE:
         // --------------------

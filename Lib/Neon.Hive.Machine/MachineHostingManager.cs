@@ -34,6 +34,7 @@ namespace Neon.Hive
     /// <summary>
     /// Manages hive provisioning directly on bare metal or virtual machines.
     /// </summary>
+    [HostingProvider(HostingEnvironments.Machine)]
     public partial class MachineHostingManager : HostingManager
     {
         private HiveProxy                       hive;

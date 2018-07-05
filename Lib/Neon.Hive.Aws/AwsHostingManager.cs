@@ -33,6 +33,7 @@ namespace Neon.Hive
     /// <summary>
     /// Manages hive provisioning on Amazon Web Services.
     /// </summary>
+    [HostingProvider(HostingEnvironments.Aws)]
     public class AwsHostingManager : HostingManager
     {
         private HiveProxy hive;

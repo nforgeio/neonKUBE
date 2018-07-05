@@ -191,7 +191,7 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
-        /// <see cref="HostingEnvironments.HyperV"/>, <see cref="HostingEnvironments.LocalHyperV"/>,
+        /// <see cref="HostingEnvironments.HyperV"/>, <see cref="HostingEnvironments.HyperVDev"/>,
         /// and <see cref="HostingEnvironments.XenServer"/> environments.
         /// </para>
         /// <para>
@@ -213,7 +213,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <returns>The prefix.</returns>
-        internal string GetVmNamePrefix(HiveDefinition hiveDefinition)
+        public string GetVmNamePrefix(HiveDefinition hiveDefinition)
         {
             if (VmNamePrefix == null)
             {
@@ -240,7 +240,7 @@ namespace Neon.Hive
                 switch (Environment)
                 {
                     case HostingEnvironments.HyperV:
-                    case HostingEnvironments.LocalHyperV:
+                    case HostingEnvironments.HyperVDev:
                     case HostingEnvironments.Machine:
                     case HostingEnvironments.XenServer:
 
@@ -287,7 +287,7 @@ namespace Neon.Hive
                     case HostingEnvironments.Aws:
                     case HostingEnvironments.Azure:
                     case HostingEnvironments.Google:
-                    case HostingEnvironments.LocalHyperV:
+                    case HostingEnvironments.HyperVDev:
                     case HostingEnvironments.Machine:
 
                         return false;
@@ -349,7 +349,7 @@ namespace Neon.Hive
                     HyperV.Validate(hiveDefinition);
                     break;
 
-                case HostingEnvironments.LocalHyperV:
+                case HostingEnvironments.HyperVDev:
 
                     LocalHyperV = LocalHyperV ?? new LocalHyperVOptions();
 

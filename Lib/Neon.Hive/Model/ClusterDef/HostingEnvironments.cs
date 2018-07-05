@@ -51,7 +51,7 @@ namespace Neon.Hive
         /// (typically for development or test purposes).
         /// </summary>
         [EnumMember(Value = "local-hyper-v")]
-        LocalHyperV,
+        HyperVDev,
 
         /// <summary>
         /// Citrix XenServer hypervisor running on remote servers (typically
