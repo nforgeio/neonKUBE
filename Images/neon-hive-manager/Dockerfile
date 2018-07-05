@@ -3,11 +3,11 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# .NET Core based image that implements the [neon-cluster-manager].
+# .NET Core based image that implements the [neon-hive-manager].
 #
 # ARGUMENTS:
 #
-#       APPNAME     - Name of the application binary/script (e.g "neon-cluster-manager")
+#       APPNAME     - Name of the application binary/script (e.g "neon-hive-manager")
 #                     This makes it easier to clone and reuse the Dockerfile.
 
 FROM        nhive/dotnet

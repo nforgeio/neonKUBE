@@ -32,7 +32,7 @@ namespace NeonCli
 {
     /// <summary>
     /// Handles the provisioning of the global hive proxy services including: 
-    /// <b>neon-cluster-manager</b>, <b>neon-proxy-manager</b>,
+    /// <b>neon-hive-manager</b>, <b>neon-proxy-manager</b>,
     /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b>,
     /// <b>neon-dns</b>, <b>neon-dns-mon</b> as well as the
     /// <b>neon-proxy-public-bridge</b> and <b>neon-proxy-private-bridge</b>
@@ -124,7 +124,7 @@ namespace NeonCli
                     firstManager.Status = string.Empty;
 
                     //---------------------------------------------------------
-                    // Deploy [neon-cluster-manager] as a service on each manager node.
+                    // Deploy [neon-hive-manager] as a service on each manager node.
 
                     string unsealSecretOption = null;
 
@@ -133,28 +133,28 @@ namespace NeonCli
                         var vaultCredentials = NeonHelper.JsonClone<VaultCredentials>(hive.HiveLogin.VaultCredentials);
 
                         // We really don't want to include the root token in the credentials
-                        // passed to [neon-cluster-manager], which needs the unseal keys.
+                        // passed to [neon-hive-manager], which needs the unseal keys.
 
                         vaultCredentials.RootToken = null;
 
-                        hive.Docker.Secret.Set("neon-cluster-manager-vaultkeys", Encoding.UTF8.GetBytes(NeonHelper.JsonSerialize(vaultCredentials, Formatting.Indented)));
+                        hive.Docker.Secret.Set("neon-hive-manager-vaultkeys", Encoding.UTF8.GetBytes(NeonHelper.JsonSerialize(vaultCredentials, Formatting.Indented)));
 
-                        unsealSecretOption = "--secret=neon-cluster-manager-vaultkeys";
+                        unsealSecretOption = "--secret=neon-hive-manager-vaultkeys";
                     }
 
-                    hive.FirstManager.Status = "start: neon-cluster-manager";
+                    hive.FirstManager.Status = "start: neon-hive-manager";
 
-                    hive.FirstManager.IdempotentDockerCommand("setup/neon-cluster-manager",
+                    hive.FirstManager.IdempotentDockerCommand("setup/neon-hive-manager",
                         response =>
                         {
                             foreach (var manager in hive.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-cluster-manager.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-hive-manager.sh"), response.BashCommand);
                             }
                         },
                         hive.SecureRunOptions | RunOptions.FaultOnError,
                         "docker service create",
-                        "--name", "neon-cluster-manager",
+                        "--name", "neon-hive-manager",
                         "--detach=false",
                         "--mount", "type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true",
                         "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
@@ -165,7 +165,7 @@ namespace NeonCli
                         "--constraint", "node.role==manager",
                         "--replicas", 1,
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
-                        Program.ResolveDockerImage(hive.Definition.ClusterManagerImage));
+                        Program.ResolveDockerImage(hive.Definition.HiveManagerImage));
 
                     //---------------------------------------------------------
                     // Deploy proxy related services

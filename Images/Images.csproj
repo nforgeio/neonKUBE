@@ -53,7 +53,7 @@
     <None Include="dotnet\resolv.conf.head.sh" />
     <None Include="neon-cli\conf\ssh_config.conf" />
     <Content Include="neon-cli\modules\docker_stack.py" />
-    <Content Include="neon-cluster-manager\.dockerignore">
+    <Content Include="neon-hive-manager\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="elasticsearch6\.dockerignore">
@@ -91,13 +91,13 @@
     <None Include="neon-cli\modules\neon_docker_service.sh" />
     <None Include="neon-cli\modules\neon_docker_login.sh" />
     <None Include="neon-cli\modules\neon_load_balancer.sh" />
-    <None Include="neon-cluster-manager\build.ps1" />
-    <None Include="neon-cluster-manager\docker-entrypoint.sh" />
-    <None Include="neon-cluster-manager\Dockerfile">
+    <None Include="neon-hive-manager\build.ps1" />
+    <None Include="neon-hive-manager\docker-entrypoint.sh" />
+    <None Include="neon-hive-manager\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="neon-cluster-manager\publish.ps1" />
-    <None Include="neon-cluster-manager\README.md" />
+    <None Include="neon-hive-manager\publish.ps1" />
+    <None Include="neon-hive-manager\README.md" />
     <Content Include="neon-dns\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

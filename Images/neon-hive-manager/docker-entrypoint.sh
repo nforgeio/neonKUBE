@@ -5,7 +5,7 @@
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # Loads the Docker host node environment variables before launching the 
-# [neon-cluster-manager] .NET service.
+# [neon-hive-manager] .NET service.
 
 # Load the Docker host node environment variables if present.
 
@@ -21,4 +21,4 @@ fi
 
 # Launch the service.
 
-neon-cluster-manager
+neon-hive-manager

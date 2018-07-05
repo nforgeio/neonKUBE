@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the [neon-cluster-manager] images and pushes them to Docker Hub.
+# Builds the [neon-hive-manager] images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -27,7 +27,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/neon-cluster-manager"
+	$registry = "nhive/neon-hive-manager"
 	$tag      = ImageTag
 	$branch   = GitBranch
 

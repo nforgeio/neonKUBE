@@ -82,7 +82,7 @@ namespace NeonCli.Ansible
         //      allow-unit-testing  - indicates whether HiveFixture based unit tests are
         //                            allowed for the hive.  (yes/no/true/false/on/off/1/0)
         //
-        //      disable-auto-unseal - controls whether [neon-cluster-manager] will automatically
+        //      disable-auto-unseal - controls whether [neon-hive-manager] will automatically
         //                            unseal the hive Vault.
         //
         //      log-retention-days  - specifies the number of days of hive logs to be 

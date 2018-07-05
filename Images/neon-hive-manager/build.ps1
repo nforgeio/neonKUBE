@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the neonHIVE [neon-cluster-manager] image.
+# Builds the neonHIVE [neon-hive-manager] image.
 #
 # Usage: powershell -file REGISTRY TAG
 
@@ -15,10 +15,10 @@ param
 
 "   "
 "======================================="
-"* NEON-CLUSTER-MANAGER:" + $tag
+"* NEON-HIVE-MANAGER:" + $tag
 "======================================="
 
-$appname = "neon-cluster-manager"
+$appname = "neon-hive-manager"
 
 # Build and publish the app to a local [bin] folder.
 

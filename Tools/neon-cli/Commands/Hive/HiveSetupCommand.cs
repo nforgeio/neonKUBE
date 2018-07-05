@@ -1655,7 +1655,7 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
 
                     if (node.Metadata.IsManager)
                     {
-                        images.Add(Program.ResolveDockerImage(hive.Definition.ClusterManagerImage));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.HiveManagerImage));
                         images.Add(Program.ResolveDockerImage(hive.Definition.ProxyManagerImage));
                         images.Add(Program.ResolveDockerImage(hive.Definition.DnsImage));
                         images.Add(Program.ResolveDockerImage(hive.Definition.DnsMonImage));
@@ -3157,7 +3157,7 @@ systemctl start neon-volume-plugin
 
                     // Persist the hive definition (without important secrets)
                     // to Consul so it will be available services like [neon-proxy-manager]
-                    // immediately (before [neon-cluster-manager] spins up).
+                    // immediately (before [neon-hive-manager] spins up).
 
                     var loginClone = hiveLogin.Clone();
 

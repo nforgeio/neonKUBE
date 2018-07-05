@@ -106,7 +106,7 @@ if ($base)
 if ($dotnet)
 {
 	Publish "$image_root\\neon-cli"
-	Publish "$image_root\\neon-cluster-manager"
+	Publish "$image_root\\neon-hive-manager"
 	Publish "$image_root\\neon-dns"
 	Publish "$image_root\\neon-dns-mon"
 	Publish "$image_root\\neon-proxy-manager"

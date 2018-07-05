@@ -38,7 +38,7 @@ namespace NeonCli
             base.Initialize(controller);
 
             controller.AddStep(GetStepLabel("node config"), (node, stepDelay) => UpdateNode(node, stepDelay));
-            controller.AddGlobalStep(GetStepLabel("neon-cluster-manager"), () => UpdateClusterManager());
+            controller.AddGlobalStep(GetStepLabel("neon-hive-manager"), () => UpdateHiveManager());
 
             if (Hive.Definition.Log.Enabled)
             {
@@ -172,14 +172,14 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Creates the [neon-ssh-credentials] secret and then updates [neon-cluster-manager] and
+        /// Creates the [neon-ssh-credentials] secret and then updates [neon-hive-manager] and
         /// its creation script on the managers to use the secret.
         /// </summary>
-        private void UpdateClusterManager()
+        private void UpdateHiveManager()
         {
             var firstManager = Hive.FirstManager;
 
-            // Create the [neon-ssh-credentials] secret because the new [neon-cluster-manager]
+            // Create the [neon-ssh-credentials] secret because the new [neon-hive-manager]
             // requires it.
 
             firstManager.InvokeIdempotentAction(GetIdempotentTag("neon-ssh-credentials"),
@@ -189,32 +189,32 @@ namespace NeonCli
                     Hive.Docker.Secret.Set("neon-ssh-credentials", $"{HiveLogin.SshUsername}/{HiveLogin.SshPassword}");
                 });
 
-            // Update the [neon-cluster-manager] service to the latest image and pass it the
+            // Update the [neon-hive-manager] service to the latest image and pass it the
             // new [neon-ssh-credentials] secret.
 
-            firstManager.InvokeIdempotentAction(GetIdempotentTag("neon-cluster-manager"),
+            firstManager.InvokeIdempotentAction(GetIdempotentTag("neon-hive-manager"),
                 () =>
                 {
-                    firstManager.Status = "update: neon-cluster-manager";
-                    firstManager.SudoCommand($"docker service update --image {Program.ResolveDockerImage(Hive.Definition.ClusterManagerImage)} --secret-add neon-ssh-credentials neon-cluster-manager");
+                    firstManager.Status = "update: neon-hive-manager";
+                    firstManager.SudoCommand($"docker service update --image {Program.ResolveDockerImage(Hive.Definition.HiveManagerImage)} --secret-add neon-ssh-credentials neon-hive-manager");
                     firstManager.Status = string.Empty;
                 });
 
-            // Upload the new [neon-cluster-manager] service creation script to the managers.
+            // Upload the new [neon-hive-manager] service creation script to the managers.
 
-            firstManager.InvokeIdempotentAction(GetIdempotentTag("neon-cluster-manager-script"),
+            firstManager.InvokeIdempotentAction(GetIdempotentTag("neon-hive-manager-script"),
                 () =>
                 {
                     string unsealSecretOption = null;
 
                     if (Hive.Definition.Vault.AutoUnseal)
                     {
-                        unsealSecretOption = "--secret=neon-cluster-manager-vaultkeys";
+                        unsealSecretOption = "--secret=neon-hive-manager-vaultkeys";
                     }
 
                     var bundle = new CommandBundle(
                         "docker service create",
-                        "--name", "neon-cluster-manager",
+                        "--name", "neon-hive-manager",
                         "--detach=false",
                         "--mount", "type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true",
                         "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
@@ -225,14 +225,14 @@ namespace NeonCli
                         "--constraint", "node.role==manager",
                         "--replicas", 1,
                         "--restart-delay", Hive.Definition.Docker.RestartDelay,
-                        Program.ResolveDockerImage(Hive.Definition.ClusterManagerImage));
+                        Program.ResolveDockerImage(Hive.Definition.HiveManagerImage));
 
                     var createScript = bundle.ToBash();
 
                     foreach (var manager in Hive.Managers)
                     {
-                        manager.Status = "update: neon-cluster-manager script";
-                        manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-cluster-manager.sh"), createScript);
+                        manager.Status = "update: neon-hive-manager script";
+                        manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-hive-manager.sh"), createScript);
                         manager.Status = string.Empty;
                     }
                 });
@@ -245,7 +245,7 @@ namespace NeonCli
         {
             var firstManager = Hive.FirstManager;
 
-            // Create the [neon-ssh-credentials] secret because the new [neon-cluster-manager]
+            // Create the [neon-ssh-credentials] secret because the new [neon-hive-manager]
             // requires it.
 
             firstManager.InvokeIdempotentAction(GetIdempotentTag("kibana-lb-rule"),

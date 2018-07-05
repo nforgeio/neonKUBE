@@ -8,7 +8,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-The **neon-cluster-manager** service performs a few hive maintenance functions:
+The **neon-hive-manager** service performs a few hive maintenance functions:
 
 * Updating the hive definition persisted to Consul so it accurately describes the current hive nodes and their labels.
 
@@ -18,9 +18,9 @@ The **neon-cluster-manager** service performs a few hive maintenance functions:
 
 neonHIVEs persist a hive defintion to Consul.  This is downloaded by the **neon-cli** and so that it can accurately make container placement decisions for situations where Docker services are not appropriate.  The hive definition includes the non-confidential properties when the hive was initialized provisioned plus the current set of hive nodes including their Docker labels.
 
-This definition is serialized as JSON and then compressed via deflate before being persisted to Consul.  **neon-cluster-manager** also persists the MD5 hash of the definition JSON to Consul, making it possible to defer retrieving the definition only when it changes.  Nodes will be added or deleted and their labels modified relatively infrequently for many clusters, so this is a good optimization.
+This definition is serialized as JSON and then compressed via deflate before being persisted to Consul.  **neon-hive-manager** also persists the MD5 hash of the definition JSON to Consul, making it possible to defer retrieving the definition only when it changes.  Nodes will be added or deleted and their labels modified relatively infrequently for many clusters, so this is a good optimization.
 
-**neon-cluster-manager** persists the hive definition and its hash to Consul at:
+**neon-hive-manager** persists the hive definition and its hash to Consul at:
 ````
 neon:
     hive:
@@ -28,7 +28,7 @@ neon:
         definition-hash     - MD5 hash of the definition (base64)
 ````
 &nbsp;
-**neon-cluster-manager** service instances need to be deployed only on hive manager nodes so it can access the local */var/run/docker.sock* Unix domain socket to query the Swarm status.  The service will be configured to run only one instance at a time although it is safe to run more than one.
+**neon-hive-manager** service instances need to be deployed only on hive manager nodes so it can access the local */var/run/docker.sock* Unix domain socket to query the Swarm status.  The service will be configured to run only one instance at a time although it is safe to run more than one.
 
 # Vault Unsealing
 
@@ -38,7 +38,7 @@ Vault is super secure by default, so secure that the keys required by Vault to d
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon vault auto-unlock on|off`
 
-Many (perhaps most) clusters don't need this level of security and operators may wish that Vault could be be automatically unsealed after restarts.  **neon-cluster-manager** can be configured to accomplish this by persisting the Vault unseal keys as a Docker secret named **neon-cluster-manager-vaultkeys**.  neonHIVEs are configured to do this by default.
+Many (perhaps most) clusters don't need this level of security and operators may wish that Vault could be be automatically unsealed after restarts.  **neon-hive-manager** can be configured to accomplish this by persisting the Vault unseal keys as a Docker secret named **neon-hive-manager-vaultkeys**.  neonHIVEs are configured to do this by default.
 
 # Environment Variables
 
@@ -48,7 +48,7 @@ Many (perhaps most) clusters don't need this level of security and operators may
 
 * **neon-ssh-credentials** - (*Required*) The service requires the SSH credentials to be mapped into the service as **neon-ssh-credentials**.  These credentials are formatted as **username/password**.
 
-* **neon-cluster-manager-vaultkeys** - (*Optional*) Pass this to enable automatic Vault unsealing.  This can be obtained from the root hive credentials and is a JSON object that will looks something like:
+* **neon-hive-manager-vaultkeys** - (*Optional*) Pass this to enable automatic Vault unsealing.  This can be obtained from the root hive credentials and is a JSON object that will looks something like:
 ````
 {
     "UnsealKeys": [
@@ -64,7 +64,7 @@ Many (perhaps most) clusters don't need this level of security and operators may
 This service reads configuration settings from Consul:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon/services`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-cluster-manager:`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-hive-manager:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`node_poll_seconds: 30`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`vault_poll_seconds: 30`
 
@@ -77,20 +77,20 @@ You'll need to restart the containers to pick up any changes.
 
 # Deployment
 
-**neon-cluster-manager** service will be deployed automatically by **neon-cli** during hive setup using a command like:
+**neon-hive-manager** service will be deployed automatically by **neon-cli** during hive setup using a command like:
 
 ````
 docker service create \
-    --name neon-cluster-manager \
+    --name neon-hive-manager \
     --detach=false \
     --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
     --env LOG_LEVEL=INFO \
-    --secret=neon-cluster-manager-vaultkeys \
+    --secret=neon-hive-manager-vaultkeys \
     --secret=neon-ssh-credentials \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \
-    nhive/neon-cluster-manager
+    nhive/neon-hive-manager
 ````

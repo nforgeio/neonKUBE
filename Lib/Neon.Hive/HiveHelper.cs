@@ -1358,7 +1358,7 @@ namespace Neon.Hive
             var fullJson         = NeonHelper.JsonSerialize(definition);
             var deflatedFullJson = NeonHelper.CompressString(fullJson);
 
-            // [neon-cluster-manager] expects the pet node definitions to be persisted to
+            // [neon-hive-manager] expects the pet node definitions to be persisted to
             // Consul at [neon/global/pets-definition] so that it can include any pets
             // in the hive definition file consumed by [neon-cli] before it executes any 
             // hive related commands.

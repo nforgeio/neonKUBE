@@ -25,17 +25,17 @@ using Neon.Docker;
 using Neon.Hive;
 using Neon.Net;
 
-namespace NeonClusterManager
+namespace NeonHiveManager
 {
     /// <summary>
-    /// Implements the <b>neon-cluster-manager</b> service.  See 
-    /// <a href="https://hub.docker.com/r/nhive/neon-cluster-manager/">nhive/neon-cluster-manager</a>
+    /// Implements the <b>neon-hive-manager</b> service.  See 
+    /// <a href="https://hub.docker.com/r/nhive/neon-hive-manager/">nhive/neon-hive-manager</a>
     /// for more information.
     /// </summary>
     public static class Program
     {
-        private static readonly string serviceName           = $"neon-cluster-manager:{GitVersion}";
-        private static readonly string serviceRootKey        = "neon/service/neon-cluster-manager";
+        private static readonly string serviceName           = $"neon-hive-manager:{GitVersion}";
+        private static readonly string serviceRootKey        = "neon/service/neon-hive-manager";
         private static readonly string nodePollSecondsKey    = $"{serviceRootKey}/node_poll_seconds";
         private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
@@ -87,7 +87,7 @@ namespace NeonClusterManager
                     // You'll find this information in the ROOT hive login
                     // for the target hive.
 
-                    secrets.Add("neon-cluster-manager-vaultkeys",
+                    secrets.Add("neon-hive-manager-vaultkeys",
                         new VaultCredentials()
                         {
                             RootToken    = "cd5831fa-86ec-cc22-b1f3-051f88147382",
@@ -120,7 +120,7 @@ namespace NeonClusterManager
 
                 if (!string.Equals(nodeRole, NodeRole.Manager, StringComparison.OrdinalIgnoreCase))
                 {
-                    log.LogCritical(() => $"[neon-cluster-manager] service is running on a [{nodeRole}] hive node.  Running on only [{NodeRole.Manager}] nodes are supported.");
+                    log.LogCritical(() => $"[neon-hive-manager] service is running on a [{nodeRole}] hive node.  Running on only [{NodeRole.Manager}] nodes are supported.");
                     Program.Exit(1);
                 }
 
@@ -231,14 +231,14 @@ namespace NeonClusterManager
             log.LogInfo(() => $"Using setting [{managerPollSecondsKey}={managerPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{logPollSecondsKey}={logPollInterval.TotalSeconds}]");
 
-            // Parse the Vault credentials from the [neon-cluster-manager-vaultkeys] 
+            // Parse the Vault credentials from the [neon-hive-manager-vaultkeys] 
             // secret, if it exists.
 
-            var vaultCredentialsJson = HiveHelper.GetSecret("neon-cluster-manager-vaultkeys");
+            var vaultCredentialsJson = HiveHelper.GetSecret("neon-hive-manager-vaultkeys");
 
             if (string.IsNullOrWhiteSpace(vaultCredentialsJson))
             {
-                log.LogInfo(() => "Vault AUTO-UNSEAL is DISABLED because [neon-cluster-manager-vaultkeys] Docker secret is not specified.");
+                log.LogInfo(() => "Vault AUTO-UNSEAL is DISABLED because [neon-hive-manager-vaultkeys] Docker secret is not specified.");
             }
             else
             {
@@ -250,7 +250,7 @@ namespace NeonClusterManager
                 }
                 catch (Exception e)
                 {
-                    log.LogError("Vault AUTO-UNSEAL is DISABLED because the [neon-cluster-manager-vaultkeys] Docker secret could not be parsed.", e);
+                    log.LogError("Vault AUTO-UNSEAL is DISABLED because the [neon-hive-manager-vaultkeys] Docker secret could not be parsed.", e);
                 }
             }
 

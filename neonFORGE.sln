@@ -105,7 +105,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{1A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Renci.SshNet.NETCore", "External\SSH.NET\Renci.SshNet.NETCore\Renci.SshNet.NETCore.csproj", "{7E6B1954-7583-4021-82DA-0DE9C171F2B7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-cluster-manager", "Services\neon-cluster-manager\neon-cluster-manager.csproj", "{C3CBC486-6217-49D5-AFA2-38EFEBF3FCBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-hive-manager", "Services\neon-hive-manager\neon-hive-manager.csproj", "{C3CBC486-6217-49D5-AFA2-38EFEBF3FCBD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "User", "User", "{DB3EE5E6-94C8-4298-AABB-FB46E820C00F}"
 EndProject

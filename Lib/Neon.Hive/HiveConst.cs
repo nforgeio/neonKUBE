@@ -197,7 +197,7 @@ namespace Neon.Hive
         public static IEnumerable<string> DockerServices =>
             new List<string>()
             {
-                "neon-cluster-manager",
+                "neon-hive-manager",
                 "neon-dns",
                 "neon-dns-mon",
                 "neon-log-collector",

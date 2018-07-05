@@ -97,7 +97,7 @@ USAGE:
     //  ProxyImage              nhive/neon-proxy:latest
     //  ProxyVaultImage         nhive/neon-proxy-vault:latest
     //  ProxyManagerImage       nhive/neon-proxy-manager:latest
-    //  ClusterManagerImage     nhive/neon-cluster-manager:latest
+    //  HiveManagerImage        nhive/neon-hive-manager:latest
 
     ""Name"": ""my-hive"",
     ""Datacenter"": ""Seattle"",
