@@ -41,9 +41,9 @@ $env:CLUSTER_MAX_PARALLEL = 10
 
 $env:SECRETS_PASS   = "neon-git"
 $env:SECRETS_GLOBAL = "$env:CLUSTER_SETUP_PATH\secrets.yaml"
-$env:SECRETS_LOCAL  = "$env:CLUSTER_SETUP_PATH\clusters\$env:CLUSTER\secrets.yaml"
+$env:SECRETS_LOCAL  = "$env:CLUSTER_SETUP_PATH\hives\$env:CLUSTER\secrets.yaml"
 $env:VARS_GLOBAL    = "$env:CLUSTER_SETUP_PATH\secrets.yaml"
-$env:VARS_LOCAL     = "$env:CLUSTER_SETUP_PATH\clusters\$env:CLUSTER\secrets.yaml"
+$env:VARS_LOCAL     = "$env:CLUSTER_SETUP_PATH\hives\$env:CLUSTER\secrets.yaml"
 
 # Hive secret YAML files need to have Linux-style line endings, so we're
 # going to convert these here.
