@@ -227,19 +227,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small2", "home-small2"
 		Devops\test\hives\home-small2\vars.yaml = Devops\test\hives\home-small2\vars.yaml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Hive.Aws", "Lib\Neon.Hive.Aws\Neon.Hive.Aws.csproj", "{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.Aws", "Lib\Neon.Hive.Aws\Neon.Hive.Aws.csproj", "{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Hive.Azure", "Lib\Neon.Hive.Azure\Neon.Hive.Azure.csproj", "{CD08B37A-614C-4DEB-9805-ADBD77DA3F8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.Azure", "Lib\Neon.Hive.Azure\Neon.Hive.Azure.csproj", "{CD08B37A-614C-4DEB-9805-ADBD77DA3F8E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Hive.Google", "Lib\Neon.Hive.Google\Neon.Hive.Google.csproj", "{8315C918-4C26-435C-AC32-47A87CB2792E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.Google", "Lib\Neon.Hive.Google\Neon.Hive.Google.csproj", "{8315C918-4C26-435C-AC32-47A87CB2792E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Hive.HyperV", "Lib\Neon.Hive.HyperV\Neon.Hive.HyperV.csproj", "{803A4763-4B6E-42AF-ADBB-61227369B5AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.HyperV", "Lib\Neon.Hive.HyperV\Neon.Hive.HyperV.csproj", "{803A4763-4B6E-42AF-ADBB-61227369B5AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Hive.HyperVDev", "Lib\Neon.Hive.HyperVDev\Neon.Hive.HyperVDev.csproj", "{8B2B63BA-AC1F-4F34-AE1A-ED4C08642E82}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.HyperVDev", "Lib\Neon.Hive.HyperVDev\Neon.Hive.HyperVDev.csproj", "{8B2B63BA-AC1F-4F34-AE1A-ED4C08642E82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Hive.Machine", "Lib\Neon.Hive.Machine\Neon.Hive.Machine.csproj", "{FC110EBB-25E9-49AC-9D21-DBD956090ED1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.Machine", "Lib\Neon.Hive.Machine\Neon.Hive.Machine.csproj", "{FC110EBB-25E9-49AC-9D21-DBD956090ED1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Hive.Xen", "Lib\Neon.Hive.Xen\Neon.Hive.Xen.csproj", "{22CA72EE-FFA9-412A-B995-D51C617B8FEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.Xen", "Lib\Neon.Hive.Xen\Neon.Hive.Xen.csproj", "{22CA72EE-FFA9-412A-B995-D51C617B8FEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Hive.Hosting", "Lib\Neon.Hive.Hosting\Neon.Hive.Hosting.csproj", "{08B7000C-F261-4543-B611-5710D12263DB}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -728,6 +730,18 @@ Global
 		{22CA72EE-FFA9-412A-B995-D51C617B8FEF}.Release|x64.Build.0 = Release|Any CPU
 		{22CA72EE-FFA9-412A-B995-D51C617B8FEF}.Release|x86.ActiveCfg = Release|Any CPU
 		{22CA72EE-FFA9-412A-B995-D51C617B8FEF}.Release|x86.Build.0 = Release|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Debug|x64.Build.0 = Debug|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Debug|x86.Build.0 = Debug|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Release|x64.ActiveCfg = Release|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Release|x64.Build.0 = Release|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Release|x86.ActiveCfg = Release|Any CPU
+		{08B7000C-F261-4543-B611-5710D12263DB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -788,6 +802,7 @@ Global
 		{8B2B63BA-AC1F-4F34-AE1A-ED4C08642E82} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{FC110EBB-25E9-49AC-9D21-DBD956090ED1} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{22CA72EE-FFA9-412A-B995-D51C617B8FEF} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
+		{08B7000C-F261-4543-B611-5710D12263DB} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

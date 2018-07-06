@@ -135,6 +135,21 @@ namespace Neon.Hive
             Manager = 0x0000010
         }
 
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Ensures that the assembly hosting this hosting manager is loaded.
+        /// </summary>
+        public static void Load()
+        {
+            // We don't have to do anything here because the assembly is loaded
+            // as a byproduct of calling this.
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Relates hive node information with Azure VM information.
         /// </summary>

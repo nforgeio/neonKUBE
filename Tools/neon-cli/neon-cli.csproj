@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Hive.Aws\Neon.Hive.Aws.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Hive.Azure\Neon.Hive.Azure.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Hive.Google\Neon.Hive.Google.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Hive.Hosting\Neon.Hive.Hosting.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Hive.HyperVDev\Neon.Hive.HyperVDev.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Hive.HyperV\Neon.Hive.HyperV.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Hive.Machine\Neon.Hive.Machine.csproj" />

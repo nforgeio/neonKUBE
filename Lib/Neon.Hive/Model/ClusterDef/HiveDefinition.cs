@@ -702,19 +702,19 @@ namespace Neon.Hive
         [Pure]
         public void Validate()
         {
-            Provisioner = Provisioner ?? defaultProvisioner;
-            DrivePrefix   = DrivePrefix ?? defaultDrivePrefix;
-            Setup         = Setup ?? new SetupOptions();
-            Hosting       = Hosting ?? new HostingOptions();
-            Vpn           = Vpn ?? new VpnOptions();
-            HostNode      = HostNode ?? new HostNodeOptions();
-            Docker        = Docker ?? new DockerOptions();
-            Network       = Network ?? new NetworkOptions();
-            Consul        = Consul ?? new ConsulOptions();
-            Vault         = Vault ?? new VaultOptions();
-            Log           = Log ?? new LogOptions();
-            Dashboard     = Dashboard ?? new DashboardOptions();
-            Ceph          = Ceph ?? new CephOptions();
+            Provisioner       = Provisioner ?? defaultProvisioner;
+            DrivePrefix       = DrivePrefix ?? defaultDrivePrefix;
+            Setup             = Setup ?? new SetupOptions();
+            Hosting           = Hosting ?? new HostingOptions();
+            Vpn               = Vpn ?? new VpnOptions();
+            HostNode          = HostNode ?? new HostNodeOptions();
+            Docker            = Docker ?? new DockerOptions();
+            Network           = Network ?? new NetworkOptions();
+            Consul            = Consul ?? new ConsulOptions();
+            Vault             = Vault ?? new VaultOptions();
+            Log               = Log ?? new LogOptions();
+            Dashboard         = Dashboard ?? new DashboardOptions();
+            Ceph              = Ceph ?? new CephOptions();
 
             ProxyImage        = ProxyImage ?? defaultProxyImage;
             ProxyVaultImage   = ProxyVaultImage ?? defaultProxyVaultImage;
@@ -735,7 +735,7 @@ namespace Neon.Hive
             Dashboard.Validate(this);
             Ceph.Validate(this);
 
-            HostingManager.ValidateCluster(this);
+            HostingManager.ValidateHive(this);
 
             if (TimeSources == null || TimeSources.Length == 0 || TimeSources.Count(ts => string.IsNullOrWhiteSpace(ts)) > 0)
             {

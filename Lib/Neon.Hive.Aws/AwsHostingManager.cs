@@ -36,6 +36,21 @@ namespace Neon.Hive
     [HostingProvider(HostingEnvironments.Aws)]
     public class AwsHostingManager : HostingManager
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Ensures that the assembly hosting this hosting manager is loaded.
+        /// </summary>
+        public static void Load()
+        {
+            // We don't have to do anything here because the assembly is loaded
+            // as a byproduct of calling this.
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private HiveProxy hive;
 
         /// <summary>

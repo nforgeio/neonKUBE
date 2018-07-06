@@ -32,6 +32,7 @@ SetVersion Neon.Hive
 SetVersion Neon.Hive.Aws
 SetVersion Neon.Hive.Azure
 SetVersion Neon.Hive.Google
+SetVersion Neon.Hive.Hosting
 SetVersion Neon.Hive.HyperV
 SetVersion Neon.Hive.HyperVDev
 SetVersion Neon.Hive.Machine
@@ -49,6 +50,7 @@ Publish Neon.Hive
 Publish Neon.Hive.Aws
 Publish Neon.Hive.Azure
 Publish Neon.Hive.Google
+Publish Neon.Hive.Hosting
 Publish Neon.Hive.HyperV
 Publish Neon.Hive.HyperVDev
 Publish Neon.Hive.Machine

@@ -119,6 +119,8 @@ Server Requirements:
                 Program.Exit(0);
             }
 
+            // Manually load all of the known hive manager assemblies.
+
             // Implement the command.
 
             packageCacheUri = commandLine.GetOption("--package-cache");     // This overrides the hive definition, if specified.
@@ -269,7 +271,16 @@ Server Requirements:
             // such as virtual machines, networks, load balancers, public IP addresses, security
             // groups,... as required for the environment.
 
+            HostingLoader.LoadManagers();   // Ensure that all hive hosting manager assemblies are loaded.
+
             hostingManager = HostingManager.GetManager(hive, Program.LogPath);
+
+            if (hostingManager == null)
+            {
+                Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{hive.Definition.Hosting.Environment}] hosting environment could be located.");
+                Program.Exit(1);
+            }
+
             hostingManager.HostUsername = Program.MachineUsername;
             hostingManager.HostPassword = Program.MachinePassword;
             hostingManager.ShowStatus   = !Program.Quiet;

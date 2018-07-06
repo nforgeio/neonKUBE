@@ -19,10 +19,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -47,9 +43,11 @@ namespace Neon.Hive
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        /// <returns>The <see cref="HostingManager"/>.</returns>
+        /// <returns>
+        /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
+        /// could be located for the specified hive environment.
+        /// </returns>
         /// <exception cref="HiveException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
-        /// <exception cref="NotImplementedException">Thrown if no hosting manager could be located for the environment.</exception>
         public static HostingManager GetManager(HiveProxy hive, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
@@ -61,6 +59,8 @@ namespace Neon.Hive
 
             var enviromentToManager = new Dictionary<HostingEnvironments, Type>();
 
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 foreach (var type in assembly.GetTypes())
@@ -84,26 +84,30 @@ namespace Neon.Hive
 
             if (!enviromentToManager.TryGetValue(hive.Definition.Hosting.Environment, out var managerType))
             {
-                throw new NotImplementedException($"Cannot locate an [{nameof(IHostingManager)}] for the [{hive.Definition.Hosting.Environment}] environment.");
+                return null;
             }
 
             return (HostingManager)Activator.CreateInstance(managerType, hive, logFolder);
         }
 
         /// <summary>
-        /// Verifies that a hive is valid for the hosting manager, customizing 
+        /// Verifies that a hive definition is valid for the hosting manager, modifyingx 
         /// properties as required.
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <exception cref="HiveDefinitionException">Thrown if any problems were detected.</exception>
-        public static void ValidateCluster(HiveDefinition hiveDefinition)
+        public static void ValidateHive(HiveDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             var hive    = new HiveProxy(hiveDefinition);
             var manager = HostingManager.GetManager(hive);
 
-            manager.Validate(hiveDefinition);
+            // Note that [manager] will be NULL if the target hosting environment manager 
+            // assembly has not already been loaded.  We won't perform hosting validation
+            // if we can't locate the manager.
+
+            manager?.Validate(hiveDefinition);
         }
 
         /// <summary>

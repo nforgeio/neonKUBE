@@ -25,11 +25,6 @@ using ICSharpCode.SharpZipLib.Zip;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-// $todo(jeff.lill):
-//
-// Have [NodeProxy.Manager] return a healthy manager rather than just the
-// first one.
-
 namespace Neon.Hive
 {
     /// <summary>
