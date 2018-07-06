@@ -122,7 +122,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// The network port to be exposed for this rule on the clusters public Internet facing load balancer.
+        /// The network port to be exposed for this rule on the hive's public Internet facing load balancer.
         /// This defaults to <b>80</b> for HTTP rules or <b>443</b> for HTTPS rules.
         /// </para>
         /// <note>

@@ -65,7 +65,7 @@ namespace Neon.Hive
         /// <note>
         /// <para><b>IMPORTANT!</b></para>
         /// <para>
-        /// Production clusters should always install a specific version of Docker so 
+        /// Production hives should always install a specific version of Docker so 
         /// it will be easy to add new hosts in the future that will have the same 
         /// Docker version as the rest of the hive.  This also prevents the package
         /// manager from inadvertently upgrading Docker.
@@ -74,7 +74,7 @@ namespace Neon.Hive
         /// <note>
         /// <para><b>IMPORTANT!</b></para>
         /// <para>
-        /// It is not possible for the <b>neon-cli</b> tool to upgrade Docker on clusters
+        /// It is not possible for the <b>neon-cli</b> tool to upgrade Docker on hives
         /// that deployed the <b>test</b> or <b>experimental</b> build.
         /// </para>
         /// </note>
@@ -137,7 +137,7 @@ namespace Neon.Hive
         /// <summary>
         /// Specifies the Docker Registries and the required credentials that will
         /// be made available to the hive.  Note that the Docker public registry
-        /// will always be available to new clusters.
+        /// will always be available to new hives.
         /// </summary>
         [JsonProperty(PropertyName = "Registries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

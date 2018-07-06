@@ -15,7 +15,7 @@
       "ResourceGroup": "neon-dev",
       "Region": "westus2",
       "DomainLabel": "neonforge-99",
-      "StaticClusterAddress": false,
+      "StaticHiveAddress": false,
       "PublicNodeAddresses": false
     }
   },

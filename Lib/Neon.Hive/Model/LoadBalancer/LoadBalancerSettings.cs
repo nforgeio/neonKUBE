@@ -194,7 +194,7 @@ namespace Neon.Hive
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Clusters with a large number of pet nodes may generate an excessive amount
+        /// Hives with a large number of pet nodes may generate an excessive amount
         /// of bridge related health checking traffic.  You can mitigate this somewhat 
         /// by designating a smaller number of Swarm target nodes here.
         /// </para>

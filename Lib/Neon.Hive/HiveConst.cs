@@ -20,7 +20,7 @@ namespace Neon.Hive
     /// <note>
     /// <b>IMPORTANT:</b> These definitions must match those in the <b>$\Stack\Docker\Images\neonhive.sh</b>
     /// file.  You must manually update that file and then rebuild and push the containers
-    /// as well as redeploy all clusters from scratch.
+    /// as well as redeploy all hives from scratch.
     /// </note>
     /// </remarks>
     public static class HiveConst

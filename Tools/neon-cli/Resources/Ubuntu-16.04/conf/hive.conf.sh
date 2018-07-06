@@ -29,7 +29,7 @@ fi
 #------------------------------------------------------------------------------
 # This identifies the tool/version that deployed or upgraded the hive.
 
-NEON_CLUSTER_PROVISIONER=$<cluster.provisioner>
+NEON_HIVE_PROVISIONER=$<hive.provisioner>
 
 #------------------------------------------------------------------------------
 # Bash does not run interactively when called remotely via SSH.  This means
@@ -122,9 +122,9 @@ export NEON_LOG_ENABLED=$<log.enabled>
 # Echo the configuration to STDERR if requested.
 
 if $summary ; then
-    echo "NEON_CLUSTER_PROVISIONER           = ${NEON_CLUSTER_PROVISIONER}" 1>&2
+    echo "NEON_HIVE_PROVISIONER              = ${NEON_CLUSTER_PROVISIONER}" 1>&2
     echo 1>&2
-    echo "NEON_CLUSTER                       = ${NEON_CLUSTER}" 1>&2
+    echo "NEON_HIVE                          = ${NEON_HIVE}" 1>&2
     echo "NEON_DATACENTER                    = ${NEON_DATACENTER}" 1>&2
     echo "NEON_ENVIRONMENT                   = ${NEON_ENVIRONMENT}" 1>&2
     echo "NEON_HOSTING                       = ${NEON_HOSTING}" 1>&2

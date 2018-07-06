@@ -82,7 +82,7 @@ namespace NeonHiveManager
                     //
                     // Add your target hive's Vault credentials here for 
                     // manual debugging.  Take care not to commit sensitive
-                    // credentials for production clusters.
+                    // credentials for production hives.
                     //
                     // You'll find this information in the ROOT hive login
                     // for the target hive.
@@ -145,7 +145,7 @@ namespace NeonHiveManager
             }
             finally
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
                 terminator.ReadyToExit();
             }
 

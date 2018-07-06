@@ -37,7 +37,7 @@ USAGE:
 ARGUMENTS:
 
     USER        - The operator's user name.
-    CLUSTER     - The hive name.
+    HIVE        - The hive name.
 
 OPTIONS:
 

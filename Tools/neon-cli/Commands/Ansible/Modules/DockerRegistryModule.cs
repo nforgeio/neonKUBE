@@ -136,7 +136,7 @@ namespace NeonCli.Ansible
         //      neon create password
         //
         // IMPORTANT: You should avoid changing the [secret] once you've deployed
-        //            your registry and have clusters and users logged into it. 
+        //            your registry and have hives and users logged into it. 
         //            Changing the secret will cause these clusters and users to 
         //            reject your registry as potentially hacked and you'll need 
         //            to have everyone logout and then login again to correct this, 

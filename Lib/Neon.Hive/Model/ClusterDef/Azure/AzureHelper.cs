@@ -31,7 +31,7 @@ namespace Neon.Hive
         /// <summary>
         /// The maximum number of nodes currently allowed in a neonHIVE deployed to Azure.
         /// </summary>
-        public const int MaxClusterNodes = 100;
+        public const int MaxHiveNodes = 100;
 
         /// <summary>
         /// The maximum number of hosted load balanced TCP/UDP endpoints allowed  in a neonHIVE deployed to Azure.

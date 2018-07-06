@@ -41,7 +41,7 @@ ARGUMENTS:
     VALUE       - identifies the desired value
     NODE        - optionally names a specific node
 
-CLUSTER IDENTIFIERS:
+HIVE IDENTIFIERS:
 
     allow-unit-testing      - enables HiveFixture unit testing (bool)
     create-date-utc         - hive creation date (UTC)
@@ -235,7 +235,7 @@ NODE IDENTIFIERS:
 
                     case "sshkey-fingerprint":
 
-                        Console.Write(hiveLogin.SshClusterHostKeyFingerprint);
+                        Console.Write(hiveLogin.SshHiveHostKeyFingerprint);
                         break;
 
                     case "sshkey-client-pem":

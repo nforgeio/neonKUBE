@@ -180,7 +180,7 @@ namespace NeonCli
         /// <param name="preprocessReader">The reader.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="nodeDefinition">The target node definition.</param>
-        private static void SetClusterVariables(PreprocessReader preprocessReader, HiveDefinition hiveDefinition, NodeDefinition nodeDefinition)
+        private static void SetHiveVariables(PreprocessReader preprocessReader, HiveDefinition hiveDefinition, NodeDefinition nodeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(preprocessReader != null);
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
@@ -413,8 +413,8 @@ namespace NeonCli
             preprocessReader.Set("load-cluster-config", HiveHostFolders.Config + "/hive.conf.sh --echo-summary");
             preprocessReader.Set("load-cluster-config-quiet", HiveHostFolders.Config + "/hive.conf.sh");
 
-            SetBashVariable(preprocessReader, "cluster.provisioner", hiveDefinition.Provisioner);
-            SetBashVariable(preprocessReader, "cluster.rootuser", Program.MachineUsername);
+            SetBashVariable(preprocessReader, "hive.provisioner", hiveDefinition.Provisioner);
+            SetBashVariable(preprocessReader, "hive.rootuser", Program.MachineUsername);
 
             SetBashVariable(preprocessReader, "node.driveprefix", hiveDefinition.DrivePrefix);
 
@@ -531,7 +531,7 @@ namespace NeonCli
 
                             if (hiveDefinition != null)
                             {
-                                SetClusterVariables(preprocessReader, hiveDefinition, node.Metadata as NodeDefinition);
+                                SetHiveVariables(preprocessReader, hiveDefinition, node.Metadata as NodeDefinition);
                             }
 
                             foreach (var line in preprocessReader.Lines())

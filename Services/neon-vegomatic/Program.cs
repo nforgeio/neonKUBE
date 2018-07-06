@@ -96,7 +96,7 @@ namespace NeonVegomatic
             }
             finally
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
                 terminator.ReadyToExit();
             }
 

@@ -30,7 +30,7 @@ namespace Neon.Hive
     /// </note>
     /// <note>
     /// Changing any of these will likely break [neon-cli] interactions
-    /// with existing clusters that use the previous folder path.  Be
+    /// with existing hives that use the previous folder path.  Be
     /// ver sure you know what you're doing when you make changes.
     /// </note>
     /// </remarks>
@@ -82,7 +82,7 @@ namespace Neon.Hive
         /// Root folder on the local tmpfs (shared memory) folder where 
         /// neonHIVE will persist misc temporary files.
         /// </summary>
-        public const string ClusterTmpfs = "/dev/shm/neon";
+        public const string HiveTmpfs = "/dev/shm/neon";
 
         /// <summary>
         /// The folder where Docker writes secrets provisioned to a container.

@@ -30,7 +30,7 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 # Volumes
 
-This image expects a single host volume to be mounted to the container at `/var/lib/neon-registry`.  This is where the registry will persist the image manifests and layers.  For development or test environments with only a single deployed registry instance, this may simply reference a local Docker volume.  For production clusters that deploy multiple registry instances, this must reference a shared file system like one hosted on the integrated CephFS using the **neon volume driver**.
+This image expects a single host volume to be mounted to the container at `/var/lib/neon-registry`.  This is where the registry will persist the image manifests and layers.  For development or test environments with only a single deployed registry instance, this may simply reference a local Docker volume.  For production hives that deploy multiple registry instances, this must reference a shared file system like one hosted on the integrated CephFS using the **neon volume driver**.
 
 # Deployment
 

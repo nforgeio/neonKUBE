@@ -94,7 +94,7 @@ namespace Neon.Hive
         /// Azure and AWS.
         /// </para>
         /// <para>
-        /// On-premise clusters are somewhat more complex.  VPN deployment is optional for
+        /// On-premise hives are somewhat more complex.  VPN deployment is optional for
         /// on-premise deployments and for on-premise deployments with VPN, operators will need 
         /// to be able choose whether to connect via the VPN when they're outside the hive
         /// network or communicate directly when they are on-premise.

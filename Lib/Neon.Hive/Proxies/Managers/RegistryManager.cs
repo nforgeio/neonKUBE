@@ -314,7 +314,7 @@ fi
 
             // We're not going to restart these in parallel so only one
             // manager cache will be down at any given time.  This should
-            // result in no cache downtime for clusters with multiple
+            // result in no cache downtime for hives with multiple
             // managers.
 
             foreach (var manager in hive.Managers)

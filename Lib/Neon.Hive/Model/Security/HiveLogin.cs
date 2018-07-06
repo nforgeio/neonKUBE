@@ -140,20 +140,20 @@ namespace Neon.Hive
         /// The SSH RSA private key fingerprint used to secure the hive servers.  This is an 
         /// MD5 hash encoded as hex bytes separated by colons.
         /// </summary>
-        [JsonProperty(PropertyName = "SshClusterHostKeyFingerprint")]
-        public string SshClusterHostKeyFingerprint { get; set; }
+        [JsonProperty(PropertyName = "SshHiveHostKeyFingerprint")]
+        public string SshHiveHostKeyFingerprint { get; set; }
 
         /// <summary>
         /// The SSH RSA private key used to secure the hive servers.
         /// </summary>
-        [JsonProperty(PropertyName = "SshClusterHostPrivateKey")]
-        public string SshClusterHostPrivateKey { get; set; }
+        [JsonProperty(PropertyName = "SshHiveHostPrivateKey")]
+        public string SshHiveHostPrivateKey { get; set; }
 
         /// <summary>
         /// The SSH RSA private key used to secure the hive servers.
         /// </summary>
-        [JsonProperty(PropertyName = "SshClusterHostPublicKey")]
-        public string SshClusterHostPublicKey { get; set; }
+        [JsonProperty(PropertyName = "SshHiveHostPublicKey")]
+        public string SshHiveHostPublicKey { get; set; }
 
         /// <summary>
         /// The HashiCorp Vault credentials.
@@ -242,13 +242,13 @@ namespace Neon.Hive
         /// </summary>
         public void ClearRootSecrets()
         {
-            IsRoot                   = false;
-            SwarmManagerToken        = null;
-            SwarmWorkerToken         = null;
-            SshClusterHostPrivateKey = null;
-            RegistryCerts            = null;
-            RegistryKeys             = null;
-            Ceph                     = null;
+            IsRoot                = false;
+            SwarmManagerToken     = null;
+            SwarmWorkerToken      = null;
+            SshHiveHostPrivateKey = null;
+            RegistryCerts         = null;
+            RegistryKeys          = null;
+            Ceph                  = null;
 
             if (VpnCredentials != null)
             {

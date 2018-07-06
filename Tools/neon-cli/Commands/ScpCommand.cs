@@ -106,33 +106,33 @@ OPTIONS:
             int             startPos;
             int             endPos;
 
-            endPos = hiveLogin.SshClusterHostKeyFingerprint.IndexOf(' ');
+            endPos = hiveLogin.SshHiveHostKeyFingerprint.IndexOf(' ');
 
-            if (!int.TryParse(hiveLogin.SshClusterHostKeyFingerprint.Substring(0, endPos), out bitCount) || bitCount <= 0)
+            if (!int.TryParse(hiveLogin.SshHiveHostKeyFingerprint.Substring(0, endPos), out bitCount) || bitCount <= 0)
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{hiveLogin.SshClusterHostKeyFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{hiveLogin.SshHiveHostKeyFingerprint}].");
                 Program.Exit(1);
             }
 
-            startPos = hiveLogin.SshClusterHostKeyFingerprint.IndexOf(md5Pattern);
+            startPos = hiveLogin.SshHiveHostKeyFingerprint.IndexOf(md5Pattern);
 
             if (startPos == -1)
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{hiveLogin.SshClusterHostKeyFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{hiveLogin.SshHiveHostKeyFingerprint}].");
                 Program.Exit(1);
             }
 
             startPos += md5Pattern.Length;
 
-            endPos = hiveLogin.SshClusterHostKeyFingerprint.IndexOf(' ', startPos);
+            endPos = hiveLogin.SshHiveHostKeyFingerprint.IndexOf(' ', startPos);
 
             if (endPos == -1)
             {
-                md5 = hiveLogin.SshClusterHostKeyFingerprint.Substring(startPos).Trim();
+                md5 = hiveLogin.SshHiveHostKeyFingerprint.Substring(startPos).Trim();
             }
             else
             {
-                md5 = hiveLogin.SshClusterHostKeyFingerprint.Substring(startPos, endPos - startPos).Trim();
+                md5 = hiveLogin.SshHiveHostKeyFingerprint.Substring(startPos, endPos - startPos).Trim();
             }
 
             fingerprint = $"ssh-rsa {bitCount} {md5}";

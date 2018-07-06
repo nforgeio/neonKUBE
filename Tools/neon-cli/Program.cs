@@ -964,7 +964,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         {
             if (HiveHelper.IsConnected)
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
             }
 
             Environment.Exit(exitCode);

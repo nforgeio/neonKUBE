@@ -38,8 +38,8 @@ namespace NeonProxyManager
     /// Implements the <b>neon-proxy-manager</b> service which is responsible for dynamically generating the HAProxy 
     /// configurations for the <c>neon-proxy-public</c>, <c>neon-proxy-private</c>, <c>neon-proxy-public-bridge</c>,
     /// and <c>neon-proxy-private-bridge</c> services from the load balancer rules persisted in Consul and the TLS certificates
-    /// persisted in Vault.  See <a href="https://hub.docker.com/r/nhive/neon-proxy-manager/">neoncluster/neon-proxy-manager</a>  
-    /// and <a href="https://hub.docker.com/r/nhive/neon-proxy/">neoncluster/neon-proxy</a> for more information.
+    /// persisted in Vault.  See <a href="https://hub.docker.com/r/nhive/neon-proxy-manager/">nhive/neon-proxy-manager</a>  
+    /// and <a href="https://hub.docker.com/r/nhive/neon-proxy/">nhive/neon-proxy</a> for more information.
     /// </summary>
     public static class Program
     {
@@ -144,7 +144,7 @@ namespace NeonProxyManager
             }
             finally
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
                 terminator.ReadyToExit();
             }
 
@@ -329,8 +329,8 @@ namespace NeonProxyManager
 
                             // Load and check the hive certificates.
 
-                            var clusterCerts = new HiveCerts();
-                            var utcNow       = DateTime.UtcNow;
+                            var hiverCerts = new HiveCerts();
+                            var utcNow     = DateTime.UtcNow;
 
                             log.LogInfo(() => "Reading hive certificates.");
 
@@ -351,7 +351,7 @@ namespace NeonProxyManager
                                         log.LogWarn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
                                     }
 
-                                    clusterCerts.Add(certInfo);
+                                    hiverCerts.Add(certInfo);
                                 }
                             }
                             catch (Exception e)
@@ -380,12 +380,12 @@ namespace NeonProxyManager
                             // and [neon-proxy-private-bridge] configurations as well for use by any 
                             // hive pet nodes.
 
-                            var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, ct);
+                            var publicBuildStatus = await BuildProxyConfigAsync("public", hiverCerts, ct);
                             var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
 
                             await consul.KV.PutString($"{proxyStatusKey}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
 
-                            var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, ct);
+                            var privateBuildStatus = await BuildProxyConfigAsync("private", hiverCerts, ct);
                             var privateProxyStatus = new LoadBalancerStatus() { Status = privateBuildStatus.Status };
 
                             await consul.KV.PutString($"{proxyStatusKey}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
@@ -396,7 +396,7 @@ namespace NeonProxyManager
                             // hasn't changed to ensure that the load balancer doesn't get
                             // out of sync.
 
-                            await UpdateClusterNetwork(publicBuildStatus.Rules, cts.Token);
+                            await UpdateHiveNetwork(publicBuildStatus.Rules, cts.Token);
                         }
                         catch (TaskCanceledException)
                         {
@@ -700,7 +700,7 @@ resolvers {resolver.Name}
             }
 
             // Enable the HAProxy statistics pages.  These will be available on the 
-            // [NeonClusterConst.HAProxyStatsPort] port on the [neon-public] or
+            // [HiveConst.HAProxyStatsPort] port on the [neon-public] or
             // [neon-private] network the proxy serves.
             //
             // HAProxy statistics pages are not intended to be viewed directly by
@@ -1473,7 +1473,7 @@ backend http:{httpRule.Name}
             // This approach balances the need for simplicity and reliability in the face of 
             // node failure while trying to avoid an explosion of health check traffic.
             //
-            // This may become a problem for clusters with a large number of pet nodes
+            // This may become a problem for hives with a large number of pet nodes
             // banging away with health checks.  One way to mitigate this is to target
             // specific Swarm nodes in the [ProxySettings] by IP address.
 
@@ -1519,7 +1519,7 @@ backend http:{httpRule.Name}
                     // There are enough workers to select targets from, so we'll just do that.
                     // The idea here is to try to keep the managers from doing as much routing 
                     // work as possible because they may be busy handling global hive activities,
-                    // especially for large clusters.
+                    // especially for large hives.
 
                     foreach (var worker in workers.SelectRandom(settings.BridgeTargetCount))
                     {
@@ -1528,7 +1528,7 @@ backend http:{httpRule.Name}
                 }
                 else
                 {
-                    // Otherwise for small clusters, we'll select targets from managers
+                    // Otherwise for small hives, we'll select targets from managers
                     // and workers.
 
                     foreach (var node in swarmNodes.SelectRandom(Math.Min(settings.BridgeTargetCount, swarmNodes.Count)))
@@ -1586,7 +1586,7 @@ defaults
     timeout check       {settings.Timeouts.CheckSeconds}s
 ");
             // Enable the HAProxy statistics pages.  These will be available on the 
-            // [NeonClusterConst.HAProxyStatsPort] port on the [neon-public] or
+            // [HiverConst.HAProxyStatsPort] port on the [neon-public] or
             // [neon-private] network the proxy serves.
             //
             // HAProxy statistics pages are not intended to be viewed directly by
@@ -1660,7 +1660,7 @@ listen tcp:port-{port}
                 // is the main thing we'd really want to log for bridge proxies.
 
                 //sbHaProxy.AppendLine($"    log                 global");
-                //sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + proxyName, tcp: true)}");
+                //sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + proxyName, tcp: true)}");
                 //sbHaProxy.AppendLine($"    option              log-health-checks");
 
                 var checkArg    = " check";
@@ -1766,7 +1766,7 @@ listen tcp:port-{port}
         /// <param name="publicRules">The public proxy rules.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task UpdateClusterNetwork(Dictionary<string, LoadBalancerRule> publicRules, CancellationToken cancellationToken)
+        private static async Task UpdateHiveNetwork(Dictionary<string, LoadBalancerRule> publicRules, CancellationToken cancellationToken)
         {
             try
             {

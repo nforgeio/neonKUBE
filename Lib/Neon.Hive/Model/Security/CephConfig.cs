@@ -29,7 +29,7 @@ namespace Neon.Hive
     public class CephConfig
     {
         /// <summary>
-        /// The cluster's unique identifier (also known as its file system identifier).
+        /// The hive's unique identifier (also known as its file system identifier).
         /// This defaults to <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Fsid", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -44,7 +44,7 @@ namespace Neon.Hive
         public string Name { get; set; } = "ceph";
 
         /// <summary>
-        /// The cluster monitor keyring.  Monitors communicate with each other via a secret key.
+        /// The Ceph cluster monitor keyring.  Monitors communicate with each other via a secret key.
         /// This defaults to <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "MonitorKeyring", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

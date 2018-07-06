@@ -73,7 +73,7 @@ namespace Neon.Hive
         /// This is not recommended for neonHIVE nodes.
         /// </para>
         /// <para>
-        /// For most clusters, you'll wish to provision one or more drives per node.  Multiple
+        /// For most hives, you'll wish to provision one or more drives per node.  Multiple
         /// drives will be auytomatically combined into a consolidated RAID0 drive on the node.
         /// The size of each drive is specified by <see cref="HardDriveSizeGB"/>.
         /// </para>

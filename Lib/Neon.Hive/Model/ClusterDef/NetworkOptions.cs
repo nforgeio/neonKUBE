@@ -37,10 +37,10 @@ namespace Neon.Hive
     /// depending on whether the the hive is being provisioned to the cloud or to on-premise hardware.
     /// </para>
     /// <para>
-    /// Both cloud and on-premise clusters are provisioned with two standard overlay networks: <b>neon-public</b> and <b>neon-private</b>.
+    /// Both cloud and on-premise hives are provisioned with two standard overlay networks: <b>neon-public</b> and <b>neon-private</b>.
     /// These networks are used to as the service backend networks for the <b>neon-proxy-public</b> and <b>neon-proxy-private</b> TCP/HTTP
     /// network proxies used to forward external in internal traffic from Docker ingress/mesh networks to services.  Both of these
-    /// networks are assigned reasonable default subnets for standalone clusters, but you'll need to take care to avoid conflicts
+    /// networks are assigned reasonable default subnets for standalone hives, but you'll need to take care to avoid conflicts
     /// when deploying more than one hive on a network.
     /// </para>
     /// <para>
@@ -81,7 +81,7 @@ namespace Neon.Hive
     ///     </para>
     ///     <note>
     ///     This subnet is internal to the neonHIVE so you don't need to worry about conflicting
-    ///     with other clusters or network services.
+    ///     with other hives or network services.
     ///     </note>
     ///     </description>
     /// </item>
@@ -94,7 +94,7 @@ namespace Neon.Hive
     ///     </para>
     ///     <note>
     ///     This subnet is internal to the neonHIVE so you don't need to worry about conflicting
-    ///     with other clusters or network services.
+    ///     with other hives or network services.
     ///     </note>
     ///     </description>
     /// </item>
@@ -140,7 +140,7 @@ namespace Neon.Hive
     ///     </para>
     ///     <note>
     ///     This subnet is internal to the neonHIVE so you don't need to worry about conflicting
-    ///     with other clusters or network services.
+    ///     with other hives or network services.
     ///     </note>
     ///     </description>
     /// </item>
@@ -153,7 +153,7 @@ namespace Neon.Hive
     ///     </para>
     ///     <note>
     ///     This subnet is internal to the neonHIVE so you don't need to worry about conflicting
-    ///     with other clusters or network services.
+    ///     with other hives or network services.
     ///     </note>
     ///     </description>
     /// </item>
@@ -189,7 +189,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <note>
         /// You must take care that this subnet does not conflict with any other subnets for this
-        /// hive or any other clusters that may be deployed to the same network.
+        /// hive or any other hives that may be deployed to the same network.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PublicSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -223,7 +223,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <note>
         /// You must take care that this subnet does not conflict with any other subnets for this
-        /// hive or any other clusters that may be deployed to the same network.
+        /// hive or any other hives that may be deployed to the same network.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PrivateSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -292,7 +292,7 @@ namespace Neon.Hive
         /// to the manager nodes.
         /// </para>
         /// <para>
-        /// This needs to be explicitly defined for on-premise clusters that also
+        /// This needs to be explicitly defined for on-premise hives that also
         /// deploy VPN servers.  In this case, you'll need to specify the public IP
         /// address or FQDN of your hive router that has forwarding rules for
         /// the inbound VPN traffic.
@@ -334,7 +334,7 @@ namespace Neon.Hive
         /// <note>
         /// IMPORTANT: You should take care to ensure that this subnet does not conflict
         /// with subnets assigned to your company or home networks and if you ever intend
-        /// to deploy multiple clusters and link them via VPNs, you must ensure that
+        /// to deploy multiple hives and link them via VPNs, you must ensure that
         /// each hive is assigned a unique address space.
         /// </note>
         /// <para>
@@ -440,13 +440,13 @@ namespace Neon.Hive
         /// provisioning in a cloud environment.
         /// </note>
         /// <note>
-        /// For on-premise clusters, the statically assigned IP addresses assigned 
+        /// For on-premise hives, the statically assigned IP addresses assigned 
         /// to the nodes must reside within the this subnet.  The network gateway
         /// will be assumed to be the second address in this subnet and the broadcast
         /// address will assumed to be the last address.
         /// </note>
         /// <note>
-        /// For clusters hosted by cloud providers, the <b>neon-cli</b> will split this
+        /// For hives hosted by cloud providers, the <b>neon-cli</b> will split this
         /// into three subnets: <see cref="NodesSubnet"/>, <see cref="CloudVpnSubnet"/> and 
         /// <see cref="VpnPoolSubnet"/> and will automatically assign IP addresses to the 
         /// virtual machines.
@@ -468,9 +468,9 @@ namespace Neon.Hive
         /// computed automatically by the <b>neon-cli</b> when provisioning in a cloud environment.
         /// </note>
         /// <note>
-        /// For on-premise clusters this will default to <b>10.169.0.0/22</b> which will work
-        /// for many clusters.  You may need to adjust this to avoid conflicts with your
-        /// local network or if you intend to deploy multiple clusters on the same network.
+        /// For on-premise hives this will default to <b>10.169.0.0/22</b> which will work
+        /// for many hives.  You may need to adjust this to avoid conflicts with your
+        /// local network or if you intend to deploy multiple hives on the same network.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VpnPoolSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -603,7 +603,7 @@ namespace Neon.Hive
                     throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] prefix length is not valid.  Only [/21] subnets are currently supported.");
                 }
 
-                // Compute [NodeSubnet] by splitting [ClusterSubnet] in quarters and taking the
+                // Compute [NodeSubnet] by splitting [HiveSubnet] in quarters and taking the
                 // first quarter.
 
                 NetworkCidr nodesSubnetCidr;
@@ -625,7 +625,7 @@ namespace Neon.Hive
 
                 if (hiveDefinition.Vpn.Enabled)
                 {
-                    // Compute [CloudVpnSubnet] by taking the second quarter of [ClusterSubnet].
+                    // Compute [CloudVpnSubnet] by taking the second quarter of [HiveSubnet].
 
                     NetworkCidr cloudVpnCidr;
 
@@ -640,7 +640,7 @@ namespace Neon.Hive
                     cloudVNetSubnet = new NetworkCidr(cloudSubnetCidr.Address, cloudSubnetCidr.PrefixLength + 1);
                     CloudVNetSubnet = cloudVNetSubnet.ToString();
 
-                    // Compute [VpnPoolSubnet] by taking the upper half of [ClusterSubnet].
+                    // Compute [VpnPoolSubnet] by taking the upper half of [HiveSubnet].
 
                     NetworkCidr vpnPoolCidr;
 

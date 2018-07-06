@@ -130,7 +130,7 @@ namespace Neon.Hive
             // $todo(jeff.lill):
             //
             // I'm not implementing [force] here.  I'm not entirely sure
-            // that this makes sense for production clusters and especially
+            // that this makes sense for production hives and especially
             // when there are pet nodes.
             //
             // Perhaps it would make more sense to replace this with a
@@ -458,8 +458,8 @@ broadcast {broadcast}
                         // DNS servers from the hive definition here???
                         //
                         // Using the Google DNS seems like it could break some hive
-                        // network configurations (i.e. for clusters that don't have
-                        // access to the public Internet).  Totally private clusters
+                        // network configurations (i.e. for hives that don't have
+                        // access to the public Internet).  Totally private hives
                         // aren't really a supported scenario right now though because
                         // we assume we can use [apt-get]... to pull down packages.
 

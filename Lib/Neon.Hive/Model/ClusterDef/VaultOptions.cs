@@ -86,7 +86,7 @@ namespace Neon.Hive
         /// we hope to use Docker secrets which will be more secure.
         /// </para>
         /// <para>
-        /// For clusters with very high security requirements, you can disable this
+        /// For hives with very high security requirements, you can disable this
         /// by setting <see cref="AutoUnseal"/>=<c>false</c>.  This means your operators
         /// will need to manually unseal restarted Vault instances using the <b>neon-cli</b>
         /// command:
@@ -124,7 +124,7 @@ namespace Neon.Hive
         /// about <b>290 years</b> (essentially infinity).
         /// </para>
         /// <note>
-        /// This default was choosen so that clusters won't have to worry about tokens
+        /// This default was choosen so that hives won't have to worry about tokens
         /// and secrets expiring at inopportune times, taking services down.   High security
         /// deployments may wish to override this globally or set the leases for specific
         /// tokens and secrets explicitly.
@@ -143,7 +143,7 @@ namespace Neon.Hive
         /// about <b>290 years</b> (essentially infinity).
         /// </para>
         /// <note>
-        /// This default was choosen so that clusters won't have to worry about tokens
+        /// This default was choosen so that hives won't have to worry about tokens
         /// and secrets expiring at inopportune times, taking services down.   High security
         /// deployments may wish to override this globally or set the leases for specific
         /// tokens and secrets explicitly.

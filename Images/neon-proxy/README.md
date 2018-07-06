@@ -104,7 +104,7 @@ Two types of credentials are currently supported: **vault-token** and **vault-ap
 
 **NOTE:** By default, the image will use HAProxy's graceful stop (`-sf` option) when loading a new configuration.  This nearly eliminates the change of dropping active connections during the transition.  There can be scenarios though, where older instances of HAProxy cannot be terminated due to long-lived TCP connections.  You can enable HAProxy hard stop (`-st` option) by including a `.hardstop` file in the configuration archive (the contents don't matter).  Hard stop terminates the existing HAProxy process before starting the new one, dropping any active connections.
 
-**NOTE:** The Consul limit for key values is 512KB.  This could become a limitation for very complex clusters that include TLS certificates in the configuration ZIP archive.  This can be mitigated by persisting certificates in Vault instead (which a better security practice anyway).
+**NOTE:** The Consul limit for key values is 512KB.  This could become a limitation for very complex hives that include TLS certificates in the configuration ZIP archive.  This can be mitigated by persisting certificates in Vault instead (which a better security practice anyway).
 
 **NOTE**: Note that this image will load environment variables from `/etc/neon/env-host` and `/etc/neon/env-container` if either of these files have been mounted mapped to the container.
 

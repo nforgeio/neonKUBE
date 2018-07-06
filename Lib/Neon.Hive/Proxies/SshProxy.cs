@@ -166,7 +166,7 @@ namespace Neon.Hive
 
         // Path to the transient file on the Linux box whose presence indicates
         // that the server is still rebooting.
-        private readonly string RebootStatusPath = $"{HiveHostFolders.ClusterTmpfs}/rebooting";
+        private readonly string RebootStatusPath = $"{HiveHostFolders.HiveTmpfs}/rebooting";
 
         private object          syncLock   = new object();
         private bool            isDisposed = false;
@@ -1986,7 +1986,7 @@ mono {scriptPath}.mono $@
 
             // Create the command folder.
 
-            var shmFolder = $"{HiveHostFolders.ClusterTmpfs}/cmd";
+            var shmFolder = $"{HiveHostFolders.HiveTmpfs}/cmd";
             var cmdFolder = LinuxPath.Combine(shmFolder, Guid.NewGuid().ToString("D"));
 
             SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));
@@ -2674,7 +2674,7 @@ echo $? > {cmdFolder}/exit
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
         /// image pull fails for some reason).  Using this will be more reliable than
-        /// executing the command directly, especially on large clusters.
+        /// executing the command directly, especially on large hives.
         /// </para>
         /// <note>
         /// You'll need to passes the full Docker command, including the leading
@@ -2744,7 +2744,7 @@ echo $? > {cmdFolder}/exit
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
         /// image pull fails for some reason).  Using this will be more reliable than
-        /// executing the command directly, especially on large clusters.
+        /// executing the command directly, especially on large hives.
         /// </para>
         /// <note>
         /// You'll need to passes the full Docker command, including the leading
@@ -2773,7 +2773,7 @@ echo $? > {cmdFolder}/exit
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
         /// image pull fails for some reason).  Using this will be more reliable than
-        /// executing the command directly, especially on large clusters.
+        /// executing the command directly, especially on large hives.
         /// </para>
         /// <note>
         /// You'll need to passes the full Docker command, including the leading
@@ -2809,7 +2809,7 @@ echo $? > {cmdFolder}/exit
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
         /// image pull fails for some reason).  Using this will be more reliable than
-        /// executing the command directly, especially on large clusters.
+        /// executing the command directly, especially on large hives.
         /// </para>
         /// <note>
         /// You'll need to passes the full Docker command, including the leading
@@ -3258,7 +3258,7 @@ echo $? > {cmdFolder}/exit
             //      * These are Docker public registry credentials only
             //
             // Users can create and use read-only credentials, which is 
-            // probably a best practice anyway for most clusters or they
+            // probably a best practice anyway for most hives or they
             // can deploy a custom registry (whose crdentials will be 
             // persisted to Vault).
 

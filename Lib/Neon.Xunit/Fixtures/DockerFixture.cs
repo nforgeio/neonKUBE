@@ -588,7 +588,7 @@ namespace Neon.Xunit
         /// <note>
         /// As a safety measure, this method ensures that the local Docker instance
         /// <b>IS NOT</b> a member of a multi-node swarm to avoid wiping out production
-        /// clusters by accident.
+        /// hives by accident.
         /// </note>
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
@@ -638,7 +638,7 @@ namespace Neon.Xunit
 
                 if (!isSingleNode)
                 {
-                    throw new InvalidOperationException("Cannot reset the hive because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production hive.");
+                    throw new InvalidOperationException("Cannot reset the hive because it has more than one node.  Testing on multi-node hives is not allowed as a safety measure to avoid accidentially wiping out a production hive.");
                 }
 
                 // Leave the swarm, effectively reseting all swarm state.

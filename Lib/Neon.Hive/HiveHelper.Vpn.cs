@@ -35,10 +35,10 @@ namespace Neon.Hive
         // located in a (hopefully) encrypted or transient [tmpfs] folder.  Each
         // hive configuration file path will look something like:
         //
-        //      .../vpn/CLUSTER/client.conf     *** on Linux
-        //      ...\vpn\CLUSTER\client.conf     *** on Windows
+        //      .../vpn/HIVE/client.conf        *** on Linux
+        //      ...\vpn\HIVE\client.conf        *** on Windows
         //
-        // where CLUSTER is the hive name and [...] will vary based on the environment:
+        // where HIVE is the hive name and [...] will vary based on the environment:
         //
         //      1. Windows:         located in the user's [AppData] folder.
         //      2. Linux/OSX:       located in the user's home folder.
@@ -732,9 +732,9 @@ verb 3
         }
 
         /// <summary>
-        /// Disconnects a VPN from a hive or the VPNs for all clusters.
+        /// Disconnects a VPN from a hive or the VPNs for all hives.
         /// </summary>
-        /// <param name="hiveName">The target hive name or <c>null</c> if all clusters are to be disconnected.</param>
+        /// <param name="hiveName">The target hive name or <c>null</c> if all hives are to be disconnected.</param>
         public static void VpnClose(string hiveName)
         {
             if (hiveName == null)

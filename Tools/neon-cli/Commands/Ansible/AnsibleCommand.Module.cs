@@ -77,7 +77,7 @@ namespace NeonCli
 
                 context.SetArguments(argsPath);
 
-                // Connect to the hive so the NeonClusterHelper methods will work.
+                // Connect to the hive so the [HiverHelper] methods will work.
 
                 HiveHelper.OpenHive(login);
 

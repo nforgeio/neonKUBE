@@ -266,11 +266,11 @@ USAGE:
                 commandLine.Arguments[0] == "vpn" &&
                 commandLine.Arguments[1] == "ca")
             {
-                var clusterDefPath  = commandLine.Arguments[2];
+                var hiveDefPath     = commandLine.Arguments[2];
                 var caFolderPath    = commandLine.Arguments[3];
                 var shimmedCaFolder = Path.Combine(shim.ShimExternalFolder, "ca");
 
-                shim.AddFile(clusterDefPath);
+                shim.AddFile(hiveDefPath);
 
                 foreach (var file in Directory.GetFiles(caFolderPath, "*.*", SearchOption.TopDirectoryOnly))
                 {
@@ -998,7 +998,7 @@ nsCertType              = server
             finally
             {
                 Directory.Delete(caFolder, recursive: true);
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
             }
         }
 
@@ -1051,7 +1051,7 @@ nsCertType              = server
             }
             finally
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
             }
         }
 
@@ -1170,7 +1170,7 @@ nsCertType              = server
             }
             finally
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
             }
         }
 
@@ -1226,7 +1226,7 @@ nsCertType              = server
             }
             finally
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
             }
         }
     }

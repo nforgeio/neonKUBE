@@ -152,7 +152,7 @@ namespace NeonDns
             }
             finally
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
                 terminator.ReadyToExit();
             }
 

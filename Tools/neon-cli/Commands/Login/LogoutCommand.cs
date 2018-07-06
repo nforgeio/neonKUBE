@@ -57,7 +57,7 @@ USAGE:
             //
             // We're passing NULL to close all hive VPN connections to ensure that 
             // we're only connected to one at a time.  It's very possible for a operator
-            // to have to manage multiple disconnnected clusters that share the same
+            // to have to manage multiple disconnnected hives that share the same
             // IP address space.
 
             HiveHelper.VpnClose(null); 

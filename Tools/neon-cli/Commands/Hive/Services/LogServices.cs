@@ -426,7 +426,7 @@ namespace NeonCli
                                 if (response.IsSuccess)
                                 {
                                     var clusterStatus = response.AsDynamic();
-                                    var status = (string)(clusterStatus.status);
+                                    var status        = (string)(clusterStatus.status);
 
                                     status      = status.ToUpperInvariant();
                                     node.Status = $"wait for [neon-log-esdata] cluster: [status={status}] [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready])";

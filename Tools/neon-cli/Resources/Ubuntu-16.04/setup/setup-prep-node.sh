@@ -41,7 +41,7 @@ echo
 #      hive setup and is also likely to interfere with end-user
 #      configuration activities as well.
 #
-#   2. Automatic updates for production and even test clusters is
+#   2. Automatic updates for production and even test hives is
 #      just not a great idea.  You just don't want a random update
 #      applied in the middle of the night that might cause trouble.
 

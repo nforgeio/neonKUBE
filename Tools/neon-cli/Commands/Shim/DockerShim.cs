@@ -42,7 +42,7 @@ namespace NeonCli
 
             this.CommandLine = commandLine;
 
-            // We're going to the shim folder within the root [neoncluster] folder within
+            // We're going to the shim folder within the root [neonhive] folder within
             // the user's home directory.  The root directory is encrypted for Windows and is
             // hopefully encrypted for Linux and OSX.  Encryption is advisable because we may
             // map be passing confidential information into the container.

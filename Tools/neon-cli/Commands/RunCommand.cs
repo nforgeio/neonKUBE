@@ -86,8 +86,8 @@ Password files simply hold a password as a single line text.  [neon-cli]
 expects password files to be located in a user-specific directory on your
 workstation:
 
-    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\passwords  - for Windows
-    ~/.neonforge/neoncluster/ansible/passwords              - for OSX
+    %LOCALAPPDATA%\neonFORGE\neonhive\ansible\passwords     - for Windows
+    ~/.neonforge/neonhive/ansible/passwords                 - for OSX
 
 These folders are encrypted at rest for security.  You can use the 
 [neon ansible password ...] commands to manage your passwords.

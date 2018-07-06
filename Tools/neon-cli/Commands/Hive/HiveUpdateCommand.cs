@@ -110,7 +110,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             {
                 case "check":
 
-                    CheckCluster(maxParallel);
+                    CheckHive(maxParallel);
                     break;
 
                 case "consul":
@@ -197,7 +197,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
         /// Checks the hive for pending updates.
         /// </summary>
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
-        private void CheckCluster(int maxParallel)
+        private void CheckHive(int maxParallel)
         {
             EnsureRootPivileges();
 

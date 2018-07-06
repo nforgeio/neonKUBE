@@ -87,7 +87,7 @@ namespace Neon.Xunit.Hive
     /// You can also specify a <c>null</c> or empty login name.  In this case,
     /// the fixture will attempt to retrieve the login name from the <b>NEON_TEST_CLUSTER</b>
     /// environment variable.  This is very handy because it allows developers to
-    /// specify different target test clusters without having to bake this into the 
+    /// specify different target test hives without having to bake this into the 
     /// unit tests themselves.
     /// </note>
     /// <para>
@@ -650,7 +650,7 @@ namespace Neon.Xunit.Hive
         /// <note>
         /// As a safety measure, this method ensures that the local Docker instance
         /// <b>IS NOT</b> a member of a multi-node swarm to avoid wiping out production
-        /// clusters by accident.
+        /// hives by accident.
         /// </note>
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>

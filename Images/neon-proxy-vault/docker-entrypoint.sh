@@ -60,7 +60,7 @@ cat <<EOF > ${configPath}
 global
 
     # Maximum number of connections.  1K should be more than enough for
-    # anything besides truly gigantic clusters.
+    # anything besides truly gigantic hives.
 
     maxconn             1000
 

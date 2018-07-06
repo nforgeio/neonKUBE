@@ -71,7 +71,7 @@ fi
 
 # IMPORTANT!
 #
-# Production clusters should install Docker with a specific version number
+# Production hives should install Docker with a specific version number
 # to ensure that you'll be able to deploy additional hosts with the
 # same Docker release as the rest of the hive.  This also prevents 
 # the package manager from inadvertently upgrading Docker.
@@ -196,7 +196,7 @@ fi
 
 # Add the current user to the [docker] group so SUDO won't be necessary.
 
-addgroup $<cluster.rootuser> docker
+addgroup $<hive.rootuser> docker
 
 # Prevent the package manager from automatically upgrading the Docker engine.
 

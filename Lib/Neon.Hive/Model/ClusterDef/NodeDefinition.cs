@@ -267,7 +267,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Identifies the hypervisor instance where this node is to be provisioned for Hyper-V
-        /// or XenServer based clusters.  This name must map to the name of one of the <see cref="HostingOptions.VmHosts"/>
+        /// or XenServer based hives.  This name must map to the name of one of the <see cref="HostingOptions.VmHosts"/>
         /// when set.
         /// </summary>
         [JsonProperty(PropertyName = "VmHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

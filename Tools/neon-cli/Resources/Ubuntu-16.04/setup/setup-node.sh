@@ -1197,9 +1197,9 @@ setuid=pdns
 # write-pid=yes
 
 #################################
-# WARNING: Be sure to comment these out for production clusters.
+# WARNING: Be sure to comment these out for production hives.
 #
-# Debugging related settings.  Be sure to comment these out for production clusters.
+# Debugging related settings.  Be sure to comment these out for production hives.
 #
 # loglevel      Amount of logging. Higher is more. Do not set below 3
 # quiet         Suppress logging of questions and answers

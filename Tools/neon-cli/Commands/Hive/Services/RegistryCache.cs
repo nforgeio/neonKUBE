@@ -188,7 +188,7 @@ namespace NeonCli
                         //      * These are Docker public registry credentials only
                         //
                         // Users can create and use read-only credentials, which is 
-                        // probably a best practice anyway for most clusters or they
+                        // probably a best practice anyway for most hives or they
                         // can deploy a custom registry (whose crdentials will be 
                         // persisted to Vault).
 

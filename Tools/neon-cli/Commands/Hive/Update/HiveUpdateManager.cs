@@ -58,7 +58,7 @@ namespace NeonCli
 
             // Obtain and parse the current hive version.
 
-            if (!SemanticVersion.TryParse(hive.Globals.Version, out var clusterVersion))
+            if (!SemanticVersion.TryParse(hive.Globals.Version, out var hiveVersion))
             {
                 throw new HiveException($"Unable to retrieve or parse the hive version global [{HiveGlobals.Version}].");
             }
@@ -68,7 +68,7 @@ namespace NeonCli
                 // Scan for the first update that applies.
 
                 var firstUpdate = Updates
-                    .Where(u => u.FromVersion >= clusterVersion)
+                    .Where(u => u.FromVersion >= hiveVersion)
                     .OrderBy(u => u.FromVersion)
                     .FirstOrDefault();
 
@@ -106,7 +106,7 @@ namespace NeonCli
             // and container images to the [:latest] tag.  This is not really correct for
             // these reasons:
             //
-            //      1. Clusters may have been deployed using images from another branch
+            //      1. Hives may have been deployed using images from another branch
             //         like [jeff-latest].  This implementation will replace these with
             //         [latest].  Perhaps we should add a hive global that identifies
             //         the branch.  This may become more important if we make the concepts

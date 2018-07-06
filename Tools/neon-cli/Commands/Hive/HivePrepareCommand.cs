@@ -54,7 +54,7 @@ OPTIONS:
     --unredacted                - Runs Vault and other commands with potential
                                   secrets without redacting logs.  This is useful 
                                   for debugging hive setup  issues.  
-                                  Do not use for production clusters.
+                                  Do not use for production hives.
 
     --remove-templates          - Removes any cached local virtual machine 
                                   templates without actually setting up a 
@@ -72,7 +72,7 @@ Server Requirements:
 ";
         private HiveProxy       hive;
         private HostingManager  hostingManager;
-        private string          clusterDefPath;
+        private string          hiveDefPath;
         private string          packageCacheUri;
         private VpnCaFiles      vpnCaFiles;
         private VpnCredentials  vpnCredentials;
@@ -137,12 +137,12 @@ Server Requirements:
                 Program.Exit(1);
             }
 
-            clusterDefPath = commandLine.Arguments[0];
+            hiveDefPath = commandLine.Arguments[0];
             force          = commandLine.GetFlag("--force");
 
-            HiveDefinition.ValidateFile(clusterDefPath, strict: true);
+            HiveDefinition.ValidateFile(hiveDefPath, strict: true);
 
-            var hiveDefinition = HiveDefinition.FromFile(clusterDefPath, strict: true);
+            var hiveDefinition = HiveDefinition.FromFile(hiveDefPath, strict: true);
 
             hiveDefinition.Provisioner = $"neon-cli:{Program.Version}";  // Identify this tool/version as the hive provisioner
 
@@ -476,11 +476,11 @@ Server Requirements:
 
                 if (HiveHelper.InToolContainer)
                 {
-                    Program.Execute(neonExecutable, "--noshim", "vpn", "ca", clusterDefPath, tempCaFolder);
+                    Program.Execute(neonExecutable, "--noshim", "vpn", "ca", hiveDefPath, tempCaFolder);
                 }
                 else
                 {
-                    Program.Execute(neonExecutable, "vpn", "ca", clusterDefPath, tempCaFolder);
+                    Program.Execute(neonExecutable, "vpn", "ca", hiveDefPath, tempCaFolder);
                 }
 
                 vpnCaFiles = VpnCaFiles.LoadFolder(tempCaFolder);
@@ -815,8 +815,8 @@ WantedBy=multi-user.target
             // and then they'd disappear.
             //
             // The solution is simply to disable the spoofing filter.  I'm going to go ahead and do this
-            // for all interfaces which should be fine for clusters hosted in cloud environments, because the
-            // VNET/Load Balancer/Security Groups will be used to lock things down.  Local clusters will
+            // for all interfaces which should be fine for hives hosted in cloud environments, because the
+            // VNET/Load Balancer/Security Groups will be used to lock things down.  Local hives will
             // need to be manually placed behind a suitable router/firewall as well.
             //
             // For robustness, I'm going to deploy this as a service daemon that polls the filter state

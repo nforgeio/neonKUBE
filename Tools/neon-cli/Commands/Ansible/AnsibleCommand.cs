@@ -97,14 +97,14 @@ command.
 Ansible roles are managed via the [neon ansible galaxy] command.  This 
 command installs roles to the your workstation in a user specific folder:
 
-    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\roles  - for Windows
-    ~/.neonforge/neoncluster/ansible/roles              - for OSX
+    %LOCALAPPDATA%\neonFORGE\neonhive\ansible\roles     - for Windows
+    ~/.neonforge/neonhive/ansible/roles                 - for OSX
 
 Ansible vault passwords are managed via the [neon ansible vault] command which
 manages secrets on your workstation in the user specific folder:
 
-    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\passwords  - for Windows
-    ~/.neonforge/neoncluster/ansible/passwords              - for OSX
+    %LOCALAPPDATA%\neonFORGE\neonhive\ansible\passwords - for Windows
+    ~/.neonforge/neonhive/ansible/passwords             - for OSX
 ";
 
         private const string execHelp = @"
@@ -212,8 +212,8 @@ OPTIONS:
 Ansible roles are managed via the [neon ansible galaxy] command.  This 
 command installs roles to the your workstation in a user specific folder:
 
-    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\roles  - for Windows
-    ~/.neonforge/neoncluster/ansible/roles              - for OSX
+    %LOCALAPPDATA%\neonFORGE\neonhive\ansible\roles     - for Windows
+    ~/.neonforge/neonhive/ansible/roles                 - for OSX
 
 The [neon ansible ...] commands map this folder into the Docker container
 they create such that any installed roles will be available. 
@@ -242,8 +242,8 @@ passwords or use [--vault-password-file NAME] to specify the password.
 Note that all password files must be located at a user specific folder
 on your workstation and must be referenced without specifying a path:
 
-    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\passwords  - for Windows
-    ~/.neonforge/neoncluster/ansible/passwords              - for OSX
+    %LOCALAPPDATA%\neonFORGE\neonhive\ansible\passwords     - for Windows
+    ~/.neonforge/neonhive/ansible/passwords                 - for OSX
 ";
 
         private const string passwordHelp = @"
@@ -277,8 +277,8 @@ OPTIONS:
 Passwords are simple text files that hold passwords on a single line.  These
 are stored in a user-specific folder at:
 
-    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\passwords  - for Windows
-    ~/.neonforge/neoncluster/ansible/passwords              - for OSX
+    %LOCALAPPDATA%\neonFORGE\neonhive\ansible\passwords     - for Windows
+    ~/.neonforge/neonhive/ansible/passwords                 - for OSX
 ";
 
         private const string configHelp = @"
@@ -1608,12 +1608,12 @@ retries = 4
             // IMPLEMENTATION NOTE:
             //
             // We need a clean way to target Docker Swarm related modules at a healthy
-            // swarm manager node.  We're going to use [NeonClusterHelper.GetHealthyManager()]
+            // swarm manager node.  We're going to use [HiveHelper.GetHealthyManager()]
             // to look for a healthy node (via pings) and then this to the inventory as
             // the [swarm-manager] host and to [/etc/hosts] as [health-swarm-manager] with
             // the manager's IP address.   We'll also generate related host variables.
             // 
-            // If [NeonClusterHelper.GetHealthyManager()] fails, we'll create a host
+            // If [HiveHelper.GetHealthyManager()] fails, we'll create a host
             // for the first manager as a fallback.  In this case, any playbooks 
             // targeting the unhealthy first manager will fail with a timeout, which
             // is what the operator should expect.
@@ -1796,7 +1796,7 @@ retries = 4
             //
             //      http://man.openbsd.org/sshd.8
 
-            var hostPublicKeyFields = login.SshClusterHostPublicKey.Split(" ");
+            var hostPublicKeyFields = login.SshHiveHostPublicKey.Split(" ");
             var hostPublicKey       = $"{hostPublicKeyFields[0]} {hostPublicKeyFields[1]}"; // Strip off the [user@host] field from the end (if present).
 
             using (var writer = new StreamWriter(new FileStream("/etc/ssh/ssh_known_hosts", FileMode.Create, FileAccess.ReadWrite), Encoding.ASCII))

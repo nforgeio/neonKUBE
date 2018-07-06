@@ -95,7 +95,7 @@ fi
 
 # Ensure that the [/dev/shm/secrets] folder exists if one wasn't mounted 
 # as a tmpfs.  [/dev/shm] stands for "shared memory" and is a built-in
-# tmpfs with a capacity of 64MB, which should be plenty for most clusters.
+# tmpfs with a capacity of 64MB, which should be plenty for most hives.
 
 export SECRETS_TMP=/dev/shm/secrets
 mkdir -p ${SECRETS_TMP}

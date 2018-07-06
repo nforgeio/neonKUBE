@@ -255,8 +255,8 @@ TCPKeepAlive yes
 
             // Add the global Neon host and hive related environment variables. 
 
-            sb.AppendLine($"NEON_CLUSTER_PROVISIONER={hiveDefinition.Provisioner}");
-            sb.AppendLine($"NEON_CLUSTER={hiveDefinition.Name}");
+            sb.AppendLine($"NEON_HIVE_PROVISIONER={hiveDefinition.Provisioner}");
+            sb.AppendLine($"NEON_HIVE={hiveDefinition.Name}");
             sb.AppendLine($"NEON_DATACENTER={hiveDefinition.Datacenter.ToLowerInvariant()}");
             sb.AppendLine($"NEON_ENVIRONMENT={hiveDefinition.Environment.ToString().ToLowerInvariant()}");
 

@@ -29,7 +29,7 @@ using Neon.Net;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Describes a neonHIVE cluster.
+    /// Describes a neonHIVE.
     /// </summary>
     public class HiveDefinition
     {
@@ -322,7 +322,7 @@ namespace Neon.Hive
         /// This defaults to <c>false</c>.
         /// </para>
         /// <note>
-        /// <b>WARNING:</b> This should not be enabled for production clusters because it may 
+        /// <b>WARNING:</b> This should not be enabled for production hives because it may 
         /// enable potential security threats.
         /// </note>
         /// </summary>
@@ -374,8 +374,8 @@ namespace Neon.Hive
         public EnvironmentType Environment { get; set; } = EnvironmentType.Other;
 
         /// <summary>
-        /// Optionally specifies that a bare Docker cluster without most of the extra <b>neonHIVE</b>
-        /// features should be created.  This is useful for creating test clusters for reporting and
+        /// Optionally specifies that a bare Docker hive without most of the extra <b>neonHIVE</b>
+        /// features should be created.  This is useful for creating test hives for reporting and
         /// replicating Docker issues.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "BareDocker", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -407,7 +407,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// A package cache will greatly reduce the Internet network traffic required to deploy a
-        /// hive, especially for large clusters.
+        /// hive, especially for large hives.
         /// </para>
         /// <note>
         /// The hive nodes are configured to failover to different proxies or to hit the 
@@ -796,15 +796,15 @@ namespace Neon.Hive
 
             if (managementNodeCount == 0)
             {
-                throw new HiveDefinitionException("Clusters must have at least one management node.");
+                throw new HiveDefinitionException("Hives must have at least one management node.");
             }
             else if (managementNodeCount > 5)
             {
-                throw new HiveDefinitionException("Clusters may not have more than [5] management nodes.");
+                throw new HiveDefinitionException("Hives may not have more than [5] management nodes.");
             }
             else if (!NeonHelper.IsOdd(managementNodeCount))
             {
-                throw new HiveDefinitionException("Clusters must have an odd number of management nodes: [1, 3, or 5]");
+                throw new HiveDefinitionException("Hives must have an odd number of management nodes: [1, 3, or 5]");
             }
 
             // Ensure that each node has a valid unique or NULL IP address.

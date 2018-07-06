@@ -80,7 +80,7 @@ You'll probably need to modify the configuration file located here: `/etc/td-age
 
 **Installing a Premium MaxMind Database**
 
-The **neon-log-collector** includes the free [MaxMind.com](http://maxmind.com) GeoLite2-City database.  This is used to map client IP addresses logged for network traffic captured by the neonHIVE proxies into geographical location information, including the latitute, longitude, continent, country, and city.  This database is provided under the [Creative Commons License](https://creativecommons.org/licenses/by-sa/4.0/) and is a reasonable first start for many clusters.
+The **neon-log-collector** includes the free [MaxMind.com](http://maxmind.com) GeoLite2-City database.  This is used to map client IP addresses logged for network traffic captured by the neonHIVE proxies into geographical location information, including the latitute, longitude, continent, country, and city.  This database is provided under the [Creative Commons License](https://creativecommons.org/licenses/by-sa/4.0/) and is a reasonable first start for many hives.
 
 MaxMind licenses much more accurate databases at a very reasonable cost, so you may wish to upgrade to one of their premium products.  To do this, you first the [MaxMind.com](http://maxmind.com) site to purchase your license.  Then modify your new image's Dockerfile to add your compressed database here:
 
@@ -90,6 +90,6 @@ Note that the database file must be named `database.mmdb.gz`.  The base **neon-l
 
 **Updating Your Hive**
 
-For new clusters, you can specify the new collector image in the hive definition before deployment and for existing clusters you can simply use this command to deploy the new image:
+For new hives, you can specify the new collector image in the hive definition before deployment and for existing clusters you can simply use this command to deploy the new image:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`nc docker service update --image YOUR-IMAGE neon-log-collector`

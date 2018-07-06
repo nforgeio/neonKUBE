@@ -8,6 +8,6 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-This image is a catch-all for non-production tests and utilities.  Most clusters will never deploy this.
+This image is a catch-all for non-production tests and utilities.  Most hives will never deploy this.
 
 See the **neon-vegomatic** project in the source code for more information.

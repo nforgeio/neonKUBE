@@ -67,7 +67,7 @@ namespace CouchbaseTest
             }
             finally
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
                 terminator.ReadyToExit();
             }
 

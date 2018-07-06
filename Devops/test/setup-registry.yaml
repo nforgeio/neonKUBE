@@ -4,8 +4,8 @@
   vars_files: 
     - "secrets.yaml"
     - "vars.yaml"
-    - "clusters/{{ lookup('env','CLUSTER') }}/secrets.yaml"
-    - "clusters/{{ lookup('env','CLUSTER') }}/vars.yaml"
+    - "hives/{{ lookup('env','CLUSTER') }}/secrets.yaml"
+    - "hives/{{ lookup('env','CLUSTER') }}/vars.yaml"
 
   user: root
   become: yes

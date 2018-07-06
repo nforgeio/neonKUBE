@@ -7,7 +7,7 @@
 #
 # ARGUMENTS:
 #
-#   HIVE-NAME		- Identifies the target hive definition in the [clusters]
+#   HIVE-NAME		- Identifies the target hive definition in the [hives]
 #	    			  subfolder.  Note that this DOES NOT include the [.json]
 #					  file extension).  Example: "home-small"
 

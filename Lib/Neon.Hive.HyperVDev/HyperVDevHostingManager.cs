@@ -138,7 +138,7 @@ namespace Neon.Hive
             // $todo(jeff.lill):
             //
             // I'm not entirely sure that the [force] option makes sense for 
-            // production clusters and especially when there are pet nodes.
+            // production hives and especially when there are pet nodes.
             //
             // Perhaps it would make more sense to replace this with a
             // [neon hive remove] command.
@@ -324,7 +324,7 @@ namespace Neon.Hive
             // option is provided to delete any cached templates.
             //
             // This should only be an issue for people using the default "latest"
-            // drive template.  Production clusters should reference a specific
+            // drive template.  Production hives should reference a specific
             // drive template.
 
             var driveTemplateUri  = new Uri(hive.Definition.Hosting.LocalHyperV.HostVhdxUri);
@@ -759,8 +759,8 @@ broadcast {broadcast}
                         // DNS servers from the hive definition here???
                         //
                         // Using the Google DNS seems like it could break some hive
-                        // network configurations (i.e. for clusters that don't have
-                        // access to the public Internet).  Totally private clusters
+                        // network configurations (i.e. for hives that don't have
+                        // access to the public Internet).  Totally private hives
                         // aren't really a supported scenario right now though because
                         // we assume we can use [apt-get]... to pull down packages.
 

@@ -45,7 +45,7 @@ namespace NeonCli
                 controller.AddGlobalStep(GetStepLabel("kibana dashboard"), () => UpdateKibanaDashboard());
             }
 
-            controller.AddGlobalStep(GetStepLabel("hive version"), () => UpdateClusterVersion());
+            controller.AddGlobalStep(GetStepLabel("hive version"), () => UpdateHiveVersion());
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace NeonCli
 
             // We need to install the [mmv] package so we can use it to easily
             // rename files.  We've also added this to the [setup-node] script
-            // so it will be available for all new clusters going forward.
+            // so it will be available for all new hives going forward.
 
             node.InvokeIdempotentAction(GetIdempotentTag("install-mmv"),
                 () =>
@@ -303,7 +303,7 @@ namespace NeonCli
         /// <summary>
         /// Updates the hive version.
         /// </summary>
-        private void UpdateClusterVersion()
+        private void UpdateHiveVersion()
         {
             var firstManager = Hive.FirstManager;
 

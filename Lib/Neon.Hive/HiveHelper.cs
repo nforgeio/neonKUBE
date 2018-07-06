@@ -114,19 +114,19 @@ namespace Neon.Hive
         /// The actual path return depends on the presence of the <b>NEON_TOOL_CONTAINER</b>
         /// environment variable.  <b>NEON_TOOL_CONTAINER=1</b> then we're running in a 
         /// shimmed Docker container and we'll expect the hive login information to be mounted
-        /// at <b>/neoncluster</b>.  Otherwise, we'll return a suitable path within the 
+        /// at <b>/neonhive</b>.  Otherwise, we'll return a suitable path within the 
         /// current user's home directory.
         /// </remarks>
         public static string GetHiveUserFolder(bool ignoreNeonToolContainerVar = false)
         {
             if (!ignoreNeonToolContainerVar && InToolContainer)
             {
-                return "/neoncluster";
+                return "/neonhive";
             }
 
             if (NeonHelper.IsWindows)
             {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "neonFORGE", "neoncluster");
+                var path = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "neonFORGE", "neonhive");
 
                 Directory.CreateDirectory(path);
 
@@ -144,7 +144,7 @@ namespace Neon.Hive
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
             {
-                return Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonforge", "neoncluster");
+                return Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonforge", "neonhive");
             }
             else
             {
@@ -243,7 +243,7 @@ namespace Neon.Hive
         /// Returns the path to the current user's hive virtual machine templates
         /// folder, creating the directory if it doesn't already exist.
         /// </summary>
-        /// <returns>The path to the nenCLUSTER setup folder.</returns>
+        /// <returns>The path to the neonHIVE setup folder.</returns>
         public static string GetVmTemplatesFolder()
         {
             var path = Path.Combine(GetHiveUserFolder(), "vm-templates");
@@ -410,7 +410,7 @@ namespace Neon.Hive
             //
             // This should make make the [neon-cli] a lot snappier because
             // hive definitions will change relatively infrequently for
-            // many clusters.
+            // many hives.
 
             var cachedDefinitionPath = GetCachedDefinitionPath(username, hiveName);
             var cachedDefinition     = (HiveDefinition)null;
@@ -576,7 +576,7 @@ namespace Neon.Hive
         /// system.
         /// </note>
         /// <note>
-        /// Take care to call <see cref="CloseCluster()"/> just before your application
+        /// Take care to call <see cref="CloseHive()"/> just before your application
         /// exits to reset any temporary settings like the DNS resolver <b>hosts</b> file.
         /// </note>
         /// <note>
@@ -753,7 +753,7 @@ namespace Neon.Hive
                 return Hive;
             }
 
-            if (Environment.GetEnvironmentVariable("NEON_CLUSTER") == null)
+            if (Environment.GetEnvironmentVariable("NEON_HIVE") == null)
             {
                 // It looks like the host node's [/etc/neon/env-host] script was not
                 // mapped into the current container/process and executed to initialize 
@@ -862,7 +862,7 @@ namespace Neon.Hive
                 hostingProvider = hive.Definition.Hosting.Environment.ToString().ToLowerInvariant();
             }
 
-            Environment.SetEnvironmentVariable("NEON_CLUSTER", hiveDefinition.Name);
+            Environment.SetEnvironmentVariable("NEON_HIVE", hiveDefinition.Name);
             Environment.SetEnvironmentVariable("NEON_DATACENTER", hiveDefinition.Datacenter);
             Environment.SetEnvironmentVariable("NEON_ENVIRONMENT", hiveDefinition.Environment.ToString().ToUpperInvariant());
             Environment.SetEnvironmentVariable("NEON_HOSTING", hostingProvider);
@@ -899,7 +899,7 @@ namespace Neon.Hive
         /// such as the modifications to the DNS resolver <b>hosts</b> file.  This should be called just
         /// before the application exits.
         /// </summary>
-        public static void CloseCluster()
+        public static void CloseHive()
         {
             if (!IsConnected)
             {
@@ -1237,7 +1237,7 @@ namespace Neon.Hive
         {
             VerifyConnected();
 
-            // For bare clusters, just return the cached definition because there
+            // For bare metal hives, just return the cached definition because there
             // is no Consul service running.
 
             if (cachedDefinition != null && cachedDefinition.BareDocker)

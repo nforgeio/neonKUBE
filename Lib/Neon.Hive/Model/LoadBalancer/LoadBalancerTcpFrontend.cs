@@ -36,7 +36,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// The network port to be exposed for this rule on the clusters public Internet facing load balancer.
+        /// The network port to be exposed for this rule on the hive's public Internet facing load balancer.
         /// This defaults to <b>0</b> for TCP rules.  Only rules with positive public ports will be exposed
         /// to to the public Internet via the load balancer.
         /// </para>

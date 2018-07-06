@@ -45,18 +45,18 @@ Configures a neonHIVE as described in the hive definition file.
 
 USAGE: 
 
-    neon hive setup [OPTIONS] root@CLUSTER
+    neon hive setup [OPTIONS] root@HIVE
 
 ARGUMENTS:
 
-    CLUSTER     - The hive name.
+    HIVE        - The hive name.
 
 OPTIONS:
 
     --unredacted        - Runs Vault and other commands with potential
                           secrets without redacting logs.  This is useful 
                           for debugging hive setup  issues.  
-                          Do not use for production clusters.
+                          Do not use for production hives.
 ";
         private string              hiveLoginPath;
         private HiveLogin           hiveLogin;
@@ -101,7 +101,7 @@ OPTIONS:
 
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: [root@CLUSTER] argument is required.");
+                Console.Error.WriteLine("*** ERROR: [root@HIVE] argument is required.");
                 Program.Exit(1);
             }
 
@@ -146,7 +146,7 @@ OPTIONS:
                     onError: message => Console.Error.WriteLine($"*** ERROR {message}"));
             }
 
-            // Emulate a hive connection so the [NeonClusterHelper] methods will work.
+            // Emulate a hive connection so the [HiveHelper] methods will work.
 
             HiveHelper.OpenHive(hiveLogin);
 
@@ -334,7 +334,7 @@ OPTIONS:
                 controller.AddStep("networks",
                     (node, stepDelay) =>
                         {
-                            CreateClusterNetworks(node, stepDelay);
+                            CreateHiveNetworks(node, stepDelay);
                         }, 
                         node => node == hive.FirstManager);
 
@@ -405,16 +405,16 @@ OPTIONS:
                         InitializeSecrets();
                     });
 
-                var clusterServices = new HiveServices(hive);
+                var hiveServices = new HiveServices(hive);
 
-                controller.AddGlobalStep("hive services", () => clusterServices.Configure(hive.FirstManager));
+                controller.AddGlobalStep("hive services", () => hiveServices.Configure(hive.FirstManager));
 
                 if (hive.Pets.Count() > 0)
                 {
                     controller.AddStep("hive containers",
                         (node, stepDelay) =>
                         {
-                            clusterServices.DeployContainers(node, stepDelay);
+                            hiveServices.DeployContainers(node, stepDelay);
                         });
                 }
 
@@ -608,7 +608,7 @@ OPTIONS:
             // Cloud deployments had their VPN configured when they were prepared
             // so we need to connect the VPN now so we can setup the nodes.  
             //
-            // On-premise clusters are always setup via local network connections
+            // On-premise hives are always setup via local network connections
             // so we will be connecting the VPN. 
 
             if (hiveLogin.Definition.Vpn.Enabled &&
@@ -881,7 +881,7 @@ $@"#----------------------------------------------------------------------------
 
 # Define the hive and Docker host related environment variables.
 
-export NEON_CLUSTER={hive.Definition.Name}
+export NEON_HIVE={hive.Definition.Name}
 export NEON_DATACENTER={hive.Definition.Datacenter}
 export NEON_ENVIRONMENT={hive.Definition.Environment}
 export NEON_HOSTING={hive.Definition.Hosting.Environment.ToString().ToLowerInvariant()}
@@ -913,7 +913,7 @@ $@"#----------------------------------------------------------------------------
 
 # Define the hive and Docker host related environment variables.
 
-export NEON_CLUSTER={hive.Definition.Name}
+export NEON_HIVE={hive.Definition.Name}
 export NEON_DATACENTER={hive.Definition.Datacenter}
 export NEON_ENVIRONMENT={hive.Definition.Environment}
 export NEON_HOSTING={hive.Definition.Hosting.Environment.ToString().ToLowerInvariant()}
@@ -1099,7 +1099,7 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
         }
 
         /// <summary>
-        /// Configures the required VPN return routes for on-premise clusters 
+        /// Configures the required VPN return routes for on-premise hives 
         /// that enable VPN.
         /// </summary>
         /// <param name="node">The target hive node.</param>
@@ -1520,7 +1520,7 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
         /// </summary>
         /// <param name="manager">The manager node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void CreateClusterNetworks(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
+        private void CreateHiveNetworks(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
         {
             manager.InvokeIdempotentAction("setup/docker-networks",
                 () =>
@@ -2094,7 +2094,7 @@ WantedBy=ceph-osd.target
                 sbHostAddresses.AppendWithSeparator(monitorNode.PrivateAddress, ", ");
             }
 
-            var clusterSubnet =
+            var hiveSubnet =
                 HostingManager.IsCloudEnvironment(hive.Definition.Hosting.Environment)
                     ? hive.Definition.Network.CloudSubnet
                     : hive.Definition.Network.PremiseSubnet;
@@ -2120,7 +2120,7 @@ fsid = {hiveLogin.Ceph.Fsid}
 mon initial members = {sbHostNames}
 mon host = {sbHostAddresses}
 mon health preluminous compat warning = false
-public network = {clusterSubnet}
+public network = {hiveSubnet}
 auth cluster required = cephx
 auth service required = cephx
 auth client required = cephx
@@ -3035,7 +3035,7 @@ systemctl start neon-volume-plugin
                         //      https://github.com/jefflill/NeonForge/issues/37
 
                         //firstManager.Status = "vault: audit enable";
-                        //cluster.VaultCommand("vault audit enable syslog tag=\"vault\" facility=\"AUTH\"");
+                        //hive.VaultCommand("vault audit enable syslog tag=\"vault\" facility=\"AUTH\"");
                     });
 
                 // Mount a [generic] backend dedicated to neonHIVE related secrets.
@@ -3390,9 +3390,9 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
 
                     hive.FirstManager.Status = "download server SSH key";
 
-                    hiveLogin.SshClusterHostPrivateKey     = hive.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
-                    hiveLogin.SshClusterHostPublicKey      = hive.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
-                    hiveLogin.SshClusterHostKeyFingerprint = hive.FirstManager.DownloadText("/dev/shm/ssh/ssh.fingerprint");
+                    hiveLogin.SshHiveHostPrivateKey     = hive.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
+                    hiveLogin.SshHiveHostPublicKey      = hive.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
+                    hiveLogin.SshHiveHostKeyFingerprint = hive.FirstManager.DownloadText("/dev/shm/ssh/ssh.fingerprint");
 
                     // Delete the SSH key files for security.
 
@@ -3479,7 +3479,7 @@ systemctl restart sshd
                     bundle = new CommandBundle("./config.sh");
 
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
-                    bundle.AddFile("ssh_host_rsa_key", hiveLogin.SshClusterHostPrivateKey);
+                    bundle.AddFile("ssh_host_rsa_key", hiveLogin.SshHiveHostPrivateKey);
                     node.SudoCommand(bundle);
                 });
         }

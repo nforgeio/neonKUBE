@@ -18,7 +18,7 @@ The **neon-hive-manager** service performs a few hive maintenance functions:
 
 neonHIVEs persist a hive defintion to Consul.  This is downloaded by the **neon-cli** and so that it can accurately make container placement decisions for situations where Docker services are not appropriate.  The hive definition includes the non-confidential properties when the hive was initialized provisioned plus the current set of hive nodes including their Docker labels.
 
-This definition is serialized as JSON and then compressed via deflate before being persisted to Consul.  **neon-hive-manager** also persists the MD5 hash of the definition JSON to Consul, making it possible to defer retrieving the definition only when it changes.  Nodes will be added or deleted and their labels modified relatively infrequently for many clusters, so this is a good optimization.
+This definition is serialized as JSON and then compressed via deflate before being persisted to Consul.  **neon-hive-manager** also persists the MD5 hash of the definition JSON to Consul, making it possible to defer retrieving the definition only when it changes.  Nodes will be added or deleted and their labels modified relatively infrequently for many hives, so this is a good optimization.
 
 **neon-hive-manager** persists the hive definition and its hash to Consul at:
 ````
@@ -38,7 +38,7 @@ Vault is super secure by default, so secure that the keys required by Vault to d
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon vault auto-unlock on|off`
 
-Many (perhaps most) clusters don't need this level of security and operators may wish that Vault could be be automatically unsealed after restarts.  **neon-hive-manager** can be configured to accomplish this by persisting the Vault unseal keys as a Docker secret named **neon-hive-manager-vaultkeys**.  neonHIVEs are configured to do this by default.
+Many (perhaps most) hives don't need this level of security and operators may wish that Vault could be be automatically unsealed after restarts.  **neon-hive-manager** can be configured to accomplish this by persisting the Vault unseal keys as a Docker secret named **neon-hive-manager-vaultkeys**.  neonHIVEs are configured to do this by default.
 
 # Environment Variables
 

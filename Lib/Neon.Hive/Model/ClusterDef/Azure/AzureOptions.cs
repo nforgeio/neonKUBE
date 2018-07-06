@@ -24,7 +24,7 @@ using Neon.Net;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Specifies the Microsoft Azure cluster hosting settings.
+    /// Specifies the Microsoft Azure hive hosting settings.
     /// </summary>
     public class AzureOptions
     {
@@ -88,7 +88,7 @@ namespace Neon.Hive
         /// </note>
         /// <para>
         /// This must be unique across all services deployed to an Azure region (your
-        /// services as well as any other Azure cluster).  The IP address will be exposed
+        /// services as well as any other Azure hive).  The IP address will be exposed
         /// by the Azure DNS like:
         /// </para>
         /// <para>
@@ -122,9 +122,9 @@ namespace Neon.Hive
         /// referenced via a DNS CNAME record and the address may change from time-to-time.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "StaticClusterAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "StaticHiveAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
-        public bool StaticClusterAddress { get; set; } = false;
+        public bool StaticHiveAddress { get; set; } = false;
 
         /// <summary>
         /// <note>
@@ -161,7 +161,7 @@ namespace Neon.Hive
         /// </list>
         /// <para>
         /// Enabling this directs the <b>neon-cli</b> to create a dynamic instance level IP
-        /// address for each hive node and add a public network interface to each cluster 
+        /// address for each hive node and add a public network interface to each hive 
         /// virtual machine.
         /// </para>
         /// <note>
@@ -217,7 +217,7 @@ namespace Neon.Hive
         /// with a value in the range of <b>2</b>...<b>20</b>.
         /// </para>
         /// <note>
-        /// Larger clusters should increase this value to avoid losing significant capacity
+        /// Larger hives should increase this value to avoid losing significant capacity
         /// as Azure updates its underlying infrastructure in an update domain requiring
         /// VM shutdown and restarts.  A value of <b>2</b> indicates that one half of the
         /// hive servers may be restarted during an update domain upgrade.  A value
@@ -268,7 +268,7 @@ namespace Neon.Hive
         [JsonIgnore]
         public int LastSshFrontendPort
         {
-            get { return FirstSshFrontendPort + AzureHelper.MaxClusterNodes - 1; }
+            get { return FirstSshFrontendPort + AzureHelper.MaxHiveNodes - 1; }
         }
 
         /// <summary>
@@ -359,16 +359,16 @@ namespace Neon.Hive
                 Environment.Validate(hiveDefinition);
             }
 
-            // Check Azure cluster limits.
+            // Check Azure hive limits.
 
             if (hiveDefinition.Managers.Count() > HiveConst.MaxManagers)
             {
                 throw new HiveDefinitionException($"Hive manager count [{hiveDefinition.Managers.Count()}] exceeds the [{HiveConst.MaxManagers}] limit for neonHIVEs.");
             }
 
-            if (hiveDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)
+            if (hiveDefinition.Nodes.Count() > AzureHelper.MaxHiveNodes)
             {
-                throw new HiveDefinitionException($"Hive node count [{hiveDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for neonHIVEs deployed to Azure.");
+                throw new HiveDefinitionException($"Hive node count [{hiveDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxHiveNodes}] limit for neonHIVEs deployed to Azure.");
             }
         }
     }

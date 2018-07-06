@@ -96,7 +96,7 @@ namespace Neon.Hive
         //         traffic on the Docker ingress network and forward it on to your Docker services.
         //
         //      7. It is possible to assign a public IP address to each hive node.  This can
-        //         help eliminate NAT port exhaustion in the load balancer for large clusters making
+        //         help eliminate NAT port exhaustion in the load balancer for large hives making
         //         a lot of outbound requests.  Note though that inbound traffic will still 
         //         route through the load balancers.
         //
@@ -729,7 +729,7 @@ namespace Neon.Hive
             //-----------------------------------------------------------------
             // Create a public address for the hive load balancers.
 
-            if (azureOptions.StaticClusterAddress)
+            if (azureOptions.StaticHiveAddress)
             {
                 pipLbManager = azure.PublicIPAddresses
                     .Define(pipLbManagerName)

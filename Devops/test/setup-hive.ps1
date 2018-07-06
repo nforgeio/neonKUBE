@@ -5,7 +5,7 @@
 #
 # ARGUMENTS:
 #
-#   hiveName  		- Identifies the target hive definition in the [clusters]
+#   hiveName  		- Identifies the target hive definition in the [hives]
 #	    			  subfolder.  Note that this DOES NOT include the [.json]
 #					  file extension).  Example: "wrt-00-prod"
 #

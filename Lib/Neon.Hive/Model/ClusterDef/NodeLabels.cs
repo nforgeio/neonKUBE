@@ -181,7 +181,7 @@ namespace Neon.Hive
         /// <summary>
         /// <b>io.neon.storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
         /// on the node itself or is mounted as a remote file system or block device.  This defaults
-        /// to <c>true</c> for on-premise clusters and is computed for cloud deployments.
+        /// to <c>true</c> for on-premise hives and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageLocal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(true)]
@@ -190,7 +190,7 @@ namespace Neon.Hive
         /// <summary>
         /// <b>io.neon.storage.ssd</b> [<c>bool</c>]: Indicates that the storage is backed
         /// by SSDs as opposed to rotating hard drive.  This defaults to <c>false</c> for 
-        /// on-premise clusters and is computed for cloud deployments.
+        /// on-premise hives and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageSSD", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
@@ -199,7 +199,7 @@ namespace Neon.Hive
         /// <summary>
         /// <b>io.neon.storage.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
         /// may be implemented locally using RAID1+ or remotely using network or cloud-based file systems.
-        /// This defaults to <c>false</c> for on-premise clusters and is computed for cloud deployments.
+        /// This defaults to <c>false</c> for on-premise hives and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageRedundant", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
@@ -208,7 +208,7 @@ namespace Neon.Hive
         /// <summary>
         /// <b>io.neon.storage.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
         /// All data will be lost when the host is restarted.  This defaults to <c>false</c> for 
-        /// on-premise clusters and is computed for cloud deployments.
+        /// on-premise clusthivesers and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageEphemeral", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
@@ -370,7 +370,7 @@ namespace Neon.Hive
         /// <item>
         ///     <term><b>Multiple Racks:</b></term>
         ///     <description>
-        ///     For clusters deployed to multiple racks, each with their own network
+        ///     For hives deployed to multiple racks, each with their own network
         ///     connection, the fault domain will typically be set at the rack
         ///     level, such that the loss of a rack or its network connectivity can
         ///     be tolerated.
@@ -386,7 +386,7 @@ namespace Neon.Hive
         ///     domain at the pod or floor level.
         ///     </para>
         ///     <para>
-        ///     For clusters that span physical datacenters, you could potentially map
+        ///     For hives that span physical datacenters, you could potentially map
         ///     each datacenter to an fault domain.
         ///     </para>
         ///     </description>
@@ -430,7 +430,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <b>io.neon.log.esdata</b> [<c>bool</c>]: Indicates that the node should host an
-        /// Elasticsearch node to be used to store cluster logging data. This defaults to <c>false</c>.
+        /// Elasticsearch node to be used to store hive logging data. This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "LogEsData", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
@@ -565,7 +565,7 @@ namespace Neon.Hive
         /// to assign to the Ceph OSDs for caching if the integrated Ceph storage cluster 
         /// is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
         /// This defaults to <see cref="CephOptions.OSDCacheSize"/> (<b>1GB</b>) (which is 
-        /// probably too small for production clusters).
+        /// probably too small for production hives).
         /// </para>
         /// <note>
         /// <para>
@@ -600,7 +600,7 @@ namespace Neon.Hive
         /// to assign to the Ceph MDS services for caching if the integrated Ceph storage cluster 
         /// is enabled and <see cref="CephMDS"/> is <c>true</c> for this node.
         /// This defaults to <see cref="CephOptions.MDSCacheSize"/> (<b>1GB</b>) (which is 
-        /// probably too small for production clusters).
+        /// probably too small for production hives).
         /// </para>
         /// <note>
         /// <para>

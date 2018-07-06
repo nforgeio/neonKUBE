@@ -114,7 +114,7 @@ namespace NeonDnsMon
             }
             finally
             {
-                HiveHelper.CloseCluster();
+                HiveHelper.CloseHive();
                 terminator.ReadyToExit();
             }
 
