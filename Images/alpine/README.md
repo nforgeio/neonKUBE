@@ -6,7 +6,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-Enhances the offical [Alpine](https://hub.docker.com/_/alpine/) image to include some additional packages.
+Enhances the official [Alpine](https://hub.docker.com/_/alpine/) image to include some additional packages.
 
 # Additional Packages
 

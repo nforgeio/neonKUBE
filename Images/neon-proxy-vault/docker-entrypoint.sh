@@ -113,7 +113,7 @@ defaults
 # Proxy definitions.
 #
 # Note that [log-format] must be consistent with the standard format implemented
-# by [NeonClusterHelper.GetProxyLogFormat()].
+# by [HiveHelper.GetProxyLogFormat()].
 
 frontend tcp:vault-static
     bind                *:${NetworkPorts_Vault}

@@ -89,7 +89,7 @@ if ($skipServices)
 $env:SETUP_ALL = "true"
 
 neon run --vault-password-file=$env:SECRETS_PASS "$env:SECRETS_GLOBAL" "$env:SECRETS_LOCAL" "$env:VARS_GLOBAL" "$env:VARS_LOCAL" -- `
-	powershell -f setup-hive.ps1 "$env:CLUSTER_SETUP_PATH\hives\$env:CLUSTER\hive.json"
+	powershell -f setup-hive.ps1 "$env:CLUSTER_SETUP_PATH\hives\$env:HIVE\hive.json"
 
 if (-not $?)
 {

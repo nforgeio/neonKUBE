@@ -1,4 +1,4 @@
-This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonHIVE.
+This image derives from the official [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonHIVE.
 
 # Image Tags
 
@@ -10,7 +10,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonHIVE.
+This image derives from the official [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonHIVE.
 
 **neon-registry** is intended to be deployed as a Docker service or container on a neonHIVE with the **Ceph Filesystem** enabled.  **CephFS** implements a shared file system that is available on all hive nodes as well as to Docker services and containers using the **neon volume driver**.  Registry service instances or containers will all mount the same shared **neon** volume to store the Docker images.  CephFS ensures that all registry instances see the same data and it also provides for data redundancy.
 
@@ -38,7 +38,7 @@ The **neon-registry** image may be deployed as a Docker container or service.  W
 
 In either case, you'll generally need the following:
 
-1. A DNS hostname with the IP address of the registry, like: `REGISTRY.MY-CLUSTER.COM`.  This will need to be public if you need to push images from outside your hive.
+1. A DNS hostname with the IP address of the registry, like: `REGISTRY.MY-HIVE.COM`.  This will need to be public if you need to push images from outside your hive.
 
 2. A TLS certificate for the registry hostname.  This should be a real certificate (not self-signed).  [namecheap.com](http://namecheap.com) sells single site certificates for less than $10, so just bite the bullet and purchase one.
 

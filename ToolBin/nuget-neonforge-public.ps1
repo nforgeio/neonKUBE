@@ -60,8 +60,8 @@ SetVersion Neon.Hive.Machine
 SetVersion Neon.Hive.Xen
 SetVersion Neon.Web
 SetVersion Neon.Xunit
-SetVersion Neon.Xunit.Cluster
 SetVersion Neon.Xunit.Couchbase
+SetVersion Neon.Xunit.Hive
 
 # Then build and publish the projects.
 
@@ -80,6 +80,6 @@ Publish Neon.Hive.Xen
 Publish Neon.RabbitMQ
 Publish Neon.Web
 Publish Neon.Xunit
-Publish Neon.Xunit.Cluster
 Publish Neon.Xunit.Couchbase
+Publish Neon.Xunit.Hive
 pause

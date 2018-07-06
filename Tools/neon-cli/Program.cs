@@ -135,7 +135,7 @@ ARGUMENTS:
 
     ARGS                - Command pass-thru arguments.
     BASH-CMD            - Bash command.
-    CLUSTER             - Names the hive to be selected for subsequent
+    HIVE                - Names the hive to be selected for subsequent
                           operations.
     CMD...              - Subcommand and arguments.
     DASHBOARD           - Identifies a hive dashboard
@@ -460,13 +460,13 @@ Docker issues are corrected.
                         // Run the [nhive/neon-cli] Docker image, passing the modified command line 
                         // arguments and mounting the following read/write volumes:
                         //
-                        //      /neoncluster    - the root folder for this workstation's hive logins
+                        //      /neonhive       - the root folder for this workstation's hive logins
                         //      /shim           - the generated shim files
                         //      /log            - the logging folder (if logging is enabled)
                         //
                         // See: https://github.com/jefflill/NeonForge/issues/266
 
-                        var secretsMount = $"-v \"{secretsRoot}:/neoncluster\"";
+                        var secretsMount = $"-v \"{secretsRoot}:/neonhive\"";
                         var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
                         var options      = shim.Terminal ? "-it" : "-i";
 
@@ -1112,7 +1112,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// Uses <see cref="HiveHelper.OpenRemoteCluster(DebugSecrets, string)"/> to 
+        /// Uses <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, string)"/> to 
         /// ensure that there's a currently logged-in hive and that the VPN connection
         /// is established if required.
         /// </summary>

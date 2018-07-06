@@ -24,16 +24,17 @@ param
 #	
 #	HIVE_NODE_TEMPLATE_USERNAME	- SSH username for the neonHIVE node template (like: [sysadmin])
 #	HIVE_NODE_TEMPLATE_PASSWORD	- SSH password for the neonHIVE node template (like: [sysadmin0000])
-#	CLUSTER_LOG_FOLDER			- Path to the setup log folder
-#	CLUSTER_MAX_PARALLEL		- Maximum setup steps to perform in parallel (like: 10)
-#	CLUSTER_LOGIN				- neonHIVE login name (like: root@home-small)
+#   HIVE					    - neonHIVE name
+#	HIVE_LOG_FOLDER			- path to the setup log folder
+#	HIVE_MAX_PARALLEL		- maximum setup steps to perform in parallel (like: 10)
+#	HIVE_LOGIN				- neonHIVE login name (like: root@home-small)
 
 # Initialize environment variables.
 
-$env:CLUSTER              = $hiveName
-$env:CLUSTER_LOGIN        = "root@$env:CLUSTER"
-$env:CLUSTER_SETUP_PATH   = "$env:NF_ROOT\Devops\test"
-$env:CLUSTER_MAX_PARALLEL = 10
+$env:HIVE               = $hiveName
+$env:HIVE_LOGIN         = "root@$env:HIVE"
+$env:CLUSTER_SETUP_PATH = "$env:NF_ROOT\Devops\test"
+$env:HIVE_MAX_PARALLEL  = 10
 
 # Hive secrets are persisted to the Ansible compatible variable files
 # called [secrets.yaml].  This file is encrypted using the [neon-git]
@@ -41,9 +42,9 @@ $env:CLUSTER_MAX_PARALLEL = 10
 
 $env:SECRETS_PASS   = "neon-git"
 $env:SECRETS_GLOBAL = "$env:CLUSTER_SETUP_PATH\secrets.yaml"
-$env:SECRETS_LOCAL  = "$env:CLUSTER_SETUP_PATH\hives\$env:CLUSTER\secrets.yaml"
+$env:SECRETS_LOCAL  = "$env:CLUSTER_SETUP_PATH\hives\$env:HIVE\secrets.yaml"
 $env:VARS_GLOBAL    = "$env:CLUSTER_SETUP_PATH\secrets.yaml"
-$env:VARS_LOCAL     = "$env:CLUSTER_SETUP_PATH\hives\$env:CLUSTER\secrets.yaml"
+$env:VARS_LOCAL     = "$env:CLUSTER_SETUP_PATH\hives\$env:HIVE\secrets.yaml"
 
 # Hive secret YAML files need to have Linux-style line endings, so we're
 # going to convert these here.
@@ -53,20 +54,20 @@ unix-text --recursive $env:CLUSTER_SETUP_PATH\*.yaml
 
 # Ensure that the setup log folder exists and is cleared.
 
-$env:CLUSTER_LOG_FOLDER = "C:\hive-logs\$env:CLUSTER"
+$env:HIVE_LOG_FOLDER = "C:\hive-logs\$env:HIVE"
 
-if (Test-Path $env:CLUSTER_LOG_FOLDER)
+if (Test-Path $env:HIVE_LOG_FOLDER)
 {
-	del "$env:CLUSTER_LOG_FOLDER\*.log"
+	del "$env:HIVE_LOG_FOLDER\*.log"
 }
 else
 {
-	mkdir "$env:CLUSTER_LOG_FOLDER"
+	mkdir "$env:HIVE_LOG_FOLDER"
 }
 
 if (-not $nologin)
 {
-	neon login $env:CLUSTER_LOGIN
+	neon login $env:HIVE_LOGIN
 
 	if (-not $?)
 	{

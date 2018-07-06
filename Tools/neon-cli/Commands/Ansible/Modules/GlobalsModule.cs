@@ -92,7 +92,7 @@ namespace NeonCli.Ansible
         // Examples:
         // ---------
         //
-        // This example enables cluster unit testing:
+        // This example enables hive unit testing:
         //
         //  - name: test
         //    hosts: localhost

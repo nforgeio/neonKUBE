@@ -40,7 +40,7 @@ namespace NeonHiveManager
         private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
         private static readonly string logPollSecondsKey     = $"{serviceRootKey}/log_poll_seconds";
-        private static readonly string clusterDefKey         = $"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}";
+        private static readonly string hiveDefinitionKey     = $"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}";
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
@@ -313,10 +313,10 @@ namespace NeonHiveManager
             // Vault proxy port because we need to be able to address these
             // individually.
 
-            var clusterNodes = await docker.NodeListAsync();
-            var hosts        = File.ReadAllText("/etc/hosts");
+            var swarmNodes = await docker.NodeListAsync();
+            var hosts      = File.ReadAllText("/etc/hosts");
 
-            foreach (var managerNode in clusterNodes.Where(n => n.Role == "manager")
+            foreach (var managerNode in swarmNodes.Where(n => n.Role == "manager")
                 .OrderBy(n => n.Hostname))
             {
                 var vaultHostname = $"{managerNode.Hostname}.neon-vault.hive";
@@ -445,7 +445,7 @@ namespace NeonHiveManager
                     // hive.  This is a serious problem.  This is configured during setup
                     // and there should always be a definition in Consul.
 
-                    log.LogError(() => $"STATE-POLLER: No hive definition has been found at [{clusterDefKey}] in Consul.  This is a serious error that will have to be corrected manually.");
+                    log.LogError(() => $"STATE-POLLER: No hive definition has been found at [{hiveDefinitionKey}] in Consul.  This is a serious error that will have to be corrected manually.");
                 }
                 catch (Exception e)
                 {

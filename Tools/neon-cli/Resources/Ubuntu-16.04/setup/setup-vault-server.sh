@@ -26,7 +26,7 @@ echo "**********************************************" 1>&2
 
 # Load the hive configuration and setup utilities.
 
-. $<load-cluster-config>
+. $<load-hive-conf>
 . setup-utility.sh
 
 # Ensure that setup is idempotent.
@@ -111,7 +111,7 @@ cat <<EOF > /usr/local/bin/vault-server
 #------------------------------------------------------------------------------
 # Starts Vault in SERVER mode.
 
-. $<load-cluster-config-quiet>
+. $<load-hive-conf-quiet>
 
 vault server                     \\
     -config=/etc/vault/vault.hcl \\

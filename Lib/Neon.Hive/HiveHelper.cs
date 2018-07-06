@@ -761,7 +761,7 @@ namespace Neon.Hive
                 // set the important ones here.
 
                 Environment.SetEnvironmentVariable("VAULT_ADDR", $"https://neon-vault.hive:{HiveHostPorts.ProxyVault}");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"neon-consul.cluster:{NetworkPorts.Consul}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"neon-consul.hive:{NetworkPorts.Consul}");
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{HiveHostNames.Consul}:{NetworkPorts.Consul}");
             }
 

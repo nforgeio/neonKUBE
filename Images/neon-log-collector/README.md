@@ -90,6 +90,6 @@ Note that the database file must be named `database.mmdb.gz`.  The base **neon-l
 
 **Updating Your Hive**
 
-For new hives, you can specify the new collector image in the hive definition before deployment and for existing clusters you can simply use this command to deploy the new image:
+For new hives, you can specify the new collector image in the hive definition before deployment and for existing hives you can simply use this command to deploy the new image:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`nc docker service update --image YOUR-IMAGE neon-log-collector`

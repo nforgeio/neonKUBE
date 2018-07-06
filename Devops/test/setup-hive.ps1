@@ -32,8 +32,8 @@ if ($env:SETUP_SKIP_PREPARE -ne "true")
 	    $env:SETUP_DEBUG `
 		--machine-username="$env:HIVE_NODE_TEMPLATE_USERNAME" `
 		--machine-password="$env:HIVE_NODE_TEMPLATE_PASSWORD" `
-		--log-folder="$env:CLUSTER_LOG_FOLDER" `
-		--max-parallel=$env:CLUSTER_MAX_PARALLEL `
+		--log-folder="$env:HIVE_LOG_FOLDER" `
+		--max-parallel=$env:HIVE_MAX_PARALLEL `
 		$hiveName
 
 	if (-not $?)
@@ -52,9 +52,9 @@ if ($env:SETUP_SKIP_SETUP -ne "true")
 		$env:SETUP_IMAGE_TAG `
 		--machine-username="$env:HIVE_NODE_TEMPLATE_USERNAME" `
 		--machine-password="$env:HIVE_NODE_TEMPLATE_PASSWORD" `
-		--log-folder="$env:CLUSTER_LOG_FOLDER" `
-		--max-parallel="$env:CLUSTER_MAX_PARALLEL" `
-		$env:CLUSTER_LOGIN
+		--log-folder="$env:HIVE_LOG_FOLDER" `
+		--max-parallel="$env:HIVE_MAX_PARALLEL" `
+		$env:HIVE_LOGIN
 
 	if (-not $?)
 	{

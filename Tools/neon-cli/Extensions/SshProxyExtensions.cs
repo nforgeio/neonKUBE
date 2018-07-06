@@ -410,8 +410,8 @@ namespace NeonCli
 
             // Set the variables.
 
-            preprocessReader.Set("load-cluster-config", HiveHostFolders.Config + "/hive.conf.sh --echo-summary");
-            preprocessReader.Set("load-cluster-config-quiet", HiveHostFolders.Config + "/hive.conf.sh");
+            preprocessReader.Set("load-hive-conf", HiveHostFolders.Config + "/hive.conf.sh --echo-summary");
+            preprocessReader.Set("load-hive-conf-quiet", HiveHostFolders.Config + "/hive.conf.sh");
 
             SetBashVariable(preprocessReader, "hive.provisioner", hiveDefinition.Provisioner);
             SetBashVariable(preprocessReader, "hive.rootuser", Program.MachineUsername);

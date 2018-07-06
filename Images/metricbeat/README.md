@@ -13,11 +13,11 @@ The following image tags identify archived images which will not be deleted but 
 
 **NOTE:**
 
-Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined system.  You should deploy the same version of each component to your cluster and when it's time to upgrade, always upgrade the Elasticsearch cluster first, followed by the Metricbeat and Kibana.
+Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined system.  You should deploy the same version of each component to your hive and when it's time to upgrade, always upgrade the Elasticsearch cluster first, followed by the Metricbeat and Kibana.
 
 # Description
 
-[Metricbeat](https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-overview.html) is an agent that runs on each cluster node that captures and ships node and container metrics to the hive Elasticsearch logs for analysis and viewing via Kibana.
+[Metricbeat](https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-overview.html) is an agent that runs on each hive node that captures and ships node and container metrics to the hive Elasticsearch logs for analysis and viewing via Kibana.
 
 By default, this container launches Metricbeat configured to capture the following node metrics:
 
@@ -79,7 +79,7 @@ This image includes the following packages:
 
 # Upgrading
 
-To upgrade to the latest version of Metricbeat, run these commands on every cluster node:
+To upgrade to the latest version of Metricbeat, run these commands on every hive node:
 
 ````
 docker pull nhive/metricbeat

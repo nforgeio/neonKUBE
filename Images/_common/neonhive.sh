@@ -165,7 +165,7 @@ export NetworkPorts_RabbitMQAdmin=15672
 export NetworkPorts_CephDashboard=7000
 
 #------------------------------------------------------------------------------
-# NeonClusterConst:
+# HiveConst:
 #
 # Important neonHIVE constants.  These must match the definitions in
 # [Neon.Hive.NeonHiveConst].

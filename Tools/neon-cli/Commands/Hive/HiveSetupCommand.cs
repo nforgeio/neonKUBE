@@ -572,7 +572,7 @@ OPTIONS:
 
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: [root@CLUSTER] argument is required.");
+                Console.Error.WriteLine("*** ERROR: [root@HIVE] argument is required.");
                 Program.Exit(1);
             }
 

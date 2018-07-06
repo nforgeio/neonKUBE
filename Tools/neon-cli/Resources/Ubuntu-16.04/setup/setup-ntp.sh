@@ -27,7 +27,7 @@ echo "**********************************************" 1>&2
 
 # Load the hive configuration and setup utilities.
 
-. $<load-cluster-config>
+. $<load-hive-conf>
 . setup-utility.sh
 
 # Ensure that setup is idempotent.
@@ -155,7 +155,7 @@ cat <<EOF > /usr/local/bin/update-time
 #
 #       --norestart - Don't restart NTP
 
-. $<load-cluster-config-quiet>
+. $<load-hive-conf-quiet>
 
 restart=true
 
