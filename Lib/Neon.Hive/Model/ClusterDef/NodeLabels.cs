@@ -37,7 +37,7 @@ namespace Neon.Hive
     /// <para>
     /// By convention, label names should use a reverse domain name form using a
     /// DNS domain you control.  For example, neonHIVE related labels are prefixed
-    /// with <b>"io.neon."</b>.  You should follow this convention for any
+    /// with <b>"io.neonhive."</b>.  You should follow this convention for any
     /// custom labels you define.
     /// </para>
     /// <note>
@@ -171,7 +171,7 @@ namespace Neon.Hive
         public const string LabelStorageEphemeral = HiveDefinition.ReservedLabelPrefix + ".storage.ephemral";
 
         /// <summary>
-        /// <b>io.neon.storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
+        /// <b>io.neonhive.storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
         /// storage capacity in gigabytes.
         /// </summary>
         [JsonProperty(PropertyName = "StorageCapacityGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -179,7 +179,7 @@ namespace Neon.Hive
         public int StorageCapacityGB { get; set; } = 0;
 
         /// <summary>
-        /// <b>io.neon.storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
+        /// <b>io.neonhive.storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
         /// on the node itself or is mounted as a remote file system or block device.  This defaults
         /// to <c>true</c> for on-premise hives and is computed for cloud deployments.
         /// </summary>
@@ -188,7 +188,7 @@ namespace Neon.Hive
         public bool StorageLocal { get; set; } = true;
 
         /// <summary>
-        /// <b>io.neon.storage.ssd</b> [<c>bool</c>]: Indicates that the storage is backed
+        /// <b>io.neonhive.storage.ssd</b> [<c>bool</c>]: Indicates that the storage is backed
         /// by SSDs as opposed to rotating hard drive.  This defaults to <c>false</c> for 
         /// on-premise hives and is computed for cloud deployments.
         /// </summary>
@@ -197,7 +197,7 @@ namespace Neon.Hive
         public bool StorageSSD { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neon.storage.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
+        /// <b>io.neonhive.storage.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
         /// may be implemented locally using RAID1+ or remotely using network or cloud-based file systems.
         /// This defaults to <c>false</c> for on-premise hives and is computed for cloud deployments.
         /// </summary>
@@ -206,7 +206,7 @@ namespace Neon.Hive
         public bool StorageRedundant { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neon.storage.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
+        /// <b>io.neonhive.storage.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
         /// All data will be lost when the host is restarted.  This defaults to <c>false</c> for 
         /// on-premise clusthivesers and is computed for cloud deployments.
         /// </summary>
@@ -238,7 +238,7 @@ namespace Neon.Hive
         public const string LabelComputeSwap = HiveDefinition.ReservedLabelPrefix + ".compute.swap";
 
         /// <summary>
-        /// <b>io.neon.compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
+        /// <b>io.neonhive.compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
         /// This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
@@ -247,7 +247,7 @@ namespace Neon.Hive
         public int ComputeCores { get; set; } = 0;
 
         /// <summary>
-        /// <b>io.neon.compute.architecture</b> [<c>enum</c>]: Specifies the CPU architecture.
+        /// <b>io.neonhive.compute.architecture</b> [<c>enum</c>]: Specifies the CPU architecture.
         /// This defaults to <see cref="CpuArchitecture.x64"/>.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeArchitecture", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -255,7 +255,7 @@ namespace Neon.Hive
         public CpuArchitecture ComputeArchitecture { get; set; } = CpuArchitecture.x64;
 
         /// <summary>
-        /// <b>io.neon.compute.ram_mb</b> [<c>int</c>]: Specifies the the available RAM in
+        /// <b>io.neonhive.compute.ram_mb</b> [<c>int</c>]: Specifies the the available RAM in
         /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
@@ -264,7 +264,7 @@ namespace Neon.Hive
         public int ComputeRamMB { get; set; } = 0;
 
         /// <summary>
-        /// <b>io.neon.compute.swap</b> [<c>bool</c>]: Specifies whether the node operating system may
+        /// <b>io.neonhive.compute.swap</b> [<c>bool</c>]: Specifies whether the node operating system may
         /// swap RAM to the file system.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeSwap", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -297,7 +297,7 @@ namespace Neon.Hive
         public const string LabelPhysicalPower = HiveDefinition.ReservedLabelPrefix + ".physical.power";
 
         /// <summary>
-        /// <b>io.neon.physical.location</b> [<c>string</c>]: A free format string describing the
+        /// <b>io.neonhive.physical.location</b> [<c>string</c>]: A free format string describing the
         /// physical location of the server.  This defaults to the 
         /// <b>empty string</b>.
         /// </summary>
@@ -319,7 +319,7 @@ namespace Neon.Hive
         public string PhysicalLocation { get; set; } = string.Empty;
 
         /// <summary>
-        /// <b>io.neon.physical.model</b> [<c>string</c>]: A free format string describing the
+        /// <b>io.neonhive.physical.model</b> [<c>string</c>]: A free format string describing the
         /// physical server computer model (e.g. <b>Dell-PowerEdge-R220</b>).  This defaults to the <b>empty string</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PhysicalMachine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -327,7 +327,7 @@ namespace Neon.Hive
         public string PhysicalMachine { get; set; } = string.Empty;
 
         /// <summary>
-        /// <b>io.neon.physical.faultdomain</b> [<c>string</c>]: A free format string 
+        /// <b>io.neonhive.physical.faultdomain</b> [<c>string</c>]: A free format string 
         /// grouping the host by the possibility of underlying hardware or software failures.
         /// This defaults to the <b>empty string</b>.
         /// </summary>
@@ -402,7 +402,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// <b>io.neon.physical.power</b> [<c>string</c>]: Describes host the physical power
+        /// <b>io.neonhive.physical.power</b> [<c>string</c>]: Describes host the physical power
         /// to the server may be controlled.  This defaults to the <b>empty string</b>.
         /// </summary>
         /// <remarks>
@@ -429,7 +429,7 @@ namespace Neon.Hive
         public const string LabelLogEsData = HiveDefinition.ReservedLabelPrefix + ".log.esdata";
 
         /// <summary>
-        /// <b>io.neon.log.esdata</b> [<c>bool</c>]: Indicates that the node should host an
+        /// <b>io.neonhive.log.esdata</b> [<c>bool</c>]: Indicates that the node should host an
         /// Elasticsearch node to be used to store hive logging data. This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "LogEsData", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -480,7 +480,7 @@ namespace Neon.Hive
         public const string LabelCephMDSCacheSizeMB = HiveDefinition.ReservedLabelPrefix + ".ceph.mds_cachesize_mb";
 
         /// <summary>
-        /// <b>io.neon.ceph.monitor</b> [<c>bool</c>]: Indicates that the Ceph 
+        /// <b>io.neonhive.ceph.monitor</b> [<c>bool</c>]: Indicates that the Ceph 
         /// monitor and manager services  will be deployed to this node if 
         /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  This defaults 
         /// to <c>false</c>.
@@ -508,7 +508,7 @@ namespace Neon.Hive
         public bool CephMON { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neon.ceph.osd</b> [<c>bool</c>]: Indicates that a Ceph OSD 
+        /// <b>io.neonhive.ceph.osd</b> [<c>bool</c>]: Indicates that a Ceph OSD 
         /// (object storage daemon) will be deployed to this if 
         /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
@@ -524,7 +524,7 @@ namespace Neon.Hive
         public bool CephOSD { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neon.ceph.osd_device</b> (<c>string</c>]: The path to the block
+        /// <b>io.neonhive.ceph.osd_device</b> (<c>string</c>]: The path to the block
         /// device where the OSD data will be persisted (like: <b>/dev/sdb</b>)
         /// when <see cref="CephOSD"/> is <c>true</c>.  This will be initialized 
         /// automatically for most hosting environments but will need to be specified 
@@ -533,7 +533,7 @@ namespace Neon.Hive
         public string CephOSDDevice { get; set; } = null;
 
         /// <summary>
-        /// <b>io.neon.ceph.mds</b> [<c>bool</c>]: Indicates that a Ceph MDS 
+        /// <b>io.neonhive.ceph.mds</b> [<c>bool</c>]: Indicates that a Ceph MDS 
         /// (metadata server) will be deployed to this if <see cref="CephOptions.Enabled"/> 
         /// is <c>true</c>.  This defaults to <c>false</c>.
         /// </summary>
@@ -549,7 +549,7 @@ namespace Neon.Hive
         public bool CephMDS { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neon.ceph.drivesize_gb</b> [<c>int</c>]: Specifies the size in gigabytes
+        /// <b>io.neonhive.ceph.drivesize_gb</b> [<c>int</c>]: Specifies the size in gigabytes
         /// of the Ceph OSD drive created for cloud and hypervisor based environments if the
         /// integrated Ceph storage cluster is enabled and <see cref="CephOSD"/>
         /// is <c>true</c> for this node.  This defaults to <see cref="CephOptions.OSDDriveSize"/>
@@ -561,7 +561,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// <b>io.neon.ceph.cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
+        /// <b>io.neonhive.ceph.cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
         /// to assign to the Ceph OSDs for caching if the integrated Ceph storage cluster 
         /// is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
         /// This defaults to <see cref="CephOptions.OSDCacheSize"/> (<b>1GB</b>) (which is 
@@ -585,7 +585,7 @@ namespace Neon.Hive
         public int CephOSDCacheSizeMB { get; set; } = 0;
 
         /// <summary>
-        /// <b>io.neon.ceph.journalsize_mb</b> [<c>int</c>]: Specifies the disk capacity
+        /// <b>io.neonhive.ceph.journalsize_mb</b> [<c>int</c>]: Specifies the disk capacity
         /// in megabytes to assign to the Ceph OSD journal if the integrated Ceph storage 
         /// cluster is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
         /// This defaults to <see cref="CephOptions.OSDJournalSize"/>.
@@ -596,7 +596,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// <b>io.neon.ceph.mds_cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
+        /// <b>io.neonhive.ceph.mds_cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
         /// to assign to the Ceph MDS services for caching if the integrated Ceph storage cluster 
         /// is enabled and <see cref="CephMDS"/> is <c>true</c> for this node.
         /// This defaults to <see cref="CephOptions.MDSCacheSize"/> (<b>1GB</b>) (which is 
@@ -628,7 +628,7 @@ namespace Neon.Hive
         /// Use this property to define custom host node labels.
         /// </para>
         /// <note>
-        /// The <b>io.neonhive</b> label prefix is reserved.
+        /// The <b>io.neonhive.</b> label prefix is reserved.
         /// </note>
         /// <note>
         /// Labels names will be converted to lowercase when the Docker daemon is started

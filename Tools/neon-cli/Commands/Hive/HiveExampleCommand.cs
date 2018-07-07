@@ -724,13 +724,13 @@ USAGE:
     //            (not engine labels).  The built-in labels can be referenced
     //            in Swarm constraint expressions as:
     //
-    //                  node.labels.io.neon.[built-in name (lowercase)]
+    //                  node.labels.io.neonhive.[built-in name (lowercase)]
     //
     //            Custom labels can be referenced via:
     //
     //                  node.labels[custom name (lowercase)]
     //
-    //            Note that the [io.neonhive] prefix is reserved for
+    //            Note that the [io.neonhive.] prefix is reserved for
     //            neonHIVE related labels.
 
     ""Nodes"": {

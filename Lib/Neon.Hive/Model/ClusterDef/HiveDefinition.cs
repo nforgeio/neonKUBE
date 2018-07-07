@@ -938,7 +938,7 @@ namespace Neon.Hive
         /// value specified.
         /// </para>
         /// <para>
-        /// Properties may be custom label names, neonHIVE label names prefixed with <b>io.neon.</b>,
+        /// Properties may be custom label names, neonHIVE label names prefixed with <b>io.neonhive.</b>,
         /// or <b>node</b> to indicate the node name.  Label name lookup is case insenstive.
         /// </para>
         /// </remarks>

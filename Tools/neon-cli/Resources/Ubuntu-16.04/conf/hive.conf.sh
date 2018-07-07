@@ -122,7 +122,7 @@ export NEON_LOG_ENABLED=$<log.enabled>
 # Echo the configuration to STDERR if requested.
 
 if $summary ; then
-    echo "NEON_HIVE_PROVISIONER              = ${NEON_CLUSTER_PROVISIONER}" 1>&2
+    echo "NEON_HIVE_PROVISIONER              = ${NEON_HIVE_PROVISIONER}" 1>&2
     echo 1>&2
     echo "NEON_HIVE                          = ${NEON_HIVE}" 1>&2
     echo "NEON_DATACENTER                    = ${NEON_DATACENTER}" 1>&2
