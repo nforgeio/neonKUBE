@@ -33,10 +33,10 @@ infrastructure related services and containers.
 
 USAGE:
 
+    neon hive update          [OPTIONS]         - updates neonHIVE and containers/services
     neon hive update check                      - checks for available updates 
     neon hive update consul   [OPTIONS] VERSION - updates HashiCorp Consul
     neon hive update docker   [OPTIONS] VERSION - updates the Docker engine
-    neon hive update hive     [OPTIONS]         - updates neonHIVE and containers/services
     neon hive update services [OPTIONS]         - updates neonHIVE containers/services
     neon hive update linux    [OPTIONS]         - updates linux on hive nodes
     neon hive update vault    [OPTIONS] VERSION - updates HashiCorp Vault
@@ -82,12 +82,6 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 Program.Exit(0);
             }
 
-            if (commandLine.Arguments.Length == 0)
-            {
-                Console.WriteLine(usage);
-                Program.Exit(1);
-            }
-
             Console.WriteLine();
 
             hiveLogin = Program.ConnectHive();
@@ -108,6 +102,11 @@ The current login must have ROOT PERMISSIONS to update the hive.
 
             switch (command)
             {
+                case null:
+
+                    UpdateHive(force, maxParallel);
+                    break;
+
                 case "check":
 
                     CheckHive(maxParallel);
@@ -137,11 +136,6 @@ The current login must have ROOT PERMISSIONS to update the hive.
                     }
 
                     UpdateDocker(force, version, maxParallel);
-                    break;
-
-                case "hive":
-
-                    UpdateHive(force, maxParallel);
                     break;
 
                 case "services":
@@ -620,7 +614,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             }
 
             Console.WriteLine();
-            Console.WriteLine("*** Hive coponents, services, and containers were updated successfully.");
+            Console.WriteLine("*** Hive components, services, and containers were updated successfully.");
         }
 
         /// <summary>
