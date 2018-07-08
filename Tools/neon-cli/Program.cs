@@ -334,9 +334,9 @@ Docker issues are corrected.
                 //
                 // Both of these issues may require resetting or reinstalling Docker.d
 #if NOSHIM_DEFAULT
-                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--noshim") != null;
-#else
                 NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--shim") == null;
+#else
+                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--noshim") != null;
 #endif
                 // Short-circuit the help command.
 
