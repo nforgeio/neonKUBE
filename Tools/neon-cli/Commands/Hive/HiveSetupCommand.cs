@@ -796,7 +796,7 @@ OPTIONS:
 
                     // Create and configure the internal hive self-signed certificates.
 
-                    node.Status = "install certs";
+                    node.Status = "install: certs";
 
                     // Install the Vault certificate.
 

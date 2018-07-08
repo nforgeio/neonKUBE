@@ -235,6 +235,7 @@ namespace NeonCli
                     var publicPublish   = new List<string>();
                     var privatePublish  = new List<string>();
                     var proxyConstraint = new List<string>();
+                    var proxyReplicas   = new List<string>();
 
                     if (hive.Definition.Docker.GetAvoidIngressNetwork(hive.Definition))
                     {
@@ -262,18 +263,37 @@ namespace NeonCli
                         privatePublish.Add($"{HiveHostPorts.ProxyPrivateFirst}-{HiveHostPorts.ProxyPrivateLast}:{HiveHostPorts.ProxyPrivateFirst}-{HiveHostPorts.ProxyPrivateLast}");
 
                         proxyConstraint.Add($"--constraint");
+                        proxyReplicas.Add("--replicas");
 
                         if (hive.Definition.Workers.Count() > 0)
                         {
                             // Constrain proxies to worker nodes if there are any.
 
                             proxyConstraint.Add($"node.role!=manager");
+
+                            if (hive.Definition.Workers.Count() == 1)
+                            {
+                                proxyReplicas.Add("1");
+                            }
+                            else
+                            {
+                                proxyReplicas.Add("2");
+                            }
                         }
                         else
                         {
                             // Constrain proxies to manager nodes nodes if there are no workers.
 
                             proxyConstraint.Add($"node.role==manager");
+
+                            if (hive.Definition.Managers.Count() == 1)
+                            {
+                                proxyReplicas.Add("1");
+                            }
+                            else
+                            {
+                                proxyReplicas.Add("2");
+                            }
                         }
                     }
 
@@ -306,6 +326,7 @@ namespace NeonCli
                         "--secret", "neon-proxy-public-credentials",
                         publicPublish,
                         proxyConstraint,
+                        proxyReplicas,
                         "--mode", "global",
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         "--network", HiveConst.PublicNetwork,
@@ -340,6 +361,7 @@ namespace NeonCli
                         "--secret", "neon-proxy-private-credentials",
                         privatePublish,
                         proxyConstraint,
+                        proxyReplicas,
                         "--mode", "global",
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         "--network", HiveConst.PrivateNetwork,
