@@ -205,23 +205,50 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Avoid using the Docker Ingress network for hive proxies.  This defaults to <c>true</c>.
+        /// Controls whether the Docker Ingress network is used for for hive proxies.  This defaults to <c>null</c>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// Docker releases made during the first three quarters of 2017 appear to have serious
-        /// problems with the ingress mesh network.  This problem seems to have been fixed but
-        /// this setting is available just in case.  Setting this property to <c>true</c> will
-        /// avoid this network by deploying the hive's public, private, and Vault proxies
-        /// on all hive Swarm nodes, effectively providing the same feature.
+        /// problems with the ingress mesh network when hosted on a Windows development machine 
+        /// using Hyper-V based virtual machines as hive nodes.  
+        /// </para>
+        /// <para>
+        /// This can be set to one of three values <c>true</c>, <c>false</c>, or <c>null</c>
+        /// (the default).  When <c>null</c>, the cluster will be provisioned with load balancers
+        /// using the Docker ingress network for all clusters except for those hosted using 
+        /// <see cref="HostingEnvironments.HyperVDev"/>.  Load balancers will be provisioned
+        /// on all cluster hosts in this case.
+        /// </para>
+        /// <para>
+        /// Setting this property to <c>true</c> will avoid the ingress network regardless of the
+        /// hosting environment and <c>false</c> will always use the ingress network.
         /// </para>
         /// <para>
         /// Here's the issue describing this: https://github.com/jefflill/NeonForge/issues/104
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "AvoidIngressNetwork", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(true)]
-        public bool AvoidIngressNetwork { get; set; } = true;
+        [DefaultValue(null)]
+        public bool? AvoidIngressNetwork { get; set; } = null;
+
+        /// <summary>
+        /// <b>Internal Use Only:</b> Indicates whether the Docker ingress network should be used
+        /// for load balancer instances based on <see cref="AvoidIngressNetwork"/> and the the
+        /// current hosting environment.
+        /// </summary>
+        /// <param name="hiveDefinition">The current hive definition.</param>
+        public bool GetAvoidIngressNetwork(HiveDefinition hiveDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
+
+            if (AvoidIngressNetwork.HasValue)
+            {
+                return AvoidIngressNetwork.Value;
+            }
+
+            return hiveDefinition.Hosting.Environment == HostingEnvironments.HyperVDev;
+        }
 
         /// <summary>
         /// Enables experimental Docker features.  This defaults to <c>false</c>.

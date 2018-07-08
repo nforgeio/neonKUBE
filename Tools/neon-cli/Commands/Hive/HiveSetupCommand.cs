@@ -2753,7 +2753,7 @@ systemctl start neon-volume-plugin
 
                     var options = new List<string>();
 
-                    if (hive.Definition.Docker.AvoidIngressNetwork)
+                    if (hive.Definition.Docker.GetAvoidIngressNetwork(hive.Definition))
                     {
                         options.Add("--publish");
                         options.Add($"mode=host,published={HiveHostPorts.ProxyVault},target={NetworkPorts.Vault}");

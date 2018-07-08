@@ -236,7 +236,7 @@ namespace NeonCli
                     var privatePublish  = new List<string>();
                     var proxyConstraint = new List<string>();
 
-                    if (hive.Definition.Docker.AvoidIngressNetwork)
+                    if (hive.Definition.Docker.GetAvoidIngressNetwork(hive.Definition))
                     {
                         // The parameterized [service create --publish] option doesn't handle port ranges so we need to 
                         // specify multiple publish options.
