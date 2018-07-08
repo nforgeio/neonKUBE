@@ -209,6 +209,10 @@ Docker issues are corrected.
             Directory.CreateDirectory(HiveLoginFolder);
             Directory.CreateDirectory(HiveTempFolder);
 
+            // Ensure that all of the hive hosting manager implementations are loaded.
+
+            new HostingManagerFactory(() => HostingLoader.Initialize());
+
             // Process the command line.
 
             try

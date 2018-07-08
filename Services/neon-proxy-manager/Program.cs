@@ -1796,9 +1796,7 @@ listen tcp:port-{port}
                 // This could be considered a feature.  For example, this allows
                 // the operator temporarily block a port manually.
 
-                HostingLoader.LoadManagers();   // Ensure that all hive hosting manager assemblies are loaded.
-
-                var hostingManager = HostingManager.GetManager(hive);
+                var hostingManager = new HostingManagerFactory().GetManager(hive);
 
                 if (hostingManager == null)
                 {

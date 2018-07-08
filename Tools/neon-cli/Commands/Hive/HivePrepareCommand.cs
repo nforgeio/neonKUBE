@@ -271,9 +271,7 @@ Server Requirements:
             // such as virtual machines, networks, load balancers, public IP addresses, security
             // groups,... as required for the environment.
 
-            HostingLoader.LoadManagers();   // Ensure that all hive hosting manager assemblies are loaded.
-
-            hostingManager = HostingManager.GetManager(hive, Program.LogPath);
+            hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(hive, Program.LogPath);
 
             if (hostingManager == null)
             {

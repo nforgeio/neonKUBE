@@ -2095,7 +2095,7 @@ WantedBy=ceph-osd.target
             }
 
             var hiveSubnet =
-                HostingManager.IsCloudEnvironment(hive.Definition.Hosting.Environment)
+                new HostingManagerFactory().IsCloudEnvironment(hive.Definition.Hosting.Environment)
                     ? hive.Definition.Network.CloudSubnet
                     : hive.Definition.Network.PremiseSubnet;
 

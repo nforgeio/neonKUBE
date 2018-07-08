@@ -735,7 +735,7 @@ namespace Neon.Hive
             Dashboard.Validate(this);
             Ceph.Validate(this);
 
-            HostingManager.ValidateHive(this);
+            new HostingManagerFactory().Validate(this);
 
             if (TimeSources == null || TimeSources.Length == 0 || TimeSources.Count(ts => string.IsNullOrWhiteSpace(ts)) > 0)
             {
