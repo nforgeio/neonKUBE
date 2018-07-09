@@ -28,7 +28,6 @@ if (-not $env:SETUP_ALL -eq "true")
 if ($env:SETUP_SKIP_PREPARE -ne "true")
 {
 	neon hive prepare `
-		$env:SETUP_NOSHIM `
 	    $env:SETUP_DEBUG `
 		--machine-username="$env:HIVE_NODE_TEMPLATE_USERNAME" `
 		--machine-password="$env:HIVE_NODE_TEMPLATE_PASSWORD" `
@@ -47,7 +46,6 @@ if ($env:SETUP_SKIP_PREPARE -ne "true")
 if ($env:SETUP_SKIP_SETUP -ne "true")
 {
 	neon hive setup `
-		$env:SETUP_NOSHIM `
 	    $env:SETUP_DEBUG `
 		$env:SETUP_IMAGE_TAG `
 		--machine-username="$env:HIVE_NODE_TEMPLATE_USERNAME" `

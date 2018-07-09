@@ -474,7 +474,7 @@ Server Requirements:
 
                 if (HiveHelper.InToolContainer)
                 {
-                    Program.Execute(neonExecutable, "--noshim", "vpn", "ca", hiveDefPath, tempCaFolder);
+                    Program.Execute(neonExecutable, "vpn", "ca", hiveDefPath, tempCaFolder);
                 }
                 else
                 {
