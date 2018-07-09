@@ -199,7 +199,7 @@ host groups if they don't already exist (named like: [GROUPNAME.hive]).
         {
             var ensureConnection = shim.CommandLine.Arguments.ElementAtOrDefault(1) != "help";
 
-            return new DockerShimInfo(isShimmed: false, ensureConnection: ensureConnection);
+            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: ensureConnection);
         }
 
         /// <summary>

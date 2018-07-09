@@ -137,7 +137,7 @@ USAGE:
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: false, ensureConnection: false);
+            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: false);
         }
     }
 }

@@ -145,7 +145,7 @@ ARGUMENTS:
                     });
             }
 
-            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
         }
     }
 }

@@ -362,7 +362,7 @@ does this on the first manager node:
                 }
             }
 
-            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
         }
     }
 }

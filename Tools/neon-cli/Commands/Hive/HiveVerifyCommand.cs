@@ -72,7 +72,7 @@ ARGUMENTS:
         {
             shim.AddFile(shim.CommandLine.Arguments.LastOrDefault());
 
-            return new DockerShimInfo(isShimmed: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional);
         }
     }
 }

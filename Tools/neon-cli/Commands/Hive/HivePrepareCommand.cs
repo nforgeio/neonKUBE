@@ -882,7 +882,7 @@ done";
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: false);
+            return new DockerShimInfo(shimability: DockerShimability.None);
         }
     }
 }

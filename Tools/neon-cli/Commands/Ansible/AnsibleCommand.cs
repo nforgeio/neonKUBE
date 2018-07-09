@@ -1024,7 +1024,7 @@ MODULES:
 
             if (shim.CommandLine.Arguments.ElementAtOrDefault(1) == "password")
             {
-                return new DockerShimInfo(isShimmed: false, ensureConnection: false);
+                return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: false);
             }
 
             // For the [config] command, we're going to shim the folder
@@ -1069,7 +1069,7 @@ MODULES:
                     break;
             }
 
-            return new DockerShimInfo(isShimmed: true, ensureConnection: ensureConnection);
+            return new DockerShimInfo(shimability: DockerShimability.Required, ensureConnection: ensureConnection);
         }
 
         /// <summary>

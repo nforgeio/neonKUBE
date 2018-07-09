@@ -228,7 +228,7 @@ OPTIONS:
         {
             // This command cannot be executed within the [neon-cli] container.
 
-            return new DockerShimInfo(isShimmed: false, ensureConnection: true);
+            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: true);
         }
     }
 }

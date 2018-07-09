@@ -395,7 +395,7 @@ certificates, and then finally the private key.
                 case "join":
                 case "split":
 
-                    return new DockerShimInfo(isShimmed: false);
+                    return new DockerShimInfo(shimability: DockerShimability.None);
 
                 // These commands can be run in Docker without modification.
 
@@ -406,7 +406,7 @@ certificates, and then finally the private key.
                         shim.AddFile(commandLine.Arguments[3]);
                     }
 
-                    return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+                    return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
 
                 case "verify":
 
@@ -415,7 +415,7 @@ certificates, and then finally the private key.
                         shim.AddFile(path);
                     }
 
-                    return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+                    return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
 
                 case "remove":
                 case "rm":
@@ -424,7 +424,7 @@ certificates, and then finally the private key.
                 case "list":
                 default:
 
-                    return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+                    return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
             }
         }
 

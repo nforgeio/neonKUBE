@@ -217,7 +217,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "neon-cli", "neon-cli", "{17B43B9A-131C-4722-BF67-86959E2E9F85}"
 	ProjectSection(SolutionItems) = preProject
 		Releases\neon-cli\1.2.84.md = Releases\neon-cli\1.2.84.md
-		Releases\neon-cli\1.2.99.md = Releases\neon-cli\1.2.99.md
+		Releases\neon-cli\18.08.0-alpha.0.md = Releases\neon-cli\18.08.0-alpha.0.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small2", "home-small2", "{18973726-A5D3-4706-8658-9ED658C631CE}"
@@ -241,7 +241,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.Machine", "Lib\Ne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.Xen", "Lib\Neon.Hive.Xen\Neon.Hive.Xen.csproj", "{22CA72EE-FFA9-412A-B995-D51C617B8FEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Hive.Hosting", "Lib\Neon.Hive.Hosting\Neon.Hive.Hosting.csproj", "{08B7000C-F261-4543-B611-5710D12263DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive.Hosting", "Lib\Neon.Hive.Hosting\Neon.Hive.Hosting.csproj", "{08B7000C-F261-4543-B611-5710D12263DB}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

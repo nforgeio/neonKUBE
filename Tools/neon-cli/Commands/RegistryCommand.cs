@@ -374,7 +374,7 @@ is running or EXITCODE=1 if it's not.
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional);
         }
     }
 }

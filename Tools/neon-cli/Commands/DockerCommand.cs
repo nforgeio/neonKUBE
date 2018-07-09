@@ -372,7 +372,7 @@ the [neon exec] command.
 
             if (leftCommandLine.HasOption("--no-upload"))
             {
-                return new DockerShimInfo(isShimmed: true);
+                return new DockerShimInfo(shimability: DockerShimability.Optional);
             }
 
             var arg1 = rightCommandLine.Arguments.ElementAtOrDefault(0);
@@ -401,7 +401,7 @@ the [neon exec] command.
 
                         if (path == null)
                         {
-                            return new DockerShimInfo(isShimmed: true, ensureConnection: true);   // This is an error but we'll let Docker report it.
+                            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);   // This is an error but we'll let Docker report it.
                         }
 
                         if (path == "-")
@@ -423,7 +423,7 @@ the [neon exec] command.
 
                         if (path == null)
                         {
-                            return new DockerShimInfo(isShimmed: true, ensureConnection: true);   // This is an error but we'll let Docker report it.
+                            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);   // This is an error but we'll let Docker report it.
                         }
 
                         if (path == "-")
@@ -438,7 +438,7 @@ the [neon exec] command.
                     break;
             }
 
-            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
         }
 
         /// <summary>

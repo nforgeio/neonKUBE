@@ -559,7 +559,7 @@ See the documentation for more load balancer rule and setting details.
                 }
             }
 
-            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
         }
     }
 }

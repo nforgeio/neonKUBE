@@ -131,7 +131,7 @@ Note that THIS CAN BE DANGEROUS, so be sure you know what you're doing.
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
         }
     }
 }

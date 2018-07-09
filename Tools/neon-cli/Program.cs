@@ -402,7 +402,14 @@ OPTIONS:
                         }
                     }
 
-                    if (shimInfo.IsShimmed)
+                    // $note(jeff.lill):
+                    //
+                    // Although commands report whether shimming is optional, we're going to
+                    // ignore this right now and shim only when required.  In the future we
+                    // may resurect the [--shim] option that will shim the command in this
+                    // case.
+
+                    if (shimInfo.Shimability == DockerShimability.Required)
                     {
                         // Map the container's [/log] directory as required.
 

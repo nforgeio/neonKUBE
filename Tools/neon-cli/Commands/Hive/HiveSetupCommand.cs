@@ -559,7 +559,7 @@ OPTIONS:
             {
                 // We'll run the command in [no-shim] mode for this option.
 
-                return new DockerShimInfo(isShimmed: false);
+                return new DockerShimInfo(shimability: DockerShimability.None);
             }
 
             if (Program.HiveLogin != null)
@@ -682,7 +682,7 @@ OPTIONS:
                     }
                 });
 
-            return new DockerShimInfo(isShimmed: true, ensureConnection: false);
+            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: false);
         }
 
         /// <summary>

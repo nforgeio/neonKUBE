@@ -291,7 +291,7 @@ USAGE:
                         }
                     });
 
-                return new DockerShimInfo(isShimmed: true);
+                return new DockerShimInfo(shimability: DockerShimability.Required);
             }
 
             // Shim command: neon vpn cert user create USER
@@ -322,14 +322,14 @@ USAGE:
                         }
                     });
 
-                return new DockerShimInfo(isShimmed: true);
+                return new DockerShimInfo(shimability: DockerShimability.Required);
             }
 
             // Shim command: neon vpn user revoke [--restart-vpn] THUMBPRINT
             //
             // No special actions required.
 
-            return new DockerShimInfo(isShimmed: true);
+            return new DockerShimInfo(shimability: DockerShimability.Required);
         }
 
         /// <summary>

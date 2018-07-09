@@ -307,7 +307,7 @@ This can be easily accomplished with a custom script.
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: false);
+            return new DockerShimInfo(shimability: DockerShimability.None);
         }
 
         /// <summary>

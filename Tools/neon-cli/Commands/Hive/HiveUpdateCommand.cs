@@ -172,7 +172,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
         }
 
         /// <summary>

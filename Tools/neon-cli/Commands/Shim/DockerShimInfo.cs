@@ -27,22 +27,22 @@ namespace NeonCli
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="isShimmed">Indicates whether the command needs to be shimmed.</param>
+        /// <param name="shimability">Indicates whether a command can or must be shimmed.</param>
         /// <param name="ensureConnection">
         /// Indicates that the command requires a hive login and VPN connection
         /// (if enabled) before the command is executed in a <b>neon-cli</b>
         /// container.  This defaults to <c>false</c>.
         /// </param>
-        public DockerShimInfo(bool isShimmed, bool ensureConnection = false)
+        public DockerShimInfo(DockerShimability shimability, bool ensureConnection = false)
         {
-            this.IsShimmed        = isShimmed;
+            this.Shimability      = shimability;
             this.EnsureConnection = ensureConnection;
         }
 
         /// <summary>
-        /// Indicates whether the command needs to be shimmed.
+        /// Indicates whether a command can or must be shimmed.
         /// </summary>
-        public bool IsShimmed { get; set; }
+        public DockerShimability Shimability { get; set; }
 
         /// <summary>
         /// Indicates that the command requires a hive login and VPN connection

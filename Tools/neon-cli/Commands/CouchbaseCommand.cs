@@ -298,12 +298,7 @@ customize this in two ways:
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            // $todo(jeff.lill): 
-            //
-            // I suppose this should be shimmed to be consistent with the
-            // other commands that are, but it's not that important.
-
-            return new DockerShimInfo(isShimmed: false, ensureConnection: true);
+            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: true);
         }
     }
 }

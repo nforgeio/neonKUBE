@@ -83,7 +83,7 @@ OPTIONS:
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional);
         }
     }
 }

@@ -272,7 +272,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
                 shim.ReplaceItem(fileArg, "@" + shimFile);
             }
 
-            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: true);
         }
     }
 }
