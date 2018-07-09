@@ -81,6 +81,11 @@ namespace NeonCli
                             {
                                 manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-dns.sh"), response.BashCommand);
                             }
+
+                            if (response.ExitCode != 0)
+                            {
+                                firstManager.Fault(response.ErrorSummary);
+                            }
                         },
                         "docker service create",
                         "--name", "neon-dns",
@@ -110,6 +115,11 @@ namespace NeonCli
                             {
                                 manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
                             }
+
+                            if (response.ExitCode != 0)
+                            {
+                                firstManager.Fault(response.ErrorSummary);
+                            }
                         },
                         "docker service create",
                         "--name", "neon-dns-mon",
@@ -124,7 +134,7 @@ namespace NeonCli
                     firstManager.Status = string.Empty;
 
                     //---------------------------------------------------------
-                    // Deploy [neon-hive-manager] as a service on each manager node.
+                    // Deploy [neon-hive-manager] as a service constrained to manager nodes.
 
                     string unsealSecretOption = null;
 
@@ -150,6 +160,11 @@ namespace NeonCli
                             foreach (var manager in hive.Managers)
                             {
                                 manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-hive-manager.sh"), response.BashCommand);
+                            }
+
+                            if (response.ExitCode != 0)
+                            {
+                                firstManager.Fault(response.ErrorSummary);
                             }
                         },
                         hive.SecureRunOptions | RunOptions.FaultOnError,
@@ -206,6 +221,11 @@ namespace NeonCli
                             {
                                 manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
                             }
+
+                            if (response.ExitCode != 0)
+                            {
+                                firstManager.Fault(response.ErrorSummary);
+                            }
                         },
                         "docker service create",
                         "--name", "neon-proxy-manager",
@@ -236,6 +256,7 @@ namespace NeonCli
                     var privatePublish  = new List<string>();
                     var proxyConstraint = new List<string>();
                     var proxyReplicas   = new List<string>();
+                    var proxyMode       = new List<string>();
 
                     if (hive.Definition.Docker.GetAvoidIngressNetwork(hive.Definition))
                     {
@@ -253,6 +274,9 @@ namespace NeonCli
                             privatePublish.Add($"--publish");
                             privatePublish.Add($"mode=host,published={port},target={port}");
                         }
+
+                        proxyMode.Add("--mode");
+                        proxyMode.Add("global");
                     }
                     else
                     {
@@ -295,6 +319,9 @@ namespace NeonCli
                                 proxyReplicas.Add("2");
                             }
                         }
+
+                        proxyMode.Add("--mode");
+                        proxyMode.Add("replicated");
                     }
 
                     // Deploy: neon-proxy-public
@@ -307,6 +334,11 @@ namespace NeonCli
                             foreach (var manager in hive.Managers)
                             {
                                 manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-public.sh"), response.BashCommand);
+                            }
+
+                            if (response.ExitCode != 0)
+                            {
+                                firstManager.Fault(response.ErrorSummary);
                             }
                         },
                         "docker service create",
@@ -327,7 +359,7 @@ namespace NeonCli
                         publicPublish,
                         proxyConstraint,
                         proxyReplicas,
-                        "--mode", "global",
+                        proxyMode,
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         "--network", HiveConst.PublicNetwork,
                         Program.ResolveDockerImage(hive.Definition.ProxyImage));
@@ -342,6 +374,11 @@ namespace NeonCli
                             foreach (var manager in hive.Managers)
                             {
                                 manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-private.sh"), response.BashCommand);
+                            }
+
+                            if (response.ExitCode != 0)
+                            {
+                                firstManager.Fault(response.ErrorSummary);
                             }
                         },
                         "docker service create",
@@ -362,7 +399,7 @@ namespace NeonCli
                         privatePublish,
                         proxyConstraint,
                         proxyReplicas,
-                        "--mode", "global",
+                        proxyMode,
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         "--network", HiveConst.PrivateNetwork,
                         Program.ResolveDockerImage(hive.Definition.ProxyImage));

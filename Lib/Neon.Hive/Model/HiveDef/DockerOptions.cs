@@ -205,29 +205,9 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Controls whether the Docker Ingress network is used for for hive proxies.  This defaults to <c>null</c>.
+        /// Controls whether the Docker Ingress network is used for for hive proxies.  This defaults to <c>null</c>
+        /// which is currently equivalent to <c>false</c>.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Docker releases made during the first three quarters of 2017 appear to have serious
-        /// problems with the ingress mesh network when hosted on a Windows development machine 
-        /// using Hyper-V based virtual machines as hive nodes.  
-        /// </para>
-        /// <para>
-        /// This can be set to one of three values <c>true</c>, <c>false</c>, or <c>null</c>
-        /// (the default).  When <c>null</c>, the cluster will be provisioned with load balancers
-        /// using the Docker ingress network for all clusters except for those hosted using 
-        /// <see cref="HostingEnvironments.HyperVDev"/>.  Load balancers will be provisioned
-        /// on all cluster hosts in this case.
-        /// </para>
-        /// <para>
-        /// Setting this property to <c>true</c> will avoid the ingress network regardless of the
-        /// hosting environment and <c>false</c> will always use the ingress network.
-        /// </para>
-        /// <para>
-        /// Here's the issue describing this: https://github.com/jefflill/NeonForge/issues/104
-        /// </para>
-        /// </remarks>
         [JsonProperty(PropertyName = "AvoidIngressNetwork", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public bool? AvoidIngressNetwork { get; set; } = null;
@@ -247,7 +227,18 @@ namespace Neon.Hive
                 return AvoidIngressNetwork.Value;
             }
 
-            return hiveDefinition.Hosting.Environment == HostingEnvironments.HyperVDev;
+            // $todo(jeff.lill):
+            //
+            // We were having problems with the ingress network in the past so the
+            // commented out code below used to avoid the ingress network when
+            // deploying on local Hyper-V.  We'll leave this commented out for the
+            // time being but if the problem doesn't resurface, we should delete it.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/104
+
+            //return hiveDefinition.Hosting.Environment == HostingEnvironments.HyperVDev;
+
+            return false;
         }
 
         /// <summary>

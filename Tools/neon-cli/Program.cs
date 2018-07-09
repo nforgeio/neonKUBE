@@ -361,16 +361,6 @@ OPTIONS:
 
                 Debug = CommandLine.HasOption("--debug");
 
-                // Locate the command.
-
-                command = GetCommand(CommandLine, commands);
-
-                if (command == null)
-                {
-                    Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
-                    Program.Exit(1);
-                }
-
                 // Let the command determine whether we're going to run in shim mode or not.
 
                 int exitCode;
@@ -381,212 +371,215 @@ OPTIONS:
 
                     HiveLogin = GetHiveLogin();
 
-                    // Give the command a chance to modify the shimmed command line and also
-                    // verify that the command can be run within Docker.
-
-                    var shimInfo = command.Shim(shim);
-
-                    if (shimInfo.EnsureConnection)
+                    if (!HiveHelper.InToolContainer)
                     {
-                        if (HiveLogin == null)
+                        // Give the command a chance to modify the shimmed command line and also
+                        // verify that the command can be run within Docker.
+
+                        var shimInfo = command.Shim(shim);
+
+                        if (shimInfo.EnsureConnection)
                         {
-                            Console.Error.WriteLine(Program.MustLoginMessage);
-                            Program.Exit(1);
-                        }
-
-                        if (HiveLogin.ViaVpn)
-                        {
-                            HiveHelper.VpnOpen(HiveLogin,
-                                onStatus: message => Console.Error.WriteLine(message),
-                                onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
-                        }
-                    }
-
-                    // $note(jeff.lill):
-                    //
-                    // Although commands report whether shimming is optional, we're going to
-                    // ignore this right now and shim only when required.  In the future we
-                    // may resurect the [--shim] option that will shim the command in this
-                    // case.
-
-                    if (shimInfo.Shimability == DockerShimability.Required)
-                    {
-                        // Map the container's [/log] directory as required.
-
-                        var logMount = string.Empty;
-
-                        if (!string.IsNullOrEmpty(LogPath))
-                        {
-                            var fullLogPath = Path.GetFullPath(LogPath);
-
-                            Directory.CreateDirectory(fullLogPath);
-
-                            logMount = $"-v {fullLogPath}:/log";
-                        }
-
-                        shim.WriteScript();
-
-                        // Run the [nhive/neon-cli] Docker image, passing the modified command line 
-                        // arguments and mounting the following read/write volumes:
-                        //
-                        //      /neonhive       - the root folder for this workstation's hive logins
-                        //      /shim           - the generated shim files
-                        //      /log            - the logging folder (if logging is enabled)
-                        //
-                        // See: https://github.com/jefflill/NeonForge/issues/266
-
-                        var secretsMount = $"-v \"{secretsRoot}:/neonhive\"";
-                        var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
-                        var options      = shim.Terminal ? "-it" : "-i";
-
-                        if (CommandLine.HasOption("--noterminal"))
-                        {
-                            options = "-i";
-                        }
-
-                        // If the NEON_RUN_ENV=PATH environment variable exists and references an 
-                        // existing file, then this instance of [neon] is running within the context 
-                        // of a [neon run ...] command.  In this case, we need to forward the run
-                        // environment variables into the container we're launching.
-                        //
-                        // The NEON_RUN_ENV file defines these variables and is compatible with the
-                        // [docker run --env-file=PATH] option so we'll use that.
-
-                        var runEnvPath = Environment.GetEnvironmentVariable("NEON_RUN_ENV");
-
-                        if (!string.IsNullOrWhiteSpace(runEnvPath) && File.Exists(runEnvPath))
-                        {
-                            if (options.Length > 0)
+                            if (HiveLogin == null)
                             {
-                                options += " ";
+                                Console.Error.WriteLine(Program.MustLoginMessage);
+                                Program.Exit(1);
                             }
 
-                            options += $"--env-file \"{runEnvPath}\"";
+                            if (HiveLogin.ViaVpn)
+                            {
+                                HiveHelper.VpnOpen(HiveLogin,
+                                    onStatus: message => Console.Error.WriteLine(message),
+                                    onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
+                            }
                         }
 
-                        // Mount any mapped client folders.
+                        // $note(jeff.lill):
+                        //
+                        // Although commands report whether shimming is optional, we're going to
+                        // ignore this right now and shim only when required.  In the future we
+                        // may resurect the [--shim] option that will shim the command in this
+                        // case.
 
-                        var sbMappedMount = new StringBuilder();
-
-                        foreach (var mappedFolder in shim.MappedFolders)
+                        if (shimInfo.Shimability == DockerShimability.Required)
                         {
-                            var mode = mappedFolder.IsReadOnly ? "ro" : "rw";
+                            // Map the container's [/log] directory as required.
 
-                            sbMappedMount.AppendWithSeparator($"-v \"{mappedFolder.ClientFolderPath}:{mappedFolder.ContainerFolderPath}:{mode}\"");
-                        }
+                            var logMount = string.Empty;
 
-                        // If the tool was built from the Git production branch then the Docker image
-                        // tag will simply be the tool version.  For non-production branches we'll
-                        // use [BRANCH-<version>] as the tag.
+                            if (!string.IsNullOrEmpty(LogPath))
+                            {
+                                var fullLogPath = Path.GetFullPath(LogPath);
+
+                                Directory.CreateDirectory(fullLogPath);
+
+                                logMount = $"-v {fullLogPath}:/log";
+                            }
+
+                            shim.WriteScript();
+
+                            // Run the [nhive/neon-cli] Docker image, passing the modified command line 
+                            // arguments and mounting the following read/write volumes:
+                            //
+                            //      /neonhive       - the root folder for this workstation's hive logins
+                            //      /shim           - the generated shim files
+                            //      /log            - the logging folder (if logging is enabled)
+                            //
+                            // See: https://github.com/jefflill/NeonForge/issues/266
+
+                            var secretsMount = $"-v \"{secretsRoot}:/neonhive\"";
+                            var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
+                            var options      = shim.Terminal ? "-it" : "-i";
+
+                            if (CommandLine.HasOption("--noterminal"))
+                            {
+                                options = "-i";
+                            }
+
+                            // If the NEON_RUN_ENV=PATH environment variable exists and references an 
+                            // existing file, then this instance of [neon] is running within the context 
+                            // of a [neon run ...] command.  In this case, we need to forward the run
+                            // environment variables into the container we're launching.
+                            //
+                            // The NEON_RUN_ENV file defines these variables and is compatible with the
+                            // [docker run --env-file=PATH] option so we'll use that.
+
+                            var runEnvPath = Environment.GetEnvironmentVariable("NEON_RUN_ENV");
+
+                            if (!string.IsNullOrWhiteSpace(runEnvPath) && File.Exists(runEnvPath))
+                            {
+                                if (options.Length > 0)
+                                {
+                                    options += " ";
+                                }
+
+                                options += $"--env-file \"{runEnvPath}\"";
+                            }
+
+                            // Mount any mapped client folders.
+
+                            var sbMappedMount = new StringBuilder();
+
+                            foreach (var mappedFolder in shim.MappedFolders)
+                            {
+                                var mode = mappedFolder.IsReadOnly ? "ro" : "rw";
+
+                                sbMappedMount.AppendWithSeparator($"-v \"{mappedFolder.ClientFolderPath}:{mappedFolder.ContainerFolderPath}:{mode}\"");
+                            }
+
+                            // If the tool was built from the Git production branch then the Docker image
+                            // tag will simply be the tool version.  For non-production branches we'll
+                            // use [BRANCH-<version>] as the tag.
 
 #pragma warning disable 162 // Unreachable code
 
-                        var imageTag = Program.Version;
+                            var imageTag = Program.Version;
 
-                        if (ThisAssembly.Git.Branch != HiveConst.GitProdBranch)
-                        {
-                            imageTag = $"{ThisAssembly.Git.Branch}-{Program.Version}";
-                        }
+                            if (ThisAssembly.Git.Branch != HiveConst.GitProdBranch)
+                            {
+                                imageTag = $"{ThisAssembly.Git.Branch}-{Program.Version}";
+                            }
 
 #pragma warning restore 162 // Unreachable code
 
-                        // Generate any [--env] options to be passed to the container.
+                            // Generate any [--env] options to be passed to the container.
 
-                        var sbEnvOptions = new StringBuilder();
+                            var sbEnvOptions = new StringBuilder();
 
-                        foreach (var envOption in shim.EnvironmentVariables)
-                        {
-                            sbEnvOptions.AppendWithSeparator(NeonHelper.NormalizeExecArgs($"--env={envOption}"));
-                        }
-
-                        // Verify that the matching [neon-cli] image exists in the local Docker,
-                        // pulling it if it does not.  We're going to do this as an extra step
-                        // to prevent the pulling messages from mixing into the command output.
-
-                        var result = NeonHelper.ExecuteCaptureStreams("docker", 
-                            new object[]
+                            foreach (var envOption in shim.EnvironmentVariables)
                             {
-                                "image",
-                                "ls",
-                                "--filter", $"reference=nhive/neon-cli:{imageTag}"
-                            });
+                                sbEnvOptions.AppendWithSeparator(NeonHelper.NormalizeExecArgs($"--env={envOption}"));
+                            }
 
-                        if (result.ExitCode != 0)
-                        {
-                            Console.Error.WriteLine(
-$@"*** ERROR: Cannot list Docker images.
+                            // Verify that the matching [neon-cli] image exists in the local Docker,
+                            // pulling it if it does not.  We're going to do this as an extra step
+                            // to prevent the pulling messages from mixing into the command output.
 
-{result.AllText}");
-                            Program.Exit(1);
-                        }
-
-                        // The Docker image list output should look something like this:
-                        //
-                        //      REPOSITORY                  TAG                 IMAGE ID            CREATED             SIZE
-                        //      nhive/neon-registry         jeff-latest         b0d1d9c21ee1        20 hours ago        34.2MB
-                        //
-                        // We're just going to look to see there's a line of text that specifies
-                        // the repo and tag we're looking for.
-
-                        var matchingNeonImages = new StringReader(result.OutputText)
-                            .Lines()
-                            .Skip(1)
-                            .Where(
-                                line =>
-                                {
-                                    var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                                    return fields.Length >= 2 &&
-                                        fields[0] == $"{HiveConst.NeonPublicRegistry}/neon-cli" &&
-                                        fields[1] == imageTag;
-                                });
-
-                        if (matchingNeonImages.Count() == 0)
-                        {
-                            // The required [neon-cli] image doesn't exist locally so pull it.
-
-                            result = NeonHelper.ExecuteCaptureStreams("docker",
+                            var result = NeonHelper.ExecuteCaptureStreams("docker",
                                 new object[]
                                 {
                                     "image",
-                                    "pull",
-                                    $"{HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}"
+                                    "ls",
+                                    "--filter", $"reference=nhive/neon-cli:{imageTag}"
                                 });
 
                             if (result.ExitCode != 0)
                             {
                                 Console.Error.WriteLine(
-$@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
+$@"*** ERROR: Cannot list Docker images.
 
 {result.AllText}");
                                 Program.Exit(1);
                             }
+
+                            // The Docker image list output should look something like this:
+                            //
+                            //      REPOSITORY                  TAG                 IMAGE ID            CREATED             SIZE
+                            //      nhive/neon-registry         jeff-latest         b0d1d9c21ee1        20 hours ago        34.2MB
+                            //
+                            // We're just going to look to see there's a line of text that specifies
+                            // the repo and tag we're looking for.
+
+                            var matchingNeonImages = new StringReader(result.OutputText)
+                                .Lines()
+                                .Skip(1)
+                                .Where(
+                                    line =>
+                                    {
+                                        var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                                        return fields.Length >= 2 &&
+                                            fields[0] == $"{HiveConst.NeonPublicRegistry}/neon-cli" &&
+                                            fields[1] == imageTag;
+                                    });
+
+                            if (matchingNeonImages.Count() == 0)
+                            {
+                                // The required [neon-cli] image doesn't exist locally so pull it.
+
+                                result = NeonHelper.ExecuteCaptureStreams("docker",
+                                    new object[]
+                                    {
+                                    "image",
+                                    "pull",
+                                    $"{HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}"
+                                    });
+
+                                if (result.ExitCode != 0)
+                                {
+                                    Console.Error.WriteLine(
+$@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
+
+{result.AllText}");
+                                    Program.Exit(1);
+                                }
+                            }
+
+                            // Crank up Docker to shim into the [neon-cli] container.
+
+                            Process process;
+
+                            try
+                            {
+                                process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}");
+                            }
+                            catch (Win32Exception)
+                            {
+                                Console.Error.WriteLine("*** ERROR: Cannot run Docker.  Make sure that it is installed and is on the PATH.");
+                                Program.Exit(1);
+                                return;
+                            }
+
+                            process.WaitForExit();
+                            exitCode = process.ExitCode;
+
+                            if (shim.PostAction != null)
+                            {
+                                shim.PostAction(exitCode);
+                            }
+
+                            Program.Exit(exitCode);
                         }
-
-                        // Crank up Docker to shim into the [neon-cli] container.
-
-                        Process process;
-
-                        try
-                        {
-                            process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}");
-                        }
-                        catch (Win32Exception)
-                        {
-                            Console.Error.WriteLine("*** ERROR: Cannot run Docker.  Make sure that it is installed and is on the PATH.");
-                            Program.Exit(1);
-                            return;
-                        }
-
-                        process.WaitForExit();
-                        exitCode = process.ExitCode;
-
-                        if (shim.PostAction != null)
-                        {
-                            shim.PostAction(exitCode);
-                        }
-
-                        Program.Exit(exitCode);
                     }
                 }
 
