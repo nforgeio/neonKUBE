@@ -154,12 +154,12 @@ USAGE:
         /// </summary>
         private void DirectNotAllowed()
         {
-            // This command cannot run in [--noshim] mode because OpenSSL
+            // This command cannot run in [no-shim] mode because OpenSSL
             // has issues with Windows style file paths.
 
             if (!HiveHelper.InToolContainer)
             {
-                Console.Error.WriteLine("*** ERROR: This VPN command cannot be run in [--noshim] mode.");
+                Console.Error.WriteLine("*** ERROR: This VPN command cannot be run in [no-shim] mode.");
                 Program.Exit(1);
             }
         }

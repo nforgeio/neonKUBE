@@ -3,8 +3,6 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
-#define NOSHIM_DEFAULT      // Undefine this to default to [--shim] mode.
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -168,26 +166,11 @@ OPTIONS:
                                           password: sysadmin0000
     --machine-username=USERNAME         - Overrides default initial machine
                                           username: sysadmin
-    --shim                              - See note below.
-    --noshim
     -q, --quiet                         - Disables operation progress
     --noterminal                        - Disables the shimmed interactive terminal
     --version=VERSION                   - Overrides the neon-cli version
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for hive
                                           stablization (defaults to 60s).
-
-NOTES:
-
-Optionally by specifying the [--shim] option, this tool may run a 
-[nhive/neon-cli] image as a Docker container, passing the command 
-line and any files into the container such that the command is 
-actually executed there.  Ideally, this would be the default option
-but this is disabled due to some Docker for Windows issues.  This 
-means that currently [--noshim] is currently the default option.
-
-Note that some commands still need to be shimmed regardless and also
-that we may make [--shim] the default for a future release once the
-Docker issues are corrected.
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -240,8 +223,6 @@ Docker issues are corrected.
                 validOptions.Add("--max-parallel");
                 validOptions.Add("-w");
                 validOptions.Add("--wait");
-                validOptions.Add("--shim");
-                validOptions.Add("--noshim");
                 validOptions.Add("--image-tag");
                 validOptions.Add("--noterminal");
                 validOptions.Add("--version");
@@ -323,24 +304,9 @@ Docker issues are corrected.
                     Program.Exit(1);
                 }
 
-                // Determine whether we're running in direct mode or shimming to a Docker container.
-
-                // $todo(jeff.lill):
-                //
-                // We're currently defaulting to [--noshim] mode due to Docker on Windows issues:
-                //
-                //      * We're seeing a lot of issues with Docker complaining about [/mnt/c] issues.
-                //      * Docker container networking is often screwed up.
-                //
-                // Both of these issues may require resetting or reinstalling Docker.d
-#if NOSHIM_DEFAULT
-                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--shim") == null;
-#else
-                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--noshim") != null;
-#endif
                 // Short-circuit the help command.
 
-                if (!NoShimMode && CommandLine.Arguments[0] == "help")
+                if (CommandLine.Arguments[0] == "help")
                 {
                     if (CommandLine.Arguments.Length == 1)
                     {
@@ -405,47 +371,39 @@ Docker issues are corrected.
                     Program.Exit(1);
                 }
 
-                // When not running in direct mode, we're going to act as a shim
-                // and run the command in a Docker container.
+                // Let the command determine whether we're going to run in shim mode or not.
 
-                if (!NoShimMode)
+                int exitCode;
+
+                using (var shim = new DockerShim(CommandLine))
                 {
-                    int exitCode;
+                    var secretsRoot = HiveHelper.GetHiveUserFolder(ignoreNeonToolContainerVar: true);
 
-                    using (var shim = new DockerShim(CommandLine))
+                    HiveLogin = GetHiveLogin();
+
+                    // Give the command a chance to modify the shimmed command line and also
+                    // verify that the command can be run within Docker.
+
+                    var shimInfo = command.Shim(shim);
+
+                    if (shimInfo.EnsureConnection)
                     {
-                        var secretsRoot = HiveHelper.GetHiveUserFolder(ignoreNeonToolContainerVar: true);
-
-                        HiveLogin = GetHiveLogin();
-
-                        // Give the command a chance to modify the shimmed command line and also
-                        // verify that the command can be run within Docker.
-
-                        var shimInfo = command.Shim(shim);
-
-                        if (shimInfo.EnsureConnection)
+                        if (HiveLogin == null)
                         {
-                            if (HiveLogin == null)
-                            {
-                                Console.Error.WriteLine(Program.MustLoginMessage);
-                                Program.Exit(1);
-                            }
-
-                            if (HiveLogin.ViaVpn)
-                            {
-                                HiveHelper.VpnOpen(HiveLogin,
-                                    onStatus: message => Console.Error.WriteLine(message),
-                                    onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
-                            }
+                            Console.Error.WriteLine(Program.MustLoginMessage);
+                            Program.Exit(1);
                         }
 
-                        if (!shimInfo.IsShimmed)
+                        if (HiveLogin.ViaVpn)
                         {
-                            // Run the command locally.
-
-                            goto notShimmed;
+                            HiveHelper.VpnOpen(HiveLogin,
+                                onStatus: message => Console.Error.WriteLine(message),
+                                onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
                         }
+                    }
 
+                    if (shimInfo.IsShimmed)
+                    {
                         // Map the container's [/log] directory as required.
 
                         var logMount = string.Empty;
@@ -620,14 +578,13 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                         {
                             shim.PostAction(exitCode);
                         }
-                    }
 
-                    Program.Exit(exitCode);
+                        Program.Exit(exitCode);
+                    }
                 }
 
-                // For direct mode, we're going to run the command here.
-
-            notShimmed:
+                // We didn't run the command as a shim, so we're going to execute
+                // the command locally.
 
                 // Process the standard command line options.
 
@@ -990,9 +947,9 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 // Special case the situation when the tool is running in a Docker container
                 // and a special file is present with the original command line presented
-                // to the external shim.
+                // to the shim.
 
-                if (NoShimMode && File.Exists("__shim.org"))
+                if (File.Exists("__shim.org"))
                 {
                     return File.ReadAllText("__shim.org").Trim();
                 }
@@ -1198,12 +1155,6 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// Runs the command in DEBUG mode.
         /// </summary>
         public static bool Debug { get; set; }
-
-        /// <summary>
-        /// Indicates whether the tool executes the command directly (when <c>true</c>) or
-        /// may act as a shim to (when <c>false</c>) a tool running in a Docker container.
-        /// </summary>
-        public static bool NoShimMode { get; private set; }
 
         /// <summary>
         /// Creates a <see cref="SshProxy{TMetadata}"/> for the specified host and server name,

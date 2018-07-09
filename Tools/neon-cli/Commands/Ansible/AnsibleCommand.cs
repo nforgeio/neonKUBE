@@ -386,7 +386,7 @@ MODULES:
                 Program.Exit(0);
             }
 
-            // The [password] command operates in [--noshim] mode so we'll implement it here.
+            // The [password] command operates in [no-shim] mode so we'll implement it here.
 
             if (command == "password")
             {
@@ -662,7 +662,7 @@ MODULES:
 
             if (!HiveHelper.InToolContainer)
             {
-                Console.Error.WriteLine($"*** ERROR: [neon ansible {command}] does not support [--noshim] mode.");
+                Console.Error.WriteLine($"*** ERROR: [neon ansible {command}] does not support [no-shim] mode.");
                 Program.Exit(1);
             }
 

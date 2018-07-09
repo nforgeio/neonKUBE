@@ -557,7 +557,7 @@ OPTIONS:
 
             if (commandLine.HasOption("--remove-templates"))
             {
-                // We'll run the command in [--noshim] mode for this option.
+                // We'll run the command in [no-shim] mode for this option.
 
                 return new DockerShimInfo(isShimmed: false);
             }

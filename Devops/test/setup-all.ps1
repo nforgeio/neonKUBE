@@ -15,8 +15,6 @@
 #
 # OPTIONS:
 #
-#   -noshim             - Run [neon-cli] in [--noshim] mode.
-#
 #	-debugsetup			- Run hive prepare and setup in DEBUG mode.
 #
 #	-skipPrepare		- Skip the hive prepare step.
@@ -46,11 +44,6 @@ cd "$env:NF_ROOT\Devops\test"
 ./env.ps1 $hiveName -nologin
 
 # Convert the optional parameters into environment variables.
-
-if ($noshim)
-{
-	$env:SETUP_NOSHIM = "--noshim"
-}
 
 if ($debugsetup)
 {
