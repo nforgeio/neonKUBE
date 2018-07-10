@@ -31,8 +31,8 @@ This file defines the variables described below.  These variables can be referen
 
 ## XenServer host credentials.
 
-`CLUSTER_XENSERVER_USERNAME`
-`CLUSTER_XENSERVER_PASSWORD`
+`HIVE_XENSERVER_USERNAME`
+`HIVE_XENSERVER_PASSWORD`
 
 ## NuGet credentials
 

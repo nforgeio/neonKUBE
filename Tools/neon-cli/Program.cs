@@ -357,10 +357,6 @@ OPTIONS:
                     Directory.CreateDirectory(LogPath);
                 }
 
-                // Handle other options.
-
-                Debug = CommandLine.HasOption("--debug");
-
                 // Let the command determine whether we're going to run in shim mode or not.
 
                 int exitCode;
@@ -618,6 +614,8 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 }
 
                 Program.WaitSeconds = waitSeconds;
+
+                Debug = leftCommandLine.HasOption("--debug");
 
                 // Parse and check any [--image-tag=TAG] option.
 
