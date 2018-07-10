@@ -82,8 +82,8 @@ namespace TestSamples
             Assert.Empty(hiveFixture.ListServices());
 
             // Add the local DNS entries for the services we'll deploy.  We're
-            // publishing these on host ports, so we'll use map the DNS entries
-            // to the local loopback address.
+            // publishing these on host ports, so we'll map the DNS entries to
+            // the local loopback address.
 
             hosts.AddHostAddress("foo.com", "127.0.0.1", deferCommit: true);
             hosts.AddHostAddress("bar.com", "127.0.0.1", deferCommit: true);
