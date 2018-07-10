@@ -30,7 +30,7 @@ namespace TestNeonCluster
         public Test_HiveFixture(HiveFixture hive)
         {
             // We're passing [login=null] below to connect to the hive specified
-            // by the NEON_TEST_CLUSTER environment variable.  This needs to be 
+            // by the TEST_TEST_HIVE environment variable.  This needs to be 
             // initialized with the login for a deployed hive.
 
             if (hive.LoginAndInitialize())
