@@ -36,10 +36,8 @@
     "Experimental": false
   },
   "Consul": {
-    "Version": "1.0.7"
   },
   "Vault": {
-    "Version": "0.10.2",
     "KeyCount": 1,
     "KeyThreshold": 1
   },
