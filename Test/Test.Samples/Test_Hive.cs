@@ -29,10 +29,10 @@ namespace TestSamples
     //
     //  * Login for the hive imported for the current user
     //
-    //  * TEST_TEST_HIVE environment variable set to the
+    //  * NEON_TEST_HIVE environment variable set to the
     //    login for the test hive, like:
     //
-    //      TEST_TEST_HIVE=root@myhive
+    //      NEON_TEST_HIVE=root@myhive
 
     public class Test_Hive : IClassFixture<HiveFixture>
     {

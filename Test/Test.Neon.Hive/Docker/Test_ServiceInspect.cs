@@ -43,7 +43,7 @@ namespace TestNeonCluster
             this.fixture = fixture;
 
             // We're passing [login=null] below to connect to the hive specified
-            // by the TEST_TEST_HIVE environment variable.  This needs to be 
+            // by the NEON_TEST_HIVE environment variable.  This needs to be 
             // initialized with the login for a deployed hive.
 
             if (this.fixture.Initialize())

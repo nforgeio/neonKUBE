@@ -85,7 +85,7 @@ namespace Neon.Xunit.Hive
     /// </para>
     /// <note>
     /// You can also specify a <c>null</c> or empty login name.  In this case,
-    /// the fixture will attempt to retrieve the login name from the <b>TEST_TEST_HIVE</b>
+    /// the fixture will attempt to retrieve the login name from the <b>NEON_TEST_HIVE</b>
     /// environment variable.  This is very handy because it allows developers to
     /// specify different target test hives without having to bake this into the 
     /// unit tests themselves.
@@ -331,7 +331,7 @@ namespace Neon.Xunit.Hive
         /// </summary>
         /// <param name="login">
         /// Optionally specifies a hive login like <b>USER@HIVE</b> or you can pass
-        /// <c>null</c> to connect to the hive specified by the <b>TEST_TEST_HIVE</b>
+        /// <c>null</c> to connect to the hive specified by the <b>NEON_TEST_HIVE</b>
         /// environment variable.
         /// </param>
         /// <param name="action">The optional initialization action.</param>
@@ -361,12 +361,12 @@ namespace Neon.Xunit.Hive
 
             if (string.IsNullOrEmpty(login))
             {
-                login = Environment.GetEnvironmentVariable("TEST_TEST_HIVE");
+                login = Environment.GetEnvironmentVariable("NEON_TEST_HIVE");
             }
 
             if (string.IsNullOrEmpty(login))
             {
-                throw new ArgumentException($"[{nameof(login)}] or the TEST_TEST_HIVE environment variable must specify the target hive login.");
+                throw new ArgumentException($"[{nameof(login)}] or the NEON_TEST_HIVE environment variable must specify the target hive login.");
             }
 
             var loginInfo = HiveHelper.SplitLogin(login);
