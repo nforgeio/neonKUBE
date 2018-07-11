@@ -160,14 +160,15 @@ OPTIONS:
     --log-folder=LOG-FOLDER             - Optional log folder path
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
                                           configured in parallel [default=5]
-    --node=NODE                         - Some commands may be directed at
-                                          specific node(s)
     --machine-password=PASSWORD         - Overrides default initial machine
                                           password: sysadmin0000
     --machine-username=USERNAME         - Overrides default initial machine
                                           username: sysadmin
-    -q, --quiet                         - Disables operation progress
     --noterminal                        - Disables the shimmed interactive terminal
+    --node=NODE                         - Some commands may be directed at
+                                          specific node(s)
+    -q, --quiet                         - Disables operation progress
+    --shim                              - Run the command in Docker if possible
     --version=VERSION                   - Overrides the neon-cli version
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for hive
                                           stablization (defaults to 60s).
@@ -227,6 +228,7 @@ OPTIONS:
                 validOptions.Add("--noterminal");
                 validOptions.Add("--version");
                 validOptions.Add("--debug");
+                validOptions.Add("--shim");
 
                 if (CommandLine.Arguments.Length == 0)
                 {
@@ -393,11 +395,22 @@ OPTIONS:
                         // $note(jeff.lill):
                         //
                         // Although commands report whether shimming is optional, we're going to
-                        // ignore this right now and shim only when required.  In the future we
-                        // may resurect the [--shim] option that will shim the command in this
-                        // case.
+                        // ignore this right now and shim only when required.  If the [--shim] 
+                        // option is present and the command allows shimming, then it'll be
+                        // shimmed.
+
+                        var shimCommand = false;
 
                         if (shimInfo.Shimability == DockerShimability.Required)
+                        {
+                            shimCommand = true;
+                        }
+                        else if (shimInfo.Shimability == DockerShimability.Optional && CommandLine.HasOption("--shim"))
+                        {
+                            shimCommand = true;
+                        }
+
+                        if (shimCommand)
                         {
                             // Map the container's [/log] directory as required.
 
