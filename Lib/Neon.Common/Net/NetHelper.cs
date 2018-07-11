@@ -25,6 +25,9 @@ namespace Neon.Net
     /// </summary>
     public static class NetHelper
     {
+        private static LinearRetryPolicy retryFile  = new LinearRetryPolicy(typeof(IOException), maxAttempts: 50, retryInterval: TimeSpan.FromMilliseconds(100));
+        private static LinearRetryPolicy retryReady = new LinearRetryPolicy(typeof(NotReadyException), maxAttempts: 50, retryInterval: TimeSpan.FromMilliseconds(100));
+
         /// <summary>
         /// Determines whether two IP addresses are equal.
         /// </summary>
@@ -156,6 +159,21 @@ namespace Neon.Net
 #if XAMARIN
             throw new NotSupportedException();
 #else
+            string hostsPath;
+
+            if (NeonHelper.IsWindows)
+            {
+                hostsPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32", "drivers", "etc", "hosts");
+            }
+            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+            {
+                hostsPath = "/etc/hosts";
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+
             // We're seeing transient file locked errors when trying to open the [hosts] file.
             // My guess is that this is cause by the Window DNS resolver opening the file as
             // READ/WRITE to prevent it from being modified while the resolver is reading any
@@ -168,31 +186,14 @@ namespace Neon.Net
             //      https://github.com/jefflill/NeonForge/issues/244
             //
             // We're going to mitigate this by writing a [neon-modify-local-hosts.hive] record with
-            // a random IP address and then wait for [ipconfig /displaydns] to report the 
-            // correct address below.
+            // a random IP address and then wait for for the DNS resolver to report the correct address.
 
-            var retryWrite    = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(500));
             var updateHost    = "neon-modify-local-hosts.hive";
             var updateAddress = new IPAddress(NeonHelper.Rand(int.MaxValue));
 
-            retryWrite.InvokeAsync(
+            retryFile.InvokeAsync(
                 async () =>
                 {
-                    string hostsPath;
-
-                    if (NeonHelper.IsWindows)
-                    {
-                        hostsPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32", "drivers", "etc", "hosts");
-                    }
-                    else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
-                    {
-                        hostsPath = "/etc/hosts";
-                    }
-                    else
-                    {
-                        throw new NotSupportedException();
-                    }
-
                     const string beginMarker = "# BEGIN-NEON-MODIFY";
                     const string endMarker   = "# END-NEON-MODIFY";
 
@@ -253,114 +254,65 @@ namespace Neon.Net
                     
                 }).Wait();
 
-            if (NeonHelper.IsWindows)
-            {
-                // Poll [ipconfig /displaydns] until it reports the correct address for the
-                // [neon-modify-local-hosts.hive].  The command output will contain a series of 
-                // records foreach cached DNS entry including those loaded from [hosts]
-                // that will look like:
-                //
-                //      neon-modify-local-hosts.hive                                
-                //      ----------------------------------------       
-                //      No records of type AAAA
-                //
-                //
-                //      neon-modify-local-hosts.hive
-                //      ----------------------------------------       
-                //      Record Name . . . . . : www.pearl2o.com
-                //      Record Type. . . . .  : 1                      
-                //      Time To Live. . . .   : 86400                  
-                //      Data Length . . . . . : 4                      
-                //      Section. . . . . . .  : Answer
-                //      A (Host) Record . . . : 10.100.16.0
-                //
-                // If [hostEntries] is not null and contains at least one entry, we'll look 
-                // for [neon-modify-local-hosts.hive] and then the first instance of "A (Host) Record"
-                // afterwards and then extract and compare the IP address to ensure that the 
-                // resolver has loaded the new entries.
-                //
-                // If [hostEntries] is null or empty, we'll wait until there are no records
-                // for [neon-modify-local-hosts.hive] to ensure that the resolver has reloaded the
-                // hosts file after we removed the entries.
+            // Poll the local DNS resolver until it reports the correct address for the
+            // [neon-modify-local-hosts.hive].
+            //
+            // If [hostEntries] is not null and contains at least one entry, we'll lookup
+            // [neon-modify-local-hosts.hive] and compare the IP address to ensure that the 
+            // resolver has loaded the new entries.
+            //
+            // If [hostEntries] is null or empty, we'll wait until there are no records
+            // for [neon-modify-local-hosts.hive] to ensure that the resolver has reloaded the
+            // hosts file after we removed the entries.
 
-                var retryReady = new LinearRetryPolicy(typeof(KeyNotFoundException), maxAttempts: 20, retryInterval: TimeSpan.FromMilliseconds(500));
+            retryReady.InvokeAsync(
+                async () =>
+                {
+                    var addresses = await GetHostAddressesAsync(updateHost);
 
-                retryReady.InvokeAsync(
-                    async () =>
+                    if (hostEntries?.Count > 0)
                     {
-                        var response = NeonHelper.ExecuteCaptureStreams("ipconfig", "/displaydns");
+                        // Ensure that new records have been loaded by the resolver.
 
-                        if (response.ExitCode != 0)
+                        if (addresses.Length != 1)
                         {
-                            throw new Exception($"DNS hosts modification failed because [ipconfig /displaydns] returned [exitcode={response.ExitCode}].");
+                            throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should only be 1.");
                         }
 
-                        var output  = response.OutputText;
-                        var posHost = output.IndexOf(updateHost + "\r\n    ----");  // Ensure that the DNS domain is underlined.
-
-                        if (hostEntries?.Count > 0)
+                        if (addresses[0].ToString() != updateAddress.ToString())
                         {
-                            // Ensure that new records have been loaded by the resolver.
-
-                            if (posHost == -1)
-                            {
-                                throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting a record for [{updateHost}].");
-                            }
-
-                            var posARecord = output.IndexOf("A (Host) Record", posHost);
-
-                            if (posARecord == -1)
-                            {
-                                throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting an A record for [{updateHost}].");
-                            }
-
-                            var posStart = output.IndexOf(':', posARecord);
-
-                            if (posStart == -1)
-                            {
-                                throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting an A record for [{updateHost}].");
-                            }
-
-                            posStart += 2;
-
-                            var posEnd = posStart;
-
-                            while (true)
-                            {
-                                var ch = output[posEnd];
-
-                                if (char.IsDigit(ch) || ch == '.')
-                                {
-                                    posEnd++;
-                                }
-                                else
-                                {
-                                    break;
-                                }
-                            }
-
-                            var address = output.Substring(posStart, posEnd - posStart).Trim();
-
-                            if (address != updateAddress.ToString())
-                            {
-                                throw new KeyNotFoundException($"[ipconfig /displaydns] is reporting A record [{updateHost}={address}] rather than [{updateAddress}].");
-                            }
+                            throw new NotReadyException($"DNS is [{updateHost}={addresses[0]}] rather than [{updateAddress}].");
                         }
-                        else
+                    }
+                    else
+                    {
+                        // Ensure that the resolver recognizes that we removed the records.
+
+                        if (addresses.Length != 0)
                         {
-                            // Ensure that the resolver recognizes that we removed the records.
-
-                            if (posHost != -1)
-                            {
-                                throw new KeyNotFoundException($"[ipconfig /displaydns] is still reporting an A record for [{updateHost}].");
-                            }
+                            throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be 0.");
                         }
+                    }
 
-                        await Task.CompletedTask;
-
-                    }).Wait();
-            }
+                }).Wait();
 #endif
+        }
+
+        /// <summary>
+        /// Performs a DNS lookup.
+        /// </summary>
+        /// <param name="hostname">The target hostname.</param>
+        /// <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
+        private static async Task<IPAddress[]> GetHostAddressesAsync(string hostname)
+        {
+            try
+            {
+                return await Dns.GetHostAddressesAsync(hostname);
+            }
+            catch (SocketException)
+            {
+                return await Task.FromResult(new IPAddress[0]);
+            }
         }
     }
 }

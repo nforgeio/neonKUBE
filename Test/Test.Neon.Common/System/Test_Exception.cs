@@ -43,7 +43,25 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Find()
         {
-            Assert.Null (((Exception)null).Find<Exception>());
+            Assert.Null(((Exception)null).Find(typeof(Exception)));
+
+            Assert.NotNull(new KeyNotFoundException().Find(typeof(KeyNotFoundException)));
+            Assert.Null(new KeyNotFoundException().Find(typeof(IndexOutOfRangeException)));
+
+            Assert.Equal("key", new IndexOutOfRangeException("message", new KeyNotFoundException("key")).Find(typeof(KeyNotFoundException)).Message);
+            Assert.Equal("key", new IndexOutOfRangeException("message", new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).Find(typeof(KeyNotFoundException)).Message);
+            Assert.Null(new IndexOutOfRangeException("message", new KeyNotFoundException("key")).Find(typeof(FormatException)));
+
+            Assert.Null(new AggregateException().Find(typeof(KeyNotFoundException)));
+            Assert.Equal("key", new AggregateException(new KeyNotFoundException("key")).Find(typeof(KeyNotFoundException)).Message);
+            Assert.Equal("key", new AggregateException(new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).Find(typeof(KeyNotFoundException)).Message);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void FindGeneric()
+        {
+            Assert.Null(((Exception)null).Find<Exception>());
 
             Assert.NotNull(new KeyNotFoundException().Find<KeyNotFoundException>());
             Assert.Null(new KeyNotFoundException().Find<IndexOutOfRangeException>());

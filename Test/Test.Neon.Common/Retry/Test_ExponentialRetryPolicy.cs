@@ -319,6 +319,33 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task SuccessDelayedAggregate()
+        {
+            var policy  = new ExponentialRetryPolicy(typeof(TransientException));
+            var times   = new List<DateTime>();
+            var success = false;
+
+            await policy.InvokeAsync(
+                async () =>
+                {
+                    times.Add(DateTime.UtcNow);
+                    await Task.Delay(0);
+
+                    if (times.Count < policy.MaxAttempts)
+                    {
+                        throw new AggregateException(new TransientException());
+                    }
+
+                    success = true;
+                });
+
+            Assert.True(success);
+            Assert.Equal(policy.MaxAttempts, times.Count);
+            VerifyIntervals(times, policy);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessCustom()
         {
             var policy  = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4));

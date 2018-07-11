@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -66,11 +67,30 @@ namespace Neon.Xunit
         // It's possible that a test may be interrupted before being allowed to
         // complete and dispose the fixtures.  The base [TextFixture] class 
         // addresses this by calling [EnsureReset()] as necessary.
+        //
+        // NOTE:
+        //
+        // We're seeing transient file locked errors when trying to open the [hosts] file
+        // on Windows.  My theory is that this is cause by the Window DNS resolver opening 
+        // the file as READ/WRITE to prevent it from being modified while the resolver is
+        // reading any changes.  We're going to mitigate this by retrying a few times.
+        //
+        // It can take a bit of time for the Windows DNS resolver to pick up the change.
+        //
+        //      https://github.com/jefflill/NeonForge/issues/244
+        //
+        // We're going to mitigate this by writing a [neon-GUID.hive] record with the
+        // [1.2.3.4] address and then wait the local DNS resolver to resolve or not
+        // resolve this host based on whether we've added or remove a section.
 
         //---------------------------------------------------------------------
         // Static members
 
-        private static object syncLock = new object();
+        private const string dummyIP = "1.2.3.4";
+
+        private static object               syncLock   = new object();
+        private static LinearRetryPolicy    retryFile  = new LinearRetryPolicy(typeof(IOException), maxAttempts: 50, retryInterval: TimeSpan.FromMilliseconds(100));
+        private static LinearRetryPolicy    retryReady = new LinearRetryPolicy(typeof(NotReadyException), maxAttempts: 50, retryInterval: TimeSpan.FromMilliseconds(100));
 
         /// <summary>
         /// Path to the local DNS resolver's [hosts] file.
@@ -96,27 +116,13 @@ namespace Neon.Xunit
         /// </param>
         private static void RemoveSection(string fixtureId = null)
         {
-            var sb      = new StringBuilder();
-            var changed = false;
+            var sb           = new StringBuilder();
+            var changed      = false;
+            var sectionGuids = new HashSet<string>();
 
-            // We're seeing transient file locked errors when trying to open the [hosts] file.
-            // My guess is that this is cause by the Window DNS resolver opening the file as
-            // READ/WRITE to prevent it from being modified while the resolver is reading any
-            // changes.
-            //
-            // We're going to mitigate this by retrying a few times.
-            //
-            // It can take a bit of time for the Windows DNS resolver to pick up the change.
-            //
-            //      https://github.com/jefflill/NeonForge/issues/244
-            //
-            // We're going to mitigate this by writing a [neon-dns-update.hive] record with
-            // a random IP address and then wait for [ipconfig /displaydns] to report the 
-            // correct address below.
+            // Update the [hosts] file.
 
-            var retryWrite = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(500));
-
-            retryWrite.InvokeAsync(
+            retryFile.InvokeAsync(
                 async () =>
                 {
                     if (File.Exists(HostsPath))
@@ -135,15 +141,27 @@ namespace Neon.Xunit
                                     if (line.StartsWith(endMarker))
                                     {
                                         inSection = false;
-                                        changed = true;
+                                        changed   = true;
                                     }
                                 }
                                 else
                                 {
                                     if (line.StartsWith(startMarker))
                                     {
+                                        // Extract the section GUID from the marker because we'll need
+                                        // these below when we verify that the resolver has picked up
+                                        // the changes.
+
+                                        var posGuid     = line.LastIndexOf('-') + 1;
+                                        var sectionGuid = line.Substring(posGuid);
+
+                                        if (!sectionGuids.Contains(sectionGuid))
+                                        {
+                                            sectionGuids.Add(sectionGuid);
+                                        }
+
                                         inSection = true;
-                                        changed = true;
+                                        changed   = true;
                                     }
                                     else
                                     {
@@ -165,6 +183,55 @@ namespace Neon.Xunit
                     await Task.CompletedTask;
 
                 }).Wait();
+
+            if (changed)
+            {
+                // We need to verify that the local DNS resolver has picked up the change
+                // by verifying that none of the removed section hostnames resolve.
+
+                retryReady.InvokeAsync(
+                    async () =>
+                    {
+                        foreach (var sectionGuid in sectionGuids)
+                        {
+                            var hostname  = GetSectionHostname(sectionGuid);
+                            var addresses = await GetHostAddressesAsync(hostname);
+
+                            if (addresses.Length > 0)
+                            {
+                                throw new NotReadyException($"Waiting for [{hostname}] to be removed by the local DNS resolver.");
+                            }
+                        }
+
+                    }).Wait();
+            }
+        }
+
+        /// <summary>
+        /// Returns the hostname for a section GUID.
+        /// </summary>
+        /// <param name="guid">The section GUID string.</param>
+        /// <returns>The section hostname.</returns>
+        private static string GetSectionHostname(string guid)
+        {
+            return $"neon-{guid}.hive";
+        }
+
+        /// <summary>
+        /// Performs a DNS lookup.
+        /// </summary>
+        /// <param name="hostname">The target hostname.</param>
+        /// <returns>The array of IP addresses resolved or an empty array if the hostname lookup failed.</returns>
+        private static async Task<IPAddress[]> GetHostAddressesAsync(string hostname)
+        {
+            try
+            {
+                return await Dns.GetHostAddressesAsync(hostname);
+            }
+            catch (SocketException)
+            {
+                return await Task.FromResult(new IPAddress[0]);
+            }
         }
 
         //---------------------------------------------------------------------
@@ -238,31 +305,53 @@ namespace Neon.Xunit
         public void Commit()
         {
             // Use a static lock to ensure that only once fixture instance
-            // at a time is munging the [hosts] file.
+            // at a time can munge the [hosts] file.
 
             lock (syncLock)
             {
+                var sectionHostname = GetSectionHostname(fixtureId);
+
                 // Remove any existing section for this instance.
 
                 RemoveSection(fixtureId);
 
-                // Append any records to the end of the [hosts] file.
+                // Append the fixture section to the end of the [hosts] file.
 
-                if (records.Count > 0)
+                var sb = new StringBuilder();
+
+                sb.AppendLine($"# START-NEON-HOSTS-FIXTURE-{fixtureId}");
+
+                sb.AppendLine($"{dummyIP, -15} {sectionHostname}");
+
+                foreach (var record in records)
                 {
-                    var sb = new StringBuilder();
-
-                    sb.AppendLine($"# START-HostsFixture-{fixtureId}");
-
-                    foreach (var record in records)
-                    {
-                        sb.AppendLine($"{record.Item2,-15} {record.Item1}");
-                    }
-
-                    sb.AppendLine($"# END-HostsFixture-{fixtureId}");
-
-                    File.AppendAllText(HostsPath, sb.ToString());
+                    sb.AppendLine($"{record.Item2, -15} {record.Item1}");
                 }
+
+                sb.AppendLine($"# END-NEON-HOSTS-FIXTURE-{fixtureId}");
+
+                retryFile.InvokeAsync(
+                    async () =>
+                    {
+                        File.AppendAllText(HostsPath, sb.ToString());
+                        await Task.CompletedTask;
+
+                    }).Wait();
+
+                // Wait for the local DNS resolver to indicate that it's picked
+                // up the changes by verifying that the section hostname resolves.
+
+                retryReady.InvokeAsync(
+                    async () =>
+                    {
+                        var addresses = await GetHostAddressesAsync(sectionHostname);
+
+                        if (addresses.Length == 0)
+                        {
+                            throw new NotReadyException($"Waiting for [{sectionHostname}] to resolve by the local DNS resolver.");
+                        }
+
+                    }).Wait();
             }
         }
 
