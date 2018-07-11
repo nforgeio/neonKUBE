@@ -9,8 +9,10 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Retry;
 
 namespace Neon.Xunit
 {
@@ -97,48 +99,72 @@ namespace Neon.Xunit
             var sb      = new StringBuilder();
             var changed = false;
 
-            if (File.Exists(HostsPath))
-            {
-                using (var reader = new StreamReader(new FileStream(HostsPath, FileMode.Open, FileAccess.ReadWrite)))
-                {
-                    var guid        = fixtureId ?? string.Empty;
-                    var startMarker = $"# START-HostsFixture-{guid}";
-                    var endMarker   = $"# END-HostsFixture-{guid}";
-                    var inSection   = false;
+            // We're seeing transient file locked errors when trying to open the [hosts] file.
+            // My guess is that this is cause by the Window DNS resolver opening the file as
+            // READ/WRITE to prevent it from being modified while the resolver is reading any
+            // changes.
+            //
+            // We're going to mitigate this by retrying a few times.
+            //
+            // It can take a bit of time for the Windows DNS resolver to pick up the change.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/244
+            //
+            // We're going to mitigate this by writing a [neon-dns-update.hive] record with
+            // a random IP address and then wait for [ipconfig /displaydns] to report the 
+            // correct address below.
 
-                    foreach (var line in reader.Lines())
+            var retryWrite = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(500));
+
+            retryWrite.InvokeAsync(
+                async () =>
+                {
+                    if (File.Exists(HostsPath))
                     {
-                        if (inSection)
+                        using (var reader = new StreamReader(new FileStream(HostsPath, FileMode.Open, FileAccess.ReadWrite)))
                         {
-                            if (line.StartsWith(endMarker))
+                            var guid        = fixtureId ?? string.Empty;
+                            var startMarker = $"# START-NEON-HOSTS-FIXTURE-{guid}";
+                            var endMarker   = $"# END-NEON-HOSTS-FIXTURE-{guid}";
+                            var inSection   = false;
+
+                            foreach (var line in reader.Lines())
                             {
-                                inSection = false;
-                                changed   = true;
-                            }
-                        }
-                        else
-                        {
-                            if (line.StartsWith(startMarker))
-                            {
-                                inSection = true;
-                                changed   = true;
-                            }
-                            else
-                            {
-                                if (!inSection)
+                                if (inSection)
                                 {
-                                    sb.AppendLine(line);
+                                    if (line.StartsWith(endMarker))
+                                    {
+                                        inSection = false;
+                                        changed = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (line.StartsWith(startMarker))
+                                    {
+                                        inSection = true;
+                                        changed = true;
+                                    }
+                                    else
+                                    {
+                                        if (!inSection)
+                                        {
+                                            sb.AppendLine(line);
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }
 
-            if (changed)
-            {
-                File.WriteAllText(HostsPath, sb.ToString());
-            }
+                    if (changed)
+                    {
+                        File.WriteAllText(HostsPath, sb.ToString());
+                    }
+
+                    await Task.CompletedTask;
+
+                }).Wait();
         }
 
         //---------------------------------------------------------------------

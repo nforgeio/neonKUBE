@@ -151,7 +151,7 @@ namespace Neon.Net
         /// section will be removed.
         /// </para>
         /// </remarks>
-        public static void ModifyHostsFile(Dictionary<string, IPAddress> hostEntries = null)
+        public static void ModifyLocalHosts(Dictionary<string, IPAddress> hostEntries = null)
         {
 #if XAMARIN
             throw new NotSupportedException();
@@ -167,12 +167,12 @@ namespace Neon.Net
             //
             //      https://github.com/jefflill/NeonForge/issues/244
             //
-            // We're going to mitigate this by writing a [neon-dns-update.hive] record with
+            // We're going to mitigate this by writing a [neon-modify-local-hosts.hive] record with
             // a random IP address and then wait for [ipconfig /displaydns] to report the 
             // correct address below.
 
             var retryWrite    = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(500));
-            var updateHost    = "neon-dns-update.hive";
+            var updateHost    = "neon-modify-local-hosts.hive";
             var updateAddress = new IPAddress(NeonHelper.Rand(int.MaxValue));
 
             retryWrite.InvokeAsync(
@@ -193,8 +193,8 @@ namespace Neon.Net
                         throw new NotSupportedException();
                     }
 
-                    const string beginMarker = "# BEGIN-NEONHELPER-MODIFY";
-                    const string endMarker   = "# END-NEONHELPER-MODIFY";
+                    const string beginMarker = "# BEGIN-NEON-MODIFY";
+                    const string endMarker   = "# END-NEON-MODIFY";
 
                     var inputLines  = File.ReadAllLines(hostsPath);
                     var lines       = new List<string>();
@@ -253,19 +253,19 @@ namespace Neon.Net
                     
                 }).Wait();
 
-            if (NeonHelper.IsWindows && hostEntries?.Count > 0)
+            if (NeonHelper.IsWindows)
             {
                 // Poll [ipconfig /displaydns] until it reports the correct address for the
-                // [neon-dns-update.hive].  The command output will contain a series of 
+                // [neon-modify-local-hosts.hive].  The command output will contain a series of 
                 // records foreach cached DNS entry including those loaded from [hosts]
                 // that will look like:
                 //
-                //      neon-dns-update.hive                                
+                //      neon-modify-local-hosts.hive                                
                 //      ----------------------------------------       
                 //      No records of type AAAA
                 //
                 //
-                //      neon-dns-update.hive
+                //      neon-modify-local-hosts.hive
                 //      ----------------------------------------       
                 //      Record Name . . . . . : www.pearl2o.com
                 //      Record Type. . . . .  : 1                      
@@ -274,8 +274,14 @@ namespace Neon.Net
                 //      Section. . . . . . .  : Answer
                 //      A (Host) Record . . . : 10.100.16.0
                 //
-                // We're going to look for [neon-dns-update.hive] and then the first instance
-                // of [A (Host) Record] afterwards and then extract and compare the IP address.
+                // If [hostEntries] is not null and contains at least one entry, we'll look 
+                // for [neon-modify-local-hosts.hive] and then the first instance of "A (Host) Record"
+                // afterwards and then extract and compare the IP address to ensure that the 
+                // resolver has loaded the new entries.
+                //
+                // If [hostEntries] is null or empty, we'll wait until there are no records
+                // for [neon-modify-local-hosts.hive] to ensure that the resolver has reloaded the
+                // hosts file after we removed the entries.
 
                 var retryReady = new LinearRetryPolicy(typeof(KeyNotFoundException), maxAttempts: 20, retryInterval: TimeSpan.FromMilliseconds(500));
 
@@ -292,48 +298,62 @@ namespace Neon.Net
                         var output  = response.OutputText;
                         var posHost = output.IndexOf(updateHost + "\r\n    ----");  // Ensure that the DNS domain is underlined.
 
-                        if (posHost == -1)
+                        if (hostEntries?.Count > 0)
                         {
-                            throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting a record for [{updateHost}].");
-                        }
+                            // Ensure that new records have been loaded by the resolver.
 
-                        var posARecord = output.IndexOf("A (Host) Record", posHost);
-
-                        if (posARecord == -1)
-                        {
-                            throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting an A record for [{updateHost}].");
-                        }
-
-                        var posStart = output.IndexOf(':', posARecord);
-
-                        if (posStart == -1)
-                        {
-                            throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting an A record for [{updateHost}].");
-                        }
-
-                        posStart += 2;
-
-                        var posEnd = posStart;
-
-                        while (true)
-                        {
-                            var ch = output[posEnd];
-
-                            if (char.IsDigit(ch) || ch == '.')
+                            if (posHost == -1)
                             {
-                                posEnd++;
+                                throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting a record for [{updateHost}].");
                             }
-                            else
+
+                            var posARecord = output.IndexOf("A (Host) Record", posHost);
+
+                            if (posARecord == -1)
                             {
-                                break;
+                                throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting an A record for [{updateHost}].");
+                            }
+
+                            var posStart = output.IndexOf(':', posARecord);
+
+                            if (posStart == -1)
+                            {
+                                throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting an A record for [{updateHost}].");
+                            }
+
+                            posStart += 2;
+
+                            var posEnd = posStart;
+
+                            while (true)
+                            {
+                                var ch = output[posEnd];
+
+                                if (char.IsDigit(ch) || ch == '.')
+                                {
+                                    posEnd++;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+
+                            var address = output.Substring(posStart, posEnd - posStart).Trim();
+
+                            if (address != updateAddress.ToString())
+                            {
+                                throw new KeyNotFoundException($"[ipconfig /displaydns] is reporting A record [{updateHost}={address}] rather than [{updateAddress}].");
                             }
                         }
-
-                        var address = output.Substring(posStart, posEnd - posStart).Trim();
-
-                        if (address != updateAddress.ToString())
+                        else
                         {
-                            throw new KeyNotFoundException($"[ipconfig /displaydns] is reporting A record [{updateHost}={address}] rather than [{updateAddress}].");
+                            // Ensure that the resolver recognizes that we removed the records.
+
+                            if (posHost != -1)
+                            {
+                                throw new KeyNotFoundException($"[ipconfig /displaydns] is still reporting an A record for [{updateHost}].");
+                            }
                         }
 
                         await Task.CompletedTask;

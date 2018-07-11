@@ -376,6 +376,11 @@ export HiveHostnames_Consul=neon-consul.hive
 # to check instance health.
 export HiveHostnames_Vault=neon-vault.hive
 
+# The special hostname used by the [HostsFixture] Xunit test fixture to verify
+# that the local DNS resolver has picked up the changes.  This is not used for any
+# other purpose.
+export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.hive
+
 #------------------------------------------------------------------------------
 # Identifies the hive Consul globals and settings.  These are located
 # under [neon/global].

@@ -70,5 +70,12 @@ namespace Neon.Hive
         /// </para>
         /// </remarks>
         public const string Vault = "neon-vault.hive";
+
+        /// <summary>
+        /// The special hostname used by the <b>HostsFixture</b> Xunit test fixture to verify
+        /// that the local DNS resolver has picked up the changes.  This is not used for any
+        /// other purpose.
+        /// </summary>
+        public const string UpdateHosts = "neon-hosts-fixture-modify.hive";
     }
 }

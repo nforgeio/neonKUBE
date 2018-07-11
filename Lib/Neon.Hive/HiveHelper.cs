@@ -886,7 +886,7 @@ namespace Neon.Hive
             hosts.Add($"{manager.Name}.{HiveHostNames.Vault}", manager.PrivateAddress);
             hosts.Add(HiveHostNames.LogEsData, manager.PrivateAddress);
 
-            NetHelper.ModifyHostsFile(hosts);
+            NetHelper.ModifyLocalHosts(hosts);
 
             HiveHelper.secrets = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             HiveHelper.configs = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -911,7 +911,7 @@ namespace Neon.Hive
 
             log.LogInfo("Emulating hive close.");
 
-            NetHelper.ModifyHostsFile();
+            NetHelper.ModifyLocalHosts();
         }
 
         /// <summary>
