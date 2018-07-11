@@ -60,10 +60,10 @@ namespace Neon.Retry
             Covenant.Requires<ArgumentException>(initialRetryInterval == null || initialRetryInterval > TimeSpan.Zero);
             Covenant.Requires<ArgumentNullException>(maxRetryInterval >= initialRetryInterval || initialRetryInterval > TimeSpan.Zero || maxRetryInterval == null);
 
-            this.transientDetector = transientDetector ?? (e => true);
-            this.MaxAttempts = maxAttempts;
+            this.transientDetector    = transientDetector ?? (e => true);
+            this.MaxAttempts          = maxAttempts;
             this.InitialRetryInterval = initialRetryInterval ?? TimeSpan.FromSeconds(1);
-            this.MaxRetryInterval = maxRetryInterval ?? TimeSpan.FromHours(24);
+            this.MaxRetryInterval     = maxRetryInterval ?? TimeSpan.FromHours(24);
 
             if (InitialRetryInterval > MaxRetryInterval)
             {
@@ -82,13 +82,14 @@ namespace Neon.Retry
         public ExponentialRetryPolicy(Type exceptionType, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string sourceModule = null)
             : this
             (
-                e => e != null && exceptionType == e.GetType(),
+                e => TransientDetector.MatchException(e, exceptionType),
                 maxAttempts,
                 initialRetryInterval,
                 maxRetryInterval,
                 sourceModule
             )
         {
+            Covenant.Requires<ArgumentNullException>(exceptionType != null);
         }
 
         /// <summary>
@@ -109,11 +110,9 @@ namespace Neon.Retry
                         return false;
                     }
 
-                    var exceptionType = e.GetType();
-
                     foreach (var type in exceptionTypes)
                     {
-                        if (type == exceptionType)
+                        if (TransientDetector.MatchException(e, type))
                         {
                             return true;
                         }

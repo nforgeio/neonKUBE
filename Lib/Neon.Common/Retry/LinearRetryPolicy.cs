@@ -72,12 +72,13 @@ namespace Neon.Retry
         public LinearRetryPolicy(Type exceptionType, int maxAttempts = 5, TimeSpan?retryInterval = null, string sourceModule = null)
             : this
             (
-                e => e != null && exceptionType == e.GetType(),
+                e => TransientDetector.MatchException(e, exceptionType),
                 maxAttempts,
                 retryInterval,
                 sourceModule
             )
         {
+            Covenant.Requires<ArgumentNullException>(exceptionType != null);
         }
 
         /// <summary>
@@ -97,11 +98,9 @@ namespace Neon.Retry
                         return false;
                     }
 
-                    var exceptionType = e.GetType();
-
                     foreach (var type in exceptionTypes)
                     {
-                        if (type == exceptionType)
+                        if (TransientDetector.MatchException(e, type))
                         {
                             return true;
                         }

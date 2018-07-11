@@ -232,5 +232,40 @@ namespace Neon.Retry
 
             return Network(e) || Http(e);
         }
+
+        /// <summary>
+        /// Used internally to determine whether a thrown exception matches a specific exception type.
+        /// </summary>
+        /// <param name="e">The thrown exception or <c>null</c>.</param>
+        /// <param name="exceptionType">The exception type to be matched.</param>
+        /// <returns>
+        /// <c>true</c> if <paramref name="e"/> is not <c>null</c> and
+        /// it's type is <paramref name="exceptionType"/> or if <paramref name="e"/>
+        /// is a <see cref="AggregateException"/> and one of the subexceptions
+        /// is a <paramref name="exceptionType"/>.
+        /// </returns>
+        internal static bool MatchException(Exception e, Type exceptionType)
+        {
+            Covenant.Requires<ArgumentException>(exceptionType != null);
+
+            if (e == null)
+            {
+                return false;
+            }
+
+            if (e.GetType() == exceptionType)
+            {
+                return true;
+            }
+
+            var aggregateException = e as AggregateException;
+
+            if (aggregateException != null && aggregateException.Find(exceptionType) != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }
