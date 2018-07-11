@@ -4,6 +4,7 @@
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
+using System.Diagnostics.Contracts;
 
 namespace System
 {
@@ -28,9 +29,10 @@ namespace System
         }
 
         /// <summary>
-        /// Searches an exception to for an underlying exception of a specific type.  This is useful for 
-        /// checking whether an exception has a specific inner exception or whether an <see cref="AggregateException"/>
-        /// was triggered with a specific exception type.
+        /// Searches an exception for an underlying exception of a specific type specified as a generic
+        /// type parameter.   This is useful for  checking whether an exception has a specific inner 
+        /// exception or whether an <see cref="AggregateException"/> was triggered with a specific 
+        /// exception type.
         /// </summary>
         /// <typeparam name="T">The target exception type.</typeparam>
         /// <param name="e">The exception being tested.</param>
@@ -74,6 +76,60 @@ namespace System
                 if (e.InnerException != null)
                 {
                     return e.InnerException.Find<T>();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Searches an exception for an underlying exception of a specific type.  This is useful for 
+        /// checking whether an exception has a specific inner exception or whether an <see cref="AggregateException"/>
+        /// was triggered with a specific exception type.
+        /// </summary>
+        /// <param name="e">The exception being tested.</param>
+        /// <param name="exceptionType">The target exception type.</param>
+        /// <returns>The underlying exception or <c>null</c>.</returns>
+        public static Exception Find(this Exception e, Type exceptionType)
+        {
+            Covenant.Requires<ArgumentNullException>(exceptionType != null);
+
+            if (e == null)
+            {
+                return null;
+            }
+
+            if (e.GetType() == exceptionType)
+            {
+                return e;
+            }
+
+            var aggregate = e as AggregateException;
+
+            if (aggregate != null)
+            {
+                foreach (var inner in aggregate.InnerExceptions)
+                {
+                    if (inner != null)
+                    {
+                        var found = inner.Find(exceptionType);
+
+                        if (found != null)
+                        {
+                            return found;
+                        }
+                    }
+                }
+
+                return null;
+            }
+            else
+            {
+                if (e.InnerException != null)
+                {
+                    return e.InnerException.Find(exceptionType);
                 }
                 else
                 {
