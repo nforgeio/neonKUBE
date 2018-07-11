@@ -16,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Retry;
 
 namespace Neon.Net
 {
@@ -155,79 +156,193 @@ namespace Neon.Net
 #if XAMARIN
             throw new NotSupportedException();
 #else
-            string hostsPath;
-
-            if (NeonHelper.IsWindows)
-            {
-                hostsPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32", "drivers", "etc", "hosts");
-            }
-            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
-            {
-                hostsPath = "/etc/hosts";
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
-
-            const string beginMarker = "# BEGIN-NEONHELPER-MODIFY";
-            const string endMarker   = "# END-NEONHELPER-MODIFY";
-
-            var inputLines  = File.ReadAllLines(hostsPath);
-            var lines       = new List<string>();
-            var tempSection = false;
-
-            // Strip out any existing temporary sections.
-
-            foreach (var line in inputLines)
-            {
-                switch (line.Trim())
-                {
-                    case beginMarker:
-
-                        tempSection = true;
-                        break;
-
-                    case endMarker:
-
-                        tempSection = false;
-                        break;
-
-                    default:
-
-                        if (!tempSection)
-                        {
-                            lines.Add(line);
-                        }
-                        break;
-                }
-            }
-
-            if (hostEntries?.Count > 0)
-            {
-                // Append the new entries.
-
-                lines.Add(beginMarker);
-
-                foreach (var item in hostEntries)
-                {
-                    var address = item.Value.ToString();
-
-                    lines.Add($"        {address}{new string(' ', 16 - address.Length)}    {item.Key}");
-                }
-
-                lines.Add(endMarker);
-            }
-
-            File.WriteAllLines(hostsPath, lines.ToArray());
-
-            // It can take a bit of time for the DNS resolver to pick
-            // up the change, so we'll mitigate this by pausing for a bit.
+            // We're seeing transient file locked errors when trying to open the [hosts] file.
+            // My guess is that this is cause by the Window DNS resolver opening the file as
+            // READ/WRITE to prevent it from being modified while the resolver is reading any
+            // changes.
+            //
+            // We're going to mitigate this by retrying a few times.
+            //
+            // It can take a bit of time for the Windows DNS resolver to pick up the change.
             //
             //      https://github.com/jefflill/NeonForge/issues/244
+            //
+            // We're going to mitigate this by writing a [neon-dns-update.hive] record with
+            // a random IP address and then wait for [ipconfig /displaydns] to report the 
+            // correct address below.
 
-            Thread.Sleep(TimeSpan.FromMilliseconds(500));
+            var retryWrite    = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(500));
+            var updateHost    = "neon-dns-update.hive";
+            var updateAddress = new IPAddress(NeonHelper.Rand(int.MaxValue));
+
+            retryWrite.InvokeAsync(
+                async () =>
+                {
+                    string hostsPath;
+
+                    if (NeonHelper.IsWindows)
+                    {
+                        hostsPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32", "drivers", "etc", "hosts");
+                    }
+                    else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+                    {
+                        hostsPath = "/etc/hosts";
+                    }
+                    else
+                    {
+                        throw new NotSupportedException();
+                    }
+
+                    const string beginMarker = "# BEGIN-NEONHELPER-MODIFY";
+                    const string endMarker   = "# END-NEONHELPER-MODIFY";
+
+                    var inputLines  = File.ReadAllLines(hostsPath);
+                    var lines       = new List<string>();
+                    var tempSection = false;
+
+                    // Strip out any existing temporary sections.
+
+                    foreach (var line in inputLines)
+                    {
+                        switch (line.Trim())
+                        {
+                            case beginMarker:
+
+                                tempSection = true;
+                                break;
+
+                            case endMarker:
+
+                                tempSection = false;
+                                break;
+
+                            default:
+
+                                if (!tempSection)
+                                {
+                                    lines.Add(line);
+                                }
+                                break;
+                        }
+                    }
+
+                    if (hostEntries?.Count > 0)
+                    {
+                        lines.Add(beginMarker);
+
+                        // Append the special update host with random IP address.
+
+                        var address = updateAddress.ToString();
+
+                        lines.Add($"        {address}{new string(' ', 16 - address.Length)}    {updateHost}");
+
+                        // Append the new entries.
+
+                        foreach (var item in hostEntries)
+                        {
+                            address = item.Value.ToString();
+
+                            lines.Add($"        {address}{new string(' ', 16 - address.Length)}    {item.Key}");
+                        }
+
+                        lines.Add(endMarker);
+                    }
+
+                    File.WriteAllLines(hostsPath, lines.ToArray());
+                    await Task.CompletedTask;
+                    
+                }).Wait();
+
+            if (NeonHelper.IsWindows && hostEntries?.Count > 0)
+            {
+                // Poll [ipconfig /displaydns] until it reports the correct address for the
+                // [neon-dns-update.hive].  The command output will contain a series of 
+                // records foreach cached DNS entry including those loaded from [hosts]
+                // that will look like:
+                //
+                //      neon-dns-update.hive                                
+                //      ----------------------------------------       
+                //      No records of type AAAA
+                //
+                //
+                //      neon-dns-update.hive
+                //      ----------------------------------------       
+                //      Record Name . . . . . : www.pearl2o.com
+                //      Record Type. . . . .  : 1                      
+                //      Time To Live. . . .   : 86400                  
+                //      Data Length . . . . . : 4                      
+                //      Section. . . . . . .  : Answer
+                //      A (Host) Record . . . : 10.100.16.0
+                //
+                // We're going to look for [neon-dns-update.hive] and then the first instance
+                // of [A (Host) Record] afterwards and then extract and compare the IP address.
+
+                var retryReady = new LinearRetryPolicy(typeof(KeyNotFoundException), maxAttempts: 20, retryInterval: TimeSpan.FromMilliseconds(500));
+
+                retryReady.InvokeAsync(
+                    async () =>
+                    {
+                        var response = NeonHelper.ExecuteCaptureStreams("ipconfig", "/displaydns");
+
+                        if (response.ExitCode != 0)
+                        {
+                            throw new Exception($"DNS hosts modification failed because [ipconfig /displaydns] returned [exitcode={response.ExitCode}].");
+                        }
+
+                        var output  = response.OutputText;
+                        var posHost = output.IndexOf(updateHost + "\r\n    ----");  // Ensure that the DNS domain is underlined.
+
+                        if (posHost == -1)
+                        {
+                            throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting a record for [{updateHost}].");
+                        }
+
+                        var posARecord = output.IndexOf("A (Host) Record", posHost);
+
+                        if (posARecord == -1)
+                        {
+                            throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting an A record for [{updateHost}].");
+                        }
+
+                        var posStart = output.IndexOf(':', posARecord);
+
+                        if (posStart == -1)
+                        {
+                            throw new KeyNotFoundException($"[ipconfig /displaydns] is not reporting an A record for [{updateHost}].");
+                        }
+
+                        posStart += 2;
+
+                        var posEnd = posStart;
+
+                        while (true)
+                        {
+                            var ch = output[posEnd];
+
+                            if (char.IsDigit(ch) || ch == '.')
+                            {
+                                posEnd++;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        var address = output.Substring(posStart, posEnd - posStart).Trim();
+
+                        if (address != updateAddress.ToString())
+                        {
+                            throw new KeyNotFoundException($"[ipconfig /displaydns] is reporting A record [{updateHost}={address}] rather than [{updateAddress}].");
+                        }
+
+                        await Task.CompletedTask;
+
+                    }).Wait();
+            }
 #endif
         }
     }
 }
+
+
