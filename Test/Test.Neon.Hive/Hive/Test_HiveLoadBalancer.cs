@@ -38,12 +38,14 @@ namespace TestNeonCluster
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Test()
+        public void Basic()
         {
+            // $todo(jeff.lill): We actually need add some load balancer rules and test those.
+
             // Deploy a couple of simple NodeJS based services, one listening on 
             // port 8080 and the other on 8081.  We're also going to use the
-            // [HostsFixture] to map a couple of DNS names to the local loopback
-            // address and then use these to query the services.
+            // [HostsFixture] to map a couple of DNS names to a hive manager
+            // address and then use these to verify that we can call the services.
 
             // Confirm that the hive starts out with no running stacks or services.
 
@@ -55,6 +57,11 @@ namespace TestNeonCluster
 
             hiveFixture.CreateService("foo", "nhive/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
             hiveFixture.CreateService("bar", "nhive/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
+
+            // Add the temporary host records.
+
+            hiveFixture.Hosts.AddHostAddress("foo.com", hiveFixture.Hive.FirstManager.PrivateAddress.ToString(), deferCommit: true);
+            hiveFixture.Hosts.AddHostAddress("bar.com", hiveFixture.Hive.FirstManager.PrivateAddress.ToString(), deferCommit: false);
 
             // Verify that each of the services are returning the expected output.
 

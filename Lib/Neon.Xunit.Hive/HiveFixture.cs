@@ -427,7 +427,11 @@ namespace Neon.Xunit.Hive
                 Reset();
             }
 
-            // Initialize the inherited class.
+            // Initialize the hosts fixture.
+
+            Hosts = new HostsFixture();
+
+            // Initialize the base class.
 
             base.Initialize(action);
 
@@ -519,6 +523,12 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
+        /// Returns a <see cref="HostsFixture"/> that can be used to manage local
+        /// DNS host mappings.  Note that this fixture is reset by <see cref="Reset"/>.
+        /// </summary>
+        public HostsFixture Hosts { get; private set; }
+
+        /// <summary>
         /// Handles error reporting for executed Docker commands.
         /// </summary>
         /// <param name="response">The command response.</param>
@@ -554,6 +564,7 @@ namespace Neon.Xunit.Hive
             var neonArgs = new List<object>();
 
             neonArgs.Add("docker");
+            neonArgs.Add("--shim");                         // We need to shim the command so [neon-cli] won't clear local [hosts] file definitions.
             neonArgs.Add("--");
 
             foreach (var item in args)
@@ -581,7 +592,7 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            var neonArgs = "docker -- " + argString;
+            var neonArgs = "docker --shim -- " + argString; // We need to shim the command so [neon-cli] won't clear local [hosts] file definitions.
 
             return DockerExecutionReport(NeonHelper.ExecuteCaptureStreams("neon", neonArgs));
         }
@@ -619,7 +630,13 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            return DockerExecutionReport(NeonHelper.ExecuteCaptureStreams("neon", args));
+            // We need to shim the command so [neon-cli] won't clear local [hosts] file definitions.
+
+            var argList = args.ToList();
+
+            argList.Insert(0, "--shim");
+
+            return DockerExecutionReport(NeonHelper.ExecuteCaptureStreams("neon", argList.ToArray()));
         }
 
         /// <summary>
@@ -638,6 +655,10 @@ namespace Neon.Xunit.Hive
         {
             base.CheckDisposed();
             this.CheckCluster();
+
+            // We need to shim the command so [neon-cli] won't clear local [hosts] file definitions.
+
+            argString = "--shim " + argString;
 
             return NeonHelper.ExecuteCaptureStreams("neon", argString);
         }
@@ -699,6 +720,10 @@ namespace Neon.Xunit.Hive
                     () => ClearSecrets(),
                     () => ClearVolumes()
                 });
+
+            // We also need to reset any temporary DNS host records.
+
+            Hosts?.Reset();
         }
 
         //---------------------------------------------------------------------
