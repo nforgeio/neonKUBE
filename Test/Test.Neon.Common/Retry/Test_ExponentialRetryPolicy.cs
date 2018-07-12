@@ -319,9 +319,36 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task SuccessDelayedAggregate()
+        public async Task SuccessDelayedAggregateSingle()
         {
-            var policy  = new ExponentialRetryPolicy(typeof(TransientException));
+            var policy = new ExponentialRetryPolicy(typeof(NotReadyException));
+            var times  = new List<DateTime>();
+            var success = false;
+
+            await policy.InvokeAsync(
+                async () =>
+                {
+                    times.Add(DateTime.UtcNow);
+                    await Task.Delay(0);
+
+                    if (times.Count < policy.MaxAttempts)
+                    {
+                        throw new AggregateException(new NotReadyException());
+                    }
+
+                    success = true;
+                });
+
+            Assert.True(success);
+            Assert.Equal(policy.MaxAttempts, times.Count);
+            VerifyIntervals(times, policy);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task SuccessDelayedAggregateArray()
+        {
+            var policy  = new ExponentialRetryPolicy(new Type[] { typeof(NotReadyException), typeof(KeyNotFoundException) });
             var times   = new List<DateTime>();
             var success = false;
 
@@ -333,7 +360,14 @@ namespace TestCommon
 
                     if (times.Count < policy.MaxAttempts)
                     {
-                        throw new AggregateException(new TransientException());
+                        if (times.Count % 1 == 0)
+                        {
+                            throw new AggregateException(new NotReadyException());
+                        }
+                        else
+                        {
+                            throw new AggregateException(new KeyNotFoundException());
+                        }
                     }
 
                     success = true;
