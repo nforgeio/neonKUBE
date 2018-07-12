@@ -965,6 +965,11 @@ namespace Neon.Hive
                     throw new ObjectDisposedException(nameof(SshProxy<TMetadata>));
                 }
 
+                if (credentials == null || credentials == SshCredentials.None)
+                {
+                    throw new HiveException("Cannot establish a SSH connection because no credentials are available.");
+                }
+
                 if (sshClient != null)
                 {
                     if (sshClient.IsConnected)

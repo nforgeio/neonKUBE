@@ -134,7 +134,17 @@ namespace Neon.Hive
                             // we need a hive proxy for global things (like managing a hosting
                             // environment) where we won't need access to specific hive nodes.
 
-                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, SshCredentials.FromUserPassword("null", ""));
+                            // $todo(jeff.lill):
+                            //
+                            // In the future, I expect that some hive services (like [neon-hive-manager])
+                            // may need to connect to cluster nodes.  For this to work, we'd need to have
+                            // some way to retrieve the SSH (and perhaps other credentials) from Vault
+                            // and set them somewhere in the [NeonHive] class (perhaps as the current
+                            // login).
+                            //
+                            // This note is repeated in: HiveLogin.cs
+
+                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, SshCredentials.None);
                         }
                     };
             }

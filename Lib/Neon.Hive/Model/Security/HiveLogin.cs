@@ -231,9 +231,23 @@ namespace Neon.Hive
             {
                 return SshCredentials.FromPrivateKey(SshUsername, SshClientKey.PrivatePEM);
             }
-            else
+            else if (!string.IsNullOrEmpty(SshUsername) && !string.IsNullOrEmpty(SshPassword))
             {
                 return SshCredentials.FromUserPassword(SshUsername, SshPassword);
+            }
+            else
+            {
+                // $todo(jeff.lill):
+                //
+                // In the future, I expect that some hive services (like [neon-hive-manager])
+                // may need to connect to cluster nodes.  For this to work, we'd need to have
+                // some way to retrieve the SSH (and perhaps other credentials) from Vault
+                // and set them somewhere in the [NeonHive] class (perhaps as the current
+                // login).
+                //
+                // This note is repeated in: HiveProxy.cs
+
+                return SshCredentials.None;
             }
         }
 
