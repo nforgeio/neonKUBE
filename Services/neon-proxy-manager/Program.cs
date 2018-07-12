@@ -99,6 +99,11 @@ namespace NeonProxyManager
                 HiveHelper.OpenHive();
             }
 
+            // [neon-proxy-manager] requires access to the [IHostingManager] implementation for the
+            // current environment, so we'll need to initialize the hosting loader.
+
+            HostingLoader.Initialize();
+
             try
             {
                 // Log into Vault using a Docker secret.
