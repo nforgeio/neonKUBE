@@ -298,11 +298,11 @@ namespace Neon.Net
 
                         if (hostEntries?.Count > 0)
                         {
-                        // Ensure that new records have been loaded by the resolver.
+                            // Ensure that the new records have been loaded by the resolver.
 
-                        if (addresses.Length != 1)
+                            if (addresses.Length != 1)
                             {
-                                throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should only be 1.");
+                                throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be [1].");
                             }
 
                             if (addresses[0].ToString() != updateAddress.ToString())
@@ -312,11 +312,11 @@ namespace Neon.Net
                         }
                         else
                         {
-                        // Ensure that the resolver recognizes that we removed the records.
+                            // Ensure that the resolver recognizes that we removed the records.
 
-                        if (addresses.Length != 0)
+                            if (addresses.Length != 0)
                             {
-                                throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be 0.");
+                                throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be [0].");
                             }
                         }
 
