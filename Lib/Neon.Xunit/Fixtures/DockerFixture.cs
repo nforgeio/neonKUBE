@@ -508,19 +508,24 @@ namespace Neon.Xunit
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!base.IsDisposed)
+            if (disposing)
             {
-                if (ignoreDispose)
+                if (!base.IsDisposed)
                 {
-                    return;
-                }
+                    GC.SuppressFinalize(this);
 
-                if (--RefCount <= 0)
-                {
-                    Reset();
-                }
+                    if (ignoreDispose)
+                    {
+                        return;
+                    }
 
-                Covenant.Assert(RefCount >= 0, "Reference count underflow.");
+                    if (--RefCount <= 0)
+                    {
+                        Reset();
+                    }
+
+                    Covenant.Assert(RefCount >= 0, "Reference count underflow.");
+                }
             }
         }
 

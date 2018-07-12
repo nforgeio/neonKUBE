@@ -122,7 +122,6 @@ namespace Neon.Docker
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -131,7 +130,11 @@ namespace Neon.Docker
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            JsonClient.Dispose();
+            if (disposing)
+            {
+                JsonClient.Dispose();
+                GC.SuppressFinalize(this);
+            }
         }
 
         /// <summary>

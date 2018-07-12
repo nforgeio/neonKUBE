@@ -69,7 +69,6 @@ namespace Neon.Hive.HyperV
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -78,11 +77,18 @@ namespace Neon.Hive.HyperV
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (powershell != null)
+            if (disposing)
             {
-                powershell.Dispose();
-                powershell = null;
+                if (powershell != null)
+                {
+                    powershell.Dispose();
+                    powershell = null;
+                }
+
+                GC.SuppressFinalize(this);
             }
+
+            powershell = null;
         }
 
         /// <summary>

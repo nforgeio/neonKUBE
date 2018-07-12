@@ -157,9 +157,14 @@ namespace Neon.Xunit
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!base.IsDisposed)
+            if (disposing)
             {
-                Reset();
+                if (!base.IsDisposed)
+                {
+                    Reset();
+                }
+
+                GC.SuppressFinalize(this);
             }
         }
 

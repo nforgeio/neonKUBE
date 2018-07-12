@@ -157,19 +157,21 @@ namespace Neon.DnsTools
         /// <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
         protected void Dispose(bool disposing)
         {
-            lock (cache)
-            {
-                if (cacheTimer != null)
-                {
-                    cacheTimer.Dispose();
-                    cacheTimer = null;
-                }
-            }
-
             if (disposing)
             {
+                lock (cache)
+                {
+                    if (cacheTimer != null)
+                    {
+                        cacheTimer.Dispose();
+                        cacheTimer = null;
+                    }
+                }
+
                 GC.SuppressFinalize(this);
             }
+
+            cacheTimer = null;
         }
 
         /// <summary>

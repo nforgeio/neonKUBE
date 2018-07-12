@@ -88,20 +88,22 @@ namespace Neon.Hive
         /// <inheritdoc/>
         public override void Dispose(bool disposing)
         {
-            if (xenHosts != null)
-            {
-                foreach (var xenHost in xenHosts)
-                {
-                    xenHost.Dispose();
-                }
-
-                xenHosts = null;
-            }
-
             if (disposing)
             {
+                if (xenHosts != null)
+                {
+                    foreach (var xenHost in xenHosts)
+                    {
+                        xenHost.Dispose();
+                    }
+
+                    xenHosts = null;
+                }
+
                 GC.SuppressFinalize(this);
             }
+
+            xenHosts = null;
         }
 
         /// <inheritdoc/>

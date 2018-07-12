@@ -94,25 +94,27 @@ namespace System.Threading.Tasks
         /// <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
         protected void Dispose(bool disposing)
         {
-            lock (syncLock)
+            if (disposing)
             {
-                if (isDisposed)
+                lock (syncLock)
                 {
-                    return;
-                }
+                    if (isDisposed)
+                    {
+                        return;
+                    }
 
-                if (tcs != null)
-                {
-                    tcs.SetException(new ObjectDisposedException(this.GetType().FullName));
-                }
+                    if (tcs != null)
+                    {
+                        tcs.SetException(new ObjectDisposedException(this.GetType().FullName));
+                    }
 
-                if (disposing)
-                {
+                    isDisposed = true;
                     GC.SuppressFinalize(this);
                 }
-
-                isDisposed = true;
             }
+
+            tcs        = null;
+            isDisposed = true;
         }
 
         /// <summary>

@@ -368,12 +368,16 @@ namespace Neon.Xunit
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!base.IsDisposed)
+            if (disposing)
             {
-                // Ensure that there are no remaining temporary records
-                // in the hosts file.
+                if (!base.IsDisposed)
+                {
+                    // Ensure that there are no remaining temporary records
+                    // in the hosts file.
 
-                RemoveSection(fixtureId);
+                    RemoveSection(fixtureId);
+                    GC.SuppressFinalize(this);
+                }
             }
         }
     }

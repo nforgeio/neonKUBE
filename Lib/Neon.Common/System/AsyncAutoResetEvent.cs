@@ -89,25 +89,26 @@ namespace System.Threading.Tasks
         /// <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
         protected void Dispose(bool disposing)
         {
-            lock (syncLock)
-            {
-                if (waitingTasks == null)
-                {
-                    return; // Already disposed
-                }
-
-                while (waitingTasks.Count > 0)
-                {
-                    waitingTasks.Dequeue().SetException(new ObjectDisposedException(this.GetType().FullName));
-                }
-
-                waitingTasks = null; // Indicates that the instance is disposed.
-            }
-
             if (disposing)
             {
+                lock (syncLock)
+                {
+                    if (waitingTasks == null)
+                    {
+                        return; // Already disposed
+                    }
+
+                    while (waitingTasks.Count > 0)
+                    {
+                        waitingTasks.Dequeue().SetException(new ObjectDisposedException(this.GetType().FullName));
+                    }
+                }
+
+                waitingTasks = null;
                 GC.SuppressFinalize(this);
             }
+
+            waitingTasks = null;
         }
 
         /// <summary>

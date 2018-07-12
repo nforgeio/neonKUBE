@@ -22,7 +22,7 @@ namespace Neon.Time
     /// timer event.
     /// </para>
     /// </remarks>
-    public sealed class GatedTimer : IDisposable
+    public class GatedTimer : IDisposable
     {
         private object          syncLock = new object();
         private INeonLogger     logger   = LogManager.Default.GetLogger<GatedTimer>();
@@ -86,7 +86,7 @@ namespace Neon.Time
         /// </summary>
         ~GatedTimer()
         {
-            Dispose();
+            Dispose(false);
         }
 
         /// <summary>
@@ -94,16 +94,32 @@ namespace Neon.Time
         /// </summary>
         public void Dispose()
         {
-            lock (syncLock)
+            Dispose(true);
+        }
+
+        /// <summary>
+        /// Releases any important resources associated with the instance.
+        /// </summary>
+        /// <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
+        protected void Dispose(bool disposing)
+        {
+            if (disposing)
             {
-                if (timer != null)
+                lock (syncLock)
                 {
+                    if (timer == null)
+                    {
+                        return;
+                    }
+
                     timer.Dispose();
                     timer = null;
-                }
 
-                GC.SuppressFinalize(this);
+                    GC.SuppressFinalize(this);
+                }
             }
+
+            timer = null;
         }
 
         /// <summary>

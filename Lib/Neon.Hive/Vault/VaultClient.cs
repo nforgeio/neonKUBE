@@ -143,7 +143,6 @@ namespace Neon.Hive
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -152,14 +151,21 @@ namespace Neon.Hive
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            lock (syncLock)
+            if (disposing)
             {
-                if (jsonClient != null)
+                lock (syncLock)
                 {
-                    jsonClient.Dispose();
-                    jsonClient = null;
+                    if (jsonClient != null)
+                    {
+                        jsonClient.Dispose();
+                        jsonClient = null;
+                    }
                 }
+
+                GC.SuppressFinalize(this);
             }
+
+            jsonClient = null;
         }
 
         /// <summary>

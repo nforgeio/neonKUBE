@@ -102,7 +102,6 @@ namespace Neon.Net
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -111,14 +110,21 @@ namespace Neon.Net
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            lock (syncLock)
+            if (disposing)
             {
-                if (HttpClient != null)
+                lock (syncLock)
                 {
-                    HttpClient.Dispose();
-                    HttpClient = null;
+                    if (HttpClient != null)
+                    {
+                        HttpClient.Dispose();
+                        HttpClient = null;
+                    }
                 }
+
+                GC.SuppressFinalize(this);
             }
+
+            HttpClient = null;
         }
 
         /// <summary>

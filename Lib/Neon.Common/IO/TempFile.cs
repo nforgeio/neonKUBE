@@ -81,7 +81,6 @@ namespace Neon.IO
             }
 
             isDisposed = true;
-
             GC.SuppressFinalize(this);
         }
 

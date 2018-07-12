@@ -165,7 +165,6 @@ namespace Neon.Hive
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -174,9 +173,14 @@ namespace Neon.Hive
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            Consul.Dispose();
-            Vault.Dispose();
-            Headend.Dispose();
+            if (disposing)
+            {
+                Consul.Dispose();
+                Vault.Dispose();
+                Headend.Dispose();
+
+                GC.SuppressFinalize(this);
+            }
         }
 
         /// <summary>

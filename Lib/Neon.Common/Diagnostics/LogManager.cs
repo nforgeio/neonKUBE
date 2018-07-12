@@ -249,7 +249,6 @@ namespace Neon.Diagnostics
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -260,6 +259,8 @@ namespace Neon.Diagnostics
         {
             if (disposing)
             {
+                GC.SuppressFinalize(this);
+
                 // Actually dispose any disposable members here if we add
                 // any in the future.
             }

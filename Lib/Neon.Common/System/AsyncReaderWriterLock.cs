@@ -217,30 +217,33 @@ namespace System.Threading.Tasks
         /// <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
         protected void Dispose(bool disposing)
         {
-            lock (syncLock)
+            if (disposing)
             {
-                if (isDisposed)
+                lock (syncLock)
                 {
-                    return;
-                }
+                    if (isDisposed)
+                    {
+                        return;
+                    }
 
-                if (disposing)
-                {
-                    GC.SuppressFinalize(this);
+                    if (waitingReaderTcs != null)
+                    {
+                        waitingReaderTcs.SetException(new ObjectDisposedException(ObjectName));
+                    }
+
+                    while (waitingWriterTcsQueue.Count > 0)
+                    {
+                        waitingWriterTcsQueue.Dequeue().SetException(new ObjectDisposedException(ObjectName));
+                    }
                 }
 
                 isDisposed = true;
-
-                if (waitingReaderTcs != null)
-                {
-                    waitingReaderTcs.SetException(new ObjectDisposedException(ObjectName));
-                }
-
-                while (waitingWriterTcsQueue.Count > 0)
-                {
-                    waitingWriterTcsQueue.Dequeue().SetException(new ObjectDisposedException(ObjectName));
-                }
+                GC.SuppressFinalize(this);
             }
+
+            waitingReaderTcs      = null;
+            waitingWriterTcsQueue = null;
+            isDisposed            = true;
         }
 
         /// <summary>

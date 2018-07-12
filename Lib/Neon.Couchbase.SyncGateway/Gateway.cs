@@ -83,20 +83,18 @@ namespace Neon.Couchbase.SyncGateway
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected void Dispose(bool disposing)
         {
-            var client = jsonClient;
-
-            if (client == null)
+            if (disposing)
             {
-                return;
+                var client = jsonClient;
+
+                if (client != null)
+                {
+                    client.Dispose();
+                    GC.SuppressFinalize(this);
+                }
             }
 
             jsonClient = null;
-            client.Dispose();
-
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-            }
         }
 
         /// <summary>

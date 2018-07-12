@@ -226,7 +226,6 @@ namespace Neon.Hive
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -235,37 +234,41 @@ namespace Neon.Hive
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            lock (syncLock)
+            if (disposing)
             {
-                if (!isDisposed)
+                lock (syncLock)
                 {
-                    Disconnect();
-
-                    if (logWriter != null)
+                    if (!isDisposed)
                     {
-                        // $hack(jeff.lill):
-                        //
-                        // Sometimes we'll see an [ObjectDisposedException] here.  I'm
-                        // not entirely sure why.  We'll mitigate this for now by catching
-                        // and ignoring the exception.
+                        Disconnect();
 
-                        try
+                        if (logWriter != null)
                         {
-                            logWriter.Dispose();
+                            // $hack(jeff.lill):
+                            //
+                            // Sometimes we'll see an [ObjectDisposedException] here.  I'm
+                            // not entirely sure why.  We'll mitigate this for now by catching
+                            // and ignoring the exception.
+
+                            try
+                            {
+                                logWriter.Dispose();
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                // Intentionally ignoring this.
+                            }
                         }
-                        catch (ObjectDisposedException)
-                        {
-                            // Intentionally ignoring this.
-                        }
-                        finally
-                        {
-                            logWriter = null;
-                        }
+
+                        isDisposed = true;
                     }
-
-                    isDisposed = true;
                 }
+
+                GC.SuppressFinalize(this);
             }
+
+            isDisposed = true;
+            logWriter  = null;
         }
 
         /// <summary>
