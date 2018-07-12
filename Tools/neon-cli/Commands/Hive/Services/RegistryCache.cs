@@ -162,8 +162,8 @@ namespace NeonCli
                             "--detach",
                             "--restart", "always",
                             "--publish", $"{HiveHostPorts.DockerRegistryCache}:5000",
-                            "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
-                            "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
+                            "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",     // Registry cache certificates folder
+                            "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",         // Registry cache repos, images, and working files folder
                             "--env", $"HOSTNAME={node.Name}.{HiveHostNames.RegistryCache}",
                             "--env", $"REGISTRY=https://{registry}",
                             "--env", $"USERNAME={publicRegistryCredentials.Username}",
