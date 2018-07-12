@@ -138,8 +138,15 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// <para>
         /// Used to temporarily modify the <b>hosts</b> file used by the DNS resolver
-        /// for debugging purposes.
+        /// for debugging or other purposes.
+        /// </para>
+        /// <note>
+        /// <b>WARNING:</b> Modifying the <b>hosts</b> file will impact all processes
+        /// on the system, not just the current one and this is designed to be used by
+        /// a single process at a time.
+        /// </note>
         /// </summary>
         /// <param name="hostEntries">A dictionary mapping the hostnames to an IP address or <c>null</c>.</param>
         /// <remarks>
@@ -187,6 +194,12 @@ namespace Neon.Net
             //
             // We're going to mitigate this by writing a [neon-modify-local-hosts.hive] record with
             // a random IP address and then wait for for the DNS resolver to report the correct address.
+            //
+            // Note that this only works on Windows and perhaps OSX.  This doesn't work on
+            // Linux because there's no central DNS resolver there.  See the issue below foir
+            // more information:
+            //
+            //      https://github.com/jefflill/NeonForge/issues/271
 
             var updateHost    = "neon-modify-local-hosts.hive";
             var updateAddress = new IPAddress(NeonHelper.Rand(int.MaxValue));
@@ -254,47 +267,61 @@ namespace Neon.Net
                     
                 }).Wait();
 
-            // Poll the local DNS resolver until it reports the correct address for the
-            // [neon-modify-local-hosts.hive].
-            //
-            // If [hostEntries] is not null and contains at least one entry, we'll lookup
-            // [neon-modify-local-hosts.hive] and compare the IP address to ensure that the 
-            // resolver has loaded the new entries.
-            //
-            // If [hostEntries] is null or empty, we'll wait until there are no records
-            // for [neon-modify-local-hosts.hive] to ensure that the resolver has reloaded the
-            // hosts file after we removed the entries.
+            if (NeonHelper.IsOSX)
+            {
+                // $todo(jeff.lill):
+                //
+                // We may need to clear the OSX DNS cache here.
+                //
+                // Here's some information on how to do this:
+                //
+                //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
+            }
 
-            retryReady.InvokeAsync(
-                async () =>
-                {
-                    var addresses = await GetHostAddressesAsync(updateHost);
+            if (NeonHelper.IsWindows || NeonHelper.IsOSX)
+            {
+                // Poll the local DNS resolver until it reports the correct address for the
+                // [neon-modify-local-hosts.hive].
+                //
+                // If [hostEntries] is not null and contains at least one entry, we'll lookup
+                // [neon-modify-local-hosts.hive] and compare the IP address to ensure that the 
+                // resolver has loaded the new entries.
+                //
+                // If [hostEntries] is null or empty, we'll wait until there are no records
+                // for [neon-modify-local-hosts.hive] to ensure that the resolver has reloaded the
+                // hosts file after we removed the entries.
 
-                    if (hostEntries?.Count > 0)
+                retryReady.InvokeAsync(
+                    async () =>
                     {
+                        var addresses = await GetHostAddressesAsync(updateHost);
+
+                        if (hostEntries?.Count > 0)
+                        {
                         // Ensure that new records have been loaded by the resolver.
 
                         if (addresses.Length != 1)
-                        {
-                            throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should only be 1.");
-                        }
+                            {
+                                throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should only be 1.");
+                            }
 
-                        if (addresses[0].ToString() != updateAddress.ToString())
-                        {
-                            throw new NotReadyException($"DNS is [{updateHost}={addresses[0]}] rather than [{updateAddress}].");
+                            if (addresses[0].ToString() != updateAddress.ToString())
+                            {
+                                throw new NotReadyException($"DNS is [{updateHost}={addresses[0]}] rather than [{updateAddress}].");
+                            }
                         }
-                    }
-                    else
-                    {
+                        else
+                        {
                         // Ensure that the resolver recognizes that we removed the records.
 
                         if (addresses.Length != 0)
-                        {
-                            throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be 0.");
+                            {
+                                throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be 0.");
+                            }
                         }
-                    }
 
-                }).Wait();
+                    }).Wait();
+            }
 #endif
         }
 

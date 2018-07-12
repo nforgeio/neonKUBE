@@ -73,7 +73,7 @@ namespace TestSamples
         {
             // Deploy a couple of simple NodeJS based services, one listening on 
             // port 8080 and the other on 8081.  We're also going to use the
-            // [HostsFixture] to map a couple of DNS names to the local loopback
+            // [HostsFixture] to map a couple of DNS names to a hive manager
             // address and then use these to query the services.
 
             // Confirm that the hive starts out with no running stacks or services.
@@ -85,8 +85,10 @@ namespace TestSamples
             // publishing these on host ports, so we'll map the DNS entries to
             // the local loopback address.
 
-            hosts.AddHostAddress("foo.com", "127.0.0.1", deferCommit: true);
-            hosts.AddHostAddress("bar.com", "127.0.0.1", deferCommit: true);
+            var managerAddress = hive.FirstManager.PrivateAddress.ToString();
+
+            hosts.AddHostAddress("foo.com", managerAddress, deferCommit: true);
+            hosts.AddHostAddress("bar.com", managerAddress, deferCommit: true);
             hosts.Commit();
 
             // Spin up a couple of NodeJS as stacks configuring them to return

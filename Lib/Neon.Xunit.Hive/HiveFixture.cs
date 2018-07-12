@@ -564,7 +564,7 @@ namespace Neon.Xunit.Hive
             var neonArgs = new List<object>();
 
             neonArgs.Add("docker");
-            neonArgs.Add("--shim");                         // We need to shim the command so [neon-cli] won't clear local [hosts] file definitions.
+            neonArgs.Add("--shim");     // We need to shim the command so [neon-cli] won't clear local [hosts] file definitions.
             neonArgs.Add("--");
 
             foreach (var item in args)
