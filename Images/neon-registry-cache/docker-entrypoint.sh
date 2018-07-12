@@ -13,6 +13,16 @@ if [ "${HOSTNAME}" == "" ] ; then
     exit 1
 fi
 
+if [ "${HOSTNAME}" == "docker.io" ] ; then
+    . log-info.sh "Transforming HOSTNAME from [docker.io] to [https://registry.docker.io]"
+    export HOSTNAME=https://registry.docker.io
+fi
+
+if [ "${HOSTNAME}" =~ ^https:// ] ; then
+    . log-info.sh "Prefixing HOSTNAME with https://"
+    export HOSTNAME=https://${HOSTNAME}
+fi
+
 if [ "${REGISTRY}" == "" ] ; then
     export REGISTRY=https://docker.io
 fi
@@ -24,7 +34,7 @@ fi
 . log-info.sh "HOSTNAME=${HOSTNAME}"
 . log-info.sh "REGISTRY=${REGISTRY}"
 . log-info.sh "USERNAME=${USERNAME}"
-. log-info.sh "PASSWORD=** REDACTED **"
+. log-info.sh "PASSWORD=**REDACTED**"
 . log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
 
 # Add the root directory to the PATH.
