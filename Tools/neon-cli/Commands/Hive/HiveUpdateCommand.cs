@@ -33,11 +33,11 @@ infrastructure related services and containers.
 
 USAGE:
 
-    neon hive update          [OPTIONS]         - updates neonHIVE and containers/services
+    neon hive update          [OPTIONS]         - updates hive nodes and containers/services
     neon hive update check                      - checks for available updates 
     neon hive update consul   [OPTIONS] VERSION - updates HashiCorp Consul
     neon hive update docker   [OPTIONS] VERSION - updates the Docker engine
-    neon hive update services [OPTIONS]         - updates neonHIVE containers/services
+    neon hive update services [OPTIONS]         - updates only hive containers/services
     neon hive update linux    [OPTIONS]         - updates linux on hive nodes
     neon hive update vault    [OPTIONS] VERSION - updates HashiCorp Vault
 
