@@ -79,8 +79,8 @@ dashboard names are reserved for use as commands:
         public override void Run(CommandLine commandLine)
         {
             hiveLogin = Program.ConnectHive();
-            hive      = new HiveProxy(hiveLogin);
-            reserved     = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+            hive     = new HiveProxy(hiveLogin);
+            reserved = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
             {
                 "get",
                 "list",
