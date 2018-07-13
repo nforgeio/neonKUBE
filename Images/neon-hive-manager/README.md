@@ -63,7 +63,7 @@ Many (perhaps most) hives don't need this level of security and operators may wi
 
 This service reads configuration settings from Consul:
 
-&nbsp;&nbsp;&nbsp;&nbsp;`neon/services`
+&nbsp;&nbsp;&nbsp;&nbsp;`neon/service`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-hive-manager:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`node_poll_seconds: 30`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`vault_poll_seconds: 30`

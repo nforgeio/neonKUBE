@@ -289,7 +289,7 @@ namespace NeonCli.Ansible
             // Determine whether the registry service is already deployed and 
             // also retrieve the registry credentials from Vault if present.
             // Note that the current registry hostname will be persisted to
-            // Consul at [neon/services/neon-registry/hostname] when a registry
+            // Consul at [neon/service/neon-registry/hostname] when a registry
             // is deployed.
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting the [neon-registry] service.");

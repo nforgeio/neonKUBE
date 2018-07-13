@@ -173,7 +173,7 @@ namespace Neon.Hive
         /// <summary>
         /// Consul root key for the <b>neon-registry</b> service.
         /// </summary>
-        public const string ConsulRegistryRootKey = "neon/services/neon-registry";
+        public const string ConsulRegistryRootKey = "neon/service/neon-registry";
 
         /// <summary>
         /// Identifies the dashboard folder where built-in hive dashboards will reside.
