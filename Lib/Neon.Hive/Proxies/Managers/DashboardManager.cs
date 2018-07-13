@@ -60,7 +60,7 @@ namespace Neon.Hive
         /// <returns>The dashboard if present or <c>null</c> if it doesn't exist.</returns>
         public HiveDashboard Get(string name)
         {
-            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(name));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(name), $"[{name}] is not a valid hive dashboard name.");
 
             return hive.Consul.Client.KV.GetObjectOrDefault<HiveDashboard>(GetDashboardConsulKey(name)).Result;
 
