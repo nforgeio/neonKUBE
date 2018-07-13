@@ -3,7 +3,7 @@
   "Datacenter": "woodinville",
   "Environment": "development",
   "TimeSources": [ "pool.ntp.org" ],
-  "DebugMode": true,
+  "DebugMode": false,
   "AllowUnitTesting": true,
   "Hosting": {
     "Environment": "machine"
