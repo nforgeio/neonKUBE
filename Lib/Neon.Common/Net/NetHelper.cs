@@ -25,8 +25,14 @@ namespace Neon.Net
     /// </summary>
     public static class NetHelper
     {
-        private static LinearRetryPolicy retryFile  = new LinearRetryPolicy(typeof(IOException), maxAttempts: 50, retryInterval: TimeSpan.FromMilliseconds(100));
-        private static LinearRetryPolicy retryReady = new LinearRetryPolicy(typeof(NotReadyException), maxAttempts: 50, retryInterval: TimeSpan.FromMilliseconds(100));
+        // Retry [hosts] file munging operations for up to 10 seconds at 100ms intervals.
+
+        private static readonly TimeSpan maxRetryTime  = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan retryInterval = TimeSpan.FromMilliseconds(100);
+        private static readonly int maxAttempts        = (int)Math.Max(1, maxRetryTime.TotalMilliseconds / retryInterval.TotalMilliseconds);
+
+        private static LinearRetryPolicy retryFile     = new LinearRetryPolicy(typeof(IOException), maxAttempts: maxAttempts, retryInterval: retryInterval);
+        private static LinearRetryPolicy retryReady    = new LinearRetryPolicy(typeof(NotReadyException), maxAttempts: maxAttempts, retryInterval: retryInterval);
 
         /// <summary>
         /// Determines whether two IP addresses are equal.
