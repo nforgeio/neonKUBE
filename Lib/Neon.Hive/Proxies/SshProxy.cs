@@ -311,15 +311,15 @@ namespace Neon.Hive
             var threadStart = new ThreadStart(action);
             var thread      = new Thread(threadStart);
 
-            LogLine($"*** DEADLOCK EXECUTE: {actionName}");
+            //LogLine($"*** DEADLOCK EXECUTE: {actionName}");
 
             thread.Start();
 
             if (!thread.Join(timeout))
             {
-                LogLine($"*** DEADLOCK BREAK: {actionName}");
+                //LogLine($"*** DEADLOCK BREAK: {actionName}");
                 thread.Abort();
-                LogLine($"*** DEADLOCK BREAK COMPLETE: {actionName}");
+                //LogLine($"*** DEADLOCK BREAK COMPLETE: {actionName}");
             }
         }
 
