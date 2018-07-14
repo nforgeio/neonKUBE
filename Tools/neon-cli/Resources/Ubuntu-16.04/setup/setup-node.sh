@@ -367,65 +367,188 @@ cat <<EOF > /usr/local/bin/neon-iptables
 #
 # We're going to loop every 30 seconds to ensure that this gets reconfigured
 # in case the network stack is restarted or Docker messes with the rules.
+#
+# Note that I'm using [--wait] to ensure that  we'll wait for the 
+# [iptables] lock to be released if somebody else (like Docker) is
+# messing with the rules.
 
-# This function appends an [iptables] rule if it doesn't already exist.
-function appendRule {
+# This returns the position of the DOCKER-INGRESS within the PREROUTING NAT table.
+# \$INGRESS_POS will return as 0 if the rule doesn't exist or the position of the rule
+# (first=1).
 
-    # Note that I'm using [--wait] to ensure that  we'll wait for the 
-    # [iptables] lock to be released if somebody else (like Docker) is
-    # messing with the rules.
+function getPreroutingIngressPos {
 
-    # Verify that the rule doesn't already exist.
+    # This code lists the rules for PREROUTING/NAT, skips the first line, greps for the
+    # DOCKER-INGRESS rule, takes the first line and then extracts the line number the 
+    # rule appeared on.  If this fails, then the ingress rule doesn't exist and we'll 
+    # return 0.
 
-    if iptables --wait --check "\$@" &> /dev/nul ; then
+    export INGRESS_POS=\$(iptables --wait -S PREROUTING -t nat | tail -n +2 | grep -nF -- "DOCKER-INGRESS" | head -1 | cut -d : -f 1)
+
+    if [ "\$?" != "0" ] ; then
+        export INGRESS_POS=0
+    elif [ "\$INGRESS_POS" == "" ] ; then
+        export INGRESS_POS=0
+    fi
+}
+
+# This returns the position of a rule for PREROUTING/NAT. \$RULE_POS will return as 0 
+# if the rule doesn't exist or the position of the rule (first=1).
+#
+# FRAGILE: The rule passed must match the rule output from the [iptables -S] command
+#          exactly for this to work.
+
+function getPreroutingRulePos {
+
+    # This code lists the rules in the CHAIN/TABLE, skips the first line, greps for
+    # the rule (passed as parameters),  takes the first line and then extracts the 
+    # line number the rule appeared on.  If this fails, then the ingress rule doesn't 
+    # exist and we'll return 0.
+
+    export RULE_POS=\$(iptables --wait -S PREROUTING -t nat | tail -n +2 | grep -nF -- "\$*" | head -1 | cut -d : -f 1)
+
+    if [ "\$?" != "0" ] ; then
+        export RULE_POS=0
+    elif [ "\$RULE_POS" == "" ] ; then
+        export RULE_POS=0
+    fi
+}
+
+# This ensures that an [iptables] rule is near the top of the PREROUTING NAT table, 
+# before the DOCKER-INGRESS rule.  The function inserts the rule if it doesn't already 
+# exist or relocates an existing rule if it is below the DOCKER-INGRESS rule.
+#
+# FRAGILE: The rule passed must match the rule output from the [iptables -S] command
+#          exactly for this to work.
+
+function insertPreroutingRule {
+
+    getPreroutingRulePos \$*
+
+    # Insert the rule if it doesn't already exist.
+
+    if [ "\$RULE_POS" == "0" ] ; then
+        echo [INFO] Inserting rule: \$*
+        iptables --wait -I PREROUTING -t nat \$*
         return
     fi
 
-    # Append the rule.
+    # The rule exists but we still need to verify that it appears above
+    # the DOCKER-INGRESS rule in the table.
 
-    echo [INFO] Appending rule: "\$@"
-    iptables --wait --append "\$@"
+    getPreroutingIngressPos
+
+    if [ "\$INGRESS_POS" == "0" ] ; then
+        echo "[INFO] There is no DOCKER-INGRESS rule for PREROUTING/NAT."
+        return;
+    fi
+
+    if [ "\$INGRESS_POS" -lt "\$RULE_POS"  ] ; then
+        echo "[INFO] Relocating PREROUTING rule above DOCKER-INGRESS: \$*"
+
+        # We'll remove the rule and reinsert it at the top.
+
+        iptables --wait -D PREROUTING -t nat \$*
+        iptables --wait -I PREROUTING -t nat \$*
+    fi
 }
 
-# This function inserts an [iptables] rule at the top of the chain if
-# the rule doesn't already exist.
-function insertRule {
+function getOutputIngressPos {
 
-    # Note that I'm using [--wait] to ensure that  we'll wait for the 
-    # [iptables] lock to be released if somebody else (like Docker) is
-    # messing with the rules.
+    # This code lists the rules for OUTPUT/NAT, skips the first line, greps for the
+    # DOCKER-INGRESS rule, takes the first line and then extracts the line number the 
+    # rule appeared on.  If this fails, then the ingress rule doesn't exist and we'll 
+    # return 0.
 
-    # Verify that the rule doesn't already exist.
+    export INGRESS_POS=\$(iptables --wait -S OUTPUT -t nat | tail -n +2 | grep -nF -- "DOCKER-INGRESS" | head -1 | cut -d : -f 1)
 
-    if iptables --wait --check "\$@" &> /dev/nul ; then
+    if [ "\$?" != "0" ] ; then
+        export INGRESS_POS=0
+    elif [ "\$INGRESS_POS" == "" ] ; then
+        export INGRESS_POS=0
+    fi
+}
+
+# This returns the position of a rule for OUTPUT/NAT. \$RULE_POS will return as 0 
+# if the rule doesn't exist or the position of the rule (first=1).
+#
+# FRAGILE: The rule passed must match the rule output from the [iptables -S] command
+#          exactly for this to work.
+
+function getOutputRulePos {
+
+    # This code lists the rules in the CHAIN/TABLE, skips the first line, greps for
+    # the rule (passed as parameters),  takes the first line and then extracts the 
+    # line number the rule appeared on.  If this fails, then the ingress rule doesn't 
+    # exist and we'll return 0.
+
+    export RULE_POS=\$(iptables --wait -S OUTPUT -t nat | tail -n +2 | grep -nF -- "\$*" | head -1 | cut -d : -f 1)
+
+    if [ "\$?" != "0" ] ; then
+        export RULE_POS=0
+    elif [ "\$RULE_POS" == "" ] ; then
+        export RULE_POS=0
+    fi
+}
+
+# This ensures that an [iptables] rule is near the top of the OUTPUT NAT table, 
+# before the DOCKER-INGRESS rule.  The function inserts the rule if it doesn't already 
+# exist or relocates an existing rule if it is below the DOCKER-INGRESS rule.
+#
+# FRAGILE: The rule passed must match the rule output from the [iptables -S] command
+#          exactly for this to work.
+
+function insertOutputRule {
+
+    getOutputRulePos \$*
+
+    # Insert the rule if it doesn't already exist.
+
+    if [ "\$RULE_POS" == "0" ] ; then
+        echo [INFO] Inserting rule: \$*
+        iptables --wait -I OUTPUT -t nat \$*
         return
     fi
 
-    # Insert the rule.
+    # The rule exists but we still need to verify that it appears above
+    # the DOCKER-INGRESS rule in the table.
 
-    echo [INFO] Inserting rule: "\$@"
-    iptables --wait --insert "\$@"
+    getOutputIngressPos
+
+    if [ "\$INGRESS_POS" == "0" ] ; then
+        echo "[INFO] There is no DOCKER-INGRESS rule for OUTPUT/NAT."
+        return;
+    fi
+
+    if [ "\$INGRESS_POS" -lt "\$RULE_POS"  ] ; then
+        echo "[INFO] Relocating OUTPUT rule above DOCKER-INGRESS: \$*"
+
+        # We'll remove the rule and reinsert it at the top.
+
+        iptables --wait -D OUTPUT -t nat \$*
+        iptables --wait -I OUTPUT -t nat \$*
+    fi
 }
 
-echo "[INFO] Verifying port forwarding rules every [30] seconds."
+echo "[INFO] Ensuring that port forwarding rules are valid every [30] seconds."
 
 while true
 do
     # Port 80 --> 5100 rules
 
-    insertRule PREROUTING -t nat -p tcp -d ${NEON_NODE_IP} --dport 80 -j REDIRECT --to 5100
-    insertRule OUTPUT -t nat -p tcp -d ${NEON_NODE_IP} --dport 80 -j REDIRECT --to 5100
+    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
+    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
 
-    insertRule PREROUTING -t nat -p tcp -d 127.0.0.0/8 --dport 80 -j REDIRECT --to 5100
-    insertRule OUTPUT -t nat -p tcp -d 127.0.0.0/8 --dport 80 -j REDIRECT --to 5100
+    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
+    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
 
     # Port 443 --> 5101 rules
 
-    insertRule PREROUTING -t nat -p tcp -d ${NEON_NODE_IP} --dport 443 -j REDIRECT --to 5101
-    insertRule OUTPUT -t nat -p tcp -d ${NEON_NODE_IP} --dport 443 -j REDIRECT --to 5101
+    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
+    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
 
-    insertRule PREROUTING -t nat -p tcp -d 127.0.0.0/8 --dport 443 -j REDIRECT --to 5101
-    insertRule OUTPUT -t nat -p tcp -d 127.0.0.0/8 --dport 443 -j REDIRECT --to 5101
+    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
+    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
 
     sleep 30
 done
