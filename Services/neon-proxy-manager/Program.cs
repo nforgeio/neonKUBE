@@ -995,7 +995,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                     }
                 }
 
-                var checkArg    = tcpRule.Check ? " check" : string.Empty;
+                var checkArg    = tcpRule.Check ? " check" : " no-check";
                 var serverIndex = 0;
 
                 foreach (var backend in tcpRule.SelectBackends(hostGroups))
@@ -1257,7 +1257,7 @@ frontend {haProxyFrontend.Name}
                         resolversArg = $" resolvers {httpRule.Resolver}";
                     }
 
-                    var checkArg        = httpRule.Check ? " check" : string.Empty;
+                    var checkArg        = httpRule.Check ? " check" : " no-check";
                     var initAddrArg     = " init-addr none";
                     var checkVersionArg = string.Empty;
 
