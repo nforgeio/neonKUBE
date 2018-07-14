@@ -280,7 +280,7 @@ See the documentation for more load balancer rule and setting details.
 
                     using (var consul = HiveHelper.OpenConsul())
                     {
-                        var confKey      = $"neon/service/neon-proxy-manager/proxies/{loadBalancerName}/conf";
+                        var confKey      = $"neon/service/neon-proxy-manager/proxies/{loadBalancerName}/proxy-conf";
                         var confZipBytes = consul.KV.GetBytesOrDefault(confKey).Result;
 
                         if (confZipBytes == null)
