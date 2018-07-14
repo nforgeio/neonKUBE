@@ -118,7 +118,7 @@ docker service create \
     --detach=false \
     --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
-    --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/public/conf \
+    --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-conf \
     --env VAULT_CREDENTIALS=neon-proxy-public-credentials \
     --env LOG_LEVEL=INFO \
     --env DEBUG=false \
@@ -136,7 +136,7 @@ docker service create \
     --detach=false \
     --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
-    --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/private/conf \
+    --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-conf \
     --env VAULT_CREDENTIALS=neon-proxy-private-credentials \
     --env LOG_LEVEL=INFO \
     --env DEBUG=false \
