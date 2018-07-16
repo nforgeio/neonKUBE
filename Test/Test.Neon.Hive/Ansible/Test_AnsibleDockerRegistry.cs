@@ -38,10 +38,7 @@ namespace TestNeonCluster
 
         public Test_AnsibleDockerRegistry(HiveFixture fixture)
         {
-            if (!fixture.LoginAndInitialize())
-            {
-                fixture.ClearVolumes();
-            }
+            fixture.LoginAndInitialize();
 
             this.hiveFixture = fixture;
             this.hive        = fixture.Hive;
@@ -55,6 +52,8 @@ namespace TestNeonCluster
             {
                 manager.DockerCommand(RunOptions.None, "docker service rm neon-registry");
             }
+
+            hiveFixture.ClearVolumes();
 
             this.hive.Certificate.Remove("neon-registry");
             this.hive.PublicLoadBalancer.RemoveRule("neon-registry");
@@ -677,7 +676,7 @@ namespace TestNeonCluster
                 File.Copy(TestHelper.AnsibleSecretsPath, Path.Combine(folder.Path, "secrets.yaml"));
 
                 //-------------------------------------------------------------
-                // Deploy a local Docker registry so we can verify registry prune.
+                // Deploy a local Docker registry so we can test registry pruning.
 
                 var playbook =
 @"

@@ -103,6 +103,7 @@ $@"
         rule_name: test
         rule:
           mode: http
+          check: false
           frontends:
             - host: test.com
           backends:

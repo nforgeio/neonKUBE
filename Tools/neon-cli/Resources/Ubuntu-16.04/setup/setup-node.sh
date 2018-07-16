@@ -534,14 +534,6 @@ echo "[INFO] Ensuring that port forwarding rules are valid every [30] seconds."
 
 while true
 do
-    # Port 80 --> 5100 rules
-
-    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
-    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
-
-    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
-    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
-
     # Port 443 --> 5101 rules
 
     insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
@@ -549,6 +541,14 @@ do
 
     insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
     insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
+
+    # Port 80 --> 5100 rules
+
+    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
+    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
+
+    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
+    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
 
     sleep 30
 done
