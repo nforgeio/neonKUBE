@@ -187,7 +187,7 @@ namespace Neon.Net
                 throw new NotSupportedException();
             }
 
-            // We're seeing transient file locked errors when trying to open the [hosts] file.
+            // We're seeing transient file locked errors when trying to update the [hosts] file.
             // My guess is that this is cause by the Window DNS resolver opening the file as
             // READ/WRITE to prevent it from being modified while the resolver is reading any
             // changes.
@@ -209,7 +209,9 @@ namespace Neon.Net
 
             var updateHost    = "neon-modify-local-hosts.hive";
             var updateAddress = new IPAddress(NeonHelper.Rand(int.MaxValue));
+            var lines         = new List<string>();
 
+try {
             retryFile.InvokeAsync(
                 async () =>
                 {
@@ -217,8 +219,9 @@ namespace Neon.Net
                     const string endMarker   = "# END-NEON-MODIFY";
 
                     var inputLines  = File.ReadAllLines(hostsPath);
-                    var lines       = new List<string>();
                     var tempSection = false;
+
+                    lines.Clear();
 
                     // Strip out any existing temporary sections.
 
@@ -284,6 +287,7 @@ namespace Neon.Net
                 //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
             }
 
+Log("**** DNS Verify 0");
             if (NeonHelper.IsWindows || NeonHelper.IsOSX)
             {
                 // Poll the local DNS resolver until it reports the correct address for the
@@ -294,41 +298,104 @@ namespace Neon.Net
                 // resolver has loaded the new entries.
                 //
                 // If [hostEntries] is null or empty, we'll wait until there are no records
-                // for [neon-modify-local-hosts.hive] to ensure that the resolver has reloaded the
-                // hosts file after we removed the entries.
+                // for [neon-modify-local-hosts.hive] to ensure that the resolver has reloaded
+                // the hosts file after we removed the entries.
+                //
+                // Note that we're going to count the retries and after the 10th (about 1 second's
+                // worth of 100ms polling), we're going to rewrite the [hosts] file.  I've seen
+                // situations where at appears that the DNS resolver isn't re-reading [hosts]
+                // after it's been updated.  I believe this is due to the file being written 
+                // twice, once to remove the section and then shortly again there after to
+                // write the section again.  I believe there's a chance that the resolver may
+                // miss the second file change notification.  Writing the file again should
+                // trigger a new notification.
 
+                var retryCount = 0;
+
+Log("**** DNS Verify 1");
                 retryReady.InvokeAsync(
                     async () =>
                     {
+Log("**** DNS Verify 2");
                         var addresses = await GetHostAddressesAsync(updateHost);
+Log("**** DNS Verify 3");
 
                         if (hostEntries?.Count > 0)
                         {
+Log("**** DNS Verify 4");
                             // Ensure that the new records have been loaded by the resolver.
 
                             if (addresses.Length != 1)
                             {
+Log("**** DNS Verify 5");
+try
+{
+    Log(File.ReadAllText(hostsPath));
+}
+catch (Exception e)
+{
+    Log($"**** DNS Verify 5: {NeonHelper.ExceptionError(e)}");
+}
+                                RewriteOn10thRetry(hostsPath, lines, ref retryCount);
                                 throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be [1].");
                             }
 
                             if (addresses[0].ToString() != updateAddress.ToString())
                             {
+Log("**** DNS Verify 6");
+                                RewriteOn10thRetry(hostsPath, lines, ref retryCount);
                                 throw new NotReadyException($"DNS is [{updateHost}={addresses[0]}] rather than [{updateAddress}].");
                             }
                         }
                         else
                         {
+Log("**** DNS Verify 7");
                             // Ensure that the resolver recognizes that we removed the records.
 
                             if (addresses.Length != 0)
                             {
+Log("**** DNS Verify 8");
+                                RewriteOn10thRetry(hostsPath, lines, ref retryCount);
                                 throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be [0].");
                             }
                         }
+Log("**** DNS Verify 9");
 
                     }).Wait();
             }
+Log("**** DNS Verify 10");
+}
+catch (Exception e)
+{
+Log("**********************************************************************");
+Log($"**** DNS Verify 11: {NeonHelper.ExceptionError(e)}");
+Log("**********************************************************************");
+            }
 #endif
+        }
+
+        /// <summary>
+        /// Rewrites the hosts file on the 10th retry.
+        /// </summary>
+        /// <param name="hostsPath">Path to the hosts file.</param>
+        /// <param name="lines">The host file lines.</param>
+        /// <param name="retryCount">The retry count.</param>
+        private static void RewriteOn10thRetry(string hostsPath, List<string> lines, ref int retryCount)
+        {
+            if (retryCount++ == 10)
+            {
+                File.WriteAllLines(hostsPath, lines);
+            }
+        }
+        
+        // $todo(jeff.lill): DELETE THIS!
+        private static void Log(string message)
+        {
+            if (NeonHelper.IsWindows)
+            {
+                Directory.CreateDirectory(@"C:\temp");
+                File.AppendAllText(@"C:\temp\login.log", message + "\r\n");
+            }
         }
 
         /// <summary>
