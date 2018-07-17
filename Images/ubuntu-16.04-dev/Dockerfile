@@ -21,7 +21,7 @@ ARG         KERNEL_VERSION
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update \
-    && apt-get install -yq build-essential \
+    && apt-get install -yq build-essential nano \
     && apt-get install -yq linux-headers-${KERNEL_VERSION}-generic \
     && apt-get clean -yq
 
