@@ -235,17 +235,6 @@
     <None Include="test\build.ps1" />
     <None Include="test\publish.ps1" />
     <None Include="test\README.md" />
-    <Content Include="ubuntu-16.04-dev\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="ubuntu-16.04-dev\build.ps1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="ubuntu-16.04-dev\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="ubuntu-16.04-dev\publish.ps1" />
-    <None Include="ubuntu-16.04-dev\README.md" />
     <None Include="ubuntu-16.04-dotnet\build.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
