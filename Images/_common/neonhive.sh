@@ -206,13 +206,57 @@ export HiveConst_HaProxyStatsUri="/_stats?no-cache"
 export HiveConst_HAProxyUidFormat="%{+X}o%ci:%cp_%fi:%fp_%Ts_%rt"
 
 #------------------------------------------------------------------------------
-# NeonHostPorts:
+# HiveHostFolders:
 #
 # Defines the Docker host network ports in the [5000-5499] range reserved 
 # by neonHIVE used by local services, containters and services on the
-# ingress betwork.
+# ingress network.
 #
-# These must match the definitions in [Neon.Hive.NeonHostPorts].
+# These must match the definitions in [Neon.Hive.HiveHostFolders].
+
+# Path to the neonHIVE configuration directory.
+export HiveHostFolders_Config=/etc/neon
+
+# Path to the neonHIVE secrets directory.
+export HiveHostFolders_Secrets=${HOME}/.secrets
+
+# Path to the neonHIVE archive directory.
+export HiveHostFolders_Archive=${HOME}/.archive
+
+# Path to the neonHIVE setup state directory.
+export HiveHostFolders_State=/var/local/neon
+
+# Path to the neonHIVE setup scripts directory.
+export HiveHostFolders_Setup=/lib/neon/setup
+
+# Path to the neonHIVE tools directory.
+export HiveHostFolders_Tools=/lib/neon/tools
+
+# Path to the neonHIVE management scripts directory.
+export HiveHostFolders_Scripts=/lib/neon/scripts
+
+# Path to the neonHIVE source code directory.
+export HiveHostFolders_Source=/lib/neon/src
+
+# The folder where hive tools can upload, unpack, and then
+# execute <see cref="CommandBundle"/>s as well as store temporary
+# command output files.
+export HiveHostFolders_Exec=/var/lib/neon/exec
+
+# Root folder on the local tmpfs (shared memory) folder where 
+# neonHIVE will persist misc temporary files.
+export HiveHostFolders_HiveTmpfs=/dev/shm/neon
+
+# The folder where Docker writes secrets provisioned to a container.
+export HiveHostFolders_DockerSecrets=/var/run/secrets
+
+#------------------------------------------------------------------------------
+# HiveHostPorts:
+#
+# Defines the neonHIVE host network ports in the [5000-5499] range reserved 
+# for local services, containters and services on the ingress network.
+#
+# These must match the definitions in [Neon.Hive.HiveHostPorts].
 
 # The local hive Docker registry port.
 export HiveHostPorts_DockerRegistryLocal=5000;

@@ -12,7 +12,7 @@ This image implements the **neon-proxy-vault** service which is responsible for 
 
 This image derives from **neoncloud/haproxy** but deploys its own **haproxy.cfg** file.  It also ignores the `CONFIG_INTERVAL` environment variable, if passed.
 
-The load balancer service listens internally on the standard Vault **port 8200** which should be published to the Docker ingress network on port `NeonHostPorts.ProxyVault` (**5003**) to make the service available to Docker hosts.
+The load balancer service listens internally on the standard Vault **port 8200** which should be published to the Docker ingress network on port `HiveHostPorts.ProxyVault` (**5003**) to make the service available to Docker hosts.
 
 Note that this image will load environment variables from `/etc/neon/env-host` and `/etc/neon/env-container` if either of these files have been volume mapped into the container.
 

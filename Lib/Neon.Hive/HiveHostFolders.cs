@@ -72,6 +72,11 @@ namespace Neon.Hive
         public const string Scripts = "/lib/neon/scripts";
 
         /// <summary>
+        /// Path to the neonHIVE source code directory.
+        /// </summary>
+        public const string Source = "/lib/neon/src";
+
+        /// <summary>
         /// The folder where hive tools can upload, unpack, and then
         /// execute <see cref="CommandBundle"/>s as well as store temporary
         /// command output files.
