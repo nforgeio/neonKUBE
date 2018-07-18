@@ -253,7 +253,7 @@ TCPKeepAlive yes
                 }
             }
 
-            // Add the global Neon host and hive related environment variables. 
+            // Add the global neonHIVE related environment variables. 
 
             sb.AppendLine($"NEON_HIVE_PROVISIONER={hiveDefinition.Provisioner}");
             sb.AppendLine($"NEON_HIVE={hiveDefinition.Name}");
@@ -285,6 +285,15 @@ TCPKeepAlive yes
 
             sb.AppendLine($"NEON_UPSTREAM_DNS=\"{sbNameservers}\"");
             sb.AppendLine($"NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hiveDefinition)}");
+
+            sb.AppendLine($"NEON_ARCHIVE_FOLDER={HiveHostFolders.Archive}");
+            sb.AppendLine($"NEON_CONFIG_FOLDER={HiveHostFolders.Config}");
+            sb.AppendLine($"NEON_SCRIPTS_FOLDER={HiveHostFolders.Scripts}");
+            sb.AppendLine($"NEON_SECRETS_FOLDER={HiveHostFolders.Secrets}");
+            sb.AppendLine($"NEON_SETUP_FOLDER={HiveHostFolders.Setup}");
+            sb.AppendLine($"NEON_SOURCE_FOLDER={HiveHostFolders.Source}");
+            sb.AppendLine($"NEON_STATE_FOLDER={HiveHostFolders.State}");
+            sb.AppendLine($"NEON_TOOLS_FOLDER={HiveHostFolders.Tools}");
 
             // Append Consul and Vault addresses.
 

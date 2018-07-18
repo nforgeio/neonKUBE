@@ -418,14 +418,14 @@ namespace NeonCli
 
             SetBashVariable(preprocessReader, "node.driveprefix", hiveDefinition.DrivePrefix);
 
+            SetBashVariable(preprocessReader, "neon.folders.archive", HiveHostFolders.Archive);
             SetBashVariable(preprocessReader, "neon.folders.config", HiveHostFolders.Config);
+            SetBashVariable(preprocessReader, "neon.folders.scripts", HiveHostFolders.Scripts);
             SetBashVariable(preprocessReader, "neon.folders.secrets", HiveHostFolders.Secrets);
             SetBashVariable(preprocessReader, "neon.folders.setup", HiveHostFolders.Setup);
-            SetBashVariable(preprocessReader, "neon.folders.tools", HiveHostFolders.Tools);
+            SetBashVariable(preprocessReader, "neon.folders.source", HiveHostFolders.Source);
             SetBashVariable(preprocessReader, "neon.folders.state", HiveHostFolders.State);
-            SetBashVariable(preprocessReader, "neon.folders.secrets", HiveHostFolders.Secrets);
-            SetBashVariable(preprocessReader, "neon.folders.scripts", HiveHostFolders.Scripts);
-            SetBashVariable(preprocessReader, "neon.folders.archive", HiveHostFolders.Archive);
+            SetBashVariable(preprocessReader, "neon.folders.tools", HiveHostFolders.Tools);
             SetBashVariable(preprocessReader, "neon.folders.exec", HiveHostFolders.Exec);
 
             preprocessReader.Set("neon.hosts.neon-log-es-data", HiveHostNames.LogEsData);
