@@ -592,13 +592,13 @@ namespace NeonCli
         /// <typeparam name="TMetadata">The server's metadata type.</typeparam>
         /// <param name="server">The remote server.</param>
         /// <param name="hiveDefinition">The hive definition or <c>null</c>.</param>
-        public static void UploadTools<TMetadata>(this SshProxy<TMetadata> server, HiveDefinition hiveDefinition = null)
+        public static void UploadResources<TMetadata>(this SshProxy<TMetadata> server, HiveDefinition hiveDefinition = null)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(server != null);
 
             //-----------------------------------------------------------------
-            // Clear the contents of the setup scripts folder.
+            // Upload resource files to the setup folder.
 
             server.Status = $"clear: {HiveHostFolders.Setup}";
             server.SudoCommand($"rm -rf {HiveHostFolders.Setup}/*.*");
@@ -612,12 +612,48 @@ namespace NeonCli
                 server.UploadFile(hiveDefinition, file, $"{HiveHostFolders.Setup}/{file.Name}");
             }
 
-            // Make the scripts executable.
+            // Make the setup scripts executable.
 
             server.SudoCommand($"chmod 700 {HiveHostFolders.Setup}/*");
 
             //-----------------------------------------------------------------
-            // Clear the contents of the tools folder.
+            // Upload resource files to the source folder.  Note that we're going
+            // to convert to Linux style line endings and we're going to convert
+            // leading spaces into TABs (4 spaces == 1 TAB).
+
+            // $hack(jeff.lill):
+            //
+            // This is hardcoded to assume that the source consists of a single level
+            // folder with the source files.  If the folders nest eny further, we'll 
+            // need to implement a recursive method to handle this properly.
+            //
+            // This code also assumes that the folder and file names do not include
+            // any spaces.
+
+            server.Status = $"clear: {HiveHostFolders.Source}";
+            server.SudoCommand($"rm -rf {HiveHostFolders.Source}/*.*");
+
+            // Upload the setup files.
+
+            server.Status = "upload: source files";
+
+            foreach (var folder in Program.LinuxFolder.GetFolder("source").Folders())
+            {
+                foreach (var file in folder.Files())
+                {
+                    var targetPath = $"{HiveHostFolders.Source}/{folder.Name}/{file.Name}";
+
+                    server.UploadText(targetPath, file.Contents, tabStop: -4);
+                    server.SudoCommand("chmod 660", targetPath);
+                }
+            }
+
+            // Make the setup scripts executable.
+
+            server.SudoCommand($"chmod 700 {HiveHostFolders.Setup}/*");
+
+            //-----------------------------------------------------------------
+            // Upload files to the tools folder.
 
             server.Status = $"clear: {HiveHostFolders.Tools}";
             server.SudoCommand($"rm -rf {HiveHostFolders.Tools}/*.*");

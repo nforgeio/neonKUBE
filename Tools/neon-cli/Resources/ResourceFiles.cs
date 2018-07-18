@@ -276,6 +276,16 @@ namespace NeonCli
                                     new File("setup-vault-server.sh", hasVariables: true),
                                     new File("setup-vault-client.sh", hasVariables: true)
                                 }),
+                            new Folder("source",
+                                folders: new List<Folder>()
+                                {
+                                    new Folder("xt_DPORT",
+                                        files: new List<File>()
+                                        {
+                                            new File("Makefile", hasVariables: false),
+                                            new File("xt_DPORT.c", hasVariables: false)
+                                        })
+                                }),
                             new Folder("tools",
                                 files: new List<File>()
                                 {

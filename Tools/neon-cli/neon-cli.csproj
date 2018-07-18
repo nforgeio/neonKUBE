@@ -141,6 +141,12 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-vault-server.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\Makefile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\xt_DPORT.c">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\Ubuntu-16.04\tools\docker-volume-create.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
