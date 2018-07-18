@@ -1,0 +1,4 @@
+﻿The \fBDPORT\fR target rewrites the destination port for IPv4 TCP/UDP packets.
+.TP
+\fB\-\-to\-port\fR \fIport\fR
+Network port to be set.

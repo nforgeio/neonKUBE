@@ -282,8 +282,11 @@ namespace NeonCli
                                     new Folder("xt_DPORT",
                                         files: new List<File>()
                                         {
-                                            new File("Makefile", hasVariables: false),
-                                            new File("xt_DPORT.c", hasVariables: false)
+                                            new File("libxt_DPORT.c", hasVariables: false),
+                                            new File("libxt_DPORT.man", hasVariables: false),
+                                            new File("xt_DPORT.c", hasVariables: false),
+                                            new File("xt_DPORT.c", hasVariables: false),
+                                            new File("xt_DPORT.h", hasVariables: false)
                                         })
                                 }),
                             new Folder("tools",

@@ -362,11 +362,19 @@ cat <<EOF > /usr/local/bin/neon-iptables
 #
 # This script runs as a systemd service to configure port 80 and 443 port
 # forwarding rules.  Note that these rules work because [neon-proxy-public]
-# is either running on ever node or we're using the Docker ingress mesh
+# is either running on every node or we're using the Docker ingress mesh
 # network to route these packets to the proxy instances.
 #
-# We're going to loop every 30 seconds to ensure that this gets reconfigured
-# in case the network stack is restarted or Docker messes with the rules.
+# These rules depend on the custom xt_DPORT external table that is capable
+# of modifying the destination port for TCP and UDP packets.  The Source
+# code for this is uploaded to [\$NEON_SOURCE_FOLDER\xt_PORT] and is compiled
+# and installed by this script if necessary when the script is started.
+#
+# Then we're going to loop every 30 seconds to ensure that the rules are
+# reconfigured in case the network stack is restarted or Docker messes with 
+# the rules: port 80/443 --> 5100/5101 translation needs to happen before
+# the DOCKER-INGRESS rules so those packets will be redirected properly 
+# to the [neon-proxy-public].
 #
 # Note that I'm using [--wait] to ensure that  we'll wait for the 
 # [iptables] lock to be released if somebody else (like Docker) is
@@ -530,25 +538,46 @@ function insertOutputRule {
     fi
 }
 
-echo "[INFO] Ensuring that port forwarding rules are valid every [30] seconds."
+# Load the hive configuration.
+
+. $<load-hive-conf>
+
+# Compile the [xt_DPORT] iptables target extension module if it's not already
+# present on this host.
+
+DPORT_MODULE_PATH=/lib/modules/\$(uname -r)/kernel/net/netfilter/xt_DPORT.ko
+
+if [ ! -f "\$DPORT_MODULE_PATH" ] ; then
+    echo "[INFO] Building the xt_DPORT iptables module because it does not exist."
+    pushd \$NEON_SOURCE_FOLDER\xt_DPORT
+    
+    if ! make ; then
+        echo "[ERROR] xt_DPORT iptables module build failed."
+    fi
+
+    cp xt_DPORT.ko \$DPORT_MODULE_PATH
+    popd
+fi
+
+echo "[INFO] Ensuring that port 80/443 forwarding rules are valid every [30] seconds."
 
 while true
 do
     # Port 443 --> 5101 rules
 
-    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
-    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
+    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j DPORT --to-port 5101
+    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j DPORT --to-port 5101
 
-    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
-    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 5101
+    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j DPORT --to-port 5101
+    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j DPORT --to-port 5101
 
     # Port 80 --> 5100 rules
 
-    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
-    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
+    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j DPORT --to-port 5100
+    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j DPORT --to-port 5100
 
-    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
-    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 5100
+    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j DPORT --to-port 5100
+    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j DPORT --to-port 5100
 
     sleep 30
 done
