@@ -721,7 +721,7 @@ OPTIONS:
 
             node.InitializeNeonFolders();
             node.UploadConfigFiles(hive.Definition);
-            node.UploadTools(hive.Definition);
+            node.UploadResources(hive.Definition);
         }
 
         /// <summary>

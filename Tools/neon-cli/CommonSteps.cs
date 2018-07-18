@@ -368,7 +368,7 @@ TCPKeepAlive yes
 
             node.InitializeNeonFolders();
             node.UploadConfigFiles(hiveDefinition);
-            node.UploadTools(hiveDefinition);
+            node.UploadResources(hiveDefinition);
 
             WaitForPackageManager(node);
 

@@ -508,7 +508,7 @@ Server Requirements:
 
             manager.InitializeNeonFolders();
             manager.UploadConfigFiles(hive.Definition);
-            manager.UploadTools(hive.Definition);
+            manager.UploadResources(hive.Definition);
 
             // Install OpenVPN.
 

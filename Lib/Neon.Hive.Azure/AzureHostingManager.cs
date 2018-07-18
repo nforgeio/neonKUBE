@@ -1069,7 +1069,7 @@ namespace Neon.Hive
                     // Dummy health probe (see note below).
 
                     .DefineTcpProbe(probeName)
-                        .WithPort(NeonHostPorts.ReservedUnused)
+                        .WithPort(HiveHostPorts.ReservedUnused)
                         .WithIntervalInSeconds(60)
                         .WithNumberOfProbes(2)
                         .Attach();
@@ -1123,10 +1123,10 @@ namespace Neon.Hive
                 // breach.
 
                 var lbManagerCreator = lbDefManager
-                    .DefineLoadBalancingRule($"neon-unused-tcp-{NeonHostPorts.ReservedUnused}")
+                    .DefineLoadBalancingRule($"neon-unused-tcp-{HiveHostPorts.ReservedUnused}")
                     .WithProtocol(TransportProtocol.Tcp)
                     .WithFrontend(feConfigName)
-                    .WithFrontendPort(NeonHostPorts.ReservedUnused)
+                    .WithFrontendPort(HiveHostPorts.ReservedUnused)
                     .WithProbe(probeName)
                     .WithBackend(bePoolName)
                     .WithIdleTimeoutInMinutes(5)
@@ -1190,7 +1190,7 @@ namespace Neon.Hive
                     // and HAProxy handles internal hive fail-over.
 
                     .DefineTcpProbe(probeName)
-                        .WithPort(NeonHostPorts.ProxyPublicHttp)
+                        .WithPort(HiveHostPorts.ProxyPublicHttp)
                         .WithIntervalInSeconds(5)
                         .WithNumberOfProbes(2)
                         .Attach();
@@ -1230,10 +1230,10 @@ namespace Neon.Hive
                     // breach.
 
                     lbWorkerCreator = lbDefWorker
-                        .DefineLoadBalancingRule($"neon-unused-tcp-{NeonHostPorts.ReservedUnused}")
+                        .DefineLoadBalancingRule($"neon-unused-tcp-{HiveHostPorts.ReservedUnused}")
                         .WithProtocol(TransportProtocol.Tcp)
                         .WithFrontend(feConfigName)
-                        .WithFrontendPort(NeonHostPorts.ReservedUnused)
+                        .WithFrontendPort(HiveHostPorts.ReservedUnused)
                         .WithProbe(probeName)
                         .WithBackend(bePoolName)
                         .WithIdleTimeoutInMinutes(5)

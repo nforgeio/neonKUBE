@@ -200,7 +200,7 @@ namespace NeonCli
 
             // Upload the cache certificates to every hive node at:
             //
-            //      /etc/docker/certs.d/<hostname>:{NeonHostPorts.RegistryCache}/ca.crt
+            //      /etc/docker/certs.d/<hostname>:{HiveHostPorts.RegistryCache}/ca.crt
             //      /usr/local/share/ca-certificates/<hostname>.crt
             //
             // and then have Linux update its known certificates.
