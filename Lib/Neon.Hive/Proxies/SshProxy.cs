@@ -1157,6 +1157,9 @@ namespace Neon.Hive
             SudoCommand($"mkdir -p {HiveHostFolders.Setup}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Setup}", RunOptions.LogOnErrorOnly);
 
+            SudoCommand($"mkdir -p {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
+
             SudoCommand($"mkdir -p {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
 
@@ -1390,7 +1393,10 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="target">The target path on the Linux server.</param>
         /// <param name="textStream">The input stream.</param>
-        /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
+        /// <param name="tabStop">
+        /// Optionally expands TABs into spaces when greater than zero or converts 
+        /// a series of leading spaces into tabs if less than zero.
+        /// </param>
         /// <param name="inputEncoding">Optionally specifies the input text encoding (defaults to UTF-8).</param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <remarks>
@@ -1427,7 +1433,7 @@ namespace Neon.Hive
                     {
                         var convertedLine = line;
 
-                        if (tabStop > 0)
+                        if (tabStop != 0)
                         {
                             convertedLine = NeonHelper.ExpandTabs(convertedLine, tabStop: tabStop);
                         }
@@ -1448,7 +1454,10 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="target">The target path on the Linux server.</param>
         /// <param name="text">The input text.</param>
-        /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
+        /// <param name="tabStop">
+        /// Optionally expands TABs into spaces when greater than zero or converts 
+        /// a series of leading spaces into tabs if less than zero.
+        /// </param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <remarks>
         /// <note>

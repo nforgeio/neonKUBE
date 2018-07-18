@@ -253,7 +253,11 @@ namespace Neon.Common
         /// into spaces such that the tab stops will be formatted correctly.
         /// </summary>
         /// <param name="input">The input string.</param>
-        /// <param name="tabStop">The tab stop width in characters (defaults to <b>4</b>).</param>
+        /// <param name="tabStop">
+        /// Optionally expands TABs into spaces when greater than zero or converts 
+        /// a series of leading spaces into tabs if less than zero.  This defaults
+        /// to <b>4</b>.
+        /// </param>
         /// <returns>The expanded string.</returns>
         /// <remarks>
         /// <note>
@@ -261,13 +265,31 @@ namespace Neon.Common
         /// the output will include line endings for every line, including the
         /// last one.
         /// </note>
+        /// <para>
+        /// A positive <paramref name="tabStop"/> does what you'd expect by converting
+        /// spaces in the string into TABs such that the tab stops align to the value
+        /// passed.  This works a bit differently for negative values.
+        /// </para>
+        /// <para>
+        /// A negative <paramref name="tabStop"/> indicates that leading spaces in each
+        /// line will be converted into TABs.  A value of -1 indicates that each leading
+        /// two spaces will bve converted into a TAB, a value of -2 indicates that each
+        /// leading 2 spaces will be converted into a TAB, and so on.
+        /// </para>
+        /// <para>
+        /// Conversion to TABs will cease when the first non space is ecountered and
+        /// any odd number of spaces remaining will be included in the output.
+        /// </para>
         /// </remarks>
         public static string ExpandTabs(string input, int tabStop = 4)
         {
             Covenant.Requires<ArgumentNullException>(input != null);
-            Covenant.Requires<ArgumentException>(tabStop >= 1);
 
-            if (tabStop == 1)
+            if (tabStop == 0)
+            {
+                return input;
+            }
+            else if (tabStop == 1)
             {
                 return input.Replace('\t', ' ');
             }
@@ -277,41 +299,89 @@ namespace Neon.Common
 
             using (var reader = new StringReader(input))
             {
-                foreach (var line in reader.Lines())
+                if (tabStop > 0)
                 {
-                    var position = 0;
-
-                    foreach (var ch in line)
+                    foreach (var line in reader.Lines())
                     {
-                        if (ch != '\t')
+                        var position = 0;
+
+                        foreach (var ch in line)
                         {
-                            sb.Append(ch);
-                            position++;
+                            if (ch != '\t')
+                            {
+                                sb.Append(ch);
+                                position++;
+                            }
+                            else
+                            {
+                                var spaceCount = tabStop - (position % tabStop);
+
+                                if (spaceCount <= 0)
+                                {
+                                    // If the current position is on a tabstop then we
+                                    // need to inject a full TAB worth of spaces.
+
+                                    spaceCount = tabStop;
+                                }
+
+                                for (int i = 0; i < spaceCount; i++)
+                                {
+                                    sb.Append(' ');
+                                }
+
+                                position += spaceCount;
+                            }
+                        }
+
+                        if (lineEndings)
+                        {
+                            sb.AppendLine();
+                        }
+                    }
+                }
+                else // tabStop < 0
+                {
+                    tabStop = -tabStop;
+
+                    foreach (var line in reader.Lines())
+                    {
+                        var leadingSpaces = 0;
+
+                        foreach (var ch in line)
+                        {
+                            if (ch == ' ')
+                            {
+                                leadingSpaces++;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        if (leadingSpaces == 0)
+                        {
+                            sb.Append(line);
                         }
                         else
                         {
-                            var spaceCount = tabStop - (position % tabStop);
+                            var tabCount = leadingSpaces / tabStop;
 
-                            if (spaceCount <= 0)
+                            if (tabCount == 0)
                             {
-                                // If the current position is on a tabstop then we
-                                // need to inject a full TAB worth of spaces.
-
-                                spaceCount = tabStop;
+                                sb.Append(line);
                             }
-
-                            for (int i = 0; i < spaceCount; i++)
+                            else
                             {
-                                sb.Append(' ');
+                                sb.Append(new string('\t', tabCount));
+                                sb.Append(line.Substring(tabCount * tabStop));
                             }
-
-                            position += spaceCount;
                         }
-                    }
 
-                    if (lineEndings)
-                    {
-                        sb.AppendLine();
+                        if (lineEndings)
+                        {
+                            sb.AppendLine();
+                        }
                     }
                 }
             }

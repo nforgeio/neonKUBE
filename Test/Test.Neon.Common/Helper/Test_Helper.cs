@@ -98,6 +98,10 @@ namespace TestCommon
 
             Assert.Equal("1   2   3", NeonHelper.ExpandTabs("1\t2\t3"));
 
+            // Verify that a zero tab stop returns and unchanged string.
+
+            Assert.Equal("    text", NeonHelper.ExpandTabs("    text", tabStop: 0));
+
             // Test input with line endings.
 
             var sb = new StringBuilder();
@@ -142,6 +146,21 @@ namespace TestCommon
 
             Assert.Equal("1       2       3", NeonHelper.ExpandTabs("1\t2\t3", 8));
 
+            // Verify that a negative tab stop converts spaces into TABs.
+
+            Assert.Equal("text", NeonHelper.ExpandTabs("text", -4));
+            Assert.Equal("\ttext", NeonHelper.ExpandTabs("    text", -4));
+            Assert.Equal("\t\ttext", NeonHelper.ExpandTabs("        text", -4));
+
+            // Verify that we can handle left-over spaces.
+
+            Assert.Equal("  text", NeonHelper.ExpandTabs("  text", -4));
+            Assert.Equal("\t text", NeonHelper.ExpandTabs("     text", -4));
+            Assert.Equal("\t  text", NeonHelper.ExpandTabs("      text", -4));
+
+            // Verify that we don't convert spaces after the first non-space character.
+
+            Assert.Equal("\ttext        x", NeonHelper.ExpandTabs("    text        x", -4));
         }
 
         [Fact]
