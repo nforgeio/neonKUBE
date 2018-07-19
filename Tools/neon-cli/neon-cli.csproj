@@ -141,10 +141,25 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-vault-server.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\Makefile">
+    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\deploy.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\libxt_DPORT.c">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\libxt_DPORT.man">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\Makefile-ko">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\Makefile-so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\xt_DPORT.c">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\xt_DPORT.h">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\Ubuntu-16.04\tools\docker-volume-create.sh">

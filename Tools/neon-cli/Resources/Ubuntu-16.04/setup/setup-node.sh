@@ -330,28 +330,15 @@ systemctl restart neon-disable-thp
 # for deployments with brain-dead consumer quality routers that cannot forward
 # packets to a different port.
 
-# $todo(jeff.lill):
-#
-# For now, this is hardcoded for just ports 80 & 443.  Eventually, it might be
-# handy to make this a hive configuration setting or perhaps a [neon-cli]
-# command so SMTP or other traffic can also be handled.
-
 # $hack(jeff.lill):
 #
 # I'm hardcoding the [neon-proxy-public] ports 5100 and 5101 here rather than
 # adding a new macro.  Hopefully, these ports will never change again.
 
-# $todo(jeff.lill:
-#
-# A possible optimization would be to ensure that these rules are always at 
-# the top of their chains.  This service will do this initially, but it's
-# possible that Docker or something else could rearrange things.
-#
-# I also tried to organize the rules into their own chains and then insert
-# jumps at the top of the chains but I couldn't get this working.  Here's
-# the tracking issue:
-#
-#       https://github.com/jefflill/NeonForge/issues/217
+# We need the iptables development packge so the [neon-iptables] service script
+# below will be able to build the DPORT iptables target extension.
+
+safe-apt-get install -yq iptables-dev
 
 cat <<EOF > /usr/local/bin/neon-iptables
 #!/bin/bash
@@ -545,19 +532,7 @@ function insertOutputRule {
 # Compile the [xt_DPORT] iptables target extension module if it's not already
 # present on this host.
 
-DPORT_MODULE_PATH=/lib/modules/\$(uname -r)/kernel/net/netfilter/xt_DPORT.ko
-
-if [ ! -f "\$DPORT_MODULE_PATH" ] ; then
-    echo "[INFO] Building the xt_DPORT iptables module because it does not exist."
-    pushd \$NEON_SOURCE_FOLDER\xt_DPORT
-    
-    if ! make ; then
-        echo "[ERROR] xt_DPORT iptables module build failed."
-    fi
-
-    cp xt_DPORT.ko \$DPORT_MODULE_PATH
-    popd
-fi
+. /lib/neon/src/xt_DPORT/deploy.sh
 
 echo "[INFO] Ensuring that port 80/443 forwarding rules are valid every [30] seconds."
 

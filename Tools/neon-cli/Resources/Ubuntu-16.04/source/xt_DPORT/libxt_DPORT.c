@@ -10,6 +10,7 @@
 #include <string.h>
 #include <xtables.h>
 #include <linux/netfilter.h>
+#include <linux/netfilter/x_tables.h>
 #include "xt_DPORT.h"
 
 enum {
@@ -41,7 +42,7 @@ static int dport_tg4_parse(int c, char **argv, int invert, unsigned int *flags,
 			if (!xtables_strtoui(optarg, NULL, &port, 1, 65535))
 				xtables_param_act(XTF_BAD_VALUE, "DPORT", "--to-port", optarg);
 
-			info->port = port;
+			info->dport = (__u16)port;
 
 			*flags |= FLAGS_DPORT;
 			return true;
@@ -61,14 +62,14 @@ static void dport_tg4_print(const void *entry, const struct xt_entry_target *tar
 {
 	const struct xt_dport_tginfo *info = (const void *)target->data;
 
-	printf(" to-port %u ", info->port);
+	printf(" to-port %u ", info->dport);
 }
 
 static void dport_tg4_save(const void *entry, const struct xt_entry_target *target)
 {
 	const struct xt_dport_tginfo *info = (const void *)target->data;
 
-	printf(" --to-port %u ", info->port);
+	printf(" --to-port %u ", info->dport);
 }
 
 static struct xtables_target dport_tg_reg[] = {
