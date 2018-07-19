@@ -2616,7 +2616,25 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                     node.Status = "mount file system";
                     node.SudoCommand($"mkdir -p /mnt/neonfs");
-                    node.SudoCommand($"ceph-fuse -m {monNode.PrivateAddress}:6789 /mnt/neonfs");
+
+                    // I've seen this fail with an transient error sometimes because no
+                    // MDS server is ready.  We'll retry a few times to mitigate this.
+
+                    var retry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 10, TimeSpan.FromSeconds(1));
+
+                    retry.InvokeAsync(
+                        async () =>
+                        {
+                            var response = node.SudoCommand($"ceph-fuse -m {monNode.PrivateAddress}:6789 /mnt/neonfs", RunOptions.Defaults & ~RunOptions.FaultOnError);
+
+                            if (response.ExitCode != 0)
+                            {
+                                throw new TransientException(response.ErrorSummary);
+                            }
+
+                            await Task.CompletedTask;
+
+                        }).Wait();
                 });
 
             // $hack(jeff.lill):
