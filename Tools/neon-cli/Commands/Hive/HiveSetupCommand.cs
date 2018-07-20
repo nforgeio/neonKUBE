@@ -2711,6 +2711,7 @@ WantedBy=docker.service
 ");
                     node.SudoCommand("chmod 644 /etc/systemd/system/ceph-fuse-neonfs.service");
                     node.SudoCommand($"systemctl enable ceph-fuse-neonfs.service");
+                    node.SudoCommand($"systemctl start ceph-fuse-neonfs.service");
                 });
 
             if (node == hive.FirstManager)
