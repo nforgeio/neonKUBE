@@ -88,10 +88,5 @@ namespace Neon.Hive
         /// neonHIVE will persist misc temporary files.
         /// </summary>
         public const string HiveTmpfs = "/dev/shm/neon";
-
-        /// <summary>
-        /// The folder where Docker writes secrets provisioned to a container.
-        /// </summary>
-        public const string DockerSecrets = "/var/run/secrets";
     }
 }

@@ -212,5 +212,10 @@ namespace Neon.Hive
         /// Identifies the neonHIVE public Docker registry.
         /// </summary>
         public const string NeonPublicRegistry = "nhive";
+
+        /// <summary>
+        /// The folder where Docker writes secrets provisioned to a container.
+        /// </summary>
+        public const string ContainerSecretsFolder = "/var/run/secrets";
     }
 }

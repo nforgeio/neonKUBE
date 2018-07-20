@@ -993,7 +993,7 @@ namespace Neon.Hive
         /// </remarks>
         public static string GetSecret(string name)
         {
-            var secretPath = Path.Combine(HiveHostFolders.DockerSecrets, name);
+            var secretPath = Path.Combine(HiveConst.ContainerSecretsFolder, name);
 
             try
             {
