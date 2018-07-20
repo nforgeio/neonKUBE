@@ -367,18 +367,22 @@ cat <<EOF > /usr/local/bin/neon-iptables
 # [iptables] lock to be released if somebody else (like Docker) is
 # messing with the rules.
 
-# This returns the position of the DOCKER-INGRESS within the PREROUTING NAT table.
+# Load the hive configuration.
+
+. $<load-hive-conf-quiet>
+
+# This returns the position of the DOCKER-INGRESS within the PREROUTING/RAW table.
 # \$INGRESS_POS will return as 0 if the rule doesn't exist or the position of the rule
 # (first=1).
 
 function getPreroutingIngressPos {
 
-    # This code lists the rules for PREROUTING/NAT, skips the first line, greps for the
+    # This code lists the rules for PREROUTING/RAW, skips the first line, greps for the
     # DOCKER-INGRESS rule, takes the first line and then extracts the line number the 
     # rule appeared on.  If this fails, then the ingress rule doesn't exist and we'll 
     # return 0.
 
-    export INGRESS_POS=\$(iptables --wait -S PREROUTING -t nat | tail -n +2 | grep -nF -- "DOCKER-INGRESS" | head -1 | cut -d : -f 1)
+    export INGRESS_POS=\$(iptables --wait -S PREROUTING -t raw | tail -n +2 | grep -nF -- "DOCKER-INGRESS" | head -1 | cut -d : -f 1)
 
     if [ "\$?" != "0" ] ; then
         export INGRESS_POS=0
@@ -387,7 +391,7 @@ function getPreroutingIngressPos {
     fi
 }
 
-# This returns the position of a rule for PREROUTING/NAT. \$RULE_POS will return as 0 
+# This returns the position of a rule for PREROUTING/RAW. \$RULE_POS will return as 0 
 # if the rule doesn't exist or the position of the rule (first=1).
 #
 # FRAGILE: The rule passed must match the rule output from the [iptables -S] command
@@ -400,7 +404,7 @@ function getPreroutingRulePos {
     # line number the rule appeared on.  If this fails, then the ingress rule doesn't 
     # exist and we'll return 0.
 
-    export RULE_POS=\$(iptables --wait -S PREROUTING -t nat | tail -n +2 | grep -nF -- "\$*" | head -1 | cut -d : -f 1)
+    export RULE_POS=\$(iptables --wait -S PREROUTING -t raw | tail -n +2 | grep -nF -- "\$*" | head -1 | cut -d : -f 1)
 
     if [ "\$?" != "0" ] ; then
         export RULE_POS=0
@@ -409,7 +413,7 @@ function getPreroutingRulePos {
     fi
 }
 
-# This ensures that an [iptables] rule is near the top of the PREROUTING NAT table, 
+# This ensures that an [iptables] rule is near the top of the PREROUTING/RAW table, 
 # before the DOCKER-INGRESS rule.  The function inserts the rule if it doesn't already 
 # exist or relocates an existing rule if it is below the DOCKER-INGRESS rule.
 #
@@ -424,7 +428,7 @@ function insertPreroutingRule {
 
     if [ "\$RULE_POS" == "0" ] ; then
         echo [INFO] Inserting rule: \$*
-        iptables --wait -I PREROUTING -t nat \$*
+        iptables --wait -I PREROUTING -t raw \$*
         return
     fi
 
@@ -434,7 +438,7 @@ function insertPreroutingRule {
     getPreroutingIngressPos
 
     if [ "\$INGRESS_POS" == "0" ] ; then
-        echo "[INFO] There is no DOCKER-INGRESS rule for PREROUTING/NAT."
+        echo "[INFO] There is no DOCKER-INGRESS rule for PREROUTING/RAW."
         return;
     fi
 
@@ -443,19 +447,19 @@ function insertPreroutingRule {
 
         # We'll remove the rule and reinsert it at the top.
 
-        iptables --wait -D PREROUTING -t nat \$*
-        iptables --wait -I PREROUTING -t nat \$*
+        iptables --wait -D PREROUTING -t raw \$*
+        iptables --wait -I PREROUTING -t raw \$*
     fi
 }
 
 function getOutputIngressPos {
 
-    # This code lists the rules for OUTPUT/NAT, skips the first line, greps for the
+    # This code lists the rules for OUTPUT/RAW, skips the first line, greps for the
     # DOCKER-INGRESS rule, takes the first line and then extracts the line number the 
     # rule appeared on.  If this fails, then the ingress rule doesn't exist and we'll 
     # return 0.
 
-    export INGRESS_POS=\$(iptables --wait -S OUTPUT -t nat | tail -n +2 | grep -nF -- "DOCKER-INGRESS" | head -1 | cut -d : -f 1)
+    export INGRESS_POS=\$(iptables --wait -S OUTPUT -t raw | tail -n +2 | grep -nF -- "DOCKER-INGRESS" | head -1 | cut -d : -f 1)
 
     if [ "\$?" != "0" ] ; then
         export INGRESS_POS=0
@@ -464,7 +468,7 @@ function getOutputIngressPos {
     fi
 }
 
-# This returns the position of a rule for OUTPUT/NAT. \$RULE_POS will return as 0 
+# This returns the position of a rule for OUTPUT/RAW. \$RULE_POS will return as 0 
 # if the rule doesn't exist or the position of the rule (first=1).
 #
 # FRAGILE: The rule passed must match the rule output from the [iptables -S] command
@@ -477,7 +481,7 @@ function getOutputRulePos {
     # line number the rule appeared on.  If this fails, then the ingress rule doesn't 
     # exist and we'll return 0.
 
-    export RULE_POS=\$(iptables --wait -S OUTPUT -t nat | tail -n +2 | grep -nF -- "\$*" | head -1 | cut -d : -f 1)
+    export RULE_POS=\$(iptables --wait -S OUTPUT -t raw | tail -n +2 | grep -nF -- "\$*" | head -1 | cut -d : -f 1)
 
     if [ "\$?" != "0" ] ; then
         export RULE_POS=0
@@ -486,7 +490,7 @@ function getOutputRulePos {
     fi
 }
 
-# This ensures that an [iptables] rule is near the top of the OUTPUT NAT table, 
+# This ensures that an [iptables] rule is near the top of the OUTPUT/RAW table, 
 # before the DOCKER-INGRESS rule.  The function inserts the rule if it doesn't already 
 # exist or relocates an existing rule if it is below the DOCKER-INGRESS rule.
 #
@@ -501,7 +505,7 @@ function insertOutputRule {
 
     if [ "\$RULE_POS" == "0" ] ; then
         echo [INFO] Inserting rule: \$*
-        iptables --wait -I OUTPUT -t nat \$*
+        iptables --wait -I OUTPUT -t raw \$*
         return
     fi
 
@@ -511,7 +515,7 @@ function insertOutputRule {
     getOutputIngressPos
 
     if [ "\$INGRESS_POS" == "0" ] ; then
-        echo "[INFO] There is no DOCKER-INGRESS rule for OUTPUT/NAT."
+        echo "[INFO] There is no DOCKER-INGRESS rule for OUTPUT/RAW."
         return;
     fi
 
@@ -520,19 +524,17 @@ function insertOutputRule {
 
         # We'll remove the rule and reinsert it at the top.
 
-        iptables --wait -D OUTPUT -t nat \$*
-        iptables --wait -I OUTPUT -t nat \$*
+        iptables --wait -D OUTPUT -t raw \$*
+        iptables --wait -I OUTPUT -t raw \$*
     fi
 }
 
-# Load the hive configuration.
+# Build and deploy the [xt_DPORT] iptables target extension module.  We need to do this
+# when the service starts to ensure that the module was built using the current Linux
+# kernel headers just in case the kernel has been upgraded.
 
-. $<load-hive-conf>
-
-# Compile the [xt_DPORT] iptables target extension module if it's not already
-# present on this host.
-
-. /lib/neon/src/xt_DPORT/deploy.sh
+echo "[INFO] Build and deploy the iptables DPORT target extension."
+bash \${NEON_SOURCE_FOLDER}/xt_DPORT/deploy.sh
 
 echo "[INFO] Ensuring that port 80/443 forwarding rules are valid every [30] seconds."
 

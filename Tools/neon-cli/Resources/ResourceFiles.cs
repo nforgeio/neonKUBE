@@ -288,7 +288,6 @@ namespace NeonCli
                                             new File("Makefile-ko", hasVariables: false),
                                             new File("Makefile-so", hasVariables: false),
                                             new File("xt_DPORT.c", hasVariables: false),
-                                            new File("xt_DPORT.c", hasVariables: false),
                                             new File("xt_DPORT.h", hasVariables: false)
                                         })
                                 }),
