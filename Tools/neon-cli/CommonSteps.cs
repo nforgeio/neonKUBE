@@ -287,12 +287,15 @@ TCPKeepAlive yes
             sb.AppendLine($"NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hiveDefinition)}");
 
             sb.AppendLine($"NEON_ARCHIVE_FOLDER={HiveHostFolders.Archive}");
+            sb.AppendLine($"NEON_BIN_FOLDER={HiveHostFolders.Bin}");
             sb.AppendLine($"NEON_CONFIG_FOLDER={HiveHostFolders.Config}");
+            sb.AppendLine($"NEON_EXEC_FOLDER={HiveHostFolders.Exec}");
             sb.AppendLine($"NEON_SCRIPTS_FOLDER={HiveHostFolders.Scripts}");
             sb.AppendLine($"NEON_SECRETS_FOLDER={HiveHostFolders.Secrets}");
             sb.AppendLine($"NEON_SETUP_FOLDER={HiveHostFolders.Setup}");
             sb.AppendLine($"NEON_SOURCE_FOLDER={HiveHostFolders.Source}");
             sb.AppendLine($"NEON_STATE_FOLDER={HiveHostFolders.State}");
+            sb.AppendLine($"NEON_TMPFS_FOLDER={HiveHostFolders.Tmpfs}");
             sb.AppendLine($"NEON_TOOLS_FOLDER={HiveHostFolders.Tools}");
 
             // Append Consul and Vault addresses.

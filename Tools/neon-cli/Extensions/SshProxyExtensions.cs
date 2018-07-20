@@ -419,14 +419,16 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "node.driveprefix", hiveDefinition.DrivePrefix);
 
             SetBashVariable(preprocessReader, "neon.folders.archive", HiveHostFolders.Archive);
+            SetBashVariable(preprocessReader, "neon.folders.bin", HiveHostFolders.Bin);
+            SetBashVariable(preprocessReader, "neon.folders.exec", HiveHostFolders.Exec);
             SetBashVariable(preprocessReader, "neon.folders.config", HiveHostFolders.Config);
             SetBashVariable(preprocessReader, "neon.folders.scripts", HiveHostFolders.Scripts);
             SetBashVariable(preprocessReader, "neon.folders.secrets", HiveHostFolders.Secrets);
             SetBashVariable(preprocessReader, "neon.folders.setup", HiveHostFolders.Setup);
             SetBashVariable(preprocessReader, "neon.folders.source", HiveHostFolders.Source);
             SetBashVariable(preprocessReader, "neon.folders.state", HiveHostFolders.State);
+            SetBashVariable(preprocessReader, "neon.folders.tmpfs", HiveHostFolders.Tmpfs);
             SetBashVariable(preprocessReader, "neon.folders.tools", HiveHostFolders.Tools);
-            SetBashVariable(preprocessReader, "neon.folders.exec", HiveHostFolders.Exec);
 
             preprocessReader.Set("neon.hosts.neon-log-es-data", HiveHostNames.LogEsData);
 
@@ -644,7 +646,7 @@ namespace NeonCli
                     var targetPath = $"{HiveHostFolders.Source}/{folder.Name}/{file.Name}";
 
                     server.UploadText(targetPath, file.Contents, tabStop: -4);
-                    server.SudoCommand("chmod 660", targetPath);
+                    server.SudoCommand("chmod 664", targetPath);
                 }
             }
 

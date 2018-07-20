@@ -214,41 +214,41 @@ export HiveConst_HAProxyUidFormat="%{+X}o%ci:%cp_%fi:%fp_%Ts_%rt"
 #
 # These must match the definitions in [Neon.Hive.HiveHostFolders].
 
-# Path to the neonHIVE configuration directory.
-export HiveHostFolders_Config=/etc/neon
-
-# Path to the neonHIVE secrets directory.
-export HiveHostFolders_Secrets=${HOME}/.secrets
-
 # Path to the neonHIVE archive directory.
 export HiveHostFolders_Archive=${HOME}/.archive
 
-# Path to the neonHIVE setup state directory.
-export HiveHostFolders_State=/var/local/neon
+# Path to the neonHIVE executable files directory.
+export HiveHostFolders_Bin=/lib/neon/bin
 
-# Path to the neonHIVE setup scripts directory.
-export HiveHostFolders_Setup=/lib/neon/setup
-
-# Path to the neonHIVE tools directory.
-export HiveHostFolders_Tools=/lib/neon/tools
-
-# Path to the neonHIVE management scripts directory.
-export HiveHostFolders_Scripts=/lib/neon/scripts
-
-# Path to the neonHIVE source code directory.
-export HiveHostFolders_Source=/lib/neon/src
+# Path to the neonHIVE configuration directory.
+export HiveHostFolders_Config=/etc/neon
 
 # The folder where hive tools can upload, unpack, and then
 # execute <see cref="CommandBundle"/>s as well as store temporary
 # command output files.
 export HiveHostFolders_Exec=/var/lib/neon/exec
 
+# Path to the neonHIVE management scripts directory.
+export HiveHostFolders_Scripts=/lib/neon/scripts
+
+# Path to the neonHIVE secrets directory.
+export HiveHostFolders_Secrets=${HOME}/.secrets
+
+# Path to the neonHIVE setup scripts directory.
+export HiveHostFolders_Setup=/lib/neon/setup
+
+# Path to the neonHIVE source code directory.
+export HiveHostFolders_Source=/lib/neon/src
+
+# Path to the neonHIVE setup state directory.
+export HiveHostFolders_State=/var/local/neon
+
 # Root folder on the local tmpfs (shared memory) folder where 
 # neonHIVE will persist misc temporary files.
-export HiveHostFolders_HiveTmpfs=/dev/shm/neon
+export HiveHostFolders_Tmpfs=/dev/shm/neon
 
-# The folder where Docker writes secrets provisioned to a container.
-export HiveHostFolders_DockerSecrets=/var/run/secrets
+# Path to the neonHIVE tools directory.
+export HiveHostFolders_Tools=/lib/neon/tools
 
 #------------------------------------------------------------------------------
 # HiveHostPorts:

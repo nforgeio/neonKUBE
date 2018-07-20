@@ -166,7 +166,7 @@ namespace Neon.Hive
 
         // Path to the transient file on the Linux box whose presence indicates
         // that the server is still rebooting.
-        private readonly string RebootStatusPath = $"{HiveHostFolders.HiveTmpfs}/rebooting";
+        private readonly string RebootStatusPath = $"{HiveHostFolders.Tmpfs}/rebooting";
 
         private object          syncLock   = new object();
         private bool            isDisposed = false;
@@ -1160,6 +1160,9 @@ namespace Neon.Hive
             SudoCommand($"mkdir -p {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
 
+            SudoCommand($"mkdir -p {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+
             SudoCommand($"mkdir -p {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
 
@@ -2003,7 +2006,7 @@ mono {scriptPath}.mono $@
 
             // Create the command folder.
 
-            var shmFolder = $"{HiveHostFolders.HiveTmpfs}/cmd";
+            var shmFolder = $"{HiveHostFolders.Tmpfs}/cmd";
             var cmdFolder = LinuxPath.Combine(shmFolder, Guid.NewGuid().ToString("D"));
 
             SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));

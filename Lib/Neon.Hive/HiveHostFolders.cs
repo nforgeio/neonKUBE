@@ -37,44 +37,19 @@ namespace Neon.Hive
     public static class HiveHostFolders
     {
         /// <summary>
-        /// Path to the neonHIVE configuration directory.
-        /// </summary>
-        public const string Config = "/etc/neon";
-
-        /// <summary>
-        /// Path to the neonHIVE secrets directory.
-        /// </summary>
-        public const string Secrets = "${HOME}/.secrets";
-
-        /// <summary>
         /// Path to the neonHIVE archive directory.
         /// </summary>
         public const string Archive = "${HOME}/.archive";
 
         /// <summary>
-        /// Path to the neonHIVE setup state directory.
+        /// Path to the neonHIVE executable files directory.
         /// </summary>
-        public const string State = "/var/local/neon";
+        public const string Bin = "/lib/neon/bin";
 
         /// <summary>
-        /// Path to the neonHIVE setup scripts directory.
+        /// Path to the neonHIVE configuration directory.
         /// </summary>
-        public const string Setup = "/lib/neon/setup";
-
-        /// <summary>
-        /// Path to the neonHIVE tools directory.
-        /// </summary>
-        public const string Tools = "/lib/neon/tools";
-
-        /// <summary>
-        /// Path to the neonHIVE management scripts directory.
-        /// </summary>
-        public const string Scripts = "/lib/neon/scripts";
-
-        /// <summary>
-        /// Path to the neonHIVE source code directory.
-        /// </summary>
-        public const string Source = "/lib/neon/src";
+        public const string Config = "/etc/neon";
 
         /// <summary>
         /// The folder where hive tools can upload, unpack, and then
@@ -84,9 +59,39 @@ namespace Neon.Hive
         public const string Exec = "/var/lib/neon/exec";
 
         /// <summary>
+        /// Path to the neonHIVE management scripts directory.
+        /// </summary>
+        public const string Scripts = "/lib/neon/scripts";
+
+        /// <summary>
+        /// Path to the neonHIVE secrets directory.
+        /// </summary>
+        public const string Secrets = "${HOME}/.secrets";
+
+        /// <summary>
+        /// Path to the neonHIVE setup scripts directory.
+        /// </summary>
+        public const string Setup = "/lib/neon/setup";
+
+        /// <summary>
+        /// Path to the neonHIVE source code directory.
+        /// </summary>
+        public const string Source = "/lib/neon/src";
+
+        /// <summary>
+        /// Path to the neonHIVE setup state directory.
+        /// </summary>
+        public const string State = "/var/local/neon";
+
+        /// <summary>
         /// Root folder on the local tmpfs (shared memory) folder where 
         /// neonHIVE will persist misc temporary files.
         /// </summary>
-        public const string HiveTmpfs = "/dev/shm/neon";
+        public const string Tmpfs = "/dev/shm/neon";
+
+        /// <summary>
+        /// Path to the neonHIVE tools directory.
+        /// </summary>
+        public const string Tools = "/lib/neon/tools";
     }
 }
