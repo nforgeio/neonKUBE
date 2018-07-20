@@ -211,7 +211,6 @@ namespace Neon.Net
             var updateAddress = new IPAddress(NeonHelper.Rand(int.MaxValue));
             var lines         = new List<string>();
 
-try {
             retryFile.InvokeAsync(
                 async () =>
                 {
@@ -287,7 +286,6 @@ try {
                 //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
             }
 
-Log("**** DNS Verify 0");
             if (NeonHelper.IsWindows || NeonHelper.IsOSX)
             {
                 // Poll the local DNS resolver until it reports the correct address for the
@@ -312,64 +310,39 @@ Log("**** DNS Verify 0");
 
                 var retryCount = 0;
 
-Log("**** DNS Verify 1");
                 retryReady.InvokeAsync(
                     async () =>
                     {
-Log("**** DNS Verify 2");
                         var addresses = await GetHostAddressesAsync(updateHost);
-Log("**** DNS Verify 3");
 
                         if (hostEntries?.Count > 0)
                         {
-Log("**** DNS Verify 4");
                             // Ensure that the new records have been loaded by the resolver.
 
                             if (addresses.Length != 1)
                             {
-Log("**** DNS Verify 5");
-try
-{
-    Log(File.ReadAllText(hostsPath));
-}
-catch (Exception e)
-{
-    Log($"**** DNS Verify 5: {NeonHelper.ExceptionError(e)}");
-}
                                 RewriteOn10thRetry(hostsPath, lines, ref retryCount);
                                 throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be [1].");
                             }
 
                             if (addresses[0].ToString() != updateAddress.ToString())
                             {
-Log("**** DNS Verify 6");
                                 RewriteOn10thRetry(hostsPath, lines, ref retryCount);
                                 throw new NotReadyException($"DNS is [{updateHost}={addresses[0]}] rather than [{updateAddress}].");
                             }
                         }
                         else
                         {
-Log("**** DNS Verify 7");
                             // Ensure that the resolver recognizes that we removed the records.
 
                             if (addresses.Length != 0)
                             {
-Log("**** DNS Verify 8");
                                 RewriteOn10thRetry(hostsPath, lines, ref retryCount);
                                 throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be [0].");
                             }
                         }
-Log("**** DNS Verify 9");
 
                     }).Wait();
-            }
-Log("**** DNS Verify 10");
-}
-catch (Exception e)
-{
-Log("**********************************************************************");
-Log($"**** DNS Verify 11: {NeonHelper.ExceptionError(e)}");
-Log("**********************************************************************");
             }
 #endif
         }
@@ -385,16 +358,6 @@ Log("**********************************************************************");
             if (retryCount++ == 10)
             {
                 File.WriteAllLines(hostsPath, lines);
-            }
-        }
-        
-        // $todo(jeff.lill): DELETE THIS!
-        private static void Log(string message)
-        {
-            if (NeonHelper.IsWindows)
-            {
-                Directory.CreateDirectory(@"C:\temp");
-                File.AppendAllText(@"C:\temp\login.log", message + "\r\n");
             }
         }
 
