@@ -307,6 +307,17 @@ OPTIONS:
             {
                 if (hive.Definition.Ceph.Enabled)
                 {
+                    controller.AddStep("ceph user",
+                        (node, stepDelay) =>
+                        {
+                            // Note that we're creating the Ceph user and group on all cluster
+                            // nodes when Ceph is enabled so that it'll be easier for an operator
+                            // to manually move services around without needing to create these
+                            // as well.
+
+                            CephUser(node, stepDelay);
+                        });
+
                     controller.AddStep("ceph packages",
                         (node, stepDelay) =>
                         {
@@ -320,7 +331,7 @@ OPTIONS:
                         (node, stepDelay) =>
                         {
                             CephBootstrap(node, stepDelay);
-                        }, 
+                        },
                         node => node.Metadata.Labels.CephMON);
 
                     controller.AddStep("ceph cluster",
@@ -2140,7 +2151,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                 node.UploadText(adminKeyringPath, hiveLogin.Ceph.AdminKeyring);
                 node.SudoCommand($"chown {cephUser}:{cephUser} {adminKeyringPath}");
-                node.SudoCommand($"chown 640 {adminKeyringPath}");
+                node.SudoCommand($"chmod 640 {adminKeyringPath}");
             }
         }
 
@@ -2184,6 +2195,33 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                 return string.Empty;
             }
+        }
+
+        /// <summary>
+        ///Creates the Ceph service user and group.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void CephUser(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        {
+            node.InvokeIdempotentAction("setup/ceph-user",
+                () =>
+                {
+                    var cephUser = hive.Definition.Ceph.Username;
+
+                    // Ensure that the Ceph lib folder exists because this acts as
+                    // the HOME directory for the user.
+
+                    node.SudoCommand($"mkdir -p /var/lib/ceph");
+
+                    // Create the [ceph] group.
+
+                    node.SudoCommand($"groupadd --system --force {cephUser}");
+
+                    // Create the [ceph] user.
+
+                    node.SudoCommand($"useradd --system -g ceph --home-dir /var/lib/ceph --comment \"Ceph storage service\" {cephUser}");
+                });
         }
 
         /// <summary>
@@ -2232,7 +2270,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                     node.UploadText(adminKeyringPath, hiveLogin.Ceph.AdminKeyring);
                     node.SudoCommand($"chown {cephUser}:{cephUser} {adminKeyringPath}");
-                    node.SudoCommand($"chown 640 {adminKeyringPath}");
+                    node.SudoCommand($"chmod 640 {adminKeyringPath}");
 
                     // Indicate that we're done configuring the monitor and start it.
 
@@ -2270,7 +2308,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                     node.UploadText(mgrKeyringPath, GetManagerKeyring(node));
                     node.SudoCommand($"chown {cephUser}:{cephUser} {mgrKeyringPath}");
-                    node.SudoCommand($"chown 640 {mgrKeyringPath}");
+                    node.SudoCommand($"chmod 640 {mgrKeyringPath}");
                     node.Status = "ceph-mgr start";
                     node.SudoCommand($"systemctl enable ceph-mgr@{node.Name}");
                     node.SudoCommand($"systemctl start ceph-mgr@{node.Name}");
@@ -2620,7 +2658,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     // I've seen this fail with an transient error sometimes because no
                     // MDS server is ready.  We'll retry a few times to mitigate this.
 
-                    var retry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 10, TimeSpan.FromSeconds(1));
+                    var retry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 30, TimeSpan.FromSeconds(1));
 
                     retry.InvokeAsync(
                         async () =>
