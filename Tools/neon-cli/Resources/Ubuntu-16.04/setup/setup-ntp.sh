@@ -139,9 +139,9 @@ do
     fi
 done
 
-# Generate the [/usr/local/bin/update-time] script.
+# Generate the [${NEON_BIN_FOLDER}/update-time] script.
 
-cat <<EOF > /usr/local/bin/update-time
+cat <<EOF > ${NEON_BIN_FOLDER}/update-time
 #!/bin/bash
 #------------------------------------------------------------------------------
 # This script stops the NTP time service and forces an immediate update.  This 
@@ -177,7 +177,7 @@ if \${restart} ; then
 fi
 EOF
 
-chmod 700 /usr/local/bin/update-time
+chmod 700 ${NEON_BIN_FOLDER}/update-time
 
 # Edit the NTP [/etc/init.d/ntp] script to initialize the hardware clock and
 # call [update-time] before starting NTP.
@@ -257,7 +257,7 @@ case $1 in
 		log_daemon_msg "Finished: Disabling Hyper-V time synchronization" "ntpd"
         
         log_daemon_msg "Start: Updating current time" "ntpd"
-        /usr/local/bin/update-time --norestart
+        ${NEON_BIN_FOLDER}/update-time --norestart
         log_daemon_msg "Finished: Updating current time" "ntpd"
 
         #------------------------------

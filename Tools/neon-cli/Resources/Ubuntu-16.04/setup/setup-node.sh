@@ -340,7 +340,7 @@ systemctl restart neon-disable-thp
 
 safe-apt-get install -yq iptables-dev
 
-cat <<EOF > /usr/local/bin/neon-iptables
+cat <<EOF > ${NEON_BIN_FOLDER}/neon-iptables
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         neon-iptables
@@ -353,15 +353,15 @@ cat <<EOF > /usr/local/bin/neon-iptables
 # network to route these packets to the proxy instances.
 #
 # These rules depend on the custom xt_DPORT external table that is capable
-# of modifying the destination port for TCP and UDP packets.  The Source
+# of modifying the destination port for TCP and UDP packets.  The source
 # code for this is uploaded to [\$NEON_SOURCE_FOLDER\xt_PORT] and is compiled
-# and installed by this script if necessary when the script is started.
+# and installed by this script if necessary when the service is started.
 #
 # Then we're going to loop every 30 seconds to ensure that the rules are
-# reconfigured in case the network stack is restarted or Docker messes with 
-# the rules: port 80/443 --> 5100/5101 translation needs to happen before
-# the DOCKER-INGRESS rules so those packets will be redirected properly 
-# to the [neon-proxy-public].
+# reconfigured in case the network stack is restarted.  Our rules translate
+# TCP ports 80/443 --> 5100/5101 within the PREROUTING/RAW and OUTPUT/RAW
+# tables which will be processed before the NAT tables where the DOCKER-INGRESS
+# rules are added.
 #
 # Note that I'm using [--wait] to ensure that  we'll wait for the 
 # [iptables] lock to be released if somebody else (like Docker) is
@@ -370,26 +370,6 @@ cat <<EOF > /usr/local/bin/neon-iptables
 # Load the hive configuration.
 
 . $<load-hive-conf-quiet>
-
-# This returns the position of the DOCKER-INGRESS within the PREROUTING/RAW table.
-# \$INGRESS_POS will return as 0 if the rule doesn't exist or the position of the rule
-# (first=1).
-
-function getPreroutingIngressPos {
-
-    # This code lists the rules for PREROUTING/RAW, skips the first line, greps for the
-    # DOCKER-INGRESS rule, takes the first line and then extracts the line number the 
-    # rule appeared on.  If this fails, then the ingress rule doesn't exist and we'll 
-    # return 0.
-
-    export INGRESS_POS=\$(iptables --wait -S PREROUTING -t raw | tail -n +2 | grep -nF -- "DOCKER-INGRESS" | head -1 | cut -d : -f 1)
-
-    if [ "\$?" != "0" ] ; then
-        export INGRESS_POS=0
-    elif [ "\$INGRESS_POS" == "" ] ; then
-        export INGRESS_POS=0
-    fi
-}
 
 # This returns the position of a rule for PREROUTING/RAW. \$RULE_POS will return as 0 
 # if the rule doesn't exist or the position of the rule (first=1).
@@ -413,9 +393,7 @@ function getPreroutingRulePos {
     fi
 }
 
-# This ensures that an [iptables] rule is near the top of the PREROUTING/RAW table, 
-# before the DOCKER-INGRESS rule.  The function inserts the rule if it doesn't already 
-# exist or relocates an existing rule if it is below the DOCKER-INGRESS rule.
+# This ensures that an [iptables] rule is near the top.
 #
 # FRAGILE: The rule passed must match the rule output from the [iptables -S] command
 #          exactly for this to work.
@@ -427,44 +405,9 @@ function insertPreroutingRule {
     # Insert the rule if it doesn't already exist.
 
     if [ "\$RULE_POS" == "0" ] ; then
-        echo [INFO] Inserting rule: \$*
+        echo [INFO] Inserting rule: PREROUTING \$*
         iptables --wait -I PREROUTING -t raw \$*
         return
-    fi
-
-    # The rule exists but we still need to verify that it appears above
-    # the DOCKER-INGRESS rule in the table.
-
-    getPreroutingIngressPos
-
-    if [ "\$INGRESS_POS" == "0" ] ; then
-        echo "[INFO] There is no DOCKER-INGRESS rule for PREROUTING/RAW."
-        return;
-    fi
-
-    if [ "\$INGRESS_POS" -lt "\$RULE_POS"  ] ; then
-        echo "[INFO] Relocating PREROUTING rule above DOCKER-INGRESS: \$*"
-
-        # We'll remove the rule and reinsert it at the top.
-
-        iptables --wait -D PREROUTING -t raw \$*
-        iptables --wait -I PREROUTING -t raw \$*
-    fi
-}
-
-function getOutputIngressPos {
-
-    # This code lists the rules for OUTPUT/RAW, skips the first line, greps for the
-    # DOCKER-INGRESS rule, takes the first line and then extracts the line number the 
-    # rule appeared on.  If this fails, then the ingress rule doesn't exist and we'll 
-    # return 0.
-
-    export INGRESS_POS=\$(iptables --wait -S OUTPUT -t raw | tail -n +2 | grep -nF -- "DOCKER-INGRESS" | head -1 | cut -d : -f 1)
-
-    if [ "\$?" != "0" ] ; then
-        export INGRESS_POS=0
-    elif [ "\$INGRESS_POS" == "" ] ; then
-        export INGRESS_POS=0
     fi
 }
 
@@ -490,9 +433,7 @@ function getOutputRulePos {
     fi
 }
 
-# This ensures that an [iptables] rule is near the top of the OUTPUT/RAW table, 
-# before the DOCKER-INGRESS rule.  The function inserts the rule if it doesn't already 
-# exist or relocates an existing rule if it is below the DOCKER-INGRESS rule.
+# This ensures that an [iptables] rule is near the top of the OUTPUT/RAW table.
 #
 # FRAGILE: The rule passed must match the rule output from the [iptables -S] command
 #          exactly for this to work.
@@ -504,42 +445,25 @@ function insertOutputRule {
     # Insert the rule if it doesn't already exist.
 
     if [ "\$RULE_POS" == "0" ] ; then
-        echo [INFO] Inserting rule: \$*
+        echo [INFO] Inserting rule: OUTPUT \$*
         iptables --wait -I OUTPUT -t raw \$*
         return
     fi
-
-    # The rule exists but we still need to verify that it appears above
-    # the DOCKER-INGRESS rule in the table.
-
-    getOutputIngressPos
-
-    if [ "\$INGRESS_POS" == "0" ] ; then
-        echo "[INFO] There is no DOCKER-INGRESS rule for OUTPUT/RAW."
-        return;
-    fi
-
-    if [ "\$INGRESS_POS" -lt "\$RULE_POS"  ] ; then
-        echo "[INFO] Relocating OUTPUT rule above DOCKER-INGRESS: \$*"
-
-        # We'll remove the rule and reinsert it at the top.
-
-        iptables --wait -D OUTPUT -t raw \$*
-        iptables --wait -I OUTPUT -t raw \$*
-    fi
 }
-
-# Build and deploy the [xt_DPORT] iptables target extension module.  We need to do this
-# when the service starts to ensure that the module was built using the current Linux
-# kernel headers just in case the kernel has been upgraded.
-
-echo "[INFO] Build and deploy the iptables DPORT target extension."
-bash \${NEON_SOURCE_FOLDER}/xt_DPORT/deploy.sh
 
 echo "[INFO] Ensuring that port 80/443 forwarding rules are valid every [30] seconds."
 
 while true
 do
+    # Build and deploy the [xt_DPORT] iptables target extension module.  We need to do this
+    # when the service starts to ensure that the module was built using the current Linux
+    # kernel headers just in case the kernel has been upgraded.
+    #
+    # We need to call this within the loop because it's possible for the module to fail
+    # to load because modules it depends on haven't been loaded yet.
+
+    sudo bash \${NEON_SOURCE_FOLDER}/xt_DPORT/deploy.sh
+
     # Port 443 --> 5101 rules
 
     insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j DPORT --to-port 5101
@@ -560,7 +484,7 @@ do
 done
 EOF
 
-chmod 744 /usr/local/bin/neon-iptables
+chmod 744 ${NEON_BIN_FOLDER}/neon-iptables
 
 # Generate the [neon-iptables] systemd unit.
 
@@ -573,7 +497,7 @@ Documentation=
 After=wait-for-network.service
 
 [Service]
-ExecStart=/usr/local/bin/neon-iptables
+ExecStart=${NEON_BIN_FOLDER}/neon-iptables
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -655,7 +579,7 @@ EOF
 # an [exit] code file) and are older than one day (or perhaps even older than an
 # hour or two) and then purge those.  Not a high priority.
 
-cat <<EOF > /usr/local/bin/neon-cleaner
+cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         neon-cleaner
@@ -737,7 +661,7 @@ do
 done
 EOF
 
-chmod 700 /usr/local/bin/neon-cleaner
+chmod 700 ${NEON_BIN_FOLDER}/neon-cleaner
 
 # Generate the [neon-cleaner] systemd unit.
 
@@ -752,7 +676,7 @@ After=local-fs.target
 Requires=local-fs.target
 
 [Service]
-ExecStart=/usr/local/bin/neon-cleaner
+ExecStart=${NEON_BIN_FOLDER}/neon-cleaner
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -1360,7 +1284,7 @@ resolvconf -u
 # watches for a file created by the [neon-dns] Docker service indicating 
 # that the PowerDNS Recursor needs to reload the hosts file.
 
-cat <<EOF > /usr/local/bin/neon-dns-loader
+cat <<EOF > ${NEON_BIN_FOLDER}/neon-dns-loader
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         neon-dns-loader
@@ -1417,7 +1341,7 @@ do
 done
 EOF
 
-chmod 774 /usr/local/bin/neon-dns-loader
+chmod 774 ${NEON_BIN_FOLDER}/neon-dns-loader
 
 cat <<EOF > /lib/systemd/system/neon-dns-loader.service
 # Used by [neon-dns] to have PowerDNS Recursor reload host entries.
@@ -1428,7 +1352,7 @@ Documentation=
 After=
 
 [Service]
-ExecStart=/usr/local/bin/neon-dns-loader
+ExecStart=${NEON_BIN_FOLDER}/neon-dns-loader
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -1436,7 +1360,7 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-chmod -R 744 /usr/local/bin/neon-dns-loader
+chmod -R 744 ${NEON_BIN_FOLDER}/neon-dns-loader
 
 systemctl enable neon-dns-loader
 systemctl daemon-reload
@@ -1457,7 +1381,7 @@ pip install jsondiff
 # Configure a CRON job that performs daily node maintenance including purging
 # unreferenced Docker images.
 
-cat <<EOF > /usr/local/bin/neon-host-maintenance 
+cat <<EOF > ${NEON_BIN_FOLDER}/neon-host-maintenance 
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         neon-host-maintenance
@@ -1471,7 +1395,7 @@ cat <<EOF > /usr/local/bin/neon-host-maintenance
 docker image prune --all --force
 EOF
 
-chmod 744 /usr/local/bin/neon-host-maintenance
+chmod 744 ${NEON_BIN_FOLDER}/neon-host-maintenance
 
 # $todo(jeff.lill):
 #
@@ -1489,7 +1413,7 @@ cat <<EOF > /etc/cron.d/neon-host-maintenance
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-15 21 * * * root /usr/local/bin/neon-host-maintenance
+15 21 * * * root ${NEON_BIN_FOLDER}/neon-host-maintenance
 EOF
 
 chmod 644 /etc/cron.d/neon-host-maintenance

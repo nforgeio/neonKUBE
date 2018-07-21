@@ -29,7 +29,7 @@ cp -r /src/* /work
 
 # Set the package file permissions.
 
-chmod 770 "/work/$packageName/usr/local/bin/neon-volume-plugin"
+chmod 770 "/work/$packageName/lib/neon/bin/neon-volume-plugin"
 chmod 644 "/work/$packageName/lib/systemd/system/neon-volume-plugin.service"
 
 # Build the package.

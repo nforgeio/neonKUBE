@@ -209,6 +209,7 @@ namespace Neon.Hive
             };
 
             controller.AddWaitUntilOnlineStep();
+            controller.AddStep("hive folders", (node, stepDelay) => node.CreateHiveHostFolders());
             controller.AddStep("verify readiness", (node, stepDelay) => VerifyReady(node));
             controller.AddStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
             controller.AddStep("provision virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));

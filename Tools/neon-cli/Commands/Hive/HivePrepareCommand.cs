@@ -138,7 +138,7 @@ Server Requirements:
             }
 
             hiveDefPath = commandLine.Arguments[0];
-            force          = commandLine.GetFlag("--force");
+            force       = commandLine.GetFlag("--force");
 
             HiveDefinition.ValidateFile(hiveDefPath, strict: true);
 
@@ -506,7 +506,7 @@ Server Requirements:
             // common node configuration, but we need some of the scripts
             // here, before that happens.
 
-            manager.InitializeNeonFolders();
+            manager.CreateHiveHostFolders();
             manager.UploadConfigFiles(hive.Definition);
             manager.UploadResources(hive.Definition);
 
@@ -822,7 +822,7 @@ WantedBy=multi-user.target
             // that the filters will always be disabled, even as interfaces are bought up and down.
 
             var disableSpoofUnit =
-@"[Unit]
+$@"[Unit]
 Description=Disable Network Anti-Spoofing Filters
 Documentation=
 After=
@@ -831,7 +831,7 @@ Before=
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/disable-spoof-filters.sh
+ExecStart={HiveHostFolders.Bin}/disable-spoof-filters.sh
 
 [Install]
 WantedBy=multi-user.target
@@ -872,8 +872,8 @@ done";
             manager.UploadText("/lib/systemd/system/disable-spoof-filters.service", disableSpoofUnit);
             manager.SudoCommand("chmod 644 /lib/systemd/system/disable-spoof-filters.service");
 
-            manager.UploadText("/usr/local/bin/disable-spoof-filters.sh", disableSpoofScript);
-            manager.SudoCommand("chmod 770 /usr/local/bin/disable-spoof-filters.sh");
+            manager.UploadText($"{HiveHostFolders.Bin}/ disable-spoof-filters.sh", disableSpoofScript);
+            manager.SudoCommand($"chmod 770 {HiveHostFolders.Bin}/ disable-spoof-filters.sh");
 
             manager.SudoCommand("systemctl enable disable-spoof-filters");
             manager.SudoCommand("systemctl restart disable-spoof-filters");

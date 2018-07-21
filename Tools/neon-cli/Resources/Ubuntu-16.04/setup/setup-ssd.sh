@@ -43,7 +43,7 @@ if ${NEON_NODE_SSD} ; then
 
     echo "*** BEGIN: Tuning for SSD" 1>&2
 
-    # This script works by generating the [/usr/local/neon-tune-ssd.sh] script so that it
+    # This script works by generating the [${NEON_BIN_FOLDER}/neon-tune-ssd] script so that it
     # configures up to 2 boot and 8 data [sd?] devices to:
     #
     #       * Use the [deadline] scheduler
@@ -57,12 +57,21 @@ if ${NEON_NODE_SSD} ; then
 
     read_ahead_size_kb=64
 
-    # Generate [/usr/local/bin/neon-tune-ssd.sh]
+    # Generate [${NEON_BIN_FOLDER}/neon-tune-ssd]
 
-    rm -f /usr/local/bin/neon-tune-ssd.sh
+    rm -f ${NEON_BIN_FOLDER}/neon-tune-ssd
 
-    echo "# This script is generated during setup by [setup-ssd.sh] to execute"         > /usr/local/bin/neon-tune-ssd.sh
-    echo "# the commands necessary to properly tune any attached SSDs"                 >> /usr/local/bin/neon-tune-ssd.sh
+    cat <<EOF > ${NEON_BIN_FOLDER}/neon-tune-ssd
+#!/bin/bash
+#------------------------------------------------------------------------------
+# FILE:         neon-tune-ssd
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+#
+# This script is generated during setup by [setup-ssd.sh] to execute
+# the commands necessary to properly tune any attached SSDs
+
+EOF
 
 	# Note that $<node.driveprefix> will be replaced with something
 	# like [sd] or [xvd].  This comes from the hosting manager used to
@@ -71,16 +80,16 @@ if ${NEON_NODE_SSD} ; then
     for DEVICE in $<node.driveprefix>a $<node.driveprefix>b $<node.driveprefix>c $<node.driveprefix>d $<node.driveprefix>e $<node.driveprefix>f $<node.driveprefix>g $<node.driveprefix>h $<node.driveprefix>i $<node.driveprefix>j
     do
         if [ -d /sys/block/$DEVICE ]; then
-            echo " "                                                                   >> /usr/local/bin/neon-tune-ssd.sh
-            echo "# DEVICE: $DEVICE"                                                   >> /usr/local/bin/neon-tune-ssd.sh
-            echo "# ---------------"                                                   >> /usr/local/bin/neon-tune-ssd.sh
-            echo "echo deadline > /sys/block/$DEVICE/queue/scheduler"                  >> /usr/local/bin/neon-tune-ssd.sh
-            echo "echo 0 > /sys/block/$DEVICE/queue/rotational"                        >> /usr/local/bin/neon-tune-ssd.sh
-            echo "echo ${read_ahead_size_kb} > /sys/block/$DEVICE/queue/read_ahead_kb" >> /usr/local/bin/neon-tune-ssd.sh
+            echo " "                                                                   >> ${NEON_BIN_FOLDER}/neon-tune-ssd
+            echo "# DEVICE: $DEVICE"                                                   >> ${NEON_BIN_FOLDER}/neon-tune-ssd
+            echo "# ---------------"                                                   >> ${NEON_BIN_FOLDER}/neon-tune-ssd
+            echo "echo deadline > /sys/block/$DEVICE/queue/scheduler"                  >> ${NEON_BIN_FOLDER}/neon-tune-ssd
+            echo "echo 0 > /sys/block/$DEVICE/queue/rotational"                        >> ${NEON_BIN_FOLDER}/neon-tune-ssd
+            echo "echo ${read_ahead_size_kb} > /sys/block/$DEVICE/queue/read_ahead_kb" >> ${NEON_BIN_FOLDER}/neon-tune-ssd
         fi
     done
 
-    chmod 700 /usr/local/bin/neon-tune-ssd.sh
+    chmod 700 ${NEON_BIN_FOLDER}/neon-tune-ssd
 
     # Configure and start the [neon-tune-ssd] systemd service.
 
@@ -93,7 +102,7 @@ Requires=
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash /usr/local/bin/neon-tune-ssd.sh
+ExecStart=${NEON_BIN_FOLDER}/neon-tune-ssd
 
 [Install]
 WantedBy=multi-user.target

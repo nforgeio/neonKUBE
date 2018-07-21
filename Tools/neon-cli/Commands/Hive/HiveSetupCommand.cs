@@ -730,7 +730,7 @@ OPTIONS:
 
             // Upload the setup and configuration files.
 
-            node.InitializeNeonFolders();
+            node.CreateHiveHostFolders();
             node.UploadConfigFiles(hive.Definition);
             node.UploadResources(hive.Definition);
         }
@@ -771,15 +771,7 @@ OPTIONS:
 
                     // Ensure that the node has been prepared for setup.
 
-                    var waitedForPackageManager = CommonSteps.PrepareNode(node, hive.Definition);
-
-                    if (!waitedForPackageManager)
-                    {
-                        // Make sure that the APT package manager is ready if
-                        // [CommonSteps.PrepareNode()] hasn't already done that.
-
-                        CommonSteps.WaitForPackageManager(node);
-                    }
+                    CommonSteps.PrepareNode(node, hive.Definition);
 
                     // Create the [/mnt-data] folder if it doesn't already exist.  This folder
                     // is where we're going to host the Docker containers and volumes that should
@@ -839,8 +831,6 @@ OPTIONS:
         {
             node.Status = "rebooting...";
             node.Reboot(wait: true);
-
-            CommonSteps.WaitForPackageManager(node);
         }
 
         /// <summary>

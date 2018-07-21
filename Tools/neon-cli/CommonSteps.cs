@@ -164,47 +164,6 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Waits for the Linux package manager to report being ready.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        /// <remarks>
-        /// The package manager is often busy after a reboot, installing updates.
-        /// This method polls the package manager status until it reports ready.
-        /// </remarks>
-        public static void WaitForPackageManager(SshProxy<NodeDefinition> node)
-        {
-            // $todo(jeff.lill): Remove this method in the future.
-            //
-            // I finally figured out that I can disable the [apt-daily] service
-            // to avoid having to perform this lengthly (and fragile) check.
-            //
-            // I'm going to make this a NOP and retain the calls to this method
-            // for the time being, in case I need to revert this for some reason.
-#if TODO
-            node.Status = "package manager check";
-
-            // Pause to give Linux a chance to boot and actually start any
-            // pending package manager operations.
-
-            Thread.Sleep(TimeSpan.FromSeconds(30));
-
-            // Wait for the package manager to report ready.
-
-            while (true)
-            {
-                if (node.SudoCommand("safe-apt-get check", RunOptions.LogOnErrorOnly).ExitCode == 0)
-                {
-                    break;
-                }
-
-                node.Status = "package manager busy";
-            }
-
-            node.Status = "package manager ready";
-#endif
-        }
-
-        /// <summary>
         /// Configures the global environment variables that describe the configuration 
         /// of the server within the hive.
         /// </summary>
@@ -343,18 +302,17 @@ TCPKeepAlive yes
         /// <param name="node">The target hive node.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        /// <returns>
-        /// <c>true</c> if the method waited for the package manager to become
-        /// ready before returning.
-        /// </returns>
-        public static bool PrepareNode(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition, bool shutdown = false)
+        public static void PrepareNode(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition, bool shutdown = false)
         {
-            var waitedForPackageManager = false;
-
             if (node.FileExists($"{HiveHostFolders.State}/setup/prepared"))
             {
-                return waitedForPackageManager; // Already prepared
+                return;     // Already prepared
             }
+
+            //-----------------------------------------------------------------
+            // Ensure that the hive host folders exist.
+
+            node.CreateHiveHostFolders();
 
             //-----------------------------------------------------------------
             // Package manager configuration.
@@ -377,12 +335,8 @@ TCPKeepAlive yes
             // Other configuration.
 
             ConfigureOpenSSH(node);
-
-            node.InitializeNeonFolders();
             node.UploadConfigFiles(hiveDefinition);
             node.UploadResources(hiveDefinition);
-
-            WaitForPackageManager(node);
 
             if (hiveDefinition != null)
             {
@@ -396,15 +350,7 @@ TCPKeepAlive yes
                 {
                     node.Status = "run: setup-prep-node.sh";
                     node.SudoCommand("setup-prep-node.sh");
-
-                    // Wait for the server a chance to perform any post-update activities
-                    // and then reboot and wait for any post-boot package manager activities.
-
-                    WaitForPackageManager(node);
                     node.Reboot(wait: true);
-                    WaitForPackageManager(node);
-
-                    waitedForPackageManager = true;
                 });
 
             // We need to upload the hive configuration and initialize drives attached 
@@ -438,8 +384,6 @@ TCPKeepAlive yes
                 node.Status = "shutdown";
                 node.SudoCommand("shutdown 0", RunOptions.Defaults | RunOptions.Shutdown);
             }
-
-            return waitedForPackageManager;
         }
     }
 }

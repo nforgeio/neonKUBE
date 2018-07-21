@@ -720,6 +720,10 @@ namespace Neon.Hive
                         node.Status = $"connecting";
                         nodeProxy.WaitForBoot();
 
+                        // We need to ensure that the host folders exist.
+
+                        nodeProxy.CreateHiveHostFolders();
+
                         // Replace the [/etc/network/interfaces] file to configure the static
                         // IP and then reboot to reinitialize networking subsystem.
 

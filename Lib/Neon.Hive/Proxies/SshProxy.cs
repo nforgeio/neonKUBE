@@ -672,7 +672,7 @@ namespace Neon.Hive
 
             try
             {
-                SudoCommand($"touch {RebootStatusPath}");
+                SudoCommand($"mkdir -p {HiveHostFolders.Tmpfs} && touch {RebootStatusPath}");
                 LogLine("*** REBOOT");
                 SudoCommand("reboot", RunOptions.Defaults | RunOptions.Shutdown);
                 LogLine("*** REBOOT submitted");
@@ -1141,18 +1141,60 @@ namespace Neon.Hive
         /// Ensures that the configuration and setup folders required for a Neon host
         /// node exist and have the appropriate permissions.
         /// </summary>
-        public void InitializeNeonFolders()
+        public void CreateHiveHostFolders()
         {
-            Status = "prepare: folders";
+            Status = "prepare: host folders";
+
+            // We need to be connected.
+
+            EnsureSshConnection();
+            EnsureScpConnection();
+
+            // We need to create the folder first without using the safe SshProxy
+            // SudoCommand/RunCommand methods because those methods depend on the 
+            // extstence of this folder.
+
+            var result = sshClient.RunCommand($"sudo mkdir -p {HiveHostFolders.Exec}");
+
+            if (result.ExitStatus != 0)
+            {
+                Log($"Cannot create folder [{HiveHostFolders.Exec}]\n");
+                Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
+                Log(result.Error);
+                Log("END-ERROR:\n");
+                throw new IOException(result.Error);
+            }
+
+            result = sshClient.RunCommand($"sudo chmod 777 {HiveHostFolders.Exec}");   // Allow non-[sudo] access.
+
+            if (result.ExitStatus != 0)
+            {
+                Log($"Cannot chmod folder [{HiveHostFolders.Exec}]\n");
+                Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
+                Log(result.Error);
+                Log("END-ERROR:\n");
+                throw new IOException(result.Error);
+            }
+
+            // Create the folders.
+
+            SudoCommand($"mkdir -p {HiveHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {HiveHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+
+            SudoCommand($"mkdir -p {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Config}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
+            SudoCommand($"mkdir -p {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);   // Allow non-[sudo] access.
+
+            SudoCommand($"mkdir -p {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+
             SudoCommand($"mkdir -p {HiveHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {HiveHostFolders.State}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.State}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Setup}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Setup}", RunOptions.LogOnErrorOnly);
@@ -1160,20 +1202,14 @@ namespace Neon.Hive
             SudoCommand($"mkdir -p {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {HiveHostFolders.State}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {HiveHostFolders.State}", RunOptions.LogOnErrorOnly);
+
+            SudoCommand($"mkdir -p {HiveHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {HiveHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {HiveHostFolders.Archive}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Archive}", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);   // Allow non-[sudo] access.
         }
 
         /// <summary>
@@ -1520,66 +1556,6 @@ namespace Neon.Hive
                 LogException("*** ERROR Downloading", e);
                 throw;
             }
-        }
-
-        /// <summary>
-        /// Uploads a Mono compatible executable to the server and generates a Bash script 
-        /// that seamlessly executes it.
-        /// </summary>
-        /// <param name="sourcePath">The path to the source executable on the local machine.</param>
-        /// <param name="targetName">The name for the target command on the server (without a folder path or file extension).</param>
-        /// <param name="targetFolder">The optional target folder on the server (defaults to <b>/usr/local/bin</b>).</param>
-        /// <param name="permissions">
-        /// The Linux file permissions.  This defaults to <b>"700"</b> which grants only the current user
-        /// read/write/execute permissions.
-        /// </param>
-        /// <remarks>
-        /// <para>
-        /// This method does the following:
-        /// </para>
-        /// <list type="number">
-        /// <item>Uploads the executable to the target folder and names it <paramref name="targetName"/><b>.mono</b>.</item>
-        /// <item>Creates a bash script in the target folder called <paramref name="targetName"/> that executes the Mono file.</item>
-        /// <item>Makes the script executable.</item>
-        /// </list>
-        /// </remarks>
-        public void UploadMonoExecutable(string sourcePath, string targetName, string targetFolder = "/usr/local/bin", string permissions = "700")
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourcePath));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolder));
-
-            using (var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
-            {
-                var binaryPath = LinuxPath.Combine(targetFolder, $"{targetName}.mono");
-
-                Upload(binaryPath, input);
-
-                // Set the permissions on the binary that match those we'll set
-                // for the wrapping script, except stripping off the executable
-                // flags.
-
-                var binaryPermissions = new LinuxPermissions(permissions);
-
-                binaryPermissions.OwnerExecute = false;
-                binaryPermissions.GroupExecute = false;
-                binaryPermissions.AllExecute   = false;
-
-                SudoCommand($"chmod {binaryPermissions} {binaryPath}", RunOptions.LogOnErrorOnly);
-            }
-
-            var scriptPath = LinuxPath.Combine(targetFolder, targetName);
-            var script =
-$@"#!/bin/bash
-#------------------------------------------------------------------------------
-# Seamlessly invokes the [{targetName}.mono] executable using the Mono
-# runtime, passing any arguments along.
-
-mono {scriptPath}.mono $@
-";
-
-            UploadText(scriptPath, script, tabStop: 4);
-            SudoCommand($"chmod {permissions} {scriptPath}", RunOptions.LogOnErrorOnly);
         }
 
         /// <summary>
@@ -2006,8 +1982,8 @@ mono {scriptPath}.mono $@
 
             // Create the command folder.
 
-            var shmFolder = $"{HiveHostFolders.Tmpfs}/cmd";
-            var cmdFolder = LinuxPath.Combine(shmFolder, Guid.NewGuid().ToString("D"));
+            var execFolder = $"{HiveHostFolders.Exec}/cmd";
+            var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("D"));
 
             SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));
 
@@ -2248,7 +2224,7 @@ echo $? > {cmdFolder}/exit
             {
                 // Text output.
 
-                result = SafeRunCommand(command);
+                result   = SafeRunCommand(command);
                 response = new CommandResponse()
                 {
                     Command     = command,
