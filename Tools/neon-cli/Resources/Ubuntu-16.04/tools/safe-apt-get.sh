@@ -23,7 +23,7 @@
 # output streams.  This means that multiple instances of this command won't
 # be able to run in parallel (which probably won't work anyway).
 
-RETRY_COUNT=5
+RETRY_COUNT=10
 RETRY_MIN_SECONDS=5
 RETRY_MAX_SECONDS=30
 
