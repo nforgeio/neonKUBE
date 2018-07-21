@@ -2603,8 +2603,8 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             node.Status = string.Empty;
 
             // We're going to have the first manager create the [neonfs_data] and [neonfs_metadata] storage 
-            // pools and then the [neonFS] filesystem on top of those pools.  Then we'll have the first
-            // manager wait for the filesystem to be created.
+            // pools and then the [neonFS] filesystem using those pools.  Then we'll have the first manager 
+            // wait for the filesystem to be created.
 
             if (node == hive.FirstManager)
             {
@@ -2622,6 +2622,8 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
             try
             {
+                node.Status = "ceph stablizing...";
+
                 NeonHelper.WaitFor(
                     () =>
                     {
@@ -2629,10 +2631,18 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     },
                     timeout: TimeSpan.FromSeconds(120),
                     pollTime: TimeSpan.FromSeconds(2));
+
+                // Wait longer to be really sure the filesystem initialization has completed.
+
+                Thread.Sleep(TimeSpan.FromSeconds(30));
             }
             catch (TimeoutException)
             {
                 node.Fault("Timeout waiting for Ceph file system.");
+            }
+            finally
+            {
+                node.Status = "ceph stablized";
             }
 
             // We're going to use the FUSE client to mount the file system at [/mnt/neonfs].
@@ -2657,6 +2667,28 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                             if (response.ExitCode != 0)
                             {
+                                throw new TransientException(response.ErrorSummary);
+                            }
+
+                            if (response.ErrorText.Contains("ceph mount failed"))
+                            {
+                                // $hack)jeff.lill):
+                                //
+                                // I've seen situations where mounting failed but the exit code was
+                                // still zero.  This appears to be a bug:
+                                //
+                                //      https://tracker.ceph.com/issues/23665
+                                //
+                                // I'm going to detect this case and throw a transient exception
+                                // and retry.
+                                //
+                                // The strange thing is that the command also reports:
+                                //
+                                //      probably no MDS server is up?
+                                //
+                                // but I explicitly verify that the MDS servers are up and active
+                                // above, so I'm not sure why this is failing.
+
                                 throw new TransientException(response.ErrorSummary);
                             }
 
