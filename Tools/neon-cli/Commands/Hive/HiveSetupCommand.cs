@@ -2622,7 +2622,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
             try
             {
-                node.Status = "ceph stablizing...";
+                node.Status = "ceph stablizing (15s)";
 
                 NeonHelper.WaitFor(
                     () =>
@@ -2634,7 +2634,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                 // Wait longer to be really sure the filesystem initialization has completed.
 
-                Thread.Sleep(TimeSpan.FromSeconds(30));
+                Thread.Sleep(TimeSpan.FromSeconds(15));
             }
             catch (TimeoutException)
             {
