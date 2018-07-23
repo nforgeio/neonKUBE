@@ -462,7 +462,7 @@ do
     # We need to call this within the loop because it's possible for the module to fail
     # to load because modules it depends on haven't been loaded yet.
 
-    sudo bash \${NEON_SOURCE_FOLDER}/xt_DPORT/deploy.sh
+    bash \${NEON_SOURCE_FOLDER}/xt_DPORT/deploy.sh
 
     # Port 443 --> 5101 rules
 

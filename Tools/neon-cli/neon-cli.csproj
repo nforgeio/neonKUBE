@@ -150,6 +150,9 @@
     <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\libxt_DPORT.man">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\LICENSE">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\Makefile-ko">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

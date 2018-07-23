@@ -285,6 +285,7 @@ namespace NeonCli
                                             new File("deploy.sh", hasVariables: false),
                                             new File("libxt_DPORT.c", hasVariables: false),
                                             new File("libxt_DPORT.man", hasVariables: false),
+                                            new File("LICENSE", hasVariables: false),
                                             new File("Makefile-ko", hasVariables: false),
                                             new File("Makefile-so", hasVariables: false),
                                             new File("xt_DPORT.c", hasVariables: false),

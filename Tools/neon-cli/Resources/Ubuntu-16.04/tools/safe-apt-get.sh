@@ -24,7 +24,7 @@
 # be able to run in parallel (which probably won't work anyway).
 
 RETRY_COUNT=10
-RETRY_MIN_SECONDS=5
+RETRY_MIN_SECONDS=10
 RETRY_MAX_SECONDS=30
 
 STDOUT_PATH=/tmp/safe-apt-get-out
