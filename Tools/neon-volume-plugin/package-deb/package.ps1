@@ -133,7 +133,7 @@ $packageSrcPath = [io.path]::combine($binPath, $packageName)
 DeleteFolder "$packageSrcPath"
 mkdir "$packageSrcPath"
 mkdir "$packageSrcPath\\DEBIAN"
-mkdir "$packageSrcPath\\usr\\local\\bin"
+mkdir "$packageSrcPath\\lib\\neon\\bin"
 mkdir "$packageSrcPath\\lib\\systemd\\system"
 
 # Copy the Debian package control file, replacing PACKAGE_VERSION with the
@@ -146,7 +146,7 @@ exec { unix-text "$packageSrcPath\\DEBIAN\\control" }
 
 # Copy the plugin binary.
 
-copy "bin\neon-volume-plugin" "$packageSrcPath\\usr\\local\\bin"
+copy "bin\neon-volume-plugin" "$packageSrcPath\\lib\\neon\\bin"
 
 # Copy the systemd service file.
 

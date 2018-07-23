@@ -38,12 +38,12 @@ func toError(text string) error {
 
 func mountPath(volumeName string) string {
 
-	return "/mnt/neonfs/docker/" + volumeName
+	return "/mnt/hivefs/docker/" + volumeName
 }
 
 func fsReady() (bool, error) {
 
-	stat, err := os.Stat("/mnt/neonfs/READY")
+	stat, err := os.Stat("/mnt/hivefs/READY")
 
 	if (err == nil && !stat.IsDir()) {
 
@@ -51,14 +51,14 @@ func fsReady() (bool, error) {
 
 	} else {
 
-		log.Println("[/mnt/neonfs] is not ready.");
+		log.Println("[/mnt/hivefs] is not ready.");
 		return false, fsNotReady()
 	}
 }
 
 func fsNotReady() error {
 
-	return toError("Hive distributed filesystem [/mnt/neonfs] is not ready.")
+	return toError("Hive distributed filesystem [/mnt/hivefs] is not ready.")
 }
 
 func stub(err error) {
@@ -73,7 +73,7 @@ func stub(err error) {
 
 func fsReadyWait() error {
 
-	// Check if neonFS is already ready.
+	// Check if hiveFS is already ready.
 
 	isReady, err := fsReady()
 	if (isReady) {
@@ -82,12 +82,12 @@ func fsReadyWait() error {
 
 	stub(err)
 
-	// We're going to wait for a period of time for neonFS
+	// We're going to wait for a period of time for hiveFS
 	// to become ready.  This most likely happens during
 	// cluster boot where it may take a minute or two for
 	// all of the Ceph services to initialize.
 
-	// We'll send [true] on this channel when neonFS is ready.
+	// We'll send [true] on this channel when hiveFS is ready.
 
 	readyChannel := make(chan bool, 1)	
 	defer close(readyChannel)
@@ -97,7 +97,7 @@ func fsReadyWait() error {
 	timer := time.NewTimer(3 * time.Minute)	// 3 minute timeout
 	defer timer.Stop()
 
-	// Start a go function that polls for neonFS to become
+	// Start a go function that polls for hiveFS to become
 	// ready and then signals on the [readyChannel].
 
 	exit := false
@@ -127,13 +127,13 @@ func fsReadyWait() error {
 	select {
 		case <- readyChannel:
 		
-			log.Println("[/mnt/neonfs] IS READY NOW ***")
+			log.Println("[/mnt/hivefs] IS READY NOW ***")
 			return nil
 
 		case <- timer.C:
 
 			exit = true
-			return toError("Timeout waiting for neonFS to become ready.")
+			return toError("Timeout waiting for hiveFS to become ready.")
 	}
 }
 
@@ -166,7 +166,7 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 	
 	if (volumeExists(request.Name)) {
 
-		// I'm not going to treat this as an error since neonFS is
+		// I'm not going to treat this as an error since hiveFS is
 		// distributed and its likely that folks may have 
 		// already created the volume on another host.
 
@@ -387,7 +387,7 @@ func (driver *neonDriver) List() (*volume.ListResponse, error) {
 	
 	var volumes []*volume.Volume
 
-	files, err := ioutil.ReadDir("/mnt/neonfs/docker")
+	files, err := ioutil.ReadDir("/mnt/hivefs/docker")
 
 	if err == nil {
 

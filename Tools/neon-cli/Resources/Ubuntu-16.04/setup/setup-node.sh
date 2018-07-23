@@ -287,7 +287,8 @@ EOF
 fi
 
 #------------------------------------------------------------------------------
-# Edit [/etc/sysctl.conf] to boost the number of RAM pages a process can map.
+# Edit [/etc/sysctl.conf] to boost the number of RAM pages a process can map
+# as well as increasing the number of available ephemeral TCP ports.
 
 cat <<EOF >> /etc/sysctl.conf
 

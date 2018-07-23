@@ -5,7 +5,7 @@ Wants=docker.service
 
 [Service]
 TimeoutStartSec=0
-ExecStart=lib/neon/bin/neon-volume-plugin
+ExecStart=/lib/neon/bin/neon-volume-plugin
 
 [Install]
 WantedBy=multi-user.target

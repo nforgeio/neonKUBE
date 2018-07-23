@@ -2355,9 +2355,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             public int MDSActiveCount { get; set; }
 
             /// <summary>
-            /// Indicates that the <b>neonFS</b> file system is ready.
+            /// Indicates that the <b>hiveFS</b> file system is ready.
             /// </summary>
-            public bool IsFsReady { get; set; }
+            public bool IsHiveFsReady { get; set; }
         }
 
         /// <summary>
@@ -2452,7 +2452,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
             // $hack(jeff.lill):
             //
-            // Detect if the [neonFS] file system is ready.  There's probably a
+            // Detect if the [hiveFS] file system is ready.  There's probably a
             // way to detect this from the JSON status above but I need to
             // move on to other things.  This is fragile because it assumes
             // that there's only one file system deployed.
@@ -2461,8 +2461,8 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
             if (result.ExitCode == 0)
             {
-                status.IsFsReady = result.OutputText.StartsWith("neonfs-") &&
-                                   result.OutputText.Contains("up:active");
+                status.IsHiveFsReady = result.OutputText.StartsWith("hivefs-") &&
+                                       result.OutputText.Contains("up:active");
             }
 
             return status;
@@ -2602,8 +2602,8 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
             node.Status = string.Empty;
 
-            // We're going to have the first manager create the [neonfs_data] and [neonfs_metadata] storage 
-            // pools and then the [neonFS] filesystem using those pools.  Then we'll have the first manager 
+            // We're going to have the first manager create the [hivefs_data] and [hivefs_metadata] storage 
+            // pools and then the [hiveFS] filesystem using those pools.  Then we'll have the first manager 
             // wait for the filesystem to be created.
 
             if (node == hive.FirstManager)
@@ -2612,9 +2612,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     () =>
                     {
                         node.Status = "create file system";
-                        node.SudoCommand($"ceph osd pool create neonfs_data {hive.Definition.Ceph.OSDPlacementGroups}");
-                        node.SudoCommand($"ceph osd pool create neonfs_metadata {hive.Definition.Ceph.OSDPlacementGroups}");
-                        node.SudoCommand($"ceph fs new neonfs neonfs_metadata neonfs_data");
+                        node.SudoCommand($"ceph osd pool create hivefs_data {hive.Definition.Ceph.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph osd pool create hivefs_metadata {hive.Definition.Ceph.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph fs new hivefs hivefs_metadata hivefs_data");
                     });
             }
 
@@ -2622,19 +2622,19 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
             try
             {
-                node.Status = "ceph stablizing (15s)";
+                node.Status = "ceph stablizing (30s)";
 
                 NeonHelper.WaitFor(
                     () =>
                     {
-                        return GetCephClusterStatus(node).IsFsReady;
+                        return GetCephClusterStatus(node).IsHiveFsReady;
                     },
                     timeout: TimeSpan.FromSeconds(120),
                     pollTime: TimeSpan.FromSeconds(2));
 
                 // Wait longer to be really sure the filesystem initialization has completed.
 
-                Thread.Sleep(TimeSpan.FromSeconds(15));
+                Thread.Sleep(TimeSpan.FromSeconds(30));
             }
             catch (TimeoutException)
             {
@@ -2645,7 +2645,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                 node.Status = "ceph stablized";
             }
 
-            // We're going to use the FUSE client to mount the file system at [/mnt/neonfs].
+            // We're going to use the FUSE client to mount the file system at [/mnt/hivefs].
 
             node.InvokeIdempotentAction("setup/ceph-mount",
                 () =>
@@ -2653,7 +2653,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     var monNode = hive.Definition.SortedNodes.First(n => n.Labels.CephMON);
 
                     node.Status = "mount file system";
-                    node.SudoCommand($"mkdir -p /mnt/neonfs");
+                    node.SudoCommand($"mkdir -p /mnt/hivefs");
 
                     // I've seen this fail with an transient error sometimes because no
                     // MDS server is ready.  We'll retry a few times to mitigate this.
@@ -2663,7 +2663,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     retry.InvokeAsync(
                         async () =>
                         {
-                            var response = node.SudoCommand($"ceph-fuse -m {monNode.PrivateAddress}:6789 /mnt/neonfs", RunOptions.Defaults & ~RunOptions.FaultOnError);
+                            var response = node.SudoCommand($"ceph-fuse -m {monNode.PrivateAddress}:6789 /mnt/hivefs", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                             if (response.ExitCode != 0)
                             {
@@ -2700,9 +2700,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             // $hack(jeff.lill):
             //
             // I couldn't enable the built-in [ceph-fuse@/*.service] to have
-            // [/mnt/neonfs] mount on reboot via:
+            // [/mnt/hivefs] mount on reboot via:
             //
-            //      systemctl enable ceph-fuse@/neonfs.service
+            //      systemctl enable ceph-fuse@/hivefs.service
             //
             // I was seeing an "Invalid argument" error.  I'm going to workaround
             // this by creating and enabling my own service.
@@ -2711,9 +2711,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                 () =>
                 {
                     node.Status = "ceph fuse service";
-                    node.UploadText("/etc/systemd/system/ceph-fuse-neonfs.service",
+                    node.UploadText("/etc/systemd/system/ceph-fuse-hivefs.service",
 $@"[Unit]
-Description=Ceph FUSE client (for /mnt/neonfs)
+Description=Ceph FUSE client (for /mnt/hivefs)
 After=network-online.target local-fs.target time-sync.target
 Wants=network-online.target local-fs.target time-sync.target
 Conflicts=umount.target
@@ -2722,7 +2722,7 @@ PartOf=ceph-fuse.target
 [Service]
 EnvironmentFile=-/etc/default/ceph
 Environment=CLUSTER=ceph
-ExecStart=/usr/bin/ceph-fuse -f --cluster ${{CLUSTER}} /mnt/neonfs
+ExecStart=/usr/bin/ceph-fuse -f --cluster ${{CLUSTER}} /mnt/hivefs
 TasksMax=infinity
 
 {UnitRestartSettings}
@@ -2731,9 +2731,9 @@ TasksMax=infinity
 WantedBy=ceph-fuse.target
 WantedBy=docker.service
 ");
-                    node.SudoCommand("chmod 644 /etc/systemd/system/ceph-fuse-neonfs.service");
-                    node.SudoCommand($"systemctl enable ceph-fuse-neonfs.service");
-                    node.SudoCommand($"systemctl start ceph-fuse-neonfs.service");
+                    node.SudoCommand("chmod 644 /etc/systemd/system/ceph-fuse-hivefs.service");
+                    node.SudoCommand($"systemctl enable ceph-fuse-hivefs.service");
+                    node.SudoCommand($"systemctl start ceph-fuse-hivefs.service");
                 });
 
             if (node == hive.FirstManager)
@@ -2741,16 +2741,16 @@ WantedBy=docker.service
                 node.InvokeIdempotentAction("setup/ceph-fs-init",
                     () =>
                     {
-                        // Initialize [/mnt/neonfs]:
+                        // Initialize [/mnt/hivefs]:
                         //
-                        //      /mnt/neonfs/READY   - Read-only file whose presence indicates that the file system is mounted
-                        //      /mnt/neonfs/docker  - Holds mapped Docker volumes
-                        //      /mnt/neonfs/neon    - Reserved for neonHIVE
+                        //      /mnt/hivefs/READY   - Read-only file whose presence indicates that the file system is mounted
+                        //      /mnt/hivefs/docker  - Holds mapped Docker volumes
+                        //      /mnt/hivefs/neon    - Reserved for neonHIVE
 
                         node.Status = "populate file system";
-                        node.SudoCommand($"touch /mnt/neonfs/READY && chmod 444 /mnt/neonfs/READY");
-                        node.SudoCommand($"mkdir -p /mnt/neonfs/docker && chown root:root /mnt/neonfs/docker && chmod 770 /mnt/neonfs/docker");
-                        node.SudoCommand($"mkdir -p /mnt/neonfs/neon && chown root:root /mnt/neonfs/neon && chmod 770 /mnt/neonfs/neon");
+                        node.SudoCommand($"touch /mnt/hivefs/READY && chmod 444 /mnt/hivefs/READY");
+                        node.SudoCommand($"mkdir -p /mnt/hivefs/docker && chown root:root /mnt/hivefs/docker && chmod 770 /mnt/hivefs/docker");
+                        node.SudoCommand($"mkdir -p /mnt/hivefs/neon && chown root:root /mnt/hivefs/neon && chmod 770 /mnt/hivefs/neon");
                     });
             }
 

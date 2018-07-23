@@ -661,7 +661,7 @@ namespace TestNeonCluster
                 // Verify that the registry is using [Ceph] to persist the images,
                 // as opposed to a standard Docker volume.
 
-                Assert.True(manager.DirectoryExists("/mnt/neonfs/docker/neon-registry/docker/registry/v2"));
+                Assert.True(manager.DirectoryExists("/mnt/hivefs/docker/neon-registry/docker/registry/v2"));
             }
         }
 
