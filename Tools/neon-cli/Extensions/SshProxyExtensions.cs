@@ -618,6 +618,9 @@ namespace NeonCli
 
             server.SudoCommand($"chmod 700 {HiveHostFolders.Setup}/*");
 
+            // Uncomment this if/when we have to upload source files.
+
+#if FALSE
             //-----------------------------------------------------------------
             // Upload resource files to the source folder.  Note that we're going
             // to convert to Linux style line endings and we're going to convert
@@ -635,7 +638,7 @@ namespace NeonCli
             server.Status = $"clear: {HiveHostFolders.Source}";
             server.SudoCommand($"rm -rf {HiveHostFolders.Source}/*.*");
 
-            // Upload the setup files.
+            // Upload the source files.
 
             server.Status = "upload: source files";
 
@@ -649,10 +652,7 @@ namespace NeonCli
                     server.SudoCommand("chmod 664", targetPath);
                 }
             }
-
-            // Make the setup scripts executable.
-
-            server.SudoCommand($"chmod 700 {HiveHostFolders.Setup}/*");
+#endif
 
             //-----------------------------------------------------------------
             // Upload files to the tools folder.

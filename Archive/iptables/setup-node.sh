@@ -322,6 +322,195 @@ systemctl daemon-reload
 systemctl restart neon-disable-thp
 
 #------------------------------------------------------------------------------
+# Configure a simple service that sets up IPTABLES rules that forward TCP
+# packets hitting ports 80 and 443 on any of the [eth#] network interfaces
+# to the [neon-proxy-public] on ports 5100 and 5101.
+#
+# This allows the hive to handle standard HTTP and HTTPS traffic without
+# having to bind to the protected system ports.  This is especially usefuly
+# for deployments with brain-dead consumer quality routers that cannot forward
+# packets to a different port.
+
+# $hack(jeff.lill):
+#
+# I'm hardcoding the [neon-proxy-public] ports 5100 and 5101 here rather than
+# adding a new macro.  Hopefully, these ports will never change again.
+
+# We need the iptables development packge so the [neon-iptables] service script
+# below will be able to build the DPORT iptables target extension.
+
+safe-apt-get install -yq iptables-dev
+
+cat <<EOF > ${NEON_BIN_FOLDER}/neon-iptables
+#!/bin/bash
+#------------------------------------------------------------------------------
+# FILE:         neon-iptables
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+#
+# This script runs as a systemd service to configure port 80 and 443 port
+# forwarding rules.  Note that these rules work because [neon-proxy-public]
+# is either running on every node or we're using the Docker ingress mesh
+# network to route these packets to the proxy instances.
+#
+# These rules depend on the custom xt_DPORT external table that is capable
+# of modifying the destination port for TCP and UDP packets.  The source
+# code for this is uploaded to [\$NEON_SOURCE_FOLDER\xt_PORT] and is compiled
+# and installed by this script if necessary when the service is started.
+#
+# Then we're going to loop every 30 seconds to ensure that the rules are
+# reconfigured in case the network stack is restarted.  Our rules translate
+# TCP ports 80/443 --> 5100/5101 within the PREROUTING/RAW and OUTPUT/RAW
+# tables which will be processed before the NAT tables where the DOCKER-INGRESS
+# rules are added.
+#
+# Note that I'm using [--wait] to ensure that  we'll wait for the 
+# [iptables] lock to be released if somebody else (like Docker) is
+# messing with the rules.
+
+# Load the hive configuration.
+
+. $<load-hive-conf-quiet>
+
+# This returns the position of a rule for PREROUTING/RAW. \$RULE_POS will return as 0 
+# if the rule doesn't exist or the position of the rule (first=1).
+#
+# FRAGILE: The rule passed must match the rule output from the [iptables -S] command
+#          exactly for this to work.
+
+function getPreroutingRulePos {
+
+    # This code lists the rules in the CHAIN/TABLE, skips the first line, greps for
+    # the rule (passed as parameters),  takes the first line and then extracts the 
+    # line number the rule appeared on.  If this fails, then the ingress rule doesn't 
+    # exist and we'll return 0.
+
+    export RULE_POS=\$(iptables --wait -S PREROUTING -t raw | tail -n +2 | grep -nF -- "\$*" | head -1 | cut -d : -f 1)
+
+    if [ "\$?" != "0" ] ; then
+        export RULE_POS=0
+    elif [ "\$RULE_POS" == "" ] ; then
+        export RULE_POS=0
+    fi
+}
+
+# This ensures that an [iptables] rule is near the top.
+#
+# FRAGILE: The rule passed must match the rule output from the [iptables -S] command
+#          exactly for this to work.
+
+function insertPreroutingRule {
+
+    getPreroutingRulePos \$*
+
+    # Insert the rule if it doesn't already exist.
+
+    if [ "\$RULE_POS" == "0" ] ; then
+        echo [INFO] Inserting rule: PREROUTING \$*
+        iptables --wait -I PREROUTING -t raw \$*
+        return
+    fi
+}
+
+# This returns the position of a rule for OUTPUT/RAW. \$RULE_POS will return as 0 
+# if the rule doesn't exist or the position of the rule (first=1).
+#
+# FRAGILE: The rule passed must match the rule output from the [iptables -S] command
+#          exactly for this to work.
+
+function getOutputRulePos {
+
+    # This code lists the rules in the CHAIN/TABLE, skips the first line, greps for
+    # the rule (passed as parameters),  takes the first line and then extracts the 
+    # line number the rule appeared on.  If this fails, then the ingress rule doesn't 
+    # exist and we'll return 0.
+
+    export RULE_POS=\$(iptables --wait -S OUTPUT -t raw | tail -n +2 | grep -nF -- "\$*" | head -1 | cut -d : -f 1)
+
+    if [ "\$?" != "0" ] ; then
+        export RULE_POS=0
+    elif [ "\$RULE_POS" == "" ] ; then
+        export RULE_POS=0
+    fi
+}
+
+# This ensures that an [iptables] rule is near the top of the OUTPUT/RAW table.
+#
+# FRAGILE: The rule passed must match the rule output from the [iptables -S] command
+#          exactly for this to work.
+
+function insertOutputRule {
+
+    getOutputRulePos \$*
+
+    # Insert the rule if it doesn't already exist.
+
+    if [ "\$RULE_POS" == "0" ] ; then
+        echo [INFO] Inserting rule: OUTPUT \$*
+        iptables --wait -I OUTPUT -t raw \$*
+        return
+    fi
+}
+
+echo "[INFO] Ensuring that port 80/443 forwarding rules are valid every [30] seconds."
+
+while true
+do
+    # Build and deploy the [xt_DPORT] iptables target extension module.  We need to do this
+    # when the service starts to ensure that the module was built using the current Linux
+    # kernel headers just in case the kernel has been upgraded.
+    #
+    # We need to call this within the loop because it's possible for the module to fail
+    # to load because modules it depends on haven't been loaded yet.
+
+    bash \${NEON_SOURCE_FOLDER}/xt_DPORT/deploy.sh
+
+    # Port 443 --> 5101 rules
+
+    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j DPORT --to-port 5101
+    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 443 -j DPORT --to-port 5101
+
+    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j DPORT --to-port 5101
+    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 443 -j DPORT --to-port 5101
+
+    # Port 80 --> 5100 rules
+
+    insertPreroutingRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j DPORT --to-port 5100
+    insertOutputRule -d ${NEON_NODE_IP}/32 -p tcp -m tcp --dport 80 -j DPORT --to-port 5100
+
+    insertPreroutingRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j DPORT --to-port 5100
+    insertOutputRule -d 127.0.0.0/8 -p tcp -m tcp --dport 80 -j DPORT --to-port 5100
+
+    sleep 30
+done
+EOF
+
+chmod 744 ${NEON_BIN_FOLDER}/neon-iptables
+
+# Generate the [neon-iptables] systemd unit.
+
+cat <<EOF > /lib/systemd/system/neon-iptables.service
+# A service that configures the port 80 and 443 port forwarding rules.
+
+[Unit]
+Description=neon-iptables
+Documentation=
+After=wait-for-network.service
+
+[Service]
+ExecStart=${NEON_BIN_FOLDER}/neon-iptables
+ExecReload=/bin/kill -s HUP \$MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable neon-iptables
+systemctl daemon-reload
+systemctl restart neon-iptables
+
+#------------------------------------------------------------------------------
 # Configure the systemd journal to perist the journal to the file system at
 # [/var/log/journal].  We need this so the node's [neon-log-host] container
 # will be able to access the journal.

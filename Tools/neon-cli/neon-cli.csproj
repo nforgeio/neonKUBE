@@ -141,30 +141,6 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-vault-server.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\deploy.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\libxt_DPORT.c">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\libxt_DPORT.man">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\LICENSE">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\Makefile-ko">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\Makefile-so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\xt_DPORT.c">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-16.04\source\xt_DPORT\xt_DPORT.h">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\Ubuntu-16.04\tools\docker-volume-create.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -189,6 +165,10 @@
     <None Update="Resources\Ubuntu-16.04\updates\010297_010298.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\Ubuntu-16.04\source\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
