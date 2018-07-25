@@ -55,7 +55,7 @@ namespace Neon.Hive
         /// <param name="rule">The parent rule.</param>
         public void Validate(LoadBalancerValidationContext context, LoadBalancerTcpRule rule)
         {
-            if (!NetHelper.IsValidPort(PublicPort))
+            if (PublicPort > 0 && !NetHelper.IsValidPort(PublicPort))
             {
                 context.Error($"Load balancer [{nameof(PublicPort)}={PublicPort}] is not a valid network port.");
             }

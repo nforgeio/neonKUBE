@@ -297,7 +297,7 @@ namespace NeonCli
                         }
 
                         publicPublish.Add($"--publish");
-                        publicPublish.Add($"{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}:{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}");
+                        publicPublish.Add($"{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PublicProxyPorts.PortRange.LastPort}:{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PublicProxyPorts.PortRange.LastPort}");
 
                         foreach (var port in HiveConst.PrivateProxyPorts.Ports)
                         {
