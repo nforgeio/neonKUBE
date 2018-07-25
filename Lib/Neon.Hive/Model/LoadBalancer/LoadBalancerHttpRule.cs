@@ -49,8 +49,8 @@ namespace Neon.Hive
         /// </para>
         /// <note>
         /// This only works for rules added to the <b>public</b> load balancer on the <b>neon-public</b>
-        /// network and it also works only for HTTPS frontends with the port set to <b>0/5101</b>
-        /// and HTTP frontends with the port set to <b>0/5100</b>.
+        /// network and it also works only for HTTP frontends with the port set to <b>0/80</b>
+        /// and HTTPS frontends with the port set to <b>0/443</b>.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "HttpsRedirect", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -230,8 +230,8 @@ namespace Neon.Hive
                     //-------------------------------------------------------------
                     // This is where we implicitly add an HTTP rule for each HTTPS rule
                     // that redirects from the [http://] scheme to [https://].  We're 
-                    // going to clone each HTTPS frontend that targets the default port
-                    // [0/5100], and set [CertName=null] and then add this to the rule
+                    // going to clone each HTTPS frontend to target the default port
+                    // [0/80], and set [CertName=null] and then add this to the rule
                     // as the HTTP frontend, if it doesn't already exist.
 
                     // Create a set of the hosts for the HTTP frontends explicitly specified 

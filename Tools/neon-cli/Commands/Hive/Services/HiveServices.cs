@@ -199,15 +199,13 @@ namespace NeonCli
                     hive.PublicLoadBalancer.UpdateSettings(
                         new LoadBalancerSettings()
                         {
-                            FirstPort = HiveHostPorts.ProxyPublicFirst,
-                            LastPort  = HiveHostPorts.ProxyPublicLast
+                            ProxyPorts = HiveConst.PublicProxyPorts
                         });
 
                     hive.PrivateLoadBalancer.UpdateSettings(
                         new LoadBalancerSettings()
                         {
-                            FirstPort = HiveHostPorts.ProxyPrivateFirst,
-                            LastPort  = HiveHostPorts.ProxyPrivateLast
+                            ProxyPorts = HiveConst.PrivateProxyPorts
                         });
 
                     // Deploy the proxy manager service.
@@ -263,13 +261,25 @@ namespace NeonCli
                         // The parameterized [service create --publish] option doesn't handle port ranges so we need to 
                         // specify multiple publish options.
 
-                        for (int port = HiveHostPorts.ProxyPublicFirst; port <= HiveHostPorts.ProxyPublicLast; port++)
+                        foreach (var port in HiveConst.PublicProxyPorts.Ports)
                         {
                             publicPublish.Add($"--publish");
                             publicPublish.Add($"mode=host,published={port},target={port}");
                         }
 
-                        for (int port = HiveHostPorts.ProxyPrivateFirst; port <= HiveHostPorts.ProxyPrivateLast; port++)
+                        for (int port = HiveConst.PublicProxyPorts.PortRange.FirstPort; port <= HiveConst.PublicProxyPorts.PortRange.LastPort; port++)
+                        {
+                            publicPublish.Add($"--publish");
+                            publicPublish.Add($"mode=host,published={port},target={port}");
+                        }
+
+                        foreach (var port in HiveConst.PrivateProxyPorts.Ports)
+                        {
+                            privatePublish.Add($"--publish");
+                            privatePublish.Add($"mode=host,published={port},target={port}");
+                        }
+
+                        for (int port = HiveConst.PrivateProxyPorts.PortRange.FirstPort; port <= HiveConst.PrivateProxyPorts.PortRange.LastPort; port++)
                         {
                             privatePublish.Add($"--publish");
                             privatePublish.Add($"mode=host,published={port},target={port}");
@@ -280,11 +290,23 @@ namespace NeonCli
                     }
                     else
                     {
+                        foreach (var port in HiveConst.PublicProxyPorts.Ports)
+                        {
+                            publicPublish.Add($"--publish");
+                            publicPublish.Add($"{port}:{port}");
+                        }
+
                         publicPublish.Add($"--publish");
-                        publicPublish.Add($"{HiveHostPorts.ProxyPublicFirst}-{HiveHostPorts.ProxyPublicLast}:{HiveHostPorts.ProxyPublicFirst}-{HiveHostPorts.ProxyPublicLast}");
+                        publicPublish.Add($"{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}:{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}");
+
+                        foreach (var port in HiveConst.PrivateProxyPorts.Ports)
+                        {
+                            privatePublish.Add($"--publish");
+                            privatePublish.Add($"{port}:{port}");
+                        }
 
                         privatePublish.Add($"--publish");
-                        privatePublish.Add($"{HiveHostPorts.ProxyPrivateFirst}-{HiveHostPorts.ProxyPrivateLast}:{HiveHostPorts.ProxyPrivateFirst}-{HiveHostPorts.ProxyPrivateLast}");
+                        privatePublish.Add($"{HiveConst.PrivateProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}:{HiveConst.PrivateProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}");
 
                         proxyConstraint.Add($"--constraint");
                         proxyReplicas.Add("--replicas");

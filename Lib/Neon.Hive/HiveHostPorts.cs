@@ -39,6 +39,13 @@ namespace Neon.Hive
     ///     </description>
     /// </item>
     /// <item>
+    ///     <term><b>80/443</b></term>
+    ///     <description>
+    ///     Reserved HTTP/HTTPS services proxied by the <b>neon-proxy-public</b> 
+    ///     service on the <b>neon-public</b> network.
+    ///     </description>
+    /// </item>
+    /// <item>
     ///     <term><b>5100-5299</b></term>
     ///     <description>
     ///     Reserved for services proxied by the <b>neon-proxy-public</b> service
@@ -122,11 +129,14 @@ namespace Neon.Hive
         public const int ReservedUnused = 5099;
 
         //---------------------------------------------------------------------
-        // Ports [5100-5299] are reserved for the public proxy that routes
-        // external traffic into the hive.
+        // Ports [80/443] and [5100-5299] are reserved for the public proxy that 
+        // routes external traffic into the hive.
         //
-        // [5100-5102] are used to route general purpose HTTP/S traffic
-        //             to both neonHIVE and application services.
+        // [80/443]    are used to route external HTTP/HTTPS traffic
+        //             into the hive.
+        //
+        // [5100-5102] are used to route general purpose TCP and specialized 
+        //             HTTP/S traffic to application services.
         //
         // [5102-5109] are reserved for internal neonHIVE TCP routes.
         //
@@ -147,13 +157,13 @@ namespace Neon.Hive
         /// The <b>neon-proxy-public</b> service port for routing external HTTP
         /// (e.g. Internet) requests to services within the hive.
         /// </summary>
-        public const int ProxyPublicHttp = 5100;
+        public const int ProxyPublicHttp = 80;
 
         /// <summary>
         /// The <b>neon-proxy-public</b> service port for routing external HTTPS
         /// (e.g. Internet) requests to services within the hive.
         /// </summary>
-        public const int ProxyPublicHttps = 5101;
+        public const int ProxyPublicHttps = 443;
 
         /// <summary>
         /// The first <b>neon-proxy-public</b> port available for routing custom

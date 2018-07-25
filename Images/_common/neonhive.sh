@@ -296,13 +296,13 @@ export HiveHostPorts_ReservedUnused=5099
 # Ports [5100-5299] are reserved for the public proxy that routes
 # external traffic into the hive.
 #
-# [5100-5102] are used to route general purpose HTTP/S traffic
+# [80/443]    are used to route general purpose HTTP/S traffic
 #             to both neonHIVE and application services.
 #
-# [5102-5109] are reserved for internal neonHIVE TCP routes.
+# [5100-5109] are reserved for internal neonHIVE TCP routes.
 #
 # [5120-5299] are available for use by application services for TCP or
-#             HTTP/S traffic.
+#             specialized HTTP/S traffic.
 
 # The public proxy port range.
 export HiveHostPorts_ProxyPublicFirst=5100
@@ -310,11 +310,11 @@ export HiveHostPorts_ProxyPublicLast=5299
 
 # The [neon-proxy-public] service port for routing external HTTP
 # (aka Internet) requests to services within the hive.
-export HiveHostPorts_ProxyPublicHttp=5100
+export HiveHostPorts_ProxyPublicHttp=80
 
 # The [neon-proxy-public] service port for routing external HTTPS
 # (aka Internet) requests to services within the hive.
-export HiveHostPorts_ProxyPublicHttps=5101
+export HiveHostPorts_ProxyPublicHttps=443
 
 # The first [neon-proxy-public] port available for routing custom
 # HTTP/S or TCP services.

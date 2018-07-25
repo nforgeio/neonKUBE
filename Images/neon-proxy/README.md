@@ -123,6 +123,8 @@ docker service create \
     --env LOG_LEVEL=INFO \
     --env DEBUG=false \
     --env VAULT_SKIP_VERIFY=true \
+    --publish 80:80 \
+    --publish 443:443 \
     --publish 5100-5299:5100-5299 \
     --secret neon-proxy-public-credentials \
     --constraint node.role!=manager \

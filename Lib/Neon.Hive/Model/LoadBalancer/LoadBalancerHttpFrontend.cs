@@ -250,9 +250,9 @@ namespace Neon.Hive
 
             if (ProxyPort != 0)
             {
-                if (ProxyPort < context.Settings.FirstPort || context.Settings.LastPort < ProxyPort)
+                if (!context.Settings.ProxyPorts.IsValidPort(ProxyPort))
                 {
-                    context.Error($"Rule [{rule.Name}] assigns [{nameof(ProxyPort)}={ProxyPort}] which is outside the range of valid frontend ports for this load balancer [{context.Settings.FirstPort}...{context.Settings.LastPort}].");
+                    context.Error($"Rule [{rule.Name}] assigns [{nameof(ProxyPort)}={ProxyPort}] which is outside the range of valid frontend ports for this load balancer [{context.Settings.ProxyPorts}].");
                 }
             }
             else

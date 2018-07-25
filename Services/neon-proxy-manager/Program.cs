@@ -233,7 +233,7 @@ namespace NeonProxyManager
             log.LogInfo(() => $"Using setting [{fallbackPollSecondsKey}={fallbackPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{certWarnDaysKey}={certWarnTime.TotalSeconds}]");
 
-            // The implementation is pretty straight forward: We're going to watch
+            // The implementation is pretty straightforward: We're going to watch
             // the [neon/service/neon-proxy-manager/conf/reload] hash for changes 
             // with the timeout set to [pollTime].  This key will be updated to a 
             // new UUID whenever [neon-cli] modifies a hive certificate or any 
@@ -487,21 +487,18 @@ namespace NeonProxyManager
                 {
                     // Initialize default settings for the load balancer if they aren't written to Consul yet.
 
-                    int firstProxyPort;
-                    int lastProxyPort;
+                    HiveProxyPorts proxyPorts;
 
                     switch (loadBalancerName)
                     {
                         case "public":
 
-                            firstProxyPort = HiveHostPorts.ProxyPublicFirst;
-                            lastProxyPort  = HiveHostPorts.ProxyPublicLast;
+                            proxyPorts = HiveConst.PublicProxyPorts;
                             break;
 
                         case "private":
 
-                            firstProxyPort = HiveHostPorts.ProxyPrivateFirst;
-                            lastProxyPort  = HiveHostPorts.ProxyPrivateLast;
+                            proxyPorts = HiveConst.PrivateProxyPorts;
                             break;
 
                         default:
@@ -511,8 +508,7 @@ namespace NeonProxyManager
 
                     settings = new LoadBalancerSettings()
                     {
-                        FirstPort = firstProxyPort,
-                        LastPort  = lastProxyPort
+                        ProxyPorts = proxyPorts
                     };
 
                     log.LogInfo(() => $"Updating proxy [{proxyDisplayName}] settings.");

@@ -85,16 +85,10 @@ namespace Neon.Hive
         // Instance members
 
         /// <summary>
-        /// First reserved port on the Docker ingress network in the block allocated to this load balancer.
+        /// Describes the individual ports and port ranges exposed by a hive proxy.
         /// </summary>
-        [JsonProperty(PropertyName = "FirstPort", Required = Required.Always)]
-        public int FirstPort { get; set; } = 0;
-
-        /// <summary>
-        /// Last reserved port on the Docker ingress network in the block allocated to this load balancer.
-        /// </summary>
-        [JsonProperty(PropertyName = "LastPort", Required = Required.Always)]
-        public int LastPort { get; set; } = 0;
+        [JsonProperty(PropertyName = "ProxyPorts", Required = Required.Always)]
+        public HiveProxyPorts ProxyPorts { get; set; }
 
         /// <summary>
         /// Returns the standard reserved HTTP port.
@@ -102,7 +96,15 @@ namespace Neon.Hive
         [JsonIgnore]
         public int DefaultHttpPort
         {
-            get { return FirstPort; }
+            get
+            {
+                if (ProxyPorts.Ports.Contains(80))
+                {
+                    return 80;
+                }
+
+                return ProxyPorts.PortRange.FirstPort;
+            }
         }
 
         /// <summary>
@@ -111,7 +113,15 @@ namespace Neon.Hive
         [JsonIgnore]
         public int DefaultHttpsPort
         {
-            get { return FirstPort + 1; }   // $hack(jeff.lill): Hardcodes the convention
+            get
+            {
+                if (ProxyPorts.Ports.Contains(443))
+                {
+                    return 443;
+                }
+
+                return ProxyPorts.PortRange.FirstPort + 1;
+            }
         }
 
         /// <summary>
@@ -120,7 +130,22 @@ namespace Neon.Hive
         [JsonIgnore]
         public int FirstTcpPort
         {
-            get { return FirstPort + 2; }   // $hack(jeff.lill): Hardcodes the convention
+            get
+            {
+                if (ProxyPorts.Ports.Contains(80) && ProxyPorts.Ports.Contains(443))
+                {
+                    return ProxyPorts.PortRange.FirstPort;
+                }
+                else if (!ProxyPorts.Ports.Contains(80) && !ProxyPorts.Ports.Contains(443))
+                {
+                    return ProxyPorts.PortRange.FirstPort + 2;
+                }
+                else
+                {
+                    Covenant.Assert(false, "Unexpected load balancer configuration.");
+                    throw new InvalidOperationException();
+                }
+            }
         }
 
         /// <summary>
@@ -239,11 +264,11 @@ namespace Neon.Hive
                     });
             }
 
-            if (!NetHelper.IsValidPort(FirstPort) ||
-                !NetHelper.IsValidPort(LastPort) ||
-                LastPort <= FirstPort + 1)
+            if (!NetHelper.IsValidPort(ProxyPorts.PortRange.FirstPort) ||
+                !NetHelper.IsValidPort(ProxyPorts.PortRange.LastPort) ||
+                ProxyPorts.PortRange.LastPort <= ProxyPorts.PortRange.FirstPort + 1)
             {
-                context.Error($"Load balancer port block [{FirstPort}-{LastPort}] range is not valid.");
+                context.Error($"Load balancer port block [{ProxyPorts.PortRange.FirstPort}-{ProxyPorts.PortRange.LastPort}] range is not valid.");
             }
 
             if (MaxConnections <= 0)

@@ -55,14 +55,14 @@ namespace Neon.Hive
         /// <param name="rule">The parent rule.</param>
         public void Validate(LoadBalancerValidationContext context, LoadBalancerTcpRule rule)
         {
-            if (ProxyPort < context.Settings.FirstTcpPort || context.Settings.LastPort < ProxyPort)
-            {
-                context.Error($"Rule [{rule.Name}] assigns [{nameof(ProxyPort)}={ProxyPort}] which is outside the range of valid frontend TCP ports for this load balancer [{context.Settings.FirstTcpPort}...{context.Settings.LastPort}].");
-            }
-
-            if (PublicPort > 0 && !NetHelper.IsValidPort(PublicPort))
+            if (!NetHelper.IsValidPort(PublicPort))
             {
                 context.Error($"Load balancer [{nameof(PublicPort)}={PublicPort}] is not a valid network port.");
+            }
+            
+            if (!context.Settings.ProxyPorts.IsValidTcpPort(ProxyPort))
+            {
+                context.Error($"Rule [{rule.Name}] assigns [{nameof(ProxyPort)}={ProxyPort}] which is outside the range of valid frontend TCP ports for this load balancer [{context.Settings.ProxyPorts}].");
             }
         }
     }
