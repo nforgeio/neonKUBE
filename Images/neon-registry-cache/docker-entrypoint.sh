@@ -4,6 +4,12 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
+# Add the root directory to the PATH.
+
+PATH=${PATH}:/
+
+# Log startup information.
+
 . log-info.sh "Starting [neon-registry-cache]"
 
 # Handle the environment variables. 
@@ -36,10 +42,6 @@ fi
 . log-info.sh "USERNAME=${USERNAME}"
 . log-info.sh "PASSWORD=**REDACTED**"
 . log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
-
-# Add the root directory to the PATH.
-
-PATH=${PATH}:/
 
 # Verify that cache TLS certificates have been mounted.
 

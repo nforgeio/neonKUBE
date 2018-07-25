@@ -6,6 +6,12 @@
 #
 # Loads the Docker host node environment variables before launching HAProxy.
 
+# Add the root directory to the PATH.
+
+PATH=${PATH}:/
+
+# Log startup information.
+
 . log-info.sh "Starting [neon-proxy]"
 . log-info.sh "CONFIG_KEY=${CONFIG_KEY}"
 . log-info.sh "CONFIG_HASH_KEY=${CONFIG_HASH_KEY}"
@@ -15,10 +21,6 @@
 . log-info.sh "POLL_SECONDS=${POLL_SECONDS}"
 . log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
 . log-info.sh "DEBUG=${DEBUG}"
-
-# Add the root directory to the PATH.
-
-PATH=${PATH}:/
 
 # Load the Docker host node environment variables if present.
 

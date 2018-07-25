@@ -4,6 +4,12 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
+# Add the root directory to the PATH.
+
+PATH=${PATH}:/
+
+# Log startup information.
+
 . log-info.sh "Starting [neon-registry]"
 
 # Handle the environment variables. 
@@ -36,10 +42,6 @@ fi
 . log-info.sh "SECRET=**REDACTED**"
 . log-info.sh "READ_ONLY=${READ_ONLY}"
 . log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
-
-# Add the root directory to the PATH.
-
-PATH=${PATH}:/
 
 # Warn if no external data volume is mounted.
 
