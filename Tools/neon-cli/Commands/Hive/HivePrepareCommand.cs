@@ -872,8 +872,8 @@ done";
             manager.UploadText("/lib/systemd/system/disable-spoof-filters.service", disableSpoofUnit);
             manager.SudoCommand("chmod 644 /lib/systemd/system/disable-spoof-filters.service");
 
-            manager.UploadText($"{HiveHostFolders.Bin}/ disable-spoof-filters.sh", disableSpoofScript);
-            manager.SudoCommand($"chmod 770 {HiveHostFolders.Bin}/ disable-spoof-filters.sh");
+            manager.UploadText($"{HiveHostFolders.Bin}/disable-spoof-filters.sh", disableSpoofScript);
+            manager.SudoCommand($"chmod 770 {HiveHostFolders.Bin}/disable-spoof-filters.sh");
 
             manager.SudoCommand("systemctl enable disable-spoof-filters");
             manager.SudoCommand("systemctl restart disable-spoof-filters");
