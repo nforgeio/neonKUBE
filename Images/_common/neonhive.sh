@@ -226,7 +226,7 @@ export HiveHostFolders_Config=/etc/neon
 # The folder where hive tools can upload, unpack, and then
 # execute <see cref="CommandBundle"/>s as well as store temporary
 # command output files.
-export HiveHostFolders_Exec=/var/lib/neon/exec
+export HiveHostFolders_Exec=${HOME}/.exec
 
 # Path to the neonHIVE management scripts directory.
 export HiveHostFolders_Scripts=/lib/neon/scripts

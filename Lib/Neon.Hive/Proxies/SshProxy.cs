@@ -1249,7 +1249,7 @@ namespace Neon.Hive
                 throw new IOException(result.Error);
             }
 
-            result = sshClient.RunCommand($"sudo chmod 777 {HiveHostFolders.Exec}");   // Allow non-[sudo] access.
+            result = sshClient.RunCommand($"sudo chmod 770 {HiveHostFolders.Exec}");   // Allow non-[sudo] access.
 
             if (result.ExitStatus != 0)
             {
@@ -1272,7 +1272,7 @@ namespace Neon.Hive
             SudoCommand($"chmod 600 {HiveHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);   // Allow non-[sudo] access.
+            SudoCommand($"chmod 770 {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
@@ -2294,7 +2294,7 @@ echo $? > {cmdFolder}/exit
             }
             else if (binaryOutput)
             {
-                result = SafeRunCommand($"{command}", binaryOutput: true);
+                result   = SafeRunCommand($"{command}", binaryOutput: true);
                 response = new CommandResponse()
                 {
                     Command      = command,

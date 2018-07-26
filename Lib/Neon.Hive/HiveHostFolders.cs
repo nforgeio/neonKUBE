@@ -56,7 +56,7 @@ namespace Neon.Hive
         /// execute <see cref="CommandBundle"/>s as well as store temporary
         /// command output files.
         /// </summary>
-        public const string Exec = "/var/lib/neon/exec";
+        public const string Exec = "${HOME}/.exec";
 
         /// <summary>
         /// Path to the neonHIVE management scripts directory.
