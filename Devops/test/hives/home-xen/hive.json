@@ -12,7 +12,7 @@
     "VmHosts": [
       {
         "Name": "xentest",
-        "Address": "10.0.0.188"
+        "Address": "10.0.172.188"
       }
     ]
   },
@@ -38,12 +38,6 @@
     //"Version": "latest",
     //"Version": "test",
     //"Version": "experimental",
-    "Registries": [
-      {
-        "Username": "stokebot",
-        "Password": "Leather.632"
-      }
-    ],
     "RegistryCache": true,
     "Experimental": false
   },
