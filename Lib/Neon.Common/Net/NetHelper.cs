@@ -169,6 +169,13 @@ namespace Neon.Net
         /// </remarks>
         public static void ModifyLocalHosts(Dictionary<string, IPAddress> hostEntries = null)
         {
+            // $todo(jeff.lill): DELETE THIS!
+
+            if (hostEntries == null)
+            {
+                return;     // We're leaving host entries around until we refactor how this works.
+            }
+
 #if XAMARIN
             throw new NotSupportedException();
 #else
