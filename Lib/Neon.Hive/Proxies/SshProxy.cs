@@ -1249,8 +1249,8 @@ namespace Neon.Hive
                 throw new IOException(result.Error);
             }
 
-            result = sshClient.RunCommand($"sudo chmod 770 {HiveHostFolders.Exec}");   // Allow non-[sudo] access.
-
+            result = sshClient.RunCommand($"sudo chmod 777 {HiveHostFolders.Exec}");        // $todo(jeff.lill): Is this a potential security problem?
+                                                                                            //                   SCP uploads fail for 770
             if (result.ExitStatus != 0)
             {
                 Log($"Cannot chmod folder [{HiveHostFolders.Exec}]\n");
@@ -1272,8 +1272,8 @@ namespace Neon.Hive
             SudoCommand($"chmod 600 {HiveHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 770 {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);
-
+            SudoCommand($"chmod 777 {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Is this a potential security problem?
+                                                                                            //                   SCP uploads fail for 770
             SudoCommand($"mkdir -p {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 600 {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
 
