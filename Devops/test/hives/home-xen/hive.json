@@ -57,7 +57,7 @@
       "PrivateAddress": "10.0.0.50",
       "VmHost": "xentest",
       "VmProcessors": 4,
-      "VmMemory": "8GB",
+      "VmMemory": "4GB",
       "VmDisk": "128GB",
       "Labels": {
         "StorageSSD": true,
