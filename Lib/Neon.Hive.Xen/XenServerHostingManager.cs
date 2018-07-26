@@ -209,7 +209,40 @@ namespace Neon.Hive
             };
 
             controller.AddWaitUntilOnlineStep();
-            controller.AddStep("hive folders", (node, stepDelay) => node.CreateHiveHostFolders(sudo: false));
+
+            controller.AddStep("sudo config", 
+                (node, stepDelay) =>
+                {
+                    using (var sshClient = node.CloneSshClient())
+                    {
+                        // We're going to rewrite [/etc/sudoers.d/nopasswd] so that client
+                        // connections won't require a TTY and also that SUDO password
+                        // prompting will be disabled for all users.
+                        //
+                        // The file will end up looking like:
+                        //
+                        //      Defaults !requiretty
+                        //      %sudo    ALL=NOPASSWD: ALL
+
+                        var response = sshClient.RunCommand("echo \"Defaults !requiretty\" >> /etc/sudoers.d/nopasswd");
+
+                        if (response.ExitStatus != 0)
+                        {
+                            node.Fault($"Cannot update [/etc/sudoers.d/nopasswd]: {response.Result}");
+                            return;
+                        }
+
+                        response = sshClient.RunCommand("echo \"%sudo    ALL=NOPASSWD: ALL\" >> /etc/sudoers.d/nopasswd");
+
+                        if (response.ExitStatus != 0)
+                        {
+                            node.Fault($"Cannot update [/etc/sudoers.d/nopasswd]: {response.Result}");
+                            return;
+                        }
+                    }
+                });
+
+            controller.AddStep("hive folders", (node, stepDelay) => node.CreateHiveHostFolders());
             controller.AddStep("verify readiness", (node, stepDelay) => VerifyReady(node));
             controller.AddStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
             controller.AddStep("provision virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));

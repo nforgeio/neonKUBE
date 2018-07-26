@@ -39,10 +39,11 @@ namespace Neon.Hive
     /// files, run commands, etc.
     /// </para>
     /// <note>
-    /// <para>
-    /// You can use <see cref="Clone()"/> to make a copy of a proxy that can be
-    /// used to perform parallel operations against the same machine.
-    /// </para>
+    /// This is class is <b>not intended</b> to be a <b>general purpose SSH wrapper</b> 
+    /// at this time.  It currently assumes that the remote side is running some variant
+    /// of Linux and it makes some globale changes including overwriting the 
+    /// <b>/etc/sudoers.d/nopasswd</b> file to disable password prompts for all
+    /// users and creating some global directories.
     /// </note>
     /// </summary>
     /// <typeparam name="TMetadata">
@@ -63,6 +64,10 @@ namespace Neon.Hive
     /// <para>
     /// Call <see cref="Dispose()"/> or <see cref="Disconnect()"/> to close the connection.
     /// </para>
+    /// <note>
+    /// You can use <see cref="Clone()"/> to make a copy of a proxy that can be
+    /// used to perform parallel operations against the same machine.
+    /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
     public class SshProxy<TMetadata> : IDisposable
@@ -954,8 +959,72 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Opens a new <see cref="SshClient"/> connection.
+        /// </summary>
+        /// <returns>The new connection.</returns>
+        /// <exception cref="SshConnectionException">Thrown if a connection could not be established.</exception>
+        private SshClient OpenSshConnection()
+        {
+            lock (syncLock)
+            {
+                if (isDisposed)
+                {
+                    throw new ObjectDisposedException(nameof(SshProxy<TMetadata>));
+                }
+
+                if (credentials == null || credentials == SshCredentials.None)
+                {
+                    throw new HiveException("Cannot establish a SSH connection because no credentials are available.");
+                }
+
+                // We're going to retry connecting up to 10 times.
+
+                const int maxTries = 10;
+
+                var connectionInfo = GetConnectionInfo();
+
+                for (int tryCount = 1; tryCount <= maxTries; tryCount++)
+                {
+                    var sshClient = new SshClient(connectionInfo)
+                    {
+                        KeepAliveInterval = TimeSpan.FromSeconds(KeepAliveSeconds)
+                    };
+
+                    try
+                    {
+                        lock (GetConnectLock(sshClient.ConnectionInfo.Host))
+                        {
+                            sshClient.Connect();
+                        }
+
+                        return sshClient;
+                    }
+                    catch (Exception e)
+                    {
+                        sshClient.Dispose();
+
+                        if (e is SshAuthenticationException)
+                        {
+                            throw; // Fail immediately for bad credentials
+                        }
+
+                        if (tryCount == maxTries)
+                        {
+                            throw;
+                        }
+
+                        Thread.Sleep(TimeSpan.FromSeconds(5));
+                    }
+                }
+
+                throw new SshConnectionException($"Cannot connect SSH to: [host={connectionInfo.Host}, username={connectionInfo.Username}]");
+            }
+        }
+
+        /// <summary>
         /// Ensures that an SSH connection has been established.
         /// </summary>
+        /// <exception cref="SshConnectionException">Thrown if a connection could not be established.</exception>
         private void EnsureSshConnection()
         {
             lock (syncLock)
@@ -982,30 +1051,50 @@ namespace Neon.Hive
                     }
                 }
 
+                this.sshClient = OpenSshConnection();
+            }
+        }
+
+        /// <summary>
+        /// Opens a new <see cref="ScpClient"/> connection.
+        /// </summary>
+        /// <returns>The new connection.</returns>
+        /// <exception cref="SshConnectionException">Thrown if a connection could not be established.</exception>
+        private ScpClient OpenScpConnection()
+        {
+            lock (syncLock)
+            {
+                if (isDisposed)
+                {
+                    throw new ObjectDisposedException(nameof(SshProxy<TMetadata>));
+                }
+
                 // We're going to retry connecting up to 10 times.
 
                 const int maxTries = 10;
 
+                var connectionInfo = GetConnectionInfo();
+
                 for (int tryCount = 1; tryCount <= maxTries; tryCount++)
                 {
-                    var sshClient = new SshClient(GetConnectionInfo())
+                    var scpClient = new ScpClient(connectionInfo)
                     {
+                        OperationTimeout  = FileTimeout,
                         KeepAliveInterval = TimeSpan.FromSeconds(KeepAliveSeconds)
                     };
 
                     try
                     {
-                        lock (GetConnectLock(sshClient.ConnectionInfo.Host))
+                        lock (GetConnectLock(scpClient.ConnectionInfo.Host))
                         {
-                            sshClient.Connect();
+                            scpClient.Connect();
                         }
 
-                        this.sshClient = sshClient;
-                        return;
+                        return scpClient;
                     }
                     catch (Exception e)
                     {
-                        sshClient.Dispose();
+                        scpClient.Dispose();
 
                         if (e is SshAuthenticationException)
                         {
@@ -1020,12 +1109,15 @@ namespace Neon.Hive
                         Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
                 }
+
+                throw new SshConnectionException($"Cannot connect SCP to: [host={connectionInfo.Host}, username={connectionInfo.Username}]");
             }
         }
 
         /// <summary>
         /// Ensures that an SCP connection has been established.
         /// </summary>
+        /// <exception cref="SshConnectionException">Thrown if a connection could not be established.</exception>
         private void EnsureScpConnection()
         {
             lock (syncLock)
@@ -1047,45 +1139,7 @@ namespace Neon.Hive
                     }
                 }
 
-                // We're going to retry connecting up to 10 times.
-
-                const int maxTries = 10;
-
-                for (int tryCount = 1; tryCount <= maxTries; tryCount++)
-                {
-                    var scpClient = new ScpClient(GetConnectionInfo())
-                    {
-                        OperationTimeout  = FileTimeout,
-                        KeepAliveInterval = TimeSpan.FromSeconds(KeepAliveSeconds)
-                    };
-
-                    try
-                    {
-                        lock (GetConnectLock(scpClient.ConnectionInfo.Host))
-                        {
-                            scpClient.Connect();
-                        }
-
-                        this.scpClient = scpClient;
-                        return;
-                    }
-                    catch (Exception e)
-                    {
-                        scpClient.Dispose();
-
-                        if (e is SshAuthenticationException)
-                        {
-                            throw; // Fail immediately for bad credentials
-                        }
-
-                        if (tryCount == maxTries)
-                        {
-                            throw;
-                        }
-
-                        Thread.Sleep(TimeSpan.FromSeconds(5));
-                    }
-                }
+                this.scpClient = OpenScpConnection();
             }
         }
 
@@ -1138,17 +1192,41 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// <para>
+        /// Creates and returns a clone of a low-level <see cref="SshClient"/> to 
+        /// the remote endpoint.
+        /// </para>
+        /// <note>
+        /// The caller is responsible for disposing the returned instance.
+        /// </note>
+        /// </summary>
+        /// <exception cref="SshConnectionException">Thrown if a connection could not be established.</exception>
+        public SshClient CloneSshClient()
+        {
+            return OpenSshConnection();
+        }
+
+        /// <summary>
+        /// <para>
+        /// Creates and returns a clone of a low-level <see cref="ScpClient"/> to 
+        /// the remote endpoint.
+        /// </para>
+        /// <note>
+        /// The caller is responsible for disposing the returned instance.
+        /// </note>
+        /// </summary>
+        /// <exception cref="SshConnectionException">Thrown if a connection could not be established.</exception>
+        public ScpClient CloneScpClient()
+        {
+            return OpenScpConnection();
+        }
+
+        /// <summary>
         /// Ensures that the configuration and setup folders required for a Neon host
         /// node exist and have the appropriate permissions.
         /// </summary>
-        /// <param name="sudo">
-        /// Optionally disable using <c>sudo</c> for the folder creation commands 
-        /// (used when provisioning XEN hosts).
-        /// </param>
-        public void CreateHiveHostFolders(bool sudo = true)
+        public void CreateHiveHostFolders()
         {
-            var sudoCmd = sudo ? "sudo " : string.Empty;
-
             Status = "prepare: host folders";
 
             // We need to be connected.
@@ -1160,7 +1238,7 @@ namespace Neon.Hive
             // SudoCommand/RunCommand methods because those methods depend on the 
             // existence of this folder.
 
-            var result = sshClient.RunCommand($"{sudoCmd}mkdir -p {HiveHostFolders.Exec}");
+            var result = sshClient.RunCommand($"sudo mkdir -p {HiveHostFolders.Exec}");
 
             if (result.ExitStatus != 0)
             {
@@ -1171,7 +1249,7 @@ namespace Neon.Hive
                 throw new IOException(result.Error);
             }
 
-            result = sshClient.RunCommand($"{sudoCmd}chmod 777 {HiveHostFolders.Exec}");   // Allow non-[sudo] access.
+            result = sshClient.RunCommand($"sudo chmod 777 {HiveHostFolders.Exec}");   // Allow non-[sudo] access.
 
             if (result.ExitStatus != 0)
             {
