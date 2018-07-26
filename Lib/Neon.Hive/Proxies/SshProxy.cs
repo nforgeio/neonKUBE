@@ -1141,8 +1141,14 @@ namespace Neon.Hive
         /// Ensures that the configuration and setup folders required for a Neon host
         /// node exist and have the appropriate permissions.
         /// </summary>
-        public void CreateHiveHostFolders()
+        /// <param name="sudo">
+        /// Optionally disable using <c>sudo</c> for the folder creation commands 
+        /// (used when provisioning XEN hosts).
+        /// </param>
+        public void CreateHiveHostFolders(bool sudo = true)
         {
+            var sudoCmd = sudo ? "sudo " : string.Empty;
+
             Status = "prepare: host folders";
 
             // We need to be connected.
@@ -1150,11 +1156,11 @@ namespace Neon.Hive
             EnsureSshConnection();
             EnsureScpConnection();
 
-            // We need to create the folder first without using the safe SshProxy
+            // We need to create this folder first without using the safe SshProxy
             // SudoCommand/RunCommand methods because those methods depend on the 
-            // extstence of this folder.
+            // existence of this folder.
 
-            var result = sshClient.RunCommand($"sudo mkdir -p {HiveHostFolders.Exec}");
+            var result = sshClient.RunCommand($"{sudoCmd}mkdir -p {HiveHostFolders.Exec}");
 
             if (result.ExitStatus != 0)
             {
@@ -1165,7 +1171,7 @@ namespace Neon.Hive
                 throw new IOException(result.Error);
             }
 
-            result = sshClient.RunCommand($"sudo chmod 777 {HiveHostFolders.Exec}");   // Allow non-[sudo] access.
+            result = sshClient.RunCommand($"{sudoCmd}chmod 777 {HiveHostFolders.Exec}");   // Allow non-[sudo] access.
 
             if (result.ExitStatus != 0)
             {
