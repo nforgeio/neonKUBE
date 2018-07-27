@@ -52,7 +52,7 @@ namespace NeonDns
         {
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
-            log.LogInfo(() => $"Starting [{serviceName}:{Program.GitVersion}]");
+            log.LogInfo(() => $"Starting [{serviceName}]");
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
 
             // Parse the environment variable settings.
