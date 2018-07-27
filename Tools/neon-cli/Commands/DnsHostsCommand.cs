@@ -268,7 +268,7 @@ host groups if they don't already exist (named like: [GROUPNAME.hive]).
 
             if (addresses.Count == 0)
             {
-                Console.WriteLine($"{lead}* not healthy");
+                Console.WriteLine($"{lead}*** UNHEALTHY ***");
             }
             else
             {
