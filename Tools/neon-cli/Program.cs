@@ -177,6 +177,34 @@ OPTIONS:
 
             LogManager.Default.LogLevel = LogLevel.None;
 
+            // We need to verify that we're running with elevated permissions if we're not
+            // shimmed into a Docker container.
+
+            // $todo(jeff.lill):
+            //
+            // We're currently requiring elevated permissions for all commands, even those
+            // that don't actually require elevated permissions.  We may wish to relax this
+            // in the future.
+
+            if (!HiveHelper.InToolContainer)
+            {
+                if (NeonHelper.IsWindows)
+                {
+                    var identity  = WindowsIdentity.GetCurrent();
+                    var principal = new WindowsPrincipal(identity);
+
+                    if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+                    {
+                        Console.Error.WriteLine("*** ERROR: This command required elevated administrator permissions.");
+                        Program.Exit(1);
+                    }
+                }
+                else if (NeonHelper.IsOSX)
+                {
+                    throw new NotImplementedException("$todo(jeff.lill): Implement OSX elevated permissions check.");
+                }
+            }
+
             // Configure the encrypted user-specific application data folder and initialize
             // the subfolders.
 
