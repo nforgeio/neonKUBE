@@ -216,11 +216,20 @@ namespace NeonDnsMon
                     await ResolveTargetsAsync(hostAddresses, targets);
 
                     // Generate a canonical [hosts.txt] file by sorting host entries by 
-                    // hostname and then by IP address followed by comment lines describing
-                    // any hosts that don't have any healthy endpoints.  These error
-                    // lines will sorted by hostname and will be formatted like:
+                    // hostname and then by IP address.
                     //
-                    //      # unhealthy: HOSTNAME
+                    // Unhealthy hosts will be assigned the unroutable [0.0.0.0] address.
+                    // The reason for this is subtle but super important.
+                    //
+                    // If we didn't do this, the DNS host would likely be resolved by a 
+                    // public DNS service, perhaps returning the IP address of a production 
+                    // endpoint.
+                    //
+                    // This could cause a disaster if the whole purpose of having a local
+                    // DNS host defined to redirect test traffic to a test service.  If
+                    // the test service endpoints didn't report as healthy and [0.0.0.0] 
+                    // wasn't set, then test traffic could potentially hit the production
+                    // endpoint and do serious damage.
 
                     var sbHosts      = new StringBuilder();
                     var mappingCount = 0;
@@ -239,12 +248,14 @@ namespace NeonDnsMon
                     if (unhealthyTargets.Count > 0)
                     {
                         sbHosts.AppendLine();
-                        sbHosts.AppendLine($"# [{unhealthyTargets.Count}] hosts without healthy endpoints:");
-                        sbHosts.AppendLine($"#");
+                        sbHosts.AppendLine($"# [{unhealthyTargets.Count}] unhealthy DNS hosts:");
+                        sbHosts.AppendLine();
+
+                        var unhealthyAddress = "0.0.0.0";
 
                         foreach (var target in unhealthyTargets.OrderBy(h => h))
                         {
-                            sbHosts.AppendLine($"# unhealthy: {target.Hostname}");
+                            sbHosts.AppendLineLinux($"{unhealthyAddress,-15} {target.Hostname}");
                         }
                     }
 
@@ -269,10 +280,10 @@ namespace NeonDnsMon
                         // Update the Consul keys using a transaction.
 
                         var operations = new List<KVTxnOp>()
-                    {
-                        new KVTxnOp(HiveConst.ConsulDnsHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
-                        new KVTxnOp(HiveConst.ConsulDnsHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
-                    };
+                        {
+                            new KVTxnOp(HiveConst.ConsulDnsHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
+                            new KVTxnOp(HiveConst.ConsulDnsHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
+                        };
 
                         await consul.KV.Txn(operations, terminator.CancellationToken);
                     }
@@ -302,7 +313,7 @@ namespace NeonDnsMon
             // I'm keeping this implementation super simple for now, by performing 
             // all of the health checks during the poll.  This probably won't scale
             // well when there are 100s of target endpoints.  This will tend to 
-            // blast endpoints all at once.
+            // blast health check traffic to all of the endpoints at once.
             //
             // It would probably be better to do health checking continuously in
             // another task and have this method resolve the hosts from that data.

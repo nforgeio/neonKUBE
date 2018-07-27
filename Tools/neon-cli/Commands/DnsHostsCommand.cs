@@ -266,7 +266,10 @@ host groups if they don't already exist (named like: [GROUPNAME.hive]).
             var indent = new string(' ', lead.Length);
             var first  = true;
 
-            if (addresses.Count == 0)
+            // Note that the [0.0.0.0] address will be provisioned by the NEON-DNS-MON service
+            // when an DNS endpoint is unhealthy, so we're not going to count these.
+
+            if (addresses.Count(a => a != "0.0.0.0") == 0)
             {
                 Console.WriteLine($"{lead}*** UNHEALTHY ***");
             }
