@@ -507,29 +507,29 @@ namespace TestCommon
             var didTask1 = false;
             var didTask2 = false;
             var didTask3 = false;
-            var delay    = TimeSpan.FromSeconds(2);
+            var delaySec = 2;
 
             NeonHelper.WaitForParallel(
                 new Action[]
                 {
                     async () => {
 
-                        await Task.Delay(delay);
+                        await Task.Delay(TimeSpan.FromSeconds(delaySec));
                         didTask0 = true;
                     },
                     async () => {
 
-                        await Task.Delay(delay);
+                        await Task.Delay(TimeSpan.FromSeconds(delaySec) * 2);
                         didTask1 = true;
                     },
                     async () => {
 
-                        await Task.Delay(delay);
+                        await Task.Delay(TimeSpan.FromSeconds(delaySec) * 3);
                         didTask2 = true;
                     },
                     () => {
 
-                        Thread.Sleep(delay);
+                        Thread.Sleep(TimeSpan.FromSeconds(delaySec) * 4);
                         didTask3 = true;
                     }
                 });
