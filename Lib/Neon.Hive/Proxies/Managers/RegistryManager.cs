@@ -8,7 +8,9 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+
 using Consul;
 
 using Neon.Common;
@@ -88,8 +90,10 @@ namespace Neon.Hive
 
             // Login all of the hive nodes in parallel.
 
-            var actions = new List<Action>();
-            var errors  = new List<string>();
+            var sleepSeconds = 5;
+            var maxAttempts  = 60 / sleepSeconds;
+            var actions      = new List<Action>();
+            var errors       = new List<string>();
 
             foreach (var node in hive.Nodes)
             {
@@ -98,18 +102,34 @@ namespace Neon.Hive
                     {
                         using (var clonedNode = node.Clone())
                         {
-                            var response = clonedNode.SudoCommand("docker login", RunOptions.None, "--username", username, "--password", password, registry);
+                            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+                            {
+                                var response = clonedNode.SudoCommand("docker login", RunOptions.None, "--username", username, "--password", password, registry);
 
-                            if (response.ExitCode != 0)
-                            {
-                                lock (errors)
+                                if (attempt == maxAttempts)
                                 {
-                                    errors.Add($"{clonedNode.Name}: {response.ErrorSummary}");
+                                    // This is the last attempt.
+
+                                    if (response.ExitCode != 0)
+                                    {
+                                        lock (errors)
+                                        {
+                                            errors.Add($"{clonedNode.Name}: {response.ErrorSummary}");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        SyncDockerConf(node);
+                                    }
+
+                                    break;
                                 }
-                            }
-                            else
-                            {
-                                SyncDockerConf(node);
+                                else
+                                {
+                                    // Pause for 5 seconds to mitigate transient errors.
+
+                                    Thread.Sleep(TimeSpan.FromSeconds(sleepSeconds));
+                                }
                             }
                         }
                     });

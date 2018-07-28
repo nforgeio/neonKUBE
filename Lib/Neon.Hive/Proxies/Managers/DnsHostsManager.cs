@@ -79,11 +79,11 @@ namespace Neon.Hive
         /// </code>
         /// <para>
         /// For a change to the hive DNS to ultimately be consistent on all
-        /// hive nodes.  This method waits 60 seconds to add about 15seconds
-        /// for health checks and other overhead.
+        /// hive nodes, this method waits 60 seconds and adds another 15
+        /// seconds for health checks and other overhead.
         /// </para>
         /// </remarks>
-        public static TimeSpan PropagationTimeout => TimeSpan.FromSeconds(60);
+        public static TimeSpan PropagationTimeout => TimeSpan.FromSeconds(15);
 
         /// <summary>
         /// Determines whether a DNS entry name is valid.

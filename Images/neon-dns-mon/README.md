@@ -37,7 +37,7 @@ docker service create \
     --env NAMESERVERS=${NEON_UPSTREAM_DNS} \
     --env PING_TIMEOUT=1.5s \
     --env LOG_LEVEL=INFO \
-    --env POLL_INTERVAL=15s \
+    --env POLL_INTERVAL=5s \
     --env WARN_INTERVAL=5m \
     --constraint node.role==manager \
     --replicas 1 \

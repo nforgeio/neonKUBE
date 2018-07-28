@@ -51,7 +51,7 @@ namespace Neon.DnsTools
         /// </summary>
         /// <param name="nameservers">The nameservers specified as <see cref="IPAddress"/> instances.</param>
         /// <returns>The <see cref="NeonDnsClient"/>.</returns>
-        public static NeonDnsClient CreateCaching(params IPAddress[] nameservers)
+        public static NeonDnsClient CreateWithCaching(params IPAddress[] nameservers)
         {
             var client = new NeonDnsClient(nameservers);
 
@@ -64,7 +64,7 @@ namespace Neon.DnsTools
         /// </summary>
         /// <param name="nameservers">The nameservers specified as IP address strings.</param>
         /// <returns>The <see cref="NeonDnsClient"/>.</returns>
-        public static NeonDnsClient CreateCaching(params string[] nameservers)
+        public static NeonDnsClient CreateWithCaching(params string[] nameservers)
         {
             var client = new NeonDnsClient(nameservers);
 
@@ -79,10 +79,7 @@ namespace Neon.DnsTools
         /// <returns>The <see cref="NeonDnsClient"/>.</returns>
         public static NeonDnsClient Create(params IPAddress[] nameservers)
         {
-            var client = new NeonDnsClient(nameservers);
-
-            client.EnableCaching();
-            return client;
+            return new NeonDnsClient(nameservers);
         }
 
         /// <summary>
@@ -92,10 +89,7 @@ namespace Neon.DnsTools
         /// <returns>The <see cref="NeonDnsClient"/>.</returns>
         public static NeonDnsClient Create(params string[] nameservers)
         {
-            var client = new NeonDnsClient(nameservers);
-
-            client.EnableCaching();
-            return client;
+            return new NeonDnsClient(nameservers);
         }
 
         //---------------------------------------------------------------------
@@ -298,7 +292,7 @@ namespace Neon.DnsTools
                         {
                             // $todo(jeff.lill): 
                             //
-                            // I wish the underlying client didn't throw exceptions.  Perhaps
+                            // I wish the underlying [DnsClient] didn't throw exceptions.  Perhaps
                             // I could extend the implementation to implement [TryResolve()].
 
                             Interlocked.Decrement(ref pending);

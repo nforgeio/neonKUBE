@@ -33,7 +33,7 @@ docker service create \
     --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/etc/powerdns/hosts,dst=/etc/powerdns/hosts \
     --mount type=bind,src=/dev/shm/neon-dns,dst=/neon-dns \
-    --env POLL_INTERVAL=15s \
+    --env POLL_INTERVAL=5s \
     --env VERIFY_INTERVAL=5m \
     --env LOG_LEVEL=INFO \
     --constraint node.role==manager \

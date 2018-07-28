@@ -60,7 +60,7 @@ namespace NeonDnsMon
         /// <param name="nameservers">Array of nameserver IP addresses.</param>
         public HealthResolver(string[] nameservers)
         {
-            dns             = NeonDnsClient.CreateCaching(nameservers);
+            dns             = NeonDnsClient.CreateWithCaching(nameservers);
             pinger          = new Pinger();
             hostToAddresses = new Dictionary<string, List<IPAddress>>(StringComparer.InvariantCultureIgnoreCase);
             addressToHealth = new Dictionary<string, bool>();

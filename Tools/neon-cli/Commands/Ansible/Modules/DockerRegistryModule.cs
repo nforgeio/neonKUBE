@@ -610,7 +610,7 @@ namespace NeonCli.Ansible
                         hive.Registry.SetLocalHostname(hostname);
                         hive.Registry.SetLocalSecret(secret);
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Adding hive DNS host entry for [{hostname}] (60 seconds).");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Adding hive DNS host entry for [{hostname}].");
                         hive.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
@@ -640,7 +640,8 @@ namespace NeonCli.Ansible
                         }
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Service created.");
-
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Wait for [neon-registry] service to stabilize (30s).");
+                        Thread.Sleep(TimeSpan.FromSeconds(30));
                         context.WriteLine(AnsibleVerbosity.Trace, $"Logging the hive into the [{hostname}] registry.");
                         hive.Registry.Login(hostname, username, password);
                     }
