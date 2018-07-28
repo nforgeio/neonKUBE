@@ -17,18 +17,27 @@ namespace TestCommon
         {
             this.fixture = fixture;
 
-            this.fixture.Initialize(
-                () =>
-                {
-                    this.fixture.CreateSecret("secret_text", "hello");
-                    this.fixture.CreateSecret("secret_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            if (!this.fixture.Initialize())
+            {
+                this.fixture.Reset();
+            }
+        }
 
-                    this.fixture.CreateConfig("config_text", "hello");
-                    this.fixture.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Basics()
+        {
+            // Initialize
 
-                    this.fixture.CreateService("test-service", "nhive/test");
+            this.fixture.CreateSecret("secret_text", "hello");
+            this.fixture.CreateSecret("secret_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
-                    var composeText =
+            this.fixture.CreateConfig("config_text", "hello");
+            this.fixture.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+
+            this.fixture.CreateService("test-service", "nhive/test");
+
+            var composeText =
 @"version: '3'
 
 services:
@@ -37,16 +46,10 @@ services:
     deploy:
       replicas: 2
 ";
-                    this.fixture.DeployStack("test-stack", composeText);
-                    this.fixture.RunContainer("test-container", "nhive/test");
-                    this.fixture.CreateNetwork("test-network");
-                });
-        }
+            this.fixture.DeployStack("test-stack", composeText);
+            this.fixture.RunContainer("test-container", "nhive/test");
+            this.fixture.CreateNetwork("test-network");
 
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void Basics()
-        {
             // Verify that the secrets, configs, networks, container, service, and stack were created.
 
             Assert.Single(fixture.ListSecrets().Where(item => item.Name == "secret_text"));
@@ -74,7 +77,7 @@ services:
         {
             //-----------------------------------------------------------------
             // Create a test volume on the hive node and then verify
-            // that ClearVolumes() removes them.
+            // that ClearVolumes() removes it.
 
             fixture.DockerExecute("docker volume create test-volume");
             fixture.ClearVolumes();

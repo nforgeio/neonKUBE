@@ -13,6 +13,12 @@
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
   <ItemGroup>
+    <Compile Remove="Resources\Ubuntu-16.04\source\**" />
+    <EmbeddedResource Remove="Resources\Ubuntu-16.04\source\**" />
+    <None Remove="Resources\Ubuntu-16.04\source\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove=".rnd" />
   </ItemGroup>
 
@@ -165,10 +171,6 @@
     <None Update="Resources\Ubuntu-16.04\updates\010297_010298.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resources\Ubuntu-16.04\source\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
