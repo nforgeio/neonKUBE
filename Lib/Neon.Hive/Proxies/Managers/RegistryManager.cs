@@ -91,7 +91,7 @@ namespace Neon.Hive
             // Login all of the hive nodes in parallel.
 
             var sleepSeconds = 5;
-            var maxAttempts  = 60 / sleepSeconds;
+            var maxAttempts  = 75 / sleepSeconds;
             var actions      = new List<Action>();
             var errors       = new List<string>();
 

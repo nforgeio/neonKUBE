@@ -83,7 +83,7 @@ namespace Neon.Hive
         /// seconds for health checks and other overhead.
         /// </para>
         /// </remarks>
-        public static TimeSpan PropagationTimeout => TimeSpan.FromSeconds(15);
+        public static TimeSpan PropagationTimeout => TimeSpan.FromSeconds(60);
 
         /// <summary>
         /// Determines whether a DNS entry name is valid.
