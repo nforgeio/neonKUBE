@@ -1092,9 +1092,36 @@ echo "nameserver ${NEON_NODE_IP}" > /etc/resolvconf/resolv.conf.d/base
 resolvconf -u
 
 #------------------------------------------------------------------------------
-# Configure the [neon-dns-loader] service on manager nodes.  This Service
+# Configure the [neon-dns-loader] service on manager nodes.  This service
 # watches for a file created by the [neon-dns] Docker service indicating 
 # that the PowerDNS Recursor needs to reload the hosts file.
+#
+# We're also going to create the [neon-dns-reload] script that signals the
+# PowerDNS Recursor to reload its host file.
+
+cat <<EOF > ${NEON_BIN_FOLDER}/neon-dns-reload
+#!/bin/bash
+#------------------------------------------------------------------------------
+# FILE:         neon-dns-reload
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+#
+# This script signals the PowerDNS Recursor to reload its host file.
+
+# Signal PowerDNS Recursor.  Note that this call will fail the first time
+# it is called after a system reboot due to a permissions issue I haven't
+# been able to figure out.  I'm going to hack around this by setting 
+# permissions for [/etc/powerdns] to [pdns:pdns] before reloading the 
+# zones and then resetting to [root:root] afterwards, as described here:
+#
+#   https://github.com/jefflill/NeonForge/issues/211
+
+chown -R pdns:pdns /etc/powerdns
+rec_control reload-zones
+chown -R root:root /etc/powerdns
+EOF
+
+chmod 774 ${NEON_BIN_FOLDER}/neon-dns-reload
 
 cat <<EOF > ${NEON_BIN_FOLDER}/neon-dns-loader
 #!/bin/bash
@@ -1136,17 +1163,9 @@ do
 
         rm \$signal_path
 
-        # Signal PowerDNS Recursor.  Note that this call will fail the first time
-        # it is called after a system reboot due to a permissions issue I haven't
-        # been able to figure out.  I'm going to hack around this by setting 
-        # permissions for [/etc/powerdns] to [pdns:pdns] before reloading the zones
-        # and then resetting to [root:root] afterwards, as described here:
-        #
-        #   https://github.com/jefflill/NeonForge/issues/211
+        # Signal PowerDNS Recursor.
 
-        chown -R pdns:pdns /etc/powerdns
-        rec_control reload-zones
-        chown -R root:root /etc/powerdns
+        ${NEON_BIN_FOLDER}/neon-dns-reload
     fi
 
     sleep \${sleep_seconds}
