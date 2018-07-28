@@ -282,7 +282,18 @@ namespace Neon.Net
                     
                 }).Wait();
 
-            if (NeonHelper.IsOSX)
+            if (NeonHelper.IsWindows)
+            {
+                // Flush the DNS cache (and I believe this reloads the [hosts] file too.
+
+                var response = NeonHelper.ExecuteCaptureStreams("ipconfig", "/flushdns");
+
+                if (response.ExitCode != 0)
+                {
+                    throw new ToolException($"ipconfig [exitcode={response.ExitCode}]: {response.ErrorText}");
+                }
+            }
+            else if (NeonHelper.IsOSX)
             {
                 // $todo(jeff.lill):
                 //
