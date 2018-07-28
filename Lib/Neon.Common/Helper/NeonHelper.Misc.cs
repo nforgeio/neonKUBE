@@ -617,6 +617,7 @@ namespace Neon.Common
                     if (!task.IsCompleted)
                     {
                         isCompleted = false;
+                        break;
                     }
                 }
 
