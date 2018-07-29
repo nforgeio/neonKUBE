@@ -338,6 +338,30 @@ namespace Neon.Xunit
 
                     }).Wait();
 
+                if (NeonHelper.IsWindows)
+                {
+                    // Flush the DNS cache (and I believe this reloads the [hosts] file too).
+
+                    var response = NeonHelper.ExecuteCaptureStreams("ipconfig", "/flushdns");
+
+                    if (response.ExitCode != 0)
+                    {
+                        throw new ToolException($"ipconfig [exitcode={response.ExitCode}]: {response.ErrorText}");
+                    }
+                }
+                else if (NeonHelper.IsOSX)
+                {
+                    // $todo(jeff.lill):
+                    //
+                    // We may need to clear the OSX DNS cache here.
+                    //
+                    // Here's some information on how to do this:
+                    //
+                    //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
+
+                    throw new NotImplementedException("$todo(jeff.lill): Purge the OSX DNS cache.");
+                }
+
                 // Wait for the local DNS resolver to indicate that it's picked
                 // up the changes by verifying that the section hostname resolves.
 

@@ -277,7 +277,7 @@ namespace Neon.Net
 
             if (NeonHelper.IsWindows)
             {
-                // Flush the DNS cache (and I believe this reloads the [hosts] file too.
+                // Flush the DNS cache (and I believe this reloads the [hosts] file too).
 
                 var response = NeonHelper.ExecuteCaptureStreams("ipconfig", "/flushdns");
 
@@ -295,6 +295,8 @@ namespace Neon.Net
                 // Here's some information on how to do this:
                 //
                 //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
+
+                throw new NotImplementedException("$todo(jeff.lill): Purge the OSX DNS cache.");
             }
 
             if (NeonHelper.IsWindows || NeonHelper.IsOSX)
