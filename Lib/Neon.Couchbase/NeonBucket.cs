@@ -1417,6 +1417,12 @@ namespace Couchbase
         }
 
         /// <inheritdoc/>
+        public Task<ISearchQueryResult> QueryAsync(SearchQuery searchQuery, CancellationToken cancellationToken)
+        {
+            return bucket.QueryAsync(searchQuery, cancellationToken);
+        }
+
+        /// <inheritdoc/>
         public IResult<T> QueuePop<T>(string key)
         {
             return bucket.QueuePop<T>(key);

@@ -21,8 +21,8 @@
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
   <ItemGroup>
-    <PackageReference Include="Consul" Version="0.7.2.4" />
-    <PackageReference Include="GitInfo" Version="2.0.10" />
+    <PackageReference Include="Consul" Version="0.7.2.6" />
+    <PackageReference Include="GitInfo" Version="2.0.11" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
 
