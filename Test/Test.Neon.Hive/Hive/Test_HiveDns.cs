@@ -102,7 +102,7 @@ namespace TestNeonCluster
             // and DOES appear when we include system entries.
 
             Assert.Single(hiveFixture.ListDnsEntries());
-            Assert.Equal(3, hiveFixture.ListDnsEntries(includeSystem: true).Count);
+            Assert.Equal(2, hiveFixture.ListDnsEntries(includeSystem: true).Count);
             Assert.True(hiveFixture.ListDnsEntries(includeSystem: true).Single(i => i.Hostname == "bar.test.com").IsSystem);
 
             //-----------------------------------------------------------------

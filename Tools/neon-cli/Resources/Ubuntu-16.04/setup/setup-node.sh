@@ -1106,7 +1106,24 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-dns-reload
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# This script signals the PowerDNS Recursor to reload its host file.
+# This script signals the PowerDNS Recursor to reload its host file and
+# optionally wipe any cached DNS records.
+#
+# USAGE:    neon-dns-reload [wipe [DOMAIN]]
+#
+# REMARKS:
+#
+#   wipe            - wipes all DNS entries from the cache
+#   wipe DOMAIN     - wipes all DNS entries related to the DOMAIN including
+#                     any subdomains from the cache.
+#
+# EXAMPLES:
+#
+#   neon-dns-reload                         - reload only
+#   neon-dns-reload wipe                    - reload and wipe all DNS records
+#   neon-dns-reload wipe google.com         - reload and wipe google.com and www.google.com
+#   neon-dns-reload wipe www.google.com     - reload and wipe www.google.com
+#   neon-dns-reload wipe hive               - reload and wipe *.hive
 
 # Signal PowerDNS Recursor.  Note that this call will fail the first time
 # it is called after a system reboot due to a permissions issue I haven't
@@ -1119,6 +1136,13 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-dns-reload
 chown -R pdns:pdns /etc/powerdns
 rec_control reload-zones
 chown -R root:root /etc/powerdns
+
+# Wipe the DNS cache if requested
+
+if [ "\${1}" == "wipe" ] ; then
+    rec_control wipe-cache \${2}\$
+fi
+
 EOF
 
 chmod 774 ${NEON_BIN_FOLDER}/neon-dns-reload

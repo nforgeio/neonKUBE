@@ -857,9 +857,9 @@ namespace Neon.Xunit.Hive
         /// </summary>
         /// <param name="entry">The entry to be set.</param>
         /// <param name="waitUntilPropagated">
-        /// Optionally waits for <see cref="DnsHostsManager.PropagationTimeout"/> 
-        /// for the change to be propagated across the hive.  This defaults to
-        /// <c>false</c>.
+        /// Optionally signals hive nodes to wipe their DNS cache and reload local hosts
+        /// so the changes will be proactively  propagated across the hive.  This defaults
+        /// to <c>false</c>.
         /// </param>
         public void SetDnsEntry(DnsEntry entry, bool waitUntilPropagated = false)
         {
@@ -867,21 +867,12 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Waits for the hive DNS state and the DNS entries to converge.
+        /// Poactively signals the hive to wipe any cached DNS entries and reload
+        /// any local host definitions.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// It may take some time for changes made to the hive DNS to be
-        /// reflected in the DNS names actually resolved on the hive nodes.
-        /// </para>
-        /// <para>
-        /// See <see cref="DnsHostsManager.PropagationTimeout"/> for more
-        /// information.
-        /// </para>
-        /// </remarks>
         public void ConvergeDns()
         {
-            Thread.Sleep(DnsHostsManager.PropagationTimeout);
+            hive.DnsHosts.Reload(wipe: true);
         }
 
         //---------------------------------------------------------------------

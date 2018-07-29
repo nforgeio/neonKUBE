@@ -3355,10 +3355,7 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="hostname">The DNS hostname to be checked.</param>
         /// <param name="timeout">
-        /// Optional timeout.  This defaults to a reasonable value 
-        /// (<see cref="DnsHostsManager.PropagationTimeout"/>) that is appropriate 
-        /// for the hive DNS host services.  You may customize this if
-        /// you're checking DNS entries served from another source.
+        /// Optional timeout.  This defaults to 60 seconds.
         /// </param>
         /// <exception cref="TimeoutException">Thrown if the hostname didn't resolve in time.</exception>
         /// <remarks>
@@ -3375,7 +3372,7 @@ echo $? > {cmdFolder}/exit
 
             if (timeout <= TimeSpan.Zero)
             {
-                timeout = DnsHostsManager.PropagationTimeout;
+                timeout = TimeSpan.FromSeconds(60);
             }
 
             try
