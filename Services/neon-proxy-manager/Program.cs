@@ -717,7 +717,7 @@ frontend haproxy_stats
     mode                http
     log                 global
     option              httplog
-    option              http-server-close
+    option              http-keep-alive
     use_backend         haproxy_stats
 
 backend haproxy_stats
@@ -985,7 +985,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: true)}");
                     }
 
-                    if (tcpRule.LogChecks)
+                    if (tcpRule.Check && tcpRule.LogChecks)
                     {
                         sbHaProxy.AppendLine($"    option              log-health-checks");
                     }
@@ -1153,7 +1153,7 @@ frontend {haProxyFrontend.Name}
     unique-id-header    {LogActivity.HttpHeader}
     unique-id-format    {HiveConst.HAProxyUidFormat}
     option              forwardfor
-    option              http-server-close
+    option              http-keep-alive
     http-request        set-header X-Forwarded-Proto https if {{ ssl_fc }}
 ");
 
@@ -1603,7 +1603,7 @@ frontend haproxy_stats
     mode                http
     log                 global
     option              httplog
-    option              http-server-close
+    option              http-keep-alive
     use_backend         haproxy_stats
 
 backend haproxy_stats
