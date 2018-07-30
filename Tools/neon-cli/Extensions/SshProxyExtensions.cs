@@ -582,8 +582,8 @@ namespace NeonCli
 
             // Secure the files and make the scripts executable.
 
-            node.SudoCommand($"chmod 644 {HiveHostFolders.Config}/*.*");
-            node.SudoCommand($"chmod 744 {HiveHostFolders.Config}/*.sh");
+            node.SudoCommand($"chmod 600 {HiveHostFolders.Config}/*.*");
+            node.SudoCommand($"chmod 700 {HiveHostFolders.Config}/*.sh");
 
             node.Status = "copied";
         }
@@ -616,7 +616,7 @@ namespace NeonCli
 
             // Make the setup scripts executable.
 
-            server.SudoCommand($"chmod 744 {HiveHostFolders.Setup}/*");
+            server.SudoCommand($"chmod 700 {HiveHostFolders.Setup}/*");
 
             // Uncomment this if/when we have to upload source files.
 
@@ -672,7 +672,7 @@ namespace NeonCli
 
             // Make the scripts executable.
 
-            server.SudoCommand($"chmod 744 {HiveHostFolders.Tools}/*");
+            server.SudoCommand($"chmod 700 {HiveHostFolders.Tools}/*");
         }
     }
 }

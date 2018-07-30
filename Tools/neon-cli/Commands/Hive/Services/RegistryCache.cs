@@ -121,14 +121,13 @@ namespace NeonCli
                         var sbScript    = new StringBuilder();
 
                         sbScript.AppendLine("mkdir -p /etc/neon-registry-cache");
-                        sbScript.AppendLine("chmod 750 /etc/neon-registry-cache");
+                        sbScript.AppendLine("chmod 600 /etc/neon-registry-cache");
 
                         copyCommand.AddFile($"cache.crt", hive.HiveLogin.RegistryCerts[node.Name]);
                         copyCommand.AddFile($"cache.key", hive.HiveLogin.RegistryKeys[node.Name]);
 
                         sbScript.AppendLine($"cp cache.crt /etc/neon-registry-cache/cache.crt");
                         sbScript.AppendLine($"cp cache.key /etc/neon-registry-cache/cache.key");
-                        sbScript.AppendLine($"chmod 640 /etc/neon-registry-cache/*");
 
                         copyCommand.AddFile("registry-cache-server-certs.sh", sbScript.ToString(), isExecutable: true);
 
