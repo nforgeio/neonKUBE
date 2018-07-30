@@ -314,8 +314,14 @@ USAGE:
         
         ""RegistryCache"": true,
 
+        // Optionally disable user namespace remapping.  This defaults to [true].
+        //
+        // NOTE: This is currently being ignored due to: https://github.com/moby/moby/issues/37560
+
+        ""UsernsRemap"": true,
+
         // Optionally enables experimental Docker features.  This defaults to [false].
-        
+
         ""Experimental"": false,        
 
         // The Docker daemon container logging options.  This defaults to:

@@ -1664,10 +1664,21 @@ namespace NeonCli.Ansible
                 args.Add($"--mount={sb}");
             }
 
+#if USERNS_REMAP
+            // $todo(jeff.lill): https://github.com/moby/moby/issues/37560
+
+            var needsHostNetwork = false;
+
             foreach (var network in service.Network)
             {
                 args.Add($"--network={network}");
+
+                if (network.Equals("host", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    needsHostNetwork = true;
+                }
             }
+#endif
 
             AppendCreateOption(args, "--no-healthcheck", service.NoHealthCheck);
 

@@ -32,6 +32,7 @@ namespace Neon.Hive
         private const string    defaultLogOptions         = "--log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true";
         private const bool      defaultRegistryCache      = true;
         private const string    defaultRegistryCacheImage = HiveConst.NeonPublicRegistry + "/neon-registry-cache:latest";
+        private const bool      defaultUsernsRemap        = true;
         private const bool      defaultExperimental       = false;
 
         /// <summary>
@@ -240,6 +241,44 @@ namespace Neon.Hive
 
             return false;
         }
+
+        /// <summary>
+        /// <note>
+        /// This setting is currently being ignored due to <a href="https://github.com/moby/moby/issues/37560">this issue</a>.
+        /// </note>
+        /// <para>
+        /// Enables Docker <a href="namespace remapping">https://docs.docker.com/engine/security/userns-remap/</a>
+        /// such that containers will run as the <b>dockremap</b> user rather than <b>root</b>.
+        /// This defaults to <c>true</c> for better container security.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// It is generally considered to be a best practice to avoid running containers
+        /// as <b>root</b> even though Linux namespaces and cgroups try to prevent 
+        /// containers from interacting with host resources or other containers.  One
+        /// basic problem is that containers running as <b>root</b> will have root
+        /// permissions on any files mounted to the container.  This means that a
+        /// container mounting the host root folder will have R/W access to the entire
+        /// host file system.
+        /// </para>
+        /// <para>
+        /// It's also potentially possible for a container running as root to elevate
+        /// its permissions via obscure commands or possible due to Docker or Linux
+        /// bugs.  Containers don't have the chance to do this if they're not running
+        /// as <b>root</b>.
+        /// </para>
+        /// <para>
+        /// You may find that some of your containers may need elevated permissions
+        /// for example for <b>--network=host</b> or to listen on protected TCP/UDP
+        /// ports below 1024.  You can specify <b>--userns=host</b> to override this
+        /// setting and run your container as <b>root</b> and/or the <b>--cap-add CAPABILITY</b> 
+        /// option to grant specific capabilities to your containers.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "UsernsRemap", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultUsernsRemap)]
+        public bool UsernsRemap { get; set; } = defaultUsernsRemap;
 
         /// <summary>
         /// Enables experimental Docker features.  This defaults to <c>false</c>.

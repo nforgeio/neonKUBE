@@ -1034,6 +1034,15 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
 
             settings.Add("log-level", "info");
             settings.Add("log-driver", "fluentd");
+
+#if USERNS_REMAP
+            // $todo(jeff.lill): https://github.com/moby/moby/issues/37560
+            if (node.Hive.Definition.Docker.UsernsRemap)
+            {
+                settings.Add("userns-remap", "default");
+            }
+#endif
+
             settings.Add("experimental", hive.Definition.Docker.Experimental);
 
             var logOptions = new JObject();
