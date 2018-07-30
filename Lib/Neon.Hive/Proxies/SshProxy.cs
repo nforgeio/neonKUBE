@@ -1263,37 +1263,37 @@ namespace Neon.Hive
             // Create the folders.
 
             SudoCommand($"mkdir -p {HiveHostFolders.Archive}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {HiveHostFolders.Archive}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Config}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 755 {HiveHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 777 {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Is this a potential security problem?
                                                                                             //                   SCP uploads fail for 770
             SudoCommand($"mkdir -p {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {HiveHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {HiveHostFolders.Setup}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.State}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.State}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {HiveHostFolders.State}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {HiveHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
         }
 
         /// <summary>
