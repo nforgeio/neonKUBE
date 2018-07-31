@@ -178,10 +178,11 @@ cat <<EOF > /etc/sysctl.conf
 #	https://github.com/moby/moby/issues/31208
 #
 # We're going to configure TCP connections to begin sending
-# keepalives after 500 minutes of being idle and then every
-# 30 seconds thereafter (regardless of any other traffic).
-# If keepalives are not ACKed after 2.5 minutes, Linux will
-# report the connection as closed to the application layer.
+# keepalives after 300 seconds (5 minutes) of being idle and 
+# then every 30 seconds thereafter (regardless of any other
+# traffic).  If keepalives are not ACKed after 30*5 seconds 
+# (2.5 minutes), Linux will report the connection as closed 
+# to the application layer.
 
 net.ipv4.tcp_keepalive_time = 300
 net.ipv4.tcp_keepalive_intvl = 30
