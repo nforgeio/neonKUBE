@@ -661,8 +661,31 @@ namespace Neon.Hive
 
             log.LogInfo(() => $"Connecting to hive [{HiveLogin}].");
 
+            var useVpn = false;
+
+            if (HiveLogin.Definition.Hosting.IsOnPremiseProvider)
+            {
+                useVpn = HiveLogin.Definition.Vpn.Enabled;
+            }
+            else
+            {
+                useVpn = true; // Always TRUE for cloud environments.
+            }
+
+            if (useVpn)
+            {
+                var errorMessage = (string)null;
+
+                HiveHelper.VpnOpen(HiveLogin, onError: message => errorMessage = message);
+
+                if (errorMessage != null)
+                {
+                    throw new HiveException($"Hive VPN connection failed: {errorMessage}");
+                }
+            }
+
             OpenHive(
-                new Hive.HiveProxy(HiveLogin,
+                new HiveProxy(HiveLogin,
                     (name, publicAddress, privateAddress) =>
                     {
                         var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, HiveLogin.GetSshCredentials(), null);
@@ -705,7 +728,7 @@ namespace Neon.Hive
             remoteConnection = true;
 
             OpenHive(
-                new Hive.HiveProxy(HiveLogin,
+                new HiveProxy(HiveLogin,
                     (name, publicAddress, privateAddress) =>
                     {
                         var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, HiveLogin.GetSshCredentials(), null);
@@ -782,8 +805,8 @@ namespace Neon.Hive
             }
 
             // Load the hive definition from Consul and initialize the [Hive] property.
-            // Note that we need to hack [GetDefinitionAsync()] into believing that the hive
-            // is already connected for this to work.
+            // Note that we need to hack [GetDefinitionAsync()] into believing that the 
+            // hive is already connected for this to work.
 
             HiveDefinition definition;
 
@@ -805,7 +828,7 @@ namespace Neon.Hive
             };
 
             var hive = OpenHive(
-                new Hive.HiveProxy(HiveLogin,
+                new HiveProxy(HiveLogin,
                     (name, publicAddress, privateAddress) =>
                     {
                         var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, sshCredentials, null);
