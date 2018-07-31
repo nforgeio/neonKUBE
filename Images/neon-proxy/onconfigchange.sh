@@ -214,7 +214,7 @@ DEBUG_OPTION=
 
 export HAPROXY_CONFIG_FOLDER=${CONFIG_FOLDER}
 
-haproxy -f ${CONFIG_PATH} ${STOP_OPTION} ${DEBUG_OPTION}
+haproxy -f ${CONFIG_PATH} ${STOP_OPTION} ${DEBUG_OPTION} -V
 
 # Give HAProxy a chance to start/restart cleanly before 
 # returning to check for another update.

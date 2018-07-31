@@ -54,4 +54,4 @@ function Build
 
 $noImagePush = $nopush
 
-Build 1.8.9 -latest
+Build 1.8.12 -latest
