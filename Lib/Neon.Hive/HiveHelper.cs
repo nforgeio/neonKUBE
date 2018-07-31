@@ -568,6 +568,7 @@ namespace Neon.Hive
         /// <param name="secrets">Optional emulated Docker secrets.</param>
         /// <param name="configs">Optional emulated Docker configs.</param>
         /// <param name="loginPath">Optional path to a specific hive login to override the current login.</param>
+        /// <param name="noVpn">Optionally specifies that the hive VPN should be ignored.</param>
         /// <returns>The <see cref="HiveProxy"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a hive is already connected.</exception>
         /// <remarks>
@@ -637,7 +638,7 @@ namespace Neon.Hive
         /// this.
         /// </note>
         /// </remarks>
-        public static HiveProxy OpenHiveRemote(DebugSecrets secrets = null, DebugConfigs configs = null, string loginPath = null)
+        public static HiveProxy OpenHiveRemote(DebugSecrets secrets = null, DebugConfigs configs = null, string loginPath = null, bool noVpn = false)
         {
             if (IsConnected)
             {
@@ -661,26 +662,33 @@ namespace Neon.Hive
 
             log.LogInfo(() => $"Connecting to hive [{HiveLogin}].");
 
-            var useVpn = false;
-
-            if (HiveLogin.Definition.Hosting.IsOnPremiseProvider)
+            if (!noVpn)
             {
-                useVpn = HiveLogin.Definition.Vpn.Enabled;
-            }
-            else
-            {
-                useVpn = true; // Always TRUE for cloud environments.
-            }
+                // It is possible for the VPN to be disconnected even if there's a current
+                // hive login.  We need to ensure that we're connected if the hive was 
+                // deployed with a VPN and wr're not explicitly ignoring that.
 
-            if (useVpn)
-            {
-                var errorMessage = (string)null;
+                var useVpn = false;
 
-                HiveHelper.VpnOpen(HiveLogin, onError: message => errorMessage = message);
-
-                if (errorMessage != null)
+                if (HiveLogin.Definition.Hosting.IsOnPremiseProvider)
                 {
-                    throw new HiveException($"Hive VPN connection failed: {errorMessage}");
+                    useVpn = HiveLogin.Definition.Vpn.Enabled;
+                }
+                else
+                {
+                    useVpn = true; // Always TRUE for cloud environments.
+                }
+
+                if (useVpn)
+                {
+                    var errorMessage = (string)null;
+
+                    HiveHelper.VpnOpen(HiveLogin, onError: message => errorMessage = message);
+
+                    if (errorMessage != null)
+                    {
+                        throw new HiveException($"Hive VPN connection failed: {errorMessage}");
+                    }
                 }
             }
 
