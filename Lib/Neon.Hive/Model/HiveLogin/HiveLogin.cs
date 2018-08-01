@@ -269,6 +269,11 @@ namespace Neon.Hive
                 VpnCredentials.CaZipKey = null;
             }
 
+            if (VaultCertificate != null)
+            {
+                VaultCertificate.KeyPem = null;
+            }
+
             // Clear the Docker registry credentials.
 
             Definition.Docker.ClearSecrets();

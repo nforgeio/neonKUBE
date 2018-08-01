@@ -473,7 +473,17 @@ subjectAltName = {sbAltNames}
         /// <returns>The combined PEM coded certificate.</returns>
         public string CombinedNormalizedPem
         {
-            get { return NormalizePem(CertPem + KeyPem); }
+            get
+            {
+                if (KeyPem == null)
+                {
+                    return CertPem;
+                }
+                else
+                {
+                    return NormalizePem(CertPem + KeyPem);
+                }
+            }
         }
 
         /// <summary>
