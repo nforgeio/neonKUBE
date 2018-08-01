@@ -704,12 +704,15 @@ OPTIONS:
             const int bitCount  = 2048;
             const int validDays = 365000;    // About 1,000 years.
 
+            if (hiveLogin.HiveCertificate == null)
+            {
+                hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Consul, bitCount, validDays, Wildcard.RootAndSubdomains);
+            }
+
             if (hiveLogin.VaultCertificate == null)
             {
                 hiveLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains);
             }
-
-            // $todo(jeff.lill): Generate the Consul cert.
 
             // Persist the certificates into the hive login.
 
@@ -801,20 +804,29 @@ OPTIONS:
 
                     node.Status = "install: certs";
 
-                    // Install the Vault certificate.
-
-                    if (!node.Metadata.IsPet)
+                    if (node.Metadata.IsManager)
                     {
-                        node.UploadText($"/usr/local/share/ca-certificates/{HiveHostNames.Vault}.crt", hiveLogin.VaultCertificate.CertPem);
+                        // Configure the Consul service certificiate (with private key).
+
+                        node.SudoCommand("mkdir -p /etc/consul.d");
+                        node.UploadText($"/etc/consul.d/consul.crt", hiveLogin.HiveCertificate.CertPem);
+                        node.UploadText($"/etc/consul.d/consul.key", hiveLogin.HiveCertificate.KeyPem);
+                        node.SudoCommand("chmod 600 /etc/consul.d/*");
+
+                        // Configure the Vault service certificate (with private key).
+
                         node.SudoCommand("mkdir -p /etc/vault");
                         node.UploadText($"/etc/vault/vault.crt", hiveLogin.VaultCertificate.CertPem);
                         node.UploadText($"/etc/vault/vault.key", hiveLogin.VaultCertificate.KeyPem);
                         node.SudoCommand("chmod 600 /etc/vault/*");
-
-                        // $todo(jeff.lill): Install the Consul certificate once we support Consul TLS.
-
-                        node.SudoCommand("update-ca-certificates");
                     }
+
+                    // Upload the hive certificates (without private key) to all hive nodes
+                    // to they'll be trusted implicitly.
+
+                    node.UploadText("/usr/local/share/ca-certificates/hive-general.crt", hiveLogin.HiveCertificate.CertPem);
+                    node.UploadText("/usr/local/share/ca-certificates/hive-vault.crt", hiveLogin.VaultCertificate.CertPem);
+                    node.SudoCommand("update-ca-certificates");
 
                     // Tune Linux for SSDs, if enabled.
 
@@ -1605,14 +1617,23 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
                             labelDefinitions.Add($"{item.Key.ToLowerInvariant()}={value}");
                         }
 
-                        // Generate a script that add the required labels to all nodes in one shot.
+                        if (labelDefinitions.Count == 0)
+                        {
+                            // This should never happen but better to be safe.
 
-                        var sbLabelScript = new StringBuilder();
+                            continue;
+                        }
+
+                        // Generate a script that adds the required labels to each in one shot.
+
+                        var labelAdds = new StringBuilder();
 
                         foreach (var labelDefinition in labelDefinitions)
                         {
-                            sbLabelScript.AppendLine($"docker node update --label-add \"{labelDefinition}\" \"{node.Name}\"");
+                            labelAdds.AppendWithSeparator($"--label-add \"{labelDefinition}\"");
                         }
+
+                        var labelCommand = $"docker node update {labelAdds} \"{node.Name}\"";
 
                         // We occasionaly see [update out of sequence] errors from labeling operations.
                         // These seem to be transient, so we're going to retry a few times before
@@ -1625,7 +1646,7 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
                             {
                                 var bundle = new CommandBundle("./set-labels.sh");
 
-                                bundle.AddFile("set-labels.sh", sbLabelScript.ToString(), isExecutable: true);
+                                bundle.AddFile("set-labels.sh", labelCommand, isExecutable: true);
 
                                 var response = manager.SudoCommand(bundle, RunOptions.Defaults & ~RunOptions.FaultOnError);
 
@@ -1637,6 +1658,12 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
                                 await Task.CompletedTask;
 
                             }).Wait();
+
+                        // We're going to wait two seconds for the hive manager to propagate the
+                        // changes in the hope of proactively avoiding the [update out of sequence] 
+                        // errors
+
+                        Thread.Sleep(TimeSpan.FromSeconds(2));
                     }
                 });
         }

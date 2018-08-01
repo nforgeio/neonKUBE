@@ -373,7 +373,7 @@ export HiveHostPorts_ProxyPrivatecFirstUser=5320
 export HiveHostPorts_ProxyPrivateLastUser=5499
 
 #------------------------------------------------------------------------------
-# NeonSysLogFacility:
+# HiveSysLogFacility:
 #
 # Define the local SysLog facilities reserved for neonHIVE purposes.  These
 # must match the definitions in [Neon.Hive.NeonSysLogFacility].
@@ -388,7 +388,7 @@ export HiveSysLogFacility_ProxyName=local7
 export HiveSysLogFacility_ProxyNumbe=23
 
 #------------------------------------------------------------------------------
-# NeonHosts:
+# HiveHostnames:
 #
 # Defines the DNS hostnames used by built-in node level applications as well
 # as Docker containers and services.

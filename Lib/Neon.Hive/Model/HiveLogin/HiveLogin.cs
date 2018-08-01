@@ -163,7 +163,17 @@ namespace Neon.Hive
         public VaultCredentials VaultCredentials { get; set;}
 
         /// <summary>
-        /// The HashiCorp Vault self-signed certificate.
+        /// The hive self-signed wildcard certificate covering <b>*.NAME.hive</b>
+        /// where <b>NAME</b> is the hive name.  This is used to secure HashCorp Vault
+        /// as well as other hive endpoints that need to be secured such as dashboards.
+        /// </summary>
+        [JsonProperty(PropertyName = "HiveCertificate", Required = Required.Default)]
+        [DefaultValue(null)]
+        public TlsCertificate HiveCertificate { get; set; }
+
+        /// <summary>
+        /// The HashiCorp Vault self-signed wildcard certificate covering <b>*.neon-vault.NAME.hive</b>
+        /// where <b>NAME</b> is the hive name.
         /// </summary>
         [JsonProperty(PropertyName = "VaultCertificate", Required = Required.Default)]
         [DefaultValue(null)]
@@ -267,6 +277,11 @@ namespace Neon.Hive
             if (VpnCredentials != null)
             {
                 VpnCredentials.CaZipKey = null;
+            }
+
+            if (HiveCertificate != null)
+            {
+                HiveCertificate.KeyPem = null;
             }
 
             if (VaultCertificate != null)

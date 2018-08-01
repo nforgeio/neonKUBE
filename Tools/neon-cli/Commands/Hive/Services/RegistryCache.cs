@@ -204,7 +204,7 @@ namespace NeonCli
             //      /etc/docker/certs.d/<hostname>:{HiveHostPorts.RegistryCache}/ca.crt
             //      /usr/local/share/ca-certificates/<hostname>.crt
             //
-            // and then have Linux update its known certificates.
+            // and then have Linux reload the trusted certificates.
 
             node.InvokeIdempotentAction("setup/registrycache-cert",
                 () =>
