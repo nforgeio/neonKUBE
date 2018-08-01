@@ -955,7 +955,7 @@ backend haproxy_stats
                 // Generate the resolvers argument to be used to locate the
                 // backend servers.
 
-                var initAddrArg  = " init-addr none";
+                var initAddrArg  = " init-addr last,libc,none";
                 var resolversArg = string.Empty;
 
                 if (!string.IsNullOrEmpty(tcpRule.Resolver))
@@ -1254,7 +1254,7 @@ frontend {haProxyFrontend.Name}
                     }
 
                     var checkArg        = httpRule.Check ? " check" : " no-check";
-                    var initAddrArg     = " init-addr none";
+                    var initAddrArg     = " init-addr last,libc,none";
                     var checkVersionArg = string.Empty;
 
                     if (!string.IsNullOrEmpty(httpRule.CheckHost))
@@ -1665,7 +1665,7 @@ listen tcp:port-{port}
                 //sbHaProxy.AppendLine($"    option              log-health-checks");
 
                 var checkArg    = " check";
-                var initAddrArg = " init-addr none";
+                var initAddrArg = " init-addr last,libc,none";
                 var serverIndex = 0;
 
                 foreach (var targetAddress in bridgeTargets)

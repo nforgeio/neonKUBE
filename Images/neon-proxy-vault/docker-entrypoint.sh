@@ -147,7 +147,7 @@ do
     ip=$(echo ${endpoint} | cut -d':' -f 2)
     port=$(echo ${endpoint} | cut -d':' -f 3)
 
-    echo "    server              ${name}.${HiveHostnames_Vault} ${ip}:${port} init-addr none check" >> ${configPath}
+    echo "    server              ${name}.${HiveHostnames_Vault} ${ip}:${port} init-addr last,libc,none check" >> ${configPath}
 done
 
 # Validate the configuration file and then launch HAProxy.
