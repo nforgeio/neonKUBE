@@ -51,7 +51,7 @@ namespace NeonCli
         /// hive.  <b>neon-cli</b> checks this to ensure that it is capable of
         /// managing a hive or if it is too old.
         /// </summary>
-        public const string MinimumVersion = "18.08-alpha.0";
+        public const string MinimumVersion = "18.08-alpha.1";
 
         /// <summary>
         /// CURL command common options.
