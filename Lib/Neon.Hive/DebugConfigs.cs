@@ -21,7 +21,7 @@ namespace Neon.Hive
 {
     /// <summary>
     /// Used to emulate Docker service configs when debugging an application using 
-    /// <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/>.
+    /// <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -69,8 +69,8 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Called internally by <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> to 
-        /// create any requested configs and add them to the dictionary.
+        /// Called internally by <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> 
+        /// to create any requested configs and add them to the dictionary.
         /// </summary>
         /// <param name="hive">The attached hive.</param>
         /// <param name="hiveLogin">The hive login.</param>

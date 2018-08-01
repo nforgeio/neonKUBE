@@ -547,7 +547,8 @@ namespace Neon.Hive
         /// Indicates whether the application is running outside of a Docker container
         /// but we're going to try to simulate the environment such that the application
         /// believe it is running in a container within a Docker hive.  See 
-        /// <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> for more information.
+        /// <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> 
+        /// for more information.
         /// </summary>
         public static bool IsConnected { get; private set; } = false;
 
@@ -753,7 +754,7 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// Connects the current application to the hive.  This only works for applications
-        /// actually running in the hive.  Use <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/>
+        /// actually running in the hive.  Use <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/>
         /// when running applications remotely.
         /// </para>
         /// <note>
@@ -926,7 +927,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Resets any temporary configurations made by <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/>
+        /// Resets any temporary configurations made by <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/>
         /// such as the modifications to the DNS resolver <b>hosts</b> file.  This should be called just
         /// before the application exits.
         /// </summary>
@@ -1012,7 +1013,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a service via the
-        /// Docker secrets feature or a secret provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> 
+        /// Docker secrets feature or a secret provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> 
         /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
@@ -1064,7 +1065,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a service via the
-        /// Docker secrets feature or a secret provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> 
+        /// Docker secrets feature or a secret provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> 
         /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
@@ -1102,7 +1103,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a config provisioned to a service via the
-        /// Docker configs feature or a config provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> 
+        /// Docker configs feature or a config provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> 
         /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
@@ -1153,7 +1154,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a config provisioned to a container via the
-        /// Docker configs feature or a config provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> 
+        /// Docker configs feature or a config provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> 
         /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
