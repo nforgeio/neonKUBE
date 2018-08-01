@@ -859,6 +859,10 @@ namespace Neon.Hive
             {
                 WaitForBoot(timeout);
             }
+            catch (SshAuthenticationException e)
+            {
+                throw new HiveException("Access Denied: Invalid credentials.", e);
+            }
             catch (Exception e)
             {
                 throw new HiveException($"Unable to connect to the hive within [{timeout}].", e);
