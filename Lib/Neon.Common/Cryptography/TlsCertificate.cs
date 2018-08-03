@@ -227,12 +227,6 @@ namespace Neon.Cryptography
 
                 var configPath = Path.Combine(tempFolder, "cert.conf");
                 var sbConfig   = new StringBuilder();
-                var sbAltNames = new StringBuilder();
-
-                foreach (var name in hostnames)
-                {
-                    sbAltNames.AppendWithSeparator($"DNS:{name}", ", ");
-                }
 
                 sbConfig.Append(
 $@"
@@ -241,10 +235,7 @@ default_bits       = 2048
 prompt             = no
 default_md         = sha256
 distinguished_name = dn
-
-[req_v3]
-basicConstraints = CA:TRUE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+req_extensions     = req_v3
 
 [dn]
 C=US
@@ -254,9 +245,18 @@ O=.
 OU=.
 CN={hostname}
 
-[san]
-subjectAltName = {sbAltNames}
+[req_v3]
+basicConstraints = CA:TRUE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
 ");
+                for (int i = 0; i < hostnames.Count; i++)
+                {
+                    sbConfig.AppendLine($"DNS.{i + 1} = {hostnames[i]}");
+                }
 
                 sbConfig.AppendLine();
 
@@ -265,8 +265,8 @@ subjectAltName = {sbAltNames}
                 var result = NeonHelper.ExecuteCaptureStreams("openssl",
                     $"req -newkey rsa:{bitCount} -nodes -sha256 -x509 -days {validDays} " +
                     $"-subj \"/C=--/ST=./L=./O=./CN={hostname}\" " +
-                    $"-reqexts san " +
-                    $"-extensions san " +
+//                    $"-reqexts san " +
+//                    $"-extensions san " +
                     $"-extensions req_v3 " +
                     $"-keyout \"{keyPath}\" " +
                     $"-out \"{certPath}\" " +
