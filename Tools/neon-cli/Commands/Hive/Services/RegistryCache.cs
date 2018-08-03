@@ -53,41 +53,6 @@ namespace NeonCli
 
             this.hive          = hive;
             this.hiveLoginPath = hiveLoginPath;
-
-            if (!hive.Definition.Docker.RegistryCache)
-            {
-                return;
-            }
-
-            // Generate self-signed certificates and private keys for the registry
-            // caches to be hosted on each of the managers.  Note that these
-            // certs will expire in about 1,000 years, so they're effectively
-            // permanent.
-
-            if (hive.HiveLogin.RegistryCerts == null || hive.HiveLogin.RegistryCerts.Count == 0)
-            {
-                hive.HiveLogin.RegistryCerts = new Dictionary<string, string>();
-                hive.HiveLogin.RegistryKeys  = new Dictionary<string, string>();
-
-                foreach (var manager in hive.Definition.SortedManagers)
-                {
-                    var certificate = TlsCertificate.CreateSelfSigned(GetCacheHost(manager), 4096, 365000);
-
-                    try
-                    {
-                        hive.HiveLogin.RegistryCerts.Add(manager.Name, certificate.CertPem);
-                        hive.HiveLogin.RegistryKeys.Add(manager.Name, certificate.KeyPem);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.Error.WriteLine("*** ERROR: Could not generate registry cache TLS certificate.");
-                        Console.Error.WriteLine(e.Message);
-                        Program.Exit(1);
-                    }
-                }
-
-                File.WriteAllText(hiveLoginPath, NeonHelper.JsonSerialize(hive.HiveLogin, Formatting.Indented));
-            }
         }
 
         /// <summary>
@@ -95,10 +60,10 @@ namespace NeonCli
         /// </summary>
         public void Configure(SshProxy<NodeDefinition> node)
         {
-            if (!hive.Definition.Docker.RegistryCache)
-            {
-                return;
-            }
+            // NOTE:
+            //
+            // We're going to configure the certificates even if the registry cache
+            // isn't enabled so it'll be easier to upgrade the hive later.
 
             // For managers, upload the individual cache certificate and 
             // private key files for managers [cache.crt] and [cache.key] at
@@ -113,128 +78,126 @@ namespace NeonCli
                 node.InvokeIdempotentAction("setup/registrycache",
                     () =>
                     {
-                        // Copy the cert and key.
+                        // Copy the registry cache certificate and private key to
+                        // 
+                        //      /etc/neon-registry-cache
 
                         node.Status = "run: registry-cache-server-certs.sh";
 
-                        var copyCommand = new CommandBundle("./registry-cache-server-certs.sh");
-                        var sbScript    = new StringBuilder();
+                        var copyCommand  = new CommandBundle("./registry-cache-server-certs.sh");
+                        var sbCopyScript = new StringBuilder();
 
-                        sbScript.AppendLine("mkdir -p /etc/neon-registry-cache");
-                        sbScript.AppendLine("chmod 750 /etc/neon-registry-cache");
+                        sbCopyScript.AppendLine("mkdir -p /etc/neon-registry-cache");
+                        sbCopyScript.AppendLine("chmod 750 /etc/neon-registry-cache");
 
-                        copyCommand.AddFile($"cache.crt", hive.HiveLogin.RegistryCerts[node.Name]);
-                        copyCommand.AddFile($"cache.key", hive.HiveLogin.RegistryKeys[node.Name]);
+                        copyCommand.AddFile($"cache.crt", hive.HiveLogin.RegistryCacheCertificate.CertPem);
+                        copyCommand.AddFile($"cache.key", hive.HiveLogin.RegistryCacheCertificate.KeyPem);
 
-                        sbScript.AppendLine($"cp cache.crt /etc/neon-registry-cache/cache.crt");
-                        sbScript.AppendLine($"cp cache.key /etc/neon-registry-cache/cache.key");
-                        sbScript.AppendLine($"chmod 640 /etc/neon-registry-cache/*");
+                        sbCopyScript.AppendLine($"cp cache.crt /etc/neon-registry-cache/cache.crt");
+                        sbCopyScript.AppendLine($"cp cache.key /etc/neon-registry-cache/cache.key");
+                        sbCopyScript.AppendLine($"chmod 640 /etc/neon-registry-cache/*");
 
-                        copyCommand.AddFile("registry-cache-server-certs.sh", sbScript.ToString(), isExecutable: true);
-
+                        copyCommand.AddFile("registry-cache-server-certs.sh", sbCopyScript.ToString(), isExecutable: true);
                         node.SudoCommand(copyCommand);
 
-                        // Create the registry data volume.
+                        // Upload the cache certificates to every hive node to:
+                        //
+                        //      /etc/docker/certs.d/<hostname>:{HiveHostPorts.RegistryCache}/ca.crt
+                        //
+                        // and then have Linux reload the trusted certificates.
 
-                        node.Status = "create: registry cache volume";
-                        node.SudoCommand(new CommandBundle("docker-volume-create \"neon-registry-cache\""));
+                        node.InvokeIdempotentAction("setup/registrycache-cert",
+                            () =>
+                            {
+                                node.Status = "upload: registry cache certs";
 
-                        // Start the registry cache using the required Docker public registry
-                        // credentials, if any.
+                                var uploadCommand  = new CommandBundle("./registry-cache-client-certs.sh");
+                                var sbUploadScript = new StringBuilder();
 
-                        var publicRegistryCredentials = hive.Definition.Docker.Registries.SingleOrDefault(r => HiveHelper.IsDockerPublicRegistry(r.Registry));
+                                uploadCommand.AddFile($"hive-neon-registry-cache.crt", hive.HiveLogin.RegistryCacheCertificate.CertPem);
 
-                        publicRegistryCredentials          = publicRegistryCredentials ?? new RegistryCredentials() { Registry = HiveConst.DockerPublicRegistry };
-                        publicRegistryCredentials.Username = publicRegistryCredentials.Username ?? string.Empty;
-                        publicRegistryCredentials.Password = publicRegistryCredentials.Password ?? string.Empty;
+                                foreach (var manager in hive.Definition.SortedManagers)
+                                {
+                                    var cacheHostName = GetCacheHost(manager);
 
-                        node.Status = "start: neon-registry-cache";
+                                    sbUploadScript.AppendLine($"mkdir -p /etc/docker/certs.d/{cacheHostName}:{HiveHostPorts.DockerRegistryCache}");
+                                    sbUploadScript.AppendLine($"cp hive-neon-registry-cache.crt /etc/docker/certs.d/{cacheHostName}:{HiveHostPorts.DockerRegistryCache}/ca.crt");
+                                }
 
-                        var registry = publicRegistryCredentials.Registry;
+                                uploadCommand.AddFile("registry-cache-client-certs.sh", sbUploadScript.ToString(), isExecutable: true);
+                                node.SudoCommand(uploadCommand);
+                            });
 
-                        if (string.IsNullOrEmpty(registry) || registry.Equals("docker.io", StringComparison.InvariantCultureIgnoreCase))
+                        // Start the registry cache containers if enabled for the hive.
+
+                        if (hive.Definition.Docker.RegistryCache)
                         {
-                            registry = "registry-1.docker.io";
+                            // Create the registry data volume.
+
+                            node.Status = "create: registry cache volume";
+                            node.SudoCommand(new CommandBundle("docker-volume-create \"neon-registry-cache\""));
+
+                            // Start the registry cache using the required Docker public registry
+                            // credentials, if any.
+
+                            var publicRegistryCredentials = hive.Definition.Docker.Registries.SingleOrDefault(r => HiveHelper.IsDockerPublicRegistry(r.Registry));
+
+                            publicRegistryCredentials          = publicRegistryCredentials ?? new RegistryCredentials() { Registry = HiveConst.DockerPublicRegistry };
+                            publicRegistryCredentials.Username = publicRegistryCredentials.Username ?? string.Empty;
+                            publicRegistryCredentials.Password = publicRegistryCredentials.Password ?? string.Empty;
+
+                            node.Status = "start: neon-registry-cache";
+
+                            var registry = publicRegistryCredentials.Registry;
+
+                            if (string.IsNullOrEmpty(registry) || registry.Equals("docker.io", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                registry = "registry-1.docker.io";
+                            }
+
+                            var runCommand = new CommandBundle(
+                                "docker run",
+                                "--name", "neon-registry-cache",
+                                "--detach",
+                                "--restart", "always",
+                                "--publish", $"{HiveHostPorts.DockerRegistryCache}:5000",
+                                "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",     // Registry cache certificates folder
+                                "--volume", "neon-registry-cache:/var/lib/neon-registry-cache", 
+                                "--env", $"HOSTNAME={node.Name}.{HiveHostNames.RegistryCache}",
+                                "--env", $"REGISTRY=https://{registry}",
+                                "--env", $"USERNAME={publicRegistryCredentials.Username}",
+                                "--env", $"PASSWORD={publicRegistryCredentials.Password}",
+                                "--env", "LOG_LEVEL=info",
+                                Program.ResolveDockerImage(hive.Definition.Docker.RegistryCacheImage));
+
+                            node.SudoCommand(runCommand);
+
+                            // Upload a script so it will be easier to manually restart the container.
+
+                            // $todo(jeff.lill);
+                            //
+                            // Persisting the registry credentials in the uploaded script here is 
+                            // probably not the best idea, but I really like the idea of having
+                            // this script available to make it easy to restart the cache if
+                            // necessary.
+                            //
+                            // There are a couple of mitigating factors:
+                            //
+                            //      * The scripts folder can only be accessed by the ROOT user
+                            //      * These are Docker public registry credentials only
+                            //
+                            // Users can create and use read-only credentials, which is 
+                            // probably a best practice anyway for most hives or they
+                            // can deploy a custom registry (whose crdentials will be 
+                            // persisted to Vault).
+
+                            node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
                         }
-
-                        var runCommand = new CommandBundle(
-                            "docker run",
-                            "--name", "neon-registry-cache",
-                            "--detach",
-                            "--restart", "always",
-                            "--publish", $"{HiveHostPorts.DockerRegistryCache}:5000",
-                            "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",     // Registry cache certificates folder
-                            "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",         // Registry cache repos, images, and working files folder
-                            "--env", $"HOSTNAME={node.Name}.{HiveHostNames.RegistryCache}",
-                            "--env", $"REGISTRY=https://{registry}",
-                            "--env", $"USERNAME={publicRegistryCredentials.Username}",
-                            "--env", $"PASSWORD={publicRegistryCredentials.Password}",
-                            "--env", "LOG_LEVEL=info",
-                            Program.ResolveDockerImage(hive.Definition.Docker.RegistryCacheImage));
-
-                        node.SudoCommand(runCommand);
-
-                        // Upload a script so it will be easier to manually restart the container.
-
-                        // $todo(jeff.lill);
-                        //
-                        // Persisting the registry credentials in the uploaded script here is 
-                        // probably not the best idea, but I really like the idea of having
-                        // this script available to make it easy to restart the cache if
-                        // necessary.
-                        //
-                        // There are a couple of mitigating factors:
-                        //
-                        //      * The scripts folder can only be accessed by the ROOT user
-                        //      * These are Docker public registry credentials only
-                        //
-                        // Users can create and use read-only credentials, which is 
-                        // probably a best practice anyway for most hives or they
-                        // can deploy a custom registry (whose crdentials will be 
-                        // persisted to Vault).
-
-                        node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
                     });
 
                 node.Status = string.Empty;
             }
 
-            // Upload the cache certificates to every hive node at:
-            //
-            //      /etc/docker/certs.d/<hostname>:{HiveHostPorts.RegistryCache}/ca.crt
-            //      /usr/local/share/ca-certificates/<hostname>.crt
-            //
-            // and then have Linux reload the trusted certificates.
-
-            node.InvokeIdempotentAction("setup/registrycache-cert",
-                () =>
-                {
-                    node.Status = "upload: registry cache certs";
-
-                    var uploadCommand = new CommandBundle("./registry-cache-client-certs.sh");
-                    var sbScript      = new StringBuilder();
-
-                    sbScript.AppendLine("mkdir -p /etc/docker/certs.d");
-                    sbScript.AppendLine("mkdir -p /usr/local/share/ca-certificates");
-
-                    foreach (var manager in hive.Definition.SortedManagers)
-                    {
-                        uploadCommand.AddFile($"{manager.Name}.crt", hive.HiveLogin.RegistryCerts[manager.Name]);
-
-                        var cacheHostName = GetCacheHost(manager);
-
-                        sbScript.AppendLine($"mkdir -p /etc/docker/certs.d/{cacheHostName}:{HiveHostPorts.DockerRegistryCache}");
-                        sbScript.AppendLine($"cp {manager.Name}.crt /etc/docker/certs.d/{cacheHostName}:{HiveHostPorts.DockerRegistryCache}/ca.crt");
-                        sbScript.AppendLine($"cp {manager.Name}.crt /usr/local/share/ca-certificates/{cacheHostName}.crt");
-                    }
-
-                    sbScript.AppendLineLinux();
-                    sbScript.AppendLineLinux("update-ca-certificates");
-
-                    uploadCommand.AddFile("registry-cache-client-certs.sh", sbScript.ToString(), isExecutable: true);
-
-                    node.SudoCommand(uploadCommand);
-                });
         }
 
         /// <summary>

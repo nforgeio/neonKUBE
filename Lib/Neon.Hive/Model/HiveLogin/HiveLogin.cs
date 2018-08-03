@@ -180,6 +180,14 @@ namespace Neon.Hive
         public TlsCertificate VaultCertificate { get; set; }
 
         /// <summary>
+        /// The Docker refistry cache self-signed wildcard certificate covering <b>*.neon-registry-cache.NAME.hive</b>
+        /// where <b>NAME</b> is the hive name.
+        /// </summary>
+        [JsonProperty(PropertyName = "RegistryCacheCertificate", Required = Required.Default)]
+        [DefaultValue(null)]
+        public TlsCertificate RegistryCacheCertificate { get; set; }
+
+        /// <summary>
         /// The Docker manager node swarm join key.
         /// </summary>
         [JsonProperty(PropertyName = "SwarmManagerToken", Required = Required.Default)]
@@ -199,20 +207,6 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "VpnCredentials", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public VpnCredentials VpnCredentials { get; set; }
-
-        /// <summary>
-        /// Dictionary of Docker registry TLS certifcates indexed by host manager node name.
-        /// </summary>
-        [JsonProperty(PropertyName = "RegistryCerts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public Dictionary<string, string> RegistryCerts { get; set; }
-
-        /// <summary>
-        /// Dictionary of Docker registry TLS private keys indexed by host manager name.
-        /// </summary>
-        [JsonProperty(PropertyName = "RegistryKeys", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public Dictionary<string, string> RegistryKeys { get; set; }
 
         /// <summary>
         /// Ceph Storage Cluster configuration.
@@ -270,8 +264,6 @@ namespace Neon.Hive
             SwarmManagerToken     = null;
             SwarmWorkerToken      = null;
             SshHiveHostPrivateKey = null;
-            RegistryCerts         = null;
-            RegistryKeys          = null;
             Ceph                  = null;
 
             if (VpnCredentials != null)
@@ -287,6 +279,11 @@ namespace Neon.Hive
             if (VaultCertificate != null)
             {
                 VaultCertificate.KeyPem = null;
+            }
+
+            if (RegistryCacheCertificate != null)
+            {
+                RegistryCacheCertificate.KeyPem = null;
             }
 
             // Clear the Docker registry credentials.

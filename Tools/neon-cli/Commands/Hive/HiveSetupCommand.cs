@@ -714,6 +714,11 @@ OPTIONS:
                 hiveLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains);
             }
 
+            if (hiveLogin.RegistryCacheCertificate == null)
+            {
+                hiveLogin.RegistryCacheCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.RegistryCache, bitCount, validDays, Wildcard.RootAndSubdomains);
+            }
+
             // Persist the certificates into the hive login.
 
             hiveLogin.Save();
@@ -823,9 +828,14 @@ OPTIONS:
 
                     // Upload the hive certificates (without private key) to all hive nodes
                     // to they'll be trusted implicitly.
+                    //
+                    // Note that uploading a registry cache certificiate even if that isn't
+                    // currently enabled in the cluster definition so it'll be easy to upgrade 
+                    // the hive later.
 
                     node.UploadText("/usr/local/share/ca-certificates/hive-general.crt", hiveLogin.HiveCertificate.CertPem);
                     node.UploadText("/usr/local/share/ca-certificates/hive-vault.crt", hiveLogin.VaultCertificate.CertPem);
+                    node.UploadText("/usr/local/share/ca-certificates/hive-registry-cache.crt", hiveLogin.RegistryCacheCertificate.CertPem);
                     node.SudoCommand("update-ca-certificates");
 
                     // Tune Linux for SSDs, if enabled.
