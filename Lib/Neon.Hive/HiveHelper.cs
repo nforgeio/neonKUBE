@@ -518,7 +518,7 @@ namespace Neon.Hive
 
                 if (string.IsNullOrEmpty(vaultUri))
                 {
-                    throw new NotSupportedException("Cannot access hive Vault because the [VAULT_ADDR] environment variable was not passed to this container.");
+                    throw new NotSupportedException("Cannot access hive Vault because the [VAULT_ADDR] environment variable is not defined.");
                 }
 
                 return new Uri(vaultUri);
@@ -536,7 +536,7 @@ namespace Neon.Hive
 
                 if (string.IsNullOrEmpty(consulUri))
                 {
-                    throw new NotSupportedException("Cannot access hive Consul because the [CONSUL_HTTP_FULLADDR] environment variable was not passed to this container.");
+                    throw new NotSupportedException("Cannot access hive Consul because the [CONSUL_HTTP_FULLADDR] environment variable is not defined.");
                 }
 
                 return new Uri(Environment.GetEnvironmentVariable("CONSUL_HTTP_FULLADDR"));
@@ -793,8 +793,9 @@ namespace Neon.Hive
                 // set the important ones here.
 
                 Environment.SetEnvironmentVariable("VAULT_ADDR", $"https://neon-vault.hive:{HiveHostPorts.ProxyVault}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_SSL", "true");
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"neon-consul.hive:{NetworkPorts.Consul}");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{HiveHostNames.Consul}:{NetworkPorts.Consul}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"https://{HiveHostNames.Consul}:{NetworkPorts.Consul}");
             }
 
             remoteConnection = false;
@@ -904,8 +905,9 @@ namespace Neon.Hive
             Environment.SetEnvironmentVariable("NEON_NODE_SSD", manager.Metadata.Labels.StorageSSD ? "true" : "false");
             Environment.SetEnvironmentVariable("VAULT_ADDR", $"{hiveDefinition.Vault.GetDirectUri(manager.Name)}");
             Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{hiveDefinition.Vault.GetDirectUri(manager.Name)}");
+            Environment.SetEnvironmentVariable("CONSUL_HTTP_SSL", "true");
             Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-            Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
             Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(hiveDefinition));
 
             // Temporarily modify the local DNS resolver hosts file so we'll be able

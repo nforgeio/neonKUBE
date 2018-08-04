@@ -136,9 +136,17 @@ namespace NeonCli
 
             sbHosts.AppendLineLinux("# PowerDNS Recursor authoritatively answers for [*.hive] hostnames.");
             sbHosts.AppendLineLinux("# on the local node using these mappings.");
+
+            sbHosts.AppendLineLinux();
+            sbHosts.AppendLineLinux("# Internal hive Consul mappings:");
             sbHosts.AppendLineLinux();
 
             sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {HiveHostNames.Consul}");
+
+            foreach (var manager in hiveDefinition.Managers)
+            {
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{HiveHostNames.Consul}");
+            }
 
             sbHosts.AppendLineLinux();
             sbHosts.AppendLineLinux("# Internal hive Vault mappings:");
@@ -482,7 +490,7 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "consul.version", hiveDefinition.Consul.Version);
             SetBashVariable(preprocessReader, "consul.options", consulOptions);
             SetBashVariable(preprocessReader, "consul.address", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-            SetBashVariable(preprocessReader, "consul.fulladdress", $"http://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            SetBashVariable(preprocessReader, "consul.fulladdress", $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
             SetBashVariable(preprocessReader, "consul.hostname", HiveHostNames.Consul);
             SetBashVariable(preprocessReader, "consul.port", hiveDefinition.Consul.Port);
             SetBashVariable(preprocessReader, "consul.tlsdisabled", true);

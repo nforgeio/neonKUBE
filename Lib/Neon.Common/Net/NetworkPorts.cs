@@ -155,7 +155,8 @@ namespace Neon.Net
         public const int SOCKS = 1080;
 
         /// <summary>
-        /// The HashiCorp Consul service port (<b>8500</b>).
+        /// The HashiCorp Consul service (RPC) port (<b>8500</b>).  The protocol
+        /// will be HTTP or HTTPS depending on how Consul is configured.
         /// </summary>
         public const int Consul = 8500;
 

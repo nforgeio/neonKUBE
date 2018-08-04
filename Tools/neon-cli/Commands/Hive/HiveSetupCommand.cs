@@ -811,13 +811,6 @@ OPTIONS:
 
                     if (node.Metadata.IsManager)
                     {
-                        // Configure the Consul service certificiate (with private key).
-
-                        node.SudoCommand("mkdir -p /etc/consul.d");
-                        node.UploadText($"/etc/consul.d/consul.crt", hiveLogin.HiveCertificate.CertPem);
-                        node.UploadText($"/etc/consul.d/consul.key", hiveLogin.HiveCertificate.KeyPem);
-                        node.SudoCommand("chmod 600 /etc/consul.d/*");
-
                         // Configure the Vault service certificate (with private key).
 
                         node.SudoCommand("mkdir -p /etc/vault");
@@ -825,6 +818,16 @@ OPTIONS:
                         node.UploadText($"/etc/vault/vault.key", hiveLogin.VaultCertificate.KeyPem);
                         node.SudoCommand("chmod 600 /etc/vault/*");
                     }
+
+                    // Configure the Consul service certificate (with private key).  Note that
+                    // these need to be configured on all hive nodes because the manager runs
+                    // the Consul service as the masters and the workers and pets run the
+                    // service as a proxy.
+
+                    node.SudoCommand("mkdir -p /etc/consul.d");
+                    node.UploadText($"/etc/consul.d/consul.crt", hiveLogin.HiveCertificate.CertPem);
+                    node.UploadText($"/etc/consul.d/consul.key", hiveLogin.HiveCertificate.KeyPem);
+                    node.SudoCommand("chmod 600 /etc/consul.d/*");
 
                     // Upload the hive certificates (without private key) to all hive nodes
                     // to they'll be trusted implicitly.
@@ -916,8 +919,9 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
 
 export VAULT_ADDR={hive.Definition.Vault.Uri}
 {vaultDirectLine}
+export CONSUL_HTTP_SSL=true
 export CONSUL_HTTP_ADDR={HiveHostNames.Consul}:{hive.Definition.Consul.Port}
-export CONSUL_HTTP_FULLADDR=http://{HiveHostNames.Consul}:{hive.Definition.Consul.Port}
+export CONSUL_HTTP_FULLADDR=https://{HiveHostNames.Consul}:{hive.Definition.Consul.Port}
 ");
             }
             else
@@ -958,7 +962,7 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
         /// <returns>The configuration file text.</returns>
         private string GetConsulConfig(SshProxy<NodeDefinition> node)
         {
-            var consulTlsDisabled = true;   // $todo(jeff.lill): Remove this once we support Consul TLS.
+            var consulTlsDisabled = false;  // Leaving this as documentation (could probably be deleted at some point). 
             var consulDef         = node.Hive.Definition.Consul;
             var consulConf        = new JObject();
 

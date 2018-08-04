@@ -105,7 +105,6 @@ export NEON_CONSUL_ADDRESS=$<consul.address>
 export NEON_CONSUL_FULLADDRESS=$<consul.fulladdress>
 export NEON_CONSUL_HOSTNAME=$<consul.hostname>
 export NEON_CONSUL_PORT=$<consul.port>
-export NEON_CONSUL_TLS_DISABLED=$<consul.tlsdisabled>
 
 # Vault settings
 
@@ -167,7 +166,6 @@ $<nodes.manager.summary>
     echo "NEON_CONSUL_FULLADDRESS            = ${NEON_CONSUL_FULLADDRESS}" 1>&2
     echo "NEON_CONSUL_HOSTNAME               = ${NEON_CONSUL_HOSTNAME}" 1>&2
     echo "NEON_CONSUL_PORT                   = ${NEON_CONSUL_PORT}" 1>&2
-    echo "NEON_CONSUL_TLS_DISABLED           = ${NEON_CONSUL_TLS_DISABLED}" 1>&2
     echo 1>&2 
     echo "NEON_VAULT_VERSION                 = ${NEON_VAULT_VERSION}" 1>&2
     echo "NEON_VAULT_DOWNLOAD                = ${NEON_VAULT_DOWNLOAD}" 1>&2
