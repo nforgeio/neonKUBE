@@ -307,7 +307,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="noConnect">
         /// Optionally indicates that the method should not connect to the hive
-        /// and should simply return the current login in if one is available.
+        /// and should simply return the current login if one is available.
         /// </param>
         /// <param name="clientVersion">
         /// Optionally specifies the current <b>neon-cli</b> version to be checked

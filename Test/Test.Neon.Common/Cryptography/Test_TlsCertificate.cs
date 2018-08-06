@@ -721,5 +721,45 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
             Assert.True(cert.IsValidHost("foobar.com"));
             Assert.False(cert.IsValidHost("test.foo.com"));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void SelfSigned_Host()
+        {
+            var cert = TlsCertificate.CreateSelfSigned("foo.com");
+
+            cert.Parse();
+            Assert.NotNull(cert.Thumbprint);
+            Assert.NotEmpty(cert.Thumbprint);
+            Assert.Single(cert.Hosts);
+            Assert.Contains("foo.com", cert.Hosts);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void SelfSigned_SubdomainsOnly()
+        {
+            var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.SubdomainsOnly);
+
+            cert.Parse();
+            Assert.NotNull(cert.Thumbprint);
+            Assert.NotEmpty(cert.Thumbprint);
+            Assert.Single(cert.Hosts);
+            Assert.Contains("*.foo.com", cert.Hosts);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void SelfSigned_RootAndSubdomains()
+        {
+            var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.RootAndSubdomains);
+
+            cert.Parse();
+            Assert.NotNull(cert.Thumbprint);
+            Assert.NotEmpty(cert.Thumbprint);
+            Assert.Equal(2, cert.Hosts.Count);
+            Assert.Contains("foo.com", cert.Hosts);
+            Assert.Contains("*.foo.com", cert.Hosts);
+        }
     }
 }

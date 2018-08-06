@@ -27,8 +27,26 @@ using Neon.IO;
 
 // $todo(jeff.lill): 
 //
-// Support construction from an X509Certificate instance once
-// .NET Standard 2.0 is released.
+// Support construction from an X509Certificate instance.  One thing we'll need
+// to do is to be able to extract the distinguisted names from the [Subject]
+// and/or [Subject Alternative Name] extension.  Here's some code that claims
+// to parse the SAN:
+//
+//public static IEnumerable<string> ParseSujectAlternativeNames(X509Certificate2 cert)
+//{
+//    Regex sanRex = new Regex(@"^DNS Name=(.*)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+//    var sanList = from X509Extension ext in cert.Extensions
+//                  where ext.Oid.FriendlyName.Equals("Subject Alternative Name", StringComparison.Ordinal)
+//                  let data = new AsnEncodedData(ext.Oid, ext.RawData)
+//                  let text = data.Format(true)
+//                  from line in text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+//                  let match = sanRex.Match(line)
+//                  where match.Success && match.Groups.Count > 0 && !string.IsNullOrEmpty(match.Groups[1].Value)
+//                  select match.Groups[1].Value;
+
+//    return sanList;
+//}
 
 namespace Neon.Cryptography
 {
@@ -511,6 +529,13 @@ subjectAltName = @alt_names
         public List<string> Hosts { get; set; } = new List<string>();
 
         /// <summary>
+        /// The certificate thumbprint.
+        /// </summary>
+        [JsonProperty(PropertyName = "Thumbprint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Thumbprint { get; set; }
+
+        /// <summary>
         /// Returns a deep copy of the instance.
         /// </summary>
         /// <returns>The clone.</returns>
@@ -521,6 +546,7 @@ subjectAltName = @alt_names
                 {
                     CertPem    = this.CertPem,
                     KeyPem     = this.KeyPem,
+                    Thumbprint = this.Thumbprint,
                     ValidFrom  = this.ValidFrom,
                     ValidUntil = this.ValidUntil
                 };
@@ -669,6 +695,18 @@ subjectAltName = @alt_names
         }
 
         /// <summary>
+        /// Adds a host to <see cref="Hosts"/> if it doesn't already exist.
+        /// </summary>
+        /// <param name="host">The host to be added.</param>
+        private void AddHost(string host)
+        {
+            if (!Hosts.Contains(host, StringComparer.InvariantCultureIgnoreCase))
+            {
+                Hosts.Add(host);
+            }
+        }
+
+        /// <summary>
         /// Extracts certificate properties such as <see cref="ValidFrom"/>, <see cref="ValidUntil"/>, and <see cref="Hosts"/> 
         /// from the dump output from the Windows <b>CertUtil.exe</b> tool (e.g. via <c>certutil -dump cert.pem</c>).
         /// </summary>
@@ -730,7 +768,7 @@ subjectAltName = @alt_names
                             break;
                         }
 
-                        Hosts.Add(line.Substring(line.IndexOf('=') + 1));
+                        AddHost(line.Substring(line.IndexOf('=') + 1));
                     }
                 }
                 else
@@ -762,7 +800,7 @@ subjectAltName = @alt_names
 
                         if (line.TrimStart().StartsWith("CN="))
                         {
-                            Hosts.Add(line.Substring(line.IndexOf('=') + 1));
+                            AddHost(line.Substring(line.IndexOf('=') + 1));
                             break;
                         }
                     }
@@ -841,7 +879,7 @@ subjectAltName = @alt_names
 
                     foreach (var entry in hostEntries)
                     {
-                        Hosts.Add(entry.Replace("DNS:", string.Empty).Trim());
+                        AddHost(entry.Replace("DNS:", string.Empty).Trim());
                     }
                 }
                 else
@@ -857,12 +895,12 @@ subjectAltName = @alt_names
 
                         if (trimmed.StartsWith("CN="))
                         {
-                            Hosts.Add(trimmed.Substring(3).Trim());
+                            AddHost(trimmed.Substring(3).Trim());
                             break;
                         }
                         else if (trimmed.StartsWith("CN = "))
                         {
-                            Hosts.Add(trimmed.Substring(5).Trim());
+                            AddHost(trimmed.Substring(5).Trim());
                             break;
                         }
                     }
@@ -881,10 +919,30 @@ subjectAltName = @alt_names
         /// <exception cref="FormatException">Thrown if the certificate cannot be parsed.</exception>
         public void Parse()
         {
+            // We need to to load the the certificate's thumbprint.
+
+            var tempPath = Path.GetTempFileName();
+
+            File.WriteAllText(tempPath, CombinedNormalizedPem);
+
+            try
+            {
+                using (var cert = new X509Certificate2(tempPath))
+                {
+                    Thumbprint = cert.Thumbprint.ToLowerInvariant();
+                }
+            }
+            finally
+            {
+                File.Delete(tempPath);
+            }
+
             // $todo(jeff.lill):
             //
-            // Hacking this using the [CertUtil] and [OpenSSL] tools until the X509Certificate
-            // class is implemented in .NET Standard 2.0.
+            // Hacking this using the [CertUtil] and [OpenSSL] tools until we completely port
+            // to using X509Certificate.  The main thing we need to do to accomplish this is
+            // to be able to parse the subject/subject alt names.  See the comment at the top
+            // of this file.
 
             var tempCertPath = Path.GetTempFileName();
             var tool         = "openssl";
