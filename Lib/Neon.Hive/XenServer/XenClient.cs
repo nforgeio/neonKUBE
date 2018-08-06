@@ -22,9 +22,9 @@ using Neon.Hive;
 namespace Neon.Hive.XenServer
 {
     /// <summary>
-    /// This class provides a simple light-weight XenServer API that
-    /// connects to the the XenServer host operating system via SSH
-    /// and executes commands using the <b>xe</b> XenServer client
+    /// This class provides a simple light-weight XenServer or CXP-ng 
+    /// API that connects to the the XenServer host operating system via 
+    /// SSH and executes commands using the <b>xe</b> XenServer client
     /// tool.
     /// </summary>
     /// <remarks>
