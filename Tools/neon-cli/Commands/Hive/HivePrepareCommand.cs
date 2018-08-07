@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Hive;
 using Neon.Net;
 
@@ -437,6 +438,28 @@ Server Requirements:
             {
                 hiveLogin.VpnCredentials = vpnCredentials;
             }
+
+            // Generate the hive certificates.
+
+            const int bitCount  = 2048;
+            const int validDays = 365000;    // About 1,000 years.
+
+            if (hiveLogin.HiveCertificate == null)
+            {
+                hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Consul, bitCount, validDays, Wildcard.RootAndSubdomains);
+            }
+
+            if (hiveLogin.VaultCertificate == null)
+            {
+                hiveLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains);
+            }
+
+            if (hiveLogin.RegistryCacheCertificate == null)
+            {
+                hiveLogin.RegistryCacheCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.RegistryCache, bitCount, validDays, Wildcard.RootAndSubdomains);
+            }
+
+            // Persist the certificates into the hive login.
 
             hiveLogin.Save();
         }

@@ -761,5 +761,24 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
             Assert.Contains("foo.com", cert.Hosts);
             Assert.Contains("*.foo.com", cert.Hosts);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ToX509Certificate2()
+        {
+            var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.RootAndSubdomains);
+
+            cert.Parse();
+            Assert.NotNull(cert.Thumbprint);
+            Assert.NotEmpty(cert.Thumbprint);
+            Assert.Equal(2, cert.Hosts.Count);
+            Assert.Contains("foo.com", cert.Hosts);
+            Assert.Contains("*.foo.com", cert.Hosts);
+
+            var x509Cert = cert.ToX509Certificate2();
+
+            Assert.NotNull(x509Cert);
+            Assert.Equal(cert.Thumbprint, x509Cert.Thumbprint, ignoreCase: true);
+        }
     }
 }

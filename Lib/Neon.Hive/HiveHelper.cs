@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -855,6 +856,28 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Looks for a certificate with a friendly name.
+        /// </summary>
+        /// <param name="store">The certificate store.</param>
+        /// <param name="friendlyName">The case insensitive friendly name.</param>
+        /// <returns>The certificate or <c>null</c> if one doesn't exist by the name.</returns>
+        private static X509Certificate2 FindCertificateByFriendlyName(X509Store store, string friendlyName)
+        {
+            Covenant.Requires<ArgumentNullException>(store != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(friendlyName));
+
+            foreach (var cert in store.Certificates)
+            {
+                if (friendlyName.Equals(cert.FriendlyName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return cert;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Connects to a hive using a <see cref="HiveProxy"/>.  Note that this version does not
         /// fully initialize the <see cref="HiveLogin"/> property.
         /// </summary>
@@ -863,6 +886,76 @@ namespace Neon.Hive
         public static HiveProxy OpenHive(HiveProxy hive)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
+
+            // We need Windows/OSX to trust these hive certificates:
+            //
+            //      HiveCertificate
+            //      VaultCertificate
+            //
+            // We're doing this here before we check whether we're already connected
+            // because it may be possible for certificates to have been deleted or
+            // perhaps changed.  This will ensure that the certificates are correct.
+
+            if (NeonHelper.IsWindows)
+            {
+                // We're going to perist these to the current user's Windows certificate store 
+                // using friendly names like:
+                //
+                //      hive-HIVENAME-general
+                //      hive-HIVENAME-vault
+                //
+                // where HIVENAME is the name of the hive.  We're also going to use the thumbprint
+                // to ensure that the persisted certificates are correct.
+
+                var hiveName = "HIVE";      // $todo(jeff.lill): Temporarily hardcoding this.
+
+                using (var store = new X509Store(StoreName.AuthRoot, StoreLocation.CurrentUser))
+                {
+                    store.Open(OpenFlags.ReadWrite);
+
+                    // Update the general certificate if necessary.
+
+                    var generalCertName = $"hive-{hiveName}-general";
+                    var generalExistingCert = FindCertificateByFriendlyName(store, generalCertName);
+                    var generalCert = HiveLogin.HiveCertificate.ToX509Certificate2();
+
+                    if (generalExistingCert == null || generalExistingCert.Thumbprint != generalCert.Thumbprint)
+                    {
+                        if (generalExistingCert != null)
+                        {
+                            store.Remove(generalExistingCert);
+                        }
+
+                        store.Add(generalCert);
+                    }
+
+                    // Update the vault certificate if necessary.
+
+                    var vaultCertName = $"hive-{hiveName}-vault";
+                    var vaultExistingCert = FindCertificateByFriendlyName(store, vaultCertName);
+                    var vaultCert = HiveLogin.VaultCertificate.ToX509Certificate2();
+
+                    if (vaultExistingCert == null || vaultExistingCert.Thumbprint != vaultCert.Thumbprint)
+                    {
+                        if (vaultExistingCert != null)
+                        {
+                            store.Remove(vaultExistingCert);
+                        }
+
+                        store.Add(vaultCert);
+                    }
+                }
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                throw new NotImplementedException("$todo(jeff.lill): IMPLEMENT THIS!");
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
+            // Make this current login.
 
             if (IsConnected)
             {
@@ -910,8 +1003,8 @@ namespace Neon.Hive
             Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
             Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(hiveDefinition));
 
-            // Temporarily modify the local DNS resolver hosts file so we'll be able
-            // resolve common hive hostnames.
+            // Update the local DNS resolver hosts file so we'll be able resolve
+            // common hive hostnames.
 
             var hosts = new Dictionary<string, IPAddress>();
 
@@ -938,10 +1031,21 @@ namespace Neon.Hive
                 return;
             }
 
+            Hive             = null;
             IsConnected      = false;
             remoteConnection = false;
 
             NetHelper.ModifyLocalHosts();
+        }
+
+        /// <summary>
+        /// Removes any local references to hives that are not referenced by a hive
+        /// login for the current user.  This removes things like DNS records in the
+        /// local <b>hosts</b> file or any trusted hive certificates.
+        /// </summary>
+        public static void CleanHiveReferences()
+        {
+            // $todo(jeff.lill): IMPLEMENT THIS.
         }
 
         /// <summary>

@@ -223,8 +223,6 @@ OPTIONS:
                     CommonSteps.VerifyOS(node);
                 });
 
-            controller.AddGlobalStep("create certs", () => CreateCertificates());
-
             // We're going to configure the managers separately from the workers
             // because we need to be careful about when we reboot the managers
             // since this will also take down the VPN.  We're also going to 
@@ -694,34 +692,6 @@ OPTIONS:
                 });
 
             return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: false);
-        }
-
-        /// <summary>
-        /// Generates the hive certificates.
-        /// </summary>
-        private void CreateCertificates()
-        {
-            const int bitCount  = 2048;
-            const int validDays = 365000;    // About 1,000 years.
-
-            if (hiveLogin.HiveCertificate == null)
-            {
-                hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Consul, bitCount, validDays, Wildcard.RootAndSubdomains);
-            }
-
-            if (hiveLogin.VaultCertificate == null)
-            {
-                hiveLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains);
-            }
-
-            if (hiveLogin.RegistryCacheCertificate == null)
-            {
-                hiveLogin.RegistryCacheCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.RegistryCache, bitCount, validDays, Wildcard.RootAndSubdomains);
-            }
-
-            // Persist the certificates into the hive login.
-
-            hiveLogin.Save();
         }
 
         /// <summary>

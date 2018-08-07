@@ -94,7 +94,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            // Simply return if we're already logged into the hive.
+            // Check whether we're already logged into the hive.
 
             var username = login.Username;
             var hiveName = login.HiveName;
@@ -117,6 +117,10 @@ ARGUMENTS:
                     Console.Error.WriteLine($"*** ERROR: {e.Message}");
                     Program.Exit(0);
                 }
+
+                // Ensure that the hive's certificates, hostnames,... are properly initialized.
+
+                HiveHelper.OpenHive(hiveLogin);
 
                 Console.Error.WriteLine($"*** You are already logged into [{Program.HiveLogin.Username}@{Program.HiveLogin.HiveName}].");
                 Program.Exit(0);
@@ -235,6 +239,10 @@ ARGUMENTS:
                     Console.Error.WriteLine($"*** ERROR: {e.Message}");
                     Program.Exit(1);
                 }
+
+                // Ensure that the hive's certificates, hostnames,... are properly initialized.
+
+                HiveHelper.OpenHive(hiveLogin);
 
                 Console.Error.WriteLine($"Logged into [{hiveLogin.LoginName}]{viaVpn}.");
                 Console.Error.WriteLine("");

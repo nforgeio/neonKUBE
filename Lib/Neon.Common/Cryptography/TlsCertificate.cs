@@ -996,5 +996,45 @@ subjectAltName = @alt_names
                 File.Delete(tempCertPath);
             }
         }
+
+        /// <summary>
+        /// <para>
+        /// Converts the <see cref="TlsCertificate"/> into a <see cref="X509Certificate2"/>.
+        /// </para>
+        /// <note>
+        /// The certificate return <b>will not</b> include the <see cref="TlsCertificate"/>'s private
+        /// key if there is one.
+        /// </note>
+        /// </summary>
+        /// <returns>The new <see cref="X509Certificate2"/>.</returns>
+        public X509Certificate2 ToX509Certificate2()
+        {
+            Covenant.Assert(!string.IsNullOrEmpty(CertPem));
+
+            // We're going to extract the base-64 encoded certificate lines into a single
+            // long line of text, decode that into raw bytes and then use that to construct
+            // the X509Certificate2.
+
+            var sb = new StringBuilder();
+
+            using (var reader = new StringReader(CertPem))
+            {
+                foreach (var l in reader.Lines())
+                {
+                    var line = l.Trim();
+
+                    if (line.Length == 0 || line.StartsWith("-----BEGIN ") || line.StartsWith("-----END "))
+                    {
+                        continue;
+                    }
+
+                    sb.Append(line);
+                }
+            }
+
+            var bytes = Convert.FromBase64String(sb.ToString());
+
+            return new X509Certificate2(bytes);
+        }
     }
 }
