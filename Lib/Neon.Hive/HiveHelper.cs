@@ -579,7 +579,7 @@ namespace Neon.Hive
         /// </note>
         /// <note>
         /// Take care to call <see cref="CloseHive()"/> just before your application
-        /// exits to reset any temporary settings like the DNS resolver <b>hosts</b> file.
+        /// exits to reset any temporary settings.
         /// </note>
         /// <note>
         /// This method currently simulates running the application on a hive manager node.
@@ -823,7 +823,7 @@ namespace Neon.Hive
             try
             {
                 IsConnected = true;
-                definition = GetDefinitionAsync().Result;
+                definition  = GetDefinitionAsync().Result;
             }
             finally
             {
@@ -870,7 +870,7 @@ namespace Neon.Hive
             }
 
             IsConnected = true;
-            Hive       = hive;
+            Hive        = hive;
 
            if (HiveLogin == null)
             {
@@ -929,9 +929,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Resets any temporary configurations made by <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/>
-        /// such as the modifications to the DNS resolver <b>hosts</b> file.  This should be called just
-        /// before the application exits.
+        /// Disconnects the current hive (if there is one).
         /// </summary>
         public static void CloseHive()
         {
@@ -942,8 +940,6 @@ namespace Neon.Hive
 
             IsConnected      = false;
             remoteConnection = false;
-
-            log.LogInfo("Emulating hive close.");
 
             NetHelper.ModifyLocalHosts();
         }

@@ -321,26 +321,6 @@ namespace Neon.Hive
             File.WriteAllText(Path, NeonHelper.JsonSerialize(this, Formatting.Indented));
         }
 
-        /// <summary>
-        /// Hive logins require some system initialization to access the hive, including 
-        /// updating the local <b>hosts</b> file and ensuring that the hive self-signed 
-        /// certificates will be trusted.  This method handles this initialization on
-        /// the local machine.
-        /// </summary>
-        public void EnableHive()
-        {
-        }
-
-        /// <summary>
-        /// Hive logins require some system initialization to access the hive, including 
-        /// updating the local <b>hosts</b> file and ensuring that the hive self-signed 
-        /// certificates will be trusted.  This method clears any of these settings
-        /// present on the local machine.
-        /// </summary>
-        public void DisableHive()
-        {
-        }
-
         /// <inheritdoc/>
         public override string ToString()
         {

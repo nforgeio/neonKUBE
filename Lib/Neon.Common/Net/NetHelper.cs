@@ -144,6 +144,32 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// Returns a usable random IP address for use for DNS reolutions.
+        /// </summary>
+        /// <returns>The generated <see cref="IPAddress"/>.</returns>
+        private static IPAddress GetRandomAddress()
+        {
+            // For some reason, the Windows DNS resolver doesn't resolve hostname with
+            // IP addresses greater than or equal to [240.0.0.0].  I've also seen the Windows
+            // DNS resolver fail for host addresses with like [0.x.x.x].
+            //
+            // We're going to mitigate each this by generating a new address
+            // until we get a good one.
+
+            while (true)
+            {
+                var addressBytes = NeonHelper.RandBytes(4);
+
+                if (addressBytes[0] == 0 || addressBytes[0] >= 240)
+                {
+                    continue;   // Try again.
+                }
+
+                return new IPAddress(addressBytes);
+            }
+        }
+
+        /// <summary>
         /// <para>
         /// Used to temporarily modify the <b>hosts</b> file used by the DNS resolver
         /// for debugging or other purposes.
@@ -202,13 +228,14 @@ namespace Neon.Net
             // a random IP address and then wait for for the DNS resolver to report the correct address.
             //
             // Note that this only works on Windows and perhaps OSX.  This doesn't work on
-            // Linux because there's no central DNS resolver there.  See the issue below foir
+            // Linux because there's no central DNS resolver there.  See the issue below for
             // more information:
             //
             //      https://github.com/jefflill/NeonForge/issues/271
 
-            var updateHost    = "neon-modify-local-hosts.hive";
-            var updateAddress = new IPAddress(NeonHelper.Rand(int.MaxValue));
+            var updateHost    = "neon-modify-local-hosts.neon";
+            var addressBytes  = NeonHelper.RandBytes(4);
+            var updateAddress = GetRandomAddress();
             var lines         = new List<string>();
 
             retryFile.InvokeAsync(
@@ -252,7 +279,7 @@ namespace Neon.Net
                     {
                         lines.Add(beginMarker);
 
-                        // Append the special update host with random IP address.
+                        // Append the special update host with a random IP address.
 
                         var address = updateAddress.ToString();
 
@@ -290,9 +317,8 @@ namespace Neon.Net
             {
                 // $todo(jeff.lill):
                 //
-                // We may need to clear the OSX DNS cache here.
-                //
-                // Here's some information on how to do this:
+                // We may need to clear the OSX DNS cache here.  Here's some information on 
+                // how to do this:
                 //
                 //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
 
@@ -305,14 +331,14 @@ namespace Neon.Net
                 // [neon-modify-local-hosts.hive].
                 //
                 // If [hostEntries] is not null and contains at least one entry, we'll lookup
-                // [neon-modify-local-hosts.hive] and compare the IP address to ensure that the 
+                // [neon-modify-local-hosts.neon] and compare the IP address to ensure that the 
                 // resolver has loaded the new entries.
                 //
                 // If [hostEntries] is null or empty, we'll wait until there are no records
-                // for [neon-modify-local-hosts.hive] to ensure that the resolver has reloaded
+                // for [neon-modify-local-hosts.neon] to ensure that the resolver has reloaded
                 // the hosts file after we removed the entries.
                 //
-                // Note that we're going to count the retries and after the 10th (about 1 second's
+                // Note that we're going to count the retries and after the 20th (about 2 second's
                 // worth of 100ms polling), we're going to rewrite the [hosts] file.  I've seen
                 // situations where at appears that the DNS resolver isn't re-reading [hosts]
                 // after it's been updated.  I believe this is due to the file being written 
@@ -334,13 +360,13 @@ namespace Neon.Net
 
                             if (addresses.Length != 1)
                             {
-                                RewriteOn10thRetry(hostsPath, lines, ref retryCount);
+                                RewriteOn20thRetry(hostsPath, lines, ref retryCount);
                                 throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be [1].");
                             }
 
                             if (addresses[0].ToString() != updateAddress.ToString())
                             {
-                                RewriteOn10thRetry(hostsPath, lines, ref retryCount);
+                                RewriteOn20thRetry(hostsPath, lines, ref retryCount);
                                 throw new NotReadyException($"DNS is [{updateHost}={addresses[0]}] rather than [{updateAddress}].");
                             }
                         }
@@ -350,7 +376,7 @@ namespace Neon.Net
 
                             if (addresses.Length != 0)
                             {
-                                RewriteOn10thRetry(hostsPath, lines, ref retryCount);
+                                RewriteOn20thRetry(hostsPath, lines, ref retryCount);
                                 throw new NotReadyException($"[{updateHost}] lookup is returning [{addresses.Length}] results.  There should be [0].");
                             }
                         }
@@ -361,17 +387,19 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Rewrites the hosts file on the 10th retry.
+        /// Rewrites the hosts file on the 20th retry.
         /// </summary>
         /// <param name="hostsPath">Path to the hosts file.</param>
         /// <param name="lines">The host file lines.</param>
         /// <param name="retryCount">The retry count.</param>
-        private static void RewriteOn10thRetry(string hostsPath, List<string> lines, ref int retryCount)
+        private static void RewriteOn20thRetry(string hostsPath, List<string> lines, ref int retryCount)
         {
-            if (retryCount++ == 10)
+            if (retryCount++ != 20)
             {
-                File.WriteAllLines(hostsPath, lines);
+                return;
             }
+
+            File.WriteAllLines(hostsPath, lines);
         }
 
         /// <summary>
