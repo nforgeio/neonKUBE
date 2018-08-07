@@ -225,6 +225,13 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Used internally to indicate that any local machine initialization has already
+        /// happened for this login.
+        /// </summary>
+        [JsonIgnore]
+        internal bool InitMachine { get; set; }
+
+        /// <summary>
         /// Returns the <see cref="SshCredentials"/> for the hive that can be used
         /// by <see cref="SshProxy{TMetadata}"/> and the <b>SSH.NET</b> Nuget package.
         /// </summary>

@@ -346,6 +346,8 @@ namespace Neon.Hive
 
                     hiveLogin.ViaVpn = current.ViaVpn && hiveLogin.VpnCredentials != null;
 
+                    InitLogin(hiveLogin);
+
                     if (noConnect)
                     {
                         return hiveLogin;
@@ -878,23 +880,22 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Connects to a hive using a <see cref="HiveProxy"/>.  Note that this version does not
-        /// fully initialize the <see cref="HiveLogin"/> property.
+        /// Ensures that a hive login is properly initialized on the current machine.
         /// </summary>
-        /// <param name="hive">The hive proxy.</param>
-        /// <returns>The <see cref="HiveProxy"/>.</returns>
-        public static HiveProxy OpenHive(HiveProxy hive)
+        /// <param name="login">The login.</param>
+        internal static void InitLogin(HiveLogin login)
         {
-            Covenant.Requires<ArgumentNullException>(hive != null);
+            Covenant.Requires<ArgumentNullException>(login != null);
+
+            if (login.InitMachine)
+            {
+                return; // Already initialized.
+            }
 
             // We need Windows/OSX to trust these hive certificates:
             //
             //      HiveCertificate
             //      VaultCertificate
-            //
-            // We're doing this here before we check whether we're already connected
-            // because it may be possible for certificates to have been deleted or
-            // perhaps changed.  This will ensure that the certificates are correct.
 
             if (NeonHelper.IsWindows)
             {
@@ -913,11 +914,13 @@ namespace Neon.Hive
                 {
                     store.Open(OpenFlags.ReadWrite);
 
-                    // Update the general certificate if necessary.
+                    // Install or update the general certificate if necessary.
 
-                    var generalCertName = $"hive-{hiveName}-general";
+                    var generalCertName     = $"hive-{hiveName}-general";
                     var generalExistingCert = FindCertificateByFriendlyName(store, generalCertName);
-                    var generalCert = HiveLogin.HiveCertificate.ToX509Certificate2();
+                    var generalCert         = login.HiveCertificate.ToX509Certificate2();
+
+                    generalCert.FriendlyName = generalCertName;
 
                     if (generalExistingCert == null || generalExistingCert.Thumbprint != generalCert.Thumbprint)
                     {
@@ -929,11 +932,13 @@ namespace Neon.Hive
                         store.Add(generalCert);
                     }
 
-                    // Update the vault certificate if necessary.
+                    // Install or update the vault certificate if necessary.
 
-                    var vaultCertName = $"hive-{hiveName}-vault";
+                    var vaultCertName     = $"hive-{hiveName}-vault";
                     var vaultExistingCert = FindCertificateByFriendlyName(store, vaultCertName);
-                    var vaultCert = HiveLogin.VaultCertificate.ToX509Certificate2();
+                    var vaultCert         = login.VaultCertificate.ToX509Certificate2();
+
+                    vaultCert.FriendlyName = vaultCertName;
 
                     if (vaultExistingCert == null || vaultExistingCert.Thumbprint != vaultCert.Thumbprint)
                     {
@@ -954,6 +959,21 @@ namespace Neon.Hive
             {
                 throw new NotImplementedException();
             }
+
+            login.InitMachine = true;
+        }
+
+        /// <summary>
+        /// Connects to a hive using a <see cref="HiveProxy"/>.  Note that this version does not
+        /// fully initialize the <see cref="HiveLogin"/> property.
+        /// </summary>
+        /// <param name="hive">The hive proxy.</param>
+        /// <returns>The <see cref="HiveProxy"/>.</returns>
+        public static HiveProxy OpenHive(HiveProxy hive)
+        {
+            Covenant.Requires<ArgumentNullException>(hive != null);
+
+            InitLogin(hive.HiveLogin);
 
             // Make this current login.
 

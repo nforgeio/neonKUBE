@@ -88,7 +88,13 @@ namespace Neon.Hive
         public HiveProxy(HiveLogin hiveLogin, Func<string, string, IPAddress, SshProxy<NodeDefinition>> nodeProxyCreator = null, RunOptions defaultRunOptions = RunOptions.None)
             : this(hiveLogin.Definition, nodeProxyCreator, defaultRunOptions)
         {
+            Covenant.Requires<ArgumentNullException>(hiveLogin != null);
+
             this.HiveLogin = hiveLogin;
+
+            // This ensures that the local machine is initialized properly for the login.
+
+            HiveHelper.InitLogin(hiveLogin);
         }
 
         /// <summary>
