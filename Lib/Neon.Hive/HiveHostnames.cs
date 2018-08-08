@@ -29,9 +29,14 @@ namespace Neon.Hive
     public static class HiveHostNames
     {
         /// <summary>
+        /// The base DNS name used for all hive endpoints.
+        /// </summary>
+        public const string Base = "name.hive";     // $todo(jeff.lill): Delete this
+
+        /// <summary>
         /// The base DNS name for the internal hive Docker registry cache instances deployed on the manager nodes.
         /// </summary>
-        public const string RegistryCache = "neon-registry-cache.hive";
+        public const string RegistryCache = "neon-registry-cache.name.hive";
 
         /// <summary>
         /// The DNS name for the Elasticsearch containers used to store the hive logs.
@@ -53,7 +58,7 @@ namespace Neon.Hive
         /// <summary>
         /// The DNS name used to access the hive's HashiCorp Consul service.
         /// </summary>
-        public const string Consul = "neon-consul.hive";
+        public const string Consul = "neon-consul.name.hive";
 
         /// <summary>
         /// The DNS name for the hive's HashiCorp Vault service.
@@ -69,13 +74,13 @@ namespace Neon.Hive
         /// to check instance health.
         /// </para>
         /// </remarks>
-        public const string Vault = "neon-vault.hive";
+        public const string Vault = "neon-vault.name.hive";
 
         /// <summary>
         /// The special hostname used by the <b>HostsFixture</b> Xunit test fixture to verify
         /// that the local DNS resolver has picked up the changes.  This is not used for any
         /// other purpose.
         /// </summary>
-        public const string UpdateHosts = "neon-hosts-fixture-modify.hive";
+        public const string UpdateHosts = "neon-hosts-fixture-modify.name.hive";
     }
 }

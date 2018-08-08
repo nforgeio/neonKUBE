@@ -800,15 +800,22 @@ OPTIONS:
                     node.SudoCommand("chmod 600 /etc/consul.d/*");
 
                     // Upload the hive certificates (without private key) to all hive nodes
-                    // to they'll be trusted implicitly.
+                    // so they'll be trusted implicitly.
                     //
                     // Note that uploading a registry cache certificiate even if that isn't
                     // currently enabled in the cluster definition so it'll be easy to upgrade 
                     // the hive later.
 
-                    node.UploadText("/usr/local/share/ca-certificates/hive-general.crt", hiveLogin.HiveCertificate.CertPem);
-                    node.UploadText("/usr/local/share/ca-certificates/hive-vault.crt", hiveLogin.VaultCertificate.CertPem);
-                    node.UploadText("/usr/local/share/ca-certificates/hive-registry-cache.crt", hiveLogin.RegistryCacheCertificate.CertPem);
+                    node.SudoCommand("mkdir -p /usr/local/share/ca-certificates/neon");
+                    node.SudoCommand("chmod 755 /usr/local/share/ca-certificates/neon");
+
+                    var hiveName = hiveLogin.Definition.Name.ToLowerInvariant();
+
+                    node.UploadText($"/usr/local/share/ca-certificates/neon/hive-{hiveName}-base.crt", hiveLogin.HiveCertificate.CertPem);
+                    node.UploadText($"/usr/local/share/ca-certificates/neon/hive-{hiveName}-vault.crt", hiveLogin.VaultCertificate.CertPem);
+                    node.UploadText($"/usr/local/share/ca-certificates/neon/hive-{hiveName}-registry-cache.crt", hiveLogin.RegistryCacheCertificate.CertPem);
+
+                    node.SudoCommand("chmod 644 /usr/local/share/ca-certificates/neon/*");
                     node.SudoCommand("update-ca-certificates");
 
                     // Tune Linux for SSDs, if enabled.
@@ -871,9 +878,9 @@ $@"#----------------------------------------------------------------------------
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# This script can be mounted into containers that required extended knowledge
-# about the hive and host node.  This will be mounted to [/etc/neon/env-host]
-# such that the container entrypoint script can execute it.
+# This script can be mounted into containers that require extended knowledge
+# about the hive and host node.  This will be generally be mounted to the container
+# at [/etc/neon/env-host] such that the container entrypoint script can execute it.
 
 # Define the hive and Docker host related environment variables.
 
@@ -892,11 +899,28 @@ export VAULT_ADDR={hive.Definition.Vault.Uri}
 export CONSUL_HTTP_SSL=true
 export CONSUL_HTTP_ADDR={HiveHostNames.Consul}:{hive.Definition.Consul.Port}
 export CONSUL_HTTP_FULLADDR=https://{HiveHostNames.Consul}:{hive.Definition.Consul.Port}
+
+# Import trusted host SSL certificates if the host directory was mounted.
+# For this to work, this host folder:
+#
+#       /usr/local/share/ca-certificates
+#
+# needs to be mounted into the container at:
+#
+#       /mnt/host/ca-certificates
+#
+# to work properly.  Note that this does nothing if the host certificates folder
+# is not mounted.
+
+if [ -d /mnt/host/ca-certificates ] ; then
+    cp -r /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
+    update-ca-certificates
+fi
 ");
             }
             else
             {
-                // Upload a more limited [/etc/neon/env-host] file for external nodes.
+                // Upload a more limited [/etc/neon/env-host] file for pet nodes.
 
                 sbEnvHost.AppendLine(
 $@"#------------------------------------------------------------------------------
@@ -904,9 +928,9 @@ $@"#----------------------------------------------------------------------------
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# This script can be mounted into containers that required extended knowledge
-# about the hive and host node.  This will be mounted to [/etc/neon/env-host]
-# such that the container entrypoint script can execute it.
+# This script can be mounted into containers that require extended knowledge
+# about the hive and host node.  This will be generally be mounted to the container
+# at [/etc/neon/env-host] such that the container entrypoint script can execute it.
 
 # Define the hive and Docker host related environment variables.
 
@@ -919,6 +943,23 @@ export NEON_NODE_ROLE={node.Metadata.Role}
 export NEON_NODE_IP={node.Metadata.PrivateAddress}
 export NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}
 export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
+
+# Import trusted host SSL certificates if the host directory was mounted.
+# For this to work, this host folder:
+#
+#       /usr/local/share/ca-certificates
+#
+# needs to be mounted into the container at:
+#
+#       /mnt/host/ca-certificates
+#
+# to work properly.  Note that this does nothing if the host certificates folder
+# is not mounted.
+
+if [ -d /mnt/host/ca-certificates ] ; then
+    cp -r /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
+    update-ca-certificates
+fi
 ");
             }
 

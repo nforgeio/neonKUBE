@@ -902,7 +902,7 @@ namespace Neon.Hive
                 // We're going to perist these to the current user's Windows certificate store 
                 // using friendly names like:
                 //
-                //      hive-HIVENAME-general
+                //      hive-HIVENAME-base
                 //      hive-HIVENAME-vault
                 //
                 // where HIVENAME is the name of the hive.  We're also going to use the thumbprint
@@ -910,13 +910,13 @@ namespace Neon.Hive
 
                 var hiveName = "HIVE";      // $todo(jeff.lill): Temporarily hardcoding this.
 
-                using (var store = new X509Store(StoreName.AuthRoot, StoreLocation.CurrentUser))
+                using (var store = new X509Store(StoreName.AuthRoot, StoreLocation.LocalMachine))
                 {
                     store.Open(OpenFlags.ReadWrite);
 
                     // Install or update the general certificate if necessary.
 
-                    var generalCertName     = $"hive-{hiveName}-general";
+                    var generalCertName     = $"hive-{hiveName}-base";
                     var generalExistingCert = FindCertificateByFriendlyName(store, generalCertName);
                     var generalCert         = login.HiveCertificate.ToX509Certificate2();
 

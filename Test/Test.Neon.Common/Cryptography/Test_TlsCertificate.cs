@@ -764,6 +764,27 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void SelfSigned_OtherFields()
+        {
+            var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.RootAndSubdomains, issuedBy: "hello", issuedTo: "world");
+
+            cert.Parse();
+            Assert.NotNull(cert.Thumbprint);
+            Assert.NotEmpty(cert.Thumbprint);
+            Assert.Equal(2, cert.Hosts.Count);
+            Assert.Contains("foo.com", cert.Hosts);
+            Assert.Contains("*.foo.com", cert.Hosts);
+
+            var x509Cert = cert.ToX509Certificate2();
+
+            Assert.NotNull(x509Cert);
+            Assert.Equal(cert.Thumbprint, x509Cert.Thumbprint, ignoreCase: true);
+            Assert.Contains("O=hello", x509Cert.Issuer);
+            Assert.Contains("OU=world", x509Cert.Issuer);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ToX509Certificate2()
         {
             var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.RootAndSubdomains);

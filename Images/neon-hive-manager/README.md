@@ -84,6 +84,7 @@ docker service create \
     --name neon-hive-manager \
     --detach=false \
     --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
+    --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
     --env LOG_LEVEL=INFO \

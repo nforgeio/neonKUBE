@@ -197,8 +197,16 @@ namespace Neon.Cryptography
         /// and the hostname.  This defaults to <see cref="Wildcard.None"/>
         /// which does not generate a wildcard certificate.
         /// </param>
+        /// <param name="issuedBy">Optionally specifies the issuer.</param>
+        /// <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
         /// <returns>The <see cref="TlsCertificate"/>.</returns>
-        public static TlsCertificate CreateSelfSigned(string hostname, int bitCount = 2048, int validDays = 365000, Wildcard wildcard = Wildcard.None)
+        public static TlsCertificate CreateSelfSigned(
+            string hostname, 
+            int bitCount = 2048, 
+            int validDays = 365000, 
+            Wildcard wildcard = Wildcard.None, 
+            string issuedBy = null,
+            string issuedTo = null)
         {
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname));
             Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096);
@@ -209,6 +217,16 @@ namespace Neon.Cryptography
             var keyPath      = Path.Combine(tempFolder, "cache.key");
             var combinedPath = Path.Combine(tempFolder, "combined.pem");
             var hostnames    = new List<string>();
+
+            if (string.IsNullOrEmpty(issuedBy))
+            {
+                issuedBy = ".";
+            }
+
+            if (string.IsNullOrEmpty(issuedTo))
+            {
+                issuedTo = ",";
+            }
 
             Directory.CreateDirectory(tempFolder);
 
@@ -259,9 +277,9 @@ req_extensions     = req_v3
 C=US
 ST=.
 L=.
-O=.
-OU=.
-CN={hostname}
+O={issuedBy}
+OU={issuedTo}
+CN=.
 
 [req_v3]
 basicConstraints = CA:TRUE
@@ -1034,7 +1052,7 @@ subjectAltName = @alt_names
 
             var bytes = Convert.FromBase64String(sb.ToString());
 
-            return new X509Certificate2(bytes);
+            return new X509Certificate2(bytes, (string)null, X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
         }
     }
 }

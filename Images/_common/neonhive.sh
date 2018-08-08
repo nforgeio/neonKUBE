@@ -394,7 +394,7 @@ export HiveSysLogFacility_ProxyNumbe=23
 # as Docker containers and services.
 
 # The base DNS name for the internal hive Docker registry cache instances deployed on the manager nodes.
-export HiveHostnames_RegistryCache=neon-registry-cache.hive
+export HiveHostnames_RegistryCache=neon-registry-cache.name.hive
 
 # The DNS name for the Elasticsearch containers used to store the hive logs.
 #
@@ -405,10 +405,10 @@ export HiveHostnames_RegistryCache=neon-registry-cache.hive
 #
 # HTTP traffic should be directed to the [HiveHostPorts_ProxyPrivateHttpLogEsData] port which will be
 # routed to the [neon-proxy-private] service via the Docker ingress network.
-export HiveHostnames_LogEsData=neon-log-esdata.hive
+export HiveHostnames_LogEsData=neon-log-esdata.name.hive
 
 # The DNS name used to access for the hive's HashiCorp Consul service.
-export HiveHostnames_Consul=neon-consul.hive
+export HiveHostnames_Consul=neon-consul.name.hive
 
 # The DNS name for the hive's HashiCorp Vault proxy.
 #
@@ -418,12 +418,12 @@ export HiveHostnames_Consul=neon-consul.hive
 # This is also the base name for the manager node specific endpoints like
 # <manager-name>.neon-vault.hive, which are used by [neon-proxy-vault]
 # to check instance health.
-export HiveHostnames_Vault=neon-vault.hive
+export HiveHostnames_Vault=neon-vault.name.hive
 
 # The special hostname used by the [HostsFixture] Xunit test fixture to verify
 # that the local DNS resolver has picked up the changes.  This is not used for any
 # other purpose.
-export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.hive
+export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.name.hive
 
 #------------------------------------------------------------------------------
 # Identifies the hive Consul globals and settings.  These are located
