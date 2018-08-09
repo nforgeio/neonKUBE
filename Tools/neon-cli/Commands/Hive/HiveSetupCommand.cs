@@ -816,7 +816,7 @@ OPTIONS:
                     node.UploadText($"/usr/local/share/ca-certificates/neon/hive-{hiveName}-registry-cache.crt", hiveLogin.RegistryCacheCertificate.CertPem);
 
                     node.SudoCommand("chmod 644 /usr/local/share/ca-certificates/neon/*");
-                    node.SudoCommand("update-ca-certificates");
+                    node.SudoCommand("update-ca-certificates --fresh");
 
                     // Tune Linux for SSDs, if enabled.
 
@@ -914,7 +914,7 @@ export CONSUL_HTTP_FULLADDR=https://{HiveHostNames.Consul}:{hive.Definition.Cons
 
 if [ -d /mnt/host/ca-certificates ] ; then
     cp -r /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
-    update-ca-certificates
+    update-ca-certificates --fresh
 fi
 ");
             }
@@ -958,7 +958,7 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
 
 if [ -d /mnt/host/ca-certificates ] ; then
     cp -r /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
-    update-ca-certificates
+    update-ca-certificates --fresh
 fi
 ");
             }

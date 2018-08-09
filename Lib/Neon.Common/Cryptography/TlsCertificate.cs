@@ -279,7 +279,7 @@ ST=.
 L=.
 O={issuedBy}
 OU={issuedTo}
-CN=.
+CN={hostname}
 
 [req_v3]
 basicConstraints = CA:TRUE
