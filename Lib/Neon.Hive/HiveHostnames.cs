@@ -53,7 +53,7 @@ namespace Neon.Hive
         /// will be routed to the <b>neon-proxy-private</b> service via the Docker ingress network.
         /// </para>
         /// </remarks>
-        public const string LogEsData = "neon-log-esdata.hive";
+        public const string LogEsData = "neon-log-esdata.name.hive";
 
         /// <summary>
         /// The DNS name used to access the hive's HashiCorp Consul service.
