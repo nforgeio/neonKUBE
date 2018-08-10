@@ -72,6 +72,12 @@ echo "***     Generating config" 1>&2
 
 mkdir -p /etc/vault
 
+if [ "${NEON_CONSUL_TLS}" == " true" ] ; then
+    CONSUL_SCHEME=https
+else
+    CONSUL_SCHEME=http
+fi
+
 cat <<EOF > /etc/vault/vault.hcl
 
 cluster_name="${NEON_DATACENTER}.${NEON_HIVE}"
@@ -87,7 +93,7 @@ listener "tcp" {
 
 backend "consul" {
 
-    scheme          = "https"
+    scheme          = "${CONSUL_SCHEME}"
     address         = "${NEON_NODE_NAME}:${NEON_CONSUL_PORT}"
     path            = "${NEON_VAULT_CONSUL_PATH}"
     tls_skip_verify = "true"

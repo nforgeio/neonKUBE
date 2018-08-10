@@ -263,9 +263,18 @@ TCPKeepAlive yes
             // CLI will access the Consul cluster via local Consul instance.  This will be a 
             // server for manager nodes and a proxy for workers and pets.
 
-            sb.AppendLine($"CONSUL_HTTP_SSL=true");
-            sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-            sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            if (hiveDefinition.Consul.Tls)
+            {
+                sb.AppendLine($"CONSUL_HTTP_SSL=true");
+                sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+                sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            }
+            else
+            {
+                sb.AppendLine($"CONSUL_HTTP_SSL=false");
+                sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+                sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"http://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            }
 
             // All nodes will be configured such that host processes using the HashiCorp Vault 
             // CLI will access the Vault cluster via the [neon-proxy-vault] proxy service

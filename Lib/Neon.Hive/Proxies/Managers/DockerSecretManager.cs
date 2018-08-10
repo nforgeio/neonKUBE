@@ -113,7 +113,7 @@ else
 
     # It appears that Docker secrets may not be available
     # immediately after they are created.  So, we're going 
-    # wait for a while until we can inspect the new secret.
+    # poll for a while until we can inspect the new secret.
 
     count=0
 

@@ -493,7 +493,7 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "consul.fulladdress", $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
             SetBashVariable(preprocessReader, "consul.hostname", HiveHostNames.Consul);
             SetBashVariable(preprocessReader, "consul.port", hiveDefinition.Consul.Port);
-            SetBashVariable(preprocessReader, "consul.tlsdisabled", true);
+            SetBashVariable(preprocessReader, "consul.tls", hiveDefinition.Consul.Tls ? "true" : "false");
 
             SetBashVariable(preprocessReader, "vault.version", hiveDefinition.Vault.Version);
 

@@ -862,17 +862,33 @@ ff02::2         ip6-allrouters
         {
             var sbEnvHost       = new StringBuilder();
             var vaultDirectLine = string.Empty;
+            var consulDefs      = string.Empty;
 
             if (node.Metadata.IsManager)
             {
                 vaultDirectLine = $"export VAULT_DIRECT_ADDR={hive.Definition.Vault.GetDirectUri(node.Name)}";
             }
 
-            if (!node.Metadata.IsPet)
+            if (hive.Definition.Consul.Tls)
             {
-                // Upload the full [/etc/neon/env-host] file for Docker Swarm nodes.
+                consulDefs =
+$@"
+export CONSUL_HTTP_SSL=true
+export CONSUL_HTTP_ADDR={HiveHostNames.Consul}:{hive.Definition.Consul.Port}
+export CONSUL_HTTP_FULLADDR=https://{HiveHostNames.Consul}:{hive.Definition.Consul.Port}
+";
+            }
+            else
+            {
+                consulDefs =
+$@"
+export CONSUL_HTTP_SSL=false
+export CONSUL_HTTP_ADDR={HiveHostNames.Consul}:{hive.Definition.Consul.Port}
+export CONSUL_HTTP_FULLADDR=http://{HiveHostNames.Consul}:{hive.Definition.Consul.Port}
+";
+            }
 
-                sbEnvHost.AppendLine(
+            sbEnvHost.AppendLine(
 $@"#------------------------------------------------------------------------------
 # FILE:         /etc/neon/env-host
 # CONTRIBUTOR:  Jeff Lill
@@ -896,9 +912,7 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
 
 export VAULT_ADDR={hive.Definition.Vault.Uri}
 {vaultDirectLine}
-export CONSUL_HTTP_SSL=true
-export CONSUL_HTTP_ADDR={HiveHostNames.Consul}:{hive.Definition.Consul.Port}
-export CONSUL_HTTP_FULLADDR=https://{HiveHostNames.Consul}:{hive.Definition.Consul.Port}
+{consulDefs}
 
 # Import trusted host SSL certificates if the host directory was mounted.
 # For this to work, this host folder:
@@ -917,52 +931,6 @@ if [ -d /mnt/host/ca-certificates ] ; then
     update-ca-certificates --fresh
 fi
 ");
-            }
-            else
-            {
-                // Upload a more limited [/etc/neon/env-host] file for pet nodes.
-
-                sbEnvHost.AppendLine(
-$@"#------------------------------------------------------------------------------
-# FILE:         /etc/neon/env-host
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
-#
-# This script can be mounted into containers that require extended knowledge
-# about the hive and host node.  This will be generally be mounted to the container
-# at [/etc/neon/env-host] such that the container entrypoint script can execute it.
-
-# Define the hive and Docker host related environment variables.
-
-export NEON_HIVE={hive.Definition.Name}
-export NEON_DATACENTER={hive.Definition.Datacenter}
-export NEON_ENVIRONMENT={hive.Definition.Environment}
-export NEON_HOSTING={hive.Definition.Hosting.Environment.ToString().ToLowerInvariant()}
-export NEON_NODE_NAME={node.Name}
-export NEON_NODE_ROLE={node.Metadata.Role}
-export NEON_NODE_IP={node.Metadata.PrivateAddress}
-export NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}
-export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
-
-# Import trusted host SSL certificates if the host directory was mounted.
-# For this to work, this host folder:
-#
-#       /usr/local/share/ca-certificates
-#
-# needs to be mounted into the container at:
-#
-#       /mnt/host/ca-certificates
-#
-# to work properly.  Note that this does nothing if the host certificates folder
-# is not mounted.
-
-if [ -d /mnt/host/ca-certificates ] ; then
-    cp -r /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
-    update-ca-certificates --fresh
-fi
-");
-            }
-
             node.UploadText($"{HiveHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
         }
 
@@ -973,9 +941,9 @@ fi
         /// <returns>The configuration file text.</returns>
         private string GetConsulConfig(SshProxy<NodeDefinition> node)
         {
-            var consulTlsDisabled = false;  // Leaving this as documentation (could probably be deleted at some point). 
-            var consulDef         = node.Hive.Definition.Consul;
-            var consulConf        = new JObject();
+            var consulTls  = node.Hive.Definition.Consul.Tls;
+            var consulDef  = node.Hive.Definition.Consul;
+            var consulConf = new JObject();
 
             consulConf.Add("log_level", "info");
             consulConf.Add("datacenter", hive.Definition.Datacenter);
@@ -986,13 +954,13 @@ fi
 
             var ports = new JObject();
 
-            ports.Add("http", consulTlsDisabled ? 8500 : -1);
-            ports.Add("https", consulTlsDisabled ? -1 : 8500);
+            ports.Add("http", consulTls ? -1 : 8500);
+            ports.Add("https", consulTls ? 8500 : -1);
             ports.Add("dns", 8600);     // This is the default Consul DNS port.
 
             consulConf.Add("ports", ports);
 
-            if (!consulTlsDisabled)
+            if (consulTls)
             {
                 consulConf.Add("cert_file", "/etc/consul.d/consul.crt");
                 consulConf.Add("key_file", "/etc/consul.d/consul.key");
@@ -1306,7 +1274,7 @@ fi
 
                     ConfigureVpnPoolRoutes(node);
 
-                    // Setup the Consul server and join it to the hive.
+                    // Setup the Consul server and join it to the Consul cluster.
 
                     node.Status = "upload: consul.json";
                     node.SudoCommand("mkdir -p /etc/consul.d");
@@ -1499,7 +1467,7 @@ fi
 
                     if (!hive.Definition.BareDocker)
                     {
-                        // Setup the Consul proxy and join it to the hive.
+                        // Setup the Consul proxy and join it to the Consul cluster.
 
                         node.Status = "upload: consul.json";
                         node.SudoCommand("mkdir -p /etc/consul.d");

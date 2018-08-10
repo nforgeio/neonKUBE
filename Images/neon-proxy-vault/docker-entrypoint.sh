@@ -16,7 +16,7 @@ PATH=${PATH}:/
 . log-info.sh "VAULT_ENDPOINTS=${VAULT_ENDPOINTS}"
 . log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
 
-# Load the Docker host node environment variables if present.
+# Run the hive host node environment script if present.
 
 if [ -f /etc/neon/env-host ] ; then
     . /etc/neon/env-host
@@ -28,12 +28,6 @@ else
     # file is mounted.
 
     NEON_NODE_IP=127.0.0.1
-fi
-
-# Load the [/etc/neon/env-container] environment variables if present.
-
-if [ -f /etc/neon/env-container ] ; then
-    . /etc/neon/env-container
 fi
 
 # Load the neonHIVE definitions.

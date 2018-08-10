@@ -106,7 +106,7 @@ Two types of credentials are currently supported: **vault-token** and **vault-ap
 
 **NOTE:** The Consul limit for key values is 512KB.  This could become a limitation for very complex hives that include TLS certificates in the configuration ZIP archive.  This can be mitigated by persisting certificates in Vault instead (which a better security practice anyway).
 
-**NOTE**: Note that this image will load environment variables from `/etc/neon/env-host` and `/etc/neon/env-container` if either of these files have been mounted mapped to the container.
+**NOTE**: Note that this image will load environment variables from `/etc/neon/env-host` if this has been mounted mapped to the container.
 
 # Deployment
 

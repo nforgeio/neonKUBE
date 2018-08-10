@@ -3,21 +3,15 @@
 # FILE:         docker-entrypoint.sh
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
-#
-# Loads the Docker host node environment variables before launching the 
-# [neon-hive-manager] .NET service.
 
-# Load the Docker host node environment variables if present.
+# Load the Docker host node environment variables.
 
-if [ -f /etc/neon/env-host ] ; then
-    . /etc/neon/env-host
+if [ ! -f /etc/neon/env-host ] ; then
+    . log-critical.sh "The [/etc/neon/env-host] file does not exist.  This file must have been generated on the Docker host by [neon-cli] during hive setup and be bound to the container."
+    exit 1
 fi
 
-# Load the [/etc/neon/env-container] environment variables if present.
-
-if [ -f /etc/neon/env-container ] ; then
-    . /etc/neon/env-container
-fi
+. /etc/neon/env-host
 
 # Launch the service.
 

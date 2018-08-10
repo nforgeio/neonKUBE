@@ -125,6 +125,7 @@ namespace NeonCli
                         "docker service create",
                         "--name", "neon-dns-mon",
                         "--detach=false",
+                        "--mount", "type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true",
                         "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
                         "--env", "POLL_INTERVAL=5s",
                         "--env", "LOG_LEVEL=INFO",

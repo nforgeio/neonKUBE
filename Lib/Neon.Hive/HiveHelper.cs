@@ -788,19 +788,6 @@ namespace Neon.Hive
                 return Hive;
             }
 
-            if (Environment.GetEnvironmentVariable("NEON_HIVE") == null)
-            {
-                // It looks like the host node's [/etc/neon/env-host] script was not
-                // mapped into the current container/process and executed to initialize 
-                // important hive service environment variables.  We'll go ahead and
-                // set the important ones here.
-
-                Environment.SetEnvironmentVariable("VAULT_ADDR", $"https://neon-vault.hive:{HiveHostPorts.ProxyVault}");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_SSL", "true");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"neon-consul.hive:{NetworkPorts.Consul}");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"https://{HiveHostNames.Consul}:{NetworkPorts.Consul}");
-            }
-
             remoteConnection = false;
 
             var sshCredentials = SshCredentials.None;
@@ -957,7 +944,16 @@ namespace Neon.Hive
             }
             else
             {
-                throw new NotImplementedException();
+                // $todo(jeff.lill):
+                //
+                // We'll end up here for Linux.  Currently we can do nothing because
+                // we can assume that we're running as an application on a hive node
+                // or in a hive container that already has the necessary trusted
+                // certificates.
+                //
+                // If or when we support [neon-cli] directly on Linux, we'll need
+                // to somehow detect this and add the trusted hive certs.  One way
+                // to detect this is to have [neon-cli] set an environment variable.
             }
 
             login.InitMachine = true;
@@ -1018,9 +1014,20 @@ namespace Neon.Hive
             Environment.SetEnvironmentVariable("NEON_NODE_SSD", manager.Metadata.Labels.StorageSSD ? "true" : "false");
             Environment.SetEnvironmentVariable("VAULT_ADDR", $"{hiveDefinition.Vault.GetDirectUri(manager.Name)}");
             Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{hiveDefinition.Vault.GetDirectUri(manager.Name)}");
-            Environment.SetEnvironmentVariable("CONSUL_HTTP_SSL", "true");
-            Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-            Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+
+            if (hiveDefinition.Consul.Tls)
+            {
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_SSL", "true");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            }
+            else
+            {
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_SSL", "false");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            }
+
             Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(hiveDefinition));
 
             // Update the local DNS resolver hosts file so we'll be able resolve
