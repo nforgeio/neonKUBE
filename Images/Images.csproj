@@ -46,6 +46,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="cfssl\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="cfssl\build.ps1" />
+    <None Include="cfssl\docker-entrypoint.sh" />
+    <None Include="cfssl\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="cfssl\publish.ps1" />
+    <None Include="cfssl\README.md" />
     <None Include="couchbase-test\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
