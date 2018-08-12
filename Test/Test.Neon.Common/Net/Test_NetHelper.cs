@@ -60,7 +60,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void ModifyLocalHosts_Basic()
+        public void ModifyLocalHosts_Default()
         {
             try
             {
@@ -86,6 +86,98 @@ namespace TestCommon
                 // Ensure that we reset the local hosts before exiting the test.
 
                 NetHelper.ModifyLocalHosts();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ModifyLocalHosts_NonDefault()
+        {
+            const string marker = "TEST";
+
+            try
+            {
+                // Verify that we start out with an undefined test host.
+
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.hive"));
+
+                // Add the test entry and verify.
+
+                var hostEntries = new Dictionary<string, IPAddress>();
+
+                hostEntries.Add("foobar.test.hive", IPAddress.Parse("1.2.3.4"));
+                NetHelper.ModifyLocalHosts(hostEntries, marker);
+                Assert.Equal("1.2.3.4", Dns.GetHostAddresses("foobar.test.hive").Single().ToString());
+
+                // Reset the hosts and verify.
+
+                NetHelper.ModifyLocalHosts(section: marker);
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.hive"));
+            }
+            finally
+            {
+                // Ensure that we reset the local hosts before exiting the test.
+
+                NetHelper.ModifyLocalHosts(section: marker);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ModifyLocalHosts_Multiple()
+        {
+            const string marker1 = "TEST-1";
+            const string marker2 = "TEST-2";
+
+            try
+            {
+                // Verify that we start out with an undefined test host.
+
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.hive"));
+
+                // Add multiple sections and verify.
+
+                var hostEntries = new Dictionary<string, IPAddress>();
+
+                hostEntries.Add("foo-0.test.hive", IPAddress.Parse("1.1.1.0"));
+                NetHelper.ModifyLocalHosts(hostEntries);
+
+                hostEntries.Clear();
+                hostEntries.Add("foo-1.test.hive", IPAddress.Parse("1.1.1.1"));
+                NetHelper.ModifyLocalHosts(hostEntries, marker1);
+
+                hostEntries.Clear();
+                hostEntries.Add("foo-2.test.hive", IPAddress.Parse("1.1.1.2"));
+                NetHelper.ModifyLocalHosts(hostEntries, marker2);
+
+                Assert.Equal("1.1.1.0", Dns.GetHostAddresses("foo-0.test.hive").Single().ToString());
+                Assert.Equal("1.1.1.1", Dns.GetHostAddresses("foo-1.test.hive").Single().ToString());
+                Assert.Equal("1.1.1.2", Dns.GetHostAddresses("foo-2.test.hive").Single().ToString());
+
+                // Reset the hosts and verify.
+
+                NetHelper.ModifyLocalHosts();
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-0.test.hive"));
+                Assert.Equal("1.1.1.1", Dns.GetHostAddresses("foo-1.test.hive").Single().ToString());
+                Assert.Equal("1.1.1.2", Dns.GetHostAddresses("foo-2.test.hive").Single().ToString());
+
+                NetHelper.ModifyLocalHosts(section: marker1);
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-0.test.hive"));
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-1.test.hive"));
+                Assert.Equal("1.1.1.2", Dns.GetHostAddresses("foo-2.test.hive").Single().ToString());
+
+                NetHelper.ModifyLocalHosts(section: marker2);
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-0.test.hive"));
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-1.test.hive"));
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-2.test.hive"));
+            }
+            finally
+            {
+                // Ensure that we reset the local hosts before exiting the test.
+
+                NetHelper.ModifyLocalHosts();
+                NetHelper.ModifyLocalHosts(section: marker1);
+                NetHelper.ModifyLocalHosts(section: marker2);
             }
         }
 

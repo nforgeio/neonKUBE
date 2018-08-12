@@ -181,23 +181,56 @@ namespace Neon.Net
         /// </note>
         /// </summary>
         /// <param name="hostEntries">A dictionary mapping the hostnames to an IP address or <c>null</c>.</param>
+        /// <param name="section">
+        /// <para>
+        /// Optionally specifies the string to use to mark the hostnames section.  This
+        /// defaults to <b>NEON-MODIFY</b> which will delimit the section with <b># BEGIN-NEON-MODIFY</b>
+        /// and <b># END-NEON-MODIFY</b>.  You may pass a different string to identify a custom section.
+        /// </para>
+        /// <note>
+        /// The string passed must be a valid DNS hostname segment that must begin with a letter
+        /// followed by letters, digits or dashes.  The maximum length is 63 characters.
+        /// </note>
+        /// </param>
         /// <remarks>
         /// <note>
-        /// This requires elevated administrative privileges.  You'll need to launch Visual Studio
-        /// or favorite development envirnment with these.
+        /// This method requires elevated administrative privileges.
         /// </note>
         /// <para>
         /// This method adds or removes a temporary section of host entry definitions
         /// delimited by special comment lines.  When <paramref name="hostEntries"/> is 
-        /// non-null or empty, the section will be added or updated.  Otherwise, the
+        /// non-null and non-empty, the section will be added or updated.  Otherwise, the
         /// section will be removed.
         /// </para>
         /// </remarks>
-        public static void ModifyLocalHosts(Dictionary<string, IPAddress> hostEntries = null)
+        public static void ModifyLocalHosts(Dictionary<string, IPAddress> hostEntries = null, string section = "NEON-MODIFY")
         {
 #if XAMARIN
             throw new NotSupportedException();
 #else
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(section));
+
+            var sectionOK = char.IsLetter(section[0]) && section.Length <= 63;
+
+            if (sectionOK)
+            {
+                foreach (var ch in section)
+                {
+                    if (!char.IsLetterOrDigit(ch) && ch != '-')
+                    {
+                        sectionOK = false;
+                        break;
+                    }
+                }
+            }
+
+            if (!sectionOK)
+            {
+                throw new ArgumentException("Suffix is not a valid DNS host name segment.", nameof(section));
+            }
+
+            section = section.ToUpperInvariant();
+
             string hostsPath;
 
             if (NeonHelper.IsWindows)
@@ -212,6 +245,14 @@ namespace Neon.Net
             {
                 throw new NotSupportedException();
             }
+
+            // $todo(jeff.lill):
+            //
+            // This method could be optimized by first reading the section hostname/address
+            // mappings and then comparing these to desired host entries and writing/verifying
+            // the entries only if they have changed.
+            //
+            // Perhaps this is something to revisit when implementing OSX support.
 
             // We're seeing transient file locked errors when trying to update the [hosts] file.
             // My guess is that this is cause by the Window DNS resolver opening the file as
@@ -233,7 +274,7 @@ namespace Neon.Net
             //
             //      https://github.com/jefflill/NeonForge/issues/271
 
-            var updateHost    = "neon-modify-local-hosts.neon";
+            var updateHost    = $"{section.ToLowerInvariant()}.neonforge";
             var addressBytes  = NeonHelper.RandBytes(4);
             var updateAddress = GetRandomAddress();
             var lines         = new List<string>();
@@ -241,8 +282,8 @@ namespace Neon.Net
             retryFile.InvokeAsync(
                 async () =>
                 {
-                    const string beginMarker = "# BEGIN-NEON-MODIFY";
-                    const string endMarker   = "# END-NEON-MODIFY";
+                    var beginMarker = $"# BEGIN-{section}";
+                    var endMarker   = $"# END-{section}";
 
                     var inputLines  = File.ReadAllLines(hostsPath);
                     var tempSection = false;
@@ -253,25 +294,22 @@ namespace Neon.Net
 
                     foreach (var line in inputLines)
                     {
-                        switch (line.Trim())
+                        var trimmed = line.Trim();
+
+                        if (trimmed == beginMarker)
                         {
-                            case beginMarker:
-
-                                tempSection = true;
-                                break;
-
-                            case endMarker:
-
-                                tempSection = false;
-                                break;
-
-                            default:
-
-                                if (!tempSection)
-                                {
-                                    lines.Add(line);
-                                }
-                                break;
+                            tempSection = true;
+                        }
+                        else if (trimmed == endMarker)
+                        {
+                            tempSection = false;
+                        }
+                        else
+                        {
+                            if (!tempSection)
+                            {
+                                lines.Add(line);
+                            }
                         }
                     }
 
