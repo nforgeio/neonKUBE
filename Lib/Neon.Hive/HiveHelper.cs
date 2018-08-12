@@ -1040,7 +1040,7 @@ namespace Neon.Hive
             hosts.Add($"{manager.Name}.{hiveDefinition.Hostnames.Vault}", manager.PrivateAddress);
             hosts.Add(hiveDefinition.Hostnames.LogEsData, manager.PrivateAddress);
 
-            NetHelper.ModifyLocalHosts(hosts);
+            NetHelper.ModifyLocalHosts(hosts, section: $"neon-hive-{hiveDefinition.Name}");
 
             HiveHelper.secrets = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             HiveHelper.configs = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -1061,8 +1061,6 @@ namespace Neon.Hive
             Hive             = null;
             IsConnected      = false;
             remoteConnection = false;
-
-            NetHelper.ModifyLocalHosts();
         }
 
         /// <summary>
