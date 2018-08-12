@@ -268,6 +268,14 @@ namespace Neon.Hive
         // Instance members
 
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public HiveDefinition()
+        {
+            this.Hostnames = new HiveHostnames(this);
+        }
+
+        /// <summary>
         /// The hive name.
         /// </summary>
         /// <remarks>
@@ -555,6 +563,48 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "Hash", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public string Hash { get; set; }
+
+        /// <summary>
+        /// Returns a <see cref="HiveHostnames"/> instance that can be used to obtain the
+        /// built-in hostnames for a hive.
+        /// </summary>
+        [JsonIgnore]
+        public HiveHostnames Hostnames { get; private set; }
+
+        /// <summary>
+        /// Returns the URI for the Elasticsearch log data backend for the cluster.
+        /// </summary>
+        [JsonIgnore]
+        public string LogEsDataUri => $"http://{Hostnames.LogEsData}:{HiveHostPorts.ProxyPrivateHttpLogEsData}";
+
+        /// <summary>
+        /// Returns the URI to the hive's Vault proxy.
+        /// </summary>
+        [JsonIgnore]
+        public string VaultProxyUri => $"https://{Hostnames.Vault}:{HiveHostPorts.ProxyVault}";
+
+        /// <summary>
+        /// Returns the URI to the Vault server running on the named manager node.
+        /// </summary>
+        /// <param name="managerName">The target manager name.</param>
+        /// <returns>The Vault URI.</returns>
+        public string GetVaultDirectUri(string managerName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(managerName));
+            Covenant.Assert(Managers.Where(m => m.Name == managerName) != null, $"[{managerName}] does not identify a hive manager.");
+
+            return $"https://{managerName}.{Hostnames.Vault}:{Vault.Port}";
+        }
+
+        /// <summary>
+        /// Returns the hostname for a registry cache instance hosted on a manager node.
+        /// </summary>
+        /// <param name="manager">The manager node.</param>
+        /// <returns>The hostname.</returns>
+        public string GetRegistryCacheHost(NodeDefinition manager)
+        {
+            return $"{manager.Name}.{Hostnames.RegistryCache}";
+        }
 
         /// <summary>
         /// Enumerates all hive node definitions.

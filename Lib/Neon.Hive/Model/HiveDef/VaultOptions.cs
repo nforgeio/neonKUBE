@@ -98,24 +98,6 @@ namespace Neon.Hive
         public bool AutoUnseal { get; set; }
 
         /// <summary>
-        /// Returns the direct URI to a Vault service instance on a specific manager node.
-        /// </summary>
-        /// <param name="managerName">The name of the target manager node.</param>
-        public string GetDirectUri(string managerName)
-        {
-            return $"https://{managerName}.{HiveHostNames.Vault}:{Port}";
-        }
-
-        /// <summary>
-        /// Returns the proxied URI to the hive's Vault service.
-        /// </summary>
-        [JsonIgnore]
-        public string Uri
-        {
-            get { return $"https://{HiveHostNames.Vault}:{HiveHostPorts.ProxyVault}"; }
-        }
-
-        /// <summary>
         /// <para>
         /// The maximum allowed TTL for a Vault token or secret.  This limit will
         /// be silently enforced by Vault.  This can be expressed as hours with an "<b>h</b>"

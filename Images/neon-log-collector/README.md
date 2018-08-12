@@ -35,6 +35,13 @@ The **neon-log-host** image is deployed as local containers on every hive node (
 
 * Custom neonHIVE filter plugins: **neon-docker**, **neon-logfields**, **neon-loglevel**, **neon-proxy**, **neon-proxy-geoip**, and **neon-timestamp**.
 
+# Configuration
+
+You need to specify the following environment variables when running the container (these are referenced by the `elasticsearch.yam` configuration file):
+
+* **ELASTICSEARCH_HOST** - (*required*) Hostname used to reach the Elasticsearch cluster.
+* **ELASTICSEARCH_PORT** - (*required*) Port used to reach the Elasticsearch cluster.
+
 # Deployment
 
 This service is deployed automatically when the **neon-cli** configures a hive using the following command:

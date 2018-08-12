@@ -446,21 +446,21 @@ Server Requirements:
 
             if (hiveLogin.HiveCertificate == null)
             {
-                hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Base, bitCount, validDays, Wildcard.RootAndSubdomains, 
+                hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.Base, bitCount, validDays, Wildcard.RootAndSubdomains, 
                     issuedBy:"neonHIVE", 
                     issuedTo:$"{hiveDefinition.Name} (hive base)");
             }
 
             if (hiveLogin.VaultCertificate == null)
             {
-                hiveLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains, 
+                hiveLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains, 
                     issuedBy: "neonHIVE", 
                     issuedTo: $"{hiveDefinition.Name} (hive vault)");
             }
 
             if (hiveLogin.RegistryCacheCertificate == null)
             {
-                hiveLogin.RegistryCacheCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.RegistryCache, bitCount, validDays, Wildcard.RootAndSubdomains, 
+                hiveLogin.RegistryCacheCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.RegistryCache, bitCount, validDays, Wildcard.RootAndSubdomains, 
                     issuedBy: "neonHIVE", 
                     issuedTo: $"{hiveDefinition.Name} (hive registry-cache)");
             }

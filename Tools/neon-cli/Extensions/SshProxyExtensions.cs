@@ -141,21 +141,21 @@ namespace NeonCli
             sbHosts.AppendLineLinux("# Internal hive Consul mappings:");
             sbHosts.AppendLineLinux();
 
-            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {HiveHostNames.Consul}");
+            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {hiveDefinition.Hostnames.Consul}");
 
             foreach (var manager in hiveDefinition.Managers)
             {
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{HiveHostNames.Consul}");
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{hiveDefinition.Hostnames.Consul}");
             }
 
             sbHosts.AppendLineLinux();
             sbHosts.AppendLineLinux("# Internal hive Vault mappings:");
             sbHosts.AppendLineLinux();
-            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {HiveHostNames.Vault}");
+            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {hiveDefinition.Hostnames.Vault}");
 
             foreach (var manager in hiveDefinition.Managers)
             {
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{HiveHostNames.Vault}");
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{hiveDefinition.Hostnames.Vault}");
             }
 
             if (hiveDefinition.Docker.RegistryCache)
@@ -166,7 +166,7 @@ namespace NeonCli
 
                 foreach (var manager in hiveDefinition.Managers)
                 {
-                    sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{HiveHostNames.RegistryCache}");
+                    sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{hiveDefinition.Hostnames.RegistryCache}");
                 }
             }
 
@@ -176,7 +176,7 @@ namespace NeonCli
                 sbHosts.AppendLineLinux("# Internal hive log pipeline related mappings:");
                 sbHosts.AppendLineLinux();
 
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {HiveHostNames.LogEsData}");
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {hiveDefinition.Hostnames.LogEsData}");
             }
 
             return sbHosts.ToString();
@@ -438,7 +438,7 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.folders.tmpfs", HiveHostFolders.Tmpfs);
             SetBashVariable(preprocessReader, "neon.folders.tools", HiveHostFolders.Tools);
 
-            preprocessReader.Set("neon.hosts.neon-log-es-data", HiveHostNames.LogEsData);
+            preprocessReader.Set("neon.hosts.neon-log-es-data", hiveDefinition.Hostnames.LogEsData);
 
             SetBashVariable(preprocessReader, "nodes.manager.count", hiveDefinition.Managers.Count());
             preprocessReader.Set("nodes.managers", sbManagers);
@@ -489,16 +489,16 @@ namespace NeonCli
 
             SetBashVariable(preprocessReader, "consul.version", hiveDefinition.Consul.Version);
             SetBashVariable(preprocessReader, "consul.options", consulOptions);
-            SetBashVariable(preprocessReader, "consul.address", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-            SetBashVariable(preprocessReader, "consul.fulladdress", $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-            SetBashVariable(preprocessReader, "consul.hostname", HiveHostNames.Consul);
+            SetBashVariable(preprocessReader, "consul.address", $"{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
+            SetBashVariable(preprocessReader, "consul.fulladdress", $"https://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
+            SetBashVariable(preprocessReader, "consul.hostname", hiveDefinition.Hostnames.Consul);
             SetBashVariable(preprocessReader, "consul.port", hiveDefinition.Consul.Port);
             SetBashVariable(preprocessReader, "consul.tls", hiveDefinition.Consul.Tls ? "true" : "false");
 
             SetBashVariable(preprocessReader, "vault.version", hiveDefinition.Vault.Version);
 
             SetBashVariable(preprocessReader, "vault.download", $"https://releases.hashicorp.com/vault/{hiveDefinition.Vault.Version}/vault_{hiveDefinition.Vault.Version}_linux_amd64.zip");
-            SetBashVariable(preprocessReader, "vault.hostname", HiveHostNames.Vault);
+            SetBashVariable(preprocessReader, "vault.hostname", hiveDefinition.Hostnames.Vault);
             SetBashVariable(preprocessReader, "vault.port", hiveDefinition.Vault.Port);
             SetBashVariable(preprocessReader, "vault.consulpath", "vault/");
             SetBashVariable(preprocessReader, "vault.maximumlease", hiveDefinition.Vault.MaximimLease);

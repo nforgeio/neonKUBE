@@ -118,7 +118,7 @@ namespace NeonCli
 
                                 foreach (var manager in hive.Definition.SortedManagers)
                                 {
-                                    var cacheHostName = GetCacheHost(manager);
+                                    var cacheHostName = hive.Definition.GetRegistryCacheHost(manager);
 
                                     sbUploadScript.AppendLine($"mkdir -p /etc/docker/certs.d/{cacheHostName}:{HiveHostPorts.DockerRegistryCache}");
                                     sbUploadScript.AppendLine($"cp hive-neon-registry-cache.crt /etc/docker/certs.d/{cacheHostName}:{HiveHostPorts.DockerRegistryCache}/ca.crt");
@@ -163,7 +163,7 @@ namespace NeonCli
                                 "--publish", $"{HiveHostPorts.DockerRegistryCache}:5000",
                                 "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",     // Registry cache certificates folder
                                 "--volume", "neon-registry-cache:/var/lib/neon-registry-cache", 
-                                "--env", $"HOSTNAME={node.Name}.{HiveHostNames.RegistryCache}",
+                                "--env", $"HOSTNAME={node.Name}.{hive.Definition.Hostnames.RegistryCache}",
                                 "--env", $"REGISTRY=https://{registry}",
                                 "--env", $"USERNAME={publicRegistryCredentials.Username}",
                                 "--env", $"PASSWORD={publicRegistryCredentials.Password}",
@@ -197,17 +197,6 @@ namespace NeonCli
 
                 node.Status = string.Empty;
             }
-
-        }
-
-        /// <summary>
-        /// Returns the hostname for a registry cache instance hosted on a manager node.
-        /// </summary>
-        /// <param name="manager">The manager node.</param>
-        /// <returns>The hostname.</returns>
-        private string GetCacheHost(NodeDefinition manager)
-        {
-            return $"{manager.Name}.{HiveHostNames.RegistryCache}";
         }
     }
 }

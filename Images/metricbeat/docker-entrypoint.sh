@@ -21,7 +21,8 @@ fi
 # Initialize the configuration defaults.
 
 if [ "${ELASTICSEARCH_URL}" == "" ] ; then
-    export ELASTICSEARCH_URL=http://${HiveHostnames_LogEsData}:${HiveHostPorts_ProxyPrivateHttpLogEsData}
+    . log-critical.sh "ELASTICSEARCH_URL environment variable is required."
+    exit 1
 fi
 
 if [ "${PERIOD}" == "" ] ; then

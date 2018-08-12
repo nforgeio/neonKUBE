@@ -8,7 +8,7 @@
 KIBANA_CONFIG_PATH=/usr/share/kibana/config/kibana.yml
 
 cat <<EOF > ${KIBANA_CONFIG_PATH}
-# Kibana is served by a back end server. This setting specifies the port to use.
+# Kibana is served by a backend server. This setting specifies the port to use.
 #server.port: 5601
 
 # Specifies the address to which the Kibana server will bind. IP addresses and hostnames are both valid values.
@@ -70,7 +70,7 @@ kibana.defaultAppId: "discover"
 # the elasticsearch.requestTimeout setting.
 #elasticsearch.pingTimeout: 1500
 
-# Time in milliseconds to wait for responses from the back end or Elasticsearch. This value
+# Time in milliseconds to wait for responses from the backend or Elasticsearch. This value
 # must be a positive integer.
 #elasticsearch.requestTimeout: 30000
 

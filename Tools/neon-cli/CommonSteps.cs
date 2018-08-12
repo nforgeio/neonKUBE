@@ -266,21 +266,21 @@ TCPKeepAlive yes
             if (hiveDefinition.Consul.Tls)
             {
                 sb.AppendLine($"CONSUL_HTTP_SSL=true");
-                sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-                sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+                sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
+                sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"https://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
             }
             else
             {
                 sb.AppendLine($"CONSUL_HTTP_SSL=false");
-                sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-                sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"http://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+                sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
+                sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"http://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
             }
 
             // All nodes will be configured such that host processes using the HashiCorp Vault 
             // CLI will access the Vault cluster via the [neon-proxy-vault] proxy service
             // by default.
 
-            sb.AppendLine($"VAULT_ADDR={hiveDefinition.Vault.Uri}");
+            sb.AppendLine($"VAULT_ADDR={hiveDefinition.VaultProxyUri}");
 
             if (node.Metadata != null)
             {
@@ -292,7 +292,7 @@ TCPKeepAlive yes
                     //
                     // This is useful when configuring Vault.
 
-                    sb.AppendLine($"VAULT_DIRECT_ADDR={hiveDefinition.Vault.GetDirectUri(node.Name)}");
+                    sb.AppendLine($"VAULT_DIRECT_ADDR={hiveDefinition.GetVaultDirectUri(node.Name)}");
                 }
                 else
                 {

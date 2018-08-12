@@ -866,7 +866,7 @@ ff02::2         ip6-allrouters
 
             if (node.Metadata.IsManager)
             {
-                vaultDirectLine = $"export VAULT_DIRECT_ADDR={hive.Definition.Vault.GetDirectUri(node.Name)}";
+                vaultDirectLine = $"export VAULT_DIRECT_ADDR={hive.Definition.GetVaultDirectUri(node.Name)}";
             }
 
             if (hive.Definition.Consul.Tls)
@@ -874,8 +874,8 @@ ff02::2         ip6-allrouters
                 consulDefs =
 $@"
 export CONSUL_HTTP_SSL=true
-export CONSUL_HTTP_ADDR={HiveHostNames.Consul}:{hive.Definition.Consul.Port}
-export CONSUL_HTTP_FULLADDR=https://{HiveHostNames.Consul}:{hive.Definition.Consul.Port}
+export CONSUL_HTTP_ADDR={hive.Definition.Hostnames.Consul}:{hive.Definition.Consul.Port}
+export CONSUL_HTTP_FULLADDR=https://{hive.Definition.Hostnames.Consul}:{hive.Definition.Consul.Port}
 ";
             }
             else
@@ -883,8 +883,8 @@ export CONSUL_HTTP_FULLADDR=https://{HiveHostNames.Consul}:{hive.Definition.Cons
                 consulDefs =
 $@"
 export CONSUL_HTTP_SSL=false
-export CONSUL_HTTP_ADDR={HiveHostNames.Consul}:{hive.Definition.Consul.Port}
-export CONSUL_HTTP_FULLADDR=http://{HiveHostNames.Consul}:{hive.Definition.Consul.Port}
+export CONSUL_HTTP_ADDR={hive.Definition.Hostnames.Consul}:{hive.Definition.Consul.Port}
+export CONSUL_HTTP_FULLADDR=http://{hive.Definition.Hostnames.Consul}:{hive.Definition.Consul.Port}
 ";
             }
 
@@ -910,9 +910,18 @@ export NEON_NODE_IP={node.Metadata.PrivateAddress}
 export NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}
 export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
 
-export VAULT_ADDR={hive.Definition.Vault.Uri}
+export VAULT_ADDR={hive.Definition.VaultProxyUri}
 {vaultDirectLine}
 {consulDefs}
+
+# Define the hive-specific host names.
+
+export HiveHostnames_Base=$NEON_HIVE.hive
+export HiveHostnames_RegistryCache=neon-registry-cache.$NEON_HIVE.hive
+export HiveHostnames_LogEsData=neon-log-esdata.$NEON_HIVE.hive
+export HiveHostnames_Consul=neon-consul.$NEON_HIVE.hive
+export HiveHostnames_Vault=neon-vault.$NEON_HIVE.hive
+export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.$NEON_HIVE.hive
 
 # Import trusted host SSL certificates if the host directory was mounted.
 # For this to work, this host folder:
@@ -1102,7 +1111,7 @@ fi
             {
                 foreach (var manager in hive.Definition.SortedManagers)
                 {
-                    registries.Add($"https://{manager.Name}.{HiveHostNames.RegistryCache}:{HiveHostPorts.DockerRegistryCache}");
+                    registries.Add($"https://{manager.Name}.{hive.Definition.Hostnames.RegistryCache}:{HiveHostPorts.DockerRegistryCache}");
                 }
             }
 

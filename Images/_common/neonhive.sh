@@ -388,44 +388,6 @@ export HiveSysLogFacility_ProxyName=local7
 export HiveSysLogFacility_ProxyNumbe=23
 
 #------------------------------------------------------------------------------
-# HiveHostnames:
-#
-# Defines the DNS hostnames used by built-in node level applications as well
-# as Docker containers and services.
-
-# The base DNS name for the internal hive Docker registry cache instances deployed on the manager nodes.
-export HiveHostnames_RegistryCache=neon-registry-cache.name.hive
-
-# The DNS name for the Elasticsearch containers used to store the hive logs.
-#
-# These are individual containers that attached to the [neon-private] network,
-# forming an Elasticsearch cluster that is deployed behind the hive's [private] proxy.  A DNS entry
-# is configured in the each Docker node's [hosts] file to reference the node's IP address as well 
-# as in the [/etc/neon/env-host] file that may be mounted into Docker containers and services.
-#
-# HTTP traffic should be directed to the [HiveHostPorts_ProxyPrivateHttpLogEsData] port which will be
-# routed to the [neon-proxy-private] service via the Docker ingress network.
-export HiveHostnames_LogEsData=neon-log-esdata.name.hive
-
-# The DNS name used to access for the hive's HashiCorp Consul service.
-export HiveHostnames_Consul=neon-consul.name.hive
-
-# The DNS name for the hive's HashiCorp Vault proxy.
-#
-# Hive services access Vault using this hostname to take advantage of the [neon-proxy-vault]
-# which provides for failover.
-#
-# This is also the base name for the manager node specific endpoints like
-# <manager-name>.neon-vault.hive, which are used by [neon-proxy-vault]
-# to check instance health.
-export HiveHostnames_Vault=neon-vault.name.hive
-
-# The special hostname used by the [HostsFixture] Xunit test fixture to verify
-# that the local DNS resolver has picked up the changes.  This is not used for any
-# other purpose.
-export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.name.hive
-
-#------------------------------------------------------------------------------
 # Identifies the hive Consul globals and settings.  These are located
 # under [neon/global].
 

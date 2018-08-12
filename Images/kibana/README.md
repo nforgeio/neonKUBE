@@ -37,7 +37,7 @@ Kibana listens internally on the default **port 5601**.
 
 # Deployment
 
-This image is typically deployed as a Docker service like:
+This image is typically deployed as a Docker service like (where **HIVENAME** is the hive's name):
 
 ````
 docker service create \
@@ -50,7 +50,7 @@ docker service create \
     --constraint "node.role==manager" \
     --publish 5001:5601 \
     --mount type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true \
-    --env ELASTICSEARCH_URL=http://neon-log-esdata.hive:5303 \
+    --env ELASTICSEARCH_URL=http://neon-log-esdata.HIVENAME.hive:5303 \
     --log-driver json-file
 ````
 &nbsp;

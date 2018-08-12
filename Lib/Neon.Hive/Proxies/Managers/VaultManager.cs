@@ -93,7 +93,7 @@ namespace Neon.Hive
                         return client;
                     }
 
-                    client = VaultClient.OpenWithToken(new Uri(hive.Definition.Vault.Uri), hive.HiveLogin.VaultCredentials.RootToken);
+                    client = VaultClient.OpenWithToken(new Uri(hive.Definition.VaultProxyUri), hive.HiveLogin.VaultCredentials.RootToken);
                 }
 
                 return client;

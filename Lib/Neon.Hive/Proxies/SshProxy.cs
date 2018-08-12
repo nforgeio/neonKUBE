@@ -3313,7 +3313,7 @@ echo $? > {cmdFolder}/exit
                 "--publish", $"{HiveHostPorts.DockerRegistryCache}:5000",
                 "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
                 "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
-                "--env", $"HOSTNAME={Name}.{HiveHostNames.RegistryCache}",
+                "--env", $"HOSTNAME={Name}.{Hive.Definition.Hostnames.RegistryCache}",
                 "--env", $"REGISTRY={registry}",
                 "--env", $"USERNAME={username}",
                 "--env", $"PASSWORD={password}",

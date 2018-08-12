@@ -34,7 +34,7 @@ NOTE: Although it would be nice to run Metricbeat as a Docker service, that does
 
 # Environment Variables
 
-* **ELASTICSEARCH_URL** (*optional*) - URL of the Elasticsearch cluster where the metrics are to be persisted.  The container will send these to the neonHIVE's Elasticsearch log storage cluster by default.
+* **ELASTICSEARCH_URL** (*required*) - URL of the Elasticsearch cluster where the metrics are to be persisted.
 
 * **PERIOD** (*optional*) - interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to **60s**.
 
@@ -61,6 +61,7 @@ docker run \
     --volume /etc/neon/env-host:/etc/neon/env-host:ro \
     --volume /proc:/hostfs/proc:ro \
     --volume /:/hostfs:ro \
+    --env "ELASTICSEARCH_URL=http://neon-log-esdata.HIVENAME.hive" \
     --log-driver json-file \
     nhive/metricbeat
 

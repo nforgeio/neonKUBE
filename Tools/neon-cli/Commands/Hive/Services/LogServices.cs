@@ -141,7 +141,7 @@ namespace NeonCli
                 {
                     using (var jsonClient = new JsonClient())
                     {
-                        var baseLogEsDataUri = $"http://{HiveHostNames.LogEsData}:{HiveHostPorts.ProxyPrivateHttpLogEsData}";
+                        var baseLogEsDataUri = hive.Definition.LogEsDataUri;
                         var baseKibanaUri    = $"http://{firstManager.PrivateAddress}:{HiveHostPorts.Kibana}";
                         var timeout          = TimeSpan.FromMinutes(5);
                         var retry             = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(1));
@@ -314,7 +314,7 @@ namespace NeonCli
             //
             //      /etc/neon/env-host         - Generic host specific environment variables
             //      /etc/neon/env-log-esdata   - Elasticsearch node host specific environment variables
-            //      neon-log-esdata-#                 - Persistent Elasticsearch data folder
+            //      neon-log-esdata-#          - Persistent Elasticsearch data folder
 
             var esBootstrapNodes = new StringBuilder();
 
@@ -408,7 +408,7 @@ namespace NeonCli
 
                     using (var jsonClient = new JsonClient())
                     {
-                        var baseLogEsDataUri = $"http://{HiveHostNames.LogEsData}:{HiveHostPorts.ProxyPrivateHttpLogEsData}";
+                        var baseLogEsDataUri = hive.Definition.LogEsDataUri;
                         var timeout          = TimeSpan.FromMinutes(5);
                         var timeoutTime      = DateTime.UtcNow + timeout;
                         var esNodeCount      = hive.Definition.Nodes.Count(n => n.Labels.LogEsData);
@@ -486,7 +486,7 @@ namespace NeonCli
                 "--constraint", $"node.role==manager",
                 "--publish", $"{HiveHostPorts.Kibana}:{NetworkPorts.Kibana}",
                 "--mount", "type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true",
-                "--env", $"ELASTICSEARCH_URL=http://{HiveHostNames.LogEsData}:{HiveHostPorts.ProxyPrivateHttpLogEsData}",
+                "--env", $"ELASTICSEARCH_URL={hive.Definition.LogEsDataUri}",
                 "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
                 Program.ResolveDockerImage(hive.Definition.Log.KibanaImage));
 
@@ -595,6 +595,7 @@ namespace NeonCli
                         "--volume", "/etc/neon/env-host:/etc/neon/env-host:ro",
                         "--volume", "/proc:/hostfs/proc:ro",
                         "--volume", "/:/hostfs:ro",
+                        "--env", $"ELASTICSEARCH_URL={hive.Definition.LogEsDataUri}",
                         "--log-driver", "json-file",
                         Program.ResolveDockerImage(hive.Definition.Log.MetricbeatImage));
 

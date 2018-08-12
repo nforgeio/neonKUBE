@@ -76,7 +76,7 @@ docker run \
     --detach \
     --restart always \
     --publish 5002:5000 \
-    --env HOST=<MANAGER-NAME>.neon-registry-cache.hive \
+    --env HOST=<MANAGER-NAME>.neon-registry-cache.HIVENAME.hive \
     --volume /etc/neon-registry-cache:/etc/neon-registry-cache:ro \
     --volume neon-registry-cache:/var/lib/neon-registry-cache \
     nhive/neon-registry-cache

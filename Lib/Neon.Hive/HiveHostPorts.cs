@@ -103,14 +103,14 @@ namespace Neon.Hive
         public const int ProxyVault = 5004;
 
         /// <summary>
-        /// The public HTTP API port exposed by individual <b>neon-log-esdata-#</b>
-        /// Elasticsearch log repository containers.
+        /// The public HTTP API port exposed by individual <b>neon-log-esdata</b>
+        /// Elasticsearch log repository container instances.
         /// </summary>
         public const int LogEsDataHttp = 5005;
 
         /// <summary>
-        /// The TCP port exposed by individual <b>neon-log-esdata-#</b> Elasticsearch
-        /// log repository containers for internal inter-node communication.
+        /// The TCP port exposed by individual <b>neon-log-esdata</b> Elasticsearch
+        /// log repository container instances for internal inter-node communication.
         /// </summary>
         public const int LogEsDataTcp = 5006;
 

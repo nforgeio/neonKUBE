@@ -16,19 +16,14 @@ PATH=${PATH}:/
 . log-info.sh "VAULT_ENDPOINTS=${VAULT_ENDPOINTS}"
 . log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
 
-# Run the hive host node environment script if present.
+# Run the hive host node environment script.
 
-if [ -f /etc/neon/env-host ] ; then
-    . /etc/neon/env-host
-else
-
-    # Initialize NEON_NODE_IP to the loopback address if host environment
-    # variables weren't mapped.  We're doing this so the SYSLOG log line 
-    # below will be valid when event when no [/etc/neon/env-host] 
-    # file is mounted.
-
-    NEON_NODE_IP=127.0.0.1
+if [ ! -f /etc/neon/env-host ] ; then
+    . log-critical.sh "The [/etc/neon/env-host] file does not exist.  This file must have been generated on the Docker host by [neon-cli] during hive setup and be bound to the container."
+    exit 1
 fi
+
+. /etc/neon/env-host
 
 # Load the neonHIVE definitions.
 

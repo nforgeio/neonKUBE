@@ -1012,20 +1012,20 @@ namespace Neon.Hive
             Environment.SetEnvironmentVariable("NEON_NODE_ROLE", manager.Metadata.Role);
             Environment.SetEnvironmentVariable("NEON_NODE_IP", manager.Metadata.PrivateAddress.ToString());
             Environment.SetEnvironmentVariable("NEON_NODE_SSD", manager.Metadata.Labels.StorageSSD ? "true" : "false");
-            Environment.SetEnvironmentVariable("VAULT_ADDR", $"{hiveDefinition.Vault.GetDirectUri(manager.Name)}");
-            Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{hiveDefinition.Vault.GetDirectUri(manager.Name)}");
+            Environment.SetEnvironmentVariable("VAULT_ADDR", $"{hiveDefinition.GetVaultDirectUri(manager.Name)}");
+            Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{hiveDefinition.GetVaultDirectUri(manager.Name)}");
 
             if (hiveDefinition.Consul.Tls)
             {
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_SSL", "true");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"https://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"https://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
             }
             else
             {
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_SSL", "false");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
             }
 
             Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(hiveDefinition));
@@ -1035,10 +1035,10 @@ namespace Neon.Hive
 
             var hosts = new Dictionary<string, IPAddress>();
 
-            hosts.Add(HiveHostNames.Consul, manager.PrivateAddress);
-            hosts.Add(HiveHostNames.Vault, manager.PrivateAddress);
-            hosts.Add($"{manager.Name}.{HiveHostNames.Vault}", manager.PrivateAddress);
-            hosts.Add(HiveHostNames.LogEsData, manager.PrivateAddress);
+            hosts.Add(hiveDefinition.Hostnames.Consul, manager.PrivateAddress);
+            hosts.Add(hiveDefinition.Hostnames.Vault, manager.PrivateAddress);
+            hosts.Add($"{manager.Name}.{hiveDefinition.Hostnames.Vault}", manager.PrivateAddress);
+            hosts.Add(hiveDefinition.Hostnames.LogEsData, manager.PrivateAddress);
 
             NetHelper.ModifyLocalHosts(hosts);
 
