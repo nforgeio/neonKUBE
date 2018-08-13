@@ -7,7 +7,7 @@
 # Loads the Docker host node environment variables before launching the 
 # [neon-vegomatic] .NET service.
 
-# Run the hive host node environment script if present.
+# Load the host node environment.
 
 if [ -f /etc/neon/env-host ] ; then
     . /etc/neon/env-host

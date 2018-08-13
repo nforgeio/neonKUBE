@@ -10,13 +10,7 @@
 
 PATH=${PATH}:/
 
-# Log startup information.
-
-. log-info.sh "Starting [neon-proxy-vault]"
-. log-info.sh "VAULT_ENDPOINTS=${VAULT_ENDPOINTS}"
-. log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
-
-# Run the hive host node environment script.
+# Load the hive host node environment.
 
 if [ ! -f /etc/neon/env-host ] ; then
     . log-critical.sh "The [/etc/neon/env-host] file does not exist.  This file must have been generated on the Docker host by [neon-cli] during hive setup and be bound to the container."
@@ -25,13 +19,20 @@ fi
 
 . /etc/neon/env-host
 
+# Log startup information.
+
+. log-info.sh "Starting [neon-proxy-vault]"
+. log-info.sh "VAULT_ENDPOINTS=${VAULT_ENDPOINTS}"
+. log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
+
 # Load the neonHIVE definitions.
 
 . /neonhive.sh
+updateCaCertificates
 
 # Generate the static part of the HAProxy configuration file.  The config is
 # pretty simple, some global defaults, the frontend definition followed by the
-# backend which defines a server for each NAME:IP:PORT passed in VAULT_ENDPOINTS.
+# backend which defines a server for each NAME:ADDRESS:PORT passed in VAULT_ENDPOINTS.
 #
 # Note that the [neon-log-collector] depends on the format of the proxy frontend
 # and backend names, so don't change these.
@@ -126,17 +127,17 @@ EOF
 # Process VAULT_ENDPOINTS by appending a server entry for each endpoint.
 # Each entry written will look like:
 #
-#   server HOSTNAME IP:PORT
+#   server HOSTNAME ADDRESS:PORT
 
 endpoints=$(echo ${VAULT_ENDPOINTS} | tr "," "\n")
 
 for endpoint in ${endpoints}
 do
     name=$(echo ${endpoint} | cut -d':' -f 1)
-    ip=$(echo ${endpoint} | cut -d':' -f 2)
+    address=$(echo ${endpoint} | cut -d':' -f 2)
     port=$(echo ${endpoint} | cut -d':' -f 3)
 
-    echo "    server              ${name}.${HiveHostnames_Vault} ${ip}:${port} init-addr last,libc,none check" >> ${configPath}
+    echo "    server              ${name}.${HiveHostnames_Vault} ${address}:${port} init-addr last,libc,none check" >> ${configPath}
 done
 
 # Validate the configuration file and then launch HAProxy.

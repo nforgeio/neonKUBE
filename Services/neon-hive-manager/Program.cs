@@ -319,7 +319,7 @@ namespace NeonHiveManager
             foreach (var managerNode in swarmNodes.Where(n => n.Role == "manager")
                 .OrderBy(n => n.Hostname))
             {
-                var vaultHostname = $"{managerNode.Hostname}.neon-vault.hive";
+                var vaultHostname = $"{managerNode.Hostname}.{hive.Definition.Hostnames.Vault}";
 
                 vaultUris.Add($"https://{vaultHostname}:{NetworkPorts.Vault}");
 

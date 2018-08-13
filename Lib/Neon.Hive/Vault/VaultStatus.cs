@@ -63,7 +63,7 @@ namespace Neon.Hive
             //      Cluster Name    woodinville.home-small
             //      Cluster ID      4d8cc51d-00a3-0d7b-b540-9429d05d77d0
             //      HA Enabled      true
-            //      HA Cluster      https://manager-0.neon-vault.hive:8201
+            //      HA Cluster      https://manager-0.neon-vault.HIVENAME.hive:8201
             //      HA Mode         active
             //
             // Note that the column widths vary between the two versions.

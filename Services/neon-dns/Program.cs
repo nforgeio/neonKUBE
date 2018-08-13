@@ -35,7 +35,7 @@ namespace NeonDns
     /// </summary>
     public static class Program
     {
-        private static readonly string      serviceName = $"neon-dns:{GitVersion}";
+        private static readonly string      serviceName       = $"neon-dns:{GitVersion}";
         private static string               powerDnsHostsPath = "/etc/powerdns/hosts";
         private static string               reloadSignalPath  = "/neon-dns/reload";
         private static ProcessTerminator    terminator;
@@ -81,23 +81,23 @@ namespace NeonDns
                     powerDnsHostsPath = Environment.ExpandEnvironmentVariables("%NF_TEMP%\\neon-dns-hosts.txt");
 
                     File.WriteAllText(powerDnsHostsPath,
-@"# PowerDNS Recursor authoritatively answers for [*.hive] hostnames.
+$@"# PowerDNS Recursor authoritatively answers for [*.hive] hostnames.
 # on the local node using these mappings.
 
-10.0.0.30       neon-consul.hive
+10.0.0.30       {HiveHelper.Hive.Definition.Hostnames.Consul}
 
 # Internal hive Vault mappings:
 
-10.0.0.30       neon-vault.hive
-10.0.0.30       manager-0.neon-vault.hive
+10.0.0.30       {HiveHelper.Hive.Definition.Hostnames.Vault}
+10.0.0.30       {HiveHelper.Hive.FirstManager.Name}.{HiveHelper.Hive.Definition.Hostnames.Vault}
 
 # Internal hive registry cache related mappings:
 
-10.0.0.30       manager-0.neon-registry-cache.hive
+10.0.0.30       {HiveHelper.Hive.FirstManager.Name}.{HiveHelper.Hive.Definition.Hostnames.RegistryCache}
 
 # Internal hive log pipeline related mappings:
 
-10.0.0.30       neon-log-esdata.hive
+10.0.0.30       {HiveHelper.Hive.Definition.Hostnames.LogEsData}
 ");
                     // We're also going to create a temporary folder for the reload signal.
 

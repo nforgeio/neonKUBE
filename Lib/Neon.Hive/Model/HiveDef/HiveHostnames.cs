@@ -95,7 +95,7 @@ namespace Neon.Hive
         /// </para>
         /// <para>
         /// This is also the base name for the manager node specific endpoints like
-        /// <b><i>manager-name</i>.neon-vault.hive</b>, which are used by <b>neon-proxy-vault</b>
+        /// <b><i>manager-name</i>.neon-vault.HIVENAME.hive</b>, which are used by <b>neon-proxy-vault</b>
         /// to check instance health.
         /// </para>
         /// </remarks>

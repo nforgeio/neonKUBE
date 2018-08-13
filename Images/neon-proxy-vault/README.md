@@ -8,7 +8,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Configuration
 
-This image implements the **neon-proxy-vault** service which is responsible for forwarding internal requests to the HashiCorp Vault instances running on the hive manager nodes.  This this function could not be handled by the **neon-proxy-private** service because that service needs to call Vault to retrieve secrets such as TLS certificates and keys. 
+This image implements the **neon-proxy-vault** service which is responsible for forwarding internal requests to the HashiCorp Vault instances running on the hive manager nodes.  This function could not be handled by the **neon-proxy-private** service because that service needs to call Vault to retrieve secrets such as TLS certificates and keys. 
 
 This image derives from **neoncloud/haproxy** but deploys its own **haproxy.cfg** file.  It also ignores the `CONFIG_INTERVAL` environment variable, if passed.
 
@@ -18,9 +18,9 @@ Note that this image will load environment variables from `/etc/neon/env-host` i
 
 # Environment Variables
 
-* **VAULT_ENDPOINTS** (*required*) - identifies the manager node IP addresses and the ports where Vault will be listening.  These must be passed a comma separated `NODE:IP:PORT`, like:
+* **VAULT_ENDPOINTS** (*required*) - identifies the Vault manager hostnames and ports where Vault will be listening.  These must be passed a comma separated `NODE:VAULT-HOSTNAME:PORT`, like:
 
-&nbsp;&nbsp;&nbsp;&nbsp;`VAULT_ENDPOINTS=manager-0:10.0.1.30:8200,manager-1:10.0.1.31:8200,...`
+&nbsp;&nbsp;&nbsp;&nbsp;`VAULT_ENDPOINTS=manager-0:manager-0.neon-vault.HIVENAME.hive:8200,manager-1:manager-1.neon-vault.HIVENAME.hive:8200,...`
 
 * **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
@@ -42,7 +42,8 @@ docker service create \
     --constraint node.role==manager \
     --publish 5004:8200 \
     --mount type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true \
-    --env VAULT_ENDPOINTS=manager-0:10.0.0.30:8200 \
+    --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
+    --env VAULT_ENDPOINTS=manager-0:manager-0.neon-vault.HIVENAME.hive:8200 \
     --env LOG_LEVEL=INFO \
     --restart-delay 10s \
     nhive/neon-proxy-vault:jeff-tls-latest

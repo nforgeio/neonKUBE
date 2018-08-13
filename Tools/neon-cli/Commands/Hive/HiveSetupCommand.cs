@@ -806,16 +806,15 @@ OPTIONS:
                     // currently enabled in the cluster definition so it'll be easy to upgrade 
                     // the hive later.
 
-                    node.SudoCommand("mkdir -p /usr/local/share/ca-certificates/neon");
-                    node.SudoCommand("chmod 755 /usr/local/share/ca-certificates/neon");
+                    node.SudoCommand("mkdir -p /usr/local/share/ca-certificates");
 
                     var hiveName = hiveLogin.Definition.Name.ToLowerInvariant();
 
-                    node.UploadText($"/usr/local/share/ca-certificates/neon/hive-{hiveName}-base.crt", hiveLogin.HiveCertificate.CertPem);
-                    node.UploadText($"/usr/local/share/ca-certificates/neon/hive-{hiveName}-vault.crt", hiveLogin.VaultCertificate.CertPem);
-                    node.UploadText($"/usr/local/share/ca-certificates/neon/hive-{hiveName}-registry-cache.crt", hiveLogin.RegistryCacheCertificate.CertPem);
+                    node.UploadText($"/usr/local/share/ca-certificates/hive-{hiveName}-base.crt", hiveLogin.HiveCertificate.CertPem);
+                    node.UploadText($"/usr/local/share/ca-certificates/hive-{hiveName}-vault.crt", hiveLogin.VaultCertificate.CertPem);
+                    node.UploadText($"/usr/local/share/ca-certificates/hive-{hiveName}-registry-cache.crt", hiveLogin.RegistryCacheCertificate.CertPem);
 
-                    node.SudoCommand("chmod 644 /usr/local/share/ca-certificates/neon/*");
+                    node.SudoCommand("chmod 644 /usr/local/share/ca-certificates/*");
                     node.SudoCommand("update-ca-certificates --fresh");
 
                     // Tune Linux for SSDs, if enabled.
@@ -923,22 +922,30 @@ export HiveHostnames_Consul=neon-consul.$NEON_HIVE.hive
 export HiveHostnames_Vault=neon-vault.$NEON_HIVE.hive
 export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.$NEON_HIVE.hive
 
-# Import trusted host SSL certificates if the host directory was mounted.
-# For this to work, this host folder:
-#
-#       /usr/local/share/ca-certificates
-#
-# needs to be mounted into the container at:
-#
-#       /mnt/host/ca-certificates
-#
-# to work properly.  Note that this does nothing if the host certificates folder
-# is not mounted.
+# This function handles loading host ssl certificates into the container
+# for Debian/Ubuntu/Alpine... based images that use the [update-ca-certificates]
+# command.  Containers that need the host certificates will need to explicitly
+# call this function in their entrypoint scripts.
 
-if [ -d /mnt/host/ca-certificates ] ; then
-    cp -r /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
-    update-ca-certificates --fresh
-fi
+function updateCaCertificates {{
+
+    # Import trusted host SSL certificates if the host directory was mounted.
+    # For this to work, this host folder:
+    #
+    #       /usr/local/share/ca-certificates
+    #
+    # needs to be mounted into the container at:
+    #
+    #       /mnt/host/ca-certificates
+    #
+    # to work properly.  Note that this does nothing if the host certificates folder
+    # is not mounted.
+
+    if [ -d /mnt/host/ca-certificates ] ; then
+        cp -r /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
+        update-ca-certificates --fresh || true
+    fi
+}}
 ");
             node.UploadText($"{HiveHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
         }
@@ -2851,7 +2858,7 @@ systemctl start neon-volume-plugin
 
             foreach (var manager in hive.Definition.SortedManagers)
             {
-                sbEndpoints.AppendWithSeparator($"{manager.Name}:{manager.PrivateAddress}:{NetworkPorts.Vault}", ",");
+                sbEndpoints.AppendWithSeparator($"{manager.Name}:{manager.Name}.{hive.Definition.Hostnames.Vault}:{NetworkPorts.Vault}", ",");
             }
 
             hive.FirstManager.InvokeIdempotentAction("setup/proxy-vault",
@@ -2896,6 +2903,7 @@ systemctl start neon-volume-plugin
                         "--network", HiveConst.PrivateNetwork,
                         options,
                         "--mount", "type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true",
+                        "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
                         "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                         "--env", $"LOG_LEVEL=INFO",
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
@@ -2929,6 +2937,7 @@ systemctl start neon-volume-plugin
                                     "--detach",
                                     "--publish", $"{HiveHostPorts.ProxyVault}:{NetworkPorts.Vault}",
                                     "--mount", "type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true",
+                                    "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
                                     "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                                     "--env", $"LOG_LEVEL=INFO",
                                     "--restart", "always",
@@ -2965,8 +2974,7 @@ systemctl start neon-volume-plugin
 
             var httpHandler = new HttpClientHandler()
             {
-                AutomaticDecompression                    = DecompressionMethods.Deflate | DecompressionMethods.GZip,
-                ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => true
+                AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip,
             };
 
             using (httpHandler)
@@ -2975,7 +2983,7 @@ systemctl start neon-volume-plugin
                 {
                     using (var vaultJsonClient = new JsonClient(httpHandler, disposeHandler: false))
                     {
-                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.PrivateAddress}:{NetworkPorts.Vault}/");
+                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.Name}.{hive.Definition.Hostnames.Vault}:{NetworkPorts.Vault}/");
 
                         // Wait for Vault to start and be able to respond to requests.
 
@@ -3054,7 +3062,7 @@ systemctl start neon-volume-plugin
 
                     using (var vaultJsonClient = new JsonClient(httpHandler, disposeHandler: false))
                     {
-                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.PrivateAddress}:{NetworkPorts.Vault}/");
+                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.Name}.{hive.Definition.Hostnames.Vault}:{NetworkPorts.Vault}/");
 
                         manager.Status = "vault: stablize";
 

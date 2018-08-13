@@ -120,8 +120,7 @@ namespace Neon.Hive
         {
             var handler = new HttpClientHandler()
             {
-                AutomaticDecompression                    = DecompressionMethods.Deflate | DecompressionMethods.GZip,
-                ServerCertificateCustomValidationCallback = ValidateRemoteCertificate
+                AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip,
             };
 
             jsonClient                 = new JsonClient(handler, disposeHandler: true);

@@ -11,11 +11,7 @@
 
 PATH=${PATH}:/
 
-# Log startup information.
-
-. log-info.sh "Starting [neon-log-collector]"
-
-# Run the hive host node environment script.
+# Load the host node environment.
 
 if [ ! -f /etc/neon/env-host ] ; then
     . log-critical.sh "The [/etc/neon/env-host] file does not exist.  This file must have been generated on the Docker host by [neon-cli] during hive setup and be bound to the container."
@@ -23,6 +19,10 @@ if [ ! -f /etc/neon/env-host ] ; then
 fi
 
 . /etc/neon/env-host
+
+# Log startup information.
+
+. log-info.sh "Starting [neon-log-collector]"
 
 # Load the neonHIVE constants.
 
