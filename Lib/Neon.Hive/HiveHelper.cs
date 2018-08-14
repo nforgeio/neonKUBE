@@ -993,7 +993,7 @@ namespace Neon.Hive
             // Initialize some properties.
 
             var hiveDefinition = Hive.Definition;
-            var manager        = Hive.GetHealthyManager(HiveProxy.HealthyManagerMode.ReturnFirst);
+            var healthyManager = Hive.GetHealthyManager(HiveProxy.HealthyManagerMode.ReturnFirst);
 
             // Simulate the environment variables initialized by a mounted [env-host] script.
 
@@ -1008,12 +1008,12 @@ namespace Neon.Hive
             Environment.SetEnvironmentVariable("NEON_DATACENTER", hiveDefinition.Datacenter);
             Environment.SetEnvironmentVariable("NEON_ENVIRONMENT", hiveDefinition.Environment.ToString().ToUpperInvariant());
             Environment.SetEnvironmentVariable("NEON_HOSTING", hostingProvider);
-            Environment.SetEnvironmentVariable("NEON_NODE_NAME", manager.Name);
-            Environment.SetEnvironmentVariable("NEON_NODE_ROLE", manager.Metadata.Role);
-            Environment.SetEnvironmentVariable("NEON_NODE_IP", manager.Metadata.PrivateAddress.ToString());
-            Environment.SetEnvironmentVariable("NEON_NODE_SSD", manager.Metadata.Labels.StorageSSD ? "true" : "false");
-            Environment.SetEnvironmentVariable("VAULT_ADDR", $"{hiveDefinition.GetVaultDirectUri(manager.Name)}");
-            Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{hiveDefinition.GetVaultDirectUri(manager.Name)}");
+            Environment.SetEnvironmentVariable("NEON_NODE_NAME", healthyManager.Name);
+            Environment.SetEnvironmentVariable("NEON_NODE_ROLE", healthyManager.Metadata.Role);
+            Environment.SetEnvironmentVariable("NEON_NODE_IP", healthyManager.Metadata.PrivateAddress.ToString());
+            Environment.SetEnvironmentVariable("NEON_NODE_SSD", healthyManager.Metadata.Labels.StorageSSD ? "true" : "false");
+            Environment.SetEnvironmentVariable("VAULT_ADDR", $"{hiveDefinition.GetVaultDirectUri(healthyManager.Name)}");
+            Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{hiveDefinition.GetVaultDirectUri(healthyManager.Name)}");
 
             if (hiveDefinition.Consul.Tls)
             {
@@ -1035,10 +1035,15 @@ namespace Neon.Hive
 
             var hosts = new Dictionary<string, IPAddress>();
 
-            hosts.Add(hiveDefinition.Hostnames.Consul, manager.PrivateAddress);
-            hosts.Add(hiveDefinition.Hostnames.Vault, manager.PrivateAddress);
-            hosts.Add($"{manager.Name}.{hiveDefinition.Hostnames.Vault}", manager.PrivateAddress);
-            hosts.Add(hiveDefinition.Hostnames.LogEsData, manager.PrivateAddress);
+            hosts.Add(hiveDefinition.Hostnames.Consul, healthyManager.PrivateAddress);
+            hosts.Add(hiveDefinition.Hostnames.Vault, healthyManager.PrivateAddress);
+
+            foreach (var manager in hiveDefinition.Managers)
+            {
+                hosts.Add($"{manager.Name}.{hiveDefinition.Hostnames.Vault}", IPAddress.Parse(manager.PrivateAddress));
+            }
+
+            hosts.Add(hiveDefinition.Hostnames.LogEsData, healthyManager.PrivateAddress);
 
             NetHelper.ModifyLocalHosts(hosts, section: $"neon-hive-{hiveDefinition.Name}");
 

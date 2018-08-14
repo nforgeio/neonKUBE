@@ -176,7 +176,7 @@ namespace NeonCli
 
                                 if (response.status.overall.state != "green")
                                 {
-                                    throw new HiveException($"Kibana [state={response.status.overall.state}]");
+                                    throw new TransientException($"Kibana [state={response.status.overall.state}]");
                                 }
 
                             }).Wait();
