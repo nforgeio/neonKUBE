@@ -48,8 +48,8 @@ namespace Neon.Retry
         }
 
         /// <summary>
-        /// Considers <see cref="SocketException"/> as possible transient errors as well as these
-        /// exceptions nested within an <see cref="AggregateException"/>.
+        /// Considers <see cref="SocketException"/> and <see cref="TransientException"/> as possible
+        /// transient errors as well as these exceptions nested within an <see cref="AggregateException"/>.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>true</c> if the exception is to be considered as transient.</returns>
@@ -62,9 +62,7 @@ namespace Neon.Retry
         {
             Covenant.Requires<ArgumentException>(e != null);
 
-            var transientException = e as TransientException;
-
-            if (transientException != null)
+            if (e is TransientException)
             {
                 return true;
             }
@@ -127,8 +125,9 @@ namespace Neon.Retry
         }
 
         /// <summary>
-        /// Considers <see cref="HttpException"/> and <see cref="HttpRequestException"/> as possible 
-        /// transient errors as well as these exceptions nested within an <see cref="AggregateException"/>.
+        /// Considers <see cref="HttpException"/>, <see cref="HttpRequestException"/>, and
+        /// <see cref="TransientException"/> as possible transient errors as well as these 
+        /// exceptions nested within an <see cref="AggregateException"/>.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>true</c> if the exception is to be considered as transient.</returns>
@@ -141,18 +140,16 @@ namespace Neon.Retry
         {
             Covenant.Requires<ArgumentException>(e != null);
 
-            var transientException = e as TransientException;
-
-            if (transientException != null)
-            {
-                return true;
-            }
-
             var aggregateException = e as AggregateException;
 
             if (aggregateException != null)
             {
                 e = aggregateException.InnerException;
+            }
+
+            if (e is TransientException)
+            {
+                return true;
             }
 
             var httpException = e as HttpException;
@@ -216,8 +213,9 @@ namespace Neon.Retry
         }
 
         /// <summary>
-        /// Considers <see cref="SocketException"/> or <see cref="HttpRequestException"/> as possible
-        /// transient errors as well as these exceptions nested within an <see cref="AggregateException"/>.
+        /// Considers <see cref="SocketException"/>, <see cref="HttpRequestException"/>, and
+        /// <see cref="TransientException"/> as possible transient errors as well as these 
+        /// exceptions nested within an <see cref="AggregateException"/>.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>true</c> if the exception is to be considered as transient.</returns>
