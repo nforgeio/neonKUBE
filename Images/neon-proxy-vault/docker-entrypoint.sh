@@ -28,7 +28,6 @@ fi
 # Load the neonHIVE definitions.
 
 . /neonhive.sh
-updateCaCertificates
 
 # Generate the static part of the HAProxy configuration file.  The config is
 # pretty simple, some global defaults, the frontend definition followed by the

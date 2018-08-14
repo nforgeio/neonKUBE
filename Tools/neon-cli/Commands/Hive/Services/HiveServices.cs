@@ -70,6 +70,40 @@ namespace NeonCli
                     }
 
                     //---------------------------------------------------------
+                    // Deploy DNS related services.
+                    
+                    // Deploy: neon-dns-mon
+
+                    firstManager.Status = "start: neon-dns-mon";
+
+                    firstManager.IdempotentDockerCommand("setup/neon-dns-mon",
+                        response =>
+                        {
+                            foreach (var manager in hive.Managers)
+                            {
+                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
+                            }
+
+                            if (response.ExitCode != 0)
+                            {
+                                firstManager.Fault(response.ErrorSummary);
+                            }
+                        },
+                        "docker service create",
+                        "--name", "neon-dns-mon",
+                        "--detach=false",
+                        "--mount", "type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true",
+                        "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
+                        "--env", "POLL_INTERVAL=5s",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--constraint", "node.role==manager",
+                        "--replicas", "1",
+                        "--log-driver", "json-file",        // $todo(jeff.lill): DELETE THIS
+                        "--restart-delay", hive.Definition.Docker.RestartDelay,
+                        Program.ResolveDockerImage(hive.Definition.DnsMonImage));
+
+                    firstManager.Status = string.Empty;
+
                     // Deploy: neon-dns
 
                     firstManager.Status = "start: neon-dns";
@@ -99,42 +133,9 @@ namespace NeonCli
                         "--env", "LOG_LEVEL=INFO",
                         "--constraint", "node.role==manager",
                         "--mode", "global",
+                        "--log-driver", "json-file",        // $todo(jeff.lill): DELETE THIS
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(hive.Definition.DnsImage));
-
-                    //---------------------------------------------------------
-                    // Deploy DNS related services.
-                    
-                    // Deploy: neon-dns-mon
-
-                    firstManager.Status = "start: neon-dns-mon";
-
-                    firstManager.IdempotentDockerCommand("setup/neon-dns-mon",
-                        response =>
-                        {
-                            foreach (var manager in hive.Managers)
-                            {
-                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
-                            }
-
-                            if (response.ExitCode != 0)
-                            {
-                                firstManager.Fault(response.ErrorSummary);
-                            }
-                        },
-                        "docker service create",
-                        "--name", "neon-dns-mon",
-                        "--detach=false",
-                        "--mount", "type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true",
-                        "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
-                        "--env", "POLL_INTERVAL=5s",
-                        "--env", "LOG_LEVEL=INFO",
-                        "--constraint", "node.role==manager",
-                        "--replicas", "1",
-                        "--restart-delay", hive.Definition.Docker.RestartDelay,
-                        Program.ResolveDockerImage(hive.Definition.DnsMonImage));
-
-                    firstManager.Status = string.Empty;
 
                     //---------------------------------------------------------
                     // Deploy [neon-hive-manager] as a service constrained to manager nodes.

@@ -279,13 +279,14 @@ ST=.
 L=.
 O={issuedBy}
 OU={issuedTo}
-CN={hostname}
+CN=.
 
 [req_v3]
-basicConstraints = CA:TRUE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage = serverAuth
-subjectAltName = @alt_names
+basicConstraints       = critical, CA:TRUE
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always, issuer:always
+keyUsage               = critical, cRLSign, digitalSignature, keyCertSign
+subjectAltName         = @alt_names
 
 [alt_names]
 ");
@@ -642,7 +643,7 @@ subjectAltName = @alt_names
                 {
                     // Wildcard:
                     //
-                    // We're going to strip off the leading segment off of both certificate and
+                    // We're going to strip off the leading label from both the certificate and
                     // test hostname up to the first dot and then compare what's left.
 
                     var certHostDotPos = certHost.IndexOf('.');

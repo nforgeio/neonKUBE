@@ -188,7 +188,7 @@ namespace Neon.Net
         /// and <b># END-NEON-MODIFY</b>.  You may pass a different string to identify a custom section.
         /// </para>
         /// <note>
-        /// The string passed must be a valid DNS hostname segment that must begin with a letter
+        /// The string passed must be a valid DNS hostname label that must begin with a letter
         /// followed by letters, digits or dashes.  The maximum length is 63 characters.
         /// </note>
         /// </param>
@@ -226,7 +226,7 @@ namespace Neon.Net
 
             if (!sectionOK)
             {
-                throw new ArgumentException("Suffix is not a valid DNS host name segment.", nameof(section));
+                throw new ArgumentException("Suffix is not a valid DNS host name label.", nameof(section));
             }
 
             section = section.ToUpperInvariant();

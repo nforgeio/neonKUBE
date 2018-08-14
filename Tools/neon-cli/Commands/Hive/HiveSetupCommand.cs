@@ -922,30 +922,30 @@ export HiveHostnames_Consul=neon-consul.$NEON_HIVE.hive
 export HiveHostnames_Vault=neon-vault.$NEON_HIVE.hive
 export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.$NEON_HIVE.hive
 
-# This function handles loading host ssl certificates into the container
-# for Debian/Ubuntu/Alpine... based images that use the [update-ca-certificates]
-# command.  Containers that need the host certificates will need to explicitly
-# call this function in their entrypoint scripts.
+# This ensures that the hive certificates mounted from the host to
+# [/usr/local/share/ca-certificates] are trusted by the container.
+# We currently support the following tools if they exist within
+# the container:
+#
+#   update-ca-certificates: Debian, Ubuntu, Alpine,...
+#   
+#   update-ca-trust: RedHat, CentOS...
+#
+# Note that custom applications (like Java) may need additional
+# certificate initialization.  You can do this in your image
+# entrypoint script.
 
-function updateCaCertificates {{
+if which update-ca-certificates ; then
 
-    # Import trusted host SSL certificates if the host directory was mounted.
-    # For this to work, this host folder:
-    #
-    #       /usr/local/share/ca-certificates
-    #
-    # needs to be mounted into the container at:
-    #
-    #       /mnt/host/ca-certificates
-    #
-    # to work properly.  Note that this does nothing if the host certificates folder
-    # is not mounted.
+    cp /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
+    update-ca-certificates --fresh
 
-    if [ -d /mnt/host/ca-certificates ] ; then
-        cp -r /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
-        update-ca-certificates --fresh || true
-    fi
-}}
+elif which update-ca-trust ; then
+
+    cp /mnt/host/ca-certificates/* /usr/share/pki/ca-trust-source/anchors/
+    update-ca-trust force-enable
+    update-ca-trust extract
+fi
 ");
             node.UploadText($"{HiveHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
         }
@@ -1341,7 +1341,22 @@ function updateCaCertificates {{
                     node.SudoCommand("mkdir -p /etc/docker");
                     node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
                     node.SudoCommand("chmod 640 /etc/docker/daemon.json");
-                    node.SudoCommand("setup-docker.sh");
+
+                    var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
+
+                    dockerRetry.InvokeAsync(
+                        async () =>
+                        {
+                            var response = node.SudoCommand("setup-docker.sh", node.DefaultRunOptions & ~RunOptions.FaultOnError);
+
+                            if (response.ExitCode != 0)
+                            {
+                                throw new TransientException(response.ErrorText);
+                            }
+
+                            await Task.CompletedTask;
+
+                        }).Wait();
 
                     // Clean up any cached APT files.
 
@@ -1526,7 +1541,22 @@ function updateCaCertificates {{
 
                     node.SudoCommand("mkdir -p /etc/docker");
                     node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
-                    node.SudoCommand("setup-docker.sh");
+
+                    var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
+
+                    dockerRetry.InvokeAsync(
+                        async () =>
+                        {
+                            var response = node.SudoCommand("setup-docker.sh", node.DefaultRunOptions & ~RunOptions.FaultOnError);
+
+                            if (response.ExitCode != 0)
+                            {
+                                throw new TransientException(response.ErrorText);
+                            }
+
+                            await Task.CompletedTask;
+
+                        }).Wait();
 
                     // Other initialization.
 

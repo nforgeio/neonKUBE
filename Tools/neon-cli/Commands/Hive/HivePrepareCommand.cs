@@ -448,21 +448,21 @@ Server Requirements:
             {
                 hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.Base, bitCount, validDays, Wildcard.RootAndSubdomains, 
                     issuedBy:"neonHIVE", 
-                    issuedTo:$"{hiveDefinition.Name} (hive base)");
+                    issuedTo:$"{hiveDefinition.Name} (hive-base)");
             }
 
             if (hiveLogin.VaultCertificate == null)
             {
                 hiveLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains, 
                     issuedBy: "neonHIVE", 
-                    issuedTo: $"{hiveDefinition.Name} (hive vault)");
+                    issuedTo: $"{hiveDefinition.Name} (hive-vault)");
             }
 
             if (hiveLogin.RegistryCacheCertificate == null)
             {
                 hiveLogin.RegistryCacheCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.RegistryCache, bitCount, validDays, Wildcard.RootAndSubdomains, 
                     issuedBy: "neonHIVE", 
-                    issuedTo: $"{hiveDefinition.Name} (hive registry-cache)");
+                    issuedTo: $"{hiveDefinition.Name} (hive-registry-cache)");
             }
 
             // Persist the certificates into the hive login.

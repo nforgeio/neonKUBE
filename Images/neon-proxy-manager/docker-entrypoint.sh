@@ -15,7 +15,6 @@ if [ ! -f /etc/neon/env-host ] ; then
 fi
 
 . /etc/neon/env-host
-updateCaCertificates
 
 # Launch the service.
 
