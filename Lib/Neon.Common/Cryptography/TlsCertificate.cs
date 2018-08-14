@@ -175,7 +175,7 @@ namespace Neon.Cryptography
         }
 
         /// <summary>
-        /// Generates a self-signed certificate for a hostname.
+        /// Generates a self-signed certificate for a hostname and/or a wildcarded hostname.
         /// </summary>
         /// <param name="hostname">
         /// <para>
@@ -199,7 +199,7 @@ namespace Neon.Cryptography
         /// </param>
         /// <param name="issuedBy">Optionally specifies the issuer.</param>
         /// <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
-        /// <returns>The <see cref="TlsCertificate"/>.</returns>
+        /// <returns>The new <see cref="TlsCertificate"/>.</returns>
         public static TlsCertificate CreateSelfSigned(
             string hostname, 
             int bitCount = 2048, 
@@ -301,9 +301,135 @@ subjectAltName         = @alt_names
 
                 var result = NeonHelper.ExecuteCaptureStreams("openssl",
                     $"req -newkey rsa:{bitCount} -nodes -sha256 -x509 -days {validDays} " +
-                    $"-subj \"/C=--/ST=./L=./O=./CN={hostname}\" " +
-//                    $"-reqexts san " +
-//                    $"-extensions san " +
+                    $"-subj \"/C=--/ST=./L=./O=./CN=.\" " +
+                    $"-extensions req_v3 " +
+                    $"-keyout \"{keyPath}\" " +
+                    $"-out \"{certPath}\" " +
+                    $"-config \"{configPath}\"");
+
+                if (result.ExitCode != 0)
+                {
+                    throw new Exception($"Certificate Error: {result.ErrorText}");
+                }
+
+                var certPem     = File.ReadAllText(certPath) + File.ReadAllText(keyPath);
+                var certificate = TlsCertificate.Parse(certPem);
+
+                return certificate;
+            }
+            catch (Win32Exception e)
+            {
+                throw new Exception($"Cannot find the [openssl] utility on the PATH.", e);
+            }
+            finally
+            {
+                Directory.Delete(tempFolder, true);
+            }
+        }
+
+        /// <summary>
+        /// Generates a self-signed certificate for arbitrary hostnames, possibly including 
+        /// hostnames with wildcards.
+        /// </summary>
+        /// <param name="hostnames">
+        /// <para>
+        /// The certificate hostnames.
+        /// </para>
+        /// <note>
+        /// You can use include a <b>"*"</b> to specify a wildcard
+        /// certificate like: <b>*.test.com</b>.
+        /// </note>
+        /// </param>
+        /// <param name="bitCount">The certificate key size in bits: one of <b>1024</b>, <b>2048</b>, or <b>4096</b> (defaults to <b>2048</b>).</param>
+        /// <param name="validDays">
+        /// The number of days the certificate will be valid.  This defaults to 365,000 days
+        /// or about 1,000 years.
+        /// </param>
+        /// <param name="issuedBy">Optionally specifies the issuer.</param>
+        /// <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
+        /// <returns>The new <see cref="TlsCertificate"/>.</returns>
+        public static TlsCertificate CreateSelfSigned(
+            IEnumerable<string> hostnames, 
+            int bitCount = 2048, 
+            int validDays = 365000, 
+            string issuedBy = null,
+            string issuedTo = null)
+        {
+            Covenant.Requires<ArgumentNullException>(hostnames != null && hostnames.Count() > 0);
+            Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096);
+            Covenant.Requires<ArgumentException>(validDays > 1);
+
+            var tempFolder   = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var certPath     = Path.Combine(tempFolder, "cache.crt");
+            var keyPath      = Path.Combine(tempFolder, "cache.key");
+            var combinedPath = Path.Combine(tempFolder, "combined.pem");
+
+            if (string.IsNullOrEmpty(issuedBy))
+            {
+                issuedBy = ".";
+            }
+
+            if (string.IsNullOrEmpty(issuedTo))
+            {
+                issuedTo = ",";
+            }
+
+            Directory.CreateDirectory(tempFolder);
+
+            try
+            {
+                // We need to specify [Subject Alternative Names] 
+                // because specifying the hostname as the [Common Name]
+                // is deprecated by the IETF and CA/Browser Forums.
+                //
+                // The latest OpenSSL release candidate for (v1.1.1) includes 
+                // a new command line option for this but the current release
+                // does not, so we're going to generate a temporary config
+                // file specifiying this.
+
+                var configPath = Path.Combine(tempFolder, "cert.conf");
+                var sbConfig   = new StringBuilder();
+
+                sbConfig.Append(
+$@"
+[req]
+default_bits       = 2048
+prompt             = no
+default_md         = sha256
+distinguished_name = dn
+req_extensions     = req_v3
+
+[dn]
+C=US
+ST=.
+L=.
+O={issuedBy}
+OU={issuedTo}
+CN=.
+
+[req_v3]
+basicConstraints       = critical, CA:TRUE
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always, issuer:always
+keyUsage               = critical, cRLSign, digitalSignature, keyCertSign
+subjectAltName         = @alt_names
+
+[alt_names]
+");
+                var hostnameList = hostnames.ToList();
+
+                for (int i = 0; i < hostnameList.Count; i++)
+                {
+                    sbConfig.AppendLine($"DNS.{i + 1} = {hostnameList[i]}");
+                }
+
+                sbConfig.AppendLine();
+
+                File.WriteAllText(configPath, NeonHelper.ToLinuxLineEndings(sbConfig.ToString()));
+
+                var result = NeonHelper.ExecuteCaptureStreams("openssl",
+                    $"req -newkey rsa:{bitCount} -nodes -sha256 -x509 -days {validDays} " +
+                    $"-subj \"/C=--/ST=./L=./O=./CN=.\" " +
                     $"-extensions req_v3 " +
                     $"-keyout \"{keyPath}\" " +
                     $"-out \"{certPath}\" " +

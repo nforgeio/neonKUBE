@@ -785,6 +785,29 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void SelfSigned_MultiHosts()
+        {
+            var cert = TlsCertificate.CreateSelfSigned(
+                new List<string>()
+                {
+                    "foo.com",
+                    "bar.com",
+                    "foobar.com",
+                    "*.root.com"
+                });
+
+            cert.Parse();
+            Assert.NotNull(cert.Thumbprint);
+            Assert.NotEmpty(cert.Thumbprint);
+            Assert.Equal(4, cert.Hosts.Count);
+            Assert.Contains("foo.com", cert.Hosts);
+            Assert.Contains("bar.com", cert.Hosts);
+            Assert.Contains("foobar.com", cert.Hosts);
+            Assert.Contains("*.root.com", cert.Hosts);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ToX509Certificate2()
         {
             var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.RootAndSubdomains);
