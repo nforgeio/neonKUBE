@@ -144,7 +144,7 @@ namespace NeonCli
                         var baseLogEsDataUri = hive.Definition.LogEsDataUri;
                         var baseKibanaUri    = $"http://{firstManager.PrivateAddress}:{HiveHostPorts.Kibana}";
                         var timeout          = TimeSpan.FromMinutes(5);
-                        var retry             = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(1));
+                        var retry             = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(2));
 
                         // The Kibana API calls below require the [kbn-xsrf] header.
 
