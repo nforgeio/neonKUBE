@@ -98,7 +98,6 @@ namespace NeonCli
                         "--env", "LOG_LEVEL=INFO",
                         "--constraint", "node.role==manager",
                         "--replicas", "1",
-                        "--log-driver", "json-file",        // $todo(jeff.lill): DELETE THIS
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(hive.Definition.DnsMonImage));
 
@@ -133,7 +132,6 @@ namespace NeonCli
                         "--env", "LOG_LEVEL=INFO",
                         "--constraint", "node.role==manager",
                         "--mode", "global",
-                        "--log-driver", "json-file",        // $todo(jeff.lill): DELETE THIS
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(hive.Definition.DnsImage));
 
