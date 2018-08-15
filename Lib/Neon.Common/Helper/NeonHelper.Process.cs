@@ -602,7 +602,22 @@ namespace Neon.Common
 
             if (IsWindows)
             {
-                Process.Start("cmd", $"/C start {uri}");
+                // $todo(jeff.lill):
+                //
+                // Firefox manages its own certificate store and does not trust Windows/OSX
+                // certificates by default.  It looks like it is possible to configure
+                // Firefox to trust the platform certificates but it then complained about
+                // he certificate being self-signed, even though it was in the store.
+                // store.
+                //
+                // I'm going to mitigate this for the time being by simply launching
+                // Microsoft Edge.  Here's the tracking issue:
+                //
+                //      https://github.com/jefflill/NeonForge/issues/282
+
+                //Process.Start("cmd", $"/C start {uri}");
+
+                Process.Start("cmd", $"/C start microsoft-edge:{uri}");
             }
             else if (IsOSX)
             {
