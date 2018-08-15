@@ -225,7 +225,7 @@ namespace Neon.Cryptography
 
             if (string.IsNullOrEmpty(issuedTo))
             {
-                issuedTo = ",";
+                issuedTo = hostname;
             }
 
             Directory.CreateDirectory(tempFolder);
@@ -277,15 +277,15 @@ req_extensions     = req_v3
 C=US
 ST=.
 L=.
-O={issuedBy}
-OU={issuedTo}
-CN=.
+O=.
+OU=.
+CN={issuedTo}
 
 [req_v3]
 basicConstraints       = critical, CA:TRUE
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
-keyUsage               = critical, cRLSign, digitalSignature, keyCertSign
+keyUsage               = critical, cRLSign, digitalSignature, keyCertSign, keyEncipherment
 subjectAltName         = @alt_names
 
 [alt_names]
@@ -371,7 +371,7 @@ subjectAltName         = @alt_names
 
             if (string.IsNullOrEmpty(issuedTo))
             {
-                issuedTo = ",";
+                issuedTo = hostnames.First();
             }
 
             Directory.CreateDirectory(tempFolder);
@@ -403,9 +403,9 @@ req_extensions     = req_v3
 C=US
 ST=.
 L=.
-O={issuedBy}
-OU={issuedTo}
-CN=.
+O=.
+OU=.
+CN={issuedTo}
 
 [req_v3]
 basicConstraints       = critical, CA:TRUE
@@ -634,6 +634,7 @@ subjectAltName         = @alt_names
         /// with Linux-style line endings for HAProxy compatability.
         /// </summary>
         /// <returns>The combined PEM coded certificate.</returns>
+        [JsonIgnore]
         public string CombinedNormalizedPem
         {
             get
@@ -648,6 +649,18 @@ subjectAltName         = @alt_names
                 }
             }
         }
+
+        /// <summary>
+        /// <para>
+        /// The friendly name for the certificate.
+        /// </para>
+        /// <note>
+        /// This property was added for convienence and is not loaded from the the 
+        /// certificate data.  You may set this to whatever you wish.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "FriendlyName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        public string FriendlyName { get; set; }
 
         /// <summary>
         /// The date when the certificate becomes valid (or <c>null</c>).
