@@ -879,62 +879,41 @@ namespace Neon.Hive
                 return; // Already initialized.
             }
 
-            // We need Windows/OSX to trust these hive certificates:
-            //
-            //      HiveCertificate
-            //      VaultCertificate
+            // Ensure that the required hive certificates are trusted.
 
             if (NeonHelper.IsWindows)
             {
-                // We're going to perist these to the current user's Windows certificate store 
-                // using friendly names like:
-                //
-                //      hive-HIVENAME-base
-                //      hive-HIVENAME-vault
-                //
-                // where HIVENAME is the name of the hive.  We're also going to use the thumbprint
-                // to ensure that the persisted certificates are correct.
-
-                var hiveName = "HIVE";      // $todo(jeff.lill): Temporarily hardcoding this.
+                // We're going to perist or update these in the Windows certificate store 
+                // using the certificate friendly names.
 
                 using (var store = new X509Store(StoreName.AuthRoot, StoreLocation.LocalMachine))
                 {
                     store.Open(OpenFlags.ReadWrite);
 
-                    // Install or update the general certificate if necessary.
-
-                    var generalCertName     = $"hive-{hiveName}-base";
-                    var generalExistingCert = FindCertificateByFriendlyName(store, generalCertName);
-                    var generalCert         = login.HiveCertificate.ToX509Certificate2();
-
-                    generalCert.FriendlyName = generalCertName;
-
-                    if (generalExistingCert == null || generalExistingCert.Thumbprint != generalCert.Thumbprint)
+                    foreach (var certificate in login.ClientCertificates)
                     {
-                        if (generalExistingCert != null)
+                        if (string.IsNullOrEmpty(certificate.FriendlyName))
                         {
-                            store.Remove(generalExistingCert);
+                            // We'll see this happen for old, pre-release logins created before
+                            // 08-15-2017 when we added the [TlsCertificate.FriendlyName] parameter.
+                            // Those logins are no longer supported but we'll silently ignore
+                            // the problems.
+
+                            continue;
                         }
 
-                        store.Add(generalCert);
-                    }
+                        var certificateX509 = certificate.ToX509Certificate2();
+                        var existingX509    = FindCertificateByFriendlyName(store, certificate.FriendlyName);
 
-                    // Install or update the vault certificate if necessary.
-
-                    var vaultCertName     = $"hive-{hiveName}-vault";
-                    var vaultExistingCert = FindCertificateByFriendlyName(store, vaultCertName);
-                    var vaultCert         = login.VaultCertificate.ToX509Certificate2();
-
-                    vaultCert.FriendlyName = vaultCertName;
-
-                    if (vaultExistingCert == null || vaultExistingCert.Thumbprint != vaultCert.Thumbprint)
-                    {
-                        if (vaultExistingCert != null)
+                        if (existingX509 == null || existingX509.Thumbprint != certificateX509.Thumbprint)
                         {
-                            store.Remove(vaultExistingCert);
-                        }
+                            if (existingX509 != null)
+                            {
+                                store.Remove(existingX509);
+                            }
 
-                        store.Add(vaultCert);
+                            store.Add(certificateX509);
+                        }
                     }
                 }
             }
@@ -942,18 +921,28 @@ namespace Neon.Hive
             {
                 throw new NotImplementedException("$todo(jeff.lill): IMPLEMENT THIS!");
             }
-            else
+            else if (NeonHelper.IsLinux && InToolContainer)
+            {
+                // We're probably running as [neon-cli] within a shimmed Docker
+                // container so we'll need to trust the hive certificates.
+                // We're going to assume that the container provides the
+                // [update-ca-certificates] tool.
+
+                // $todo(jeff.lill): IMPLEMENT THIS!
+            }
+            else if (NeonHelper.IsLinux)
             {
                 // $todo(jeff.lill):
                 //
-                // We'll end up here for Linux.  Currently we can do nothing because
-                // we can assume that we're running as an application on a hive node
-                // or in a hive container that already has the necessary trusted
-                // certificates.
+                // We'll land here if we're actually running on the hive or
+                // when/if we support [neon-cli] on Linux workstations.  We'll
+                // need to detect which is the case (perhaps with a new parameter
+                // or environment variable).
                 //
-                // If or when we support [neon-cli] directly on Linux, we'll need
-                // to somehow detect this and add the trusted hive certs.  One way
-                // to detect this is to have [neon-cli] set an environment variable.
+                // For [neon-cli], we'll need to ensure that the hive certificates
+                // are trusted.  For Docker containers, we're going to assume 
+                // that the host node mounted its certificates into the container
+                // and that the container entrypoint script loaded them.
             }
 
             login.InitMachine = true;

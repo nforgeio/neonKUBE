@@ -449,6 +449,8 @@ Server Requirements:
                 hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.Base, bitCount, validDays, Wildcard.RootAndSubdomains, 
                     issuedBy:"neonHIVE", 
                     issuedTo:$"{hiveDefinition.Name} (hive-base)");
+
+                hiveLogin.HiveCertificate.FriendlyName = $"hive-{hiveLogin.Definition.Name}-base";
             }
 
             if (hiveLogin.VaultCertificate == null)
@@ -456,6 +458,8 @@ Server Requirements:
                 hiveLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains, 
                     issuedBy: "neonHIVE", 
                     issuedTo: $"{hiveDefinition.Name} (hive-vault)");
+
+                hiveLogin.VaultCertificate.FriendlyName = $"hive-{hiveLogin.Definition.Name}-vault";
             }
 
             if (hiveLogin.RegistryCacheCertificate == null)
@@ -463,6 +467,8 @@ Server Requirements:
                 hiveLogin.RegistryCacheCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.RegistryCache, bitCount, validDays, Wildcard.RootAndSubdomains, 
                     issuedBy: "neonHIVE", 
                     issuedTo: $"{hiveDefinition.Name} (hive-registry-cache)");
+
+                hiveLogin.RegistryCacheCertificate.FriendlyName = $"hive-{hiveLogin.Definition.Name}-registry-cache";
             }
 
             // Persist the certificates into the hive login.

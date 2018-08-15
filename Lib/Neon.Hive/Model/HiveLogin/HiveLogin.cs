@@ -188,6 +188,23 @@ namespace Neon.Hive
         public TlsCertificate RegistryCacheCertificate { get; set; }
 
         /// <summary>
+        /// Returns the certificates that will need to be trusted so that
+        /// [neon-cli] will function properly.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<TlsCertificate> ClientCertificates
+        {
+            get
+            {
+                return new TlsCertificate[]
+                {
+                    HiveCertificate,
+                    VaultCertificate
+                };
+            }
+        }
+
+        /// <summary>
         /// The Docker manager node swarm join key.
         /// </summary>
         [JsonProperty(PropertyName = "SwarmManagerToken", Required = Required.Default)]
