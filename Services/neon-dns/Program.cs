@@ -81,7 +81,7 @@ namespace NeonDns
                     powerDnsHostsPath = Environment.ExpandEnvironmentVariables("%NF_TEMP%\\neon-dns-hosts.txt");
 
                     File.WriteAllText(powerDnsHostsPath,
-$@"# PowerDNS Recursor authoritatively answers for [*.hive] hostnames.
+$@"# PowerDNS Recursor authoritatively answers for [*.HIVENAME.nhive.io] hostnames.
 # on the local node using these mappings.
 
 10.0.0.30       {HiveHelper.Hive.Definition.Hostnames.Consul}

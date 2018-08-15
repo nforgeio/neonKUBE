@@ -915,12 +915,12 @@ export VAULT_ADDR={hive.Definition.VaultProxyUri}
 
 # Define the hive-specific host names.
 
-export HiveHostnames_Base=$NEON_HIVE.hive
-export HiveHostnames_RegistryCache=neon-registry-cache.$NEON_HIVE.hive
-export HiveHostnames_LogEsData=neon-log-esdata.$NEON_HIVE.hive
-export HiveHostnames_Consul=neon-consul.$NEON_HIVE.hive
-export HiveHostnames_Vault=neon-vault.$NEON_HIVE.hive
-export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.$NEON_HIVE.hive
+export HiveHostnames_Base=$NEON_HIVE.nhive.io
+export HiveHostnames_RegistryCache=neon-registry-cache.$NEON_HIVE.nhive.io
+export HiveHostnames_LogEsData=neon-log-esdata.$NEON_HIVE.nhive.io
+export HiveHostnames_Consul=neon-consul.$NEON_HIVE.nhive.io
+export HiveHostnames_Vault=neon-vault.$NEON_HIVE.nhive.io
+export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.$NEON_HIVE.nhive.io
 
 # This ensures that the hive certificates mounted from the host to
 # [/usr/local/share/ca-certificates] are trusted by the container.

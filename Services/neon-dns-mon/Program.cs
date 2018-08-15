@@ -179,17 +179,17 @@ namespace NeonDnsMon
                     var hostAddresses = new HostAddresses();
 
                     // Retrieve the current hive definition from Consul if we don't already
-                    // have it or if it's different from what we've cached.
+                    // have it or it's different from what we've cached.
 
                     hiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, terminator.CancellationToken);
 
                     log.LogDebug(() => $"Hive has [{hiveDefinition.NodeDefinitions.Count}] nodes.");
 
-                    // Add the [NAME.hive] definitions for each cluster node.
+                    // Add the [NAME.HIVENAME.nhive.io] definitions for each cluster node.
 
                     foreach (var node in hiveDefinition.Nodes)
                     {
-                        hostAddresses.Add($"{node.Name}.hive", IPAddress.Parse(node.PrivateAddress));
+                        hostAddresses.Add($"{node.Name}.{hiveDefinition.Name}.nhive.io", IPAddress.Parse(node.PrivateAddress));
                     }
 
                     // Read the DNS entry definitions from Consul and add the appropriate 
@@ -218,7 +218,7 @@ namespace NeonDnsMon
                     // Generate a canonical [hosts.txt] file by sorting host entries by 
                     // hostname and then by IP address.
                     //
-                    // Unhealthy hosts will be assigned the unroutable [0.0.0.0] address.
+                    // Unhealthy hosts will be assigned the unrouteable [0.0.0.0] address.
                     // The reason for this is subtle but super important.
                     //
                     // If we didn't do this, the DNS host would likely be resolved by a 
@@ -312,8 +312,8 @@ namespace NeonDnsMon
             //
             // I'm keeping this implementation super simple for now, by performing 
             // all of the health checks during the poll.  This probably won't scale
-            // well when there are 100s of target endpoints.  This will tend to 
-            // blast health check traffic to all of the endpoints at once.
+            // well when there are 100s of target endpoints.  This will also tend 
+            // to blast health check traffic to all of the endpoints at once.
             //
             // It would probably be better to do health checking continuously in
             // another task and have this method resolve the hosts from that data.

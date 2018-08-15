@@ -163,7 +163,7 @@ namespace Neon.Hive
         public VaultCredentials VaultCredentials { get; set;}
 
         /// <summary>
-        /// The hive self-signed wildcard certificate covering <b>*.NAME.hive</b>
+        /// The hive self-signed wildcard certificate covering <b>*.NAME.nhive.io</b>
         /// where <b>NAME</b> is the hive name.  This is used to secure HashCorp Vault
         /// as well as other hive endpoints that need to be secured such as dashboards.
         /// </summary>
@@ -172,7 +172,7 @@ namespace Neon.Hive
         public TlsCertificate HiveCertificate { get; set; }
 
         /// <summary>
-        /// The HashiCorp Vault self-signed wildcard certificate covering <b>*.neon-vault.NAME.hive</b>
+        /// The HashiCorp Vault self-signed wildcard certificate covering <b>*.neon-vault.NAME.nhive.io</b>
         /// where <b>NAME</b> is the hive name.
         /// </summary>
         [JsonProperty(PropertyName = "VaultCertificate", Required = Required.Default)]
@@ -180,7 +180,7 @@ namespace Neon.Hive
         public TlsCertificate VaultCertificate { get; set; }
 
         /// <summary>
-        /// The Docker registry cache self-signed wildcard certificate covering <b>*.neon-registry-cache.NAME.hive</b>
+        /// The Docker registry cache self-signed wildcard certificate covering <b>*.neon-registry-cache.NAME.nhive.io</b>
         /// where <b>NAME</b> is the hive name.
         /// </summary>
         [JsonProperty(PropertyName = "RegistryCacheCertificate", Required = Required.Default)]

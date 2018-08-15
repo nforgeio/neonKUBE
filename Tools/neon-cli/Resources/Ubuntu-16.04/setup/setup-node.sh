@@ -1124,7 +1124,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-dns-reload
 #   neon-dns-reload wipe                    - reload and wipe all DNS records
 #   neon-dns-reload wipe google.com         - reload and wipe google.com and www.google.com
 #   neon-dns-reload wipe www.google.com     - reload and wipe www.google.com
-#   neon-dns-reload wipe hive               - reload and wipe *.hive
+#   neon-dns-reload wipe nhive.io           - reload and wipe *.nhive.io
 
 # Signal PowerDNS Recursor.  Note that this call will fail the first time
 # it is called after a system reboot due to a permissions issue I haven't

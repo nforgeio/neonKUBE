@@ -33,7 +33,7 @@ namespace Neon.Hive
     /// </summary>
     /// <remarks>
     /// <para>
-    /// By convention, built-in DNS hostnames will look like <b>NAME.HIVENAME.hive</b>,
+    /// By convention, built-in DNS hostnames will look like <b>NAME.HIVENAME.nhive.io</b>,
     /// where <b>NAME</b> identifies the target service and <b>HIVENAME</b> is the name
     /// of the hive.
     /// </para>
@@ -56,12 +56,12 @@ namespace Neon.Hive
         /// <summary>
         /// Returns the base hostname used for all hive endpoints.
         /// </summary>
-        public string Base => $"{hiveDefinition.Name}.hive";
+        public string Base => $"{hiveDefinition.Name}.nhive.io";
 
         /// <summary>
         /// Returns the base hostname for the internal hive Docker registry cache instances deployed on the manager nodes.
         /// </summary>
-        public string RegistryCache => $"neon-registry-cache.{hiveDefinition.Name}.hive";
+        public string RegistryCache => $"neon-registry-cache.{hiveDefinition.Name}.nhive.io";
 
         /// <summary>
         /// Returns the DNS name for the Elasticsearch containers used to store the hive logs.
@@ -78,12 +78,12 @@ namespace Neon.Hive
         /// will be routed to the <b>neon-proxy-private</b> service via the Docker ingress network.
         /// </para>
         /// </remarks>
-        public string LogEsData => $"neon-log-esdata.{hiveDefinition.Name}.hive";
+        public string LogEsData => $"neon-log-esdata.{hiveDefinition.Name}.nhive.io";
 
         /// <summary>
         /// Returns the hostname used to access the hive's HashiCorp Consul service.
         /// </summary>
-        public string Consul => $"neon-consul.{hiveDefinition.Name}.hive";
+        public string Consul => $"neon-consul.{hiveDefinition.Name}.nhive.io";
 
         /// <summary>
         /// Returns the hostname for the hive's HashiCorp Vault service.
@@ -95,17 +95,17 @@ namespace Neon.Hive
         /// </para>
         /// <para>
         /// This is also the base name for the manager node specific endpoints like
-        /// <b><i>manager-name</i>.neon-vault.HIVENAME.hive</b>, which are used by <b>neon-proxy-vault</b>
+        /// <b><i>manager-name</i>.neon-vault.HIVENAME.nhive.io</b>, which are used by <b>neon-proxy-vault</b>
         /// to check instance health.
         /// </para>
         /// </remarks>
-        public string Vault => $"neon-vault.{hiveDefinition.Name}.hive";
+        public string Vault => $"neon-vault.{hiveDefinition.Name}.nhive.io";
 
         /// <summary>
         /// Returns the special hostname used by the <b>HostsFixture</b> Xunit test fixture to verify
         /// that the local DNS resolver has picked up the changes.  This is not used for any
         /// other purpose.
         /// </summary>
-        public string UpdateHosts => $"neon-hosts-fixture-modify.{hiveDefinition.Name}.hive";
+        public string UpdateHosts => $"neon-hosts-fixture-modify.{hiveDefinition.Name}.nhive.io";
     }
 }

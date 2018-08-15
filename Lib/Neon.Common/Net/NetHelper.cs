@@ -265,7 +265,7 @@ namespace Neon.Net
             //
             //      https://github.com/jefflill/NeonForge/issues/244
             //
-            // We're going to mitigate this by writing a [neon-modify-local-hosts.hive] record with
+            // We're going to mitigate this by writing a [neon-modify-local-hosts.nhive.io] record with
             // a random IP address and then wait for for the DNS resolver to report the correct address.
             //
             // Note that this only works on Windows and perhaps OSX.  This doesn't work on
@@ -366,7 +366,7 @@ namespace Neon.Net
             if (NeonHelper.IsWindows || NeonHelper.IsOSX)
             {
                 // Poll the local DNS resolver until it reports the correct address for the
-                // [neon-modify-local-hosts.hive].
+                // [neon-modify-local-hosts.nhive.io].
                 //
                 // If [hostEntries] is not null and contains at least one entry, we'll lookup
                 // [neon-modify-local-hosts.neon] and compare the IP address to ensure that the 

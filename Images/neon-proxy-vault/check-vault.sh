@@ -17,7 +17,7 @@
 # This script actually ignores these and uses the backend name passed as the
 # HAPROXY_SERVER_NAME environment variable as the hostname of the instance 
 # and HAPROXY_SERVER_PORT as the service port.  HAPROXY_SERVER_NAME is set
-# to an hostname like [manager-0.neon-vault.HIVENAME.hive] in the HAProxy 
+# to an hostname like [manager-0.neon-vault.HIVENAME.nhive.io] in the HAProxy 
 # config file.
 #
 # The script returns 0 if the endpoint is ready, non-zero if it's unavailable, 

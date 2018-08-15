@@ -134,7 +134,7 @@ namespace NeonCli
         {
             var sbHosts = new StringBuilder();
 
-            sbHosts.AppendLineLinux("# PowerDNS Recursor authoritatively answers for [*.hive] hostnames.");
+            sbHosts.AppendLineLinux("# PowerDNS Recursor authoritatively answers for [*.HIVENAME.nhive.io] hostnames.");
             sbHosts.AppendLineLinux("# on the local node using these mappings.");
 
             sbHosts.AppendLineLinux();

@@ -285,7 +285,7 @@ CN={issuedTo}
 basicConstraints       = critical, CA:TRUE
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
-keyUsage               = critical, cRLSign, digitalSignature, keyCertSign, keyEncipherment
+keyUsage               = critical, cRLSign, digitalSignature, keyCertSign
 subjectAltName         = @alt_names
 
 [alt_names]
@@ -411,7 +411,7 @@ CN={issuedTo}
 basicConstraints       = critical, CA:TRUE
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
-keyUsage               = critical, cRLSign, digitalSignature, keyCertSign, keyEncipherment
+keyUsage               = critical, cRLSign, digitalSignature, keyCertSign
 subjectAltName         = @alt_names
 
 [alt_names]
@@ -1190,9 +1190,12 @@ subjectAltName         = @alt_names
                 }
             }
 
-            var bytes = Convert.FromBase64String(sb.ToString());
+            var bytes    = Convert.FromBase64String(sb.ToString());
+            var x509Cert = new X509Certificate2(bytes, (string)null, X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
 
-            return new X509Certificate2(bytes, (string)null, X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+            x509Cert.FriendlyName = this.FriendlyName;
+
+            return x509Cert;
         }
     }
 }

@@ -61,7 +61,7 @@ docker run \
     --volume /etc/neon/env-host:/etc/neon/env-host:ro \
     --volume /proc:/hostfs/proc:ro \
     --volume /:/hostfs:ro \
-    --env "ELASTICSEARCH_URL=http://neon-log-esdata.HIVENAME.hive" \
+    --env "ELASTICSEARCH_URL=http://neon-log-esdata.HIVENAME.nhive.io" \
     --log-driver json-file \
     nhive/metricbeat
 

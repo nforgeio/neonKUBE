@@ -79,7 +79,7 @@ namespace Neon.Xunit
         //
         //      https://github.com/jefflill/NeonForge/issues/244
         //
-        // We're going to mitigate this by writing a [neon-GUID.hive] record with the
+        // We're going to mitigate this by writing a [neon-GUID.nhive.io] record with the
         // [1.2.3.4] address and then wait the local DNS resolver to resolve or not
         // resolve this host based on whether we've added or remove a section.
 
@@ -214,7 +214,7 @@ namespace Neon.Xunit
         /// <returns>The section hostname.</returns>
         private static string GetSectionHostname(string guid)
         {
-            return $"neon-{guid}.hive";
+            return $"neon-{guid}.nhive.io";
         }
 
         /// <summary>

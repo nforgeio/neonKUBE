@@ -20,7 +20,7 @@ Note that this image will load environment variables from `/etc/neon/env-host` i
 
 * **VAULT_ENDPOINTS** (*required*) - identifies the Vault manager hostnames and ports where Vault will be listening.  These must be passed a comma separated `NODE:VAULT-HOSTNAME:PORT`, like:
 
-&nbsp;&nbsp;&nbsp;&nbsp;`VAULT_ENDPOINTS=manager-0:manager-0.neon-vault.HIVENAME.hive:8200,manager-1:manager-1.neon-vault.HIVENAME.hive:8200,...`
+&nbsp;&nbsp;&nbsp;&nbsp;`VAULT_ENDPOINTS=manager-0:manager-0.neon-vault.HIVENAME.nhive.io:8200,manager-1:manager-1.neon-vault.HIVENAME.nhive.io:8200,...`
 
 * **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
@@ -43,7 +43,7 @@ docker service create \
     --publish 5004:8200 \
     --mount type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
-    --env VAULT_ENDPOINTS=manager-0:manager-0.neon-vault.HIVENAME.hive:8200 \
+    --env VAULT_ENDPOINTS=manager-0:manager-0.neon-vault.HIVENAME.nhive.io:8200 \
     --env LOG_LEVEL=INFO \
     --restart-delay 10s \
     nhive/neon-proxy-vault:jeff-tls-latest

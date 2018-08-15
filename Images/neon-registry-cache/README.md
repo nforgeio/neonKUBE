@@ -46,7 +46,7 @@ This configuration makes a NeonCluser self-bootstrapping where even this **neon-
 
 The neonHIVE **neon-cli** handles the deployment of Docker pull-thru registry caches to the hive manager nodes unless disabled in the hive definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
 
-1. Generates a self-signed certificate for each hive manager with the certificate hosts matching **<MANAGER-NAME>.neon-registry-cache.hive**, where *<MANAGER-NAME>* is the name of the manager node.
+1. Generates a self-signed certificate for each hive manager with the certificate hosts matching **<MANAGERNAME>.neon-registry-cache.HIVENAME.nhive.io**, where *MANAGERNAME* is the name of the manager node and *HIVENAME* identifies the hive.
 
 2. Copies the generated certificates to every hive node as **/etc/docker/certs.d/<hostname>:5002/ca.crt**.
 
@@ -76,7 +76,7 @@ docker run \
     --detach \
     --restart always \
     --publish 5002:5000 \
-    --env HOST=<MANAGER-NAME>.neon-registry-cache.HIVENAME.hive \
+    --env HOST=<MANAGER-NAME>.neon-registry-cache.HIVENAME.nhive.io \
     --volume /etc/neon-registry-cache:/etc/neon-registry-cache:ro \
     --volume neon-registry-cache:/var/lib/neon-registry-cache \
     nhive/neon-registry-cache

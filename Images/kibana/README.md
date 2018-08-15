@@ -50,7 +50,7 @@ docker service create \
     --constraint "node.role==manager" \
     --publish 5001:5601 \
     --mount type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true \
-    --env ELASTICSEARCH_URL=http://neon-log-esdata.HIVENAME.hive:5303 \
+    --env ELASTICSEARCH_URL=http://neon-log-esdata.HIVENAME.nhive.io:5303 \
     --log-driver json-file
 ````
 &nbsp;
