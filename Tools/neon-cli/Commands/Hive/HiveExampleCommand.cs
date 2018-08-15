@@ -416,6 +416,9 @@ USAGE:
         //                        command below to generate a custom key:
         //
         //                              neon create cyhper 
+        //
+        //  Tls                   Controls whether Consul traffic is secured 
+        //                        via TLS.  This defaults to [true].
     },
 
     // HashiCorp Vault secret server options.

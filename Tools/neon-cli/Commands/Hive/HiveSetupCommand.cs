@@ -3741,7 +3741,7 @@ systemctl restart sshd
                             Name        = "consul",
                             Title       = "Consul",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{NetworkPorts.Consul}/ui",
+                            Url         = $"{hive.Definition.Consul.Scheme}://healthy-manager:{NetworkPorts.Consul}/ui",
                             Description = "Hive Consul key/value store"
                         };
 

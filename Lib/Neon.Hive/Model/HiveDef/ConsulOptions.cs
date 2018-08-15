@@ -94,23 +94,18 @@ namespace Neon.Hive
         public int DnsMaxStale { get; set; } = 315360000;
 
         /// <summary>
-        /// <para>
-        /// Controls whether Consul is to be secured by a TLS certificate.
-        /// </para>
-        /// <note>
-        /// <para>
-        /// This property is <b>currently ignored</b> and defaults to <c>false</c>. 
-        /// The expectation is that this will be implemented and enabled by default
-        /// in the future as part of:
-        /// </para>
-        /// <para>
-        /// https://github.com/jefflill/NeonForge/issues/278
-        /// </para>
-        /// </note>
+        /// Controls whether Consul is to be secured by HTTPS and a TLS certificate.
+        /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Tls", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool Tls { get; set; } = false;
+        [DefaultValue(true)]
+        public bool Tls { get; set; } = true;
+
+        /// <summary>
+        /// Returns the HTTP/HTTPS scheme to be used to access the Consul REST API.
+        /// </summary>
+        [JsonIgnore]
+        public string Scheme => Tls ? "https" : "http";
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

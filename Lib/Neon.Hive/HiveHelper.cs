@@ -1025,7 +1025,7 @@ namespace Neon.Hive
             {
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_SSL", "false");
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"{hiveDefinition.Consul.Scheme}://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
             }
 
             Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(hiveDefinition));
@@ -1041,6 +1041,11 @@ namespace Neon.Hive
             foreach (var manager in hiveDefinition.Managers)
             {
                 hosts.Add($"{manager.Name}.{hiveDefinition.Hostnames.Vault}", IPAddress.Parse(manager.PrivateAddress));
+            }
+
+            foreach (var node in hiveDefinition.Nodes)
+            {
+                hosts.Add($"{node.Name}.{hiveDefinition.Hostnames.Base}", IPAddress.Parse(node.PrivateAddress));
             }
 
             hosts.Add(hiveDefinition.Hostnames.LogEsData, healthyManager.PrivateAddress);

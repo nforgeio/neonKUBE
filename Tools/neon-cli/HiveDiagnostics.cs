@@ -364,7 +364,7 @@ namespace NeonCli
             // JSON content.  The reason for this is because we have not
             // yet initialized and unsealed the vault.
 
-            var targetUrl = $"http://{node.Metadata.PrivateAddress}:{hiveDefinition.Vault.Port}/v1/sys/health?standbycode=200";
+            var targetUrl = $"https://{node.Metadata.PrivateAddress}:{hiveDefinition.Vault.Port}/v1/sys/health?standbycode=200";
 
             using (var client = new HttpClient())
             {

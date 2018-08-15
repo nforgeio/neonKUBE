@@ -310,7 +310,7 @@ dashboard names are reserved for use as commands:
                 // Special case the [health-manager] hostname by replacing it with
                 // the IP address of a healthy hive manager node.
 
-                url = new Uri($"{url.Scheme}://{hive.GetHealthyManager().PrivateAddress}:{url.Port}{url.PathAndQuery}");
+                url = new Uri($"{url.Scheme}://{hive.GetHealthyManager().Name}.{hive.Definition.Hostnames.Base}:{url.Port}{url.PathAndQuery}");
             }
 
             NeonHelper.OpenBrowser(url.ToString());
