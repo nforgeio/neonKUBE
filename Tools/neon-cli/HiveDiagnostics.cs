@@ -150,7 +150,7 @@ namespace NeonCli
         /// <param name="hiveDefinition">The hive definition.</param>
         private static void CheckManagerNtp(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
         {
-            // We're going to use [ntpq -p] to query the configured time sources.
+            // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
             //
             //      remote           refid      st t when poll reach   delay   offset  jitter
@@ -187,7 +187,7 @@ namespace NeonCli
                     line = reader.ReadLine();
                     if (string.IsNullOrWhiteSpace(line))
                     {
-                        fault = "NTP: Invalid [ntpq -p] response.";
+                        fault = "NTP: Invalid [ntpq -pw] response.";
 
                         Thread.Sleep(retryDelay);
                         continue;
@@ -196,7 +196,7 @@ namespace NeonCli
                     line = reader.ReadLine();
                     if (string.IsNullOrWhiteSpace(line) || line[0] != '=')
                     {
-                        fault = "NTP: Invalid [ntpq -p] response.";
+                        fault = "NTP: Invalid [ntpq -pw] response.";
 
                         Thread.Sleep(retryDelay);
                         continue;
@@ -242,7 +242,7 @@ namespace NeonCli
         /// <param name="hiveDefinition">The hive definition.</param>
         private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
         {
-            // We're going to use [ntpq -p] to query the configured time sources.
+            // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
             //
             //           remote           refid      st t when poll reach   delay   offset  jitter
@@ -252,7 +252,6 @@ namespace NeonCli
             //           + 10.0.1.7        198.60.22.240    2 u  111  128  377    0.062    3.409   0.608
             //           + 10.0.1.7        198.60.22.240    2 u  111  128  377    0.062    3.409   0.608
             //
-            //
             // For worker nodes, we need to verify that each of the managers are answering
             // by confirming that their IP addresses are present.
 
@@ -260,6 +259,9 @@ namespace NeonCli
 
             var retryDelay = TimeSpan.FromSeconds(30);
             var fault      = (string)null;
+            var firstTry   = true;
+
+        tryAgain:
 
             for (var tries = 0; tries < 6; tries++)
             {
@@ -288,6 +290,26 @@ namespace NeonCli
 
             if (fault != null)
             {
+                if (firstTry)
+                {
+                    // $hack(jeff.lill):
+                    //
+                    // I've seen the NTP check fail on a non-manager node, complaining
+                    // that the connection attempt was rejected.  I manually restarted
+                    // the node and then it worked.  I'm not sure if the rejected connection
+                    // was being made to the local NTP service or from the local service
+                    // to NTP running on the manager.
+                    //
+                    // I'm going to assume that it was to the local NTP service and I'm
+                    // going to try mitigating this by restarting the local NTP service
+                    // and then re-running the tests.  I'm only going to do this once.
+
+                    node.SudoCommand("systemctl restart ntp", node.DefaultRunOptions & ~RunOptions.FaultOnError);
+
+                    firstTry = false;
+                    goto tryAgain;
+                }
+
                 node.Fault(fault);
             }
         }
