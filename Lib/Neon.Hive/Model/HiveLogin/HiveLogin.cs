@@ -180,7 +180,7 @@ namespace Neon.Hive
         public TlsCertificate VaultCertificate { get; set; }
 
         /// <summary>
-        /// The Docker refistry cache self-signed wildcard certificate covering <b>*.neon-registry-cache.NAME.hive</b>
+        /// The Docker registry cache self-signed wildcard certificate covering <b>*.neon-registry-cache.NAME.hive</b>
         /// where <b>NAME</b> is the hive name.
         /// </summary>
         [JsonProperty(PropertyName = "RegistryCacheCertificate", Required = Required.Default)]
