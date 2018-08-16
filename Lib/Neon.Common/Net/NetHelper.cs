@@ -184,8 +184,8 @@ namespace Neon.Net
         /// <param name="section">
         /// <para>
         /// Optionally specifies the string to use to mark the hostnames section.  This
-        /// defaults to <b>NEON-MODIFY</b> which will delimit the section with <b># BEGIN-NEON-MODIFY</b>
-        /// and <b># END-NEON-MODIFY</b>.  You may pass a different string to identify a custom section.
+        /// defaults to <b>MODIFY</b> which will delimit the section with <b># NEON-BEGIN-MODIFY</b>
+        /// and <b># NEON-END-MODIFY</b>.  You may pass a different string to identify a custom section.
         /// </para>
         /// <note>
         /// The string passed must be a valid DNS hostname label that must begin with a letter
@@ -203,7 +203,7 @@ namespace Neon.Net
         /// section will be removed.
         /// </para>
         /// </remarks>
-        public static void ModifyLocalHosts(Dictionary<string, IPAddress> hostEntries = null, string section = "NEON-MODIFY")
+        public static void ModifyLocalHosts(Dictionary<string, IPAddress> hostEntries = null, string section = "MODIFY")
         {
 #if XAMARIN
             throw new NotSupportedException();
@@ -282,8 +282,8 @@ namespace Neon.Net
             retryFile.InvokeAsync(
                 async () =>
                 {
-                    var beginMarker = $"# BEGIN-{section}";
-                    var endMarker   = $"# END-{section}";
+                    var beginMarker = $"# NEON-BEGIN-{section}";
+                    var endMarker   = $"# NEON-END-{section}";
 
                     var inputLines  = File.ReadAllLines(hostsPath);
                     var tempSection = false;
@@ -422,6 +422,50 @@ namespace Neon.Net
                     }).Wait();
             }
 #endif
+        }
+
+        /// <summary>
+        /// Lists the names of the local host sections.
+        /// </summary>
+        /// <returns>The section names converted to uppercase.</returns>
+        public static IEnumerable<string> ListLocalHostsSections()
+        {
+            string hostsPath;
+
+            if (NeonHelper.IsWindows)
+            {
+                hostsPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32", "drivers", "etc", "hosts");
+            }
+            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+            {
+                hostsPath = "/etc/hosts";
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+
+            var sections = new List<string>();
+
+            using (var reader = new StringReader(File.ReadAllText(hostsPath)))
+            {
+                foreach (var rawLine in reader.Lines())
+                {
+                    var line = rawLine.Trim();
+
+                    if (line.StartsWith("# NEON-BEGIN-"))
+                    {
+                        var sectionName = line.Substring("# NEON-BEGIN-".Length).Trim();
+
+                        if (!string.IsNullOrEmpty(sectionName))
+                        {
+                            sections.Add(sectionName.ToUpperInvariant());
+                        }
+                    }
+                }
+            }
+
+            return sections;
         }
 
         /// <summary>

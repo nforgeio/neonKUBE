@@ -3,6 +3,9 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
+using Neon.Common;
+using Neon.Net;
+using Neon.Xunit;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,15 +14,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using Neon.Common;
-using Neon.Net;
-using Neon.Xunit;
-
 using Xunit;
 
 namespace TestCommon
@@ -126,8 +120,8 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ModifyLocalHosts_Multiple()
         {
-            const string marker1 = "TEST-1";
-            const string marker2 = "TEST-2";
+            const string section1 = "TEST-1";
+            const string section2 = "TEST-2";
 
             try
             {
@@ -135,20 +129,32 @@ namespace TestCommon
 
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.nhive.io"));
 
-                // Add multiple sections and verify.
+                // Add multiple sections and verify (including listing sections).
 
                 var hostEntries = new Dictionary<string, IPAddress>();
+                var sections    = (IEnumerable<string>)null;
 
                 hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.0"));
                 NetHelper.ModifyLocalHosts(hostEntries);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Single(sections, "MODIFY");
 
                 hostEntries.Clear();
                 hostEntries.Add("foo-1.test.nhive.io", IPAddress.Parse("1.1.1.1"));
-                NetHelper.ModifyLocalHosts(hostEntries, marker1);
+                NetHelper.ModifyLocalHosts(hostEntries, section1);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Equal(2, sections.Count());
+                Assert.Contains("MODIFY", sections);
+                Assert.Contains(section1.ToUpperInvariant(), sections);
 
                 hostEntries.Clear();
                 hostEntries.Add("foo-2.test.nhive.io", IPAddress.Parse("1.1.1.2"));
-                NetHelper.ModifyLocalHosts(hostEntries, marker2);
+                NetHelper.ModifyLocalHosts(hostEntries, section2);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Equal(3, sections.Count());
+                Assert.Contains("MODIFY", sections);
+                Assert.Contains(section1.ToUpperInvariant(), sections);
+                Assert.Contains(section2.ToUpperInvariant(), sections);
 
                 Assert.Equal("1.1.1.0", Dns.GetHostAddresses("foo-0.test.nhive.io").Single().ToString());
                 Assert.Equal("1.1.1.1", Dns.GetHostAddresses("foo-1.test.nhive.io").Single().ToString());
@@ -161,12 +167,12 @@ namespace TestCommon
                 Assert.Equal("1.1.1.1", Dns.GetHostAddresses("foo-1.test.nhive.io").Single().ToString());
                 Assert.Equal("1.1.1.2", Dns.GetHostAddresses("foo-2.test.nhive.io").Single().ToString());
 
-                NetHelper.ModifyLocalHosts(section: marker1);
+                NetHelper.ModifyLocalHosts(section: section1);
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-0.test.nhive.io"));
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-1.test.nhive.io"));
                 Assert.Equal("1.1.1.2", Dns.GetHostAddresses("foo-2.test.nhive.io").Single().ToString());
 
-                NetHelper.ModifyLocalHosts(section: marker2);
+                NetHelper.ModifyLocalHosts(section: section2);
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-0.test.nhive.io"));
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-1.test.nhive.io"));
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-2.test.nhive.io"));
@@ -176,8 +182,8 @@ namespace TestCommon
                 // Ensure that we reset the local hosts before exiting the test.
 
                 NetHelper.ModifyLocalHosts();
-                NetHelper.ModifyLocalHosts(section: marker1);
-                NetHelper.ModifyLocalHosts(section: marker2);
+                NetHelper.ModifyLocalHosts(section: section1);
+                NetHelper.ModifyLocalHosts(section: section2);
             }
         }
 
@@ -189,8 +195,7 @@ namespace TestCommon
             {
                 // Verify that we start out with an undefined test host.
 
-                //Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.nhive.io"));
-if (File.Exists(@"C:\temp\dns.log")) File.Delete(@"C:\temp\dns.log");
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.nhive.io"));
 
                 // We're going to perform multiple updates to ensure that
                 // the DNS resolver is reliably picking up the changes.
