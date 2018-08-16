@@ -116,6 +116,7 @@ export NEON_VAULT_PORT=$<vault.port>
 export NEON_VAULT_CONSUL_PATH=$<vault.consulpath>
 export NEON_VAULT_MAXIMUM_LEASE=$<vault.maximumlease>
 export NEON_VAULT_DEFAULT_LEASE=$<vault.defaultlease>
+export NEON_VAULT_DASHBOARD=$<vault.dashboard>
 
 # Log settings
 
@@ -177,6 +178,7 @@ $<nodes.manager.summary>
     echo "NEON_VAULT_CONSUL_PATH             = ${NEON_VAULT_CONSUL_PATH}" 1>&2
     echo "NEON_VAULT_MAXIMUM_LEASE           = ${NEON_VAULT_MAXIMUM_LEASE}" 1>&2
     echo "NEON_VAULT_DEFAULT_LEASE           = ${NEON_VAULT_DEFAULT_LEASE}" 1>&2
+    echo "NEON_VAULT_DASHBOARD               = ${NEON_VAULT_DASHBOARD}" 1>&2
     echo 1>&2
     echo "NEON_LOG_ENABLED                   = ${NEON_LOG_ENABLED}" 1>&2
     echo 1>&2

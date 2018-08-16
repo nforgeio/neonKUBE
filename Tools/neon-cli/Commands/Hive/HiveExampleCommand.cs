@@ -527,6 +527,10 @@ USAGE:
 
         ""Consul"": true,
 
+        // Enables the Vault dashboard.  Defaults to [true].
+
+        ""Vault"": true,
+
         // Enables the Ceph dashboard.  Defaults to [true].
 
         ""Ceph"": true

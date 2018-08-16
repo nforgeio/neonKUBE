@@ -83,6 +83,7 @@ cat <<EOF > /etc/vault/vault.hcl
 cluster_name="${NEON_DATACENTER}.${NEON_HIVE}"
 max_lease_ttl="${NEON_VAULT_MAXIMUM_LEASE}"
 default_lease_ttl="${NEON_VAULT_DEFAULT_LEASE}"
+ui=${NEON_VAULT_DASHBOARD}
 
 listener "tcp" {
 

@@ -3746,6 +3746,25 @@ systemctl restart sshd
                         hive.Dashboard.Set(consulDashboard);
                         firstManager.Status = string.Empty;
                     }
+
+                    // Configure the Vault dashboard.
+
+                    if (hive.Definition.Dashboard.Vault)
+                    {
+                        firstManager.Status = "vault dashboard";
+
+                        var vaultDashboard = new HiveDashboard()
+                        {
+                            Name        = "vault",
+                            Title       = "Vault",
+                            Folder      = HiveConst.DashboardSystemFolder,
+                            Url         = $"https://healthy-manager:{hive.Definition.Vault.Port}/ui",
+                            Description = "Hive Vault secure storage"
+                        };
+
+                        hive.Dashboard.Set(vaultDashboard);
+                        firstManager.Status = string.Empty;
+                    }
                 });
         }
     }

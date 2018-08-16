@@ -30,6 +30,7 @@ namespace Neon.Hive
     {
         private const bool defaultKibana = true;
         private const bool defaultConsul = true;
+        private const bool defaultVault  = true;
         private const bool defaultCeph   = true;
 
         /// <summary>
@@ -46,6 +47,13 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "Consul", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultConsul)]
         public bool Consul { get; set; } = defaultConsul;
+
+        /// <summary>
+        /// Enables the Vault dashboard.  This defaults to <c>true</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Vault", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultVault)]
+        public bool Vault { get; set; } = defaultVault;
 
         /// <summary>
         /// Enables the Ceph dashboard.  This defaults to <c>true</c>.

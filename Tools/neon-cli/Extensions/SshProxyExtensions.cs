@@ -503,6 +503,7 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "vault.consulpath", "vault/");
             SetBashVariable(preprocessReader, "vault.maximumlease", hiveDefinition.Vault.MaximimLease);
             SetBashVariable(preprocessReader, "vault.defaultlease", hiveDefinition.Vault.DefaultLease);
+            SetBashVariable(preprocessReader, "vault.dashboard", hiveDefinition.Dashboard.Vault ? "true" : "false");
 
             SetBashVariable(preprocessReader, "log.enabled", hiveDefinition.Log.Enabled);
         }
