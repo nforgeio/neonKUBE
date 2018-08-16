@@ -37,7 +37,6 @@
     "Experimental": false
   },
   "Consul": {
-    "Tls": true
   },
   "Vault": {
     "KeyCount": 1,
