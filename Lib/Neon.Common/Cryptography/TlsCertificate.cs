@@ -285,7 +285,7 @@ CN={issuedTo}
 basicConstraints       = critical, CA:TRUE
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
-keyUsage               = critical, cRLSign, digitalSignature, keyCertSign
+keyUsage               = critical, cRLSign, digitalSignature, keyCertSign, keyEncipherment
 subjectAltName         = @alt_names
 
 [alt_names]
@@ -411,7 +411,7 @@ CN={issuedTo}
 basicConstraints       = critical, CA:TRUE
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
-keyUsage               = critical, cRLSign, digitalSignature, keyCertSign
+keyUsage               = critical, cRLSign, digitalSignature, keyCertSign, keyEncipherment
 subjectAltName         = @alt_names
 
 [alt_names]

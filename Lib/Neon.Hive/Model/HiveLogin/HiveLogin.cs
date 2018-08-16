@@ -163,29 +163,18 @@ namespace Neon.Hive
         public VaultCredentials VaultCredentials { get; set;}
 
         /// <summary>
-        /// The hive self-signed wildcard certificate covering <b>*.NAME.nhive.io</b>
-        /// where <b>NAME</b> is the hive name.  This is used to secure HashCorp Vault
-        /// as well as other hive endpoints that need to be secured such as dashboards.
+        /// <para>
+        /// This certificate covers all of the hive built-in hostnames that will be 
+        /// accessed via TLS/SSL.  This includes these names:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><b>*.HIVENAME.nhive.io</b></item>
+        /// <item><b>*.neon-vault.HIVENAME.nhive.io</b></item>
+        /// </list>
         /// </summary>
         [JsonProperty(PropertyName = "HiveCertificate", Required = Required.Default)]
         [DefaultValue(null)]
         public TlsCertificate HiveCertificate { get; set; }
-
-        /// <summary>
-        /// The HashiCorp Vault self-signed wildcard certificate covering <b>*.neon-vault.NAME.nhive.io</b>
-        /// where <b>NAME</b> is the hive name.
-        /// </summary>
-        [JsonProperty(PropertyName = "VaultCertificate", Required = Required.Default)]
-        [DefaultValue(null)]
-        public TlsCertificate VaultCertificate { get; set; }
-
-        /// <summary>
-        /// The Docker registry cache self-signed wildcard certificate covering <b>*.neon-registry-cache.NAME.nhive.io</b>
-        /// where <b>NAME</b> is the hive name.
-        /// </summary>
-        [JsonProperty(PropertyName = "RegistryCacheCertificate", Required = Required.Default)]
-        [DefaultValue(null)]
-        public TlsCertificate RegistryCacheCertificate { get; set; }
 
         /// <summary>
         /// Returns the certificates that will need to be trusted so that
@@ -198,8 +187,7 @@ namespace Neon.Hive
             {
                 return new TlsCertificate[]
                 {
-                    HiveCertificate,
-                    VaultCertificate
+                    HiveCertificate
                 };
             }
         }
@@ -298,16 +286,6 @@ namespace Neon.Hive
             if (HiveCertificate != null)
             {
                 HiveCertificate.KeyPem = null;
-            }
-
-            if (VaultCertificate != null)
-            {
-                VaultCertificate.KeyPem = null;
-            }
-
-            if (RegistryCacheCertificate != null)
-            {
-                RegistryCacheCertificate.KeyPem = null;
             }
 
             // Clear the Docker registry credentials.

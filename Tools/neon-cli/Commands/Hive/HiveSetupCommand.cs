@@ -784,8 +784,8 @@ OPTIONS:
                         // Configure the Vault service certificate (with private key).
 
                         node.SudoCommand("mkdir -p /etc/vault");
-                        node.UploadText($"/etc/vault/vault.crt", hiveLogin.VaultCertificate.CertPem);
-                        node.UploadText($"/etc/vault/vault.key", hiveLogin.VaultCertificate.KeyPem);
+                        node.UploadText($"/etc/vault/vault.crt", hiveLogin.HiveCertificate.CertPem);
+                        node.UploadText($"/etc/vault/vault.key", hiveLogin.HiveCertificate.KeyPem);
                         node.SudoCommand("chmod 600 /etc/vault/*");
                     }
 
@@ -810,9 +810,7 @@ OPTIONS:
 
                     var hiveName = hiveLogin.Definition.Name.ToLowerInvariant();
 
-                    node.UploadText($"/usr/local/share/ca-certificates/hive-{hiveName}-base.crt", hiveLogin.HiveCertificate.CertPem);
-                    node.UploadText($"/usr/local/share/ca-certificates/hive-{hiveName}-vault.crt", hiveLogin.VaultCertificate.CertPem);
-                    node.UploadText($"/usr/local/share/ca-certificates/hive-{hiveName}-registry-cache.crt", hiveLogin.RegistryCacheCertificate.CertPem);
+                    node.UploadText($"/usr/local/share/ca-certificates/hive-{hiveName}.crt", hiveLogin.HiveCertificate.CertPem);
 
                     node.SudoCommand("chmod 644 /usr/local/share/ca-certificates/*");
                     node.SudoCommand("update-ca-certificates --fresh");

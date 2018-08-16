@@ -446,29 +446,18 @@ Server Requirements:
 
             if (hiveLogin.HiveCertificate == null)
             {
-                hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.Base, bitCount, validDays, Wildcard.RootAndSubdomains, 
+                var hostnames = new string[]
+                {
+                    $"{hive.Name}.nhive.io",
+                    $"*.{hive.Name}.nhive.io",
+                    $"*.neon-vault.{hive.Name}.nhive.io"
+                };
+
+                hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(hostnames, bitCount, validDays, 
                     issuedBy:"neonHIVE", 
-                    issuedTo:$"{hiveDefinition.Name} (hive-base)");
+                    issuedTo:$"neonHIVE: {hiveDefinition.Name}");
 
-                hiveLogin.HiveCertificate.FriendlyName = $"hive-{hiveLogin.Definition.Name}-base";
-            }
-
-            if (hiveLogin.VaultCertificate == null)
-            {
-                hiveLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains, 
-                    issuedBy: "neonHIVE", 
-                    issuedTo: $"{hiveDefinition.Name} (hive-vault)");
-
-                hiveLogin.VaultCertificate.FriendlyName = $"hive-{hiveLogin.Definition.Name}-vault";
-            }
-
-            if (hiveLogin.RegistryCacheCertificate == null)
-            {
-                hiveLogin.RegistryCacheCertificate = TlsCertificate.CreateSelfSigned(hive.Definition.Hostnames.RegistryCache, bitCount, validDays, Wildcard.RootAndSubdomains, 
-                    issuedBy: "neonHIVE", 
-                    issuedTo: $"{hiveDefinition.Name} (hive-registry-cache)");
-
-                hiveLogin.RegistryCacheCertificate.FriendlyName = $"hive-{hiveLogin.Definition.Name}-registry-cache";
+                hiveLogin.HiveCertificate.FriendlyName = $"neonHIVE: {hiveLogin.Definition.Name}";
             }
 
             // Persist the certificates into the hive login.

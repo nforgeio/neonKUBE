@@ -90,8 +90,8 @@ namespace NeonCli
                         sbCopyScript.AppendLine("mkdir -p /etc/neon-registry-cache");
                         sbCopyScript.AppendLine("chmod 750 /etc/neon-registry-cache");
 
-                        copyCommand.AddFile($"cache.crt", hive.HiveLogin.RegistryCacheCertificate.CertPem);
-                        copyCommand.AddFile($"cache.key", hive.HiveLogin.RegistryCacheCertificate.KeyPem);
+                        copyCommand.AddFile($"cache.crt", hive.HiveLogin.HiveCertificate.CertPem);
+                        copyCommand.AddFile($"cache.key", hive.HiveLogin.HiveCertificate.KeyPem);
 
                         sbCopyScript.AppendLine($"cp cache.crt /etc/neon-registry-cache/cache.crt");
                         sbCopyScript.AppendLine($"cp cache.key /etc/neon-registry-cache/cache.key");
@@ -114,7 +114,7 @@ namespace NeonCli
                                 var uploadCommand  = new CommandBundle("./registry-cache-client-certs.sh");
                                 var sbUploadScript = new StringBuilder();
 
-                                uploadCommand.AddFile($"hive-neon-registry-cache.crt", hive.HiveLogin.RegistryCacheCertificate.CertPem);
+                                uploadCommand.AddFile($"hive-neon-registry-cache.crt", hive.HiveLogin.HiveCertificate.CertPem);
 
                                 foreach (var manager in hive.Definition.SortedManagers)
                                 {
