@@ -32,6 +32,7 @@ Manages hive logins for the current user on the local computer.
 USAGE:
 
     neon login          [--no-vpn] [--show-vpn] USER@HIVE
+    neon clean
     neon login export   USER@HIVE
     neon login import   PATH
     neon login list

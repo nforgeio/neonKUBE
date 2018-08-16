@@ -1039,7 +1039,7 @@ namespace Neon.Hive
 
             hosts.Add(hiveDefinition.Hostnames.LogEsData, healthyManager.PrivateAddress);
 
-            NetHelper.ModifyLocalHosts(hosts, section: $"neon-hive-{hiveDefinition.Name}");
+            NetHelper.ModifyLocalHosts(hosts, section: $"hive-{hiveDefinition.Name}");
 
             HiveHelper.secrets = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             HiveHelper.configs = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -1069,13 +1069,90 @@ namespace Neon.Hive
         /// </summary>
         public static void CleanHiveReferences()
         {
-            // $todo(jeff.lill): IMPLEMENT THIS.
+            // Scan the hive login files for the current user and create a hashset
+            // with the current hive names.
+
+            var hiveNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var loginPath in Directory.GetFiles(HiveHelper.GetLoginFolder(), "*.login.json", SearchOption.TopDirectoryOnly))
+            {
+                var login = NeonHelper.JsonDeserialize<HiveLogin>(File.ReadAllText(loginPath));
+
+                if (!hiveNames.Contains(login.Definition.Name))
+                {
+                    hiveNames.Add(login.Definition.Name);
+                }
+            }
+
+            // Scan the platform certificate store for certificates belonging to
+            // hives without a local login and remove them.  We're going to depend
+            // on being able to identify hive certificates by parsing friendly
+            // names like:
+            //
+            //      neonHIVE: HIVENAME
+
+            if (NeonHelper.IsWindows)
+            {
+                using (var store = new X509Store(StoreName.AuthRoot, StoreLocation.LocalMachine))
+                {
+                    store.Open(OpenFlags.ReadWrite);
+
+                    foreach (var cert in store.Certificates)
+                    {
+                        if (!string.IsNullOrEmpty(cert.FriendlyName) && cert.FriendlyName.StartsWith("neonHIVE:"))
+                        {
+                            var posColon = cert.FriendlyName.IndexOf(':');
+
+                            if (posColon != -1)
+                            {
+                                var certHiveName = cert.FriendlyName.Substring(posColon + 1).Trim();
+
+                                if (!hiveNames.Contains(certHiveName))
+                                {
+                                    // There's no login for this certificate, so delete it.
+
+                                    store.Remove(cert);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                throw new NotImplementedException("$todo(jeff.lill): Implement this for OSX.");
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
+            // Scan the [host] sections for section names like:
+            //
+            //      hive-HIVENAME
+            //
+            // and then extract the hivenames and then delete any sections
+            // for which there is no local hive.  Note that the sections
+            // will be listed as uppercase.
+
+            foreach (var section in NetHelper.ListLocalHostsSections())
+            {
+                if (section.StartsWith("hive-", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var hiveName = section.Substring("hive-".Length);
+
+                    if (!hiveNames.Contains(hiveName))
+                    {
+                        NetHelper.ModifyLocalHosts(section: $"hive-{hiveName}");
+                    }
+                }
+            }
         }
 
         /// <summary>
         /// Verifies that a hive is connected.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if a hive is not connected.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when a hive is not connected.</exception>
         private static void VerifyConnected()
         {
             if (!IsConnected)

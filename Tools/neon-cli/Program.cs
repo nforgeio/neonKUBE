@@ -110,6 +110,7 @@ COMMAND SUMMARY:
     neon hive update        ARGS
     neon load-balancer|lb   CMD...
     neon login              [--no-vpn] USER@HIVE
+    neon login clean
     neon login export       USER@HIVE
     neon login import       PATH
     neon login list
@@ -281,7 +282,6 @@ OPTIONS:
                     new ExecCommand(),
                     new FileCommand(),
                     new FolderCommand(),
-                    new LoginCommand(),
                     new HiveCommand(),
                     new HiveExampleCommand(),
                     new HiveGetCommand(),
@@ -294,6 +294,8 @@ OPTIONS:
                     new HiveUpdateCommand(),
                     new HiveVerifyCommand(),
                     new LoadBalancerCommand(),
+                    new LoginCommand(),
+                    new LoginCleanCommand(),
                     new LoginExportCommand(),
                     new LoginImportCommand(),
                     new LoginListCommand(),
