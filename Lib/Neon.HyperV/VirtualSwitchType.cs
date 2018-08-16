@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Hive.HyperV
+namespace Neon.HyperV
 {
     /// <summary>
     /// Enumerates the known Hyper-V virtual machine states.

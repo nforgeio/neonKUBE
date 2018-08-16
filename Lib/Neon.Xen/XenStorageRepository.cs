@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using Neon.Common;
 using Neon.Hive;
 
-namespace Neon.Hive.XenServer
+namespace Neon.Xen
 {
     /// <summary>
     /// Describes a XenServer storage repository.

@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 using Neon.Common;
 using Neon.Hive;
 
-namespace Neon.Hive.XenServer
+namespace Neon.Xen
 {
     /// <summary>
     /// Base class for all XenServer object that implements common properties.

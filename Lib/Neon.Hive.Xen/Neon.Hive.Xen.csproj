@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Hive\Neon.Hive.csproj" />
+    <ProjectReference Include="..\Neon.Xen\Neon.Xen.csproj" />
   </ItemGroup>
 
   <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />

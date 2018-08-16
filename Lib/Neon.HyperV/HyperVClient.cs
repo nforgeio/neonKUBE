@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Hive.HyperV
+namespace Neon.HyperV
 {
     /// <summary>
     /// <para>

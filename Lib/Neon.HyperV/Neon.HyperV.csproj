@@ -5,20 +5,23 @@
     <Version>7.0.0-preview.0</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Description>neonHIVE Hyper-V Hosting.</Description>
+    <Product>neonHIVE</Product>
+    <Description>Hyper-V provisioning.</Description>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>
-    <Product>neonHIVE</Product>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
+    <PackageId>Neon.HyperV</PackageId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netstandard2.0\Neon.Hive.HyperV.xml</DocumentationFile>
+    <DefineConstants>DEBUG;TRACE;NETSTANDARD2_0</DefineConstants>
+    <DocumentationFile>C:\src\neonFORGE\Lib\Neon.HyperV\Neon.HyperV.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard2.0\Neon.Hive.HyperV.xml</DocumentationFile>
+    <DefineConstants>TRACE;NETSTANDARD2_0</DefineConstants>
+    <DocumentationFile>C:\src\neonFORGE\Lib\Neon.HyperV\Neon.HyperV.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,10 +30,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Hive\Neon.Hive.csproj" />
-    <ProjectReference Include="..\Neon.HyperV\Neon.HyperV.csproj" />
   </ItemGroup>
-
-  <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
 </Project>

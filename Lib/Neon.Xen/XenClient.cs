@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Hive;
 
-namespace Neon.Hive.XenServer
+namespace Neon.Xen
 {
     /// <summary>
     /// This class provides a simple light-weight XenServer or CXP-ng 
@@ -47,7 +47,7 @@ namespace Neon.Hive.XenServer
     /// </para>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public sealed partial class XenClient : IDisposable
+    public sealed partial class XenClient : IDisposable, IXenClient
     {
         // Implementation Note:
         // --------------------

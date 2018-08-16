@@ -14,7 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Hive.XenServer;
+//using Neon.Hive.XenServer;
 
 namespace Neon.Hive
 {
@@ -656,9 +656,9 @@ namespace Neon.Hive
             var maxNodeNameWidth  = nodes.Max(n => n.Name.Length);
             var maxHostNameWidth  = 0;
 
-            if (typeof(NodeMetadata) == typeof(XenClient))
+            if (typeof(NodeMetadata) == typeof(IXenClient))
             {
-                maxHostNameWidth = nodes.Max(n => (n.Metadata as XenClient).Name.Length);
+                maxHostNameWidth = nodes.Max(n => (n.Metadata as IXenClient).Name.Length);
             }
 
             sbDisplay.Clear();
@@ -813,16 +813,16 @@ namespace Neon.Hive
                         }
                     }
                 }
-                else if (typeof(NodeMetadata) == typeof(XenClient))
+                else if (typeof(NodeMetadata) == typeof(IXenClient))
                 {
                     // Provisioning hive nodes on XenServer hosts.
 
                     sbDisplay.AppendLine();
                     sbDisplay.AppendLine(" Xen Servers:");
 
-                    foreach (var node in nodes.OrderBy(n => (n.Metadata as XenClient).Name, StringComparer.InvariantCultureIgnoreCase))
+                    foreach (var node in nodes.OrderBy(n => (n.Metadata as IXenClient).Name, StringComparer.InvariantCultureIgnoreCase))
                     {
-                        var xenHost = node.Metadata as XenClient;
+                        var xenHost = node.Metadata as IXenClient;
 
                         sbDisplay.AppendLine($"    {xenHost.Name}{new string(' ', maxHostNameWidth - xenHost.Name.Length)}: {GetStatus(stepNodeNamesSet, node)}");
                     }

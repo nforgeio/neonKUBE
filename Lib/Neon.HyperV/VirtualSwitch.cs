@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    XenVirtualDrive.cs
+// FILE:	    VirtualSwitch.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -14,16 +14,21 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Hive.XenServer
+namespace Neon.HyperV
 {
     /// <summary>
-    /// Specifies virtual drive creation parameters.
+    /// Describes the a Hyper-V virtual network switch.
     /// </summary>
-    public class XenVirtualDrive
+    public class VirtualSwitch
     {
         /// <summary>
-        /// The drive size in bytes.
+        /// The switch name.
         /// </summary>
-        public long Size { get; set; }
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The switch type.
+        /// </summary>
+        public VirtualSwitchType Type { get; set; }
     }
 }

@@ -1,0 +1,414 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Neon.HyperV</name>
+    </assembly>
+    <members>
+        <member name="T:Neon.HyperV.HyperVClient">
+            <summary>
+            <para>
+            Abstracts management of local Hyper-V virtual machines and components
+            on Windows via PowerShell.
+            </para>
+            <note>
+            This class requires elevated administrative rights.
+            </note>
+            </summary>
+            <threadsafety instance="false"/>
+        </member>
+        <member name="P:Neon.HyperV.HyperVClient.DefaultDriveFolder">
+            <summary>
+            Returns the path to the default Hyper-V virtual drive folder.
+            </summary>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.#ctor">
+            <summary>
+            Default constructor to be used to manage Hyper-V objects
+            on the local Windows machine.
+            </summary>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.Dispose">
+            <summary>
+            Releases all resources associated with the instance.
+            </summary>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.Dispose(System.Boolean)">
+            <summary>
+            Releases all associated resources.
+            </summary>
+            <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.CheckDisposed">
+            <summary>
+            Ensures that the instance has not been disposed.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Thrown if the instance has been disposed.</exception>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.ExtractVM(System.Object)">
+            <summary>
+            Extracts virtual machine properties from a dynamic PowerShell result.
+            </summary>
+            <param name="rawMachine">The dynamic machine properties.</param>
+            <returns>The parsed <see cref="T:Neon.HyperV.VirtualMachine"/>.</returns>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.AddVM(System.String,System.String,System.String,System.Int32,System.String,System.String,System.Boolean,System.String,System.String,System.Collections.Generic.IEnumerable{Neon.HyperV.VirtualDrive})">
+            <summary>
+            Creates a virtual machine. 
+            </summary>
+            <param name="machineName">The machine name.</param>
+            <param name="memorySize">
+            A string specifying the memory size.  This can be a long byte count or a
+            long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>2GB</b>.
+            </param>
+            <param name="minimumMemorySize">
+            Optionally specifies the minimum memory size.  This defaults to <c>null</c> which will
+            set this to <paramref name="memorySize"/>.
+            </param>
+            <param name="processorCount">
+            The number of virutal processors to assign to the machine.  This defaults to <b>4</b>.
+            </param>
+            <param name="diskSize">
+            A string specifying the primary disk size.  This can be a long byte count or a
+            long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>64GB</b>.
+            </param>
+            <param name="drivePath">
+            Optionally specifies the path where the virtual hard drive will be located.  Pass 
+            <c>null</c> or empty to to default to <b>MACHINE-NAME.vhdx</b> located in the default
+            Hyper-V virtual machine drive folder.
+            </param>
+            <param name="checkpointDrives">Optionally enables drive checkpoints.  This defaults to <c>false</c>.</param>
+            <param name="templateDrivePath">
+            If this is specified and <paramref name="drivePath"/> is not <c>null</c> then
+            the hard drive template at <paramref name="templateDrivePath"/> will be copied
+            to <paramref name="drivePath"/> before creating the machine.
+            </param>
+            <param name="switchName">Optional name of the virtual switch.</param>
+            <param name="extraDrives">
+            Optionally specifies any additional virtual drives to be created and 
+            then attached to the new virtual machine (e.g. for Ceph OSD).
+            </param>
+            <remarks>
+            <note>
+            The <see cref="P:Neon.HyperV.VirtualDrive.Path"/> property of <paramref name="extraDrives"/> may be
+            passed as <c>null</c> or empty.  In this case, the drive name will default to
+            being located in the standard Hyper-V virtual drivers folder and will be named
+            <b>MACHINE-NAME-#.vhdx</b>, where <b>#</b> is the one-based index of the drive
+            in the enumeration.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.RemoveVM(System.String)">
+            <summary>
+            Removes a named virtual machine.
+            </summary>
+            <param name="machineName">The machine name.</param>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.ListVMs">
+            <summary>
+            Lists the virtual machines.
+            </summary>
+            <returns><see cref="T:System.Collections.Generic.IEnumerable`1"/>.</returns>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.GetVM(System.String)">
+            <summary>
+            Gets the current status for a named virtual machine.
+            </summary>
+            <param name="machineName">The machine name.</param>
+            <returns>The <see cref="T:Neon.HyperV.VirtualMachine"/>.</returns>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.VMExists(System.String)">
+            <summary>
+            Determines whether a named virtual machine exists.
+            </summary>
+            <param name="machineName">The machine name.</param>
+            <returns><c>true</c> if the machine exists.</returns>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.StartVM(System.String)">
+            <summary>
+            Starts the named virtual machine.
+            </summary>
+            <param name="machineName">The machine name.</param>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.StopVM(System.String)">
+            <summary>
+            Stops the named virtual machine.
+            </summary>
+            <param name="machineName">The machine name.</param>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.GetVMDrives(System.String)">
+            <summary>
+            Returns host file system paths to any virtual drives attached to
+            the named virtual machine.
+            </summary>
+            <param name="machineName">The machine name.</param>
+            <returns>The list of fully qualified virtual drive file paths.</returns>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.ListVMSwitches">
+            <summary>
+            Returns the virtual network switches.
+            </summary>
+            <returns>The list of switches.</returns>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.NewVMExternalSwitch(System.String,System.Net.IPAddress)">
+            <summary>
+            Adds a virtual ethernet switch to Hyper-V with external connectivity
+            to the ethernet adapter named <b>Ethernet</b>.
+            </summary>
+            <param name="switchName">The new switch name.</param>
+            <param name="gateway">Address of the hive network gateway, used to identify a connected network interface.</param>
+        </member>
+        <member name="M:Neon.HyperV.HyperVClient.ListVMNetworkAdapters(System.String,System.Boolean)">
+            <summary>
+            Returns the virtual network adapters attached to the name virtual machine.
+            </summary>
+            <param name="machineName">The machine name.</param>
+            <param name="waitForAddresses">Optionally waits until the adapter has been able to acquire at least one IPv4 address.</param>
+            <returns>The list of network adapters.</returns>
+        </member>
+        <member name="T:Neon.HyperV.HyperVException">
+            <summary>
+            Thrown by <see cref="T:Neon.HyperV.HyperVClient"/> when an error is detected.
+            </summary>
+        </member>
+        <member name="M:Neon.HyperV.HyperVException.#ctor(System.String,System.Exception)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="innerException">Optionally specifies an inner exception.</param>
+        </member>
+        <member name="T:Neon.HyperV.PowerShell">
+            <summary>
+            <para>
+            Internal proxy for executing PowerShell commands on Windows machines.
+            </para>
+            <note>
+            This class requires elevated administrative rights.
+            </note>
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.PowerShell.Column.Title">
+            <summary>
+            Column title.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.PowerShell.Column.Start">
+            <summary>
+            Index of the starting position for the column data.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.PowerShell.Column.Width">
+            <summary>
+            Column width (number of characters).
+            </summary>
+        </member>
+        <member name="M:Neon.HyperV.PowerShell.#ctor">
+            <summary>
+            Default constructor to be used to execute local PowerShell commands.
+            </summary>
+        </member>
+        <member name="M:Neon.HyperV.PowerShell.Dispose">
+            <summary>
+            Releases all resources associated with the instance.
+            </summary>
+        </member>
+        <member name="M:Neon.HyperV.PowerShell.Dispose(System.Boolean)">
+            <summary>
+            Releases all associated resources.
+            </summary>
+            <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
+        </member>
+        <member name="M:Neon.HyperV.PowerShell.ExpandEnvironmentVars(System.String)">
+            <summary>
+            Expands any environment variables of the form <b>${NAME}</b> in the input
+            string and returns the expanded result.
+            </summary>
+            <param name="input">The input string.</param>
+            <returns>The expanded output string.</returns>
+        </member>
+        <member name="M:Neon.HyperV.PowerShell.Execute(System.String,System.Boolean)">
+            <summary>
+            Executes a PowerShell command that returns a simple string result.
+            </summary>
+            <param name="command">The command string.</param>
+            <param name="noEnvironmentVars">
+            Optionally disables that environment variable subsitution (defaults to <c>false</c>).
+            </param>
+            <returns>The list of <c>dynamic</c> objects parsed from the command response.</returns>
+            <exception cref="T:Neon.HyperV.HyperVException">Thrown if the command failed.</exception>
+        </member>
+        <member name="M:Neon.HyperV.PowerShell.ExecuteTable(System.String,System.Boolean)">
+            <summary>
+            Executes a PowerShell command that returns a result table, subsituting any
+            environment variable references of the form <b>${NAME}</b> and returning a list 
+            of <c>dynamic</c> objects parsed from the table with the object property
+            names set to the table column names and the values parsed as strings.
+            </summary>
+            <param name="command">The command string.</param>
+            <param name="noEnvironmentVars">
+            Optionally disables that environment variable subsitution (defaults to <c>false</c>).
+            </param>
+            <returns>The list of <c>dynamic</c> objects parsed from the command response.</returns>
+            <exception cref="T:Neon.HyperV.HyperVException">Thrown if the command failed.</exception>
+        </member>
+        <member name="T:Neon.HyperV.VirtualDrive">
+            <summary>
+            Specifies virtual drive creation parameters.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualDrive.Path">
+            <summary>
+            Specifies the path where the drive will be located.  The drive format
+            is indicated by the file type, either <b>.vhd</b> or <b>.vhdx</b>.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualDrive.Size">
+            <summary>
+            The drive size in bytes.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualDrive.IsDynamic">
+            <summary>
+            Indicates whether a dynamic drive will be created as opposed to a
+            pre-allocated fixed drive.  This defaults to <b>true</b>.
+            </summary>
+        </member>
+        <member name="T:Neon.HyperV.VirtualMachine">
+            <summary>
+            Describes the state of a Hyper-V based virtual machine.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualMachine.Name">
+            <summary>
+            The machine name.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualMachine.State">
+            <summary>
+            The current machine state.
+            </summary>
+        </member>
+        <member name="T:Neon.HyperV.VirtualMachineState">
+            <summary>
+            Enumerates the known Hyper-V virtual machine states.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualMachineState.Unknown">
+            <summary>
+            The current state cannot be determined or is not one of
+            the known states below.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualMachineState.Off">
+            <summary>
+            The machine is turned off.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualMachineState.Starting">
+            <summary>
+            The machine is starting.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualMachineState.Running">
+            <summary>
+            The machine is running.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualMachineState.Paused">
+            <summary>
+            The machine is paused.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualMachineState.Saved">
+            <summary>
+            The machine saved.
+            </summary>
+        </member>
+        <member name="T:Neon.HyperV.VirtualNetworkAdapter">
+            <summary>
+            Describes a Hyper-V virtual network adapter attached to a virtual machine.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualNetworkAdapter.Name">
+            <summary>
+            The adapter name.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualNetworkAdapter.IsManagementOs">
+            <summary>
+            <c>true</c> if this adapter is attached to the management operating system.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualNetworkAdapter.VMName">
+            <summary>
+            The name of the attached virtual machine.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualNetworkAdapter.SwitchName">
+            <summary>
+            The attached switch name.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualNetworkAdapter.MacAddress">
+            <summary>
+            The adapter's MAC address.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualNetworkAdapter.Status">
+            <summary>
+            The adapter status.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualNetworkAdapter.Addresses">
+            <summary>
+            The IP addresses assigned to the adapter.
+            </summary>
+        </member>
+        <member name="T:Neon.HyperV.VirtualSwitch">
+            <summary>
+            Describes the a Hyper-V virtual network switch.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualSwitch.Name">
+            <summary>
+            The switch name.
+            </summary>
+        </member>
+        <member name="P:Neon.HyperV.VirtualSwitch.Type">
+            <summary>
+            The switch type.
+            </summary>
+        </member>
+        <member name="T:Neon.HyperV.VirtualSwitchType">
+            <summary>
+            Enumerates the known Hyper-V virtual machine states.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualSwitchType.Unknown">
+            <summary>
+            The current switch type cannot be determined or is not one of
+            the known states below.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualSwitchType.External">
+            <summary>
+            The switch can communicate with the host operating system as well as
+            any networks the host can reach.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualSwitchType.Internal">
+            <summary>
+            The switch can communicate with the host operating system as well as
+            any hosted virtual machines connected to an <see cref="F:Neon.HyperV.VirtualSwitchType.External"/>
+            or <see cref="F:Neon.HyperV.VirtualSwitchType.Internal"/> switch.  The switch cannot communicate
+            with anything outside of the host.
+            </summary>
+        </member>
+        <member name="F:Neon.HyperV.VirtualSwitchType.Private">
+            <summary>
+            The switch can communicate only with virtual machines using the
+            same switch.
+            </summary>
+        </member>
+    </members>
+</doc>

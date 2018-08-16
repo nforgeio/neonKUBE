@@ -436,7 +436,7 @@ namespace Neon.Hive
         /// </para>
         /// <note>
         /// This property must be configured for the on-premise providers (<see cref="HostingEnvironments.Machine"/>, 
-        /// <see cref="HyperV"/>, and <see cref="XenServer"/>) and is computed automatically by the <b>neon</b> tool when
+        /// <b>HyperV</b>, and <b>XenServer</b>".  This is computed automatically by the <b>neon</b> tool when
         /// provisioning in a cloud environment.
         /// </note>
         /// <note>

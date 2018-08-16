@@ -6,27 +6,25 @@
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
     <Product>neonHIVE</Product>
-    <Description>neonHIVE Hyper-V Hosting for Development.</Description>
+    <Description>XenServer provisioning.</Description>
+    <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
-    <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>
-    <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netstandard2.0\Neon.Hive.HyperVDev.xml</DocumentationFile>
+    <DefineConstants>DEBUG;TRACE;NETSTANDARD2_0</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard2.0\Neon.Hive.HyperVDev.xml</DocumentationFile>
+    <DefineConstants>TRACE;NETSTANDARD2_0</DefineConstants>
+    <DocumentationFile>C:\src\neonFORGE\Lib\Neon.XenServer\Neon.XenServer.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Hive\Neon.Hive.csproj" />
-    <ProjectReference Include="..\Neon.HyperV\Neon.HyperV.csproj" />
   </ItemGroup>
-
-  <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
 </Project>

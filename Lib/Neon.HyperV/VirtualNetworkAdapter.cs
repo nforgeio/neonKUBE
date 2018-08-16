@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Hive.HyperV
+namespace Neon.HyperV
 {
     /// <summary>
     /// Describes a Hyper-V virtual network adapter attached to a virtual machine.

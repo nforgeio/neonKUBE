@@ -13,8 +13,8 @@ using System.Threading;
 using Newtonsoft.Json;
 
 using Neon.Common;
-using Neon.Hive.XenServer;
 using Neon.Net;
+using Neon.Xen;
 
 namespace Neon.Hive
 {

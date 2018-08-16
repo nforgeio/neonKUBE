@@ -1,34 +1,31 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualSwitch.cs
+// FILE:	    IXenClient.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Hive.HyperV
+namespace Neon.Hive
 {
     /// <summary>
-    /// Describes the a Hyper-V virtual network switch.
+    /// <b>Internal Use Only:</b> Used internally by neonHIVE as a potentially temporary
+    /// hack required by <see cref="SetupController{NodeMetadata}"/> to display XenServer
+    /// provisioning status.  This may be removed at some point in the future.
     /// </summary>
-    public class VirtualSwitch
+    public interface IXenClient
     {
         /// <summary>
-        /// The switch name.
+        /// Returns the name of the connected XenServer.
         /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// The switch type.
-        /// </summary>
-        public VirtualSwitchType Type { get; set; }
+        string Name { get; }
     }
 }

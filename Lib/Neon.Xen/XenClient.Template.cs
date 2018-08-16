@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Hive;
 
-namespace Neon.Hive.XenServer
+namespace Neon.Xen
 {
     public partial class XenClient
     {

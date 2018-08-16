@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Hive.HyperV
+namespace Neon.HyperV
 {
     /// <summary>
     /// Describes the state of a Hyper-V based virtual machine.

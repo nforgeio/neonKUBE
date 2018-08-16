@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.IO;
 
-namespace Neon.Hive.HyperV
+namespace Neon.HyperV
 {
     /// <summary>
     /// Thrown by <see cref="HyperVClient"/> when an error is detected.

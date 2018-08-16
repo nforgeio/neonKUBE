@@ -26,8 +26,8 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.HyperV;
 using Neon.IO;
-using Neon.Hive.HyperV;
 using Neon.Net;
 using Neon.Time;
 

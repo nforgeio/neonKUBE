@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Hive;
 
-namespace Neon.Hive.XenServer
+namespace Neon.Xen
 {
     /// <summary>
     /// Holds the response from a XenServer command invoked using the <b>xe</b> CLI.
