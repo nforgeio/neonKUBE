@@ -185,10 +185,14 @@ namespace Neon.Hive
         {
             get
             {
-                return new TlsCertificate[]
+                var certs = new List<TlsCertificate>();
+
+                if (HiveCertificate != null)
                 {
-                    HiveCertificate
-                };
+                    certs.Add(HiveCertificate);
+                }
+
+                return certs;
             }
         }
 
