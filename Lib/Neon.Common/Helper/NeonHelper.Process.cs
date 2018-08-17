@@ -610,14 +610,30 @@ namespace Neon.Common
                 // he certificate being self-signed, even though it was in the store.
                 // store.
                 //
-                // I'm going to mitigate this for the time being by simply launching
-                // Microsoft Edge.  Here's the tracking issue:
+                // I tried using Microsoft Edge but that didn't work either due to
+                // apparent timing problems when reading the hosts file.  I'm going
+                // to mitigate the issue by requiring and launching Chrome instead.
+                //
+                // Here's the tracking issue:
                 //
                 //      https://github.com/jefflill/NeonForge/issues/282
 
-                //Process.Start("cmd", $"/C start {uri}");
+                // This code launches the default browser"
+                //
+                //      Process.Start("cmd", $"/C start {uri}");
 
-                Process.Start("cmd", $"/C start microsoft-edge:{uri}");
+                // This code launched Microsoft Edge:
+                //
+                //      Process.Start("cmd", $"/C start microsoft-edge:{uri}");
+
+                var chromePath = Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%\\Google\\Chrome\\application\\chrome.exe"); ;
+
+                if (!File.Exists(chromePath))
+                {
+                    throw new Exception("Google Chrome is required.  Please install this from: https://www.google.com/chrome");
+                }
+
+                Process.Start(chromePath, uri);
             }
             else if (IsOSX)
             {
