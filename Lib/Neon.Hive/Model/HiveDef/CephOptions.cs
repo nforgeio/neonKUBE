@@ -41,6 +41,16 @@ namespace Neon.Hive
         private const string defaultVolumePluginPackage = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-volume-plugin_latest.deb";
 
         /// <summary>
+        /// Returns the names of the supported Ceph releases.
+        /// </summary>
+        private IEnumerable<string> SupportedVersions =
+            new string[]
+            {
+                "luminous",
+                "mimic"
+            };
+
+        /// <summary>
         /// The fudge factor to apply to Ceph cache sizes before actually
         /// configuring the services.
         /// </summary>
@@ -208,6 +218,29 @@ namespace Neon.Hive
         public string VolumePluginPackage { get; set; } = defaultVolumePluginPackage;
 
         /// <summary>
+        /// Indicates whether the Ceph dashboard requires TLS.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// All Ceph versions after <b>luminous</b> require TLS.
+        /// </note>
+        /// </remarks>
+        [JsonIgnore]
+        public bool DashboardTls => Version != "luminous";
+
+        /// <summary>
+        /// Returns the TCP port for the Ceph dashboard.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// The older <b>luminous</b> release hardcodes the dashboard to port <b>7000</b>
+        /// and the new releases will be listening at <see cref="HiveHostPorts.CephDashboard"/>.
+        /// </note>
+        /// </remarks>
+        [JsonIgnore]
+        public int DashboardPort => Version == "luminous" ? 7000 : HiveHostPorts.CephDashboard;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -225,6 +258,11 @@ namespace Neon.Hive
             if (string.IsNullOrEmpty(VolumePluginPackage) || !Uri.TryCreate(VolumePluginPackage, UriKind.Absolute, out var uri))
             {
                 throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(VolumePluginPackage)}={VolumePluginPackage}] must be set to a valid package URL.");
+            }
+
+            if (!SupportedVersions.Contains(Version))
+            {
+                throw new HiveDefinitionException($"[{Version}] is not a supported Ceph release.");
             }
 
             // Examine the Ceph related labels for the hive nodes to verify that any 
