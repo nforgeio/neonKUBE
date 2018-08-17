@@ -183,7 +183,7 @@ namespace NeonCli
 
                         // Add the index pattern to Kibana.
 
-                        firstManager.Status = "add index pattern to kibana";
+                        firstManager.Status = "configure kibana index pattern";
 
                         retry.InvokeAsync(
                             async () =>
@@ -191,7 +191,7 @@ namespace NeonCli
                                 dynamic indexPattern = new ExpandoObject();
                                 dynamic attributes   = new ExpandoObject();
 
-                                attributes.title = "logstash-*";
+                                attributes.title         = "logstash-*";
                                 attributes.timeFieldName = "@timestamp";
 
                                 indexPattern.attributes = attributes;
