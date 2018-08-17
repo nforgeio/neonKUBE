@@ -202,34 +202,44 @@ namespace Neon.Net
         /// non-null and non-empty, the section will be added or updated.  Otherwise, the
         /// section will be removed.
         /// </para>
+        /// <para>
+        /// You can remove all host sections by passing both <paramref name="hostEntries"/> 
+        /// and <paramref name="section"/> as <c>null</c>.
+        /// </para>
         /// </remarks>
         public static void ModifyLocalHosts(Dictionary<string, IPAddress> hostEntries = null, string section = "MODIFY")
         {
 #if XAMARIN
             throw new NotSupportedException();
 #else
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(section));
-
-            var sectionOK = char.IsLetter(section[0]) && section.Length <= 63;
-
-            if (sectionOK)
+            if (hostEntries != null && string.IsNullOrWhiteSpace(section))
             {
-                foreach (var ch in section)
+                throw new ArgumentNullException(nameof(section));
+            }
+
+            if (section != null)
+            {
+                var sectionOK = char.IsLetter(section[0]) && section.Length <= 63;
+
+                if (sectionOK)
                 {
-                    if (!char.IsLetterOrDigit(ch) && ch != '-')
+                    foreach (var ch in section)
                     {
-                        sectionOK = false;
-                        break;
+                        if (!char.IsLetterOrDigit(ch) && ch != '-')
+                        {
+                            sectionOK = false;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (!sectionOK)
-            {
-                throw new ArgumentException("Suffix is not a valid DNS host name label.", nameof(section));
-            }
+                if (!sectionOK)
+                {
+                    throw new ArgumentException("Suffix is not a valid DNS host name label.", nameof(section));
+                }
 
-            section = section.ToUpperInvariant();
+                section = section.ToUpperInvariant();
+            }
 
             string hostsPath;
 
@@ -245,14 +255,6 @@ namespace Neon.Net
             {
                 throw new NotSupportedException();
             }
-
-            // $todo(jeff.lill):
-            //
-            // This method could be optimized by first reading the section hostname/address
-            // mappings and then comparing these to desired host entries and writing/verifying
-            // the entries only if they have changed.
-            //
-            // Perhaps this is something to revisit when implementing OSX support.
 
             // We're seeing transient file locked errors when trying to update the [hosts] file.
             // My guess is that this is cause by the Window DNS resolver opening the file as
@@ -274,44 +276,113 @@ namespace Neon.Net
             //
             //      https://github.com/jefflill/NeonForge/issues/271
 
-            var updateHost    = $"{section.ToLowerInvariant()}.neonforge";
+            var updateHost    = section != null ? $"{section.ToLowerInvariant()}.neonforge-marker" : $"H-{Guid.NewGuid().ToString("D")}.neonforge-marker";
             var addressBytes  = NeonHelper.RandBytes(4);
             var updateAddress = GetRandomAddress();
             var lines         = new List<string>();
+            var existingHosts = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var different     = false;
 
             retryFile.InvokeAsync(
                 async () =>
                 {
-                    var beginMarker = $"# NEON-BEGIN-{section}";
-                    var endMarker   = $"# NEON-END-{section}";
+                    var beginMarker = $"# NEON-BEGIN-";
+                    var endMarker   = $"# NEON-END-";
 
-                    var inputLines  = File.ReadAllLines(hostsPath);
-                    var tempSection = false;
+                    if (section != null)
+                    {
+                        beginMarker += section;
+                        endMarker   += section;
+                    }
+
+                    var inputLines = File.ReadAllLines(hostsPath);
+                    var inSection  = false;
+
+                    // Load lines of text from the current [hosts] file, without
+                    // any lines for the named section.  We're going to parse those
+                    // lines instead, so we can compare them against the [hostEntries]
+                    // passed to determine whether we actually need to update the
+                    // [hosts] file.
 
                     lines.Clear();
-
-                    // Strip out any existing temporary sections.
+                    existingHosts.Clear();
 
                     foreach (var line in inputLines)
                     {
                         var trimmed = line.Trim();
 
-                        if (trimmed == beginMarker)
+                        if (trimmed == beginMarker || (section == null && trimmed.StartsWith(beginMarker)))
                         {
-                            tempSection = true;
+                            inSection = true;
                         }
-                        else if (trimmed == endMarker)
+                        else if (trimmed == endMarker || (section == null && trimmed.StartsWith(endMarker)))
                         {
-                            tempSection = false;
+                            inSection = false;
                         }
                         else
                         {
-                            if (!tempSection)
+                            if (inSection)
                             {
+                                // The line is within the named section, so we're going to parse
+                                // the host entry (if any) and add it to [existingHosts].
+
+                                if (trimmed.Length == 0 || trimmed.StartsWith("#"))
+                                {
+                                    // Ignore empty or comment lines (just to be safe).
+
+                                    continue;
+                                }
+
+                                // We're going to simply assume that the address and hostname
+                                // are separated by whitespace and that there's no other junk
+                                // on the line (like comments added by the operator).  If there
+                                // is any junk, we'll capture that too and then the entries
+                                // won't match and we'll just end up rewriting the section
+                                // (which is reasonable).
+                                //
+                                // Note that we're going to ignore the special marker entry.
+
+                                var fields   = line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                var address  = fields[0];
+                                var hostname = fields.Length > 1 ? fields[1] : string.Empty;
+
+                                if (!hostname.EndsWith(".neonforge-marker"))
+                                {
+                                    existingHosts[hostname] = address;
+                                }
+                            }
+                            else
+                            {
+                                // The line is not in the named section, so we'll
+                                // include it as as.
+
                                 lines.Add(line);
                             }
                         }
                     }
+
+                    // Compare the existing entries against the new ones and rewrite
+                    // the [hosts] file only if they are different.
+
+                    if (hostEntries != null && hostEntries.Count == existingHosts.Count)
+                    {
+                        foreach (var item in hostEntries)
+                        {
+                            if (!existingHosts.TryGetValue(item.Key, out var existingAddress) ||
+                                item.Value.ToString() != existingAddress)
+                            {
+                                different = true;
+                                break;
+                            }
+                        }
+
+                        if (!different)
+                        {
+                            return;
+                        }
+                    }
+
+                    // Append the section if it has any host entries.
 
                     if (hostEntries?.Count > 0)
                     {
@@ -339,6 +410,14 @@ namespace Neon.Net
                     await Task.CompletedTask;
                     
                 }).Wait();
+
+            if (!different)
+            {
+                // We didn't detect any changes to the section above so we're going to
+                // exit without rewriting the [hosts] file.
+
+                return;
+            }
 
             if (NeonHelper.IsWindows)
             {

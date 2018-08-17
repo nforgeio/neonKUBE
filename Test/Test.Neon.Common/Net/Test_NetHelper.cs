@@ -58,6 +58,10 @@ namespace TestCommon
         {
             try
             {
+                // Clear any existing hosts sections.
+
+                NetHelper.ModifyLocalHosts(section: null);
+
                 // Verify that we start out with an undefined test host.
 
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.nhive.io"));
@@ -79,7 +83,7 @@ namespace TestCommon
             {
                 // Ensure that we reset the local hosts before exiting the test.
 
-                NetHelper.ModifyLocalHosts();
+                NetHelper.ModifyLocalHosts(section: null);
             }
         }
 
@@ -91,6 +95,10 @@ namespace TestCommon
 
             try
             {
+                // Clear any existing hosts sections.
+
+                NetHelper.ModifyLocalHosts(section: null);
+
                 // Verify that we start out with an undefined test host.
 
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.nhive.io"));
@@ -112,7 +120,7 @@ namespace TestCommon
             {
                 // Ensure that we reset the local hosts before exiting the test.
 
-                NetHelper.ModifyLocalHosts(section: marker);
+                NetHelper.ModifyLocalHosts(section: null);
             }
         }
 
@@ -125,6 +133,10 @@ namespace TestCommon
 
             try
             {
+                // Clear any existing hosts sections.
+
+                NetHelper.ModifyLocalHosts(section: null);
+
                 // Verify that we start out with an undefined test host.
 
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.nhive.io"));
@@ -181,9 +193,112 @@ namespace TestCommon
             {
                 // Ensure that we reset the local hosts before exiting the test.
 
+                NetHelper.ModifyLocalHosts(section: null);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ModifyLocalHosts_Modify()
+        {
+            try
+            {
+                // Clear any existing hosts sections.
+
+                NetHelper.ModifyLocalHosts(section: null);
+
+                // Verify that we start out with an undefined test host.
+
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.nhive.io"));
+
+                // Add a default section and verify.
+
+                var hostEntries = new Dictionary<string, IPAddress>();
+                var sections    = (IEnumerable<string>)null;
+
+                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.0"));
+                NetHelper.ModifyLocalHosts(hostEntries);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Single(sections, "MODIFY");
+
+                // Submit the same definitions to the default section and verify that
+                // we didn't rewrite the section by ensuring that the special section
+                // marker host address hasn't changed.
+
+                var originalMarkerAddress = Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString();
+
+                hostEntries.Clear();
+                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.0"));
+                NetHelper.ModifyLocalHosts(hostEntries);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Single(sections, "MODIFY");
+                Assert.Equal("1.1.1.0", Dns.GetHostAddresses("foo-0.test.nhive.io").Single().ToString());
+                Assert.Equal(originalMarkerAddress, Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString());
+
+                // Modify the existing host and verify.
+
+                hostEntries.Clear();
+                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.1"));
+                NetHelper.ModifyLocalHosts(hostEntries);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Single(sections, "MODIFY");
+                Assert.Equal("1.1.1.1", Dns.GetHostAddresses("foo-0.test.nhive.io").Single().ToString());
+                Assert.NotEqual(originalMarkerAddress, Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString());
+
+                // Submit the same entries again and verify that [hosts] wasn't rewritten.
+
+                originalMarkerAddress = Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString();
+
+                NetHelper.ModifyLocalHosts(hostEntries);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Single(sections, "MODIFY");
+                Assert.Equal("1.1.1.1", Dns.GetHostAddresses("foo-0.test.nhive.io").Single().ToString());
+                Assert.Equal(originalMarkerAddress, Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString());
+
+                // Add a new hostname and verify.
+
+                hostEntries.Clear();
+                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.1"));
+                hostEntries.Add("foo-100.test.nhive.io", IPAddress.Parse("1.1.1.100"));
+                NetHelper.ModifyLocalHosts(hostEntries);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Single(sections, "MODIFY");
+                Assert.Equal("1.1.1.1", Dns.GetHostAddresses("foo-0.test.nhive.io").Single().ToString());
+                Assert.Equal("1.1.1.100", Dns.GetHostAddresses("foo-100.test.nhive.io").Single().ToString());
+                Assert.NotEqual(originalMarkerAddress, Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString());
+
+                // Submit the same entries again and verify that [hosts] wasn't rewritten.
+
+                originalMarkerAddress = Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString();
+
+                NetHelper.ModifyLocalHosts(hostEntries);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Single(sections, "MODIFY");
+                Assert.Equal("1.1.1.1", Dns.GetHostAddresses("foo-0.test.nhive.io").Single().ToString());
+                Assert.Equal("1.1.1.100", Dns.GetHostAddresses("foo-100.test.nhive.io").Single().ToString());
+                Assert.Equal(originalMarkerAddress, Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString());
+
+                // Remove one of the entries and verify.
+
+                hostEntries.Clear();
+                hostEntries.Add("foo-0.test.nhive.io", IPAddress.Parse("1.1.1.1"));
+                NetHelper.ModifyLocalHosts(hostEntries);
+                sections = NetHelper.ListLocalHostsSections();
+                Assert.Single(sections, "MODIFY");
+                Assert.Equal("1.1.1.1", Dns.GetHostAddresses("foo-0.test.nhive.io").Single().ToString());
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-100.test.nhive.io"));
+                Assert.NotEqual(originalMarkerAddress, Dns.GetHostAddresses("modify.neonforge-marker").Single().ToString());
+
+                // Reset the hosts and verify.
+
                 NetHelper.ModifyLocalHosts();
-                NetHelper.ModifyLocalHosts(section: section1);
-                NetHelper.ModifyLocalHosts(section: section2);
+                Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foo-0.test.nhive.io"));
+            }
+            finally
+            {
+                // Ensure that we reset the local hosts before exiting the test.
+
+                NetHelper.ModifyLocalHosts(section: null);
             }
         }
 
@@ -193,6 +308,10 @@ namespace TestCommon
         {
             try
             {
+                // Clear any existing hosts sections.
+
+                NetHelper.ModifyLocalHosts(section: null);
+
                 // Verify that we start out with an undefined test host.
 
                 Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.nhive.io"));
@@ -215,7 +334,6 @@ namespace TestCommon
                     // Reset the hosts and verify.
 
                     NetHelper.ModifyLocalHosts();
-                    //Assert.Throws<SocketException>(() => Dns.GetHostAddresses("foobar.test.nhive.io"));
 
                     Thread.Sleep(TimeSpan.FromSeconds(1));
                 }
@@ -224,7 +342,7 @@ namespace TestCommon
             {
                 // Ensure that we reset the local hosts before exiting the test.
 
-                NetHelper.ModifyLocalHosts();
+                NetHelper.ModifyLocalHosts(section: null);
             }
         }
 
@@ -233,6 +351,10 @@ namespace TestCommon
         {
             if (NeonHelper.IsWindows)
             {
+                // Clear any existing hosts sections.
+
+                NetHelper.ModifyLocalHosts(section: null);
+
                 // The Windows DNS resolver doesn't consider all IP addresses to be valid.
                 // Specifically, I'm seeing problems with addresses greater than or equal
                 // to [240.0.0.0]. and also addresses with a leading 0, like [0.x.x.x].
