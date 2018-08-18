@@ -2265,7 +2265,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
         /// <returns>The keyring.</returns>
         private string GetMDSKeyring(SshProxy<NodeDefinition> node)
         {
-            var result = node.SudoCommand($"ceph auth get-or-create mds.{node.Name} mds \"allow \" osd \"allow *\" mon \"allow rwx\"");
+            var result = node.SudoCommand($"ceph auth get-or-create mds.{node.Name} mds \"allow *\" osd \"allow *\" mon \"allow rwx\"");
 
             if (result.ExitCode == 0)
             {
@@ -2391,6 +2391,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     node.UploadText(mgrKeyringPath, GetManagerKeyring(node));
                     node.SudoCommand($"chown {cephUser}:{cephUser} {mgrKeyringPath}");
                     node.SudoCommand($"chmod 640 {mgrKeyringPath}");
+
                     node.Status = "ceph-mgr start";
                     node.SudoCommand($"systemctl enable ceph-mgr@{node.Name}");
                     node.SudoCommand($"systemctl start ceph-mgr@{node.Name}");
