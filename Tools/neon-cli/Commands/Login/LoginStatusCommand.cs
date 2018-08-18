@@ -72,7 +72,7 @@ USAGE:
             // Parse and validate the hive definition.
 
             hive = new HiveProxy(hiveLogin,
-                (nodeName, publicAddress, privateAddress) =>
+                (nodeName, publicAddress, privateAddress, append) =>
                 {
                     return new SshProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, hiveLogin.GetSshCredentials(), TextWriter.Null);
                 });

@@ -1205,9 +1205,13 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <param name="name">The node name.</param>
         /// <param name="publicAddress">The node's public IP address or FQDN.</param>
         /// <param name="privateAddress">The node's private IP address.</param>
+        /// <param name="append">
+        /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
+        /// or <c>false</c> to replace any existing log file with a new one.
+        /// </param>
         /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the sewrver.</typeparam>
         /// <returns>The <see cref="SshProxy{TMetadata}"/>.</returns>
-        public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress)
+        public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress, bool append)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1216,7 +1220,9 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
             if (!string.IsNullOrEmpty(LogPath))
             {
-                logWriter = new StreamWriter(new FileStream(Path.Combine(LogPath, name + ".log"), FileMode.Create, FileAccess.ReadWrite));
+                var path = Path.Combine(LogPath, name + ".log");
+
+                logWriter = new StreamWriter(new FileStream(path, append ? FileMode.Append : FileMode.Create, append ? FileAccess.Write : FileAccess.ReadWrite));
             }
 
             SshCredentials sshCredentials;

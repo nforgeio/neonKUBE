@@ -58,13 +58,17 @@ OPTIONS:
                           for debugging hive setup  issues.  
                           Do not use for production hives.
 ";
-        private string              hiveLoginPath;
-        private HiveLogin           hiveLogin;
-        private HiveProxy           hive;
-        private string              managerNodeNames     = string.Empty;
-        private string              managerNodeAddresses = string.Empty;
-        private int                 managerCount         = 0;
-        private bool                sshTlsAuth;
+        private const string    logBeginMarker  = "# HIVE-BEGIN-SETUP ############################################################";
+        private const string    logEndMarker    = "# HIVE-END-SETUP ##############################################################";
+        private const string    logFailedMarker = "# HIVE-END-SETUP-FAILED #######################################################";
+
+        private string          hiveLoginPath;
+        private HiveLogin       hiveLogin;
+        private HiveProxy       hive;
+        private string          managerNodeNames     = string.Empty;
+        private string          managerNodeAddresses = string.Empty;
+        private int             managerCount         = 0;
+        private bool            sshTlsAuth;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -132,7 +136,9 @@ OPTIONS:
                 Console.Error.WriteLine($"*** ERROR: Hive [{hiveLogin.HiveName}] has already been setup.");
             }
 
-            hive = new HiveProxy(hiveLogin, Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
+            // Note that hive setup appends to existing log files.
+
+            hive = new HiveProxy(hiveLogin, Program.CreateNodeProxy<NodeDefinition>, appendLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
             // We need to ensure that any necessary VPN connection is opened if we're
             // not provisioning on-premise or not running in the tool container.
@@ -222,6 +228,10 @@ OPTIONS:
                     Thread.Sleep(stepDelay);
                     CommonSteps.VerifyOS(node);
                 });
+
+            // Write the operation begin marker to all hive node logs.
+
+            hive.LogLine(logBeginMarker);
 
             // We're going to configure the managers separately from the workers
             // because we need to be careful about when we reboot the managers
@@ -520,6 +530,10 @@ OPTIONS:
 
             if (!controller.Run())
             {
+                // Write the operation end/failed to all hive node logs.
+
+                hive.LogLine(logFailedMarker);
+
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                 Program.Exit(1);
             }
@@ -541,6 +555,10 @@ OPTIONS:
             }
 
             hiveLogin.Save();
+
+            // Write the operation end marker to all hive node logs.
+
+            hive.LogLine(logEndMarker);
 
             Console.WriteLine($"*** Logging into [{HiveConst.RootUser}@{hive.Definition.Name}].");
 

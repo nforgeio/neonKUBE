@@ -698,7 +698,7 @@ namespace Neon.Hive
 
             OpenHive(
                 new HiveProxy(HiveLogin,
-                    (name, publicAddress, privateAddress) =>
+                    (name, publicAddress, privateAddress, appendLog) =>
                     {
                         var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, HiveLogin.GetSshCredentials(), null);
 
@@ -741,7 +741,7 @@ namespace Neon.Hive
 
             OpenHive(
                 new HiveProxy(HiveLogin,
-                    (name, publicAddress, privateAddress) =>
+                    (name, publicAddress, privateAddress, appendLog) =>
                     {
                         var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, HiveLogin.GetSshCredentials(), null);
 
@@ -829,7 +829,7 @@ namespace Neon.Hive
 
             var hive = OpenHive(
                 new HiveProxy(HiveLogin,
-                    (name, publicAddress, privateAddress) =>
+                    (name, publicAddress, privateAddress, appendLog) =>
                     {
                         var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, sshCredentials, null);
 
