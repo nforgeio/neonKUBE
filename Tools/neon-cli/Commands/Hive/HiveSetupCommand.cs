@@ -1865,7 +1865,7 @@ StartLimitBurst=1051200";
                     // Extract the Ceph release and version from the configuration.
                     // Note that the version is optional and is currently ignored.
 
-                    var parts       = hive.Definition.Ceph.Version.Split('/');
+                    var parts       = hive.Definition.Ceph.Release.Split('/');
                     var cephRelease = parts[0].Trim().ToLowerInvariant();
 
                     // Configure the Ceph Debian package repositories and install
@@ -2191,6 +2191,7 @@ mds_standby_replay = true
             node.UploadText("/etc/ceph/ceph.conf",
 $@"[global]
 fsid = {hiveLogin.Ceph.Fsid}
+mgr initial modules = dashboard
 mon initial members = {sbHostNames}
 mon host = {sbHostAddresses}
 mon health preluminous compat warning = false
@@ -2376,24 +2377,27 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     node.SudoCommand($"systemctl enable ceph-mgr@{node.Name}");
                     node.SudoCommand($"systemctl start ceph-mgr@{node.Name}");
 
+                    // Give the manager some time to start.
+
+                    Thread.Sleep(TimeSpan.FromSeconds(15));
+
                     if (hive.Definition.Dashboard.Ceph)
                     {
                         // Enable the Ceph dashboard.
 
                         node.Status = "ceph dashboard";
-                        node.SudoCommand("ceph mgr module enable dashboard");
 
                         // Ceph versions after [luminous] require additional configuration
                         // to setup the TLS certificate and login credentials.
 
-                        if (hive.Definition.Ceph.Version != "luminous")
+                        if (hive.Definition.Ceph.Release != "luminous")
                         {
                             node.UploadText($"{mgrFolder}/dashboard.crt", hive.HiveLogin.HiveCertificate.CertPem);
                             node.SudoCommand($"chmod 640 {mgrFolder}/dashboard.crt");
                             node.UploadText($"{mgrFolder}/dashboard.key", hive.HiveLogin.HiveCertificate.KeyPem);
                             node.SudoCommand($"chmod 640 {mgrFolder}/dashboard.key");
-                            node.SudoCommand($"ceph config-key set mgr {mgrFolder}/dashboard/crt -i dashboard.crt");
-                            node.SudoCommand($"ceph config-key set mgr {mgrFolder}/dashboard/key -i dashboard.key");
+                            node.SudoCommand($"ceph config-key set mgr {mgrFolder}/dashboard/crt -i {mgrFolder}/dashboard.crt");
+                            node.SudoCommand($"ceph config-key set mgr {mgrFolder}/dashboard/key -i {mgrFolder}/dashboard.key");
 
                             node.SudoCommand($"ceph dashboard set-login-credentials sysadmin password");    // $todo(jeff.lill): Try an empty password?
                             node.SudoCommand($"ceph config set mgr mgr/dashboard/server_port {HiveHostPorts.CephDashboard}");

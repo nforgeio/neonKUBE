@@ -31,7 +31,7 @@ namespace Neon.Hive
     /// </summary>
     public class CephOptions
     {
-        private const string defaultVersion             = "luminous";
+        private const string defaultRelease             = "mimic";
         private const string defaultOSDDriveSize        = "16GB";
         private const string defaultOSDCacheSize        = "256MB";
         private const string defaultOSDJournalSize      = "1GB";
@@ -74,21 +74,13 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// <para>
-        /// Specifies the Ceph software release name and optional version, formatted
-        /// like <b>luminous</b> or <b>luminous/12.2.2</b>.  The Ceph software releases
-        /// are documented <a href="http://docs.ceph.com/docs/master/releases/">here</a>.
-        /// This defaults to a reasonable recent release without a version number.
-        /// </para>
-        /// <note>
-        /// The version number is currently ignored but may be honored in future
-        /// neonHIVE releases such that you can install a specific version of
-        /// a Ceph release.
-        /// </note>
+        /// Specifies the Ceph software release name like <b>luminous</b>.
+        /// Currently supported releases are <b>luminous</b> and <b>mimic</b>.
+        /// This defaults to <b>mimic</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "Version", Required = Required.Default)]
-        [DefaultValue(defaultVersion)]
-        public string Version { get; set; } = defaultVersion;
+        [JsonProperty(PropertyName = "Release", Required = Required.Default)]
+        [DefaultValue(defaultRelease)]
+        public string Release { get; set; } = defaultRelease;
 
         /// <summary>
         /// <para>
@@ -226,7 +218,7 @@ namespace Neon.Hive
         /// </note>
         /// </remarks>
         [JsonIgnore]
-        public bool DashboardTls => Version != "luminous";
+        public bool DashboardTls => Release != "luminous";
 
         /// <summary>
         /// Returns the TCP port for the Ceph dashboard.
@@ -238,7 +230,7 @@ namespace Neon.Hive
         /// </note>
         /// </remarks>
         [JsonIgnore]
-        public int DashboardPort => Version == "luminous" ? 7000 : HiveHostPorts.CephDashboard;
+        public int DashboardPort => Release == "luminous" ? 7000 : HiveHostPorts.CephDashboard;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -260,9 +252,9 @@ namespace Neon.Hive
                 throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(VolumePluginPackage)}={VolumePluginPackage}] must be set to a valid package URL.");
             }
 
-            if (!SupportedVersions.Contains(Version))
+            if (!SupportedVersions.Contains(Release))
             {
-                throw new HiveDefinitionException($"[{Version}] is not a supported Ceph release.");
+                throw new HiveDefinitionException($"[{Release}] is not a supported Ceph release.");
             }
 
             // Examine the Ceph related labels for the hive nodes to verify that any 
@@ -336,14 +328,14 @@ namespace Neon.Hive
 
             // Validate the properties.
 
-            if (string.IsNullOrWhiteSpace(Version))
+            if (string.IsNullOrWhiteSpace(Release))
             {
-                Version = defaultVersion;
+                Release = defaultRelease;
             }
 
-            if (Version == string.Empty)
+            if (Release == string.Empty)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(Version)}={Version}] is not a valid.  Please use something like [{defaultVersion}].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(Release)}={Release}] is not a valid.  Please specify something like [{defaultRelease}].");
             }
 
             if (HiveDefinition.ValidateSize(OSDDriveSize, this.GetType(), nameof(OSDDriveSize)) < NeonHelper.Giga)
