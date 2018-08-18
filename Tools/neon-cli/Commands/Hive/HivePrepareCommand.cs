@@ -71,6 +71,10 @@ Server Requirements:
     * OpenSSH installed (or another SSH server)
     * [sudo] elevates permissions without a password
 ";
+        private const string    logBeginMarker  = "# HIVE-BEGIN-PREPARE ##########################################################";
+        private const string    logEndMarker    = "# HIVE-END-PREPARE ############################################################";
+        private const string    logFailedMarker = "# HIVE-END-PREPARE-FAILED #####################################################";
+
         private HiveProxy       hive;
         private HostingManager  hostingManager;
         private string          hiveDefPath;
@@ -147,7 +151,9 @@ Server Requirements:
 
             hiveDefinition.Provisioner = $"neon-cli:{Program.Version}";  // Identify this tool/version as the hive provisioner
 
-            hive = new HiveProxy(hiveDefinition, Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
+            // Note that hive prepare starts new log files.
+
+            hive = new HiveProxy(hiveDefinition, Program.CreateNodeProxy<NodeDefinition>, appendLog: false, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
             if (File.Exists(Program.GetHiveLoginPath(HiveConst.RootUser, hive.Definition.Name)))
             {
@@ -328,6 +334,10 @@ Server Requirements:
             // and configure OpenVPN on the manager nodes so that hive setup will be
             // able to reach the nodes on all ports.
 
+            // Write the operation begin marker to all hive node logs.
+
+            hive.LogLine(logBeginMarker);
+
             var operation = $"Preparing [{hive.Definition.Name}] nodes";
 
             var controller = 
@@ -417,6 +427,10 @@ Server Requirements:
             
             if (!controller.Run())
             {
+                // Write the operation end/failed marker to all hive node logs.
+
+                hive.LogLine(logFailedMarker);
+
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                 Program.Exit(1);
             }
@@ -464,6 +478,10 @@ Server Requirements:
             // Persist the certificates into the hive login.
 
             hiveLogin.Save();
+
+            // Write the operation end marker to all hive node logs.
+
+            hive.LogLine(logEndMarker);
         }
 
         /// <summary>

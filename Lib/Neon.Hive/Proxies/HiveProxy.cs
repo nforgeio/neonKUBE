@@ -61,8 +61,9 @@ namespace Neon.Hive
         //---------------------------------------------------------------------
         // Implementation
 
-        private RunOptions                                                  defaultRunOptions;
-        private Func<string, string, IPAddress, SshProxy<NodeDefinition>>   nodeProxyCreator;
+        private RunOptions                                                          defaultRunOptions;
+        private Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>>     nodeProxyCreator;
+        private bool                                                                appendLog;
 
         /// <summary>
         /// Constructs a hive proxy from a hive login.
@@ -73,6 +74,7 @@ namespace Neon.Hive
         /// given the node name, public address or FQDN, private address, and
         /// the node definition.
         /// </param>
+        /// <param name="appendLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
@@ -85,8 +87,12 @@ namespace Neon.Hive
         /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
         /// argument is passed.
         /// </remarks>
-        public HiveProxy(HiveLogin hiveLogin, Func<string, string, IPAddress, SshProxy<NodeDefinition>> nodeProxyCreator = null, RunOptions defaultRunOptions = RunOptions.None)
-            : this(hiveLogin.Definition, nodeProxyCreator, defaultRunOptions)
+        public HiveProxy(
+            HiveLogin hiveLogin,
+            Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
+            bool                                                            appendLog         = false,
+            RunOptions                                                      defaultRunOptions = RunOptions.None)
+            : this(hiveLogin.Definition, nodeProxyCreator, appendLog: appendLog, defaultRunOptions: defaultRunOptions)
         {
             Covenant.Requires<ArgumentNullException>(hiveLogin != null);
 
@@ -106,6 +112,7 @@ namespace Neon.Hive
         /// given the node name, public address or FQDN, private address, and
         /// the node definition.
         /// </param>
+        /// <param name="appendLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
@@ -118,14 +125,18 @@ namespace Neon.Hive
         /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
         /// argument is passed.
         /// </remarks>
-        public HiveProxy(HiveDefinition hiveDefinition, Func<string, string, IPAddress, SshProxy<NodeDefinition>> nodeProxyCreator = null, RunOptions defaultRunOptions = RunOptions.None)
+        public HiveProxy(
+            HiveDefinition hiveDefinition,
+            Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator = null,
+            bool                                                            appendLog = false,
+            RunOptions                                                      defaultRunOptions = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             if (nodeProxyCreator == null)
             {
                 nodeProxyCreator =
-                    (name, publicAddress, privateAddress) =>
+                    (name, publicAddress, privateAddress, append) =>
                     {
                         var login = HiveHelper.HiveLogin;
 
@@ -159,6 +170,7 @@ namespace Neon.Hive
             this.HiveLogin           = new HiveLogin();
             this.defaultRunOptions   = defaultRunOptions;
             this.nodeProxyCreator    = nodeProxyCreator;
+            this.appendLog           = appendLog;
 
             this.Docker              = new DockerManager(this);
             this.Certificate         = new CertificateManager(this);
@@ -387,7 +399,7 @@ namespace Neon.Hive
 
             foreach (var nodeDefinition in Definition.SortedNodes)
             {
-                var node = nodeProxyCreator(nodeDefinition.Name, nodeDefinition.PublicAddress, IPAddress.Parse(nodeDefinition.PrivateAddress ?? "0.0.0.0"));
+                var node = nodeProxyCreator(nodeDefinition.Name, nodeDefinition.PublicAddress, IPAddress.Parse(nodeDefinition.PrivateAddress ?? "0.0.0.0"), appendLog);
 
                 node.Hive              = this;
                 node.DefaultRunOptions = defaultRunOptions;
@@ -539,6 +551,18 @@ namespace Neon.Hive
         public void SignalLoadBalancerUpdate()
         {
             Consul.Client.KV.PutString("neon/service/neon-proxy-manager/conf/reload", Guid.NewGuid().ToString("D")).Wait();
+        }
+
+        /// <summary>
+        /// Writes a message to the logs associated with all hive nodes.
+        /// </summary>
+        /// <param name="message">Optionally specifies the log message.</param>
+        public void LogLine(string message = null)
+        {
+            foreach (var node in Nodes)
+            {
+                node.LogLine(message);
+            }
         }
     }
 }
