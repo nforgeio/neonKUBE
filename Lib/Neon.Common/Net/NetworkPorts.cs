@@ -256,11 +256,6 @@ namespace Neon.Net
         /// </summary>
         public const int AppCacherNg = 3142;
 
-        /// <summary>
-        /// Default port for the Ceph dashboard.
-        /// </summary>
-        public const int CephDashboard = 7000;
-
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map
@@ -328,8 +323,7 @@ namespace Neon.Net
                 new Map("OpenVPN", OpenVPN),
                 new Map("AMQP", AMQP),
                 new Map("RabbitMQAdmin", RabbitMQAdmin),
-                new Map("aptcacherng", AppCacherNg),
-                new Map("cephdashboard", CephDashboard)
+                new Map("aptcacherng", AppCacherNg)
             };
 
         wellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

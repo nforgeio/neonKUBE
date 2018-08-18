@@ -121,6 +121,11 @@ namespace Neon.Hive
         public const int LogHostSysLog = 5007;
 
         /// <summary>
+        /// The port exposed by the hive's Ceph dashboard.
+        /// </summary>
+        public const int CephDashboard = 5008;
+
+        /// <summary>
         /// This port is reserved and must not be assigned to any service.  This is
         /// currently referenced by the manager load balancer rule for Azure deployments
         /// and it must not actually host a service.  See the <b>AzureHostingManager</b>
@@ -225,10 +230,9 @@ namespace Neon.Hive
         /// </summary>
         public const int ProxyPrivateHttpLogEsData = 5303;
 
-        /// <summary>
-        /// The port assigned to the hive Ceph web dashboard.
-        /// </summary>
-        public const int ProxyPrivateHttpCephDashboard = 5304;
+        //*********************************************************************
+        // 5304: This port is unused and available.
+        //*********************************************************************
 
         /// <summary>
         /// The port assigned to the Kibana dashboard.

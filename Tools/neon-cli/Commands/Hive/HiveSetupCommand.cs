@@ -2394,10 +2394,34 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     node.SudoCommand($"systemctl enable ceph-mgr@{node.Name}");
                     node.SudoCommand($"systemctl start ceph-mgr@{node.Name}");
 
-                    // Enable the Ceph dashboard.
+                    if (hive.Definition.Dashboard.Ceph)
+                    {
+                        // Enable the Ceph dashboard.
 
-                    node.Status = "ceph dashboard";
-                    node.SudoCommand("ceph mgr module enable dashboard");
+                        node.Status = "ceph dashboard";
+                        node.SudoCommand("ceph mgr module enable dashboard");
+
+                        // Ceph versions after [luminous] require additional configuration
+                        // to setup the TLS certificate and login credentials.
+
+                        if (hive.Definition.Ceph.Version != "luminous")
+                        {
+                            node.UploadText($"{mgrFolder}/dashboard.crt", hive.HiveLogin.HiveCertificate.CertPem);
+                            node.SudoCommand($"chmod 640 {mgrFolder}/dashboard.crt");
+                            node.UploadText($"{mgrFolder}/dashboard.key", hive.HiveLogin.HiveCertificate.KeyPem);
+                            node.SudoCommand($"chmod 640 {mgrFolder}/dashboard.key");
+                            node.SudoCommand($"ceph config-key set mgr {mgrFolder}/dashboard/crt -i dashboard.crt");
+                            node.SudoCommand($"ceph config-key set mgr {mgrFolder}/dashboard/key -i dashboard.key");
+
+                            node.SudoCommand($"ceph dashboard set-login-credentials sysadmin password");    // $todo(jeff.lill): Try an empty password?
+                            node.SudoCommand($"ceph config set mgr mgr/dashboard/server_port {HiveHostPorts.CephDashboard}");
+
+                            // Restart the dashboard to pick up the changes.
+
+                            node.SudoCommand("ceph mgr module disable dashboard");
+                            node.SudoCommand("ceph mgr module enable dashboard");
+                        }
+                    }
 
                     // Remove the temp folder.
 
@@ -3665,65 +3689,24 @@ systemctl restart sshd
             firstManager.InvokeIdempotentAction("setup/dashboards",
                 () =>
                 {
-                    // Create the [neon-fs] dashboard and related route.
+                    // Configure the [Ceph] dashboard.
 
                     if (hive.Definition.Ceph.Enabled && hive.Definition.Dashboard.Ceph)
                     {
                         firstManager.Status = "ceph dashboard";
+
+                        var dashboardScheme = hive.Definition.Ceph.DashboardTls ? "https" : "http";
 
                         var cephDashboard = new HiveDashboard()
                         {
                             Name        = "ceph",
                             Title       = "Ceph File System",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
+                            Url         = $"{dashboardScheme}://healthy-manager:{hive.Definition.Ceph.DashboardPort}",
                             Description = "Ceph distributed file system"
                         };
 
                         hive.Dashboard.Set(cephDashboard);
-
-                        var rule = new LoadBalancerHttpRule()
-                        {
-                            Name     = "neon-ceph-dashboard",
-                            System   = true,
-                            Resolver = null
-                        };
-
-                        // We're going to consider only 2xx status codes as healthy because
-                        // standby CEPH-MGR nodes will try to redirect to the primary node
-                        // via the primary node's hostname.  This won't work because hive
-                        // node hostnames are not DNS resolvable (e.g. on the operator's
-                        // workstation where browser displaying the dashboard is running).
-                        //
-                        // This setting will cause the standby nodes that will be returning
-                        // [302 temporary redirect] status codes as unhealthy, so that traffic
-                        // will only be routed to the primary.
-                        //
-                        // You can find more information here:
-                        //
-                        //      https://github.com/jefflill/NeonForge/issues/222
-
-                        rule.CheckExpect = @"rstatus ^2\d\d";
-
-                        // Initialize the frontends and backends.
-
-                        rule.Frontends.Add(
-                            new LoadBalancerHttpFrontend()
-                            {
-                                ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
-                            });
-
-                        foreach (var monNode in hive.Nodes.Where(n => n.Metadata.Labels.CephMON))
-                        {
-                            rule.Backends.Add(
-                                new LoadBalancerHttpBackend()
-                                {
-                                    Server = monNode.Metadata.PrivateAddress.ToString(),
-                                    Port   = NetworkPorts.CephDashboard,
-                                });
-                        }
-
-                        hive.PrivateLoadBalancer.SetRule(rule);
                         firstManager.Status = string.Empty;
                     }
 
