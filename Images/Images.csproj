@@ -184,7 +184,6 @@
     <Content Include="neon-registry-cache\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="neon-proxy-vault\check-vault.sh" />
     <None Include="neon-registry-cache\build.ps1" />
     <None Include="neon-registry-cache\docker-entrypoint.sh" />
     <None Include="neon-registry-cache\Dockerfile">

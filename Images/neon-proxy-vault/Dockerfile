@@ -12,7 +12,6 @@ MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
 COPY docker-entrypoint.sh   /
-COPY check-vault.sh         /
 COPY _common/*.sh           /
 
 RUN chmod 700 /*.sh \

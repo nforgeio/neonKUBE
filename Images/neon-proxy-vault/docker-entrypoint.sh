@@ -55,18 +55,25 @@ global
 
     maxconn             1000
 
-    # Randomize health checks some.
+    # Randomize health check timing.
 
     spread-checks       5
-
-    # Enable health checks via external scripts or programs.
-
-    external-check
 
     # Enable logging to syslog on the local Docker host under the
     # HiveSysLogFacility_VaultLB facility.
 
     log                 ${NEON_NODE_IP}:${HiveHostPorts_LogHostSysLog} len 65535 ${HiveSysLogFacility_ProxyName}
+
+    # Disable TLS certificate verification for backend health checks.
+    # We could have used:
+    #
+    #       default-server ca-file /etc/ssl/certs/ca-certificates.crt
+    #
+    # to tell HAProxy about the known certificates but I think I'd rather
+    # allow the clients to report any certificate problems to simplify
+    # future debugging.
+
+    ssl-server-verify   none
 
 defaults
 
@@ -100,7 +107,7 @@ defaults
     # Amount of time after which a health check is considered to have timed out.
 
     timeout check       5s
-    
+
 # Proxy definitions.
 #
 # Note that [log-format] must be consistent with the standard format implemented
@@ -115,12 +122,18 @@ frontend tcp:vault-static
     option              dontlognull
     default_backend     tcp:vault-static
 
+# Note that the [/v1/sys/health] endpoint returns a 200 status code
+# when a Vault backend is the active leader and 429 when its not
+# the leader.  I suppose that other 4xx/5xx status codes may be
+# returned when Vault is having problems.
+#
+# We're simply going to send all traffic to the Vault leader that
+# returns the 200.
+
 backend tcp:vault-static
-    option              log-health-checks
-    option              external-check
+    option              httpchk HEAD /v1/sys/health
     log                 global
-    external-check      path "/usr/bin:/bin"
-    external-check      command "/check-vault.sh"
+    option              log-health-checks
 EOF
 
 # Process VAULT_ENDPOINTS by appending a server entry for each endpoint.
@@ -136,7 +149,7 @@ do
     address=$(echo ${endpoint} | cut -d':' -f 2)
     port=$(echo ${endpoint} | cut -d':' -f 3)
 
-    echo "    server              ${name}.${HiveHostnames_Vault} ${address}:${port} init-addr last,libc,none check" >> ${configPath}
+    echo "    server              ${name}.${HiveHostnames_Vault} ${address}:${port} init-addr last,libc,none check check-ssl" >> ${configPath}
 done
 
 # Validate the configuration file and then launch HAProxy.

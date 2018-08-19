@@ -1277,11 +1277,6 @@ backend http:{httpRule.Name}
                         sbHaProxy.AppendLine($"    redirect            scheme https if !{{ ssl_fc }}");
                     }
 
-                    if (httpRule.Check && !string.IsNullOrEmpty(httpRule.CheckExpect))
-                    {
-                        sbHaProxy.AppendLine($"    http-check          expect {httpRule.CheckExpect.Trim()}");
-                    }
-
                     if (httpRule.Check && !string.IsNullOrEmpty(httpRule.CheckUri))
                     {
                         sbHaProxy.AppendLine($"    option              httpchk {httpRule.CheckMethod.ToUpper()} {httpRule.CheckUri} {checkVersionArg}");
@@ -1290,6 +1285,11 @@ backend http:{httpRule.Name}
                     if (httpRule.Check && httpRule.LogChecks)
                     {
                         sbHaProxy.AppendLine($"    option              log-health-checks");
+                    }
+
+                    if (httpRule.Check && !string.IsNullOrEmpty(httpRule.CheckExpect))
+                    {
+                        sbHaProxy.AppendLine($"    http-check          expect {httpRule.CheckExpect.Trim()}");
                     }
 
                     if (httpRule.Log)
