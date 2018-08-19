@@ -3787,6 +3787,25 @@ systemctl restart sshd
                         firstManager.Status = string.Empty;
                     }
 
+                    // Configure the Kibana dashboard.
+
+                    if (hive.Definition.Log.Enabled && hive.Definition.Dashboard.Kibana)
+                    {
+                        firstManager.Status = "kibana dashboard";
+
+                        var kibanaDashboard = new HiveDashboard()
+                        {
+                            Name        = "kibana",
+                            Title       = "Kibana",
+                            Folder      = HiveConst.DashboardSystemFolder,
+                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpKibana}",
+                            Description = "Kibana hive monitoring dashboard"
+                        };
+
+                        hive.Dashboard.Set(kibanaDashboard);
+                        firstManager.Status = string.Empty;
+                    }
+
                     // Configure the Vault dashboard.
 
                     if (hive.Definition.Dashboard.Vault)
