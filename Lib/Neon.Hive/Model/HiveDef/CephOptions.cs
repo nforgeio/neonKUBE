@@ -74,10 +74,27 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Specifies the Ceph software release name like <b>luminous</b>.
-        /// Currently supported releases are <b>luminous</b> and <b>mimic</b>.
-        /// This defaults to <b>mimic</b>.
+        /// Specifies the Ceph software major release name. This defaults to <b>mimic</b>.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The following major Ceph releases are supported:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>mimic</b></term>
+        ///     <description>
+        ///     Released 07-2018 (<b>default</b>)
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>luminous</b></term>
+        ///     <description>
+        ///     Released 08-2017
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </remarks>
         [JsonProperty(PropertyName = "Release", Required = Required.Default)]
         [DefaultValue(defaultRelease)]
         public string Release { get; set; } = defaultRelease;
