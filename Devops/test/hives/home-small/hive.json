@@ -46,7 +46,8 @@
     "Enabled": true
   },
   "Ceph": {
-    "Enabled": true
+    "Enabled": true,
+    "Release": "luminous"
   },
   "Nodes": {
     "manager-0": {
