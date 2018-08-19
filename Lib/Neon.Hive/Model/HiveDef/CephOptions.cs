@@ -252,6 +252,9 @@ namespace Neon.Hive
                 throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(VolumePluginPackage)}={VolumePluginPackage}] must be set to a valid package URL.");
             }
 
+            Release = Release ?? defaultRelease;
+            Release = Release.ToLowerInvariant();
+
             if (!SupportedVersions.Contains(Release))
             {
                 throw new HiveDefinitionException($"[{Release}] is not a supported Ceph release.");

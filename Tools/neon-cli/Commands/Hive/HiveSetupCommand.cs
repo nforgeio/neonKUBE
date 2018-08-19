@@ -3695,43 +3695,77 @@ systemctl restart sshd
                 () =>
                 {
                     // Configure the [Ceph] dashboard.
+                    //
+                    // Note that the old [luminous] dashboard is HTTP and is hardcoded to listen
+                    // on port 7000 whereas the [mimic] and later releases are HTTPS and listen
+                    // on [HiveHostPorts.ProxyPrivateHttpCephDashboard].
+                    //
+                    // Note that only the Ceph dashboard running on the lead MGR can actually
+                    // render properly so non-leader MGR dashboards will redirect incoming 
+                    // requests to the leader.  We're going to mitigate this by setting up
+                    // a load balancer rule that only considers 2XX responses as valid so
+                    // that we won't direct traffic to the non-lead MGRs that return 302
+                    // redirects.
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/222
 
                     if (hive.Definition.Ceph.Enabled && hive.Definition.Dashboard.Ceph)
                     {
-                        firstManager.Status = "ceph dashboard";
+		                firstManager.Status = "ceph dashboard";
 
-                        var dashboardScheme = hive.Definition.Ceph.DashboardTls ? "https" : "http";
-
-                        var cephDashboard = new HiveDashboard()
+                        if (hive.Definition.Ceph.Release == "luminous")
                         {
-                            Name        = "ceph",
-                            Title       = "Ceph File System",
-                            Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"{dashboardScheme}://healthy-manager:{hive.Definition.Ceph.DashboardPort}",
-                            Description = "Ceph distributed file system"
-                        };
+                            var cephDashboard = new HiveDashboard()
+                            {
+                                Name        = "ceph",
+                                Title       = "Ceph File System",
+                                Folder      = HiveConst.DashboardSystemFolder,
+                                Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
+                                Description = "Ceph distributed file system"
+                            };
 
-                        hive.Dashboard.Set(cephDashboard);
-                        firstManager.Status = string.Empty;
-                    }
+                            hive.Dashboard.Set(cephDashboard);
 
-                    // Configure the Kibana dashboard.
+                            var rule = new LoadBalancerHttpRule()
+                            {
+                                Name     = "neon-ceph-dashboard",
+                                System   = true,
+                                Resolver = null
+                            };
 
-                    if (hive.Definition.Log.Enabled && hive.Definition.Dashboard.Kibana)
-                    {
-                        firstManager.Status = "kibana dashboard";
+                            rule.CheckExpect = @"rstatus ^2\d\d";
 
-                        var kibanaDashboard = new HiveDashboard()
+                            // Initialize the frontends and backends.
+
+                            rule.Frontends.Add(
+                                new LoadBalancerHttpFrontend()
+                                {
+                                    ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
+                                });
+
+                            foreach (var monNode in hive.Nodes.Where(n => n.Metadata.Labels.CephMON))
+                            {
+                                rule.Backends.Add(
+                                    new LoadBalancerHttpBackend()
+                                    {
+                                        Server = monNode.Metadata.PrivateAddress.ToString(),
+                                        Port   = 7000,  // Luminous dashboard is hardcoded to port 7000
+                                    });
+                            }
+
+                            hive.PrivateLoadBalancer.SetRule(rule);
+                            firstManager.Status = string.Empty;
+                        }
+                        else
                         {
-                            Name        = "kibana",
-                            Title       = "Kibana",
-                            Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpKibana}",
-                            Description = "Kibana hive monitoring dashboard"
-                        };
+                            // [mimic] and later releases is a bit more complicated because
+                            // the dashboard is required to server HTTPS.  So the dashboard 
+                            // manages the certificate/key and which means that we need to
+                            // deploy a pass-thru TCP rule and we also need to deploy a
+                            // script to perform the backend health checks.
 
-                        hive.Dashboard.Set(kibanaDashboard);
-                        firstManager.Status = string.Empty;
+                            
+                        }
                     }
 
                     // Configure the Consul dashboard.

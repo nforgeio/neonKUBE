@@ -230,9 +230,10 @@ namespace Neon.Hive
         /// </summary>
         public const int ProxyPrivateHttpLogEsData = 5303;
 
-        //*********************************************************************
-        // 5304: This port is unused and available.
-        //*********************************************************************
+        /// <summary>
+        /// The port assigned to the hive Ceph web dashboard.
+        /// </summary>
+        public const int ProxyPrivateHttpCephDashboard = 5304;
 
         /// <summary>
         /// The port assigned to the Kibana dashboard.
