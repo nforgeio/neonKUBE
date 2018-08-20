@@ -2845,7 +2845,7 @@ PartOf=ceph-fuse.target
 [Service]
 EnvironmentFile=-/etc/default/ceph
 Environment=CLUSTER=ceph
-ExecStart=/usr/bin/ceph-fuse -f --cluster ${{CLUSTER}} /mnt/hivefs
+ExecStart=/usr/bin/ceph-fuse -f -o nonempty --cluster ${{CLUSTER}} /mnt/hivefs
 TasksMax=infinity
 
 {UnitRestartSettings}
