@@ -447,7 +447,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Deploys hive service containers to a node.
+        /// Deploys hive containers to a node.
         /// </summary>
         /// <param name="node">The target hive node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
