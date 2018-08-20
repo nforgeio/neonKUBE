@@ -48,8 +48,17 @@ fi
 
 # Peform the operation.
 
+RETRY=$false
+
 for i in {1..$RETRY_COUNT}
 do
+    if $RETRY ; then
+        DELAY=$(shuf -i $RETRY_MIN_SECONDS-$RETRY_MAX_SECONDS -n 1)
+        echo "*** WARNING: safe-apt-get: retrying after fetch failure (delay=${DELAY}s)." >&2
+        echo "*** WARNING: safe-apt-get" "$@" >&2
+        sleep $DELAY
+    fi
+
     if apt-get "$@" 1>$STDOUT_PATH 2>$STDERR_PATH
     then
         EXIT_CODE=$?
@@ -71,18 +80,12 @@ do
         fi
 
         if ! $TRANSIENT_ERROR ; then
-            # Looks like the operation failed dur to a non-transient
+            # Looks like the operation failed due to a non-transient
             # problem so we'll break out of the retry loop.
             break
         fi
 
-        if [ "$i" == "$RETRY_COUNT" ] ; then
-            exit $EXIT_CODE     # That was the last attempt.
-        fi
-
-        DELAY=$(shuf -i $RETRY_MIN_SECONDS-$RETRY_MAX_SECONDS -n 1)
-        echo "*** WARNING: safe-apt-get: retrying after fetch failure (delay=${DELAY}s)." >&2
-        sleep $DELAY
+        RETRY=$true
     fi
 done
 
