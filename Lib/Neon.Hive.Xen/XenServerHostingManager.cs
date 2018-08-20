@@ -337,7 +337,7 @@ namespace Neon.Hive
             if (xenHost.Template.Find(templateName) == null)
             {
                 xenSshProxy.Status = "download vm template (slow)";
-                xenHost.Template.Install(hive.Definition.Hosting.XenServer.HostXvaUri, templateName);
+                xenHost.Template.Install(hive.Definition.Hosting.XenServer.HostXvaUri, templateName, hive.Definition.Hosting.XenServer.StorageRepository);
             }
         }
 
@@ -392,10 +392,12 @@ namespace Neon.Hive
                 }
 
                 var vm = xenHost.Machine.Install(vmName, hive.Definition.Hosting.XenServer.TemplateName,
-                    processors: processors,
-                    memoryBytes: memoryBytes,
-                    diskBytes: diskBytes,
-                    extraDrives: extraDrives);
+                    processors:                 processors,
+                    memoryBytes:                memoryBytes,
+                    diskBytes:                  diskBytes,
+                    extraDrives:                extraDrives,
+                    primaryStorageRepository:   hive.Definition.Hosting.XenServer.StorageRepository,
+                    extraStorageRespository:    hive.Definition.Hosting.XenServer.OsdStorageRepository);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "start virtual machine");
 

@@ -59,12 +59,20 @@ namespace Neon.Hive
 
         /// <summary>
         /// Identifies the XenServer storage repository to be used to store the XenServer
-        /// node template as well as the hive virtual machine images.  This may be the
-        /// name of the target repository or its UUID.  This defaults to <b>Local storage</b>.
+        /// node template as well as the hive virtual machine images.  This defaults to
+        /// <b>Local storage</b>.
         /// </summary>
         [JsonProperty(PropertyName = "StorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultStorageRepository)]
         public string StorageRepository { get; set; } = defaultStorageRepository;
+
+        /// <summary>
+        /// Identifies the XenServer storage repository to be used to for any Ceph OSD
+        /// drives created for the cluster.  This defaults to <b>Local storage</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "OsdStorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultStorageRepository)]
+        public string OsdStorageRepository { get; set; } = defaultStorageRepository;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -77,9 +85,10 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
-            HostXvaUri        = HostXvaUri ?? defaultHostXvaUri;
-            TemplateName      = TemplateName ?? defaultTemplate;
-            StorageRepository = StorageRepository ?? defaultStorageRepository;
+            HostXvaUri           = HostXvaUri ?? defaultHostXvaUri;
+            TemplateName         = TemplateName ?? defaultTemplate;
+            StorageRepository    = StorageRepository ?? defaultStorageRepository;
+            OsdStorageRepository = OsdStorageRepository ?? defaultStorageRepository;
 
             if (!hiveDefinition.Network.StaticIP)
             {
@@ -94,6 +103,11 @@ namespace Neon.Hive
             if (string.IsNullOrEmpty(StorageRepository))
             {
                 throw new HiveDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
+            }
+
+            if (string.IsNullOrEmpty(OsdStorageRepository))
+            {
+                OsdStorageRepository = StorageRepository;
             }
 
             hiveDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
