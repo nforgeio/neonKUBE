@@ -197,16 +197,14 @@ else
     . log-info.sh "HAProxy is starting ${STOP_TYPE}"
 fi
 
-# Uncomment the IF statement below to have HAProxy start in
-# DEBUG mode as well, when DEBUG=true.  This mode generates
-# a lot of logging noise and will probably impact performance 
-# so we really don't want this for most debugging situations.
+# Enable HAProxy debugging mode to get a better idea of why health
+# checks are failing.
 
 DEBUG_OPTION=
 
-# if [ "${DEBUG}" == "true" ] ; then
-#     DEBUG_OPTION=-d
-# fi
+if [ "${DEBUG}" == "true" ] ; then
+    DEBUG_OPTION=-d
+fi
 
 # HAProxy will fork itself below because the generated configuration FILE
 # specifies [daemon] mode.  This allows the script to return to the Consul

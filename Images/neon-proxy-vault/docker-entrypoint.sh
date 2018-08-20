@@ -88,7 +88,7 @@ defaults
 
     # Log TCP connection details.
 
-    option tcplog
+    option              tcplog
 
     # Timeouts are relatively brief because Vault is hive local and should be fast.
 

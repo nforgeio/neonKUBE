@@ -831,7 +831,7 @@ OPTIONS:
                     node.UploadText($"/usr/local/share/ca-certificates/hive-{hiveName}.crt", hiveLogin.HiveCertificate.CertPem);
 
                     node.SudoCommand("chmod 644 /usr/local/share/ca-certificates/*");
-                    node.SudoCommand("update-ca-certificates --fresh");
+                    node.SudoCommand("update-ca-certificates");
 
                     // Tune Linux for SSDs, if enabled.
 
@@ -938,29 +938,32 @@ export HiveHostnames_Consul=neon-consul.$NEON_HIVE.nhive.io
 export HiveHostnames_Vault=neon-vault.$NEON_HIVE.nhive.io
 export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.$NEON_HIVE.nhive.io
 
-# This ensures that the hive certificates mounted from the host to
-# [/usr/local/share/ca-certificates] are trusted by the container.
-# We currently support the following tools if they exist within
-# the container:
-#
-#   update-ca-certificates: Debian, Ubuntu, Alpine,...
-#   
-#   update-ca-trust: RedHat, CentOS...
-#
-# Note that custom applications (like Java) may need additional
-# certificate initialization.  You can do this in your image
-# entrypoint script.
+if [ -d /mnt/host/ca-certificates ] ; then
 
-if which update-ca-certificates ; then
+    # This ensures that the hive certificates mounted from the host to
+    # [/usr/local/share/ca-certificates] are trusted by the container.
+    # We currently support the following tools if they exist within
+    # the container:
+    #
+    #   update-ca-certificates: Debian, Ubuntu, Alpine,...
+    #   
+    #   update-ca-trust: RedHat, CentOS...
+    #
+    # Note that custom applications (like Java) may need additional
+    # certificate initialization.  You can do this in your image
+    # entrypoint script.
 
-    cp /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
-    update-ca-certificates --fresh
+    if which update-ca-certificates ; then
 
-elif which update-ca-trust ; then
+        cp /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
+        update-ca-certificates
 
-    cp /mnt/host/ca-certificates/* /usr/share/pki/ca-trust-source/anchors/
-    update-ca-trust force-enable
-    update-ca-trust extract
+    elif which update-ca-trust ; then
+
+        cp /mnt/host/ca-certificates/* /usr/share/pki/ca-trust-source/anchors/
+        update-ca-trust force-enable
+        update-ca-trust extract
+    fi
 fi
 ");
             node.UploadText($"{HiveHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
@@ -2842,7 +2845,7 @@ PartOf=ceph-fuse.target
 [Service]
 EnvironmentFile=-/etc/default/ceph
 Environment=CLUSTER=ceph
-ExecStart=/usr/bin/ceph-fuse -f --cluster ${{CLUSTER}} /mnt/hivefs
+ExecStart=/usr/bin/ceph-fuse -f -o nonempty --cluster ${{CLUSTER}} /mnt/hivefs
 TasksMax=infinity
 
 {UnitRestartSettings}
@@ -3733,6 +3736,16 @@ systemctl restart sshd
                                 Resolver = null
                             };
 
+                            // The [luminous] dashboard is not secured by TLS, so we can perform
+                            // normal HTTP health checks.  Note that only the active lead Ceph MGR
+                            // node's dashboard actually works.  The non-leader nodes will return
+                            // a 307 (temporary redirect) status code.
+                            //
+                            // We're going to consider only servers that return 2xx status codes
+                            // as healthy so we'll always direct traffic to the lead MGR.
+
+                            rule.CheckMode   = LoadBalancerCheckMode.Http;
+                            rule.CheckTls    = false;
                             rule.CheckExpect = @"rstatus ^2\d\d";
 
                             // Initialize the frontends and backends.
@@ -3749,7 +3762,7 @@ systemctl restart sshd
                                     new LoadBalancerHttpBackend()
                                     {
                                         Server = monNode.Metadata.PrivateAddress.ToString(),
-                                        Port   = 7000,  // Luminous dashboard is hardcoded to port 7000
+                                        Port   = 7000,  // The [luminous] dashboard is hardcoded to port 7000
                                     });
                             }
 
