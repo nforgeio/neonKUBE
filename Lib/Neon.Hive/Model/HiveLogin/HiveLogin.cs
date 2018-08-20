@@ -163,6 +163,20 @@ namespace Neon.Hive
         public VaultCredentials VaultCredentials { get; set;}
 
         /// <summary>
+        /// Username for the Ceph dashboard.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephDashboardUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string CephDashboardUsername { get; set; }
+
+        /// <summary>
+        /// Password for the Ceph dashboard.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephDashboardPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string CephDashboardPassword { get; set; }
+
+        /// <summary>
         /// <para>
         /// This certificate covers all of the hive built-in hostnames that will be 
         /// accessed via TLS/SSL.  This includes these names:

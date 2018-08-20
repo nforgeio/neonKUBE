@@ -1051,6 +1051,11 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                     if (tcpRule.UseHttpCheckMode)
                     {
                         sbHaProxy.AppendLine($"    option              httpchk {GetHttpCheckOptionArgs(tcpRule)}");
+
+                        if (!string.IsNullOrEmpty(tcpRule.CheckExpect))
+                        {
+                            sbHaProxy.AppendLine($"    http-check          expect {tcpRule.CheckExpect.Trim()}");
+                        }
                     }
                 }
 

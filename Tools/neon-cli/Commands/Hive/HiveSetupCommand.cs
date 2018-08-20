@@ -807,6 +807,12 @@ OPTIONS:
                         node.SudoCommand("chmod 600 /etc/vault/*");
                     }
 
+                    node.SudoCommand("mkdir -p /etc/neon/certs");
+                    node.SudoCommand("chmod 700 /etc/neon/certs");
+                    node.UploadText($"/etc/neon/certs/hive.crt", hiveLogin.HiveCertificate.CertPem);
+                    node.UploadText($"/etc/neon/certs/hive.key", hiveLogin.HiveCertificate.KeyPem);
+                    node.SudoCommand("chmod 600 /etc/neon/certs/*");
+
                     // Configure the Consul service certificate (with private key).  Note that
                     // these need to be configured on all hive nodes because the manager runs
                     // the Consul service as the masters and the workers and pets run the
@@ -2414,20 +2420,14 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                         if (hive.Definition.Ceph.Release != "luminous")
                         {
-                            node.UploadText($"{mgrFolder}/dashboard.crt", hive.HiveLogin.HiveCertificate.CertPem);
-                            node.SudoCommand($"chmod 640 {mgrFolder}/dashboard.crt");
-                            node.UploadText($"{mgrFolder}/dashboard.key", hive.HiveLogin.HiveCertificate.KeyPem);
-                            node.SudoCommand($"chmod 640 {mgrFolder}/dashboard.key");
-                            node.SudoCommand($"ceph config-key set mgr {mgrFolder}/dashboard/crt -i {mgrFolder}/dashboard.crt");
-                            node.SudoCommand($"ceph config-key set mgr {mgrFolder}/dashboard/key -i {mgrFolder}/dashboard.key");
-
-                            node.SudoCommand($"ceph dashboard set-login-credentials sysadmin password");    // $todo(jeff.lill): Try an empty password?
+                            node.SudoCommand($"ceph config-key set mgr/dashboard/crt -i /etc/neon/certs/hive.crt");
+                            node.SudoCommand($"ceph config-key set mgr/dashboard/key -i /etc/neon/certs/hive.key");
+                            node.SudoCommand($"ceph dashboard set-login-credentials sysadmin password");
                             node.SudoCommand($"ceph config set mgr mgr/dashboard/server_port {HiveHostPorts.CephDashboard}");
 
-                            // Restart the dashboard to pick up the changes.
+                            // Restart the MGR to pick up the changes.
 
-                            node.SudoCommand("ceph mgr module disable dashboard");
-                            node.SudoCommand("ceph mgr module enable dashboard");
+                            node.SudoCommand($"systemctl restart ceph-mgr@{node.Name}");
                         }
                     }
 
@@ -3388,13 +3388,28 @@ systemctl start neon-volume-plugin
         {
             var firstManager = hive.FirstManager;
 
-            firstManager.InvokeIdempotentAction("setup/ssh-secret",
+            // Create the [neon-ssh-credentials] Docker secret.
+
+            firstManager.InvokeIdempotentAction("setup/neon-ssh-credentials",
                 () =>
                 {
-                    // Create the [neon-ssh-credentials] Docker secret using the first manager.
-
                     firstManager.Status = "secret: SSH credentials";
                     hive.Docker.Secret.Set("neon-ssh-credentials", $"{hiveLogin.SshUsername}/{hiveLogin.SshPassword}");
+                });
+
+            // Create the [neon-ceph-dashboard-credentials] Docker secret.
+
+            firstManager.InvokeIdempotentAction("setup/neon-ceph-dashboard-credentials",
+                () =>
+                {
+                    // Create the [neon-ssh-credentials] Docker secret.
+
+                    firstManager.Status = "secret: Ceph dashboard credentials";
+
+                    hiveLogin.CephDashboardUsername = "sysadmin";
+                    // hiveLogin.CephDashboardPassword = NeonHelper.GetRandomPassword(20);  $todo(jeff.lill): uncomment this
+                    hiveLogin.CephDashboardPassword = "password";
+                    hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
                 });
         }
 
@@ -3767,18 +3782,74 @@ systemctl restart sshd
                             }
 
                             hive.PrivateLoadBalancer.SetRule(rule);
-                            firstManager.Status = string.Empty;
                         }
                         else
                         {
                             // [mimic] and later releases is a bit more complicated because
-                            // the dashboard is required to server HTTPS.  So the dashboard 
+                            // the dashboard is required to serve HTTPS.  So the dashboard 
                             // manages the certificate/key and which means that we need to
-                            // deploy a pass-thru TCP rule and we also need to deploy a
-                            // script to perform the backend health checks.
+                            // deploy a pass-thru TCP rule.
+                            //
+                            // Note that only the active lead Ceph MGR node's dashboard actually
+                            // works.  The non-leader nodes will return a 307 (temporary redirect) 
+                            // status code.  The trick here is that we need to enable an HTTPS 
+                            // based health check.
+                            //
+                            // We're going to consider only servers that return 2xx status codes
+                            // as healthy so we'll always direct traffic to the lead MGR.
 
-                            
+                            var cephDashboard = new HiveDashboard()
+                            {
+                                Name        = "ceph",
+                                Title       = "Ceph File System",
+                                Folder      = HiveConst.DashboardSystemFolder,
+                                Url         = $"https://healthy-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
+                                Description = "Ceph distributed file system"
+                            };
+
+                            hive.Dashboard.Set(cephDashboard);
+
+                            var rule = new LoadBalancerTcpRule()
+                            {
+                                Name     = "neon-ceph-dashboard",
+                                System   = true,
+                                Resolver = null
+                            };
+
+                            // The [luminous] dashboard is not secured by TLS, so we can perform
+                            // normal HTTP health checks.  Note that only the active lead Ceph MGR
+                            // node's dashboard actually works.  The non-leader nodes will return
+                            // a 307 (temporary redirect) status code.
+                            //
+                            // We're going to consider only servers that return 2xx status codes
+                            // as healthy so we'll always direct traffic to the lead MGR.
+
+                            rule.CheckMode   = LoadBalancerCheckMode.Http;
+                            rule.CheckTls    = true;
+                            rule.CheckExpect = @"rstatus ^2\d\d";
+
+                            // Initialize the frontends and backends.
+
+                            rule.Frontends.Add(
+                                new LoadBalancerTcpFrontend()
+                                {
+                                    ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
+                                });
+
+                            foreach (var monNode in hive.Nodes.Where(n => n.Metadata.Labels.CephMON))
+                            {
+                                rule.Backends.Add(
+                                    new LoadBalancerTcpBackend()
+                                    {
+                                        Server = monNode.Metadata.PrivateAddress.ToString(),
+                                        Port   = HiveHostPorts.CephDashboard
+                                    });
+                            }
+
+                            hive.PrivateLoadBalancer.SetRule(rule);
                         }
+
+                        firstManager.Status = string.Empty;
                     }
 
                     // Configure the Consul dashboard.
