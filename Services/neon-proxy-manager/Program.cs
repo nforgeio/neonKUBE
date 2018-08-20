@@ -11,6 +11,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -31,6 +32,17 @@ using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Hive;
 using Neon.Time;
+
+// $todo(jeff.lill):
+//
+// We don't currently implement any support for:
+//
+//      tcp-check send ...
+//      tcp-check expect ...
+//
+// These are used for sending and validating arbitrary verification
+// data against a TCP backend and would be useful for verifying the
+// health of SMTP backend servers, etc.
 
 namespace NeonProxyManager
 {
@@ -448,6 +460,48 @@ namespace NeonProxyManager
         }
 
         /// <summary>
+        /// Returns the <c>option</c> argument for a <see cref="LoadBalancerRule"/> that has
+        /// enables HTTP health checks.
+        /// </summary>
+        /// <param name="rule">The load balancer rule.</param>
+        /// <returns>The option argument string.</returns>
+        private static string GetHttpCheckOptionArgs(LoadBalancerRule rule)
+        {
+            Covenant.Requires<ArgumentNullException>(rule != null);
+
+            if (rule.UseHttpCheckMode)
+            {
+                // Generate the request headers.  We're going to append the [CheckHost] if present first, 
+                // followed by any custom check headers.
+
+                var headers = string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(rule.CheckHost))
+                {
+                    headers += $@"Host: {rule.CheckHost}\r\n";
+                }
+
+                foreach (var header in rule.CheckHeaders)
+                {
+                    headers += $@"{header.Name}: {header.Value}\r\n";
+                }
+
+                var optionArgs = $"{rule.CheckMethod.ToUpperInvariant()} {rule.CheckUri} HTTP/{rule.CheckVersion}";
+
+                if (!string.IsNullOrEmpty(headers))
+                {
+                    optionArgs += $@"\r\n{headers}";
+                }
+
+                return optionArgs;
+            }
+            else
+            {
+                throw new InvalidOperationException($"Rule [{rule.Name}] does not perform HTTP health checks.");
+            }
+        }
+
+        /// <summary>
         /// Rebuilds the configurations for a public or private load balancers and 
         /// persists them to Consul if they differ from the previous version.
         /// </summary>
@@ -668,6 +722,10 @@ global
 
     ca-base             ""${{HAPROXY_CONFIG_FOLDER}}""
     crt-base            ""${{HAPROXY_CONFIG_FOLDER}}""
+
+# Disable TLS certificate verification for backend health checks:
+
+    ssl-server-verify   none
 
 # Other settings
 
@@ -963,7 +1021,7 @@ backend haproxy_stats
                     resolversArg = $" resolvers {tcpRule.Resolver}";
                 }
 
-                // Generate the frontend with integrated backend servers.
+                // Generate the frontend and it's associated backend servers.
 
                 foreach (var frontend in tcpRule.Frontends)
                 {
@@ -985,14 +1043,25 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: true)}");
                     }
 
-                    if (tcpRule.Check && tcpRule.LogChecks)
+                    if (tcpRule.CheckMode != LoadBalancerCheckMode.Disabled && tcpRule.LogChecks)
                     {
                         sbHaProxy.AppendLine($"    option              log-health-checks");
                     }
+
+                    if (tcpRule.UseHttpCheckMode)
+                    {
+                        sbHaProxy.AppendLine($"    option              httpchk {GetHttpCheckOptionArgs(tcpRule)}");
+                    }
                 }
 
-                var checkArg    = tcpRule.Check ? " check" : " no-check";
+                var checkArg    = tcpRule.CheckMode != LoadBalancerCheckMode.Disabled ? " check" : " no-check";
+                var checkSslArg = tcpRule.CheckTls ? " check-ssl" : string.Empty;
                 var serverIndex = 0;
+
+                if (tcpRule.CheckMode == LoadBalancerCheckMode.Disabled)
+                {
+                    checkSslArg = string.Empty;
+                }
 
                 foreach (var backend in tcpRule.SelectBackends(hostGroups))
                 {
@@ -1003,7 +1072,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         backendName = backend.Name;
                     }
 
-                    sbHaProxy.AppendLine($"    server              {backendName} {backend.Server}:{backend.Port}{checkArg}{initAddrArg}{resolversArg}");
+                    sbHaProxy.AppendLine($"    server              {backendName} {backend.Server}:{backend.Port}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
                 }
             }
 
@@ -1253,17 +1322,13 @@ frontend {haProxyFrontend.Name}
                         resolversArg = $" resolvers {httpRule.Resolver}";
                     }
 
-                    var checkArg        = httpRule.Check ? " check" : " no-check";
-                    var initAddrArg     = " init-addr last,libc,none";
-                    var checkVersionArg = string.Empty;
+                    var checkArg    = httpRule.CheckMode != LoadBalancerCheckMode.Disabled ? " check" : " no-check";
+                    var checkSslArg = httpRule.CheckTls ? " check-ssl" : string.Empty;
+                    var initAddrArg = " init-addr last,libc,none";
 
-                    if (!string.IsNullOrEmpty(httpRule.CheckHost))
+                    if (httpRule.CheckMode == LoadBalancerCheckMode.Disabled)
                     {
-                        checkVersionArg = $"\"HTTP/{httpRule.CheckVersion}\\r\\nHost: {httpRule.CheckHost}\"";
-                    }
-                    else
-                    {
-                        checkVersionArg = $"HTTP/{httpRule.CheckVersion}";
+                        checkSslArg = string.Empty;
                     }
 
                     sbHaProxy.Append(
@@ -1277,19 +1342,23 @@ backend http:{httpRule.Name}
                         sbHaProxy.AppendLine($"    redirect            scheme https if !{{ ssl_fc }}");
                     }
 
-                    if (httpRule.Check && !string.IsNullOrEmpty(httpRule.CheckUri))
+                    if (httpRule.UseHttpCheckMode)
                     {
-                        sbHaProxy.AppendLine($"    option              httpchk {httpRule.CheckMethod.ToUpper()} {httpRule.CheckUri} {checkVersionArg}");
+                        sbHaProxy.AppendLine($"    option              httpchk {GetHttpCheckOptionArgs(httpRule)}");
+
+                        if (!string.IsNullOrEmpty(httpRule.CheckExpect))
+                        {
+                            sbHaProxy.AppendLine($"    http-check          expect {httpRule.CheckExpect.Trim()}");
+                        }
+                    }
+                    else if (httpRule.CheckMode == LoadBalancerCheckMode.Tcp)
+                    {
+                        sbHaProxy.AppendLine($"    option              tcp-check");
                     }
 
-                    if (httpRule.Check && httpRule.LogChecks)
+                    if (httpRule.CheckMode != LoadBalancerCheckMode.Disabled && httpRule.LogChecks)
                     {
                         sbHaProxy.AppendLine($"    option              log-health-checks");
-                    }
-
-                    if (httpRule.Check && !string.IsNullOrEmpty(httpRule.CheckExpect))
-                    {
-                        sbHaProxy.AppendLine($"    http-check          expect {httpRule.CheckExpect.Trim()}");
                     }
 
                     if (httpRule.Log)
@@ -1315,7 +1384,7 @@ backend http:{httpRule.Name}
                             sslArg = $" ssl verify required";
                         }
 
-                        sbHaProxy.AppendLine($"    server              {serverName} {backend.Server}:{backend.Port}{sslArg}{checkArg}{initAddrArg}{resolversArg}");
+                        sbHaProxy.AppendLine($"    server              {serverName} {backend.Server}:{backend.Port}{sslArg}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
                     }
                 }
             }

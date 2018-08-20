@@ -58,61 +58,6 @@ namespace Neon.Hive
         public bool HttpsRedirect { get; set; } = false;
 
         /// <summary>
-        /// <para>
-        /// The relative URI the load balancer will use to verify the backend server health when <see cref="LoadBalancerRule.Check"/> is <c>true</c> .  
-        /// The health check must return a <b>2xx</b> or <b>3xx</b> HTTP  status code to be considered healthy.  This defaults to the
-        /// relative path <b>/</b>.  You can also set this to <c>null</c> or the empty string to disable HTTP based checks.
-        /// </para>
-        /// <para>
-        /// You can also set this to <c>null</c> to enable simple TCP connect checks will be performed if <see cref="LoadBalancerRule.Check"/> 
-        /// is enabled.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "CheckUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("/")]
-        public string CheckUri { get; set; } = "/";
-
-        /// <summary>
-        /// The HTTP method to be used when submitting backend server health requests.  This defaults to <b>HEAD</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "CheckMethod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("HEAD")]
-        public string CheckMethod { get; set; } = "HEAD";
-
-        /// <summary>
-        /// The HTTP version to be used for submitting backend checks.  This defaults to <b>1.0</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "CheckVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("1.0")]
-        public string CheckVersion { get; set; } = "1.0";
-
-        /// <summary>
-        /// The HTTP <b>Host</b> header to be used when submitting the backend checks.  This
-        /// defaults to <c>null</c>.  It's likely you'll need to specify this when setting
-        /// <see cref="CheckVersion"/><b>="1.1"</b> since the host header is required by 
-        /// the HTTP 1.1 specification.
-        /// </summary>
-        [JsonProperty(PropertyName = "CheckHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string CheckHost { get; set; } = null;
-
-        /// <summary>
-        /// <para>
-        /// Specifies a response check that overrides the default <b>2xx</b>/<b>3xx</b> status code
-        /// check.  This can be used to implement custom status code or response body checks.  This
-        /// defaults to <c>null</c>.
-        /// </para>
-        /// <para>
-        /// The property may be set to an expression implemented by the HAProxy 
-        /// <a href="http://cbonte.github.io/haproxy-dconv/1.7/configuration.html#http-check%20expect">http-check expect</a> 
-        /// keyword.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "CheckExpect", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string CheckExpect { get; set; } = null;
-
-        /// <summary>
         /// The load balancer frontend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Frontends", Required = Required.Always)]
