@@ -509,7 +509,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <b>io.neonhive.ceph.osd</b> [<c>bool</c>]: Indicates that a Ceph OSD 
-        /// (object storage daemon) will be deployed to this if 
+        /// (object storage daemon) will be deployed to this node if 
         /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
@@ -534,7 +534,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <b>io.neonhive.ceph.mds</b> [<c>bool</c>]: Indicates that a Ceph MDS 
-        /// (metadata server) will be deployed to this if <see cref="CephOptions.Enabled"/> 
+        /// (metadata server) will be deployed to this node if <see cref="CephOptions.Enabled"/> 
         /// is <c>true</c>.  This defaults to <c>false</c>.
         /// </summary>
         /// <remarks>
@@ -619,6 +619,32 @@ namespace Neon.Hive
         public int CephMDSCacheSizeMB { get; set; } = 0;
 
         //---------------------------------------------------------------------
+        // Kong Gateway API related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="KongDB"/>.
+        /// </summary>
+        public const string LabelKongDB = HiveDefinition.ReservedLabelPrefix + ".kong.db";
+
+        /// <summary>
+        /// <b>io.neonhive.kong.db</b> [<c>bool</c>]: Indicates that a Kong
+        /// API Gateway Cassandra backing database deployed to this node if 
+        /// <see cref="KongOptions.Enabled"/> is <c>true</c>.  This defaults to 
+        /// <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// The Kong API Gateway requires a database to persist the current
+        /// configuration settings.  neonHIVE provisions a Cassandra cluster
+        /// for this purpose to the hive manager nodes by default.  You can
+        /// set this label deploy this database to specific nodes.  Cassandra
+        /// runs as a Docker container, so you can deploy it to manager, 
+        /// worker, and/or pets.
+        /// </remarks>
+        [JsonProperty(PropertyName = "KongDB", Required = Required.Default)]
+        [DefaultValue(false)]
+        public bool KongDB { get; set; } = false;
+
+        //---------------------------------------------------------------------
 
         /// <summary>
         /// Custom node labels.
@@ -700,6 +726,8 @@ namespace Neon.Hive
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDCacheSizeMB,      CephOSDCacheSizeMB));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDJournalSizeMB,    CephOSDJournalSizeMB));
                 list.Add(new KeyValuePair<string, object>(LabelCephMDSCacheSizeMB,      CephMDSCacheSizeMB));
+
+                list.Add(new KeyValuePair<string, object>(LabelKongDB,                  KongDB));
 
                 return list;
             }
@@ -786,6 +814,8 @@ namespace Neon.Hive
                     case LabelCephOSDJournalSizeMB:     ParseCheck(label, () => { node.Labels.CephOSDJournalSizeMB = int.Parse(label.Value); }); break;
                     case LabelCephMDSCacheSizeMB:       ParseCheck(label, () => { node.Labels.CephMDSCacheSizeMB = int.Parse(label.Value); }); break;
 
+                    case LabelKongDB:                   node.Labels.KongDB = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+
                     case LabelDatacenter:
                     case LabelEnvironment:
 
@@ -828,30 +858,34 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(target != null);
 
-            target.StorageCapacityGB   = this.StorageCapacityGB;
-            target.StorageLocal        = this.StorageLocal;
-            target.StorageSSD          = this.StorageSSD;
-            target.StorageRedundant    = this.StorageRedundant;
-            target.StorageEphemeral    = this.StorageEphemeral;
+            target.StorageCapacityGB    = this.StorageCapacityGB;
+            target.StorageLocal         = this.StorageLocal;
+            target.StorageSSD           = this.StorageSSD;
+            target.StorageRedundant     = this.StorageRedundant;
+            target.StorageEphemeral     = this.StorageEphemeral;
 
-            target.ComputeCores        = this.ComputeCores;
-            target.ComputeArchitecture = this.ComputeArchitecture;
-            target.ComputeRamMB        = this.ComputeRamMB;
-            target.ComputeSwap         = this.ComputeSwap;
+            target.ComputeCores         = this.ComputeCores;
+            target.ComputeArchitecture  = this.ComputeArchitecture;
+            target.ComputeRamMB         = this.ComputeRamMB;
+            target.ComputeSwap          = this.ComputeSwap;
 
-            target.PhysicalLocation    = this.PhysicalLocation;
-            target.PhysicalMachine     = this.PhysicalMachine;
-            target.PhysicalFaultDomain = this.PhysicalFaultDomain;
-            target.PhysicalPower       = this.PhysicalPower;
+            target.PhysicalLocation     = this.PhysicalLocation;
+            target.PhysicalMachine      = this.PhysicalMachine;
+            target.PhysicalFaultDomain  = this.PhysicalFaultDomain;
+            target.PhysicalPower        = this.PhysicalPower;
 
-            target.LogEsData           = this.LogEsData;
+            target.LogEsData            = this.LogEsData;
 
-            target.CephMON             = this.CephMON;
-            target.CephMON             = this.CephMON;
-            target.CephOSD             = this.CephOSD;
-            target.CephMDS             = this.CephMDS;
-            target.CephOSDDriveSizeGB  = this.CephOSDDriveSizeGB;
-            target.CephOSDCacheSizeMB  = this.CephOSDCacheSizeMB;
+            target.CephMON              = this.CephMON;
+            target.CephOSD              = this.CephOSD;
+            target.CephOSDDevice        = this.CephOSDDevice;
+            target.CephMDS              = this.CephMDS;
+            target.CephOSDDriveSizeGB   = this.CephOSDDriveSizeGB;
+            target.CephOSDCacheSizeMB   = this.CephOSDCacheSizeMB;
+            target.CephOSDJournalSizeMB = this.CephOSDJournalSizeMB;
+            target.CephMDSCacheSizeMB   = this.CephMDSCacheSizeMB;
+
+            target.KongDB               = this.KongDB;
 
             foreach (var item in this.Custom)
             {

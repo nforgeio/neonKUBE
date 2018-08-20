@@ -536,7 +536,7 @@ USAGE:
         ""Ceph"": true
     },
 
-    // Integrated Ceph Storage Hive settings.
+    // Integrated Ceph Distributed Storage Cluster settings.
 
 `   ""Ceph"": {
 
@@ -613,6 +613,16 @@ USAGE:
         // NOTE: The default is probably too small for production environments
 
         ""MDSCacheSize"": ""64MB""
+    },
+
+    // Integrated Kong API Gateway settings.
+
+    ""Kong"": {
+
+        // Indicates whether Kong API Gateway is to be enabled for the hive.  
+        // This defaults to [true].
+
+        ""Enabled"": true
     },
 
     //-------------------------------------------------------------------------

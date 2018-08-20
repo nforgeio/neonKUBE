@@ -95,6 +95,7 @@ if ($base)
 	Publish "$image_root\\elasticsearch"
 	Publish "$image_root\\elasticsearch6"
 	Publish "$image_root\\kibana"
+	Publish "$image_root\\kong"
 	Publish "$image_root\\metricbeat"
 	Publish "$image_root\\td-agent"
 	Publish "$image_root\\node"

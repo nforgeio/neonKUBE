@@ -26,8 +26,9 @@ using Neon.IO;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Specifies the options for configuring the hive integrated <a href="https://ceph.com/">Ceph</a>
-    /// distributed storage cluster.
+    /// Specifies the options for configuring the hive integrated
+    /// <a href="https://ceph.com/">Ceph Distributed Storage</a>
+    /// cluster.
     /// </summary>
     public class CephOptions
     {
@@ -43,7 +44,7 @@ namespace Neon.Hive
         /// <summary>
         /// Returns the names of the supported Ceph releases.
         /// </summary>
-        private IEnumerable<string> SupportedVersions =
+        private IEnumerable<string> SupportedReleases =
             new string[]
             {
                 "luminous",
@@ -272,7 +273,7 @@ namespace Neon.Hive
             Release = Release ?? defaultRelease;
             Release = Release.ToLowerInvariant();
 
-            if (!SupportedVersions.Contains(Release))
+            if (!SupportedReleases.Contains(Release))
             {
                 throw new HiveDefinitionException($"[{Release}] is not a supported Ceph release.");
             }

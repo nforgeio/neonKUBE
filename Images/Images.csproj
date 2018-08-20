@@ -61,6 +61,16 @@
     </None>
     <None Include="couchbase-test\init-cluster.sh" />
     <None Include="dotnet\resolv.conf.head.sh" />
+    <Content Include="kong\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="kong\build.ps1" />
+    <None Include="kong\docker-entrypoint.sh" />
+    <None Include="kong\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="kong\publish.ps1" />
+    <None Include="kong\README.md" />
     <None Include="neon-cli\conf\ssh_config.conf" />
     <Content Include="neon-cli\modules\docker_stack.py" />
     <Content Include="neon-hive-manager\.dockerignore">

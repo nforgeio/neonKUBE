@@ -488,11 +488,18 @@ namespace Neon.Hive
         public DashboardOptions Dashboard { get; set; } = new DashboardOptions();
 
         /// <summary>
-        /// Integrated Ceph storage cluster options.
+        /// Integrated <a href="http://ceph.com">Ceph distributed storage cluster</a> options.
         /// </summary>
         [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public CephOptions Ceph { get; set; } = new CephOptions();
+
+        /// <summary>
+        /// Integrated <a href="https://konghq.com/">Kong API Gateway</a> options.
+        /// </summary>
+        [JsonProperty(PropertyName = "Kong", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(null)]
+        public KongOptions Kong { get; set; } = new KongOptions();
 
         /// <summary>
         /// The Docker image to be used to provision public and private proxies and proxy bridges.
@@ -765,6 +772,7 @@ namespace Neon.Hive
             Log               = Log ?? new LogOptions();
             Dashboard         = Dashboard ?? new DashboardOptions();
             Ceph              = Ceph ?? new CephOptions();
+            Kong              = Kong ?? new KongOptions();
 
             ProxyImage        = ProxyImage ?? defaultProxyImage;
             ProxyVaultImage   = ProxyVaultImage ?? defaultProxyVaultImage;
@@ -784,6 +792,7 @@ namespace Neon.Hive
             Log.Validate(this);
             Dashboard.Validate(this);
             Ceph.Validate(this);
+            Kong.Validate(this);
 
             new HostingManagerFactory().Validate(this);
 
