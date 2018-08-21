@@ -43,5 +43,27 @@ namespace Neon.Common
         {
             get { return OutputText + ErrorText; }
         }
+
+        /// <summary>
+        /// Ensure that the command returned a zero exit code.
+        /// </summary>
+        /// <exception cref="ExecuteException">Thrown if the exit code isn't zero.</exception>
+        public void EnsureSuccess()
+        {
+            if (ExitCode != 0)
+            {
+                // We're going to use the error text as the exception message if this
+                // isn't empty, otherwise we'll use the output text.
+
+                if (ErrorText.Trim().Length > 0)
+                {
+                    throw new ExecuteException(ExitCode, ErrorText);
+                }
+                else
+                {
+                    throw new ExecuteException(ExitCode, OutputText);
+                }
+            }
+        }
     }
 }

@@ -930,10 +930,15 @@ namespace Neon.Hive
 
                 Directory.CreateDirectory("/usr/local/share/ca-certificates");
 
+                var certNumber = 0;
+
                 foreach (var certificate in login.ClientCertificates)
                 {
-                    certificate.CertPem;
+                    File.WriteAllText(Path.Combine("/usr/local/share/ca-certificates", $"hive-cert-{certNumber}.crt"), certificate.CertPemNormalized);
+                    certNumber++;
                 }
+
+                var response = NeonHelper.ExecuteCaptureStreams("chmod", "644 /usr/local/share/ca-certificates/*");
             }
             else if (NeonHelper.IsLinux)
             {
