@@ -10,7 +10,7 @@ namespace Neon.Common
 {
     /// <summary>
     /// Holds the process exit code and captured standard output from a process
-    /// launched by <see cref="NeonHelper.ExecuteCaptureStreams(string, string, TimeSpan?, Process)"/>.
+    /// launched by <see cref="NeonHelper.ExecuteCapture(string, string, TimeSpan?, Process)"/>.
     /// </summary>
     public class ExecuteResult
     {

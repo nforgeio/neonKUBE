@@ -148,7 +148,7 @@ catch [Exception] {{
     exit 1
 }}
 ");
-                var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"-file \"{file.Path}\"");
+                var result = NeonHelper.ExecuteCapture("powershell.exe", $"-file \"{file.Path}\"");
 
                 // $hack(jeff.lill):
                 //
@@ -205,7 +205,7 @@ catch [Exception] {{
     exit 1
 }}
 ");
-                var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"-file \"{file.Path}\"");
+                var result = NeonHelper.ExecuteCapture("powershell.exe", $"-file \"{file.Path}\"");
 
                 // $hack(jeff.lill):
                 //

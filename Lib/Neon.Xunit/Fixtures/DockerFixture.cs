@@ -552,7 +552,7 @@ namespace Neon.Xunit
         {
             base.CheckDisposed();
 
-            return NeonHelper.ExecuteCaptureStreams("docker", args);
+            return NeonHelper.ExecuteCapture("docker", args);
         }
 
         /// <summary>
@@ -577,7 +577,7 @@ namespace Neon.Xunit
         {
             base.CheckDisposed();
 
-            return NeonHelper.ExecuteCaptureStreams("docker", argString);
+            return NeonHelper.ExecuteCapture("docker", argString);
         }
 
         /// <summary>

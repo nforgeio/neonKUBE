@@ -53,7 +53,7 @@ namespace TestCommon
             // We'll verify that one of the IDs returned matches the container
             // launched by the fixture.
 
-            var result = NeonHelper.ExecuteCaptureStreams("docker", new object[] { "ps", "--format", "{{.ID}}" });
+            var result = NeonHelper.ExecuteCapture("docker", new object[] { "ps", "--format", "{{.ID}}" });
 
             if (result.ExitCode != 0)
             {

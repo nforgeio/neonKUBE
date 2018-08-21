@@ -936,7 +936,7 @@ namespace Neon.Hive
                     certNumber++;
                 }
 
-                NeonHelper.ExecuteCaptureStreams("update-ca-certificates", (string)null).EnsureSuccess();
+                NeonHelper.ExecuteCapture("update-ca-certificates", (string)null).EnsureSuccess();
             }
             else if (NeonHelper.IsLinux)
             {

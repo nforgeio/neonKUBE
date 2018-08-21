@@ -105,7 +105,7 @@ namespace Neon.Xunit
             // and remove it if its ID doesn't match the current container.
 
             var args   = new string[] { "ps", "-a", "--filter", $"name={name}", "--format", "{{.ID}}" };
-            var result = NeonHelper.ExecuteCaptureStreams($"docker", args);
+            var result = NeonHelper.ExecuteCapture($"docker", args);
 
             if (result.ExitCode == 0)
             {
@@ -138,7 +138,7 @@ namespace Neon.Xunit
 
             var argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, extraArgs.ToArray(), image, containerArgs);
 
-            result = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+            result = NeonHelper.ExecuteCapture($"docker", argsString);
 
             if (result.ExitCode != 0)
             {
@@ -178,7 +178,7 @@ namespace Neon.Xunit
                 try
                 {
                     var args   = new string[] { "rm", "--force", ContainerId };
-                    var result = NeonHelper.ExecuteCaptureStreams($"docker", args);
+                    var result = NeonHelper.ExecuteCapture($"docker", args);
 
                     if (result.ExitCode != 0)
                     {

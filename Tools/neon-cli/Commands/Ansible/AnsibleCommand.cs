@@ -814,7 +814,7 @@ MODULES:
 
                     Environment.CurrentDirectory = "/etc/ansible";
 
-                    var result = NeonHelper.ExecuteCaptureStreams("zip", $"-r \"{zipPath}\" .");
+                    var result = NeonHelper.ExecuteCapture("zip", $"-r \"{zipPath}\" .");
 
                     if (result.ExitCode != 0)
                     {

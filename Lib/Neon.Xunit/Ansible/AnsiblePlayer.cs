@@ -49,7 +49,7 @@ namespace Neon.Xunit
                 Environment.CurrentDirectory = workDir;
                 File.WriteAllText(Path.Combine(workDir, "play.yaml"), playbook);
 
-                var response = NeonHelper.ExecuteCaptureStreams("neon", new object[] { "ansible", "play", "--noterminal", "--", args, "-vvvv", "play.yaml" });
+                var response = NeonHelper.ExecuteCapture("neon", new object[] { "ansible", "play", "--noterminal", "--", args, "-vvvv", "play.yaml" });
 
                 return new AnsiblePlayResults(response);
             }
@@ -64,7 +64,7 @@ namespace Neon.Xunit
                         Environment.CurrentDirectory = folder.Path;
                         File.WriteAllText(Path.Combine(folder.Path, "play.yaml"), playbook);
 
-                        var response = NeonHelper.ExecuteCaptureStreams("neon", new object[] { "ansible", "play", "--noterminal", "--", args, "-vvvv", "play.yaml" });
+                        var response = NeonHelper.ExecuteCapture("neon", new object[] { "ansible", "play", "--noterminal", "--", args, "-vvvv", "play.yaml" });
 
                         return new AnsiblePlayResults(response);
                     }

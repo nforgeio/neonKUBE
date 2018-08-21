@@ -498,7 +498,7 @@ certificates, and then finally the private key.
                     sbArgs.Append($"\"{tempCertPath}\" ");
                     sbArgs.Append($"\"{tempCaPath}\"");
 
-                    var result = NeonHelper.ExecuteCaptureStreams("certutil", sbArgs.ToString());
+                    var result = NeonHelper.ExecuteCapture("certutil", sbArgs.ToString());
 
                     Console.WriteLine(result.OutputText);
                     Console.Error.WriteLine(result.ErrorText);
@@ -512,7 +512,7 @@ certificates, and then finally the private key.
                     sbArgs.Append($"-CAfile \"{tempCaPath}\" ");
                     sbArgs.Append($"\"{tempCertPath}\"");
 
-                    var result = NeonHelper.ExecuteCaptureStreams("openssl", sbArgs.ToString());
+                    var result = NeonHelper.ExecuteCapture("openssl", sbArgs.ToString());
 
                     Console.WriteLine(result.OutputText);
                     Console.Error.WriteLine(result.ErrorText);

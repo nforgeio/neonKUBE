@@ -330,7 +330,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Used by <see cref="ExecuteCaptureStreams(string, string, TimeSpan?, Process)"/> to redirect process output streams.
+        /// Used by <see cref="ExecuteCapture(string, string, TimeSpan?, Process)"/> to redirect process output streams.
         /// </summary>
         private sealed class ProcessStreamRedirector
         {
@@ -405,9 +405,9 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static ExecuteResult ExecuteCaptureStreams(string path, object[] args, TimeSpan? timeout = null, Process process = null)
+        public static ExecuteResult ExecuteCapture(string path, object[] args, TimeSpan? timeout = null, Process process = null)
         {
-            return ExecuteCaptureStreams(path, NormalizeExecArgs(args), timeout, process);
+            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process);
         }
 
         /// <summary>
@@ -436,7 +436,7 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static ExecuteResult ExecuteCaptureStreams(string path, string args, TimeSpan? timeout = null, Process process = null)
+        public static ExecuteResult ExecuteCapture(string path, string args, TimeSpan? timeout = null, Process process = null)
         {
             var processInfo     = new ProcessStartInfo(GetProgramPath(path), args != null ? args : string.Empty);
             var redirector      = new ProcessStreamRedirector();
@@ -526,10 +526,10 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<ExecuteResult> ExecuteCaptureStreamsAsync(string path, object[] args,
-                                                                           TimeSpan? timeout = null, Process process = null)
+        public static async Task<ExecuteResult> ExecuteCaptureAsync(string path, object[] args,
+                                                                    TimeSpan? timeout = null, Process process = null)
         {
-            return await ExecuteCaptureStreamsAsync(path, NormalizeExecArgs(args), timeout, process);
+            return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process);
         }
 
         /// <summary>
@@ -558,10 +558,10 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<ExecuteResult> ExecuteCaptureStreamsAsync(string path, string args, 
-                                                                           TimeSpan? timeout = null, Process process = null)
+        public static async Task<ExecuteResult> ExecuteCaptureAsync(string path, string args, 
+                                                                    TimeSpan? timeout = null, Process process = null)
         {
-            return await Task.Run(() => ExecuteCaptureStreams(path, args, timeout, process));
+            return await Task.Run(() => ExecuteCapture(path, args, timeout, process));
         }
 
 #if NETSTANDARD2_0

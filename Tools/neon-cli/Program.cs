@@ -534,7 +534,7 @@ OPTIONS:
                             // pulling it if it does not.  We're going to do this as an extra step
                             // to prevent the pulling messages from mixing into the command output.
 
-                            var result = NeonHelper.ExecuteCaptureStreams("docker",
+                            var result = NeonHelper.ExecuteCapture("docker",
                                 new object[]
                                 {
                                     "image",
@@ -576,7 +576,7 @@ $@"*** ERROR: Cannot list Docker images.
                             {
                                 // The required [neon-cli] image doesn't exist locally so pull it.
 
-                                result = NeonHelper.ExecuteCaptureStreams("docker",
+                                result = NeonHelper.ExecuteCapture("docker",
                                     new object[]
                                     {
                                     "image",
@@ -1341,7 +1341,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 File.WriteAllText(pemKeyPath, pemKey);
 
-                var result = NeonHelper.ExecuteCaptureStreams(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{hive.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{hive.Definition.Name} Key"" /output=""{ppkKeyPath}""");
 
                 if (result.ExitCode != 0)
                 {
@@ -1395,7 +1395,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
             try
             {
-                var result = NeonHelper.ExecuteCaptureStreams(programPath, sbArgs.ToString());
+                var result = NeonHelper.ExecuteCapture(programPath, sbArgs.ToString());
 
                 if (result.ExitCode != 0)
                 {
@@ -1432,7 +1432,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
             argList.Insert(0, NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()));
 
-            return NeonHelper.ExecuteCaptureStreams("dotnet", argList.ToArray());
+            return NeonHelper.ExecuteCapture("dotnet", argList.ToArray());
         }
 
         /// <summary>

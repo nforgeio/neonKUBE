@@ -299,7 +299,7 @@ subjectAltName         = @alt_names
 
                 File.WriteAllText(configPath, NeonHelper.ToLinuxLineEndings(sbConfig.ToString()));
 
-                var result = NeonHelper.ExecuteCaptureStreams("openssl",
+                var result = NeonHelper.ExecuteCapture("openssl",
                     $"req -newkey rsa:{bitCount} -nodes -sha256 -x509 -days {validDays} " +
                     $"-subj \"/C=--/ST=./L=./O=./CN=.\" " +
                     $"-extensions req_v3 " +
@@ -427,7 +427,7 @@ subjectAltName         = @alt_names
 
                 File.WriteAllText(configPath, NeonHelper.ToLinuxLineEndings(sbConfig.ToString()));
 
-                var result = NeonHelper.ExecuteCaptureStreams("openssl",
+                var result = NeonHelper.ExecuteCapture("openssl",
                     $"req -newkey rsa:{bitCount} -nodes -sha256 -x509 -days {validDays} " +
                     $"-subj \"/C=--/ST=./L=./O=./CN=.\" " +
                     $"-extensions req_v3 " +
@@ -504,7 +504,7 @@ subjectAltName         = @alt_names
                     sbArgs.Append($"\"{tempCertPath}\" ");
                     sbArgs.Append($"\"{tempCaPath}\"");
 
-                    var result = NeonHelper.ExecuteCaptureStreams("certutil", sbArgs.ToString());
+                    var result = NeonHelper.ExecuteCapture("certutil", sbArgs.ToString());
 
                     if (result.ExitCode != 0)
                     {
@@ -518,7 +518,7 @@ subjectAltName         = @alt_names
                     sbArgs.Append($"-CAfile \"{tempCaPath}\" ");
                     sbArgs.Append($"\"{tempCertPath}\"");
 
-                    var result = NeonHelper.ExecuteCaptureStreams("openssl", sbArgs.ToString());
+                    var result = NeonHelper.ExecuteCapture("openssl", sbArgs.ToString());
 
                     if (result.ExitCode != 0)
                     {
@@ -1159,7 +1159,7 @@ subjectAltName         = @alt_names
                     sbArgs.Append("-dump ");
                     sbArgs.Append($"\"{tempCertPath}\" ");
 
-                    var result = NeonHelper.ExecuteCaptureStreams("certutil", sbArgs.ToString());
+                    var result = NeonHelper.ExecuteCapture("certutil", sbArgs.ToString());
 
                     if (result.ExitCode != 0)
                     {
@@ -1173,7 +1173,7 @@ subjectAltName         = @alt_names
                     sbArgs.Append($"x509 -in \"{tempCertPath}\" ");
                     sbArgs.Append("-text");
 
-                    var result = NeonHelper.ExecuteCaptureStreams("openssl", sbArgs.ToString());
+                    var result = NeonHelper.ExecuteCapture("openssl", sbArgs.ToString());
 
                     if (result.ExitCode != 0)
                     {

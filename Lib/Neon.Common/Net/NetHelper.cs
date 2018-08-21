@@ -423,7 +423,7 @@ namespace Neon.Net
             {
                 // Flush the DNS cache (and I believe this reloads the [hosts] file too).
 
-                var response = NeonHelper.ExecuteCaptureStreams("ipconfig", "/flushdns");
+                var response = NeonHelper.ExecuteCapture("ipconfig", "/flushdns");
 
                 if (response.ExitCode != 0)
                 {

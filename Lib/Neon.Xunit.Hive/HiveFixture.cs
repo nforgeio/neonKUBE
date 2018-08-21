@@ -577,7 +577,7 @@ namespace Neon.Xunit.Hive
                 neonArgs.Add(item);
             }
 
-            return NeonExecutionReport(NeonHelper.ExecuteCaptureStreams("neon", neonArgs.ToArray()));
+            return NeonExecutionReport(NeonHelper.ExecuteCapture("neon", neonArgs.ToArray()));
         }
 
         /// <summary>
@@ -599,7 +599,7 @@ namespace Neon.Xunit.Hive
 
             var neonArgs = "docker --shim -- " + argString; // We need to shim the command so [neon-cli] won't clear local [hosts] file definitions.
 
-            return DockerExecutionReport(NeonHelper.ExecuteCaptureStreams("neon", neonArgs));
+            return DockerExecutionReport(NeonHelper.ExecuteCapture("neon", neonArgs));
         }
 
         /// <summary>
@@ -641,7 +641,7 @@ namespace Neon.Xunit.Hive
 
             argList.Insert(0, "--shim");
 
-            return DockerExecutionReport(NeonHelper.ExecuteCaptureStreams("neon", argList.ToArray()));
+            return DockerExecutionReport(NeonHelper.ExecuteCapture("neon", argList.ToArray()));
         }
 
         /// <summary>
@@ -665,7 +665,7 @@ namespace Neon.Xunit.Hive
 
             argString = "--shim " + argString;
 
-            return NeonHelper.ExecuteCaptureStreams("neon", argString);
+            return NeonHelper.ExecuteCapture("neon", argString);
         }
 
         /// <summary>

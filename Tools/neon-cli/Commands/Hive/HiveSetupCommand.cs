@@ -677,7 +677,7 @@ OPTIONS:
 
                         try
                         {
-                            result = NeonHelper.ExecuteCaptureStreams("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{hiveLogin.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                            result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{hiveLogin.Definition.Name} Key"" /output=""{ppkKeyPath}""");
                         }
                         catch (Win32Exception)
                         {
@@ -3502,7 +3502,7 @@ chmod 666 /run/ssh-key*
 
                     try
                     {
-                        result = NeonHelper.ExecuteCaptureStreams("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{hive.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                        result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{hive.Definition.Name} Key"" /output=""{ppkKeyPath}""");
                     }
                     catch (Win32Exception)
                     {
