@@ -855,11 +855,11 @@ namespace Neon.Hive
             Covenant.Requires<ArgumentNullException>(store != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(friendlyName));
 
-            foreach (var cert in store.Certificates)
+            foreach (var certificate in store.Certificates)
             {
-                if (friendlyName.Equals(cert.FriendlyName, StringComparison.InvariantCultureIgnoreCase))
+                if (friendlyName.Equals(certificate.FriendlyName, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return cert;
+                    return certificate;
                 }
             }
 
@@ -928,7 +928,12 @@ namespace Neon.Hive
                 // We're going to assume that the container provides the
                 // [update-ca-certificates] tool.
 
-                // $todo(jeff.lill): IMPLEMENT THIS!
+                Directory.CreateDirectory("/usr/local/share/ca-certificates");
+
+                foreach (var certificate in login.ClientCertificates)
+                {
+                    certificate.CertPem;
+                }
             }
             else if (NeonHelper.IsLinux)
             {
@@ -1097,21 +1102,21 @@ namespace Neon.Hive
                 {
                     store.Open(OpenFlags.ReadWrite);
 
-                    foreach (var cert in store.Certificates)
+                    foreach (var certificate in store.Certificates)
                     {
-                        if (!string.IsNullOrEmpty(cert.FriendlyName) && cert.FriendlyName.StartsWith("neonHIVE:"))
+                        if (!string.IsNullOrEmpty(certificate.FriendlyName) && certificate.FriendlyName.StartsWith("neonHIVE:"))
                         {
-                            var posColon = cert.FriendlyName.IndexOf(':');
+                            var posColon = certificate.FriendlyName.IndexOf(':');
 
                             if (posColon != -1)
                             {
-                                var certHiveName = cert.FriendlyName.Substring(posColon + 1).Trim();
+                                var certHiveName = certificate.FriendlyName.Substring(posColon + 1).Trim();
 
                                 if (!hiveNames.Contains(certHiveName))
                                 {
                                     // There's no login for this certificate, so delete it.
 
-                                    store.Remove(cert);
+                                    store.Remove(certificate);
                                 }
                             }
                         }

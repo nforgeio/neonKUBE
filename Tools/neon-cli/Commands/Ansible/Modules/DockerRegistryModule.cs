@@ -522,7 +522,7 @@ namespace NeonCli.Ansible
                     var passwordChanged    = password != currentCredentials?.Password;
                     var secretChanged      = secret != currentSecret;
                     var imageChanged       = image != currentImage;
-                    var certificateChanged = certificate?.CombinedNormalizedPem != currentCertificate?.CombinedNormalizedPem;
+                    var certificateChanged = certificate?.CombinedPemNormalized != currentCertificate?.CombinedPemNormalized;
                     var updateRequired     = hostnameChanged || 
                                              usernameChanged || 
                                              passwordChanged || 

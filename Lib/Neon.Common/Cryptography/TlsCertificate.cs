@@ -615,10 +615,48 @@ subjectAltName         = @alt_names
         public string CertPem { get; set; }
 
         /// <summary>
+        /// The public certificate as PEM encoded text normalized with Linux-style line endings.
+        /// </summary>
+        [JsonIgnore]
+        public string CertPemNormalized
+        {
+            get
+            {
+                if (CertPem == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return NormalizePem(CertPem);
+                }
+            }
+        }
+
+        /// <summary>
         /// The private key as PEM encoded text.
         /// </summary>
         [JsonProperty(PropertyName = "KeyPem", Required = Required.Always | Required.DisallowNull)]
         public string KeyPem { get; set; }
+
+        /// <summary>
+        /// The private key as PEM encoded text normalized with Linux-style line endings.
+        /// </summary>
+        [JsonIgnore]
+        public string KeyPemNormalized
+        {
+            get
+            {
+                if (KeyPem == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return NormalizePem(KeyPem);
+                }
+            }
+        }
 
         /// <summary>
         /// Returns the combined certificate and private key as PEM encoded text.
@@ -635,13 +673,13 @@ subjectAltName         = @alt_names
         /// </summary>
         /// <returns>The combined PEM coded certificate.</returns>
         [JsonIgnore]
-        public string CombinedNormalizedPem
+        public string CombinedPemNormalized
         {
             get
             {
                 if (KeyPem == null)
                 {
-                    return CertPem;
+                    return null;
                 }
                 else
                 {
@@ -1081,7 +1119,7 @@ subjectAltName         = @alt_names
 
             var tempPath = Path.GetTempFileName();
 
-            File.WriteAllText(tempPath, CombinedNormalizedPem);
+            File.WriteAllText(tempPath, CombinedPemNormalized);
 
             try
             {
@@ -1107,7 +1145,7 @@ subjectAltName         = @alt_names
 
             try
             {
-                File.WriteAllText(tempCertPath, this.CombinedNormalizedPem);
+                File.WriteAllText(tempCertPath, this.CombinedPemNormalized);
 
                 var sbArgs = new StringBuilder();
 
