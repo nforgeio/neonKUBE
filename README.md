@@ -40,7 +40,7 @@ Follow steps below to configure a development or test workstation.
 	  * PowerShell Tools
 	  * Help Viewer
   * Click **Install** (and take a coffee break)
-  * Install **.NET Core SDK 2.1.401 (x64 installer)** from [here](https://www.microsoft.com/net/download/dotnet-core/2.1)
+  * Install **.NET Core SDK 2.1.300 (x64 installer)** from [here](https://www.microsoft.com/net/download/dotnet-core/2.1)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   
