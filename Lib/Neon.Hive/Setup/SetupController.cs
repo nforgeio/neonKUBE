@@ -655,8 +655,8 @@ namespace Neon.Hive
             var maxStepLabelWidth = steps.Max(n => n.Label.Length);
             var maxNodeNameWidth  = nodes.Max(n => n.Name.Length);
             var maxHostNameWidth  = 0;
-
-            if (typeof(NodeMetadata) == typeof(IXenClient))
+            
+            if (typeof(NodeMetadata).Implements<IXenClient>())
             {
                 maxHostNameWidth = nodes.Max(n => (n.Metadata as IXenClient).Name.Length);
             }
@@ -813,7 +813,7 @@ namespace Neon.Hive
                         }
                     }
                 }
-                else if (typeof(NodeMetadata) == typeof(IXenClient))
+                else if (typeof(NodeMetadata).Implements<IXenClient>())
                 {
                     // Provisioning hive nodes on XenServer hosts.
 
