@@ -29,7 +29,7 @@ Follow steps below to configure a development or test workstation.
 
 4. Ensure that hardware virtualization is enabled in your BIOS.
 
-5. Install **Visual Studio Community Edition 15.7+** from [here](https://www.visualstudio.com/downloads/).
+5. Install **Visual Studio Community Edition 15.8+** from [here](https://www.visualstudio.com/downloads/).
 
   * Select **all workloads** on the first panel
   * Select **individual components** and enable these:
@@ -40,13 +40,15 @@ Follow steps below to configure a development or test workstation.
 	  * PowerShell Tools
 	  * Help Viewer
   * Click **Install** (and take a coffee break)
-  * Install .NET SDK 2.1.200 (x64 installer) from [here](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.200}
+  * Install **.NET Core SDK 2.1.401 (x64 installer)** from [here](https://www.microsoft.com/net/download/dotnet-core/2.1)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   
 6. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonFORGE applications and services, **Visual Studio must be running with elevated privileges**.
 
-7. Install **Docker for Windows** from [here](https://store.docker.com/editions/community/docker-ce-desktop-windows)
+7. Install **.NET Core SDK 2.1.401 x64** from [here](https://www.microsoft.com/net/download/dotnet-core/2.1#sdk-2.1.300)
+
+8. Install **Docker for Windows** from [here](https://store.docker.com/editions/community/docker-ce-desktop-windows)
 
   * Use the **Stable** channel unless you have a specific need for bleeding edge features
   * **Right-click** the Docker icon in the system tray and select **Settings...*
@@ -56,19 +58,19 @@ Follow steps below to configure a development or test workstation.
   * You'll need to enter your workstation **credentials**
   * Select the **Daemon** tab on the left and make sure that **Experimental** is **unchecked**
 
-8. Test your Docker configuration.
+9. Test your Docker configuration.
 
   * Open a **CMD** command window.
   * Run this command: `docker pull alpine`
 
-9. If the previous step failed with a **Network Timeout** or another error, you'll need to update Docker's network settings:
+10. If the previous step failed with a **Network Timeout** or another error, you'll need to update Docker's network settings:
 
   * **Right-click** the Docker again in the system tray and select **Settings...*
   * Click **Network** on the left, select Fixed DNS Server and then **Apply**
 
     ![Docker Network Settings](./README/DockerNetwork.png)
 
-10. **Clone** the source repository on your workstation:
+11. **Clone** the source repository on your workstation:
 
   * Create an individual Github account [here](https://github.com/join?source=header-home) if you don't already have one
   * Have one of the neonFORGE repository administrators **grant you access** to the repository
@@ -81,34 +83,34 @@ Follow steps below to configure a development or test workstation.
     ![Video Studio Clone](./README/VisualStudioClone.png)
   * Click **Clone**
 
-11. **Close** any running instances of **Visual Studio**
+12. **Close** any running instances of **Visual Studio**
 
-12. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
+13. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
 
-13. Configure the build **environment variables**:
+14. Configure the build **environment variables**:
 
   * Open **File Explorer**
   * Navigate to the directory holding the cloned repository
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the CMD window when the script is finished
 
-14. Enable PowerShell script execution via (in a CMD window as administrator):
+15. Enable PowerShell script execution via (in a CMD window as administrator):
 
   `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
 
-15. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
+16. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon ansible password import %NF_ROOT%\passwords.zip`
 
-16. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
+17. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
 
-17. Confirm that the solution builds:
+18. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
   * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+19. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
   * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
   * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -118,27 +120,27 @@ Follow steps below to configure a development or test workstation.
   
     ![WinSCP Hidden Files](./README/WinSCPHiddenFiles.png)
 
-19. Install **OpenVPN**
+20. Install **OpenVPN**
 
    * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
    * Run this command as administrator in a CMD window to install a second TAP interface:
 
    `"%PROGRAMFILES%\Tap-Windows\bin\addtap.bat"`
 
-20. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+21. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-21. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+22. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-22. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+23. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
-23. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
+24. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
 
   * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
   * Confgure this to run as administrator.
   * Run Cmdr and configure settings.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-24. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+25. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
 # Git Branches and Docker Image Tagging Conventions
 
