@@ -24,7 +24,7 @@ namespace CoreLayers
     /// The idea here is that that tool will be used by Docker image generation
     /// scripts so that an image layer with just the dependencies can be created
     /// followed by the application layer.  This should tend to optimize images
-    /// because depdencies will like change less frequently and it's also likely
+    /// because dependencies will like change less frequently and it's also likely
     /// that multiple application images may share the same dependencies.
     /// </para>
     /// <para>

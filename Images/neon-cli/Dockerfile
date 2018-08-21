@@ -48,7 +48,7 @@ RUN apt-get update \
 
 # Add the application files in two layers.  The first will contain the dependencies
 # and the second will contain the application files.  This should result in more
-# efficient images because depdencies tend to be more stable than application files.
+# efficient images because dependencies tend to be more stable than application files.
 #
 # Note that we used the [core-layers] tool to separate the binary files before
 # building the container.
