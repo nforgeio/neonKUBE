@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>7.0.0-preview.0</Version>
+    <Version>7.0.0-preview.1</Version>
     <Company>neonFORGE, LLC</Company>
     <Product>neonHIVE</Product>
     <Description>neonFORGE Couchbase client extensions.</Description>
