@@ -31,5 +31,5 @@ RUN chmod 700 /*.sh \
     && mv docker-entrypoint.sh kong-entrypoint.sh \
     && mv neon-docker-entrypoint.sh docker-entrypoint.sh
 
-ENTRYPOINT ["tini","-g","--","/docker-entrypoint.sh"]
+ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
 CMD ["kong", "docker-start"]
