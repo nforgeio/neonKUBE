@@ -31,8 +31,8 @@ using Neon.Net;
 
 // $todo(jeff.lill): 
 //
-// This class being static doesn't support dependency injection.  I'm not sure it's
-// worth changing this now.  Perhaps when we start doing more hive unit testing.
+// This class being static doesn't support dependency injection.  
+// I'm not sure it's worth changing this now.
 
 namespace Neon.Hive
 {
