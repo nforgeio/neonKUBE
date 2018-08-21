@@ -928,8 +928,6 @@ namespace Neon.Hive
                 // We're going to assume that the container provides the
                 // [update-ca-certificates] tool.
 
-                Directory.CreateDirectory("/usr/local/share/ca-certificates");
-
                 var certNumber = 0;
 
                 foreach (var certificate in login.ClientCertificates)
@@ -938,7 +936,7 @@ namespace Neon.Hive
                     certNumber++;
                 }
 
-                var response = NeonHelper.ExecuteCaptureStreams("chmod", "644 /usr/local/share/ca-certificates/*");
+                NeonHelper.ExecuteCaptureStreams("update-ca-certificates", (string)null).EnsureSuccess();
             }
             else if (NeonHelper.IsLinux)
             {
