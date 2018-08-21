@@ -105,6 +105,14 @@ namespace Neon.Xen
             /// Optionally specifies any additional virtual drives to be created and 
             /// then attached to the new virtual machine (e.g. for Ceph OSD).
             /// </param>
+            /// <param name="primaryStorageRepository">
+            /// Optionally specifies the storage repository where the virtual machine's
+            /// primary disk will be created.  This defaults to <b>Local storage</b>.
+            /// </param>
+            /// <param name="extraStorageRespository">
+            /// Optionally specifies the storage repository where any extra drives for
+            /// the virtual machine will be created.  This defaults to <b>Local storage</b>.
+            /// </param>
             /// <returns>The new <see cref="XenVirtualMachine"/>.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public XenVirtualMachine Install(
@@ -113,27 +121,32 @@ namespace Neon.Xen
                 int                             processors  = 2, 
                 long                            memoryBytes = 0, 
                 long                            diskBytes   = 0, 
-                IEnumerable<XenVirtualDrive>    extraDrives = null)
+                IEnumerable<XenVirtualDrive>    extraDrives = null,
+                string                          primaryStorageRepository = "Local storage",
+                string                          extraStorageRespository  = "Local storage")
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(templateName));
                 Covenant.Requires<ArgumentException>(processors > 0);
                 Covenant.Requires<ArgumentException>(memoryBytes >= 0);
                 Covenant.Requires<ArgumentException>(diskBytes >= 0);
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(primaryStorageRepository));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(extraStorageRespository));
 
                 if (client.Template.Find(templateName) == null)
                 {
                     throw new XenException($"Template [{templateName}] does not exist.");
                 }
 
-                var response = client.SafeInvoke("vm-install", $"template={templateName}", $"new-name-label={name}");
-                var uuid     = response.OutputText.Trim();
+                var primarySR = client.Repository.Find(name: extraStorageRespository, mustExist: true);
+                var response  = client.SafeInvoke("vm-install", $"template={templateName}", $"new-name-label={name}", $"sr-uuid={primarySR.Uuid}");
+                var uuid      = response.OutputText.Trim();
 
                 // Configure processors
 
                 client.SafeInvoke("vm-param-set",
-                        $"uuid={uuid}",
-                        $"VCPUs-at-startup={processors}",
-                        $"VCPUs-max={processors}");
+                    $"uuid={uuid}",
+                    $"VCPUs-at-startup={processors}",
+                    $"VCPUs-max={processors}");
 
                 // Configure memory.
 
@@ -169,11 +182,11 @@ namespace Neon.Xen
                 if (extraDrives != null && extraDrives.Count() > 0)
                 {
                     var driveIndex = 1; // The boot device has index=0
-                    var sr         = client.Repository.Find("Local storage");
+                    var extraSR    = client.Repository.Find(name: extraStorageRespository, mustExist: true);
 
                     foreach (var drive in extraDrives)
                     {
-                        client.SafeInvoke("vm-disk-add", $"uuid={uuid}", $"sr-uuid={sr.Uuid}", $"disk-size={drive.Size}", $"device={driveIndex}");
+                        client.SafeInvoke("vm-disk-add", $"uuid={uuid}", $"sr-uuid={extraSR.Uuid}", $"disk-size={drive.Size}", $"device={driveIndex}");
                         driveIndex++;
                     }
                 }

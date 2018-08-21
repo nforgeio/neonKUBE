@@ -61,23 +61,40 @@ namespace Neon.Xen
             /// </summary>
             /// <param name="name">Specifies the target name.</param>
             /// <param name="uuid">Specifies the target unique ID.</param>
+            /// <param name="mustExist">Optionally specifies that the request repository must exist.  This defaults to <c>false</c>.</param>
             /// <returns>The named item or <c>null</c> if it doesn't exist.</returns>
+            /// <exception cref="ArgumentException">Thrown if neither <paramref name="name"/> or <paramref name="uuid"/> were passed.</exception>
+            /// <exception cref="KeyNotFoundException">Thrown if <paramref name="mustExist"/> is <c>true</c> and the request repository doesn't exist.</exception>
             /// <remarks>
             /// <note>
             /// One of <paramref name="name"/> or <paramref name="uuid"/> must be specified.
             /// </note>
             /// </remarks>
-            public XenStorageRepository Find(string name = null, string uuid = null)
+            public XenStorageRepository Find(string name = null, string uuid = null, bool mustExist = false)
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(uuid));
 
                 if (!string.IsNullOrWhiteSpace(name))
                 {
-                    return List().FirstOrDefault(item => item.NameLabel == name);
+                    var sr = List().FirstOrDefault(item => item.NameLabel == name);
+
+                    if (mustExist && sr == null)
+                    {
+                        throw new KeyNotFoundException($"Storage repository [{name}] does not exist.");
+                    }
+
+                    return sr;
                 }
                 else if (!string.IsNullOrWhiteSpace(uuid))
                 {
-                    return List().FirstOrDefault(item => item.Uuid == uuid);
+                    var sr = List().FirstOrDefault(item => item.Uuid == uuid);
+
+                    if (mustExist && sr == null)
+                    {
+                        throw new KeyNotFoundException($"Storage repository [{uuid}] does not exist.");
+                    }
+
+                    return sr;
                 }
                 else
                 {
