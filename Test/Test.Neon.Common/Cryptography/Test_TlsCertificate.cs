@@ -766,7 +766,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void SelfSigned_OtherFields()
         {
-            var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.RootAndSubdomains, issuedBy: "hello", issuedTo: "world");
+            var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.RootAndSubdomains);
 
             cert.Parse();
             Assert.NotNull(cert.Thumbprint);
@@ -779,8 +779,6 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
 
             Assert.NotNull(x509Cert);
             Assert.Equal(cert.Thumbprint, x509Cert.Thumbprint, ignoreCase: true);
-            Assert.Contains("O=hello", x509Cert.Issuer);
-            Assert.Contains("OU=world", x509Cert.Issuer);
         }
 
         [Fact]
