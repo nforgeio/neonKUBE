@@ -37,7 +37,7 @@ namespace NeonCli
         /// if the <b>--version=VERSION</b> option was specified to force a specific
         /// version.
         /// </summary>
-        public const string ActualVersion  = "18.08-preview.1";
+        public const string ActualVersion  = "18.08-preview.2";
 
         /// <summary>
         /// Returns the <b>neon-cli</b> version.  This may be different from <see cref="ActualVersion"/>
