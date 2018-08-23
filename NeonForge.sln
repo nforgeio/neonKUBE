@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\Thumbs.db = Doc\Thumbs.db
 		Doc\Ubuntu-16.04 neonHIVE Deploy.docx = Doc\Ubuntu-16.04 neonHIVE Deploy.docx
 		Doc\Ubuntu-16.04 neonHIVE Template.docx = Doc\Ubuntu-16.04 neonHIVE Template.docx
+		Doc\varnish-book.pdf = Doc\varnish-book.pdf
 		Doc\Vault & neonHIVE.docx = Doc\Vault & neonHIVE.docx
 	EndProjectSection
 EndProject
