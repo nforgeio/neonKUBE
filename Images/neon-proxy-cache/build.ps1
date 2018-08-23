@@ -4,8 +4,6 @@
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # Builds the neonHIVE Varnish base images.
-#
-# Usage: powershell -file build.ps1 REGISTRY ALPINE-VERSION VARNISH-VERSION TAG
 
 param 
 (

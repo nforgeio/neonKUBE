@@ -10,7 +10,9 @@ The following image tags identify archived images which will not be deleted but 
 
 # Description
 
-This base image includes the [Varnish Cache](http://varnish-cache.org) high performance caching HTTP proxy.  This can be placed in front of websites to improve webpage loading performance and reduce the load from the backends.  This image is also extended by [neon-varnish](https://hub.docker.com/r/nhive/neon-varnish/) that integrates the into neonHIVE.
+This image deploys (Varnish Cache)[http://varnish-cache.org] which is a high performance caching HTTP proxy.  This can be put in front of websites that allow caching to take load off of the web servers and improve webpage loading performance.
+
+This image supports only a very basic configuration that listens on port 80 and proxies only one backend server/port.  This will be good enough though for many Docker Stack scenarios.  You can derive from this image to implement more advanced scenarios like **neon-proxy-cache** does.
 
 # Environment Variables
 

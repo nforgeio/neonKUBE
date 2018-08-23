@@ -25,12 +25,11 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $varnishFamily,    # Varnish version family (like "60")
-		[parameter(Mandatory=$True, Position=2)][string] $varnishVersion,   # Specific Varish version (like "6.0.0")
+		[parameter(Mandatory=$True, Position=2)][string] $varnishVersion,   # Specific base varnish image version (like "6.0.0")
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/varnish"
+	$registry = "nhive/neon-varnish"
 	$date     = UtcDate
 	$branch   = GitBranch
 
@@ -47,7 +46,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -varnishFamily $varnishFamily -varnishVersion $varnishVersion -tag $tag
+	. ./build.ps1 -registry $registry -varnishVersion $varnishVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if (IsProd)
@@ -77,4 +76,4 @@ if ($all)
 {
 }
 
-Build "60" "6.0.0" -latest
+Build "6.0.0" -latest

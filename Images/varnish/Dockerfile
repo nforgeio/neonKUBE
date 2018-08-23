@@ -5,7 +5,7 @@
 #
 # ARGUMENTS:
 #
-#   FAMILY      - Identifies the major any minor version (like: "60")
+#   FAMILY      - Identifies the major/minor version (like: "60")
 #   VERSION     - The specific version (like: "6.0.0")
 
 FROM        nhive/ubuntu-16.04-dotnet
@@ -14,8 +14,21 @@ STOPSIGNAL  SIGTERM
 ARG         FAMILY
 ARG         VERSION
 
+# Varnish and dependencies layer.
+
 RUN apt-get update \
-    && apt-get -yq install curl apt-utils nano \
+    && apt-get -yq install curl apt-utils \
     && curl -s https://packagecloud.io/install/repositories/varnishcache/varnish${FAMILY}/script.deb.sh | bash \
     && apt-get install -yq varnish=${VERSION}\* \
     && apt-get clean -yq
+
+# Entrypoint and other tools layer.
+
+COPY docker-entrypoint.sh   /
+COPY _common/*.sh           /
+
+RUN chmod 700 /*.sh \
+    && apt-get update \
+    && apt-get install -yq nano
+
+ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]

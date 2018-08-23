@@ -8,14 +8,13 @@
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $varnishFamily,     # Varnish version family (like "60")
-	[parameter(Mandatory=$True,Position=3)][string] $varnishVersion,    # Specific Varish version (like "6.0.0")
-	[parameter(Mandatory=$True,Position=4)][string] $tag
+	[parameter(Mandatory=$True,Position=2)][string] $varnishVersion,    # Specific Varish version (like "6.0.0")
+	[parameter(Mandatory=$True,Position=3)][string] $tag
 )
 
 "   "
 "======================================="
-"* VARNISH:" + $tag
+"* NEON-VARNISH:" + $tag
 "======================================="
 
 # Copy the common scripts.
