@@ -96,11 +96,11 @@ Follow steps below to configure a development or test workstation.
 
   `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
 
-15. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
+15. Restart Visual Studio (to pick up the environment new variables) and build **Tools/neon-cli**
+
+16. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon ansible password import %NF_ROOT%\passwords.zip`
-
-16. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
 
 17. Confirm that the solution builds:
 
@@ -129,7 +129,7 @@ Follow steps below to configure a development or test workstation.
 
 21. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-22 *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+22. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
 23. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
 
