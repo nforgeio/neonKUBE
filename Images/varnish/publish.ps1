@@ -25,8 +25,8 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $alpineVersion,
-		[parameter(Mandatory=$True, Position=2)][string] $varnishVersion,
+		[parameter(Mandatory=$True, Position=1)][string] $varnishFamily,    # Varnish version family (like "60")
+		[parameter(Mandatory=$True, Position=2)][string] $varnishVersion,   # Specific Varish version (like "6.0.0")
 		[switch]$latest = $False
 	)
 
@@ -53,7 +53,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -alpineVersion $alpineVersion -varnishVersion $varnishVersion -tag $tag
+	. ./build.ps1 -registry $registry -varnishFamily $varnishFamily -varnishVersion $varnishVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if (IsProd)
@@ -83,4 +83,4 @@ if ($all)
 {
 }
 
-Build "3.7" "5.2.1-r0" -latest
+Build "60" "6.0.0" -latest

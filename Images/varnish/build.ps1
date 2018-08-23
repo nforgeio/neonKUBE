@@ -10,8 +10,8 @@
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $alpineVersion,
-	[parameter(Mandatory=$True,Position=3)][string] $varnishVersion,
+	[parameter(Mandatory=$True,Position=2)][string] $varnishFamily,     # Varnish version family (like "60")
+	[parameter(Mandatory=$True,Position=3)][string] $varnishVersion,    # Specific Varish version (like "6.0.0")
 	[parameter(Mandatory=$True,Position=4)][string] $tag
 )
 
@@ -29,7 +29,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "ALPINE_VERSION=$alpineVersion" --build-arg "VARNISH_VERSION=$varnishVersion" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "FAMILY=$varnishFamily" --build-arg "VERSION=$varnishVersion" . }
 
 # Clean up
 
