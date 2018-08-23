@@ -3,32 +3,19 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Base Alpine image.
-#
 # ARGUMENTS:
 #
-#   ALPINE_VERSION      - The base ALPINE image tag (e.g. "3.4")
-#   VARNISH_VERSION     - The Varnish version
+#   FAMILY      - Identifies the major any minor version (like: "60")
+#   VERSION     - The specific version (like: "6.0.0")
 
-ARG         ALPINE_VERSION
-FROM        alpine:${ALPINE_VERSION}
+FROM        nhive/ubuntu-16.04-dotnet
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
-ARG         VARNISH_VERSION
+ARG         FAMILY
+ARG         VERSION
 
-# Install Varnish.
-
-# $todo(jeff.lill):
-#
-# Note that we're currently ignoring VARNISH_VERSION and are
-# just installing the latest version available for Alpine.
-# At some point, I'd like to actually build download a 
-# specific source TAR and build it.
-
-COPY docker-entrypoint.sh   /
-COPY _common/*.sh           /
-
-RUN chmod 700 /*.sh \
-    && apk add --update tini varnish
-
-ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
+RUN apt-get update \
+    && apt-get -yq install curl apt-utils nano \
+    && curl -s https://packagecloud.io/install/repositories/varnishcache/varnish${FAMILY}/script.deb.sh | bash \
+    && apt-get install -yq varnish=${VERSION}\* \
+    && apt-get clean -yq
