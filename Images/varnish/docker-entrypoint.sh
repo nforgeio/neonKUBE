@@ -4,7 +4,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Runs varnish-cache
+# Runs the [varnish] HTTP caching proxy with some simple configuration options.
 
 # Add the root directory to the PATH.
 

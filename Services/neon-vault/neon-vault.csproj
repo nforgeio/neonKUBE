@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>neon_vault</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Hive\Neon.Hive.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
+
+</Project>
