@@ -156,6 +156,16 @@
     </None>
     <None Include="neon-proxy-cache\publish.ps1" />
     <None Include="neon-proxy-cache\README.md" />
+    <Content Include="neon-varnish\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-varnish\build.ps1" />
+    <None Include="neon-varnish\docker-entrypoint.sh" />
+    <None Include="neon-varnish\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-varnish\publish.ps1" />
+    <None Include="neon-varnish\README.md" />
     <None Include="test\docker-entrypoint.sh" />
     <None Include="test\Dockerfile" />
     <Content Include="_artifacts\README.txt" />

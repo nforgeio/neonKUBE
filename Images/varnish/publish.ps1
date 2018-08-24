@@ -34,12 +34,6 @@ function Build
 	$date     = UtcDate
 	$branch   = GitBranch
 
-	# $todo(jeff.lill):
-	#
-	# We're currently ignoring [$varnishVersion] when setting the image label.
-	# In the future, [build.ps1] should actually download the Varnish source
-	# for the specified version and build it.
-
 	if (IsProd)
 	{
 		# $tag = "$varnishVersion-$date"

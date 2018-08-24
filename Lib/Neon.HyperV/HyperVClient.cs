@@ -156,7 +156,8 @@ namespace Neon.HyperV
         /// <param name="machineName">The machine name.</param>
         /// <param name="memorySize">
         /// A string specifying the memory size.  This can be a long byte count or a
-        /// long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>2GB</b>.
+        /// long with units like <b>512MB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults 
+        /// to <b>2GB</b>.
         /// </param>
         /// <param name="minimumMemorySize">
         /// Optionally specifies the minimum memory size.  This defaults to <c>null</c> which will
@@ -167,7 +168,7 @@ namespace Neon.HyperV
         /// </param>
         /// <param name="diskSize">
         /// A string specifying the primary disk size.  This can be a long byte count or a
-        /// long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>64GB</b>.
+        /// long with units like <b>512MB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to <b>64GB</b>.
         /// </param>
         /// <param name="drivePath">
         /// Optionally specifies the path where the virtual hard drive will be located.  Pass 
