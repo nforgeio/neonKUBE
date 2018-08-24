@@ -285,7 +285,7 @@ namespace Neon.Hive
         /// <summary>
         /// Specifies the maximum amount of memory to allocate to this node when provisioned on a hypervisor.  
         /// This is specified as a string that can be a long byte count or a long with units like <b>512MB</b>
-        /// or <b>2GB</b>.  This defaults to the value specified by <see cref="HostingOptions.VmMemory"/>.
+        /// <b>2GB</b>, or <b>1TB</b>.  This defaults to the value specified by <see cref="HostingOptions.VmMemory"/>.
         /// </summary>
         [JsonProperty(PropertyName = "VmMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -294,7 +294,7 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// Specifies the minimum amount of memory to allocate to each hive virtual machine.  This is specified as a string that
-        /// can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b> or may be set to <c>null</c> to set
+        /// can be a long byte count or a long with units like <b>512MB</b>, <b>2GB</b>, or <b>1TB</b> or may be set to <c>null</c> to set
         /// the same value as <see cref="VmMemory"/>.  This defaults to the value specified by <see cref="HostingOptions.VmMinimumMemory"/>.
         /// </para>
         /// <note>
@@ -308,8 +308,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// The amount of disk space to allocate to this node when when provisioned on a hypervisor.  This is specified as a string
-        /// that can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to the value specified 
-        /// by <see cref="HostingOptions.VmDisk"/>.
+        /// that can be a long byte count or a long with units like <b>512MB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to the
+        /// value specified by <see cref="HostingOptions.VmDisk"/>.
         /// </summary>
         [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

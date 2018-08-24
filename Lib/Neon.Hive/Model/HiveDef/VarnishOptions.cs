@@ -30,6 +30,8 @@ namespace Neon.Hive
     /// </summary>
     public class VarnishOptions
     {
+        private const string defaultCacheSize = "100MB";
+
         /// <summary>
         /// Indicates whether Varnish cache is to be enabled for the hive.  
         /// This defaults to <c>true</c>.
@@ -37,6 +39,11 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
+
+        /// <summary>
+        /// Specifies the size of the varnish cache 
+        /// </summary>
+        public string CacheSize { get; set; } = defaultCacheSize;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
