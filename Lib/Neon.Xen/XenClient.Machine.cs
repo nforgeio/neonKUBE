@@ -115,7 +115,7 @@ namespace Neon.Xen
             /// </param>
             /// <returns>The new <see cref="XenVirtualMachine"/>.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
-            public XenVirtualMachine Install(
+            public XenVirtualMachine Create(
                 string                          name, 
                 string                          templateName, 
                 int                             processors  = 2, 
@@ -137,7 +137,7 @@ namespace Neon.Xen
                     throw new XenException($"Template [{templateName}] does not exist.");
                 }
 
-                var primarySR = client.Repository.Find(name: extraStorageRespository, mustExist: true);
+                var primarySR = client.Repository.Find(name: primaryStorageRepository, mustExist: true);
                 var response  = client.SafeInvoke("vm-install", $"template={templateName}", $"new-name-label={name}", $"sr-uuid={primarySR.Uuid}");
                 var uuid      = response.OutputText.Trim();
 

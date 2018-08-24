@@ -391,7 +391,7 @@ namespace Neon.Hive
                         });
                 }
 
-                var vm = xenHost.Machine.Install(vmName, hive.Definition.Hosting.XenServer.TemplateName,
+                var vm = xenHost.Machine.Create(vmName, hive.Definition.Hosting.XenServer.TemplateName,
                     processors:                 processors,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  diskBytes,
