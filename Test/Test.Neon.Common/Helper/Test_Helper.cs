@@ -255,6 +255,12 @@ namespace TestCommon
             Assert.True(NeonHelper.TryParseCount("1G", out value));
             Assert.Equal((double)NeonHelper.Giga, value);
 
+            Assert.True(NeonHelper.TryParseCount("2TB", out value));
+            Assert.Equal((double)NeonHelper.Tera * 2, value);
+
+            Assert.True(NeonHelper.TryParseCount("1T", out value));
+            Assert.Equal((double)NeonHelper.Tera, value);
+
             Assert.True(NeonHelper.TryParseCount("2GB", out value));
             Assert.Equal((double)NeonHelper.Giga * 2, value);
 
