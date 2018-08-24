@@ -52,6 +52,7 @@ namespace Neon.Hive
         private const string        defaultHiveManagerImage   = HiveConst.NeonPublicRegistry + "/neon-hive-manager:latest";
         private const string        defaultDnsImage           = HiveConst.NeonPublicRegistry + "/neon-dns:latest";
         private const string        defaultDnsMonImage        = HiveConst.NeonPublicRegistry + "/neon-dns-mon:latest";
+        private const string        defaultVarnishImage       = HiveConst.NeonPublicRegistry + "/neon-varnish:latest";
         private const string        defaultDrivePrefix        = "sd";
         private const int           defaultStepStaggerSeconds = 5;
         private const bool          defaultAllowUnitTesting   = false;
@@ -495,11 +496,11 @@ namespace Neon.Hive
         public CephOptions Ceph { get; set; } = new CephOptions();
 
         /// <summary>
-        /// Integrated <a href="https://konghq.com/">Kong API Gateway</a> options.
+        /// Integrated <a href="https://varnish-cache.org/">Kong API Gateway</a> options.
         /// </summary>
-        [JsonProperty(PropertyName = "Kong", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "Vernish", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public KongOptions Kong { get; set; } = new KongOptions();
+        public VarnishOptions Varnish { get; set; } = new VarnishOptions();
 
         /// <summary>
         /// The Docker image to be used to provision public and private proxies and proxy bridges.
@@ -548,6 +549,14 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "DnsMonImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultDnsMonImage)]
         public string DnsMonImage { get; set; } = defaultDnsMonImage;
+
+        /// <summary>
+        /// The Docker image to be used to provision the <b>neon-varnish</b> service.
+        /// This defaults to <b>nhive/neon-varnish:latest</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "VarnishImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultVarnishImage)]
+        public string VarnishImage { get; set; } = defaultDnsMonImage;
 
         /// <summary>
         /// Describes the Docker host nodes in the hive.
@@ -772,7 +781,7 @@ namespace Neon.Hive
             Log               = Log ?? new LogOptions();
             Dashboard         = Dashboard ?? new DashboardOptions();
             Ceph              = Ceph ?? new CephOptions();
-            Kong              = Kong ?? new KongOptions();
+            Varnish           = Varnish ?? new VarnishOptions();
 
             ProxyImage        = ProxyImage ?? defaultProxyImage;
             ProxyVaultImage   = ProxyVaultImage ?? defaultProxyVaultImage;
@@ -780,6 +789,7 @@ namespace Neon.Hive
             HiveManagerImage  = HiveManagerImage ?? defaultHiveManagerImage;
             DnsImage          = DnsImage ?? defaultDnsImage;
             DnsMonImage       = DnsMonImage ?? defaultDnsMonImage;
+            VarnishImage      = VarnishImage ?? defaultVarnishImage;
 
             Setup.Validate(this);
             Network.Validate(this);
@@ -792,7 +802,7 @@ namespace Neon.Hive
             Log.Validate(this);
             Dashboard.Validate(this);
             Ceph.Validate(this);
-            Kong.Validate(this);
+            Varnish.Validate(this);
 
             new HostingManagerFactory().Validate(this);
 

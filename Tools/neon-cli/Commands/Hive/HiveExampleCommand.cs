@@ -615,11 +615,11 @@ USAGE:
         ""MDSCacheSize"": ""64MB""
     },
 
-    // Integrated Kong API Gateway settings.
+    // Integrated Varnish HTTP Cache settings.
 
-    ""Kong"": {
+    ""Varnish"": {
 
-        // Indicates whether Kong API Gateway is to be enabled for the hive.  
+        // Indicates whether Varnish cache is to be enabled for the hive.  
         // This defaults to [true].
 
         ""Enabled"": true

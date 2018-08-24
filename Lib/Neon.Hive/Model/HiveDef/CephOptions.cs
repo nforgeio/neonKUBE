@@ -356,7 +356,7 @@ namespace Neon.Hive
 
             if (Release == string.Empty)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(Release)}={Release}] is not a valid.  Please specify something like [{defaultRelease}].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(Release)}={Release}] is not valid.  Please specify something like [{defaultRelease}].");
             }
 
             if (HiveDefinition.ValidateSize(OSDDriveSize, this.GetType(), nameof(OSDDriveSize)) < NeonHelper.Giga)

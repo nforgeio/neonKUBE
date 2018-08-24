@@ -32,11 +32,10 @@ namespace NeonCli
 {
     /// <summary>
     /// Handles the provisioning of the global hive proxy services including: 
-    /// <b>neon-hive-manager</b>, <b>neon-proxy-manager</b>,
-    /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b>,
-    /// <b>neon-dns</b>, <b>neon-dns-mon</b> as well as the
-    /// <b>neon-proxy-public-bridge</b> and <b>neon-proxy-private-bridge</b>
-    /// containers on any pet nodes.
+    /// <b>neon-hive-manager</b>, <b>neon-proxy-manager</b>, <b>neon-varnish</b>,
+    /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b>, <b>neon-dns</b>, 
+    /// <b>neon-dns-mon</b> as well as the <b>neon-proxy-public-bridge</b> and
+    /// <b>neon-proxy-private-bridge</b> containers on any pet nodes.
     /// </summary>
     public class HiveServices
     {
@@ -184,6 +183,46 @@ namespace NeonCli
                         "--replicas", 1,
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(hive.Definition.HiveManagerImage));
+
+                    //---------------------------------------------------------
+                    // Deploy the Varnish HTTP caching service
+
+                    if (hive.Definition.Varnish.Enabled)
+                    {
+                        firstManager.Status = "start: neon-varnish";
+
+                        var constraint = new List<string>();
+
+                        if (hive.Workers.Count() > 0)
+                        {
+                            constraint.Add("--constraint");
+                            constraint.Add("node.role!=manager");
+                        }
+
+                        firstManager.IdempotentDockerCommand("setup/neon-varnish",
+                            response =>
+                            {
+                                foreach (var manager in hive.Managers)
+                                {
+                                    manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-varnish.sh"), response.BashCommand);
+                                }
+
+                                if (response.ExitCode != 0)
+                                {
+                                    firstManager.Fault(response.ErrorSummary);
+                                }
+                            },
+                            "docker service create",
+                            "--name", "neon-varnish",
+                            "--detach=false",
+                            "--mount", "type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true",
+                            "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
+                            "--env", "LOG_LEVEL=INFO",
+                            constraint,
+                            "--replicas", 1,
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
+                            Program.ResolveDockerImage(hive.Definition.VarnishImage));
+                    }
 
                     //---------------------------------------------------------
                     // Deploy proxy related services
