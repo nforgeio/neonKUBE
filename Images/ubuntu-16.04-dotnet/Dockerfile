@@ -8,7 +8,7 @@
 #
 # ARGUMENTS:
 #
-#   VERSION     - The version of the .NET runtime to install (e.g. "2.0.0")
+#   VERSION     - The version of the .NET runtime to install (e.g. "2.1")
 
 FROM        nhive/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
@@ -27,11 +27,12 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 #
 #   https://www.microsoft.com/net/learn/get-started/linuxubuntu
 
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg \
-    && mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg \
-    && echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list \
+RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O /tmp/packages-microsoft-prod.deb \
+    && dpkg -i /tmp/packages-microsoft-prod.deb \
     && apt-get update \
-    && apt-get install -yq dotnet-runtime-$VERSION \
+    && apt-get install -yq apt-transport-https apt-utils \
+    && apt-get install -yq aspnetcore-runtime-${VERSION} \
+    && rm /tmp/packages-microsoft-prod.deb \
     && apt-get clean -yq
 
 CMD /bin/bash

@@ -71,17 +71,22 @@ namespace Neon.Common
         /// <summary>
         /// The constant 1,024 (2^10).
         /// </summary>
-        public const int Kilo = 1024;
+        public const long Kilo = 1024;
 
         /// <summary>
         /// The constant 1,048,576 (2^20).
         /// </summary>
-        public const int Mega = Kilo * Kilo;
+        public const long Mega = Kilo * Kilo;
 
         /// <summary>
         /// The constant 1,073,741,824 (2^30).
         /// </summary>
-        public const int Giga = Mega * Kilo;
+        public const long Giga = Mega * Kilo;
+
+        /// <summary>
+        /// The constant 1,099,511,627,776 (2^40).
+        /// </summary>
+        public const long Tera = Giga * Kilo;
 
         /// <summary>
         /// Returns the characters used as wildcards for the current file system.
@@ -244,7 +249,7 @@ namespace Neon.Common
                 return false;
             }
 
-            var units = 1;
+            var units = 1L;
             var trim  = 0;
 
             if (input.EndsWith("KB", StringComparison.OrdinalIgnoreCase))
@@ -260,6 +265,11 @@ namespace Neon.Common
             else if (input.EndsWith("GB", StringComparison.OrdinalIgnoreCase))
             {
                 units = Giga;
+                trim = 2;
+            }
+            else if (input.EndsWith("TB", StringComparison.OrdinalIgnoreCase))
+            {
+                units = Tera;
                 trim  = 2;
             }
             else if (input.EndsWith("B", StringComparison.OrdinalIgnoreCase))
@@ -280,6 +290,11 @@ namespace Neon.Common
             else if (input.EndsWith("G", StringComparison.OrdinalIgnoreCase))
             {
                 units = Giga;
+                trim = 1;
+            }
+            else if (input.EndsWith("T", StringComparison.OrdinalIgnoreCase))
+            {
+                units = Tera;
                 trim  = 1;
             }
 
