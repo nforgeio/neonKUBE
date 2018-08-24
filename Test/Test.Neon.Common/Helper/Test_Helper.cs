@@ -264,6 +264,12 @@ namespace TestCommon
             Assert.True(NeonHelper.TryParseCount("4gb", out value));
             Assert.Equal((double)NeonHelper.Giga * 4, value);
 
+            Assert.True(NeonHelper.TryParseCount("3t", out value));
+            Assert.Equal((double)NeonHelper.Tera * 3, value);
+
+            Assert.True(NeonHelper.TryParseCount("4tb", out value));
+            Assert.Equal((double)NeonHelper.Tera * 4, value);
+
             // Test fractional values.
 
             Assert.True(NeonHelper.TryParseCount("0.5", out value));
