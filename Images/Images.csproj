@@ -60,6 +60,16 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="couchbase-test\init-cluster.sh" />
+    <Content Include="dotnet-aspnet\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="dotnet-aspnet\build.ps1" />
+    <None Include="dotnet-aspnet\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="dotnet-aspnet\publish.ps1" />
+    <None Include="dotnet-aspnet\README.md" />
+    <None Include="dotnet-aspnet\resolv.conf.head.sh" />
     <None Include="dotnet\resolv.conf.head.sh" />
     <Content Include="kong\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
