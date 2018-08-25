@@ -74,6 +74,7 @@ if ($all)
 {
 	Build 2.0.3-runtime
 	Build 2.0.4-runtime
+	Build 2.0.5-runtime -latest
 }
 
-Build 2.0.5-runtime -latest
+Build 2.1.3-runtime-alpine3.7 -latest

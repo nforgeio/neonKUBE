@@ -7,7 +7,7 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The .NET Core image tag (e.g. "1.1.0-runtime")
+#   VERSION         - The .NET Core image tag (like:"2.1.3-runtime-alpine3.7")
 #   TINI_VERSION    - The version of the Tini INIT manager to install
 
 ARG         VERSION
