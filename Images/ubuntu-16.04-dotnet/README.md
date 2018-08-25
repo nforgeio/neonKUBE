@@ -1,4 +1,4 @@
-Ubuntu 16.04 image with .NET Core.
+Ubuntu 16.04 image with the .NET Core (including ASP.NET)
 
 # Image Tags
 
@@ -8,4 +8,4 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-This image extends the latest [nhive/ubuntu-16.04](https://hub.docker.com/r/nhive/ubuntu-16.04/) by installing the .NET Core runtime.  The image tag identifies the .NET Core version installed.
+This image extends the latest [nhive/ubuntu-16.04](https://hub.docker.com/r/nhive/ubuntu-16.04/) by installing the .NET Core runtime (including ASP.NET).  The image tag identifies the .NET Core version installed.
