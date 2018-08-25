@@ -31,12 +31,6 @@ namespace Neon.Hive
         public const string RootUser = "root";
 
         /// <summary>
-        /// The local endpoint exposed by hivev docker instances to be monitored by the 
-        /// <b>neon-log-metricbeat</b> container to capture Docker metrics.
-        /// </summary>
-        public readonly static string DockerApiInternalEndpoint = $"tcp://127.0.0.1:{NetworkPorts.Docker}";
-
-        /// <summary>
         /// Name of the standard hive <b>public</b> overlay network.
         /// </summary>
         public const string PublicNetwork = "neon-public";

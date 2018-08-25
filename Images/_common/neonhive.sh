@@ -170,10 +170,6 @@ export NetworkPorts_CephDashboard=7000
 # Important neonHIVE constants.  These must match the definitions in
 # [Neon.Hive.NeonHiveConst].
 
-# The local endpoint exposed by hive docker instances to be monitored by the 
-# [neon-log-metricbeat] container to capture Docker metrics.
-export HiveConst_DockerApiInternalEndpoint=tcp://127.0.0.1:${NetworkPorts_Docker}
-
 # Name of the standard hive public overlay network.
 export HiveConst_PublicNetwork="neon-public"
 

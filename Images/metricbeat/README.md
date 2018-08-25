@@ -25,18 +25,19 @@ By default, this container launches Metricbeat configured to capture the followi
 * Filesystem Statistics and Summaries
 * Process Statistics
 * Disk I/O
+* Docker
 * Memory
 * Network
 
 You may may modify these behaviors by creating a derived image, modifying the `/metricbeat.yml.sh` configuration script and then redeploying the hive's **neon-log-metricbeat** containers as described below.
-
-NOTE: Although it would be nice to run Metricbeat as a Docker service, that doesn't work because it has to run on the host network.
 
 # Environment Variables
 
 * **ELASTICSEARCH_URL** (*required*) - URL of the Elasticsearch cluster where the metrics are to be persisted.
 
 * **PERIOD** (*optional*) - interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to **60s**.
+
+* **DOCKER_ENDPOINT** (*optional*) - specifies the Docker endpoint to be monitored.  This defaults to the local Docker unix domain soxket `unix:///var/run/docker.sock` which must be explicitly bound to the Metricbeat container.  You may also specify a URL.
 
 * **PROCESSES** (*optional*) - JSON array specifying the regex's of the process names for which statistics are to be gathered.  This defaults to **['dockerd','consul','vault']**.
 
@@ -58,6 +59,7 @@ docker run \
     --detatch \
     --net host \
     --restart always \
+    --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
     --volume /etc/neon/env-host:/etc/neon/env-host:ro \
     --volume /proc:/hostfs/proc:ro \
     --volume /:/hostfs:ro \

@@ -29,6 +29,10 @@ if [ "${PERIOD}" == "" ] ; then
     export PERIOD=60s
 fi
 
+if [ "${DOCKER_ENDPOINT}" == "" ] ; then
+    export DOCKER_ENDPOINT=unix:///var/run/docker.sock
+fi
+
 if [ "${PROCESSES}" == "" ] ; then
     export PROCESSES=[\'dockerd\',\'consul\',\'vault\']
 fi

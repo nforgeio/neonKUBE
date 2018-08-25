@@ -326,20 +326,13 @@ namespace NeonCli
                 managerTimeSources = "\"pool.ntp.org\"";
             }
 
-            // Generate the Docker daemon command line options.  The [/etc/default/docker] script uses this.
+            // Generate the Docker daemon command line options.
 
             var sbDockerOptions = new StringBuilder();
 
             if (Program.ServiceManager == ServiceManager.Systemd)
             {
                 sbDockerOptions.AppendWithSeparator($"-H unix:///var/run/docker.sock");
-
-                if (hiveDefinition.Log.Enabled)
-                {
-                    // Metricbeat needs Docker API access.
-
-                    sbDockerOptions.AppendWithSeparator($"-H {HiveConst.DockerApiInternalEndpoint}");
-                }
             }
             else
             {
