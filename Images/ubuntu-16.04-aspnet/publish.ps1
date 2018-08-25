@@ -1,9 +1,9 @@
-﻿#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the [nhive/dotnet-aspnet] images and pushes them to Docker Hub.
+# Builds all of the supported Ubuntu/.NET Core images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -25,32 +25,24 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,
+		[parameter(Mandatory=$True, Position=1)][string] $dotnetVersion,
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/dotnet-aspnet"
+	$registry = "nhive/ubuntu-16.04-dotnet"
 	$date     = UtcDate
 	$branch   = GitBranch
-
-	if (IsProd)
-	{
-		$tag = "$version-$date"
-	}
-	else
-	{
-		$tag = "$branch-$version"
-	}
+	$tag      = "${dotnetVersion}-${date}"
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
-    PushImage "${registry}:$tag"
+	. ./build.ps1 -registry $registry -tag $tag -version $dotnetVersion
+	PushImage "${registry}:$tag"
 
 	if (IsProd)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
-		PushImage "${registry}:$version"
+		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
+		PushImage "${registry}:$dotnetVersion"
 	}
 
 	if ($latest)
@@ -74,4 +66,4 @@ if ($all)
 {
 }
 
-Build 2.1.3-aspnetcore-runtime-alpine3.7 -latest
+Build 2.1 -latest

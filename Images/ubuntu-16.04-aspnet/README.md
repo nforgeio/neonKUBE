@@ -1,4 +1,4 @@
-Ubuntu 16.04 image with the .NET Core (does not include ASP.NET)
+Ubuntu 16.04 image with the .NET Core (includes ASP.NET)
 
 # Image Tags
 

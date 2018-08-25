@@ -7,11 +7,11 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The .NET Core image tag (like:"2.1.3-aspnetcore-runtime-alpine3.7")
+#   VERSION         - The .NET Core image tag (like: "2.1.3")
 #   TINI_VERSION    - The version of the Tini INIT manager to install
 
 ARG         VERSION
-FROM        microsoft/dotnet:${VERSION}
+FROM        microsoft/dotnet:${VERSION}-aspnetcore-runtime-alpine3.7
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         TINI_VERSION

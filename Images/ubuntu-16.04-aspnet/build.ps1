@@ -1,9 +1,9 @@
-﻿#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds a [nhive/dotnet-aspnet] image.
+# Builds a neonHIVE Ubuntu image with the specified .NET Core packages.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
@@ -16,7 +16,7 @@ param
 
 "   "
 "======================================="
-"* DOTNET-ASPNET:" + $tag
+"* UBUNTU-16.04-ASPNET " + $tag
 "======================================="
 
 # Copy the common scripts.
@@ -28,8 +28,11 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version"  --build-arg "TINI_VERSION=$tini_version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
 
 # Clean up
+
+sleep 5 # Docker sometimes appears to hold references to files we need
+		# to delete so wait for a bit.
 
 DeleteFolder _common

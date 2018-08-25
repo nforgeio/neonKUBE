@@ -6,7 +6,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Details
 
-neonHIVE base runtime images for Microsoft .NET Core Linux containers.  These images are based off of the corresponding basic **Alpine runtime** images at [microsoft/dotnet](https://hub.docker.com/r/microsoft/dotnet/).  Use the larger [nhive/dotnet-aspnet](https://hub.docker.com/r/nhive/dotnet-aspnet/) image if you need ASP.NET support.
+neonHIVE base runtime images for Microsoft .NET Core Linux containers.  These images are based off of the corresponding basic **Alpine ASP.NET runtime** images at [microsoft/dotnet](https://hub.docker.com/r/microsoft/dotnet/).  Use the larger [nhive/aspnet](https://hub.docker.com/r/nhive/aspnet/) image if you need ASP.NET support.
 
 # Additional Packages
 

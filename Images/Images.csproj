@@ -60,16 +60,16 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="couchbase-test\init-cluster.sh" />
-    <Content Include="dotnet-aspnet\.dockerignore">
+    <Content Include="aspnet\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="dotnet-aspnet\build.ps1" />
-    <None Include="dotnet-aspnet\Dockerfile">
+    <None Include="aspnet\build.ps1" />
+    <None Include="aspnet\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="dotnet-aspnet\publish.ps1" />
-    <None Include="dotnet-aspnet\README.md" />
-    <None Include="dotnet-aspnet\resolv.conf.head.sh" />
+    <None Include="aspnet\publish.ps1" />
+    <None Include="aspnet\README.md" />
+    <None Include="aspnet\resolv.conf.head.sh" />
     <None Include="dotnet\resolv.conf.head.sh" />
     <Content Include="kong\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -274,6 +274,17 @@
     <None Include="test\build.ps1" />
     <None Include="test\publish.ps1" />
     <None Include="test\README.md" />
+    <Content Include="ubuntu-16.04-aspnet\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="ubuntu-16.04-aspnet\build.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ubuntu-16.04-aspnet\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ubuntu-16.04-aspnet\publish.ps1" />
+    <None Include="ubuntu-16.04-aspnet\README.md" />
     <None Include="ubuntu-16.04-dotnet\build.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

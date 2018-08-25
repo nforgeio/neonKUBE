@@ -84,13 +84,24 @@ elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 
 if ($base)
 {
+	# Other images are based off of these:
+
 	Publish "$image_root\\alpine"
 	Publish "$image_root\\ubuntu-16.04"
+
+	# .NET Core Base images:
+
+	Publish "$image_root\\dotnet"
+	Publish "$image_root\\aspnet"
 	Publish "$image_root\\ubuntu-16.04-dotnet"
+	Publish "$image_root\\ubuntu-16.04-aspnet"
+
+	# Other base images:
+
 	Publish "$image_root\\couchbase-test"
 	Publish "$image_root\\cfssl"
 	Publish "$image_root\\golang"
-	Publish "$image_root\\dotnet"
+	Publish "$image_root\\aspnet"
 	Publish "$image_root\\openjdk"
 	Publish "$image_root\\elasticsearch"
 	Publish "$image_root\\elasticsearch6"

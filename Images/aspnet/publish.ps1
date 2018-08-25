@@ -1,9 +1,9 @@
-#------------------------------------------------------------------------------
+﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds all of the supported Ubuntu/.NET Core images and pushes them to Docker Hub.
+# Builds the [nhive/dotnet-aspnet] images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -25,24 +25,32 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $dotnetVersion,
+		[parameter(Mandatory=$True, Position=1)][string] $version,
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/ubuntu-16.04-dotnet"
+	$registry = "nhive/aspnet"
 	$date     = UtcDate
 	$branch   = GitBranch
-	$tag      = "${dotnetVersion}-${date}"
-
-	# Build and publish the images.
-
-	. ./build.ps1 -registry $registry -tag $tag -version $dotnetVersion
-	PushImage "${registry}:$tag"
 
 	if (IsProd)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
-		PushImage "${registry}:$dotnetVersion"
+		$tag = "$version-$date"
+	}
+	else
+	{
+		$tag = "$branch-$version"
+	}
+
+	# Build and publish the images.
+
+	. ./build.ps1 -registry $registry -version $version -tag $tag
+    PushImage "${registry}:$tag"
+
+	if (IsProd)
+	{
+		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
+		PushImage "${registry}:$version"
 	}
 
 	if ($latest)
@@ -64,15 +72,7 @@ $noImagePush = $nopush
 
 if ($all)
 {
-    # I'm not sure if these older .NET Core 2.0.x builds will work anymore
-    # after we upgraded to 2.1.  There probably isn't a reason to rebuild
-    # these again though, because neonHIVE was never released to the public
-    # on .NET Core 2.1.
-    #
-	# Build 2.0.3
-	# Build 2.0.4
-    # Build 2.0.5
 }
 
-Build 2.1 -latest
-
+Build 2.1
+Build 2.1.3 -latest
