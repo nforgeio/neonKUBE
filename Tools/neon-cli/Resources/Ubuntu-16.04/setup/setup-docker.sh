@@ -154,7 +154,7 @@ Type=notify
 # The default is not to use systemd for cgroups because the delegate issues still
 # exists and systemd currently does not support the cgroup feature set required
 # for containers run by docker
-ExecStart=/usr/bin/dockerd --graph /mnt-data/docker $<docker.options>
+ExecStart=/usr/bin/dockerd --data-root /mnt-data/docker $<docker.options>
 ExecReload=/bin/kill -s HUP \$MAINPID
 # Rate limit Docker restarts
 Restart=always
