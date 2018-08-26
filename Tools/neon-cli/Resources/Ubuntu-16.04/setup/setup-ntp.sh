@@ -36,7 +36,7 @@ startsetup ntp
 
 # Install NTP and configure.
 
-safe-apt-get -yq install ntp
+safe-apt-get install -yq ntp
 mkdir -p /var/log/ntp
 
 cat <<EOF > /etc/ntp.conf

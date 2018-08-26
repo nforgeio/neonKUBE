@@ -30,7 +30,8 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O /tmp/packages-microsoft-prod.deb \
     && dpkg -i /tmp/packages-microsoft-prod.deb \
     && apt-get update \
-    && apt-get install -yq apt-transport-https apt-utils \
+    && apt-get install -yq apt-utils \
+    && apt-get install -yq apt-transport-https \
     && apt-get install -yq aspnetcore-runtime-${VERSION} \
     && rm /tmp/packages-microsoft-prod.deb \
     && apt-get clean -yq

@@ -17,7 +17,7 @@ STOPSIGNAL  SIGTERM
 
 # Install the [tini] INIT manager.
 
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini ca-certificates
 
 # Install the Consul and Vault binaries.
 

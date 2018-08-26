@@ -12,12 +12,11 @@ STOPSIGNAL  SIGTERM
 COPY docker-entrypoint.sh   /
 COPY program.js             /
 
-RUN chmod 700 /docker-entrypoint.sh \
-    && apk add --no-cache tini \
+RUN apk add --no-cache tini ca-certificates \
+    && chmod 700 /docker-entrypoint.sh \
     && chmod 700 /sbin/tini \
     && chmod 600 /program.js
 
 EXPOSE 80
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
-

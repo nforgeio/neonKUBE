@@ -28,7 +28,7 @@ RUN chmod 700 /sbin/tini
 
 RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf \
     && apt-get update \
-    && apt-get install -yq wget curl unzip jq gosu \
+    && apt-get install -yq wget curl unzip jq gosu ca-certificates \
     && apt-get install -yq apt-transport-https \
     && apt-get clean -yq
 

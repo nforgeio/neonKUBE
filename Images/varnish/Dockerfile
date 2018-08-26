@@ -17,7 +17,8 @@ ARG         VERSION
 # Varnish and dependencies layer.
 
 RUN apt-get update \
-    && apt-get -yq install curl apt-utils \
+    && apt-get install -yq apt-utils \
+    && apt-get install -yq curl \
     && curl -s https://packagecloud.io/install/repositories/varnishcache/varnish${FAMILY}/script.deb.sh | bash \
     && apt-get install -yq varnish=${VERSION}\* \
     && apt-get clean -yq
