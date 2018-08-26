@@ -21,7 +21,7 @@ param
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "TINI_VERSION=$tini_version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "TINI_URL=$tini_url" . }
 
 if ($latest)
 {

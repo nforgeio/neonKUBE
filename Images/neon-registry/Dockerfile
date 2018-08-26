@@ -8,7 +8,6 @@
 # ARGUMENTS:
 #
 #   VERSION         - The Docker registry version (e.g. "2.6.0")
-#   TINI_VERSION    - The version of the Tini INIT manager to install
 #
 # REMARKS:
 #
@@ -23,7 +22,7 @@ STOPSIGNAL  SIGTERM
 
 # Install the [tini] INIT manager.
 
-RUN apk add --update tini
+RUN apk add --no-cache tini
 
 # Install our custom entry point and helper scripts.
 

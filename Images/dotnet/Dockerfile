@@ -8,13 +8,11 @@
 # ARGUMENTS:
 #
 #   VERSION         - The .NET Core image tag (like: "2.1.3")
-#   TINI_VERSION    - The version of the Tini INIT manager to install
 
 ARG         VERSION
 FROM        microsoft/dotnet:${VERSION}-runtime-alpine3.7
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
-ARG         TINI_VERSION
 
 # Opt-out of .NET Core telemetry.
 
@@ -30,5 +28,4 @@ COPY _common/*.sh           /
 
 # Install the [tini] INIT manager.
 
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod 700 /tini
+RUN apk add --no-cache tini

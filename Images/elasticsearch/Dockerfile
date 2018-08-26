@@ -75,4 +75,4 @@ COPY config/*               /usr/share/elasticsearch/config/
 
 RUN chmod 700 /*.sh
 
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

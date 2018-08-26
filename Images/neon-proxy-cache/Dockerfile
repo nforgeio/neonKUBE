@@ -20,6 +20,6 @@ COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
 
 RUN chmod 700 /*.sh \
-    && apk add --update varnish
+    && apk add --no-cache varnish
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

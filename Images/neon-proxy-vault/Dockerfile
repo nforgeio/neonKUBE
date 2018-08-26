@@ -15,6 +15,6 @@ COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
 
 RUN chmod 700 /*.sh \
-    && apk add --update curl jq
+    && apk add --no-cache curl jq
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

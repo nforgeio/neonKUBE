@@ -17,7 +17,7 @@ STOPSIGNAL  SIGTERM
 
 # Install the [tini] INIT manager.
 
-RUN apk add --update tini
+RUN apk add --no-cache tini
 
 # Install the Consul and Vault binaries.
 
@@ -35,6 +35,6 @@ COPY _common/*.sh           /
 # Set script permissions and then install [bash], [unzip] and [jq]. 
 
 RUN chmod 700 /*.sh \
-    && apk add --update bash unzip jq
+    && apk add --no-cache bash unzip jq
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

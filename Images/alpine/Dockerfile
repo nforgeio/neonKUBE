@@ -16,5 +16,4 @@ STOPSIGNAL  SIGTERM
 
 # Install the [tini] INIT manager.
 
-RUN apk add --update tini \
-    && chmod 700 /sbin/tini
+RUN apk add --no-cache tini

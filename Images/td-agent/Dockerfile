@@ -28,4 +28,4 @@ COPY td-agent.conf /etc/td-agent
 
 RUN chmod 600 /etc/td-agent
 
-ENTRYPOINT [ "/tini", "-g", "--", "/usr/sbin/td-agent" ]
+ENTRYPOINT ["tini", "-g", "--", "/usr/sbin/td-agent"]

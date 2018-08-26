@@ -8,6 +8,10 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 Enhances the official [Alpine](https://hub.docker.com/_/alpine/) image to include some additional packages.
 
+Note that any images that extend this one should launch the [tini](https://github.com/krallin/tini) init manager as the first process within the container so that Linux signals will be forwarded to child processes and so zombie processes will be reaped.  You'll need to specify a Docker entrypoint like:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]`
+
 # Additional Packages
 
 This image includes the following packages:

@@ -28,7 +28,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version"  --build-arg "TINI_VERSION=$tini_version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
 
 # Clean up
 

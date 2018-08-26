@@ -3,18 +3,16 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Base .NET Core image (with ASP.NET).
+# Base ASP.NET Core image.
 #
 # ARGUMENTS:
 #
-#   VERSION         - The .NET Core image tag (like: "2.1.3")
-#   TINI_VERSION    - The version of the Tini INIT manager to install
+#   VERSION         - The ASP.NET Core image tag (e.g. "2.1.3")
 
 ARG         VERSION
 FROM        microsoft/dotnet:${VERSION}-aspnetcore-runtime-alpine3.7
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
-ARG         TINI_VERSION
 
 # Opt-out of .NET Core telemetry.
 
@@ -30,5 +28,4 @@ COPY _common/*.sh           /
 
 # Install the [tini] INIT manager.
 
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod 700 /tini
+RUN apk add --no-cache tini
