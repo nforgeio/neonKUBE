@@ -592,6 +592,7 @@ namespace NeonCli
                         "--detach",
                         "--net", "host",
                         "--restart", "always",
+                        "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
                         "--volume", "/etc/neon/env-host:/etc/neon/env-host:ro",
                         "--volume", "/proc:/hostfs/proc:ro",
                         "--volume", "/:/hostfs:ro",
