@@ -876,7 +876,7 @@ ff02::2         ip6-allrouters
         }
 
         /// <summary>
-        /// Generates and uploads the <b>/etc/neon/env-host</b> file for a node.
+        /// Generates and uploads the <b>/etc/neon/host-env</b> file for a node.
         /// </summary>
         /// <param name="node">The target node.</param>
         private void UploadHostEnvFile(SshProxy<NodeDefinition> node)
@@ -911,13 +911,13 @@ export CONSUL_HTTP_FULLADDR=http://{hive.Definition.Hostnames.Consul}:{hive.Defi
 
             sbEnvHost.AppendLine(
 $@"#------------------------------------------------------------------------------
-# FILE:         /etc/neon/env-host
+# FILE:         /etc/neon/host-env
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # This script can be mounted into containers that require extended knowledge
 # about the hive and host node.  This will be generally be mounted to the container
-# at [/etc/neon/env-host] such that the container entrypoint script can execute it.
+# at [/etc/neon/host-env] such that the container entrypoint script can execute it.
 
 # Define the hive and Docker host related environment variables.
 
@@ -972,7 +972,7 @@ if [ -d /mnt/host/ca-certificates ] ; then
     fi
 fi
 ");
-            node.UploadText($"{HiveHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
+            node.UploadText($"{HiveHostFolders.Config}/host-env", sbEnvHost.ToString(), 4, Encoding.UTF8);
         }
 
         /// <summary>
@@ -2980,7 +2980,7 @@ systemctl start neon-volume-plugin
                         "--endpoint-mode", "vip",
                         "--network", HiveConst.PrivateNetwork,
                         options,
-                        "--mount", "type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true",
+                        "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
                         "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
                         "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                         "--env", $"LOG_LEVEL=INFO",
@@ -3014,7 +3014,7 @@ systemctl start neon-volume-plugin
                                     "--name", "neon-proxy-vault",
                                     "--detach",
                                     "--publish", $"{HiveHostPorts.ProxyVault}:{NetworkPorts.Vault}",
-                                    "--mount", "type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true",
+                                    "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
                                     "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
                                     "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                                     "--env", $"LOG_LEVEL=INFO",

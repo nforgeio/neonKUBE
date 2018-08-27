@@ -28,7 +28,7 @@ The **neon-log-collector** service is responsible for receiving events from the 
 
 # Deployment
 
-This image requires some knowledge about its execution context like the hive and node names.  There's currently no standard way to provide this in Docker so the container requires that the `/etc/neon/env-host` script on the host be mounted to the same location within the container and that this script initializes some standard `NEON_*` environment variables.
+This image requires some knowledge about its execution context like the hive and node names.  There's currently no standard way to provide this in Docker so the container requires that the `/etc/neon/host-env` script on the host be mounted to the same location within the container and that this script initializes some standard `NEON_*` environment variables.
 
 The image also requires **read/write** access to the host's `/var/log` directory so it can access the systemd logs and also to persist some state. 
 
@@ -39,7 +39,7 @@ docker run \
     --name neon-log-host \
     --detach \
     --restart always \
-    --volume /etc/neon/env-host:/etc/neon/env-host:ro \
+    --volume /etc/neon/host-env:/etc/neon/host-env:ro \
     --volume /var/log:/hostfs/var/log \
     --network host \
     --log-driver json-file \
@@ -62,7 +62,7 @@ docker run \
     --detach \
     --restart always \
     --restart-delay 10s \
-    --volume /etc/neon/env-host:/etc/neon/env-host:ro \
+    --volume /etc/neon/host-env:/etc/neon/host-env:ro \
     --volume /var/log:/hostfs/var/log \
     --network host \
     --log-driver json-file \

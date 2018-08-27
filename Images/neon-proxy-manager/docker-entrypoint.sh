@@ -9,12 +9,12 @@
 
 # Load the Docker host node environment.
 
-if [ ! -f /etc/neon/env-host ] ; then
-    . log-critical.sh "The [/etc/neon/env-host] file does not exist.  This file must have been generated on the Docker host by [neon-cli] during hive setup and be bound to the container."
+if [ ! -f /etc/neon/host-env ] ; then
+    . log-critical.sh "The [/etc/neon/host-env] file does not exist.  This file must have been generated on the Docker host by [neon-cli] during hive setup and be bound to the container."
     exit 1
 fi
 
-. /etc/neon/env-host
+. /etc/neon/host-env
 
 # Launch the service.
 

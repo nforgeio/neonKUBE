@@ -603,7 +603,7 @@ namespace Neon.Hive
         /// </para>
         /// <list type="bullet">
         ///     <item>
-        ///     Simulating the presence of a mounted and executed <b>/etc/neon/env-host</b> script.
+        ///     Simulating the presence of a mounted and executed <b>/etc/neon/host-env</b> script.
         ///     </item>
         ///     <item>
         ///     Emulated mounted Docker secrets via <paramref name="secrets"/> 
@@ -763,7 +763,7 @@ namespace Neon.Hive
         /// <note>
         /// This should only be called by services that are actually deployed in running 
         /// hive containers that have mapped in the hive node environment variables
-        /// and host DNS mappings from <b>/etc/neon/env-host</b>.
+        /// and host DNS mappings from <b>/etc/neon/host-env</b>.
         /// </note>
         /// </summary>
         /// <param name="sshCredentialsSecret">Optionally identifies the Docker secret the hive SSH credentials.</param>
@@ -992,7 +992,7 @@ namespace Neon.Hive
             var hiveDefinition = Hive.Definition;
             var healthyManager = Hive.GetHealthyManager(HiveProxy.HealthyManagerMode.ReturnFirst);
 
-            // Simulate the environment variables initialized by a mounted [env-host] script.
+            // Simulate the environment variables initialized by a mounted [host-env] script.
 
             var hostingProvider = string.Empty;
 
