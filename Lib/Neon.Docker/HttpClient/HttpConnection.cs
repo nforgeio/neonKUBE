@@ -65,9 +65,19 @@ namespace Microsoft.Net.Http.Client
             builder.Append(' ');
             builder.Append(request.GetAddressLineProperty());
             builder.Append(" HTTP/");
-            builder.Append(request.Version.ToString(2));
-            builder.Append("\r\n");
 
+            if (request.GetHostProperty() == "unix.sock")
+            {
+                // $hack(jeff.lill): Hardcoded to HTTP/1.0 for unix sockets
+
+                builder.Append("1.1");
+            }
+            else
+            {
+                builder.Append(request.Version.ToString(2));
+            }
+
+            builder.Append("\r\n");
             builder.Append(request.Headers.ToString());
 
             if (request.Content != null)
