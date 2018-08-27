@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -2061,6 +2062,40 @@ namespace Neon.Hive
             }
 
             return hostname.Equals(HiveConst.DockerPublicRegistry, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        /// <summary>
+        /// <b>HACK:</b> This simulates a REST call to Docker that lists the swarm nodes.
+        /// </summary>
+        /// <param name="hiveDefinition">The target hive definition.</param>
+        /// <returns>The list of swarm nodes.</returns>
+        public static List<DockerNode> GetHackedDockerNodes(HiveDefinition hiveDefinition)
+        {
+            // $todo(jeff.lill):
+            //
+            // .NET Core doesn't currently support unix domain sockets and my 2.0 based hack
+            // no longer seems to work, so we're going to use HiveHelper.GetHackedDockerNodes()
+            // to return the swarm nodes from the hive definition as a temporary hack.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/306
+
+            var swarmNodes = new List<DockerNode>();
+
+            foreach (var node in hiveDefinition.Swarm)
+            {
+                // Initialize only the properties we're actually using right now.
+
+                dynamic source = new ExpandoObject();
+
+                source.Description.Hostname = node.Name;
+                source.Spec.Role            = node.Role;
+                source.Status.State         = "ready";
+                source.Status.Addr          = node.PrivateAddress;
+
+                swarmNodes.Add(new DockerNode(source, "STUB"));
+            }
+
+            return swarmNodes;
         }
     }
 }

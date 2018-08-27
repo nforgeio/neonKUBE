@@ -67,6 +67,59 @@ namespace Neon.Docker
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="stub"></param>
+        public DockerNode(dynamic source, string stub)
+        {
+            // $todo(jeff.lill):
+            //
+            // .NET Core doesn't currently support unix domain sockets and my 2.0 based hack
+            // no longer seems to work, so we're going to use HiveHelper.GetHackedDockerNodes()
+            // to return the swarm nodes from the hive definition as a temporary hack.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/306
+            //
+            // Remove this constructor once we have a real fix.
+            
+            this.Inner         = source;
+            this.ID            = source.ID;
+            this.CreatedAt     = source.CreatedAt;
+            this.UpdatedAt     = source.UpdatedAt;
+
+            this.Role          = source.Spec.Role;
+            this.Availability  = source.Spec.Availability;
+
+            this.Hostname      = source.Description.Hostname;
+            this.Architecture  = source.Description.Platform.Architecture;
+            this.OS            = source.Description.Platform.OS;
+            this.NanoCPUs      = source.Description.Resources.NanoCPUs;
+            this.MemoryBytes   = source.Description.Resources.MemoryBytes;
+            this.EngineVersion = source.Description.Engine.EngineVersion;
+
+            this.State         = source.Status.State;
+            this.Addr          = source.Status.Addr;
+
+            this.Labels = new Dictionary<string, string>();
+
+            if (source.Spec.Labels != null)
+            {
+                var labelsObject = (JObject)source.Spec.Labels;
+
+                foreach (var property in labelsObject.Properties())
+                {
+                    this.Labels[property.Name] = (string)property.Value;
+                }
+            }
+
+            if (source.ManagerStatus != null)
+            {
+                this.ManagerStatus = new DockerNodeManagerStatus(source.ManagerStatus);
+            }
+        }
+
+        /// <summary>
         /// Returns the raw <v>dynamic</v> object actually returned by Docker.
         /// You may use this to access newer Docker properties that have not
         /// yet been wrapped by this class.

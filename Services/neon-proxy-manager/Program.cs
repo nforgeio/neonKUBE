@@ -389,8 +389,18 @@ namespace NeonProxyManager
                             // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
                             // proxy bridge configurations.
 
+                            // $todo(jeff.lill):
+                            //
+                            // .NET Core doesn't currently support unix domain sockets and my 2.0 based hack
+                            // no longer seems to work, so we're going to use HiveHelper.GetHackedDockerNodes()
+                            // to return the swarm nodes from the hive definition as a temporary hack.
+                            //
+                            //      https://github.com/jefflill/NeonForge/issues/306
+#if TODO
                             swarmNodes = await docker.NodeListAsync();
-
+#else
+                            swarmNodes = HiveHelper.GetHackedDockerNodes(hiveDefinition);
+#endif
                             // Rebuild the proxy configurations and write the captured status to
                             // Consul to make it available for the [neon proxy public|private status]
                             // command.  Note that we're going to build the [neon-proxy-public-bridge]
@@ -1641,7 +1651,7 @@ global
 # should probably specify a different SYSLOG facility so we can distinguish 
 # between problems with bridges and normal proxies. 
 
-#   log                 ""${{NEON_NODE_IP}}:{HiveHostPorts.LogHostSysLog}"" len 65535 {HiveSysLogFacility.ProxyName}
+# log                 ""${{NEON_NODE_IP}}:{HiveHostPorts.LogHostSysLog}"" len 65535 {HiveSysLogFacility.ProxyName}
 
 # Certificate Authority and Certificate file locations:
 

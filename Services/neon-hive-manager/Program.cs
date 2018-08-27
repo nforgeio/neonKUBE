@@ -313,7 +313,20 @@ namespace NeonHiveManager
             // Vault proxy port because we need to be able to address these
             // individually.
 
+            // $todo(jeff.lill):
+            //
+            // .NET Core doesn't currently support unix domain sockets and my 2.0 based hack
+            // no longer seems to work, so we're going to use HiveHelper.GetHackedDockerNodes()
+            // to return the swarm nodes from the hive definition as a temporary hack.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/306
+#if TODO
             var swarmNodes = await docker.NodeListAsync();
+#else
+            var swarmNodes = HiveHelper.GetHackedDockerNodes(hive.Definition);
+
+            await Task.CompletedTask;
+#endif
             var hosts      = File.ReadAllText("/etc/hosts");
 
             foreach (var managerNode in swarmNodes.Where(n => n.Role == "manager")
@@ -360,8 +373,18 @@ namespace NeonHiveManager
 
                     log.LogDebug(() => $"STATE-POLLER: Querying [{docker.Settings.Uri}]");
 
+                    // $todo(jeff.lill):
+                    //
+                    // .NET Core doesn't currently support unix domain sockets and my 2.0 based hack
+                    // no longer seems to work, so we're going to use HiveHelper.GetHackedDockerNodes()
+                    // to return the swarm nodes from the hive definition as a temporary hack.
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/306
+#if TODO
                     var swarmNodes = await docker.NodeListAsync();
-
+#else
+                    var swarmNodes = HiveHelper.GetHackedDockerNodes(hive.Definition);
+#endif
                     // Parse the node definitions from the swarm nodes and build a new definition with
                     // using the new nodes.  Then compare the hashes of the cached and new hive definitions
                     // and then update Consul if they're different.
