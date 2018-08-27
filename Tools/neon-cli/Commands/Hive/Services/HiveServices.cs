@@ -186,6 +186,7 @@ namespace NeonCli
                     //---------------------------------------------------------
                     // Deploy the Varnish HTTP caching service
 
+#if TODO
                     if (hive.Definition.Varnish.Enabled)
                     {
                         firstManager.Status = "start: neon-varnish";
@@ -221,6 +222,7 @@ namespace NeonCli
                             "--restart-delay", hive.Definition.Docker.RestartDelay,
                             Program.ResolveDockerImage(hive.Definition.VarnishImage));
                     }
+#endif
 
                     //---------------------------------------------------------
                     // Deploy proxy related services
