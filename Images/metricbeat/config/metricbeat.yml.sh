@@ -50,7 +50,7 @@ metricbeat.modules:
 metricbeat.modules:
 - module: docker
   metricsets: ["cpu", "info", "memory", "network", "diskio", "container"]
-  hosts: ["${HiveConst_DockerApiInternalEndpoint}"]
+  hosts: ["${DOCKER_ENDPOINT}"]
   enabled: true
   period: ${PERIOD}
 

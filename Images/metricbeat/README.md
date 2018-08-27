@@ -37,7 +37,7 @@ You may may modify these behaviors by creating a derived image, modifying the `/
 
 * **PERIOD** (*optional*) - interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to **60s**.
 
-* **DOCKER_ENDPOINT** (*optional*) - specifies the Docker endpoint to be monitored.  This defaults to the local Docker unix domain soxket `unix:///var/run/docker.sock` which must be explicitly bound to the Metricbeat container.  You may also specify a URL.
+* **DOCKER_ENDPOINT** (*optional*) - specifies the Docker endpoint to be monitored.  This defaults to the local Docker unix domain socket `unix:///var/run/docker.sock` which must be explicitly bound to the Metricbeat container.  You may also specify a URL.
 
 * **PROCESSES** (*optional*) - JSON array specifying the regex's of the process names for which statistics are to be gathered.  This defaults to **['dockerd','consul','vault']**.
 
