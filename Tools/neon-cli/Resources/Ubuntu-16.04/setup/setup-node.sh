@@ -52,13 +52,14 @@ fi
 
 # Install some common packages:
 #
-#	jq			JSON parser (useful for shell scripts)
-#	aptitude	Apt related utilities
-#	gdebi-core	Installs .deb package files AND their dependencies
-#   mmv         Easy multiple file renaming
+#	jq			        JSON parser (useful for shell scripts)
+#	aptitude	        Apt related utilities
+#	gdebi-core	        Installs .deb package files AND their dependencies
+#   mmv                 Easy multiple file renaming
+#   ca-certificates     Latest certificate authority certs
 
 safe-apt-get update
-safe-apt-get install -yq jq aptitude gdebi-core mmv
+safe-apt-get install -yq jq aptitude gdebi-core mmv ca-certificates
 
 # Configure the hostname.
 #
