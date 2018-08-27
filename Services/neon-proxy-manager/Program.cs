@@ -396,11 +396,9 @@ namespace NeonProxyManager
                             // to return the swarm nodes from the hive definition as a temporary hack.
                             //
                             //      https://github.com/jefflill/NeonForge/issues/306
-#if TODO
+
                             swarmNodes = await docker.NodeListAsync();
-#else
-                            swarmNodes = HiveHelper.GetHackedDockerNodes(hiveDefinition);
-#endif
+
                             // Rebuild the proxy configurations and write the captured status to
                             // Consul to make it available for the [neon proxy public|private status]
                             // command.  Note that we're going to build the [neon-proxy-public-bridge]
