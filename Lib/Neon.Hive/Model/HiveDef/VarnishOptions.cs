@@ -36,13 +36,15 @@ namespace Neon.Hive
         /// Indicates whether Varnish cache is to be enabled for the hive.  
         /// This defaults to <c>true</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
+        [JsonProperty(PropertyName = "Enabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
 
         /// <summary>
         /// Specifies the size of the varnish cache 
         /// </summary>
+        [JsonProperty(PropertyName = "CacheSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultCacheSize)]
         public string CacheSize { get; set; } = defaultCacheSize;
 
         /// <summary>

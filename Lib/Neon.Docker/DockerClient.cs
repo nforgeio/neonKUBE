@@ -78,7 +78,7 @@ namespace Neon.Docker
             Covenant.Requires<ArgumentNullException>(settings != null);
 
             // Select a custom managed handler when Docker is listening on a Unix
-            // domain sockets, otherwise use the standard handler.
+            // domain socket, otherwise use the standard handler.
 
             if (settings.Uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
             {

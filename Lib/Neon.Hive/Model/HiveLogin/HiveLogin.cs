@@ -322,9 +322,7 @@ namespace Neon.Hive
         /// <returns>The clone.</returns>
         public HiveLogin Clone()
         {
-            var json = NeonHelper.JsonSerialize(this);
-
-            return NeonHelper.JsonDeserialize<HiveLogin>(json);
+            return NeonHelper.JsonClone(this);
         }
 
         /// <summary>

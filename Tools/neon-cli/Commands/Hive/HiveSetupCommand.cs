@@ -3358,8 +3358,8 @@ systemctl start neon-volume-plugin
                 {
                     firstManager.Status = "consul initialize";
 
-                    // Persist the hive definition (without important secrets)
-                    // to Consul so it will be available services like [neon-proxy-manager]
+                    // Persist the hive definition (without important secrets) to
+                    // Consul so it will be available services like [neon-proxy-manager]
                     // immediately (before [neon-hive-manager] spins up).
 
                     var loginClone = hiveLogin.Clone();
