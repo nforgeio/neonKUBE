@@ -26,6 +26,7 @@ COPY resolv.conf.head.sh    /etc/resolv.conf.head
 
 COPY _common/*.sh           /
 
-# Install the [tini] INIT manager.
+# Install the [tini] INIT manager, the CA certificates, and
+# [libcurl] so .NET Core apps can use the legacy HttpClientHandler.
 
-RUN apk add --no-cache tini ca-certificates
+RUN apk add --no-cache tini ca-certificates libcurl

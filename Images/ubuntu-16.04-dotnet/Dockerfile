@@ -31,7 +31,7 @@ RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsof
     && dpkg -i /tmp/packages-microsoft-prod.deb \
     && apt-get update \
     && apt-get install -yq apt-utils \
-    && apt-get install -yq apt-transport-https \
+    && apt-get install -yq apt-transport-https lubcurl \
     && apt-get install -yq dotnet-runtime-${VERSION} \
     && rm /tmp/packages-microsoft-prod.deb \
     && apt-get clean -yq

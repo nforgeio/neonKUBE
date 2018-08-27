@@ -77,43 +77,71 @@ namespace Neon.Docker
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
-            // Select a custom managed handler when Docker is listening on a Unix
-            // domain socket, otherwise use the standard handler.
+            // $hack(jeff.lill):
+            //
+            // Disable the new [SocketsHttpHandler] and so we can still use the legacy
+            // [HttpClientHandler] so we can access the Docker unix domain socket.
+            // This requires that [libcurl] be installed and is also slower then
+            // the new code.  We'll want to switch to a native unix socket implementation
+            // once there is one.
+            //
+            // Here's some documentation:
+            //
+            //      https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-2-1
+            //
+            // Here's the tracking issues:
+            //
+            //      https://github.com/jefflill/NeonForge/issues/306
 
-            if (settings.Uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
-            {
-                baseUri = new UriBuilder("http", settings.Uri.Segments.Last()).Uri.ToString();
-                handler = new ManagedHandler(
-                    async (string host, int port, CancellationToken cancellationToken) =>
-                    {
-                        var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+            AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
 
-                        await sock.ConnectAsync(new UnixDomainSocketEndPoint(settings.Uri.LocalPath));
-                        
-                        return sock;
-                    });
-            }
-            else
+            try
             {
-                baseUri = settings.Uri.ToString();
-                handler = new HttpClientHandler()
+                // Select a custom managed handler when Docker is listening on a Unix
+                // domain socket, otherwise use the standard handler.
+
+                if (settings.Uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
                 {
-                    AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+                    baseUri = new UriBuilder("http", settings.Uri.Segments.Last()).Uri.ToString();
+                    handler = new ManagedHandler(
+                        async (string host, int port, CancellationToken cancellationToken) =>
+                        {
+                            var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+
+                            await sock.ConnectAsync(new UnixDomainSocketEndPoint(settings.Uri.LocalPath));
+
+                            return sock;
+                        });
+                }
+                else
+                {
+                    baseUri = settings.Uri.ToString();
+                    handler = new HttpClientHandler()
+                    {
+                        AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+                    };
+                }
+
+                // Ensure that the [baseUri] doesn't end with a "/".
+
+                if (baseUri.EndsWith("/"))
+                {
+                    baseUri = baseUri.Substring(0, baseUri.Length - 1);
+                }
+
+                this.Settings   = settings;
+                this.JsonClient = new JsonClient(handler, disposeHandler: true)
+                {
+                    SafeRetryPolicy = settings.RetryPolicy
                 };
             }
-
-            // Ensure that the [baseUri] doesn't end with a "/".
-
-            if (baseUri.EndsWith("/"))
+            finally
             {
-                baseUri = baseUri.Substring(0, baseUri.Length - 1);
+                // Re-enable the [SocketsHttpHandler] so that subsequent [HttpClient]
+                // instances will use the faster managed implementation. 
+
+                //AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", true);
             }
-
-            this.Settings   = settings;
-            this.JsonClient = new JsonClient(handler, disposeHandler: true)
-            {
-                SafeRetryPolicy = settings.RetryPolicy
-            };
         }
 
         /// <summary>
