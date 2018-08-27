@@ -60,7 +60,7 @@ docker run \
     --net host \
     --restart always \
     --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
-    --volume /etc/neon/env-host:/etc/neon/env-host:ro \
+    --volume /etc/neon/host-env:/etc/neon/host-env:ro \
     --volume /proc:/hostfs/proc:ro \
     --volume /:/hostfs:ro \
     --env "ELASTICSEARCH_URL=http://neon-log-esdata.HIVENAME.nhive.io" \
@@ -70,7 +70,7 @@ docker run \
 # Install the dashboards.
     
 docker run --rm --name neon-log-metricbeat-dash \
-    --volume=/etc/neon/env-host:/etc/neon/env-host:ro \
+    --volume=/etc/neon/host-env:/etc/neon/host-env:ro \
     nhive/metricbeat import-dashboards
 ````
 &nbsp;
@@ -93,7 +93,7 @@ docker run \
     --detatch \
     --net host \
     --restart always \
-    --volume /etc/neon/env-host:/etc/neon/env-host:ro \
+    --volume /etc/neon/host-env:/etc/neon/host-env:ro \
     --volume /proc:/hostfs/proc:ro \
     --volume /:/hostfs:ro \
     --log-driver json-file \
@@ -103,7 +103,7 @@ docker run \
 and then run this command on a single node to upgrade the dashboards:
 ````
 docker run --rm --name neon-log-metricbeat-dash \
-    --volume=/etc/neon/env-host:/etc/neon/env-host:ro \
+    --volume=/etc/neon/host-env:/etc/neon/host-env:ro \
     nhive/metricbeat import-dashboards
 ````
 &nbsp;

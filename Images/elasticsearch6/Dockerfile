@@ -8,8 +8,8 @@
 # ElasticSearch image.  This image includes:
 #
 #   * A custom entry point script that loads environment variables and other
-#     settings via the mounted [/etc/neon/env-host] and
-#     [/etc/neon/env-host] files.
+#     settings via the mounted [/etc/neon/host-env] and
+#     [/etc/neon/host-env] files.
 #
 #   * Elasticsearch X-PACK plugins.
 #

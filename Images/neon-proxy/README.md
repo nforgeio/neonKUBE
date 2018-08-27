@@ -108,7 +108,7 @@ Two types of credentials are currently supported: **vault-token** and **vault-ap
 
 **NOTE:** The Consul limit for key values is 512KB.  This could become a limitation for very complex hives that include TLS certificates in the configuration ZIP archive.  This can be mitigated by persisting certificates in Vault instead (which a better security practice anyway).
 
-**NOTE**: Note that this image will load environment variables from `/etc/neon/env-host` if this has been mounted mapped to the container.
+**NOTE**: Note that this image will load environment variables from `/etc/neon/host-env` if this has been mounted mapped to the container.
 
 # Deployment
 
@@ -118,7 +118,7 @@ Proxies are deployed  by default to non-manager nodes (if there are any) as a Do
 docker service create \
     --name neon-proxy-public \
     --detach=false \
-    --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
+    --mount type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true \
     --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-conf \
@@ -139,7 +139,7 @@ docker service create \
 docker service create \
     --name neon-proxy-private \
     --detach=false \
-    --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
+    --mount type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true \
     --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-conf \

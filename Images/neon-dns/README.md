@@ -30,7 +30,7 @@ The **neon-dns** service integrates with **neon-dns-mon** and PowerDNS installed
 docker service create \
     --name neon-dns \
     --detach=false \
-    --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
+    --mount type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true \
     --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
     --mount type=bind,src=/etc/powerdns/hosts,dst=/etc/powerdns/hosts \
     --mount type=bind,src=/dev/shm/neon-dns,dst=/neon-dns \
@@ -47,7 +47,7 @@ docker service create \
 
 The three file system mounts are required for the hive DNS to function properly.
 
-* `/etc/neon/env-host` - is a script that the service uses to load node specific environment variables.
+* `/etc/neon/host-env` - is a script that the service uses to load node specific environment variables.
 
 * `/etc/powerdns/hosts` - is the local PowerDNS Recursor hosts files where dynamic DNS entries will be written.
 

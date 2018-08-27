@@ -9,8 +9,8 @@
 
 # Load the host node environment.
 
-if [ -f /etc/neon/env-host ] ; then
-    . /etc/neon/env-host
+if [ -f /etc/neon/host-env ] ; then
+    . /etc/neon/host-env
 fi
 
 set -e
