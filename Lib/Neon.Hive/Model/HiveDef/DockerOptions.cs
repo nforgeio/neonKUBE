@@ -106,31 +106,14 @@ namespace Neon.Hive
                     default:
 
                         // Remove the "-ce" from the end of the version and then
-                        // return fully qualified package version.
+                        // return package version.
 
                         if (!version.EndsWith("-ce"))
                         {
                             throw new NotSupportedException("Docker version must end with [-ce] because only Docker Community Edition is supported at this time.");
                         }
 
-                        // $todo(jeff.lill):
-                        //
-                        // This is a bit of a mess.  It appears that releases before [17.06.0-ce]
-                        // append "~ubuntu-xenial" to the version and versions after that just append
-                        // "~ubuntu".  I really believe I'm going to need to maintain a global 
-                        // registry of Docker versions so I don't have to keep messing with the
-                        // [neon-cli].
-
-                        version = version.Substring(0, version.Length - "-ce".Length);
-
-                        if (new Version(version) >= new System.Version("17.06.0"))
-                        {
-                            return $"{version}~ce-0~ubuntu";
-                        }
-                        else
-                        {
-                            return $"{version}~ce-0~ubuntu-xenial";
-                        }
+                        return version.Substring(0, version.Length - "-ce".Length);
                 }
             }
         }

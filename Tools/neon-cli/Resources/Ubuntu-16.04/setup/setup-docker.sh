@@ -113,25 +113,44 @@ if [ "${docker_version}" != "" ] ; then
 
 	safe-apt-get install -yq apt-transport-https ca-certificates curl software-properties-common
 
-    # Add any necessary APT keys.  It appears that sometimes Docker doesn't
-    # keep the Ubuntu key server up-to-date.
+    # Download the Docker GPG key.
 
-    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7EA0A9C3F273FCD8
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 
-	# Configure the stable, edge, and testing respositores.
+	# Configure the stable repository only.  We don't currently support specifying a 
+    # specific edge or testing release.
 
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge"
-	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) testing"
+	# add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge"
+	# add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) testing"
 	safe-apt-get update
 
-	# Install a specific Docker version.
-	#
-	# This command lists the available versions:
-	#
-	#		apt-cache madison docker-ce
+    # We need to use [apt-cache madison docker-ce] to determine the fully qualified name
+    # for the desired package.  This command produces output like:
+    #
+    #   docker-ce | 18.06.1~ce~3-0~ubuntu | https://download.docker.com/linux/ubuntu xenial/stable amd64 Packages
+    #   docker-ce | 18.06.0~ce~3-0~ubuntu | https://download.docker.com/linux/ubuntu xenial/stable amd64 Packages
+    #   docker-ce | 18.03.1~ce-0~ubuntu | https://download.docker.com/linux/ubuntu xenial/stable amd64 Packages
+    #   docker-ce | 18.03.0~ce-0~ubuntu | https://download.docker.com/linux/ubuntu xenial/stable amd64 Packages
+    #   docker-ce | 17.12.1~ce-0~ubuntu | https://download.docker.com/linux/ubuntu xenial/stable amd64 Packages
+    #
+    # We're going to grep for the first line that matches the Docker version and then extract The
+    # fully qualified package name between the first and second "|" characters.
 
-	safe-apt-get install -yq docker-ce=${docker_version}
+    set +euo pipefail
+    package=$(apt-cache madison docker-ce | grep --max-count 1 ${docker_version} | cut -d '|' -f 2 - | xargs)
+    set -euo pipefail
+
+    if [ "${package}" == "" ] ; then
+
+        echo "*** ERROR: [${docker_version}] is not a known Docker stable version." > /dev/stderr
+        echo "           Here are the known Docker packages:"                       > /dev/stderr
+        echo                                                                        > /dev/stderr
+        apt-cache madison docker-ce                                                 > /dev/stderr
+        exit 1
+    fi
+ 
+	safe-apt-get install -yq docker-ce=${package}
 fi
 
 #--------------------------------------------------------------------------
