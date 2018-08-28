@@ -1729,6 +1729,11 @@ namespace NeonCli.Ansible
             AppendCreateOptionEnum(args, "--rollback-order", service.RollbackOrder);
             AppendCreateOption(args, "--rollback-parallelism", service.RollbackParallism, 1);
 
+            foreach (var network in service.Network)
+            {
+                AppendCreateOption(args, "--network", network);
+            }
+
             foreach (var secret in service.Secret)
             {
                 var sb = new StringBuilder();

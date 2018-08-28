@@ -1641,8 +1641,6 @@ $@"
 
             Assert.NotNull(networks);
             Assert.Equal(2, networks.Count);
-            Assert.True(networks.Exists(n => n.Target == "network-1"));
-            Assert.True(networks.Exists(n => n.Target == "network-2"));
 
             //-----------------------------------------------------------------
             // Verify that we can detect when no changes were made.
@@ -1659,8 +1657,6 @@ $@"
 
             Assert.NotNull(networks);
             Assert.Equal(2, networks.Count);
-            Assert.True(networks.Exists(n => n.Target == "network-1"));
-            Assert.True(networks.Exists(n => n.Target == "network-2"));
 
             //-----------------------------------------------------------------
             // Remove one of the networks.
@@ -1690,7 +1686,6 @@ $@"
 
             Assert.NotNull(networks);
             Assert.Single(networks);
-            Assert.True(networks.Exists(n => n.Target == "network-1"));
 
             //-----------------------------------------------------------------
             // Remove the remaining network.
