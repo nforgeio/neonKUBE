@@ -48,11 +48,11 @@ fi
 
 # Peform the operation.
 
-RETRY=$false
+RETRY=false
 
 for i in {1..$RETRY_COUNT}
 do
-    if $RETRY ; then
+    if [ "$RETRY" == "true" ] ; then
         DELAY=$(shuf -i $RETRY_MIN_SECONDS-$RETRY_MAX_SECONDS -n 1)
         echo "*** WARNING: safe-apt-get: retrying after fetch failure (delay=${DELAY}s)." >&2
         echo "*** WARNING: safe-apt-get" "$@" >&2
@@ -85,7 +85,7 @@ do
             break
         fi
 
-        RETRY=$true
+        RETRY=true
     fi
 done
 
@@ -96,8 +96,16 @@ cat $STDERR_PATH >&2
 
 # Delete the output files.
 
-rm $STDOUT_PATH
-rm $STDERR_PATH
-rm $STDALL_PATH
+if [ -f $STDOUT_PATH ] ; then
+    rm $STDOUT_PATH
+fi
+
+if [ -f $STDERR_PATH ] ; then
+    rm $STDERR_PATH
+fi
+
+if [ -f $STDALL_PATH ] ; then
+    rm $STDALL_PATH
+fi
         
 exit $EXIT_CODE
