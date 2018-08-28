@@ -71,7 +71,7 @@ export NEON_STATE_FOLDER=$<neon.folders.state>
 export NEON_TMPFS_FOLDER=$<neon.folders.tmpfs>
 export NEON_TOOLS_FOLDER=$<neon.folders.tools>
 
-export PATH=${PATH}:${NEON_SETUP_FOLDER}:${NEON_TOOLS_FOLDER}
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${NEON_SETUP_FOLDER}:${NEON_TOOLS_FOLDER}
 
 #------------------------------------------------------------------------------
 # Describe the hive manager nodes.  You can use the [getmanager] function
