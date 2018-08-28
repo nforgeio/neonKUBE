@@ -108,6 +108,7 @@ if ($base)
 	Publish "$image_root\\kibana"
 	Publish "$image_root\\kong"
 	Publish "$image_root\\metricbeat"
+	Publish "$image_root\\rabbitmq"
 	Publish "$image_root\\td-agent"
 	Publish "$image_root\\node"
 	Publish "$image_root\\haproxy"
