@@ -106,6 +106,11 @@ namespace Neon.Hive
                             {
                                 var response = clonedNode.SudoCommand("docker login", RunOptions.None, "--username", username, "--password", password, registry);
 
+                                if (response.ExitCode == 0)
+                                {
+                                    return;
+                                }
+
                                 if (attempt == maxAttempts)
                                 {
                                     // This is the last attempt.
