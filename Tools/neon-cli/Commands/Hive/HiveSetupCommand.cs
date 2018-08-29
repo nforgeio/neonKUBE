@@ -2731,7 +2731,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
             if (node == hive.FirstManager)
             {
-                node.InvokeIdempotentAction("setup/ceph-fs",
+                node.InvokeIdempotentAction("setup/hive-fs",
                     () =>
                     {
                         node.Status = "create file system";
@@ -2745,7 +2745,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
             try
             {
-                node.Status = "ceph stablizing (30s)";
+                node.Status = "ceph stablize (30s)";
 
                 NeonHelper.WaitFor(
                     () =>
@@ -2861,7 +2861,7 @@ WantedBy=docker.service
 
             if (node == hive.FirstManager)
             {
-                node.InvokeIdempotentAction("setup/ceph-fs-init",
+                node.InvokeIdempotentAction("setup/hive-fs-init",
                     () =>
                     {
                         // Initialize [/mnt/hivefs]:
@@ -2870,12 +2870,37 @@ WantedBy=docker.service
                         //      /mnt/hivefs/docker  - Holds mapped Docker volumes
                         //      /mnt/hivefs/neon    - Reserved for neonHIVE
 
-                        node.Status = "populate file system";
+                        node.Status = "populate hiveFS";
                         node.SudoCommand($"touch /mnt/hivefs/READY && chmod 444 /mnt/hivefs/READY");
                         node.SudoCommand($"mkdir -p /mnt/hivefs/docker && chown root:root /mnt/hivefs/docker && chmod 770 /mnt/hivefs/docker");
                         node.SudoCommand($"mkdir -p /mnt/hivefs/neon && chown root:root /mnt/hivefs/neon && chmod 770 /mnt/hivefs/neon");
                     });
             }
+
+            node.InvokeIdempotentAction("setup/hive-fs-ready",
+                () =>
+                {
+                    // Wait up to 120 seconds for the hive file system to indicate that it's ready
+                    // by the presence of the [/mnt/hivefs/READY] file.
+
+                    node.Status = "waiting for hiveFS";
+
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            try
+                            {
+                                return node.FileExists("/mnt/hivefs/READY");
+                            }
+                            catch (Exception e)
+                            {
+                                node.LogException("Waiting for hiveFS", e);
+                                return false;
+                            }
+                        },
+                        timeout: TimeSpan.FromSeconds(120),
+                        pollTime: TimeSpan.FromSeconds(1));
+                });
 
             // Download and install the [neon-volume-plugin].
 

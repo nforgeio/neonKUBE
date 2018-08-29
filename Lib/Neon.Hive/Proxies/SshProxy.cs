@@ -1420,11 +1420,10 @@ namespace Neon.Hive
         /// Determines whether a file exists on the remote server.
         /// </summary>
         /// <param name="path">The file path.</param>
-        /// <param name="runOptions">Optional command execution options.</param>
         /// <returns><c>true</c> if the file exists.</returns>
-        public bool FileExists(string path, RunOptions runOptions = RunOptions.None)
+        public bool FileExists(string path)
         {
-            var response = SudoCommand($"if [ -f \"{path}\" ] ; then exit 0; else exit 1; fi", runOptions);
+            var response = SudoCommand($"if [ -f \"{path}\" ] ; then exit 0; else exit 1; fi", RunOptions.None);
 
             return response.ExitCode == 0;
         }
