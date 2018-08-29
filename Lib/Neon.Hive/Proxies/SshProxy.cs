@@ -2336,7 +2336,9 @@ echo $? > {cmdFolder}/exit
                 {
                     if (binaryOutput)
                     {
-                        LogLine($"    BINARY OUTPUT [length={response.OutputBinary.Length}]");
+                        var outputBinary = response.OutputBinary ?? new byte[0];
+
+                        LogLine($"    BINARY OUTPUT [length={outputBinary.Length}]");
                     }
                     else
                     {
