@@ -55,7 +55,7 @@ namespace Neon.Data
         /// You must specify the hostname/address for at least one operating RabbitMQ node.  
         /// The RabbitMQ client will use this to discover the remaining nodes.  It is a best 
         /// practice to specify multiple nodes in a clustered environment to avoid initial
-        /// connection problems if any single node is down.
+        /// connection problems when any single node is down.
         /// </remarks>
         [JsonProperty(PropertyName = "Hostnames", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
