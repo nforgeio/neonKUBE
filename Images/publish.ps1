@@ -92,7 +92,7 @@ docker system prune -af
 
 if ($base)
 {
-	# Other images are based off of these:
+	# Base OS images:
 
 	Publish "$image_root\\alpine"
 	Publish "$image_root\\ubuntu-16.04"
@@ -107,7 +107,6 @@ if ($base)
 	# Other base images:
 
 	Publish "$image_root\\couchbase-test"
-	Publish "$image_root\\cfssl"
 	Publish "$image_root\\golang"
 	Publish "$image_root\\aspnet"
 	Publish "$image_root\\openjdk"
