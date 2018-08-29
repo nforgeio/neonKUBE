@@ -8,7 +8,7 @@
 #   FAMILY      - Identifies the major/minor version (like: "60")
 #   VERSION     - The specific version (like: "6.0.0")
 
-FROM        nhive/ubuntu-16.04-dotnet
+FROM        nhive/ubuntu-16.04-dotnet:2.1
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         FAMILY

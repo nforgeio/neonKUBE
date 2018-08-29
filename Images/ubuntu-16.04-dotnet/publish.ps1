@@ -64,14 +64,6 @@ $noImagePush = $nopush
 
 if ($all)
 {
-    # I'm not sure if these older .NET Core 2.0.x builds will work anymore
-    # after we upgraded to 2.1.  There probably isn't a reason to rebuild
-    # these again though, because neonHIVE was never released to the public
-    # on .NET Core 2.1.
-    #
-	# Build 2.0.3
-	# Build 2.0.4
-    # Build 2.0.5
 }
 
 Build 2.1 -latest

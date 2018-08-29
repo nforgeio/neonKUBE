@@ -168,7 +168,7 @@ namespace Neon.Hive
 
             foreach (var manager in hive.Managers)
             {
-                manager.Status = "vault: check ready";
+                manager.Status = "vault: check";
             }
 
             while (readyManagers.Count < hive.Managers.Count())

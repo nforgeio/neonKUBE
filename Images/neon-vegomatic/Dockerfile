@@ -10,7 +10,7 @@
 #       APPNAME     - Name of the application binary/script (e.g "neon-vegomatic")
 #                     This makes it easier to clone and reuse this Dockerfile.
 
-FROM        nhive/dotnet
+FROM        nhive/dotnet:2.1
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
