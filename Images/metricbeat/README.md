@@ -4,13 +4,6 @@ Supported images are tagged with the Metricbeat version plus the image build dat
 
 From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
-The following image tags identify archived images which will not be deleted but are no longer maintained.
-
-* `5.2.0`
-* `5.3.0`
-* `5.4.0`
-* `5.5.0`
-
 **NOTE:**
 
 Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined system.  You should deploy the same version of each component to your hive and when it's time to upgrade, always upgrade the Elasticsearch cluster first, followed by the Metricbeat and Kibana.
