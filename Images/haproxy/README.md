@@ -6,15 +6,6 @@ Supported images are tagged with the HAProxy version plus the image build date.
 
 From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
-The following image tags identify archived images which will not be deleted but are no longer maintained.
-
-* `1.6.9`
-* `1.6.10`
-* `1.7.0`
-* `1.7.1`
-* `1.7.2`
-* `1.7.8`
-
 # Description
 
 HAProxy (Alpine) image used for both ingress and internal load balancing within a neonHIVE.  This image is deployed automatically during hive setup and integrates with Consul, Vault, and **neon-proxy-manager** services to update its configuration as hive load balancer rules change.

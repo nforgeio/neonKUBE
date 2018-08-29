@@ -8,10 +8,6 @@ The most recent production build will be tagged as **latest**.
 
 From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
-The following image tags identify archived images which will not be deleted but are no longer maintained.
-
-* `2.6.0, 2.6, 2`
-
 # Description
 
 This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache for a neonHIVE that can reduce the network traffic to upstream image registries.
