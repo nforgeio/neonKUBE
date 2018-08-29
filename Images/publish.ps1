@@ -62,6 +62,8 @@ function Publish
 	}
 }
 
+# Handle the command line arguments.
+
 if ($all)
 {
 	$base   = $True
@@ -76,6 +78,12 @@ elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 	$dotnet = $True
 	$other  = $True
 }
+
+# Purge any local Docker images as well as the image build cache.
+# This also purges everything else Docker as a side effect.  We
+# need to do this to ensure that we get a clean build.
+
+docker system prune -af
 
 # NOTE: 
 #
