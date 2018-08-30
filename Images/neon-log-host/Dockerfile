@@ -5,8 +5,13 @@
 #
 # TD-Agent deployed on each neonHIVE node that forwards log events to the
 # cluster log aggregator.
+#
+# ARGUMENTS:
+#
+#   BRANCH          - The current GitHub branch
 
-FROM        nhive/td-agent
+ARG         BRANCH
+FROM        nhive/td-agent:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

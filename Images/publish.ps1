@@ -111,7 +111,6 @@ if ($base)
 	Publish "$image_root\\aspnet"
 	Publish "$image_root\\openjdk"
 	Publish "$image_root\\elasticsearch"
-	Publish "$image_root\\elasticsearch6"
 	Publish "$image_root\\kibana"
 	Publish "$image_root\\kong"
 	Publish "$image_root\\metricbeat"

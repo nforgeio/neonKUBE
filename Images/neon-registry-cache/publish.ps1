@@ -32,15 +32,7 @@ function Build
 	$registry = "nhive/neon-registry-cache"
 	$date     = UtcDate
 	$branch   = GitBranch
-
-	if (IsProd)
-	{
-		$tag = "$version-$date"
-	}
-	else
-	{
-		$tag = "$branch-$version"
-	}
+	$tag      = "$branch-$version"
 
 	# Build and publish the images.
 
@@ -51,6 +43,9 @@ function Build
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
 		PushImage "${registry}:$version"
+
+		Exec { docker tag "${registry}:$tag" "${registry}:$version-$date" }
+		PushImage "${registry}:$version-$date"
 	}
 
 	if ($latest)

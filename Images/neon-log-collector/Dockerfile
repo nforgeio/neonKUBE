@@ -6,8 +6,13 @@
 # TD-Agent deployed as the [neon-log-collector] service to receive events
 # from the node [neon-log-host] containers, perform any transformations
 # and then persist them to Elasticsearch.
+#
+# ARGUMENTS:
+#
+#   BRANCH          - The current GitHub branch
 
-FROM        nhive/td-agent
+ARG         BRANCH
+FROM        nhive/td-agent:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

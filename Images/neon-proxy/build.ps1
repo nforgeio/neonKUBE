@@ -19,6 +19,8 @@ param
 "* NEON-PROXY:" + $tag
 "======================================="
 
+$branch = GitBranch
+
 # Copy the common scripts.
 
 DeleteFolder _common

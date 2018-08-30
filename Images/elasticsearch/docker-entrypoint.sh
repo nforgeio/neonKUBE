@@ -54,6 +54,11 @@ fi
 
 ELASTICSEARCH_HTTP_HOST=0.0.0.0
 
+# Path to the directory containing configuration files is specified via an
+# environment variable for Elasticsearchy 6+
+
+ES_PATH_CONF=/usr/share/elasticsearch/config
+
 # The built-in Elasticsearch configuration environment variable subsititution
 # mechanism has some issues, so we're going to use a script to explicitly 
 # subsitute these variables and generate new config files.

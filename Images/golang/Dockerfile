@@ -7,9 +7,11 @@
 #
 # ARGUMENTS:
 #
+#   BRANCH          - The current GitHub branch
 #   VERSION         - The GOLANG version (e.g. "1.9.4")
 
-FROM        nhive/ubuntu-16.04
+ARG         BRANCH
+FROM        nhive/ubuntu-16.04:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

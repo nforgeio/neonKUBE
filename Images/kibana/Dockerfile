@@ -8,13 +8,15 @@
 #
 # ARGUMENTS:
 #
+#   BRANCH          - The current GitHub branch
 #   VERSION         - The Kibana version (e.g. "5.0.0")
 #
 # REMARKS:
 #
 # Kibana listens internally on the default port 5601.
 
-FROM        nhive/ubuntu-16.04
+ARG         BRANCH
+FROM        nhive/ubuntu-16.04:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 ARG         VERSION
 

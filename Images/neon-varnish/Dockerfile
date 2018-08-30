@@ -5,10 +5,12 @@
 #
 # ARGUMENTS:
 #
+#   BRANCH      - The current GitHub branch
 #   VERSION     - The specific [neon-varnish] version (like: "6.0.0")
 
+ARG         BRANCH
 ARG         VERSION
-FROM        nhive/varnish:${VERSION}
+FROM        nhive/varnish:${BRANCH}-${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

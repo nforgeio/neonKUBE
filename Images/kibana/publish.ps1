@@ -63,6 +63,7 @@ function Build
 
         Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
 		PushImage "${registry}:${branch}-latest"
+	}
 }
 
 $noImagePush = $nopush

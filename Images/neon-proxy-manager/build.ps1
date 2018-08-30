@@ -37,7 +37,7 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" --build-arg "APPNAME=$appname" . }
 
 # Clean up
 

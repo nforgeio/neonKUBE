@@ -43,6 +43,9 @@ function Build
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
 		PushImage "${registry}:$dotnetVersion"
+
+		Exec { docker tag "${registry}:$tag" "${registry}:$branch-$dotnetVersion" }
+		PushImage "${registry}:$branch-$dotnetVersion"
 	}
 
 	if ($latest)

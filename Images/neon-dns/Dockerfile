@@ -7,10 +7,12 @@
 #
 # ARGUMENTS:
 #
+#       BRANCH      - The current GitHub branch
 #       APPNAME     - Name of the application binary/script (e.g "neon-dns")
 #                     This makes it easier to clone and reuse the Dockerfile.
 
-FROM        nhive/dotnet:2.1
+ARG         BRANCH
+FROM        nhive/dotnet:${BRANCH}-2.1
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

@@ -6,8 +6,13 @@
 # This image is the default implementation of the [neon-proxy-vault] service responsible
 # for forwarding requests to the HashiCorp Vault instances running on the hive's
 # manager nodes.
+#
+# ARGUMENTS:
+#
+#   BRANCH          - The current GitHub branch
 
-FROM        nhive/haproxy
+ARG         BRANCH
+FROM        nhive/haproxy:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

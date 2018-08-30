@@ -27,7 +27,6 @@ function Build
 		[switch]$latest = $False
 	)
 
-
 	$registry = "nhive/neon-proxy-manager"
 	$tag      = ImageTag
 	$branch   = GitBranch

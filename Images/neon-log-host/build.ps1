@@ -18,6 +18,8 @@ param
 "* NEON-LOG-HOST:" + $tag
 "======================================="
 
+$branch = GitBranch
+
 # Copy the common scripts.
 
 DeleteFolder _common
@@ -27,7 +29,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" . }
 
 # Clean up
 

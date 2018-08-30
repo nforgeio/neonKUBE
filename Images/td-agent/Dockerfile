@@ -7,9 +7,11 @@
 #
 # ARGUMENTS:
 #
+#   BRANCH          - The current GitHub branch
 #   VERSION         - The TD-AGENT version (e.g. "3")
 
-FROM        nhive/ubuntu-16.04
+ARG         BRANCH
+FROM        nhive/ubuntu-16.04:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

@@ -46,7 +46,11 @@ $version=$(& dotnet "$pwd\bin\$appname.dll" version -n)
 
 if (IsProd)
 {
-	Exec { docker build -t "${registry}:$version" --build-arg "APPNAME=$appname" . }
+	Exec { docker build -t "${registry}:$version" --build-arg "BRANCH=$branch" --build-arg "APPNAME=$appname" . }
+	PushImage "${registry}:$version"
+
+	Exec { docker tag "${registry}:$version" "${registry}:$branch-$version"}
+	PushImage "${registry}:$branch-$version"
 
 	if ($latest)
 	{
@@ -56,18 +60,15 @@ if (IsProd)
 		Exec { docker tag "${registry}:$version" "${registry}:${branch}-latest" }
 		PushImage "${registry}:${branch}-latest"
 	}
-
-	PushImage "${registry}:$version"
 }
 else
 {
-	Exec { docker build -t "${registry}:$branch-$version" --build-arg "APPNAME=$appname" . }
+	Exec { docker build -t "${registry}:$branch-$version" --build-arg "BRANCH=$branch" --build-arg "APPNAME=$appname" . }
+	PushImage "${registry}:$branch-$version"
 
 	if ($latest)
 	{
 		Exec { docker tag "${registry}:$branch-$version" "${registry}:$branch-latest"}
 		PushImage "${registry}:$branch-latest"
 	}
-
-	PushImage "${registry}:$branch-$version"
 }

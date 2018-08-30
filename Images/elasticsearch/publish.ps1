@@ -32,15 +32,7 @@ function Build
 	$registry = "nhive/elasticsearch"
 	$date     = UtcDate
 	$branch   = GitBranch
-
-	if (IsProd)
-	{
-		$tag = "$version-$date"
-	}
-	else
-	{
-		$tag = "$branch-$version"
-	}
+	$tag      = "$branch-$version"
 
 	# Build and publish the images.
 
@@ -51,6 +43,9 @@ function Build
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
 		PushImage "${registry}:$version"
+
+		Exec { docker tag "${registry}:$tag" "${registry}:$version-$date" }
+		PushImage "${registry}:$version-$date"
 	}
 
 	if ($latest)
@@ -70,13 +65,6 @@ $noImagePush = $nopush
 
 if ($all)
 {
-	# Never rebuild 5.2.0 again so it will remain based on the deprecated Elasticsearch image.
-	#
-	# Build 5.2.0
-
-	Build 5.3.0
-	Build 5.4.0
-	Build 5.5.0
 }
 
-# Elasticsearch 6+ is built from [$/Images/elasticsearch6]
+Build 6.1.1 -latest

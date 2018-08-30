@@ -21,4 +21,4 @@ param
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" --build-arg "VERSION=$version" . }
