@@ -60,7 +60,7 @@ function Build
 
 $noImagePush = $nopush
 
-# The image is tiny so we're going to always Build
+# The image is tiny so we're going to always build
 # all versions which will all be the same anyway.
 
 Build 0
