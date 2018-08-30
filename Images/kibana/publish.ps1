@@ -11,7 +11,7 @@
 
 param 
 (
-	[switch]$all = $False,
+	[switch]$allVersions = $False,
     [switch]$nopush = $False
 )
 
@@ -68,15 +68,8 @@ function Build
 
 $noImagePush = $nopush
 
-if ($all)
+if ($allVersions)
 {
-	# Never rebuild 5.2.0 again so it will remain based on the deprecated Kibana image.
-	#
-	# Build 5.2.0
-
-	Build 5.3.0
-	Build 5.4.0
-	Build 5.5.0
 }
 
 Build 6.1.1 -latest

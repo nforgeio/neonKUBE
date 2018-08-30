@@ -11,7 +11,7 @@
 
 param 
 (
-	[switch]$all = $False,
+	[switch]$allVersions = $False,
     [switch]$nopush = $False
 )
 
@@ -63,14 +63,8 @@ function Build
 
 $noImagePush = $nopush
 
-if ($all)
+if ($allVersions)
 {
-	Build 1.6.9
-	Build 1.6.10
-	Build 1.7.0
-	Build 1.7.1
-	Build 1.7.2
-	Build 1.7.8
 }
 
 Build 1.8.13 -latest
