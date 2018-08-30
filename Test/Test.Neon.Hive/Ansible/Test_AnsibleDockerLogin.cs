@@ -88,27 +88,18 @@ namespace TestNeonCluster
                 Assert.NotNull(hive.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
 
                 // Verify the login by examining the [/home/USER/.docker/conf.json] file on one
-                // of the nodes and then verifying that the file matches.
+                // of the nodes and then verifying we're authenticated.
 
                 var userDockerConfPath   = $"/home/{hive.HiveLogin.SshUsername}/.docker/config.json";
-                var rootDockerConfFolder = "/root/.docker";
-                var rootDockerConfPath   = $"{rootDockerConfFolder}/config.json";
                 var firstManager         = hive.FirstManager;
                 var dockerAuthId         = "https://index.docker.io/v1/";
 
                 Assert.True(firstManager.FileExists(userDockerConfPath));
-                Assert.True(firstManager.FileExists(rootDockerConfPath));
 
                 var userConfJson = firstManager.DownloadText(userDockerConfPath);
                 var userConf     = NeonHelper.JsonDeserialize<dynamic>(userConfJson);
 
                 Assert.True(!string.IsNullOrEmpty((string)userConf.auths[dockerAuthId].auth));
-
-                var rootConfJson = firstManager.DownloadText(rootDockerConfPath);
-                var rootConf     = NeonHelper.JsonDeserialize<dynamic>(rootConfJson);
-
-                Assert.True(!string.IsNullOrEmpty((string)rootConf.auths[dockerAuthId].auth));
-                Assert.Equal((string)userConf.auths[dockerAuthId].auth, (string)rootConf.auths[dockerAuthId].auth);
 
                 //-----------------------------------------------------------------
                 // Run the play again and verify that [changed=false].
@@ -136,18 +127,11 @@ namespace TestNeonCluster
                 Assert.NotNull(hive.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
 
                 Assert.True(firstManager.FileExists(userDockerConfPath));
-                Assert.True(firstManager.FileExists(rootDockerConfPath));
 
                 userConfJson = firstManager.DownloadText(userDockerConfPath);
                 userConf     = NeonHelper.JsonDeserialize<dynamic>(userConfJson);
 
                 Assert.True(!string.IsNullOrEmpty((string)userConf.auths[dockerAuthId].auth));
-
-                rootConfJson = firstManager.DownloadText(rootDockerConfPath);
-                rootConf     = NeonHelper.JsonDeserialize<dynamic>(rootConfJson);
-
-                Assert.True(!string.IsNullOrEmpty((string)rootConf.auths[dockerAuthId].auth));
-                Assert.Equal((string)userConf.auths[dockerAuthId].auth, (string)rootConf.auths[dockerAuthId].auth);
 
                 //-----------------------------------------------------------------
                 // Verify that we log off the test Docker hub account.
@@ -172,26 +156,20 @@ namespace TestNeonCluster
 
                 Assert.Null(hive.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
 
-                // Verify the logout by ensuring that either the [/home/USER/.docker/conf.json]
-                // and [/root/.docker.conf.json] files don't ecist on one of the nodes or that
-                // both of them lack credentials for [docker.io].
+                // Verify the logout by ensuring that the [/home/USER/.docker/conf.json]
+                // and [/root/.docker.conf.json] doesn't exist on one of the nodes or that
+                // it lacks credentials for [docker.io].
 
-                if (firstManager.FileExists(userDockerConfPath) || firstManager.FileExists(rootDockerConfPath))
+                if (firstManager.FileExists(userDockerConfPath))
                 {
                     // Both config files should exist if one of them is present.
 
                     Assert.True(firstManager.FileExists(userDockerConfPath));
-                    Assert.True(firstManager.FileExists(rootDockerConfPath));
 
                     userConfJson = firstManager.DownloadText(userDockerConfPath);
                     userConf     = NeonHelper.JsonDeserialize<dynamic>(userConfJson);
 
                     Assert.Null(userConf.auths[dockerAuthId]);
-
-                    rootConfJson = firstManager.DownloadText(rootDockerConfPath);
-                    rootConf     = NeonHelper.JsonDeserialize<dynamic>(rootConfJson);
-
-                    Assert.Null(rootConf.auths[dockerAuthId]);
                 }
 
                 //-----------------------------------------------------------------
@@ -217,26 +195,20 @@ namespace TestNeonCluster
 
                 Assert.Null(hive.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
 
-                // Verify the logout by ensuring that either the [/home/USER/.docker/conf.json]
-                // and [/root/.docker.conf.json] files don't ecist on one of the nodes or that
-                // both of them lack credentials for [docker.io].
+                // Verify the logout by ensuring that the [/home/USER/.docker/conf.json]
+                // and [/root/.docker.conf.json] doesn't exist on one of the nodes or that
+                // it lacks credentials for [docker.io].
 
-                if (firstManager.FileExists(userDockerConfPath) || firstManager.FileExists(rootDockerConfPath))
+                if (firstManager.FileExists(userDockerConfPath))
                 {
                     // Both config files should exist if one of them is present.
 
                     Assert.True(firstManager.FileExists(userDockerConfPath));
-                    Assert.True(firstManager.FileExists(rootDockerConfPath));
 
                     userConfJson = firstManager.DownloadText(userDockerConfPath);
-                    userConf     = NeonHelper.JsonDeserialize<dynamic>(userConfJson);
+                    userConf = NeonHelper.JsonDeserialize<dynamic>(userConfJson);
 
                     Assert.Null(userConf.auths[dockerAuthId]);
-
-                    rootConfJson = firstManager.DownloadText(rootDockerConfPath);
-                    rootConf     = NeonHelper.JsonDeserialize<dynamic>(rootConfJson);
-
-                    Assert.Null(rootConf.auths[dockerAuthId]);
                 }
             }
         }
