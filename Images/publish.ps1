@@ -130,7 +130,7 @@ if ($dotnet)
 	Publish "$image_root\\neon-dns"
 	Publish "$image_root\\neon-dns-mon"
 	Publish "$image_root\\neon-proxy-manager"
-	Publish "$image_root\\neon-varnish"
+    Publish "$image_root\\neon-varnish"
     Publish "$image_root\\neon-vegomatic"
 }
 

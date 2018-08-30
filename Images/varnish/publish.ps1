@@ -33,17 +33,7 @@ function Build
 	$registry = "nhive/varnish"
 	$date     = UtcDate
 	$branch   = GitBranch
-
-	if (IsProd)
-	{
-		# $tag = "$varnishVersion-$date"
-		$tag = "$date"
-	}
-	else
-	{
-		# $tag = "$branch-$varnishVersion"
-		$tag = "$branch-$date"
-	}
+	$tag      = "$branch-$date"
 
 	# Build and publish the images.
 
@@ -54,6 +44,9 @@ function Build
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:$varnishVersion" }
 		PushImage "${registry}:$varnishVersion"
+
+		Exec { docker tag "${registry}:$tag" "${registry}:$branch-$varnishVersion" }
+		PushImage "${registry}:$branch-$varnishVersion"
 	}
 
 	if ($latest)

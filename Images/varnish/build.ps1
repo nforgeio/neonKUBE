@@ -27,7 +27,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "FAMILY=$varnishFamily" --build-arg "VERSION=$varnishVersion" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "FAMILY=$varnishFamily" --build-arg "BRANCH=$branch" --build-arg "VERSION=$varnishVersion" . }
 
 # Clean up
 

@@ -44,7 +44,7 @@ function Build
 		Exec { docker tag "${registry}:$tag" "${registry}:$varnishVersion" }
 		PushImage "${registry}:$varnishVersion"
 
-		Exec { docker tag "${registry}:$version" "${registry}:${branch}-latest" }
+		Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
 		PushImage "${registry}:${branch}-latest"
 	}
 
