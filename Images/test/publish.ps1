@@ -32,18 +32,29 @@ function Build
 	$registry = "nhive/test"
 	$date     = UtcDate
 	$branch   = GitBranch
-
-	$tag = $version
+	$tag      = "$branch-$version"
 
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -version $version -tag $tag
     PushImage "${registry}:$tag"
 
+	if (IsProd)
+	{
+		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
+		PushImage "${registry}:$version"
+	}
+
 	if ($latest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-		PushImage "${registry}:latest"
+		if (IsProd)
+		{
+			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+			PushImage "${registry}:latest"
+		}
+
+        Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
+		PushImage "${registry}:${branch}-latest"
 	}
 }
 

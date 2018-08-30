@@ -25,27 +25,27 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,
+		[parameter(Mandatory=$True, Position=1)][string] $dotnetVersion,
 		[switch]$latest = $False
 	)
 
 	$registry = "nhive/aspnet"
 	$date     = UtcDate
 	$branch   = GitBranch
-	$tag      = "$branch-$version"
+	$tag      = "$branch-$dotnetVersion"
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -version $dotnetVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if (IsProd)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$version" }
-		PushImage "${registry}:$version"
+		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
+		PushImage "${registry}:$dotnetVersion"
 
-		Exec { docker tag "${registry}:$tag" "${registry}:$version-$date" }
-		PushImage "${registry}:$version-$date"
+		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion-$date" }
+		PushImage "${registry}:$dotnetVersion-$date"
 	}
 
 	if ($latest)

@@ -32,20 +32,20 @@ function Build
 	$registry = "nhive/ubuntu-16.04-dotnet"
 	$date     = UtcDate
 	$branch   = GitBranch
-	$tag      = "${dotnetVersion}-${date}"
+	$tag      = "$branch-$dotnetVersion"
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -tag $tag -version $dotnetVersion
-	PushImage "${registry}:$tag"
+	. ./build.ps1 -registry $registry -version $dotnetVersion -tag $tag
+    PushImage "${registry}:$tag"
 
 	if (IsProd)
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
 		PushImage "${registry}:$dotnetVersion"
 
-		Exec { docker tag "${registry}:$tag" "${registry}:$branch-$dotnetVersion" }
-		PushImage "${registry}:$branch-$dotnetVersion"
+		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion-$date" }
+		PushImage "${registry}:$dotnetVersion-$date"
 	}
 
 	if ($latest)
