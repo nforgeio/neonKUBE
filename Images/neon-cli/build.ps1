@@ -52,6 +52,9 @@ if (IsProd)
 	{
 		Exec { docker tag "${registry}:$version" "${registry}:latest"}
 		PushImage "${registry}:latest"
+
+		Exec { docker tag "${registry}:$version" "${registry}:${branch}-latest" }
+		PushImage "${registry}:${branch}-latest"
 	}
 
 	PushImage "${registry}:$version"
