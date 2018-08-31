@@ -17,7 +17,7 @@ using Newtonsoft.Json.Linq;
 namespace Neon.Data
 {
     /// <summary>
-    /// Settings used to connect a RabbitMQ client to a broker.
+    /// Settings used to connect a RabbitMQ client to a message broker.
     /// </summary>
     public class RabbitMQSettings
     {
@@ -62,12 +62,25 @@ namespace Neon.Data
         public List<string> Hostnames { get; set; } = new List<string>();
 
         /// <summary>
-        /// Specifies the broker port number.  This defaults to <b>5672</b>.  You
-        /// should use <b>5671</b> if TLS is enabled on the broker.
+        /// Specifies the broker port number.  This defaults to <b>5672</b> (the non-TLS port).
         /// </summary>
         [JsonProperty(PropertyName = "Port", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(0)]
-        public int Port { get; set; } = 5672;
+        [DefaultValue(NetworkPorts.AMQP)]
+        public int Port { get; set; } = NetworkPorts.AMQP;
+
+        /// <summary>
+        /// The username used to authenticate against RabbitMQ.
+        /// </summary>
+        [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Username { get; set; }
+
+        /// <summary>
+        /// The password used to authenticate against RabbitMQ.
+        /// </summary>
+        [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Password { get; set; }
 
         /// <summary>
         /// Returns <c>true</c> if the settings are valid.

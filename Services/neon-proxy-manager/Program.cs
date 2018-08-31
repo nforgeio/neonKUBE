@@ -389,14 +389,6 @@ namespace NeonProxyManager
                             // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
                             // proxy bridge configurations.
 
-                            // $todo(jeff.lill):
-                            //
-                            // .NET Core doesn't currently support unix domain sockets and my 2.0 based hack
-                            // no longer seems to work, so we're going to use HiveHelper.GetHackedDockerNodes()
-                            // to return the swarm nodes from the hive definition as a temporary hack.
-                            //
-                            //      https://github.com/jefflill/NeonForge/issues/306
-
                             swarmNodes = await docker.NodeListAsync();
 
                             // Rebuild the proxy configurations and write the captured status to

@@ -942,6 +942,7 @@ export HiveHostnames_RegistryCache=neon-registry-cache.$NEON_HIVE.nhive.io
 export HiveHostnames_LogEsData=neon-log-esdata.$NEON_HIVE.nhive.io
 export HiveHostnames_Consul=neon-consul.$NEON_HIVE.nhive.io
 export HiveHostnames_Vault=neon-vault.$NEON_HIVE.nhive.io
+export HiveHostnames_RabbitMQ=neon-rabbitmq.$NEON_HIVE.nhive.io
 export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.$NEON_HIVE.nhive.io
 
 if [ -d /mnt/host/ca-certificates ] ; then

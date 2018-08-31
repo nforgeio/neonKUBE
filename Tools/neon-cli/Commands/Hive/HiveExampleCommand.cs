@@ -625,6 +625,40 @@ USAGE:
         ""Enabled"": true
     },
 
+    // Integrated RabbitMQ settings.
+
+    ""RabbitMQ"": {
+
+        // Specifies the maximum RAM to be allocated to each RabbitMQ node container.
+        // This can be a long byte count or a long with units like [512MB] or [2GB].
+        // This can be overridden  for specific nodes.  This defaults to [100MB].
+        //
+        // NOTE: The default is probably too small for production environments
+
+        ""RamLimit"": ""100MB"",
+
+        // Specifies the how much of [RamLimit] each node can allocate for
+        // caching and internal use expressed as a number between 0.0 - 1.0.
+        // This defaults to <c>0.50</c> indicating that up to half of [RamLimit]
+        // may be used.
+        //
+        // NOTE: The default value is very conservative especially as you increase 
+        //       [RamLimit].  For larger RAM values you should be able allocate a 
+        //       larger percentage of RAM for this data.
+
+        ""RamHighWatermark"": 0.50,
+
+        // Specifies the username used to secure the message cluster.
+        // This defaults to [guest].
+
+        ""Username"": ""guest"",
+
+        // Specifies the password used to secure the message cluster.
+        // This defaults to [guest].
+
+        ""Password"": ""guest""
+    },
+
     //-------------------------------------------------------------------------
     // This section describes the physical and/or virtual machines that 
     // will host your hive.  There are three basic types of nodes:

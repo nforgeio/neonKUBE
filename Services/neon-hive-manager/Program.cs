@@ -313,14 +313,6 @@ namespace NeonHiveManager
             // Vault proxy port because we need to be able to address these
             // individually.
 
-            // $todo(jeff.lill):
-            //
-            // .NET Core doesn't currently support unix domain sockets and my 2.0 based hack
-            // no longer seems to work, so we're going to use HiveHelper.GetHackedDockerNodes()
-            // to return the swarm nodes from the hive definition as a temporary hack.
-            //
-            //      https://github.com/jefflill/NeonForge/issues/306
-
             var swarmNodes = await docker.NodeListAsync();
             var hosts      = File.ReadAllText("/etc/hosts");
 

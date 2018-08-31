@@ -437,6 +437,22 @@ namespace Neon.Hive
         public bool LogEsData { get; set; } = false;
 
         //---------------------------------------------------------------------
+        // Build-in hive RabbitMQ queue related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="RabbitMQ"/>.
+        /// </summary>
+        public const string LabelRabbitMQ = HiveDefinition.ReservedLabelPrefix + ".rabbitmq";
+
+        /// <summary>
+        /// <b>io.neonhive.rabbitmq</b> [<c>bool</c>]: Indicates that the node should host a
+        /// RabbitMQ instance. This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "RabbitMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(false)]
+        public bool RabbitMQ { get; set; } = false;
+
+        //---------------------------------------------------------------------
         // Ceph Storage Cluster related labels.
 
         /// <summary>
@@ -692,6 +708,8 @@ namespace Neon.Hive
 
                 list.Add(new KeyValuePair<string, object>(LabelLogEsData,               LogEsData));
 
+                list.Add(new KeyValuePair<string, object>(LabelRabbitMQ,                RabbitMQ));
+
                 list.Add(new KeyValuePair<string, object>(LabelCephMON,                 CephMON));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 CephOSD));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDDevice,           CephOSDDevice));
@@ -776,6 +794,8 @@ namespace Neon.Hive
                     case LabelPhysicalPower:            node.Labels.PhysicalPower = label.Value;  break;
 
                     case LabelLogEsData:                node.Labels.LogEsData = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+
+                    case LabelRabbitMQ:                 node.Labels.RabbitMQ = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
                     case LabelCephMON:                  node.Labels.CephMON = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephOSD:                  node.Labels.CephOSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;

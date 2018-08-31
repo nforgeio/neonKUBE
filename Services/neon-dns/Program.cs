@@ -328,7 +328,7 @@ $@"# PowerDNS Recursor authoritatively answers for [*.HIVENAME.nhive.io] hostnam
                                         sbHosts.Clear();
                                         sbHosts.AppendLine(text);
 
-                                        // Append the marker line, followed by the dynamic host
+                                        // Append the marker line, followed by dynamic host
                                         // entries we downloaded from Consul.
 
                                         sbHosts.AppendLine();

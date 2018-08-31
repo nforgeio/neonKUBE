@@ -140,22 +140,22 @@ namespace Neon.Hive
         public static readonly string GlobalKey = "neon/global";
 
         /// <summary>
-        /// Consul root key for the Dynamic DNS service related values.
+        /// Consul root key for the Local DNS service related values.
         /// </summary>
         public static readonly string ConsulDnsRootKey = "neon/dns";
 
         /// <summary>
-        /// Consul root key for the Dynamic DNS entry definitions.
+        /// Consul root key for the Local DNS entry definitions.
         /// </summary>
         public static readonly string ConsulDnsEntriesKey = $"{ConsulDnsRootKey}/entries";
 
         /// <summary>
-        /// Consul key for the Dynamic DNS answer <b>hosts.txt</b> file.
+        /// Consul key for the Local DNS answer <b>hosts.txt</b> file.
         /// </summary>
         public static readonly string ConsulDnsHostsKey = $"{ConsulDnsRootKey}/answers/hosts.txt";
 
         /// <summary>
-        /// Consul key for the Dynamic DNS answer <b>hosts.md5</b> file.
+        /// Consul key for the Local DNS answer <b>hosts.md5</b> file.
         /// </summary>
         public static readonly string ConsulDnsHostsMd5Key = $"{ConsulDnsRootKey}/answers/hosts.md5";
 

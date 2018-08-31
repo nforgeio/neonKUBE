@@ -53,6 +53,7 @@ namespace Neon.Hive
         private const string        defaultDnsImage           = HiveConst.NeonPublicRegistry + "/neon-dns:latest";
         private const string        defaultDnsMonImage        = HiveConst.NeonPublicRegistry + "/neon-dns-mon:latest";
         private const string        defaultVarnishImage       = HiveConst.NeonPublicRegistry + "/neon-varnish:latest";
+        private const string        defaultRabbitMQImage      = HiveConst.NeonPublicRegistry + "/rabbitmq:latest";
         private const string        defaultDrivePrefix        = "sd";
         private const int           defaultStepStaggerSeconds = 5;
         private const bool          defaultAllowUnitTesting   = false;
@@ -498,9 +499,16 @@ namespace Neon.Hive
         /// <summary>
         /// Integrated <a href="https://varnish-cache.org/">Kong API Gateway</a> options.
         /// </summary>
-        [JsonProperty(PropertyName = "Vernish", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "Varnish", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public VarnishOptions Varnish { get; set; } = new VarnishOptions();
+
+        /// <summary>
+        /// Integrated <a href="https://rabbitmq.org/">RabbitMQ Message Queue</a> options.
+        /// </summary>
+        [JsonProperty(PropertyName = "RabbitMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(null)]
+        public RabbitMQOptions RabbitMQ{ get; set; } = new RabbitMQOptions();
 
         /// <summary>
         /// The Docker image to be used to provision public and private proxies and proxy bridges.
@@ -556,7 +564,15 @@ namespace Neon.Hive
         /// </summary>
         [JsonProperty(PropertyName = "VarnishImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultVarnishImage)]
-        public string VarnishImage { get; set; } = defaultDnsMonImage;
+        public string VarnishImage { get; set; } = defaultVarnishImage;
+
+        /// <summary>
+        /// The Docker image to be used to provision the <b>neon-rabbitmq</b> service.
+        /// This defaults to <b>nhive/rabbitmq:latest</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "RabbitMQImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultRabbitMQImage)]
+        public string RabbitMQImage { get; set; } = defaultRabbitMQImage;
 
         /// <summary>
         /// Describes the Docker host nodes in the hive.
@@ -782,6 +798,7 @@ namespace Neon.Hive
             Dashboard         = Dashboard ?? new DashboardOptions();
             Ceph              = Ceph ?? new CephOptions();
             Varnish           = Varnish ?? new VarnishOptions();
+            RabbitMQ          = RabbitMQ ?? new RabbitMQOptions();
 
             ProxyImage        = ProxyImage ?? defaultProxyImage;
             ProxyVaultImage   = ProxyVaultImage ?? defaultProxyVaultImage;
@@ -790,6 +807,7 @@ namespace Neon.Hive
             DnsImage          = DnsImage ?? defaultDnsImage;
             DnsMonImage       = DnsMonImage ?? defaultDnsMonImage;
             VarnishImage      = VarnishImage ?? defaultVarnishImage;
+            RabbitMQImage     = RabbitMQImage ?? defaultRabbitMQImage;
 
             Setup.Validate(this);
             Network.Validate(this);

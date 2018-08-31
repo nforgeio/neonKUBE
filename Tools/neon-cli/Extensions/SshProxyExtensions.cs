@@ -179,6 +179,15 @@ namespace NeonCli
                 sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {hiveDefinition.Hostnames.LogEsData}");
             }
 
+            sbHosts.AppendLineLinux();
+            sbHosts.AppendLineLinux("# Internal hive RabbitMQ related mappings:");
+            sbHosts.AppendLineLinux();
+
+            foreach (var node in hiveDefinition.SortedNodes.Where(n => n.Labels.RabbitMQ))
+            {
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(node)} {node.Name}.{hiveDefinition.Hostnames.RabbitMQ}");
+            }
+
             return sbHosts.ToString();
         }
 
@@ -470,7 +479,7 @@ namespace NeonCli
             else
             {
                 // All servers use the configured upstream nameservers when we're not
-                // deploying the Dynamic DNS.
+                // deploying the Local DNS.
 
                 preprocessReader.Set("net.nameservers", nameservers);
             }

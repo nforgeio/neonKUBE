@@ -102,6 +102,15 @@ namespace Neon.Hive
         public string Vault => $"neon-vault.{hiveDefinition.Name}.nhive.io";
 
         /// <summary>
+        /// Returns the base hostname for the internal hive Docker RabbitMQ cluster nodes.
+        /// </summary>
+        /// <remarks>
+        /// Individual RabbitMQ instances will be named like <b><i>hive-node</i>.neon-rabbitmq.HIVENAME.nhive.io</b>,
+        /// where <i>hive-node</i> is the name of the hive node hosting the component.
+        /// </remarks>
+        public string RabbitMQ => $"neon-rabbitmq.{hiveDefinition.Name}.nhive.io";
+
+        /// <summary>
         /// Returns the special hostname used by the <b>HostsFixture</b> Xunit test fixture to verify
         /// that the local DNS resolver has picked up the changes.  This is not used for any
         /// other purpose.
