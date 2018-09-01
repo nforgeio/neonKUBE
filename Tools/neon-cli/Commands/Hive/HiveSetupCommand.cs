@@ -1785,6 +1785,11 @@ fi
                         }
                     }
 
+                    if (node.Metadata.Labels.RabbitMQ)
+                    {
+                        images.Add(Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
+                    }
+
                     foreach (var image in images)
                     {
                         var command = $"docker pull {image}";
@@ -3908,7 +3913,7 @@ systemctl restart sshd
                             Name        = "kibana",
                             Title       = "Kibana",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpKibana}",
+                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateKibanaDashboard}",
                             Description = "Kibana hive monitoring dashboard"
                         };
 

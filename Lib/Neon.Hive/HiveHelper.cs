@@ -1046,6 +1046,11 @@ namespace Neon.Hive
                 hosts.Add($"{node.Name}.{hiveDefinition.Hostnames.Base}", IPAddress.Parse(node.PrivateAddress));
             }
 
+            foreach (var node in hiveDefinition.Nodes.Where(n => n.Labels.RabbitMQ))
+            {
+                hosts.Add($"{node.Name}.{hiveDefinition.Hostnames.RabbitMQ}", IPAddress.Parse(node.PrivateAddress));
+            }
+
             hosts.Add(hiveDefinition.Hostnames.LogEsData, healthyManager.PrivateAddress);
 
             NetHelper.ModifyLocalHosts(hosts, section: $"hive-{hiveDefinition.Name}");
@@ -1142,7 +1147,7 @@ namespace Neon.Hive
             //
             // and then extract the hivenames and then delete any sections
             // for which there is no local hive.  Note that the sections
-            // will be listed as uppercase.
+            // will be listed in uppercase.
 
             foreach (var section in NetHelper.ListLocalHostsSections())
             {

@@ -489,68 +489,112 @@ namespace NeonCli
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         public void DeployContainers(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            // NOTE: A this time, we only need to deploy the proxy bridges to the
-            //       pet nodes, because these will be deployed as global services
-            //       on the swarm nodes.
+            // NOTE: We only need to deploy the proxy bridges to the pet nodes, 
+            //       because these will be deployed as global services on the 
+            //       swarm nodes.
 
-            if (!node.Metadata.IsPet)
+            if (node.Metadata.IsPet)
             {
-                return;
+                node.InvokeIdempotentAction("setup/neon-proxy-public-bridge",
+                    () =>
+                    {
+                        Thread.Sleep(stepDelay);
+
+                        node.Status = "start: neon-proxy-public-bridge";
+
+                        var response = node.DockerCommand(
+                            "docker run",
+                            "--detach",
+                            "--name", "neon-proxy-public-bridge",
+                            "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public-bridge/proxy-conf",
+                            "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/public-bridge/proxy-hash",
+                            "--env", "VAULT_CREDENTIALS=neon-proxy-private-credentials",
+                            "--env", "WARN_SECONDS=300",
+                            "--env", "POLL_SECONDS=15",
+                            "--env", "START_SECONDS=10",
+                            "--env", "LOG_LEVEL=INFO",
+                            "--env", "DEBUG=false",
+                            "--env", "VAULT_SKIP_VERIFY=true",
+                            "--network", "host",
+                            "--restart", "always",
+                            Program.ResolveDockerImage(hive.Definition.ProxyImage));
+
+                        node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
+                        node.Status = string.Empty;
+                    });
+
+                node.InvokeIdempotentAction("setup/neon-proxy-private-bridge",
+                    () =>
+                    {
+                        node.Status = "start: neon-proxy-private-bridge";
+
+                        var response = node.DockerCommand(
+                            "docker run",
+                            "--detach",
+                            "--name", "neon-proxy-private-bridge",
+                            "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/proxy-conf",
+                            "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/proxy-hash",
+                            "--env", "VAULT_CREDENTIALS=neon-proxy-private-credentials",
+                            "--env", "WARN_SECONDS=300",
+                            "--env", "POLL_SECONDS=15",
+                            "--env", "START_SECONDS=10",
+                            "--env", "LOG_LEVEL=INFO",
+                            "--env", "DEBUG=false",
+                            "--env", "VAULT_SKIP_VERIFY=true",
+                            "--network", "host",
+                            "--restart", "always",
+                            Program.ResolveDockerImage(hive.Definition.ProxyImage));
+
+                        node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
+                        node.Status = string.Empty;
+                    });
             }
+            
+            // Deploy RabbitMQ on the labeled nodes.
 
-            node.InvokeIdempotentAction("setup/neon-proxy-public-bridge",
-                () =>
+            if (node.Metadata.Labels.RabbitMQ)
+            {
+                node.Status = "start: neon-rabbitmq";
+
+                // Build a comma separated list of fully qualified RabbitMQ hostnames so we
+                // can pass them as the CLUSTER environment variable.
+
+                var sbCluster = new StringBuilder();
+
+                foreach (var rabbitNode in hive.Definition.SortedNodes.Where(n => n.Labels.RabbitMQ))
                 {
-                    Thread.Sleep(stepDelay);
+                    sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.RabbitMQ}", ",");
+                }
 
-                    node.Status = "start: neon-proxy-public-bridge";
+                var response = node.DockerCommand(
+                    "docker run",
+                    "--detach",
+                    "--name", "neon-rabbitmq",
+                    "--env", $"CLUSTER_NAME={hive.Definition.Name}",
+                    "--env", $"CLUSTER_NODES={sbCluster}",
+                    "--env", $"CLUSTER_PARTITION_MODE=autoheal",
+                    "--env", $"NODENAME={node.Name}@{node.Name}.{hive.Definition.Hostnames.RabbitMQ}",
+                    "--env", $"ERL_EPMD_PORT={HiveHostPorts.RabbitMQEPMD}",
+                    "--env", $"RABBITMQ_DEFAULT_USER=sysadmin",
+                    "--env", $"RABBITMQ_DEFAULT_PASS=password",
+                    "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.RabbitMQAMPQ}",
+                    "--env", $"RABBITMQ_DIST_PORT={HiveHostPorts.RabbitMQDIST}",
+                    "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.RabbitMQDashboard}",
+                    "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.RabbitMQ.ErlangCookie}",
+                    "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.RabbitMQ.RamHighWatermark}",
+                    "--env", $"RABBITMQ_HIPE_COMPILE=1",
+                    "--mount", "type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq",
+                    "--publish", $"{HiveHostPorts.RabbitMQEPMD}:{HiveHostPorts.RabbitMQEPMD}",
+                    "--publish", $"{HiveHostPorts.RabbitMQAMPQ}:{HiveHostPorts.RabbitMQAMPQ}",
+                    "--publish", $"{HiveHostPorts.RabbitMQDIST}:{HiveHostPorts.RabbitMQDIST}",
+                    "--publish", $"{HiveHostPorts.RabbitMQDashboard}:{HiveHostPorts.RabbitMQDashboard}",
+                    "--memory", HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.RamLimit, this.GetType(), nameof(hive.Definition.RabbitMQ.RamLimit)),
+                    "--restart", "always",
+                    Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
 
-                    var response = node.DockerCommand(
-                        "docker run",
-                        "--detach",
-                        "--name", "neon-proxy-public-bridge",
-                        "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public-bridge/proxy-conf",
-                        "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/public-bridge/proxy-hash",
-                        "--env", "VAULT_CREDENTIALS=neon-proxy-private-credentials",
-                        "--env", "WARN_SECONDS=300",
-                        "--env", "POLL_SECONDS=15",
-                        "--env", "START_SECONDS=10",
-                        "--env", "LOG_LEVEL=INFO",
-                        "--env", "DEBUG=false",
-                        "--env", "VAULT_SKIP_VERIFY=true",
-                        "--network", "host",
-                        "--restart", "always",
-                        Program.ResolveDockerImage(hive.Definition.ProxyImage));
-
-                    node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
-                    node.Status = string.Empty;
-                });
-
-            node.InvokeIdempotentAction("setup/neon-proxy-private-bridge",
-                () =>
-                {
-                    node.Status = "start: neon-proxy-private-bridge";
-
-                    var response = node.DockerCommand(
-                        "docker run",
-                        "--detach",
-                        "--name", "neon-proxy-private-bridge",
-                        "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/proxy-conf",
-                        "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/proxy-hash",
-                        "--env", "VAULT_CREDENTIALS=neon-proxy-private-credentials",
-                        "--env", "WARN_SECONDS=300",
-                        "--env", "POLL_SECONDS=15",
-                        "--env", "START_SECONDS=10",
-                        "--env", "LOG_LEVEL=INFO",
-                        "--env", "DEBUG=false",
-                        "--env", "VAULT_SKIP_VERIFY=true",
-                        "--network", "host",
-                        "--restart", "always",
-                        Program.ResolveDockerImage(hive.Definition.ProxyImage));
-
-                    node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
-                    node.Status = string.Empty;
-                });
+                node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-rabbitmq.sh"), response.BashCommand);
+                node.Status = string.Empty;
+            }
         }
     }
 }

@@ -53,7 +53,6 @@ namespace Neon.Hive
         private const string        defaultDnsImage           = HiveConst.NeonPublicRegistry + "/neon-dns:latest";
         private const string        defaultDnsMonImage        = HiveConst.NeonPublicRegistry + "/neon-dns-mon:latest";
         private const string        defaultVarnishImage       = HiveConst.NeonPublicRegistry + "/neon-varnish:latest";
-        private const string        defaultRabbitMQImage      = HiveConst.NeonPublicRegistry + "/rabbitmq:latest";
         private const string        defaultDrivePrefix        = "sd";
         private const int           defaultStepStaggerSeconds = 5;
         private const bool          defaultAllowUnitTesting   = false;
@@ -567,14 +566,6 @@ namespace Neon.Hive
         public string VarnishImage { get; set; } = defaultVarnishImage;
 
         /// <summary>
-        /// The Docker image to be used to provision the <b>neon-rabbitmq</b> service.
-        /// This defaults to <b>nhive/rabbitmq:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "RabbitMQImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultRabbitMQImage)]
-        public string RabbitMQImage { get; set; } = defaultRabbitMQImage;
-
-        /// <summary>
         /// Describes the Docker host nodes in the hive.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
@@ -807,7 +798,6 @@ namespace Neon.Hive
             DnsImage          = DnsImage ?? defaultDnsImage;
             DnsMonImage       = DnsMonImage ?? defaultDnsMonImage;
             VarnishImage      = VarnishImage ?? defaultVarnishImage;
-            RabbitMQImage     = RabbitMQImage ?? defaultRabbitMQImage;
 
             Setup.Validate(this);
             Network.Validate(this);
@@ -821,6 +811,7 @@ namespace Neon.Hive
             Dashboard.Validate(this);
             Ceph.Validate(this);
             Varnish.Validate(this);
+            RabbitMQ.Validate(this);
 
             new HostingManagerFactory().Validate(this);
 

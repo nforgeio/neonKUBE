@@ -237,7 +237,7 @@ namespace NeonCli
                         rule.Frontends.Add(
                             new LoadBalancerHttpFrontend()
                             {
-                                ProxyPort = HiveHostPorts.ProxyPrivateHttpKibana
+                                ProxyPort = HiveHostPorts.ProxyPrivateKibanaDashboard
                             });
 
                         rule.Backends.Add(

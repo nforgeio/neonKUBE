@@ -282,6 +282,21 @@ export HiveHostPorts_LogEsDataTcp=5006
 # SYSLOG events from the HAProxy based services and perhaps other sources.
 export HiveHostPorts_LogHostSysLog=5007
 
+# The port exposed by the hive's Ceph dashboard.
+export HiveHostPorts_CephDashboard=5008
+
+# The RabbitMQ/Erlang peer discovery protocol port.
+export HiveHostPorts_RabbitMQEPMD=5009
+
+# The RabbitMQ message broker AMPQ port.
+export HiveHostPorts_RabbitMQAMPQ=5010
+
+# The RabbitMQ message broker cluster internal communication port.
+export HiveHostPorts_RabbitMQDIST=5011
+
+# The RabbitMQ management dashboard port.
+export HiveHostPorts_RabbitMQDashboard=5012
+
 # This port is reserved and must not be assigned to any service.  This is
 # currently referenced by the manager load balancer rule for Azure deployments
 # and it must not actually host a service.  See the [AzureHostingManager]
@@ -357,12 +372,15 @@ export HiveHostPorts_ProxyPrivateHttpLogEsData=5303
 # The port assigned to the hive Ceph web dashboard.
 export HiveHostPorts_ProxyPrivateHttpCephDashboard=5304
 
-# The port assigned to the Kibana dashboard.
-export HiveHostPorts_ProxyPrivateHttpKibana=5305
+# The port assigned to the load balanced Kibana dashboard.
+export HiveHostPorts_ProxyPrivateKibanaDashboard=5305
+
+# The port assigned to the load balanced RabbitMQ dashboard.
+export HiveHostPorts_ProxyPrivateRabbitMQDashboard=5306
 
 # The first [neon-proxy-private] port available for routing custom
 # HTTP/S or TCP services.
-export HiveHostPorts_ProxyPrivatecFirstUser=5320
+export HiveHostPorts_ProxyPrivateFirstUser=5320
 
 # The first [neon-proxy-private] port available for routing custom
 # HTTP/S or TCP services.

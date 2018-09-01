@@ -182,7 +182,8 @@ namespace Neon.Hive
             {
                 "neon-log-host",
                 "neon-log-metricbeat",
-                "neon-registry-cache"
+                "neon-registry-cache",
+                "rabbitmq"
             };
 
         /// <summary>

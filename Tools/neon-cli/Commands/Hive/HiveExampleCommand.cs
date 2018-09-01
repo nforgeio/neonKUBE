@@ -656,7 +656,26 @@ USAGE:
         // Specifies the password used to secure the message cluster.
         // This defaults to [guest].
 
-        ""Password"": ""guest""
+        ""Password"": ""guest"",
+
+        // Specifies the shared secret clustered RabbitMQ nodes will use for mutual authentication.
+        // A secure password will be generated if this isn't specified.
+        
+        ""ErlangCookie"": ""MY-SECRET"",
+
+        // Specifies how the RabbitMQ cluster will deal with network partitions.  The possible
+        // values are [autoheal], [pause_minority], or [pause_if_all_down].  This defaults to 
+        // [autoheal] to favor availability over the potential for data loss.  The other modes 
+        // may require manual intervention to being the cluster back
+        //
+        // See https://www.rabbitmq.com/partitions.html for more information.
+
+        ""PartitionMode"": ""autoheal"",
+
+        // The Docker image to be used to provision the [neon-rabbitmq] service.
+        // This defaults to [nhive/rabbitmq:latest].
+
+         ""RabbitMQImage"": ""nhive/rabbitmq:latest""
     },
 
     //-------------------------------------------------------------------------

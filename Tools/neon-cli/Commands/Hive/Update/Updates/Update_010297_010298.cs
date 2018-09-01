@@ -264,7 +264,7 @@ namespace NeonCli
                     rule.Frontends.Add(
                         new LoadBalancerHttpFrontend()
                         {
-                            ProxyPort = HiveHostPorts.ProxyPrivateHttpKibana
+                            ProxyPort = HiveHostPorts.ProxyPrivateKibanaDashboard
                         });
 
                     rule.Backends.Add(
@@ -291,7 +291,7 @@ namespace NeonCli
                         Name        = "kibana",
                         Title       = "Kibana",
                         Folder      = HiveConst.DashboardSystemFolder,
-                        Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpKibana}",
+                        Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateKibanaDashboard}",
                         Description = "Kibana hive monitoring dashboard"
                     };
 

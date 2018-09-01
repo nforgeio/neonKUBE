@@ -126,6 +126,26 @@ namespace Neon.Hive
         public const int CephDashboard = 5008;
 
         /// <summary>
+        /// The RabbitMQ/Erlang peer discovery protocol port.
+        /// </summary>
+        public const int RabbitMQEPMD = 5009;
+
+        /// <summary>
+        /// The RabbitMQ message broker AMPQ port.
+        /// </summary>
+        public const int RabbitMQAMPQ = 5010;
+
+        /// <summary>
+        /// The RabbitMQ message broker cluster internal communication port.
+        /// </summary>
+        public const int RabbitMQDIST = 5011;
+
+        /// <summary>
+        /// The RabbitMQ management dashboard port.
+        /// </summary>
+        public const int RabbitMQDashboard = 5012;
+
+        /// <summary>
         /// This port is reserved and must not be assigned to any service.  This is
         /// currently referenced by the manager load balancer rule for Azure deployments
         /// and it must not actually host a service.  See the <b>AzureHostingManager</b>
@@ -236,9 +256,14 @@ namespace Neon.Hive
         public const int ProxyPrivateHttpCephDashboard = 5304;
 
         /// <summary>
-        /// The port assigned to the Kibana dashboard.
+        /// The port assigned to the load balanced Kibana dashboard.
         /// </summary>
-        public const int ProxyPrivateHttpKibana = 5305;
+        public const int ProxyPrivateKibanaDashboard = 5305;
+
+        /// <summary>
+        /// The port assigned to the load balanced RabbitMQ dashboard.
+        /// </summary>
+        public const int ProxyPrivateRabbitMQDashboard = 5306;
 
         /// <summary>
         /// The first <b>neon-proxy-private</b> port available for routing custom
