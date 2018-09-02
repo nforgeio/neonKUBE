@@ -329,8 +329,8 @@ MODULES:
     neon_docker_login       - Manages Docker registry logins
     neon_docker_secret      - Manages Docker secrets
     neon_docker_service     - Manages Docker services
-    neon_dns_hosts          - Manages hive DNS host overrides
     neon-globals            - Manages hive global settings
+    neon_hive_dns           - Manages hive DNS host overrides
     neon_load_balancer      - Manager hive load balancers  
 ";
 

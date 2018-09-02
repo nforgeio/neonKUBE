@@ -68,7 +68,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns_hosts:
+      neon_hive_dns:
         state: present
         hostname: {host}
         UNKNOWN: argument
@@ -90,7 +90,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns_hosts:
+      neon_hive_dns:
         state: present
         hostname: {host}
         endpoints:
@@ -123,7 +123,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns_hosts:
+      neon_hive_dns:
         state: present
         hostname: {host}
         endpoints:
@@ -183,7 +183,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns_hosts:
+      neon_hive_dns:
         state: present
         hostname: {host}
         endpoints:
@@ -214,7 +214,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns_hosts:
+      neon_hive_dns:
         state: present
         hostname: {host}
         endpoints:
@@ -275,7 +275,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns_hosts:
+      neon_hive_dns:
         state: present
         hostname: {host}
         endpoints:
@@ -323,7 +323,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns_hosts:
+      neon_hive_dns:
         state: absent
         hostname: {host}
         endpoints:

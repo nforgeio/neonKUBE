@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsHostsModule.cs
+// FILE:	    HiveDnsModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -31,12 +31,12 @@ using Neon.Net;
 namespace NeonCli.Ansible
 {
     /// <summary>
-    /// Implements the <b>neon_dns_hosts</b> Ansible module.
+    /// Implements the <b>neon_hive_dns</b> Ansible module.
     /// </summary>
-    public class DnsHostsModule : IAnsibleModule
+    public class HiveDnsModule : IAnsibleModule
     {
         //---------------------------------------------------------------------
-        // neon_dns_hosts:
+        // neon_hive_dns:
         //
         // Synopsis:
         // ---------
@@ -108,7 +108,7 @@ namespace NeonCli.Ansible
         //    hosts: localhost
         //    tasks:
         //      - name: DNS task
-        //        neon_dns_hosts:
+        //        neon_hive_dns:
         //          hostname: foo.com
         //          state: present
         //          endpoints:
@@ -120,7 +120,7 @@ namespace NeonCli.Ansible
         //    hosts: localhost
         //    tasks:
         //      - name: DNS task
-        //        neon_dns_hosts:
+        //        neon_hive_dns:
         //          hostname: foo.com
         //          state: present
         //          endpoints:
@@ -135,7 +135,7 @@ namespace NeonCli.Ansible
         //    hosts: localhost
         //    tasks:
         //      - name: DNS task
-        //        neon_dns_hosts:
+        //        neon_hive_dns:
         //          hostname: foo.com
         //          state: present
         //          wait: yes
@@ -155,7 +155,7 @@ namespace NeonCli.Ansible
         //    hosts: localhost
         //    tasks:
         //      - name: DNS task
-        //        neon_dns_hosts:
+        //        neon_hive_dns:
         //          hostname: foo.com
         //          state: present
         //          endpoints:
@@ -170,7 +170,7 @@ namespace NeonCli.Ansible
         //    hosts: localhost
         //    tasks:
         //      - name: DNS task
-        //        neon_dns_hosts:
+        //        neon_hive_dns:
         //          hostname: foo.com
         //          state: present
         //          endpoints:
@@ -185,7 +185,7 @@ namespace NeonCli.Ansible
         //    hosts: localhost
         //    tasks:
         //      - name: DNS task
-        //        neon_dns_hosts:
+        //        neon_hive_dns:
         //          hostname: foo.com
         //          state: present
         //          endpoints:

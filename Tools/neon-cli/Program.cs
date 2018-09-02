@@ -92,12 +92,12 @@ COMMAND SUMMARY:
     neon create password    [--length=#]
     neon create uuid
     neon dashboard|dash     DASHBOARD
-    neon dns-hosts          ARGS
     neon docker             -- CMD [ARGS]
     neon download           SOURCE TARGET [NODE]
     neon exec               BASH-CMD
     neon file               create|decrypt|edit|encrypt|view PATH PASSWORD-NAME
     neon folder             FOLDER
+    neon hive dns           ARGS
     neon hive example
     neon hive get           VALUE-EXPR
     neon hive info
@@ -276,13 +276,13 @@ OPTIONS:
                     new CreatePasswordCommand(),
                     new CreateUuidCommand(),
                     new DashboardCommand(),
-                    new DnsHostsCommand(),
                     new DockerCommand(),
                     new DownloadCommand(),
                     new ExecCommand(),
                     new FileCommand(),
                     new FolderCommand(),
                     new HiveCommand(),
+                    new HiveDnsCommand(),
                     new HiveExampleCommand(),
                     new HiveGetCommand(),
                     new HiveInfoCommand(),

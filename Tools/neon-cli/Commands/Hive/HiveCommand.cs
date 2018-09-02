@@ -31,6 +31,7 @@ Performs basic hive provisioning and management.
 
 USAGE:
 
+    neon hive dns           - Manages the local hive DNS hosts
     neon hive example       - Outputs a sample hive definition
     neon hive get           - Gets hive variables and settings
     neon hive info          - Outputs hive information

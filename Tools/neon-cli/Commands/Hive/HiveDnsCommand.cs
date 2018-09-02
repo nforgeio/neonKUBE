@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsHostsCommand.cs
+// FILE:	    HiveDnsCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -27,25 +27,25 @@ using System.Diagnostics.Contracts;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>dns-hosts</b> command.
+    /// Implements the <b>hive dns</b> command.
     /// </summary>
-    public class DnsHostsCommand : CommandBase
+    public class HiveDnsCommand : CommandBase
     {
         private const string usage =
 @"
-Manages hive DNS local hosts records.  This works much like the Linux
-[/etc/hosts] file except that it manages DNS records for the entire hive.
+Manages hive DNS hosts records.  This works much like the Linux [/etc/hosts]
+file except that it manages DNS records for the entire hive.
 
 USAGE:
 
-    neon dns-hosts help                                  - Describes DNS entry format
-    neon dns-hosts addr|addresses [HOST]                 - Lists current host addresses
-    neon dns-hosts [--yaml] get HOST                     - Gets DNS host settings
-    neon dns-hosts ls|list                               - Lists the DNS host entries
-    neon dns-hosts [--wait] rm|remove HOST               - Removes DNS host settings
-    neon dns-hosts [--wait] set [--check] HOST ADDRESSES - Sets DNS host settings
-    neon dns-hosts [--wait] set PATH                     - Sets DNS settings from a file
-    neon dns-hosts [--wait] set -                        - Sets DNS settings from STDIN
+    neon hive dns help                                   - Describes DNS entry format
+    neon hive dns addr|addresses [HOST]                  - Lists current host addresses
+    neon hive dns [--yaml] get HOST                      - Gets DNS host settings
+    neon hive dns ls|list                                - Lists the DNS host entries
+    neon hive dns [--wait] rm|remove HOST                - Removes DNS host settings
+    neon hive dns [--wait] set [--check] HOST ADDRESSES  - Sets DNS host settings
+    neon hive dns [--wait] set PATH                      - Sets DNS settings from a file
+    neon hive dns [--wait] set -                         - Sets DNS settings from STDIN
 
 ARGUMENTS:
 
@@ -120,7 +120,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "dns-hosts" }; }
+            get { return new string[] { "hive dns" }; }
         }
 
         /// <inheritdoc/>
