@@ -40,19 +40,75 @@ RabbitMQ configuration is performed using environment variables as described [he
 
 * `RABBITMQ_HIPE_COMPILE` - (*optional*) specifies that RabbitMQ be precompiled using the HiPE Erlang just-in-time compiler for 20-50% better performance at the cost of an additional 30-45 second delay during startup.  Set this to "1" to enable.  This defaults to `0` to disable precompiling.
 
-RabbitMQ persists its operational data to the `/var/lib/rabbitmq/mnesia` directory within the container.  Production deployments will typically mount a named Docker volume here so the data will persist across container restarts.
+* `RABBITMQ_DISK_FREE_LIMIT` = (*optional*) specifies the minimum bytes of free disk space available when RabbitMQ will begin throttling messages via flow control.  This is an absolute number of bytes like `1000000000` or `100MB`.  This defaults to twice the available RAM plus `1GB` to help prevent RabbitMQ from filling the disk up on hive host nodes.
+
+RabbitMQ persists its operational data to the `/var/lib/rabbitmq` directory within the container.  Production deployments will typically mount a named Docker volume here so the data will persist across container restarts.
+
+**NOTE:**
+
+After some experimentation, I've seen that setting `RABBITMQ_HIPE_COMPILE=1` requires something like 500MB or memory to start successfully.  Without precompiling, RabbitMQ can start with `250MB` RAM.
+
+# Clustering
+
+RabbitMQ is often deployed as a cluster of multiple instances for resilience and scalability.  You need to do two things to make this work:
+
+1. Generate a password string and assign it to `RABBITMQ_ERLANG_COOKIE` for each RabbitMQ instance so they can mutually authenticate each other.\
+2. Implement a node discovery mechanism.
+
+The simplest way to configure node discovery is to pass the list of nodes in `CLUSTER_NODES` when launching each RabbitMQ instance also passing the specific RabbitMQ node name in `NODENAME`.  This statically configures the cluster using the RabbitMQ configuration file.
+
+Here's an example that creates a two node cluster on two different machines (**server-0.mydomain.com** and **server-1.mydomain.com**):
+```
+# Set the secret used to mutually authenticate the nodes.
+cluster_secret=shared-secret
+
+# Create the [myrabbit-0] RabbitMQ node on the [server-0.mydomain.com] server.
+docker run \
+    --detach \
+    --name neon-rabbitmq \
+    --env CLUSTER_NAME=my-message-cluster \
+    --env CLUSTER_NODES=myrabbit-0@server-0.mydomain.com,myrabbit-1@server-1.mydomain",
+    --env CLUSTER_PARTITION_MODE=autoheal \
+    --env NODENAME=myrabbit-0@server-0.mydomain.com \
+    --env RABBITMQ_ERLANG_COOKIE=$cluster_secret \
+    --mount type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq \
+    --restart always
+
+# Create the [myrabbit-1] RabbitMQ node on the [server-1.mydomain.com] server.
+docker run \
+    --detach \
+    --name neon-rabbitmq \
+    --env CLUSTER_NAME=my-message-cluster \
+    --env CLUSTER_NODES=myrabbit-0@server-0.mydomain.com,myrabbit-1@server-1.mydomain",
+    --env CLUSTER_PARTITION_MODE=autoheal \
+    --env NODENAME=myrabbit-1@server-1.mydomain.com \
+    --env RABBITMQ_ERLANG_COOKIE=$cluster_secret \
+    --mount type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq \
+    --restart always
+```
+&nbsp;
+Another more flexible way, is to start the nodes and then use the `rabbitmqctl` CLI to form the cluster as discussed [here](https://www.rabbitmq.com/clustering.html#transcript).
+
+**NOTE:** The static cluster configuration specified by `CLUSTER_NODES` is used only when a RabbitMQ node is started for the first time or reset.  It is possible to use `rabbitmqctl` to reconfigure these clusters after they have started.
 
 # Hive Deployment
 
 RabbitMQ is deployed automatically as one or more containers during hive setup.  By default, it'll be deployed to hive managers but you can target specific swarm or pet nodes by setting the `io.neonhive.rabbitmq` label to `true` for the target nodes.
 
-Each RabbitMQ container will be named `neon-rabbitmq` and will also have a local named volume `neon-rabbitmq` for persistent storage.  A local hive DNS entry for each container will defined like `NODENAME.neon-rabbitmq.HIVENAME.nhive.io`, where *NODENAME* is the name of the hosting node and *HIVENAME* is the have name.
+Each RabbitMQ container will be named `neon-rabbitmq` and will also have a local named volume `neon-rabbitmq` for persistent storage.  A local hive DNS entry for each container will defined like `NODENAME.neon-rabbitmq.HIVENAME.nhive.io`, where *NODENAME* is the name of the hosting node and *HIVENAME* is the have name.  The management components are always enabled.
 
-The RabbitMQ service will be configured to listen on `RABBITMQ_NODE_PORT` for the public AMQP API.  This defaults to `5672` but will be set to `5009` for the built-in hive brokers and published by the container.  Clustered nodes use port 20000 by default to communicate priviately between themselves.  This is published as port `5010` one the hive hosts.
+The hive deployed containers also use these settings:
 
-The RabbitMQ management UI plugin will be enabled.  This listens on `15672` within the container but is published as `5011` for external access.
+`ERL_EPMD_PORT=5009`
+`RABBITMQ_NODE_PORT=5010`
+`RABBITMQ_DIST_PORT=5011`
+`RABBITMQ_MANAGEMENT_PORT=5012`
 
 Each built-in RabbitMQ instance deployed for the hive will have mount a local Docker volume named `neon-rabbitmq`.  This will be mapped to the `/var/lib/rabbitmq` directory within the container so that the message related data will persist across container restarts.
+
+neonHIVEs default to deploying RabbitMQ without precompiling and allocating 250MB RAM per each instance deployed to hive manager nodes.  We do this to reduce the overhead for very small development or testing hives.
+
+For production scenarios that use messaging heavily, you should consider enabling `RABBITMQ_HIPE_COMPILE=1` which will increase the default RabbitMQ RAM to 500MB and also consider deploying dedicated hive pet nodes to host RabbitMQ and also increase the allocated RAM to make best use of these pets.
 
 # Additional Packages
 

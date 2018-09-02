@@ -36,13 +36,20 @@ namespace Neon.Hive
         private const double defaultRamHighWatermark = 0.50;
         private const string defaultUsername         = "sysadmin";
         private const string defaultPassword         = "password";
+        private const bool   defaultPrecompile       = false;
         private const string defaultPartitionMode    = "autoheal";
         private const string defaultRabbitMQImage    = HiveConst.NeonPublicRegistry + "/rabbitmq:latest";
 
         /// <summary>
+        /// <para>
         /// Specifies the maximum RAM to be allocated to each RabbitMQ node container.
         /// This can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.
-        /// This defaults to <b>500MB</b> which is the minimum supported value.
+        /// </para>
+        /// <para>
+        /// This defaults to <b>500MB</b> if <see cref="Precompile"/><c>true</c> or
+        /// <b>250MB</b> when precompiling is disabled.  Note that these are the
+        /// minimum values for these situations.
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "RamLimit", Required = Required.Default)]
         [DefaultValue(defaultRamLimit)]
@@ -66,6 +73,24 @@ namespace Neon.Hive
         public double RamHighWatermark { get; set;  } = defaultRamHighWatermark;
 
         /// <summary>
+        /// <para>
+        /// Specifies the minimum allowed free disk space before RabbitMQ will begin thottling
+        /// message traffic to avoid fill up the drive.  This can be a long byte count or a long
+        /// with units like <b>512MB</b> or <b>2GB</b>.
+        /// </para>
+        /// <para>
+        /// This defaults to twice <see cref="RamLimit"/> plus <b>1GB</b> to avoid having 
+        /// RabbitMQ consume so much disk space that the hive host node is impacted.
+        /// </para>
+        /// <para>
+        /// This cannot be less than <b>1GB</b>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "DiskFreeLimit", Required = Required.Default)]
+        [DefaultValue(null)]
+        public string DiskFreeLimit { get; set; }
+
+        /// <summary>
         /// Specifies the username used to secure the cluster.  This defaults to <b>sysadmin</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Username", Required = Required.Default)]
@@ -86,6 +111,15 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "ErlangCookie", Required = Required.Default)]
         [DefaultValue(null)]
         public string ErlangCookie { get; set; }
+
+        /// <summary>
+        /// Specifies that RabbitMQ should be precompiled for 20-50% better performance at the
+        /// cost of 30-45 seconds longer for the nodes to start and a minimum of 250MB of additional
+        /// RAM per instance.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Precompile", Required = Required.Default)]
+        [DefaultValue(defaultPrecompile)]
+        public bool Precompile { get; set; } = defaultPrecompile;
 
         /// <summary>
         /// <para>
@@ -120,12 +154,13 @@ namespace Neon.Hive
         /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(HiveDefinition hiveDefinition)
         {
-            RamLimit      = RamLimit ?? defaultRamLimit;
-            Username      = Username ?? defaultUsername;
-            Password      = Password ?? defaultPassword;
-            PartitionMode = PartitionMode ?? defaultPartitionMode;
-            PartitionMode = PartitionMode.ToLowerInvariant();
-            RabbitMQImage = RabbitMQImage ?? defaultRabbitMQImage;
+            RamLimit         = RamLimit ?? defaultRamLimit;
+            RamHighWatermark = RamHighWatermark == 0.0 ? defaultRamHighWatermark : RamHighWatermark;
+            Username         = Username ?? defaultUsername;
+            Password         = Password ?? defaultPassword;
+            PartitionMode    = PartitionMode ?? defaultPartitionMode;
+            PartitionMode    = PartitionMode.ToLowerInvariant();
+            RabbitMQImage    = RabbitMQImage ?? defaultRabbitMQImage;
 
             if (string.IsNullOrWhiteSpace(ErlangCookie))
             {
@@ -137,14 +172,32 @@ namespace Neon.Hive
                 RamHighWatermark = defaultRamHighWatermark;
             }
 
-            if (HiveDefinition.ValidateSize(RamLimit, this.GetType(), nameof(RamLimit)) < 500 * NeonHelper.Mega)
+            var ramSize = HiveDefinition.ValidateSize(RamLimit, this.GetType(), nameof(RamLimit));
+
+            if (Precompile && ramSize < 500 * NeonHelper.Mega)
             {
-                throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamLimit)}={RamLimit}] cannot be less than [500MB].");
+                throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamLimit)}={RamLimit}] cannot be less than [500MB] when [{nameof(RabbitMQOptions)}.{nameof(Precompile)}={Precompile}].");
+            }
+            else if (!Precompile && ramSize < 250 * NeonHelper.Mega)
+            {
+                throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamLimit)}={RamLimit}] cannot be less than [250MB] when [{nameof(RabbitMQOptions)}.{nameof(Precompile)}={Precompile}].");
             }
 
             if (RamHighWatermark <= 0.0 || RamHighWatermark > 1.0)
             {
                 throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] must be a positive number between 0..1.");
+            }
+
+            if (string.IsNullOrWhiteSpace(DiskFreeLimit))
+            {
+                DiskFreeLimit = ((2 * ramSize) + (1 * NeonHelper.Giga)).ToString();
+            }
+
+            var diskFreeLimit = HiveDefinition.ValidateSize(DiskFreeLimit, this.GetType(), nameof(DiskFreeLimit));
+
+            if (diskFreeLimit < 1 * NeonHelper.Giga)
+            {
+                throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] cannot be less [1GB].");
             }
 
             switch (PartitionMode)

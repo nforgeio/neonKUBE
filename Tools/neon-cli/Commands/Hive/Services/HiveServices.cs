@@ -566,6 +566,8 @@ namespace NeonCli
                     sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.RabbitMQ}", ",");
                 }
 
+                var precompile = hive.Definition.RabbitMQ.Precompile ? "1" : "0";
+
                 var response = node.DockerCommand(
                     "docker run",
                     "--detach",
@@ -582,13 +584,14 @@ namespace NeonCli
                     "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.RabbitMQDashboard}",
                     "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.RabbitMQ.ErlangCookie}",
                     "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.RabbitMQ.RamHighWatermark}",
-                    "--env", $"RABBITMQ_HIPE_COMPILE=1",
+                    "--env", $"RABBITMQ_HIPE_COMPILE={precompile}",
+                    "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.DiskFreeLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.DiskFreeLimit))}",
                     "--mount", "type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq",
                     "--publish", $"{HiveHostPorts.RabbitMQEPMD}:{HiveHostPorts.RabbitMQEPMD}",
                     "--publish", $"{HiveHostPorts.RabbitMQAMPQ}:{HiveHostPorts.RabbitMQAMPQ}",
                     "--publish", $"{HiveHostPorts.RabbitMQDIST}:{HiveHostPorts.RabbitMQDIST}",
                     "--publish", $"{HiveHostPorts.RabbitMQDashboard}:{HiveHostPorts.RabbitMQDashboard}",
-                    "--memory", HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.RamLimit, this.GetType(), nameof(hive.Definition.RabbitMQ.RamLimit)),
+                    "--memory", HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.RamLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.RamLimit)),
                     "--restart", "always",
                     Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
 

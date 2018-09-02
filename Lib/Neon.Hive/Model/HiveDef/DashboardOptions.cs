@@ -28,10 +28,11 @@ namespace Neon.Hive
     /// </summary>
     public class DashboardOptions
     {
-        private const bool defaultKibana = true;
-        private const bool defaultConsul = true;
-        private const bool defaultVault  = true;
-        private const bool defaultCeph   = true;
+        private const bool defaultKibana   = true;
+        private const bool defaultConsul   = true;
+        private const bool defaultVault    = true;
+        private const bool defaultCeph     = true;
+        private const bool defaultRabbitMQ = true;
 
         /// <summary>
         /// Enables the Elastic Kibana dashboard if logging is enabled for the hive.
@@ -61,6 +62,13 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultCeph)]
         public bool Ceph { get; set; } = defaultCeph;
+
+        /// <summary>
+        /// Enables the RabbitMQ dashboard.  This defaults to <c>true</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "RabbitMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultRabbitMQ)]
+        public bool RabbitMQ { get; set; } = defaultRabbitMQ;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

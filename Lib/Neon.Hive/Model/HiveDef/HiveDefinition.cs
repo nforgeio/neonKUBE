@@ -262,7 +262,8 @@ namespace Neon.Hive
                 "ceph",
                 "ceph-mon",
                 "ceph-mds",
-                "ceph-osd"
+                "ceph-osd",
+                "rabbitmq"
             };
 
         //---------------------------------------------------------------------
@@ -1111,7 +1112,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Returns a dictionary mapping Ansible host group names to the list of node
-        /// definitions specifying the nodes within the group.  The group name keys
+        /// definitions specifying the nodes within each group.  The group name keys
         /// are case insenstive and the groups returned will include built-in groups
         /// like <b>all</b>, <b>swarm</b>, <b>managers</b>, <b>worker</b>, <b>pets</b>,
         /// etc. in addition to any explicit groups specified by <see cref="NodeDefinition.HostGroups"/>.
@@ -1164,7 +1165,7 @@ namespace Neon.Hive
                     members.Add(node);
                 }
 
-                groups.Add("all", members.ToList());
+                groups.Add("all", members);
             }
 
             // [swarm] group
@@ -1176,7 +1177,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("swarm", members.ToList());
+            groups.Add("swarm", members);
 
             // [managers] group
 
@@ -1187,7 +1188,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("managers", members.ToList());
+            groups.Add("managers", members);
 
             // [workers] group
 
@@ -1198,7 +1199,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("workers", members.ToList());
+            groups.Add("workers", members);
 
             // [pets] group
 
@@ -1209,7 +1210,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("pets", members.ToList());
+            groups.Add("pets", members);
 
             // [ceph] group
 
@@ -1220,7 +1221,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("ceph", members.ToList());
+            groups.Add("ceph", members);
 
             // [ceph-mon] group
 
@@ -1231,7 +1232,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("ceph-mon", members.ToList());
+            groups.Add("ceph-mon", members);
 
             // [ceph-mds] group
 
@@ -1242,7 +1243,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("ceph-mds", members.ToList());
+            groups.Add("ceph-mds", members);
 
             // [ceph-osd] group
 
@@ -1253,7 +1254,18 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("ceph-osd", members.ToList());
+            groups.Add("ceph-osd", members);
+
+            // [rabbitmq] group
+
+            members.Clear();
+
+            foreach (var node in SortedNodes.Where(n => n.Labels.RabbitMQ))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("rabbitmq", members);
 
             return groups;
         }

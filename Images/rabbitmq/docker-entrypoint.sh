@@ -20,6 +20,10 @@ fi
 
 . /neonhive.sh
 
+# This is the path to the RabbitMQ config file.
+
+config_path=/etc/rabbitmq/rabbitmq.conf
+
 # Parse the environment variables.
 
 if [ "$NODENAME" != "" ] ; then
@@ -52,14 +56,12 @@ if [ "$CLUSTER_NODES" != "" ] ; then
     # hostname or IP address of the node like "manager-0.neon-rabbitmq.MYHIVE.nhive.io".
     # The node definitions are to be separated by commas.
     
-    config_path=/etc/rabbitmq/rabbitmq.conf
-
     # Clear any existing configuration file.
 
     echo > $config_path
     chmod 644 $config_path
 
-    echo "# We're doing static config-based cluster discovery."                            >> $config_path
+    echo "# Static config-based cluster discovery."                                        >> $config_path
     echo                                                                                   >> $config_path
     echo "cluster_formation.peer_discovery_backend = rabbit_peer_discovery_classic_config" >> $config_path
 
@@ -74,12 +76,8 @@ if [ "$CLUSTER_NODES" != "" ] ; then
         echo "cluster_formation.classic_config.nodes.$index = $node_name@$node_host" >> $config_path
         index=$((index + 1))
     done
-    
-    # Other cluster related configuration.
-
-    echo "cluster_partition_handling = $CLUSTER_PARTITION_MODE" >> $config_path
 fi
-
+    
 if [ "$ERL_EPMD_PORT" == "" ] ; then
     export ERL_EPMD_PORT=4369
 fi
@@ -112,6 +110,24 @@ if [ "$RABBITMQ_ERLANG_COOKIE" == "" ] ; then
     fi
 fi
 
+if [ "$RABBITMQ_DISK_FREE_LIMIT" == "" ] ; then
+    RABBITMQ_DISK_FREE_LIMIT=500MB
+fi
+
+# Other configuration settings:
+
+echo "cluster_partition_handling  = $CLUSTER_PARTITION_MODE"   >> $config_path
+echo "disk_free_limit.absolute    = $RABBITMQ_DISK_FREE_LIMIT" >> $config_path
+echo "loopback_users              = none"                      >> $config_path
+
+# $todo(jeff.lill):
+#
+# I'm not sure if these statistics related settings are a good
+# idea.  This appeared to cause some trouble a few years back.
+
+echo "collect_statistics          = fine"  >> $config_path
+echo "collect_statistics_interval = 30000" >> $config_path
+
 # Generate the Erlang cookie if the environment variable doesn't specify one.
 
 if [ "$RABBITMQ_ERLANG_COOKIE" == "" ] ; then
@@ -135,7 +151,7 @@ if [ "$RABBITMQ_HIPE_COMPILE" != "1" ] ; then
     export RABBITMQ_HIPE_COMPILE=''
 fi
 
-# We need this so RabbitMQ will allow fully qualified host names.
+# We need this so RabbitMQ will use fully qualified hostnames.
 
 export RABBITMQ_USE_LONGNAME=true
 
@@ -145,7 +161,27 @@ if [ "$CLUSTER_NAME" != "" ] ; then
     rabbitmqctl set_cluster_name $CLUSTER_NAME
 fi
 
-# Enable the management UI and then start RabbitMQ.
+# Enable the management components.
 
 rabbitmq-plugins enable rabbitmq_management
+
+# It appears that RabbitMQ can have issues forming a cluster when all of The
+# nodes are started at the same time.  The most recent post to this issue:
+#
+#   https://groups.google.com/forum/#!topic/rabbitmq-users/DpQGo_UTjG8
+#
+# from 08-2018 for v3.7.7 indicates that this is still a problem and that 
+# the current mitigation is to introduce random delays before starting each
+# instance.  It appears that they're talking about adding retries in the 
+# future.
+#
+# We're going to go ahead and sleem for a random number of seconds between
+# 0 and 30 to mitigate this when clustering is enabled.
+
+if [ "$CLUSTER_NODES" != "" ] ; then
+    delay=$(shuf -i 0-30 -n 1)
+    . ./log-info.sh "Delaying start by [$delay sec] to mitigate a cluster formation race"
+    sleep $delay
+fi
+
 . /rabbitmq-entrypoint.sh rabbitmq-server

@@ -3867,15 +3867,13 @@ systemctl restart sshd
                                     ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
                                 });
 
-                            foreach (var monNode in hive.Nodes.Where(n => n.Metadata.Labels.CephMON))
-                            {
-                                rule.Backends.Add(
-                                    new LoadBalancerTcpBackend()
-                                    {
-                                        Server = monNode.Metadata.PrivateAddress.ToString(),
-                                        Port   = HiveHostPorts.CephDashboard
-                                    });
-                            }
+                            rule.Backends.Add(
+                                new LoadBalancerTcpBackend()
+                                {
+                                    Group      = "ceph-mon",
+                                    GroupLimit = 5,
+                                    Port       = HiveHostPorts.CephDashboard
+                                });
 
                             hive.PrivateLoadBalancer.SetRule(rule);
                         }
@@ -3939,6 +3937,53 @@ systemctl restart sshd
                         hive.Dashboard.Set(vaultDashboard);
                         firstManager.Status = string.Empty;
                     }
+
+                    // Configure the RabbitMQ dashboard.
+
+                    if (hive.Definition.Dashboard.RabbitMQ)
+                    {
+                        var rabbitDashboard = new HiveDashboard()
+                        {
+                            Name        = "rabbitmq",
+                            Title       = "RabbitMQ Messaging System",
+                            Folder      = HiveConst.DashboardSystemFolder,
+                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
+                            Description = "RabbitMQ messaging system"
+                        };
+
+                        hive.Dashboard.Set(rabbitDashboard);
+
+                        var rule = new LoadBalancerTcpRule()
+                        {
+                            Name     = "neon-rabbitmq-dashboard",
+                            System   = true,
+                            Resolver = null
+                        };
+
+                        rule.CheckMode   = LoadBalancerCheckMode.Http;
+                        rule.CheckTls    = false;
+                        rule.CheckExpect = @"rstatus ^2\d\d";
+
+                        // Initialize the frontends and backends.
+
+                        rule.Frontends.Add(
+                            new LoadBalancerTcpFrontend()
+                            {
+                                ProxyPort = HiveHostPorts.ProxyPrivateRabbitMQDashboard
+                            });
+
+                        rule.Backends.Add(
+                            new LoadBalancerTcpBackend()
+                            {
+                                Group      = "rabbitmq",
+                                GroupLimit = 5,
+                                Port       = HiveHostPorts.RabbitMQDashboard
+                            });
+
+                        hive.PrivateLoadBalancer.SetRule(rule);
+                    }
+
+                    firstManager.Status = string.Empty;
                 });
         }
     }
