@@ -91,7 +91,7 @@ COMMAND SUMMARY:
     neon create cypher
     neon create password    [--length=#]
     neon create uuid
-    neon dashboard          DASHBOARD
+    neon dashboard|dash     DASHBOARD
     neon dns-hosts          ARGS
     neon docker             -- CMD [ARGS]
     neon download           SOURCE TARGET [NODE]

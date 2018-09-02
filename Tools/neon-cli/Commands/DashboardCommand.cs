@@ -33,11 +33,11 @@ Manages hive dashboards.
 
 USAGE:
 
-    neon dashboard NAME                     - Show named dashboard
-    neon dashboard get NAME                 - Prints a dashboard URL
-    neon dashboard ls|list                  - Lists the dashboards
-    neon dashboard rm|remove NAME           - Removes a dashboard
-    neon dashboard set NAME URL [OPTIONS]   - Saves a dashboard
+    neon dashboard|dash NAME                    - Show named dashboard
+    neon dashboard|dash get NAME                - Prints a dashboard URL
+    neon dashboard|dash ls|list                 - Lists the dashboards
+    neon dashboard|dash rm|remove NAME          - Removes a dashboard
+    neon dashboard|dash set NAME URL [OPTIONS]  - Saves a dashboard
 
 OPTIONS:
 
@@ -61,6 +61,12 @@ dashboard names are reserved for use as commands:
         public override string[] Words
         {
             get { return new string[] { "dashboard" }; }
+        }
+
+        /// <inheritdoc/>
+        public override string[] AltWords
+        {
+            get { return new string[] { "dash" }; }
         }
 
         /// <inheritdoc/>
