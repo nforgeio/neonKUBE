@@ -250,7 +250,7 @@ namespace Neon.Hive
         public NodeLabels Labels { get; set; }
 
         /// <summary>
-        /// Specifies the Ansible host groups to which this node belongs.  This can be used to organize
+        /// Specifies the hive host groups to which this node belongs.  This can be used to organize
         /// nodes (most likely pets) into groups that will be managed by Ansible playbooks.  These
         /// group are in addition to the standard host groups automatically supported by <b>neoncli</b>:
         /// <b>all</b>, <b>managers</b>, <b>workers</b>, <b>swarm</b>, and <b>pets</b>.

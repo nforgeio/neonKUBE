@@ -248,7 +248,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the set of the standard built-in Ansible host groups.
+        /// Returns the set of the standard built-in hive host groups.
         /// </summary>
         public static HashSet<string> StandardHostGroups { get; private set; } =
             new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
@@ -1111,7 +1111,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns a dictionary mapping Ansible host group names to the list of node
+        /// Returns a dictionary mapping hive host group names to the list of node
         /// definitions specifying the nodes within each group.  The group name keys
         /// are case insenstive and the groups returned will include built-in groups
         /// like <b>all</b>, <b>swarm</b>, <b>managers</b>, <b>worker</b>, <b>pets</b>,
@@ -1121,6 +1121,7 @@ namespace Neon.Hive
         /// <returns></returns>
         public Dictionary<string, List<NodeDefinition>> GetNodeGroups(bool excludeAllGroup = false)
         {
+Neon.Diagnostics.LogManager.Default.GetLogger().LogInfo($"GetNodeGroups-0: NODE-COUNT={this.Nodes.Count()}");
             var groups = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
 
             // Add explicit group assignments.  Note that we're going to ignore
@@ -1148,8 +1149,8 @@ namespace Neon.Hive
 
             // Add built-in group assignments.  Note that we're going to take care
             // to ensure that only one instance of a node will be added to any
-            // specific group.  This could happen if the user explicitly specified
-            // that a node is a member of a built-in group (which should probably
+            // given group.  This could happen if the user explicitly specified
+            // that a node as a member of a built-in group (which should probably
             // be detected as an error).
 
             var members = new List<NodeDefinition>();

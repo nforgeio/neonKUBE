@@ -51,7 +51,7 @@ namespace Neon.Hive
         public int Port { get; set; }
 
         /// <summary>
-        /// Optionally identifies the Ansible host group to be targeted.  When this is not empty,
+        /// Optionally identifies the hive host group to be targeted.  When this is not empty,
         /// all nodes within the group will be targeted unless <see cref="GroupLimit"/> is positive
         /// when up to <see cref="GroupLimit"/> randomly selected nodes will be targeted.
         /// </summary>

@@ -1629,10 +1629,10 @@ namespace Neon.Hive
                 // in sync.
 
                 var operations = new List<KVTxnOp>()
-                    {
-                        new KVTxnOp($"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}", KVTxnVerb.Set) { Value = deflatedFullJson },
-                        new KVTxnOp($"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionHash}", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(definition.Hash) }
-                    };
+                {
+                    new KVTxnOp($"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}", KVTxnVerb.Set) { Value = deflatedFullJson },
+                    new KVTxnOp($"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionHash}", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(definition.Hash) }
+                };
 
                 // Add any pets to the transaction if enabled.
 

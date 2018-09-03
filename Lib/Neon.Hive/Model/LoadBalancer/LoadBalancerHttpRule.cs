@@ -112,7 +112,7 @@ namespace Neon.Hive
             //
             // Note that we're only going to process the first backend that
             // targets any given group (multiple backends targeting the 
-            // same group could be considered to be a configuration problem).
+            // same group will be considered to be a configuration problem).
 
             // NOTE:
             //

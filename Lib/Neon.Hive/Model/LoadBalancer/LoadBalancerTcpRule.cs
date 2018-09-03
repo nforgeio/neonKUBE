@@ -117,8 +117,8 @@ namespace Neon.Hive
         /// when generating HAProxy configuration files.
         /// </note>
         /// <note>
-        /// This method will compute the select the first time it's called on an
-        /// instance and then return the same selected backends thereafter.
+        /// This method will compute the selected backends the first time it's called 
+        /// on an instance and then return the same selected backends thereafter.
         /// </note>
         /// </remarks>
         public List<LoadBalancerTcpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
@@ -144,7 +144,7 @@ namespace Neon.Hive
             //
             // Note that we're only going to process the first backend that
             // targets any given group (multiple backends targeting the 
-            // same group could be considered to be a configuration problem).
+            // same group will be considered to be a configuration problem).
 
             // NOTE:
             //

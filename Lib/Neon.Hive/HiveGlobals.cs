@@ -25,7 +25,7 @@ namespace Neon.Hive
         public const string CreateDateUtc = "create-date-utc";
 
         /// <summary>
-        /// Current hive definition as compressed JSON.
+        /// Current hive definition as compressed JSON text (UTF-8).
         /// </summary>
         public const string DefinitionDeflate = "definition-deflated";
 
