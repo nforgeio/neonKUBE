@@ -16,7 +16,7 @@ param
 
 "   "
 "======================================="
-"* RABBITMQ:" + $tag
+"* NEON-RABBITMQ:" + $tag
 "======================================="
 
 # Copy the common scripts.

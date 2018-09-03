@@ -166,16 +166,16 @@
     </None>
     <None Include="neon-varnish\publish.ps1" />
     <None Include="neon-varnish\README.md" />
-    <Content Include="rabbitmq\.dockerignore">
+    <Content Include="neon-rabbitmq\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="rabbitmq\build.ps1" />
-    <None Include="rabbitmq\docker-entrypoint.sh" />
-    <None Include="rabbitmq\Dockerfile">
+    <None Include="neon-rabbitmq\build.ps1" />
+    <None Include="neon-rabbitmq\docker-entrypoint.sh" />
+    <None Include="neon-rabbitmq\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="rabbitmq\publish.ps1" />
-    <None Include="rabbitmq\README.md" />
+    <None Include="neon-rabbitmq\publish.ps1" />
+    <None Include="neon-rabbitmq\README.md" />
     <None Include="test\docker-entrypoint.sh" />
     <None Include="test\Dockerfile" />
     <Content Include="_artifacts\README.txt" />

@@ -114,7 +114,6 @@ if ($base)
 	Publish "$image_root\\kibana"
 	Publish "$image_root\\kong"
 	Publish "$image_root\\metricbeat"
-	Publish "$image_root\\rabbitmq"
 	Publish "$image_root\\td-agent"
 	Publish "$image_root\\node"
 	Publish "$image_root\\haproxy"
@@ -140,5 +139,6 @@ if ($other)
 	Publish "$image_root\\neon-log-host"
 	Publish "$image_root\\neon-proxy"
 	Publish "$image_root\\neon-proxy-vault"
+	Publish "$image_root\\neon-rabbitmq"
 	Publish "$image_root\\test"
 }

@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# neonHIVE RabbitMQ image (including the management features).
+# [neon-rabbitmq] image (including the management features).
 #
 # ARGUMENTS:
 #

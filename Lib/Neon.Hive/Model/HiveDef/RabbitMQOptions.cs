@@ -38,7 +38,7 @@ namespace Neon.Hive
         private const string defaultPassword         = "password";
         private const bool   defaultPrecompile       = false;
         private const string defaultPartitionMode    = "autoheal";
-        private const string defaultRabbitMQImage    = HiveConst.NeonPublicRegistry + "/rabbitmq:latest";
+        private const string defaultRabbitMQImage    = HiveConst.NeonPublicRegistry + "/neon-rabbitmq:latest";
 
         /// <summary>
         /// <para>
