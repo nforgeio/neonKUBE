@@ -42,9 +42,9 @@ RabbitMQ configuration is performed using environment variables as described [he
 
 * `RABBITMQ_DISK_FREE_LIMIT` - (*optional*) specifies the minimum bytes of free disk space available when RabbitMQ will begin throttling messages via flow control.  This is an absolute number of bytes like `1000000000` or `100MB`.  This defaults to twice the available RAM plus `1GB` to help prevent RabbitMQ from filling the disk up on hive host nodes.
 
-* `TLS_CERT_FILE` - (*optional*) enables TLS security for both the AMPQ endpoint as well as the RabbitMQ dashboard by specifying the path to the TLS certificate file.
+* `RABBITMQ_SSL_CERTFILE` - (*optional*) enables TLS security for both the AMPQ endpoint as well as the RabbitMQ dashboard by specifying the path to the TLS certificate file.
 
-* `TLS_KEY_FILE` - (*optional*) enables TLS security for both the AMPQ endpoint as well as the RabbitMQ dashboard by specifying the path to the TLS private key file.
+* `RABBITMQ_SSL_KEYFILE` - (*optional*) enables TLS security for both the AMPQ endpoint as well as the RabbitMQ dashboard by specifying the path to the TLS private key file.
 
 RabbitMQ persists its operational data to the `/var/lib/rabbitmq` directory within the container.  Production deployments will typically mount a named Docker volume here so the data will persist across container restarts.
 
@@ -75,8 +75,8 @@ docker run \
     --env CLUSTER_PARTITION_MODE=autoheal \
     --env NODENAME=myrabbit-0@server-0.mydomain.com \
     --env RABBITMQ_ERLANG_COOKIE=$cluster_secret \
-    --env TLS_CERT_FILE=/etc/neon/certs/hive.crt \
-    --env TLS_KEY_FILE=/etc/neon/certs/hive.key \
+    --env RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt \
+    --env RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key \
     --mount type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq \
     --mount type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly \
     --restart always
@@ -90,8 +90,8 @@ docker run \
     --env CLUSTER_PARTITION_MODE=autoheal \
     --env NODENAME=myrabbit-1@server-1.mydomain.com \
     --env RABBITMQ_ERLANG_COOKIE=$cluster_secret \
-    --env TLS_CERT_FILE=/etc/neon/certs/hive.crt \
-    --env TLS_KEY_FILE=/etc/neon/certs/hive.key \
+    --env RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt \
+    --env RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key \
     --mount type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq \
     --mount type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly \
     --restart always

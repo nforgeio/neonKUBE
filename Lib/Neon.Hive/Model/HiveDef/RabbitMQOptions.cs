@@ -32,13 +32,16 @@ namespace Neon.Hive
     /// </summary>
     public class RabbitMQOptions
     {
-        private const string defaultRamLimit         = "500MB";
+        private const string defaultRamLimit         = "250MB";
+        private const string defaultCompiledRamLimit = "500MB";
         private const double defaultRamHighWatermark = 0.50;
         private const string defaultUsername         = "sysadmin";
         private const string defaultPassword         = "password";
         private const bool   defaultPrecompile       = false;
         private const string defaultPartitionMode    = "autoheal";
         private const string defaultRabbitMQImage    = HiveConst.NeonPublicRegistry + "/neon-rabbitmq:latest";
+
+        private string ramLimit = null;
 
         /// <summary>
         /// <para>
@@ -52,8 +55,21 @@ namespace Neon.Hive
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "RamLimit", Required = Required.Default)]
-        [DefaultValue(defaultRamLimit)]
-        public string RamLimit { get; set; } = defaultRamLimit;
+        [DefaultValue(null)]
+        public string RamLimit
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(ramLimit))
+                {
+                    return Precompile ? defaultCompiledRamLimit : defaultRamLimit;
+                }
+                else
+                {
+                    return ramLimit;
+                }
+            }
+        }
 
         /// <summary>
         /// <para>

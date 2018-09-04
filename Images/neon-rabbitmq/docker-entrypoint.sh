@@ -116,18 +116,27 @@ fi
 
 # TLS related configuration.
 
-if [[ "$TLS_CERT_FILE" != "" && "$TLS_KEY_FILE" != "" ]] ; then
+if [[ "$RABBITMQ_SSL_CERTFILE" != "" && "$RABBITMQ_SSL_KEYFILE" != "" ]] ; then
 
     . log-info.sh "TLS is enabled."
 
-    if [ ! -f "$TLS_CERT_FILE" ] ; then
-        . log-error.sh "File [TLS_CERT_FILE=$TLS_CERT_FILE] does not exist."
+    if [ ! -f "$RABBITMQ_SSL_CERTFILE" ] ; then
+        . log-error.sh "File [RABBITMQ_SSL_CERTFILE=$RABBITMQ_SSL_CERTFILE] does not exist."
         exit 1
     fi
 
-    if [ ! -f "$TLS_KEY_FILE" ] ; then
-        . log-error.sh "File [TLS_KEY_FILE=$TLS_KEY_FILE] does not exist."
+    if [ ! -f "$RABBITMQ_SSL_KEYFILE" ] ; then
+        . log-error.sh "File [RABBITMQ_SSL_KEYFILE=$RABBITMQ_SSL_KEYFILE] does not exist."
         exit 1
+    fi
+
+    if [ "$RABBITMQ_SSL_CACERTFILE" == "" ] ; then
+
+        # RabbitMQ seems to always require a CA cert file, even if we're
+        # disabling client checks so we'll simply use the main certificate
+        # and hope for the best.
+
+        export RABBITMQ_SSL_CACERTFILE=$RABBITMQ_SSL_CERTFILE
     fi
 
     # We need to copy the certificate and private key to another directory
@@ -135,37 +144,35 @@ if [[ "$TLS_CERT_FILE" != "" && "$TLS_KEY_FILE" != "" ]] ; then
 
     mkdir -p /etc/rabbitmq/cert
     chmod 777 /etc/rabbitmq/cert
-    cp "$TLS_CERT_FILE" /etc/rabbitmq/cert/hive.crt
-    cp "$TLS_KEY_FILE"  /etc/rabbitmq/cert/hive.key
+    cp "$RABBITMQ_SSL_CERTFILE"   /etc/rabbitmq/cert/hive.crt
+    cp "$RABBITMQ_SSL_KEYFILE"    /etc/rabbitmq/cert/hive.key
+    cp "$RABBITMQ_SSL_CACERTFILE" /etc/rabbitmq/cert/hiveca.crt
     chmod 666 /etc/rabbitmq/cert/*
 
-    echo                                                                         >> $config_path
-    echo "# TLS Configuration"                                                   >> $config_path
-    echo                                                                         >> $config_path
-    echo "listeners.ssl.default                   = $RABBITMQ_NODE_PORT"         >> $config_path
-    echo "ssl_options.certfile                    = /etc/rabbitmq/cert/hive.crt" >> $config_path
-    echo "ssl_options.keyfile                     = /etc/rabbitmq/cert/hive.key" >> $config_path
-    echo "ssl_options.verify                      = verify_none"                 >> $config_path
-    echo "ssl_options.fail_if_no_peer_cert        = false"                       >> $config_path
-    echo                                                                         >> $config_path
-    echo "management.listener.ssl                 = true"                        >> $config_path
-    echo "management.listener.ssl_opts.cacertfile = /etc/rabbitmq/cert/hive.crt" >> $config_path
-    echo "management.listener.ssl_opts.certfile   = /etc/rabbitmq/cert/hive.crt" >> $config_path
-    echo "management.listener.ssl_opts.keyfile    = /etc/rabbitmq/cert/hive.key" >> $config_path
+    export RABBITMQ_SSL_CERTFILE=/etc/rabbitmq/cert/hive.crt
+    export RABBITMQ_SSL_KEYFILE=/etc/rabbitmq/cert/hive.key
+    export RABBITMQ_SSL_CACERTFILE=/etc/rabbitmq/cert/hiveca.crt
 
-    # Set this to a hopefully unused port just in case the base RabbitMQ entrypoint
-    # script generates the [listeners] configuration.  This avoids having the TLS
-    # and the non-TLS ports being assigned the same value and crapping out.  This
-    # port is not exposed outside of the container so it's essentially a NOP.
+    echo                                                                           >> $config_path
+    echo "# TLS Configuration"                                                     >> $config_path
+    echo                                                                           >> $config_path
+    echo "listeners.tcp.default                   = 65123"                         >> $config_path
+    echo "listeners.ssl.default                   = $RABBITMQ_NODE_PORT"           >> $config_path
+    echo "ssl_options.certfile                    = /etc/rabbitmq/cert/hive.crt"   >> $config_path
+    echo "ssl_options.keyfile                     = /etc/rabbitmq/cert/hive.key"   >> $config_path
+    echo "ssl_options.cacertfile                  = /etc/rabbitmq/cert/hiveca.crt" >> $config_path
+    echo "ssl_options.verify                      = verify_none"                   >> $config_path
+    echo "ssl_options.fail_if_no_peer_cert        = false"                         >> $config_path
+    echo                                                                           >> $config_path
+    echo "management.listener.ssl                 = true"                          >> $config_path
+    echo "management.listener.ssl_opts.certfile   = /etc/rabbitmq/cert/hive.crt"   >> $config_path
+    echo "management.listener.ssl_opts.keyfile    = /etc/rabbitmq/cert/hive.key"   >> $config_path
+    echo "management.listener.ssl_opts.cacertfile = /etc/rabbitmq/cert/hiveca.crt" >> $config_path
 
-    export RABBITMQ_NODE_PORT=65103
-   
 elif [[ "$TLS_CERT_FILE" == "" && "$TLS_KEY_FILE" == "" ]] ; then
-
     . log-info.sh "TLS is disabled."
 else
-
-    . log-error.sh "One of [TLS_CERT_FILE] or [TLS_KEY-FILE] is missing."
+    . log-error.sh "One of [RABBITMQ_SSL_CERTFILE] or [RABBITMQ_SSL_KEYFILE-FILE] is missing."
     exit 1
 fi
 
@@ -255,4 +262,6 @@ if [ ! -f $restarted_path ] ; then
 fi
 
 # sleep 100000000
-. /rabbitmq-entrypoint.sh rabbitmq-server
+# . /rabbitmq-entrypoint.sh rabbitmq-server
+bash /rabbitmq-entrypoint.sh rabbitmq-server
+sleep 100000000000
