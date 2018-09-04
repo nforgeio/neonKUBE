@@ -82,6 +82,8 @@ if [ "$ERL_EPMD_PORT" == "" ] ; then
     export ERL_EPMD_PORT=4369
 fi
 
+export ERL_EPMD_ADDRESS=0.0.0.0
+
 if [ "$RABBITMQ_DEFAULT_USER" == "" ] ; then
     export RABBITMQ_DEFAULT_USER=sysadmin
 fi
@@ -116,7 +118,7 @@ fi
 
 # TLS related configuration.
 
-if [[ "$RABBITMQ_SSL_CERTFILE" != "" && "$RABBITMQ_SSL_KEYFILE" != "" ]] ; then
+if [[ "$RABBITMQ_SSL_CERTFILE" != "" && "$RABBITMQ_SSL_KEYFILE" != "" && "TODO" == "" ]] ; then
 
     . log-info.sh "TLS is enabled."
 
@@ -153,49 +155,109 @@ if [[ "$RABBITMQ_SSL_CERTFILE" != "" && "$RABBITMQ_SSL_KEYFILE" != "" ]] ; then
     export RABBITMQ_SSL_KEYFILE=/etc/rabbitmq/cert/hive.key
     export RABBITMQ_SSL_CACERTFILE=/etc/rabbitmq/cert/hiveca.crt
 
-    echo                                                                           >> $config_path
-    echo "# TLS Configuration"                                                     >> $config_path
-    echo                                                                           >> $config_path
-    echo "listeners.tcp.default                   = 65123"                         >> $config_path
-    echo "listeners.ssl.default                   = $RABBITMQ_NODE_PORT"           >> $config_path
-    echo "ssl_options.certfile                    = /etc/rabbitmq/cert/hive.crt"   >> $config_path
-    echo "ssl_options.keyfile                     = /etc/rabbitmq/cert/hive.key"   >> $config_path
-    echo "ssl_options.cacertfile                  = /etc/rabbitmq/cert/hiveca.crt" >> $config_path
-    echo "ssl_options.verify                      = verify_none"                   >> $config_path
-    echo "ssl_options.fail_if_no_peer_cert        = false"                         >> $config_path
-    echo                                                                           >> $config_path
-    echo "management.listener.ssl                 = true"                          >> $config_path
-    echo "management.listener.ssl_opts.certfile   = /etc/rabbitmq/cert/hive.crt"   >> $config_path
-    echo "management.listener.ssl_opts.keyfile    = /etc/rabbitmq/cert/hive.key"   >> $config_path
-    echo "management.listener.ssl_opts.cacertfile = /etc/rabbitmq/cert/hiveca.crt" >> $config_path
+    echo                                                                                    >> $config_path
+    echo "# Connection Settings"                                                            >> $config_path
+    echo                                                                                    >> $config_path
+    echo "listeners.tcp.default                       = none"                               >> $config_path
+    echo "listeners.ssl.default                       = $RABBITMQ_NODE_PORT"                >> $config_path
+    echo "ssl_options.certfile                        = /etc/rabbitmq/cert/hive.crt"        >> $config_path
+    echo "ssl_options.keyfile                         = /etc/rabbitmq/cert/hive.key"        >> $config_path
+    echo "ssl_options.cacertfile                      = /etc/rabbitmq/cert/hiveca.crt"      >> $config_path
+    echo "ssl_options.verify                          = verify_none"                        >> $config_path
+    echo "ssl_options.fail_if_no_peer_cert            = false"                              >> $config_path
+    echo                                                                                    >> $config_path
+    echo "management.listener.port                    = $RABBITMQ_MANAGEMENT_PORT"          >> $config_path
+    echo "management.listener.ssl                     = true"                               >> $config_path
+    echo "management.listener.ssl_opts.certfile       = /etc/rabbitmq/cert/hive.crt"        >> $config_path
+    echo "management.listener.ssl_opts.keyfile        = /etc/rabbitmq/cert/hive.key"        >> $config_path
+    echo "management.listener.ssl_opts.cacertfile     = /etc/rabbitmq/cert/hiveca.crt"      >> $config_path
 
 elif [[ "$TLS_CERT_FILE" == "" && "$TLS_KEY_FILE" == "" ]] ; then
+
     . log-info.sh "TLS is disabled."
+
+    unset RABBITMQ_SSL_CERTFILE
+    unset RABBITMQ_SSL_KEYFILE
+    unset RABBITMQ_SSL_CACERTFILE
+
+    echo                                                                                    >> $config_path
+    echo "# Connection Settings"                                                            >> $config_path
+    echo                                                                                    >> $config_path
+    echo "listeners.tcp.default                       = 0.0.0.0:$RABBITMQ_NODE_PORT"        >> $config_path
+    echo "listeners.ssl.default                       = none"                               >> $config_path
+    echo                                                                                    >> $config_path
+    echo "management.listener.port                    = 0.0.0.0:$RABBITMQ_MANAGEMENT_PORT"  >> $config_path
+    echo "management.listener.ssl                     = false"                              >> $config_path
 else
-    . log-error.sh "One of [RABBITMQ_SSL_CERTFILE] or [RABBITMQ_SSL_KEYFILE-FILE] is missing."
+    . log-error.sh "One of [RABBITMQ_SSL_CERTFILE] or [RABBITMQ_SSL_KEYFILE_FILE] is missing."
     exit 1
 fi
 
 # Other configuration settings:
 
-echo                                                           >> $config_path
-echo "# Other Settings"                                        >> $config_path
-echo                                                           >> $config_path
-echo "cluster_partition_handling  = $CLUSTER_PARTITION_MODE"   >> $config_path
-echo "disk_free_limit.absolute    = $RABBITMQ_DISK_FREE_LIMIT" >> $config_path
-echo "loopback_users              = none"                      >> $config_path
+hipe_compile=false
+if [ "$RABBITMQ_HIPE_COMPILE" == "1" ] ; then
+    hipe_compile=true
+fi
+
+echo                                                                                        >> $config_path
+echo "# Other Settings"                                                                     >> $config_path
+echo                                                                                        >> $config_path
+echo "loopback_users                              = none"                                   >> $config_path
+echo "default_user                                = $RABBITMQ_DEFAULT_USER"                 >> $config_path
+echo "default_pass                                = $RABBITMQ_DEFAULT_PASS"                 >> $config_path
+echo "hipe_compile                                = $hipe_compile"                          >> $config_path
+echo "cluster_partition_handling                  = $CLUSTER_PARTITION_MODE"                >> $config_path
+
+# We need to tell RabbitMQ about the actual RAM available to the container 
+# due to any CGROUP limits so the server will be able to compute the relative
+# RAM high watermark.
+
+memTotalKb=
+if [ -r /proc/meminfo ]; then
+    memTotalKb="$(awk -F ':? +' '$1 == "MemTotal" { print $2; exit }' /proc/meminfo)"
+fi
+memLimitB=
+if [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+    # "18446744073709551615" is a valid value for "memory.limit_in_bytes", which is too big for Bash math to handle
+    # "$(( 18446744073709551615 / 1024 ))" = 0; "$(( 18446744073709551615 * 40 / 100 ))" = 0
+    memLimitB="$(awk -v totKb="$memTotalKb" '{
+        limB = $0;
+        limKb = limB / 1024;
+        if (!totKb || limKb < totKb) {
+            printf "%.0f\n", limB;
+        }
+    }' /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+fi
+if [ -n "$memLimitB" ]; then
+    echo "total_memory_available_override_value       = $memLimitB"                 >> $config_path
+fi
+
+# RABBITMQ_VM_MEMORY_HIGH_WATERMARK is relative number to available RAM between [0.0 ... 1.0] (with a decimal point)
+# or an absolute number of bytes.
+
+if [[ $RABBITMQ_VM_MEMORY_HIGH_WATERMARK =~ ^\d*\.\d*$ ]] ; then
+    echo "vm_memory_high_watermark.relative.relative  = $RABBITMQ_VM_MEMORY_HIGH_WATERMARK" >> $config_path
+else
+    echo "vm_memory_high_watermark.relative.absolute  = $RABBITMQ_VM_MEMORY_HIGH_WATERMARK" >> $config_path
+fi
+
+# RABBITMQ_DISK_FREE_LIMIT is relative to available RAM between [0.0 ... 1.0] (with a decimal point)
+# or an absolute number of bytes.
+
+if [[ $RABBITMQ_DISK_FREE_LIMIT =~ ^\d*\.\d*$ ]] ; then
+    echo "disk_free_limit.relative                    = $RABBITMQ_DISK_FREE_LIMIT"  >> $config_path
+else
+    echo "disk_free_limit.absolute                    = $RABBITMQ_DISK_FREE_LIMIT"  >> $config_path
+fi
 
 # $todo(jeff.lill):
 #
 # I'm not sure if these statistics related settings are a good
 # idea.  This appeared to cause some trouble a few years back.
 
-echo "collect_statistics          = fine"  >> $config_path
-echo "collect_statistics_interval = 30000" >> $config_path
-
-echo                                            >> $config_path
-echo "# RabbitMQ Entrypoint Generated Settings" >> $config_path
-echo                                            >> $config_path
+echo "collect_statistics                          = fine"                           >> $config_path
+echo "collect_statistics_interval                 = 30000"                          >> $config_path
 
 # Generate the Erlang cookie if the environment variable doesn't specify one.
 
@@ -227,41 +289,18 @@ export RABBITMQ_USE_LONGNAME=true
 # Set the cluster name if specified.
 
 if [ "$CLUSTER_NAME" != "" ] ; then
-    rabbitmqctl set_cluster_name $CLUSTER_NAME
+    # rabbitmqctl set_cluster_name $CLUSTER_NAME
+    echo TODO
 fi
 
 # Enable the management components.
 
+. log-info.sh "Enabling management plugin..."
 rabbitmq-plugins enable rabbitmq_management
+. log-info.sh "Management plugin enabled."
 
-# It appears that RabbitMQ can have issues forming a cluster when all of the
-# nodes are started at the same time.  The most recent post to this issue:
-#
-#   https://groups.google.com/forum/#!topic/rabbitmq-users/DpQGo_UTjG8
-#
-# from 08-2018 indicates that this is still a problem for v3.7.7 and that 
-# the current mitigation is to introduce random delays before starting each
-# instance.  It appears that they're talking about adding retries in the 
-# future.
-#
-# We're going to go ahead and sleep for a random number of seconds between
-# 0 and 30 to mitigate this when clustering is enabled and this is the
-# first time to container is started.
-
-restarted_path=/var/lib/rabbitmq/.restarted
-
-if [ ! -f $restarted_path ] ; then
-
-    if [ "$CLUSTER_NODES" != "" ] ; then
-        delay=$(shuf -i 5-30 -n 1)
-        . log-info.sh "Delaying start by [$delay] seconds to mitigate a cluster formation race."
-        sleep $delay
-    fi
-
-    touch $restarted_path
-fi
-
-# sleep 100000000
+env | sort
 # . /rabbitmq-entrypoint.sh rabbitmq-server
-bash /rabbitmq-entrypoint.sh rabbitmq-server
+# bash /rabbitmq-entrypoint.sh rabbitmq-server
+rabbitmq-server 
 sleep 100000000000

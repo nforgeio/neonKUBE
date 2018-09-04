@@ -554,14 +554,39 @@ namespace NeonCli
 
             if (node.Metadata.Labels.RabbitMQ)
             {
-                node.Status = "start: neon-rabbitmq";
+                node.Status = "neon-rabbitmq: wait";
+
+                // It appears that RabbitMQ can have issues forming a cluster when all of the
+                // nodes are started at the same time.  The most recent post at the bottom
+                // of this issue:
+                //
+                //   https://groups.google.com/forum///!topic/rabbitmq-users/DpQGo_UTjG8
+                //
+                // from 08-2018 indicates that this is still a problem for v3.7.7 and that 
+                // the current mitigation is to introduce random delays before starting each
+                // instance.  It appears that they're talking about adding retries in the 
+                // future.  This is only a problem when RabbitMQ cluster nodes are started
+                // for the first time.
+                //
+                // We're going to go ahead and stagger the container deployment by creating
+                // a list of RabbitMQ nodes sorted by node name, determining the index of
+                // of the current node in the list, and then delaying by 10 seconds times
+                // the index.  This will spread the container starts out nicely.
+
+                var rabbitNodes = hive.Definition.SortedNodes.Where(n => n.Labels.RabbitMQ).ToList();
+                var startDelay  = TimeSpan.FromSeconds(10);
+                var index       = rabbitNodes.IndexOf(node.Metadata);
+
+                Thread.Sleep(startDelay.Multiply(index));
 
                 // Build a comma separated list of fully qualified RabbitMQ hostnames so we
                 // can pass them as the CLUSTER environment variable.
 
+                node.Status = "neon-rabbitmq: start";
+
                 var sbCluster = new StringBuilder();
 
-                foreach (var rabbitNode in hive.Definition.SortedNodes.Where(n => n.Labels.RabbitMQ))
+                foreach (var rabbitNode in rabbitNodes)
                 {
                     sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.RabbitMQ}", ",");
                 }
@@ -599,7 +624,10 @@ namespace NeonCli
                     Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
 
                 node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-rabbitmq.sh"), response.BashCommand);
-                node.Status = string.Empty;
+
+                // $todo(jeff.lill): Actually verify that the node is ready.
+
+                node.Status = "neon-rabbitmq: ready";
             }
         }
     }

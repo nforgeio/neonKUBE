@@ -36,7 +36,7 @@ RabbitMQ configuration is performed using environment variables as described [he
 
 * `RABBITMQ_ERLANG_COOKIE` - (*required* if `CLUSTER_NODES` is present) shared secret to be used by clustered RabbitMQ nodes for mutual authentication.  This is just a password string.
 
-* `RABBITMQ_VM_MEMORY_HIGH_WATERMARK` - (*optional*) specifies the maximum amount of RAM to use as a percentage of available memory (e.g. `49%` or `0.49`) or an absolute number of bytes like `1000000000` or `100MiB`).
+* `RABBITMQ_VM_MEMORY_HIGH_WATERMARK` - (*optional*) specifies the maximum amount of RAM to use as a percentage of available memory (e.g. `0.49` for 49%) or an absolute number of bytes like `1000000000` or `100MB`).  This defaults to `0.50`.
 
 * `RABBITMQ_HIPE_COMPILE` - (*optional*) specifies that RabbitMQ be precompiled using the HiPE Erlang just-in-time compiler for 20-50% better performance at the cost of an additional 30-45 second delay during startup.  Set this to "1" to enable.  This defaults to `0` to disable precompiling.
 

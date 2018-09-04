@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -34,7 +35,7 @@ namespace Neon.Hive
     {
         private const string defaultRamLimit         = "250MB";
         private const string defaultCompiledRamLimit = "500MB";
-        private const double defaultRamHighWatermark = 0.50;
+        private const string defaultRamHighWatermark = "0.50";
         private const string defaultUsername         = "sysadmin";
         private const string defaultPassword         = "password";
         private const bool   defaultPrecompile       = false;
@@ -76,9 +77,9 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// Specifies the how much of <see cref="RamLimit"/> each node can allocate for
-        /// caching and internal use expressed as a number between 0.0 - 1.0.  This
-        /// defaults to <c>0.50</c> indicating that up to half of <see cref="RamLimit"/>
-        /// may be used.
+        /// caching and internal use.  This may be expressed as a percentage of total RAM
+        /// like <b>0.49</b> or <b>49%</b> or as an absolute number of bytes like 
+        /// <b>250000000</b> or <b>250MB</b>.  This defaults to <b>0.50</b>.
         /// </para>
         /// <note>
         /// The default value is very conservative especially as you increase <see cref="RamLimit"/>.
@@ -88,7 +89,7 @@ namespace Neon.Hive
         /// </summary>
         [JsonProperty(PropertyName = "RamHighWatermark", Required = Required.Default)]
         [DefaultValue(defaultRamHighWatermark)]
-        public double RamHighWatermark { get; set;  } = defaultRamHighWatermark;
+        public string RamHighWatermark { get; set;  } = defaultRamHighWatermark;
 
         /// <summary>
         /// <para>
@@ -173,7 +174,7 @@ namespace Neon.Hive
         public void Validate(HiveDefinition hiveDefinition)
         {
             RamLimit         = RamLimit ?? defaultRamLimit;
-            RamHighWatermark = RamHighWatermark == 0.0 ? defaultRamHighWatermark : RamHighWatermark;
+            RamHighWatermark = RamHighWatermark ?? defaultRamHighWatermark;
             Username         = Username ?? defaultUsername;
             Password         = Password ?? defaultPassword;
             PartitionMode    = PartitionMode ?? defaultPartitionMode;
@@ -185,9 +186,49 @@ namespace Neon.Hive
                 ErlangCookie = NeonHelper.GetRandomPassword(20);
             }
 
-            if (RamHighWatermark <= 0.0)
+            // RamHighWatermark: We're going to keep things simple and convert relative
+            // percentage values to a number between [0..1] and we're going to convert
+            // absolute bytes units into a simple number (without units).  This simplifies
+            // the RabbitMQ Docker entrypoint script so all it needs to do is look for a
+            // decimal point to identify a relative limit vs. an absolute limit.  The
+            // script won't need to do percentage or unit conversions.
+
+            if (RamHighWatermark.EndsWith("%"))
             {
-                RamHighWatermark = defaultRamHighWatermark;
+                // RamHighWatermark is a relative percentage.
+
+                var numberPart = RamHighWatermark.Substring(0, RamHighWatermark.Length - 1);
+
+                if (!double.TryParse(numberPart, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number) || number <= 0.0 || number >= 100.0)
+                {
+                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] is not within: 0% < {nameof(RamHighWatermark)} <= 100%");
+                }
+
+                RamHighWatermark = (number / 100).ToString("0.00#", CultureInfo.InvariantCulture);
+            }
+            else if (RamHighWatermark.Contains('.'))
+            {
+                // RamHighWatermark is a relative number between [0..1].
+
+                if (!double.TryParse(RamHighWatermark, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number) || number <= 0.0 || number >= 1.0)
+                {
+                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] is not within: 0.0 < {nameof(RamHighWatermark)} <= 1.0");
+                }
+
+                RamHighWatermark = number.ToString("0.00#", CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                // RamHighWaterMark is absolute.
+
+                var number = HiveDefinition.ValidateSize(RamHighWatermark, this.GetType(), nameof(RamHighWatermark));
+
+                if (number <= 0)
+                {
+                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] must be greater than 0.");
+                }
+
+                RamHighWatermark = number.ToString();
             }
 
             var ramSize = HiveDefinition.ValidateSize(RamLimit, this.GetType(), nameof(RamLimit));
@@ -201,21 +242,54 @@ namespace Neon.Hive
                 throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamLimit)}={RamLimit}] cannot be less than [250MB] when [{nameof(RabbitMQOptions)}.{nameof(Precompile)}={Precompile}].");
             }
 
-            if (RamHighWatermark <= 0.0 || RamHighWatermark > 1.0)
-            {
-                throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] must be a positive number between 0..1.");
-            }
+            // DiskFreeLimit: We're going to keep things simple and convert relative
+            // percentage values to a number between [0..1] and we're going to convert
+            // absolute bytes units into a simple number (without units).  This simplifies
+            // the RabbitMQ Docker entrypoint script so all it needs to do is look for a
+            // decimal point to identify a relative limit vs. an absolute limit.  The
+            // script won't need to do percentage or unit conversions.
 
             if (string.IsNullOrWhiteSpace(DiskFreeLimit))
             {
                 DiskFreeLimit = ((2 * ramSize) + (1 * NeonHelper.Giga)).ToString();
             }
 
-            var diskFreeLimit = HiveDefinition.ValidateSize(DiskFreeLimit, this.GetType(), nameof(DiskFreeLimit));
-
-            if (diskFreeLimit < 1 * NeonHelper.Giga)
+            if (DiskFreeLimit.EndsWith("%"))
             {
-                throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] cannot be less [1GB].");
+                // DiskFreeLimit is a relative percentage.
+
+                var numberPart = DiskFreeLimit.Substring(0, DiskFreeLimit.Length - 1);
+
+                if (!double.TryParse(numberPart, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number) || number <= 0.0 || number >= 100.0)
+                {
+                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] is not within: 0% < {nameof(DiskFreeLimit)} <= 100%");
+                }
+
+                DiskFreeLimit = (number / 100).ToString("0.00#", CultureInfo.InvariantCulture);
+            }
+            else if (DiskFreeLimit.Contains('.'))
+            {
+                // DiskFreeLimit is a relative number between [0..1].
+
+                if (!double.TryParse(DiskFreeLimit, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number) || number <= 0.0 || number >= 1.0)
+                {
+                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] is not within: 0.0 < {nameof(DiskFreeLimit)} <= 1.0");
+                }
+
+                DiskFreeLimit = number.ToString("0.00#", CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                // DiskFreeLimit is absolute.
+
+                var number = HiveDefinition.ValidateSize(DiskFreeLimit, this.GetType(), nameof(DiskFreeLimit));
+
+                if (number < 1 * NeonHelper.Giga)
+                {
+                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] must be greater than [1GB].");
+                }
+
+                DiskFreeLimit = number.ToString();
             }
 
             switch (PartitionMode)
