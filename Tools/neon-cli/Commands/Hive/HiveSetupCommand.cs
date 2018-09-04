@@ -3947,7 +3947,7 @@ systemctl restart sshd
                             Name        = "rabbitmq",
                             Title       = "RabbitMQ Messaging System",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
+                            Url         = $"https://healthy-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
                             Description = "RabbitMQ messaging system"
                         };
 
@@ -3961,7 +3961,7 @@ systemctl restart sshd
                         };
 
                         rule.CheckMode   = LoadBalancerCheckMode.Http;
-                        rule.CheckTls    = false;
+                        rule.CheckTls    = true;
                         rule.CheckExpect = @"rstatus ^2\d\d";
 
                         // Initialize the frontends and backends.

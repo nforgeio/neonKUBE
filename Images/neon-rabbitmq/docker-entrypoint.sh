@@ -114,8 +114,66 @@ if [ "$RABBITMQ_DISK_FREE_LIMIT" == "" ] ; then
     RABBITMQ_DISK_FREE_LIMIT=500MB
 fi
 
+# TLS related configuration.
+
+if [[ "$TLS_CERT_FILE" != "" && "$TLS_KEY_FILE" != "" ]] ; then
+
+    . log-info.sh "TLS is enabled."
+
+    if [ ! -f "$TLS_CERT_FILE" ] ; then
+        . log-error.sh "File [TLS_CERT_FILE=$TLS_CERT_FILE] does not exist."
+        exit 1
+    fi
+
+    if [ ! -f "$TLS_KEY_FILE" ] ; then
+        . log-error.sh "File [TLS_KEY_FILE=$TLS_KEY_FILE] does not exist."
+        exit 1
+    fi
+
+    # We need to copy the certificate and private key to another directory
+    # so we can change their permissions to be readable by RabbitMQ.
+
+    mkdir -p /etc/rabbitmq/cert
+    chmod 777 /etc/rabbitmq/cert
+    cp "$TLS_CERT_FILE" /etc/rabbitmq/cert/hive.crt
+    cp "$TLS_KEY_FILE"  /etc/rabbitmq/cert/hive.key
+    chmod 666 /etc/rabbitmq/cert/*
+
+    echo                                                                         >> $config_path
+    echo "# TLS Configuration"                                                   >> $config_path
+    echo                                                                         >> $config_path
+    echo "listeners.ssl.default                   = $RABBITMQ_NODE_PORT"         >> $config_path
+    echo "ssl_options.certfile                    = /etc/rabbitmq/cert/hive.crt" >> $config_path
+    echo "ssl_options.keyfile                     = /etc/rabbitmq/cert/hive.key" >> $config_path
+    echo "ssl_options.verify                      = verify_none"                 >> $config_path
+    echo "ssl_options.fail_if_no_peer_cert        = false"                       >> $config_path
+    echo                                                                         >> $config_path
+    echo "management.listener.ssl                 = true"                        >> $config_path
+    echo "management.listener.ssl_opts.cacertfile = /etc/rabbitmq/cert/hive.crt" >> $config_path
+    echo "management.listener.ssl_opts.certfile   = /etc/rabbitmq/cert/hive.crt" >> $config_path
+    echo "management.listener.ssl_opts.keyfile    = /etc/rabbitmq/cert/hive.key" >> $config_path
+
+    # Set this to a hopefully unused port just in case the base RabbitMQ entrypoint
+    # script generates the [listeners] configuration.  This avoids having the TLS
+    # and the non-TLS ports being assigned the same value and crapping out.  This
+    # port is not exposed outside of the container so it's essentially a NOP.
+
+    export RABBITMQ_NODE_PORT=65103
+   
+elif [[ "$TLS_CERT_FILE" == "" && "$TLS_KEY_FILE" == "" ]] ; then
+
+    . log-info.sh "TLS is disabled."
+else
+
+    . log-error.sh "One of [TLS_CERT_FILE] or [TLS_KEY-FILE] is missing."
+    exit 1
+fi
+
 # Other configuration settings:
 
+echo                                                           >> $config_path
+echo "# Other Settings"                                        >> $config_path
+echo                                                           >> $config_path
 echo "cluster_partition_handling  = $CLUSTER_PARTITION_MODE"   >> $config_path
 echo "disk_free_limit.absolute    = $RABBITMQ_DISK_FREE_LIMIT" >> $config_path
 echo "loopback_users              = none"                      >> $config_path
@@ -127,6 +185,10 @@ echo "loopback_users              = none"                      >> $config_path
 
 echo "collect_statistics          = fine"  >> $config_path
 echo "collect_statistics_interval = 30000" >> $config_path
+
+echo                                            >> $config_path
+echo "# RabbitMQ Entrypoint Generated Settings" >> $config_path
+echo                                            >> $config_path
 
 # Generate the Erlang cookie if the environment variable doesn't specify one.
 
@@ -165,23 +227,32 @@ fi
 
 rabbitmq-plugins enable rabbitmq_management
 
-# It appears that RabbitMQ can have issues forming a cluster when all of The
+# It appears that RabbitMQ can have issues forming a cluster when all of the
 # nodes are started at the same time.  The most recent post to this issue:
 #
 #   https://groups.google.com/forum/#!topic/rabbitmq-users/DpQGo_UTjG8
 #
-# from 08-2018 for v3.7.7 indicates that this is still a problem and that 
+# from 08-2018 indicates that this is still a problem for v3.7.7 and that 
 # the current mitigation is to introduce random delays before starting each
 # instance.  It appears that they're talking about adding retries in the 
 # future.
 #
-# We're going to go ahead and sleem for a random number of seconds between
-# 0 and 30 to mitigate this when clustering is enabled.
+# We're going to go ahead and sleep for a random number of seconds between
+# 0 and 30 to mitigate this when clustering is enabled and this is the
+# first time to container is started.
 
-if [ "$CLUSTER_NODES" != "" ] ; then
-    delay=$(shuf -i 0-30 -n 1)
-    . ./log-info.sh "Delaying start by [$delay sec] to mitigate a cluster formation race"
-    sleep $delay
+restarted_path=/var/lib/rabbitmq/.restarted
+
+if [ ! -f $restarted_path ] ; then
+
+    if [ "$CLUSTER_NODES" != "" ] ; then
+        delay=$(shuf -i 5-30 -n 1)
+        . log-info.sh "Delaying start by [$delay] seconds to mitigate a cluster formation race."
+        sleep $delay
+    fi
+
+    touch $restarted_path
 fi
 
+# sleep 100000000
 . /rabbitmq-entrypoint.sh rabbitmq-server

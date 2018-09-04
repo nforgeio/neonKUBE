@@ -33,8 +33,8 @@ STOPSIGNAL  SIGTERM
 RUN apt-get update \
     && apt-get install -yq tini pwgen ca-certificates \
     && apt-get clean -yq \
-    && cp /usr/local/bin/docker-entrypoint.sh /rabbitmq-entrypoint.sh.saved \
-    && mv /usr/local/bin/docker-entrypoint.sh /rabbitmq-entrypoint.sh \
+    && cp /usr/local/bin/docker-entrypoint.sh /rabbitmq-entrypoint.sh.shipped \
+    && cp /usr/local/bin/docker-entrypoint.sh /rabbitmq-entrypoint.sh \
     && sed -i 's/15671/$RABBITMQ_MANAGEMENT_PORT/g' /rabbitmq-entrypoint.sh \
     && sed -i 's/15672/$RABBITMQ_MANAGEMENT_PORT/g' /rabbitmq-entrypoint.sh \
     && sed -i 's/5671/$RABBITMQ_NODE_PORT/g' /rabbitmq-entrypoint.sh \
