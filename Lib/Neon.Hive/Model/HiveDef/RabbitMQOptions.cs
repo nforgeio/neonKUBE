@@ -69,6 +69,8 @@ namespace Neon.Hive
                     return ramLimit;
                 }
             }
+
+            set { ramLimit = value; }
         }
 
         /// <summary>
