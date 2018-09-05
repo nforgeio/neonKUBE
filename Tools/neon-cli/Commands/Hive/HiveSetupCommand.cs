@@ -1785,7 +1785,7 @@ fi
                         }
                     }
 
-                    if (node.Metadata.Labels.RabbitMQ)
+                    if (pullAll || node.Metadata.Labels.RabbitMQ)
                     {
                         images.Add(Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
                     }
@@ -2428,7 +2428,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                         {
                             node.SudoCommand($"ceph config-key set mgr/dashboard/crt -i /etc/neon/certs/hive.crt");
                             node.SudoCommand($"ceph config-key set mgr/dashboard/key -i /etc/neon/certs/hive.key");
-                            node.SudoCommand($"ceph dashboard set-login-credentials sysadmin password");
+                            node.SudoCommand($"ceph dashboard set-login-credentials {HiveConst.DefaultUsername} {HiveConst.DefaultPassword}");
                             node.SudoCommand($"ceph config set mgr mgr/dashboard/server_port {HiveHostPorts.CephDashboard}");
 
                             // Restart the MGR to pick up the changes.
@@ -3437,9 +3437,9 @@ systemctl start neon-volume-plugin
 
                     firstManager.Status = "secret: Ceph dashboard credentials";
 
-                    hiveLogin.CephDashboardUsername = "sysadmin";
+                    hiveLogin.CephDashboardUsername = HiveConst.DefaultUsername;
                     // hiveLogin.CephDashboardPassword = NeonHelper.GetRandomPassword(20);  $todo(jeff.lill): uncomment this
-                    hiveLogin.CephDashboardPassword = "password";
+                    hiveLogin.CephDashboardPassword = HiveConst.DefaultPassword;
                     hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
                 });
         }
@@ -3947,7 +3947,8 @@ systemctl restart sshd
                             Name        = "rabbitmq",
                             Title       = "RabbitMQ Messaging System",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"https://healthy-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
+                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
+                            //Url         = $"https://healthy-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
                             Description = "RabbitMQ messaging system"
                         };
 
@@ -3961,7 +3962,8 @@ systemctl restart sshd
                         };
 
                         rule.CheckMode   = LoadBalancerCheckMode.Http;
-                        rule.CheckTls    = true;
+                        //rule.CheckTls    = true;
+                        rule.CheckTls    = false;
                         rule.CheckExpect = @"rstatus ^2\d\d";
 
                         // Initialize the frontends and backends.

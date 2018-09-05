@@ -232,5 +232,15 @@ namespace Neon.Hive
             new HiveProxyPorts(
                 range: new HiveProxyPortRange(HiveHostPorts.ProxyPrivateFirst, HiveHostPorts.ProxyPrivateLast),
                 ports: null);
+
+        /// <summary>
+        /// The default username for component dashboards and management tools (like Ceph and RabbitMQ).
+        /// </summary>
+        public const string DefaultUsername = "sysadmin";
+
+        /// <summary>
+        /// The default password for component dashboards and management tools (like Ceph and RabbitMQ).
+        /// </summary>
+        public const string DefaultPassword = "password";
     }
 }

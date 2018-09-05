@@ -36,8 +36,8 @@ namespace Neon.Hive
         private const string defaultRamLimit         = "250MB";
         private const string defaultCompiledRamLimit = "500MB";
         private const string defaultRamHighWatermark = "0.50";
-        private const string defaultUsername         = "sysadmin";
-        private const string defaultPassword         = "password";
+        private const string defaultUsername         = HiveConst.DefaultUsername;
+        private const string defaultPassword         = HiveConst.DefaultPassword;
         private const bool   defaultPrecompile       = false;
         private const string defaultPartitionMode    = "autoheal";
         private const string defaultRabbitMQImage    = HiveConst.NeonPublicRegistry + "/neon-rabbitmq:latest";
@@ -93,7 +93,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Specifies the minimum allowed free disk space before RabbitMQ will begin thottling
+        /// Specifies the minimum allowed free disk space before RabbitMQ will begin throttling
         /// message traffic to avoid fill up the drive.  This can be a long byte count or a long
         /// with units like <b>512MB</b> or <b>2GB</b>.
         /// </para>
@@ -117,7 +117,7 @@ namespace Neon.Hive
         public string Username { get; set; } = defaultUsername;
 
         /// <summary>
-        /// Specifies the password used to secure the cluster.  This defaults to <b>password</b>.
+        /// Specifies the password used to secure the cluster.  This defaults to <b>password</b>>.
         /// </summary>
         [JsonProperty(PropertyName = "Password", Required = Required.Default)]
         [DefaultValue(defaultPassword)]
@@ -133,8 +133,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// Specifies that RabbitMQ should be precompiled for 20-50% better performance at the
-        /// cost of 30-45 seconds longer for the nodes to start and a minimum of 250MB of additional
-        /// RAM per instance.  This defaults to <c>false</c>.
+        /// cost of 30-45 seconds longer for the nodes to start and a minimum of 250MB of 
+        /// additional RAM per instance.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Precompile", Required = Required.Default)]
         [DefaultValue(defaultPrecompile)]

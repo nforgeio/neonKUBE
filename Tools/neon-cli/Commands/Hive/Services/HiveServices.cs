@@ -554,7 +554,7 @@ namespace NeonCli
 
             if (node.Metadata.Labels.RabbitMQ)
             {
-                node.Status = "neon-rabbitmq: wait";
+                node.Status = "rabbitmq: waiting";
 
                 // It appears that RabbitMQ can have issues forming a cluster when all of the
                 // nodes are started at the same time.  The most recent post at the bottom
@@ -570,19 +570,27 @@ namespace NeonCli
                 //
                 // We're going to go ahead and stagger the container deployment by creating
                 // a list of RabbitMQ nodes sorted by node name, determining the index of
-                // of the current node in the list, and then delaying by 10 seconds times
-                // the index.  This will spread the container starts out nicely.
+                // of the current node in the list, and then delaying by 10 seconds (plus
+                // another 45 seconds if we're precompiling) times the index.  This should 
+                // spread the container starts out nicely.
 
                 var rabbitNodes = hive.Definition.SortedNodes.Where(n => n.Labels.RabbitMQ).ToList();
                 var startDelay  = TimeSpan.FromSeconds(10);
                 var index       = rabbitNodes.IndexOf(node.Metadata);
+
+                if (hive.Definition.RabbitMQ.Precompile)
+                {
+                    // Add some more time to give server a chance to be compiled.
+
+                    startDelay += TimeSpan.FromSeconds(45);
+                }
 
                 Thread.Sleep(startDelay.Multiply(index));
 
                 // Build a comma separated list of fully qualified RabbitMQ hostnames so we
                 // can pass them as the CLUSTER environment variable.
 
-                node.Status = "neon-rabbitmq: start";
+                node.Status = "rabbitmq: starting";
 
                 var sbCluster = new StringBuilder();
 
@@ -598,6 +606,13 @@ namespace NeonCli
                     hipeCompile.Add("--env");
                     hipeCompile.Add("RABBITMQ_HIPE_COMPILE=1");
                 }
+
+                // $todo(jeff.lill):
+                //
+                // I was unable to get TLS working correctly for RabbitMQ.  I'll come back
+                // and revisit this later:
+                //
+                //      https://github.com/jefflill/NeonForge/issues/319
 
                 var response = node.DockerCommand(
                     "docker run",
@@ -617,8 +632,8 @@ namespace NeonCli
                     "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.RabbitMQ.RamHighWatermark}",
                     hipeCompile,
                     "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.DiskFreeLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.DiskFreeLimit))}",
-                    "--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
-                    "--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",
+                    //"--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
+                    //"--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",
                     "--env", $"ERL_EPMD_PORT={HiveHostPorts.RabbitMQEPMD}",
                     "--mount", "type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq",
                     "--mount", "type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly",
@@ -634,7 +649,7 @@ namespace NeonCli
 
                 // $todo(jeff.lill): Actually verify that the node is ready.
 
-                node.Status = "neon-rabbitmq: ready";
+                node.Status = "rabbitmq: ready";
             }
         }
     }

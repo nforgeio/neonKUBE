@@ -631,16 +631,18 @@ USAGE:
 
         // Specifies the maximum RAM to be allocated to each RabbitMQ node container.
         // This can be a long byte count or a long with units like [512MB] or [2GB].
-        // This can be overridden  for specific nodes.  This defaults to [100MB].
+        // This can be overridden  for specific nodes.  This defaults to [500MB] if
+        // the RabbitMQ Server is being precompiled and [250MB] if not.
         //
         // NOTE: The default is probably too small for production environments
 
-        ""RamLimit"": ""100MB"",
+        ""RamLimit"": ""500MB"",
 
         // Specifies the how much of [RamLimit] each node can allocate for
         // caching and internal use expressed as a number between 0.0 - 1.0.
         // This defaults to <c>0.50</c> indicating that up to half of [RamLimit]
-        // may be used.
+        // may be used.  This can also be an absolute number of bytes like
+        // [250000000] or [250MB].
         //
         // NOTE: The default value is very conservative especially as you increase 
         //       [RamLimit].  For larger RAM values you should be able allocate a 
@@ -648,15 +650,26 @@ USAGE:
 
         ""RamHighWatermark"": 0.50,
 
-        // Specifies the username used to secure the message cluster.
-        // This defaults to [guest].
+        // Specifies the minimum allowed free disk space before RabbitMQ will begin throttling
+        // message traffic to avoid fill up the drive.  This can be a long byte count or a long
+        // with units like [512MB] or [2GB].
+        /
+        // This defaults to twice [RamLimit] plus [1GB] to avoid having 
+        // RabbitMQ consume so much disk space that the hive host node is impacted.
+        //
+        // This cannot be less than [1GB].
 
-        ""Username"": ""guest"",
+        ""DiskFreeLimit"": ""2GB"",
+
+        // Specifies the username used to secure the message cluster.
+        // This defaults to [sysadmin].
+
+        ""Username"": ""sysadmin"",
 
         // Specifies the password used to secure the message cluster.
-        // This defaults to [guest].
+        // This defaults to [password].
 
-        ""Password"": ""guest"",
+        ""Password"": ""password"",
 
         // Specifies the shared secret clustered RabbitMQ nodes will use for mutual authentication.
         // A secure password will be generated if this isn't specified.
@@ -671,6 +684,12 @@ USAGE:
         // See https://www.rabbitmq.com/partitions.html for more information.
 
         ""PartitionMode"": ""autoheal"",
+
+        // Specifies that RabbitMQ should be precompiled for 20-50% better performance at the
+        // cost of 30-45 seconds longer for the nodes to start the first time and a minimum of
+        // 250MB of additional RAM per instance.  This defaults to [false].
+
+        ""Precompile"": false,
 
         // The Docker image to be used to provision the [neon-rabbitmq] service.
         // This defaults to [nhive/rabbitmq:latest].

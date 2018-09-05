@@ -30,6 +30,7 @@ fi
 # of our settings.
 
 config_path=/etc/rabbitmq/rabbitmq.neon.conf
+touch $config_path
 
 # Parse the environment variables.
 
@@ -80,7 +81,7 @@ if [ "$CLUSTER_NODES" != "" ] ; then
         node_name=$(echo $node | cut -d '@' -f 1)
         node_host=$(echo $node | cut -d '@' -f 2)
 
-        echo "cluster_formation.classic_config.nodes.$index = $node_name@$node_host"            >> $config_path
+        echo "cluster_formation.classic_config.nodes.$index    = $node_name@$node_host"         >> $config_path
         index=$((index + 1))
     done
 fi
@@ -90,11 +91,11 @@ if [ "$ERL_EPMD_PORT" == "" ] ; then
 fi
 
 if [ "$RABBITMQ_DEFAULT_USER" == "" ] ; then
-    export RABBITMQ_DEFAULT_USER=sysadmin
+    export RABBITMQ_DEFAULT_USER=HiveConst_DefaultUsername
 fi
 
 if [ "$RABBITMQ_DEFAULT_PASS" == "" ] ; then
-    export RABBITMQ_DEFAULT_PASS=password
+    export RABBITMQ_DEFAULT_PASS=HiveConst_DefaultPassword
 fi
 
 if [ "$RABBITMQ_NODE_PORT" == "" ] ; then
@@ -163,8 +164,7 @@ if [[ "$RABBITMQ_SSL_CERTFILE" != "" && "$RABBITMQ_SSL_KEYFILE" != "" ]] ; then
     echo                                                                                    >> $config_path
     echo "# Connection Settings"                                                            >> $config_path
     echo                                                                                    >> $config_path
-    echo "listeners.tcp.default                       = none"                               >> $config_path
-    echo "listeners.ssl.default                       = 0.0.0.0:$RABBITMQ_NODE_PORT"        >> $config_path
+    echo "listeners.ssl.1                             = 0.0.0.0:$RABBITMQ_NODE_PORT"        >> $config_path
     echo "ssl_options.certfile                        = /etc/rabbitmq/cert/hive.crt"        >> $config_path
     echo "ssl_options.keyfile                         = /etc/rabbitmq/cert/hive.key"        >> $config_path
     echo "ssl_options.cacertfile                      = /etc/rabbitmq/cert/hive.ca.crt"     >> $config_path
@@ -176,7 +176,13 @@ if [[ "$RABBITMQ_SSL_CERTFILE" != "" && "$RABBITMQ_SSL_KEYFILE" != "" ]] ; then
     echo "management.listener.ssl                     = true"                               >> $config_path
     echo "management.listener.ssl_opts.certfile       = /etc/rabbitmq/cert/hive.crt"        >> $config_path
     echo "management.listener.ssl_opts.keyfile        = /etc/rabbitmq/cert/hive.key"        >> $config_path
-    echo "management.listener.ssl_opts.cacertfile     = /etc/rabbitmq/cert/hive.ca.crt"     >> $config_path
+    # echo "management.listener.ssl_opts.cacertfile     = /etc/rabbitmq/cert/hive.ca.crt"     >> $config_path
+
+    # Set the main TCP listener to use an unused and unpublished port to avoid
+    # having RabbitMQ try to have its TCP and SSL listeners try to listen on 
+    # the same port.
+
+    export RABBITMQ_NODE_PORT=65123
 
 elif [[ "$TLS_CERT_FILE" == "" && "$TLS_KEY_FILE" == "" ]] ; then
 
@@ -294,11 +300,11 @@ export RABBITMQ_USE_LONGNAME=true
 
 # Log the configuration variables and files to make debugging easier.
 
-echo "Environment Variables ***************************************************************"
+echo "============================ Environment Variables =================================="
 env | sort
-echo "Config File *************************************************************************"
+echo "================================= Config File ======================================="
 cat $config_path
-echo "*************************************************************************************"
+echo "====================================================================================="
 
 # Enable the management components.
 
@@ -316,4 +322,3 @@ fi
 # Start RabbitMQ via its modified Docker entrypoint.
 
 rabbitmq-entrypoint.sh rabbitmq-server
-
