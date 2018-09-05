@@ -29,6 +29,7 @@ using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Net;
+using Neon.RabbitMQ;
 
 // $todo(jeff.lill): 
 //
@@ -2028,8 +2029,8 @@ namespace Neon.Hive
         /// <param name="connectionKey">The Consul key for the connection settings.</param>
         /// <param name="secretName">The local container name for the Docker secret.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
-        /// <returns>The <see cref="RabbitMQ.Client.IConnection"/>.</returns>
-        public static async Task<RabbitMQ.Client.IConnection> OpenRabbitMQAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default)
+        /// <returns>The <see cref="global::RabbitMQ.Client.IConnection"/>.</returns>
+        public static async Task<global::RabbitMQ.Client.IConnection> OpenRabbitMQAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default)
         {
             VerifyConnected();
 

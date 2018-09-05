@@ -29,7 +29,7 @@ namespace NeonCli
         /// <param name="node">The target hive node.</param>
         public static void VerifyOS(SshProxy<NodeDefinition> node)
         {
-            node.Status = "verify: operating system";
+            node.Status = "check: operating system";
 
             var response = node.SudoCommand("lsb_release -a");
 

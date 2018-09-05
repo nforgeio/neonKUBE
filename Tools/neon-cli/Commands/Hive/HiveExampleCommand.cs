@@ -661,15 +661,20 @@ USAGE:
 
         ""DiskFreeLimit"": ""2GB"",
 
-        // Specifies the username used to secure the message cluster.
-        // This defaults to [sysadmin].
+        // Specifies the password used to secure the message cluster's
+        // [sysadmin] account.  This defaults to [password].
 
-        ""Username"": ""sysadmin"",
+        ""SysadminPassword"": ""password"",
 
-        // Specifies the password used to secure the message cluster.
-        // This defaults to [password].
+        // Specifies the password used to secure the message cluster's
+        // [neon] account.  This defaults to [password].
 
-        ""Password"": ""password"",
+        ""NeonPassword"": ""password"",
+
+        // Specifies the password used to secure the message cluster's
+        // [user] account.  This defaults to [password].
+
+        ""UserPassword"": ""password"",
 
         // Specifies the shared secret clustered RabbitMQ nodes will use for mutual authentication.
         // A secure password will be generated if this isn't specified.

@@ -36,7 +36,6 @@ namespace Neon.Hive
         private const string defaultRamLimit         = "250MB";
         private const string defaultCompiledRamLimit = "500MB";
         private const string defaultRamHighWatermark = "0.50";
-        private const string defaultUsername         = HiveConst.DefaultUsername;
         private const string defaultPassword         = HiveConst.DefaultPassword;
         private const bool   defaultPrecompile       = false;
         private const string defaultPartitionMode    = "autoheal";
@@ -110,18 +109,43 @@ namespace Neon.Hive
         public string DiskFreeLimit { get; set; }
 
         /// <summary>
-        /// Specifies the username used to secure the cluster.  This defaults to <b>sysadmin</b>.
+        /// Returns the <b>sysadmin</b> username.
         /// </summary>
-        [JsonProperty(PropertyName = "Username", Required = Required.Default)]
-        [DefaultValue(defaultUsername)]
-        public string Username { get; set; } = defaultUsername;
+        [JsonIgnore]
+        public string SysadminAccount => "sysadmin";
 
         /// <summary>
-        /// Specifies the password used to secure the cluster.  This defaults to <b>password</b>>.
+        /// Returns the <b>neon</b> username.
         /// </summary>
-        [JsonProperty(PropertyName = "Password", Required = Required.Default)]
+        [JsonIgnore]
+        public string NeonAccount => "neon";
+
+        /// <summary>
+        /// Returns the <b>user</b> username.
+        /// </summary>
+        [JsonIgnore]
+        public string UserAccount => "sysadmin";
+
+        /// <summary>
+        /// Specifies the password used to secure the <b>sysadmin</b> account.  This defaults to <b>password</b>>.
+        /// </summary>
+        [JsonProperty(PropertyName = "SysadminPassword", Required = Required.Default)]
         [DefaultValue(defaultPassword)]
-        public string Password { get; set; } = defaultPassword;
+        public string SysadminPassword { get; set; } = defaultPassword;
+
+        /// <summary>
+        /// Specifies the password used to secure the <b>neon</b> account.  This defaults to <b>password</b>>.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonPassword", Required = Required.Default)]
+        [DefaultValue(defaultPassword)]
+        public string NeonPassword { get; set; } = defaultPassword;
+
+        /// <summary>
+        /// Specifies the password used to secure the <b>user</b> account.  This defaults to <b>password</b>>.
+        /// </summary>
+        [JsonProperty(PropertyName = "UserPassword", Required = Required.Default)]
+        [DefaultValue(defaultPassword)]
+        public string UserPassword { get; set; } = defaultPassword;
 
         /// <summary>
         /// Specifies the shared secret clustered RabbitMQ nodes will use for mutual authentication.
@@ -175,8 +199,9 @@ namespace Neon.Hive
         {
             RamLimit         = RamLimit ?? defaultRamLimit;
             RamHighWatermark = RamHighWatermark ?? defaultRamHighWatermark;
-            Username         = Username ?? defaultUsername;
-            Password         = Password ?? defaultPassword;
+            SysadminPassword = SysadminPassword ?? defaultPassword;
+            NeonPassword     = NeonPassword ?? defaultPassword;
+            UserPassword     = UserPassword ?? defaultPassword;
             PartitionMode    = PartitionMode ?? defaultPartitionMode;
             PartitionMode    = PartitionMode.ToLowerInvariant();
             RabbitMQImage    = RabbitMQImage ?? defaultRabbitMQImage;

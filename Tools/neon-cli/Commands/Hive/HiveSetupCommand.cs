@@ -30,6 +30,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Hive;
 using Neon.Net;
+using Neon.RabbitMQ;
 using Neon.Retry;
 using Neon.Time;
 
@@ -428,14 +429,11 @@ OPTIONS:
 
                 controller.AddGlobalStep("hive services", () => hiveServices.Configure(hive.FirstManager));
 
-                if (hive.Pets.Count() > 0)
-                {
-                    controller.AddStep("hive containers",
-                        (node, stepDelay) =>
-                        {
-                            hiveServices.DeployContainers(node, stepDelay);
-                        });
-                }
+                controller.AddStep("hive containers",
+                    (node, stepDelay) =>
+                    {
+                        hiveServices.DeployContainers(node, stepDelay);
+                    });
 
                 if (hive.Definition.Log.Enabled)
                 {
@@ -3433,14 +3431,58 @@ systemctl start neon-volume-plugin
             firstManager.InvokeIdempotentAction("setup/neon-ceph-dashboard-credentials",
                 () =>
                 {
-                    // Create the [neon-ssh-credentials] Docker secret.
-
                     firstManager.Status = "secret: Ceph dashboard credentials";
-
                     hiveLogin.CephDashboardUsername = HiveConst.DefaultUsername;
                     // hiveLogin.CephDashboardPassword = NeonHelper.GetRandomPassword(20);  $todo(jeff.lill): uncomment this
                     hiveLogin.CephDashboardPassword = HiveConst.DefaultPassword;
                     hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
+                });
+
+            // Create the [neon-rabbitmq-settings] Docker secrets for the [sysadmin],
+            // [neon], and [user] accounts.
+
+            firstManager.InvokeIdempotentAction("setup/neon-rabbitmq-settings",
+                () =>
+                {
+                    firstManager.Status = "secret: RabbitMQ settings";
+
+                    var rabbitMQHosts = new List<string>();
+
+                    foreach (var node in hive.Definition.SortedNodes.Where(n => n.Labels.RabbitMQ))
+                    {
+                        rabbitMQHosts.Add($"{node.Name}.{hive.Definition.Hostnames.RabbitMQ}");
+                    }
+
+                    // $todo(jeff.lill):
+                    //
+                    // Should I configure and use a private load balancer rule instead of
+                    // explicitly specifying each cluster host?  The nice thing about this
+                    // is that I could use a hive host group so that the settings would
+                    // still work even if RabbitMQ cluster nodes are moved to different
+                    // hosts.
+
+                    var rabbitSettings = new RabbitMQSettings()
+                    {
+                        Hosts       = rabbitMQHosts,
+                        Port        = HiveHostPorts.RabbitMQAMPQ,
+                        Username    = hive.Definition.RabbitMQ.SysadminAccount,
+                        Password    = hive.Definition.RabbitMQ.SysadminPassword,
+                        VirtualHost = "/"
+                    };
+
+                    hive.Docker.Secret.Set("neon-rabbitmq-sysadmin", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
+
+                    rabbitSettings.Username    = hive.Definition.RabbitMQ.NeonAccount;
+                    rabbitSettings.Password    = hive.Definition.RabbitMQ.NeonPassword;
+                    rabbitSettings.VirtualHost = "/neon";
+
+                    hive.Docker.Secret.Set("neon-rabbitmq-neon", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
+
+                    rabbitSettings.Username    = hive.Definition.RabbitMQ.UserAccount;
+                    rabbitSettings.Password    = hive.Definition.RabbitMQ.UserPassword;
+                    rabbitSettings.VirtualHost = "/user";
+
+                    hive.Docker.Secret.Set("neon-rabbitmq-user", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
                 });
         }
 

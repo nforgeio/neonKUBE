@@ -248,7 +248,7 @@ fi
 # RABBITMQ_VM_MEMORY_HIGH_WATERMARK is relative number to available RAM between [0.0 ... 1.0] 
 # (with a decimal point) or an absolute number of bytes.
 
-if [[ $RABBITMQ_VM_MEMORY_HIGH_WATERMARK =~ ^\d*\.\d*$ ]] ; then
+if [[ "$RABBITMQ_VM_MEMORY_HIGH_WATERMARK" =~ ^[0-9]+\.[0-9]+$ ]] ; then
     echo "vm_memory_high_watermark.relative           = $RABBITMQ_VM_MEMORY_HIGH_WATERMARK" >> $config_path
 else
     echo "vm_memory_high_watermark.absolute           = $RABBITMQ_VM_MEMORY_HIGH_WATERMARK" >> $config_path
@@ -257,7 +257,7 @@ fi
 # RABBITMQ_DISK_FREE_LIMIT is relative to available RAM between [0.0 ... 1.0] (with a decimal point)
 # or an absolute number of bytes.
 
-if [[ $RABBITMQ_DISK_FREE_LIMIT =~ ^\d*\.\d*$ ]] ; then
+if [[ $RABBITMQ_DISK_FREE_LIMIT =~ ^[0-9]+\.[0-9]+$ ]] ; then
     echo "disk_free_limit.relative                    = $RABBITMQ_DISK_FREE_LIMIT"          >> $config_path
 else
     echo "disk_free_limit.absolute                    = $RABBITMQ_DISK_FREE_LIMIT"          >> $config_path
@@ -300,11 +300,14 @@ export RABBITMQ_USE_LONGNAME=true
 
 # Log the configuration variables and files to make debugging easier.
 
-echo "============================ Environment Variables =================================="
-env | sort
-echo "================================= Config File ======================================="
-cat $config_path
-echo "====================================================================================="
+if [ "$DEBUG" == "true" ] ; then
+
+    echo "============================ Environment Variables =================================="
+    env | sort
+    echo "================================= Config File ======================================="
+    cat $config_path
+    echo "====================================================================================="
+fi
 
 # Enable the management components.
 

@@ -53,7 +53,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Configures the hive proxy related services.
+        /// Configures the hive services.
         /// </summary>
         /// <param name="firstManager">The first hive proxy manager.</param>
         public void Configure(SshProxy<NodeDefinition> firstManager)
@@ -133,6 +133,37 @@ namespace NeonCli
                         "--mode", "global",
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(hive.Definition.DnsImage));
+
+                    //---------------------------------------------------------
+                    // Deploy the RabbitMQ cluster.
+
+                    hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster",
+                        () =>
+                        {
+                            // We're going to start list the hive nodes that will host the
+                            // RabbitMQ cluster and sort them by node name.  Then we're
+                            // going to ensure that the first node is started and ready
+                            // before configuring the rest of the cluster.
+
+                            var rabbitMQNodes = hive.Nodes
+                                .Where(n => n.Metadata.Labels.RabbitMQ)
+                                .OrderBy(n => n.Name)
+                                .ToList();
+
+                            DeployRabbitMQ(rabbitMQNodes.First());
+                            Thread.Sleep(TimeSpan.FromSeconds(30));     // Give the first node a chance to initialize
+
+                            // Start the remaining nodes in parallel.
+
+                            var actions = new List<Action>();
+
+                            foreach (var node in rabbitMQNodes.Skip(1))
+                            {
+                                actions.Add(() => DeployRabbitMQ(node));
+                            }
+
+                            NeonHelper.WaitForParallel(actions);
+                        });
 
                     //---------------------------------------------------------
                     // Deploy [neon-hive-manager] as a service constrained to manager nodes.
@@ -483,6 +514,110 @@ namespace NeonCli
         }
 
         /// <summary>
+        /// Deploys RabbitMQ to a cluster node as a container.
+        /// </summary>
+        /// <param name="node">The target hive node.</param>
+        private void DeployRabbitMQ(SshProxy<NodeDefinition> node)
+        {
+            // Deploy RabbitMQ only on the labeled nodes.
+
+            if (node.Metadata.Labels.RabbitMQ)
+            {
+                // Build a comma separated list of fully qualified RabbitMQ hostnames so we
+                // can pass them as the CLUSTER environment variable.
+
+                var rabbitNodes = hive.Definition.SortedNodes.Where(n => n.Labels.RabbitMQ).ToList();
+                var sbCluster   = new StringBuilder();
+
+                foreach (var rabbitNode in rabbitNodes)
+                {
+                    sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.RabbitMQ}", ",");
+                }
+
+                var hipeCompile = new List<string>();
+
+                if (hive.Definition.RabbitMQ.Precompile)
+                {
+                    hipeCompile.Add("--env");
+                    hipeCompile.Add("RABBITMQ_HIPE_COMPILE=1");
+                }
+
+                // $todo(jeff.lill):
+                //
+                // I was unable to get TLS working correctly for RabbitMQ.  I'll come back
+                // and revisit this later:
+                //
+                //      https://github.com/jefflill/NeonForge/issues/319
+
+                node.InvokeIdempotentAction("setup/rabbitmq-node",
+                    () =>
+                    {
+                        node.Status = "rabbitmq: start";
+
+                        var response = node.DockerCommand(
+                                    "docker run",
+                                    "--detach",
+                                    "--name", "neon-rabbitmq",
+                                    "--env", $"CLUSTER_NAME={hive.Definition.Name}",
+                                    "--env", $"CLUSTER_NODES={sbCluster}",
+                                    "--env", $"CLUSTER_PARTITION_MODE=autoheal",
+                                    "--env", $"NODENAME={node.Name}@{node.Name}.{hive.Definition.Hostnames.RabbitMQ}",
+                                    "--env", $"RABBITMQ_USE_LONGNAME=true",
+                                    "--env", $"RABBITMQ_DEFAULT_USER=sysadmin",
+                                    "--env", $"RABBITMQ_DEFAULT_PASS=password",
+                                    "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.RabbitMQAMPQ}",
+                                    "--env", $"RABBITMQ_DIST_PORT={HiveHostPorts.RabbitMQDIST}",
+                                    "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.RabbitMQDashboard}",
+                                    "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.RabbitMQ.ErlangCookie}",
+                                    "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.RabbitMQ.RamHighWatermark}",
+                                    hipeCompile,
+                                    "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.DiskFreeLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.DiskFreeLimit))}",
+                                    //"--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
+                                    //"--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",
+                                    "--env", $"ERL_EPMD_PORT={HiveHostPorts.RabbitMQEPMD}",
+                                    "--mount", "type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq",
+                                    "--mount", "type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly",
+                                    "--publish", $"{HiveHostPorts.RabbitMQEPMD}:{HiveHostPorts.RabbitMQEPMD}",
+                                    "--publish", $"{HiveHostPorts.RabbitMQAMPQ}:{HiveHostPorts.RabbitMQAMPQ}",
+                                    "--publish", $"{HiveHostPorts.RabbitMQDIST}:{HiveHostPorts.RabbitMQDIST}",
+                                    "--publish", $"{HiveHostPorts.RabbitMQDashboard}:{HiveHostPorts.RabbitMQDashboard}",
+                                    "--memory", HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.RamLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.RamLimit)),
+                                    "--restart", "always",
+                                    Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
+
+                        node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-rabbitmq.sh"), response.BashCommand);
+                    });
+
+                // Wait for the RabbitMQ node to report that it's ready.
+
+                var timeout  = TimeSpan.FromMinutes(4);
+                var pollTime = TimeSpan.FromSeconds(2);
+
+                node.Status = "rabbitmq: waiting";
+
+                try
+                {
+                    NeonHelper.WaitFor(
+                    () =>
+                    {
+                        var readyReponse = node.SudoCommand("docker exec neon-rabbitmq rabbitmqctl status", node.DefaultRunOptions & ~RunOptions.FaultOnError);
+
+                        return readyReponse.ExitCode == 0;
+                    },
+                    timeout: timeout,
+                    pollTime: pollTime);
+                }
+                catch (TimeoutException)
+                {
+                    node.Fault($"RabbitMQ not ready after waiting [{timeout}].");
+                    return;
+                }
+
+                node.Status = "rabbitmq: ready";
+            }
+        }
+
+        /// <summary>
         /// Deploys hive containers to a node.
         /// </summary>
         /// <param name="node">The target hive node.</param>
@@ -548,108 +683,6 @@ namespace NeonCli
                         node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
                         node.Status = string.Empty;
                     });
-            }
-            
-            // Deploy RabbitMQ on the labeled nodes.
-
-            if (node.Metadata.Labels.RabbitMQ)
-            {
-                node.Status = "rabbitmq: waiting";
-
-                // It appears that RabbitMQ can have issues forming a cluster when all of the
-                // nodes are started at the same time.  The most recent post at the bottom
-                // of this issue:
-                //
-                //   https://groups.google.com/forum///!topic/rabbitmq-users/DpQGo_UTjG8
-                //
-                // from 08-2018 indicates that this is still a problem for v3.7.7 and that 
-                // the current mitigation is to introduce random delays before starting each
-                // instance.  It appears that they're talking about adding retries in the 
-                // future.  This is only a problem when RabbitMQ cluster nodes are started
-                // for the first time.
-                //
-                // We're going to go ahead and stagger the container deployment by creating
-                // a list of RabbitMQ nodes sorted by node name, determining the index of
-                // of the current node in the list, and then delaying by 10 seconds (plus
-                // another 45 seconds if we're precompiling) times the index.  This should 
-                // spread the container starts out nicely.
-
-                var rabbitNodes = hive.Definition.SortedNodes.Where(n => n.Labels.RabbitMQ).ToList();
-                var startDelay  = TimeSpan.FromSeconds(10);
-                var index       = rabbitNodes.IndexOf(node.Metadata);
-
-                if (hive.Definition.RabbitMQ.Precompile)
-                {
-                    // Add some more time to give server a chance to be compiled.
-
-                    startDelay += TimeSpan.FromSeconds(45);
-                }
-
-                Thread.Sleep(startDelay.Multiply(index));
-
-                // Build a comma separated list of fully qualified RabbitMQ hostnames so we
-                // can pass them as the CLUSTER environment variable.
-
-                node.Status = "rabbitmq: starting";
-
-                var sbCluster = new StringBuilder();
-
-                foreach (var rabbitNode in rabbitNodes)
-                {
-                    sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.RabbitMQ}", ",");
-                }
-
-                var hipeCompile = new List<string>();
-
-                if (hive.Definition.RabbitMQ.Precompile)
-                {
-                    hipeCompile.Add("--env");
-                    hipeCompile.Add("RABBITMQ_HIPE_COMPILE=1");
-                }
-
-                // $todo(jeff.lill):
-                //
-                // I was unable to get TLS working correctly for RabbitMQ.  I'll come back
-                // and revisit this later:
-                //
-                //      https://github.com/jefflill/NeonForge/issues/319
-
-                var response = node.DockerCommand(
-                    "docker run",
-                    "--detach",
-                    "--name", "neon-rabbitmq",
-                    "--env", $"CLUSTER_NAME={hive.Definition.Name}",
-                    "--env", $"CLUSTER_NODES={sbCluster}",
-                    "--env", $"CLUSTER_PARTITION_MODE=autoheal",
-                    "--env", $"NODENAME={node.Name}@{node.Name}.{hive.Definition.Hostnames.RabbitMQ}",
-                    "--env", $"RABBITMQ_USE_LONGNAME=true",
-                    "--env", $"RABBITMQ_DEFAULT_USER=sysadmin",
-                    "--env", $"RABBITMQ_DEFAULT_PASS=password",
-                    "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.RabbitMQAMPQ}",
-                    "--env", $"RABBITMQ_DIST_PORT={HiveHostPorts.RabbitMQDIST}",
-                    "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.RabbitMQDashboard}",
-                    "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.RabbitMQ.ErlangCookie}",
-                    "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.RabbitMQ.RamHighWatermark}",
-                    hipeCompile,
-                    "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.DiskFreeLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.DiskFreeLimit))}",
-                    //"--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
-                    //"--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",
-                    "--env", $"ERL_EPMD_PORT={HiveHostPorts.RabbitMQEPMD}",
-                    "--mount", "type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq",
-                    "--mount", "type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly",
-                    "--publish", $"{HiveHostPorts.RabbitMQEPMD}:{HiveHostPorts.RabbitMQEPMD}",
-                    "--publish", $"{HiveHostPorts.RabbitMQAMPQ}:{HiveHostPorts.RabbitMQAMPQ}",
-                    "--publish", $"{HiveHostPorts.RabbitMQDIST}:{HiveHostPorts.RabbitMQDIST}",
-                    "--publish", $"{HiveHostPorts.RabbitMQDashboard}:{HiveHostPorts.RabbitMQDashboard}",
-                    "--memory", HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.RamLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.RamLimit)),
-                    "--restart", "always",
-                    Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
-
-                node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-rabbitmq.sh"), response.BashCommand);
-
-                // $todo(jeff.lill): Actually verify that the node is ready.
-
-                node.Status = "rabbitmq: ready";
             }
         }
     }

@@ -14,7 +14,7 @@ using Neon.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Neon.Data
+namespace Neon.RabbitMQ
 {
     /// <summary>
     /// Settings used to connect a RabbitMQ client to a message broker.
@@ -57,9 +57,9 @@ namespace Neon.Data
         /// practice to specify multiple nodes in a clustered environment to avoid initial
         /// connection problems when any single node is down.
         /// </remarks>
-        [JsonProperty(PropertyName = "Hostnames", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Hosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<string> Hostnames { get; set; } = new List<string>();
+        public List<string> Hosts { get; set; } = new List<string>();
 
         /// <summary>
         /// Specifies the broker port number.  This defaults to <b>5672</b> (the non-TLS port).
@@ -95,12 +95,12 @@ namespace Neon.Data
                     return false;
                 }
 
-                if (Hostnames == null || Hostnames.Count == 0)
+                if (Hosts == null || Hosts.Count == 0)
                 {
                     return false;
                 }
 
-                foreach (var hostname in Hostnames)
+                foreach (var hostname in Hosts)
                 {
                     if (string.IsNullOrEmpty(hostname))
                     {

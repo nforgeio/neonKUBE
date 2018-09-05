@@ -11,7 +11,7 @@ using RabbitMQ.Client;
 
 using Neon.Common;
 using Neon.Hive;
-using Neon.Data;
+using Neon.RabbitMQ;
 
 namespace RabbitMQ.Client
 {
@@ -30,7 +30,7 @@ namespace RabbitMQ.Client
         public static IConnection OpenBroker(this RabbitMQSettings settings, string username, string password)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.VirtualHost));
-            Covenant.Requires<ArgumentNullException>(settings.Hostnames != null && settings.Hostnames.Count > 0);
+            Covenant.Requires<ArgumentNullException>(settings.Hosts != null && settings.Hosts.Count > 0);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password));
 
@@ -40,7 +40,7 @@ namespace RabbitMQ.Client
             connectionFactory.UserName    = username;
             connectionFactory.Password    = password;
 
-            return connectionFactory.CreateConnection(settings.Hostnames);
+            return connectionFactory.CreateConnection(settings.Hosts);
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace RabbitMQ.Client
         public static IConnection OpenBroker(this RabbitMQSettings settings, Credentials credentials)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.VirtualHost));
-            Covenant.Requires<ArgumentNullException>(settings.Hostnames != null && settings.Hostnames.Count > 0);
+            Covenant.Requires<ArgumentNullException>(settings.Hosts != null && settings.Hosts.Count > 0);
             Covenant.Requires<ArgumentNullException>(credentials != null);
 
             return OpenBroker(settings, credentials.Username, credentials.Password);
@@ -67,7 +67,7 @@ namespace RabbitMQ.Client
         public static IConnection OpenBroker(this RabbitMQSettings settings, string secretName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.VirtualHost));
-            Covenant.Requires<ArgumentNullException>(settings.Hostnames != null && settings.Hostnames.Count > 0);
+            Covenant.Requires<ArgumentNullException>(settings.Hosts != null && settings.Hosts.Count > 0);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName));
 
             var credentials = NeonHelper.JsonDeserialize<Credentials>(HiveHelper.GetSecret(secretName));
