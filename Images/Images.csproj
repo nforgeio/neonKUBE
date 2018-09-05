@@ -159,6 +159,8 @@
     <Content Include="neon-varnish\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="neon-rabbitmq\rabbitmq-entrypoint.sh" />
+    <None Include="neon-rabbitmq\set-cluster-name.sh" />
     <None Include="neon-varnish\build.ps1" />
     <None Include="neon-varnish\docker-entrypoint.sh" />
     <None Include="neon-varnish\Dockerfile">

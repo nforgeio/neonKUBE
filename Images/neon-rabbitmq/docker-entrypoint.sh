@@ -20,9 +20,16 @@ fi
 
 . /neonhive.sh
 
-# This is the path to the RabbitMQ config file.
+# This is the path to a temporary RabbitMQ config file.  We're going to completely
+# manage the contents of the configuration file by writing our settings here And
+# then relying on a modified RabbitMQ docker entrypoint script (created by the 
+# image Dockerfile) to copy this to the standard configuration file just before
+# launching the RabbitMQ server.
+#
+# This is necessary because the RabbitMQ docker entrypoint script overwrites some
+# of our settings.
 
-config_path=/etc/rabbitmq/rabbitmq.conf
+config_path=/etc/rabbitmq/rabbitmq.neon.conf
 
 # Parse the environment variables.
 
@@ -58,12 +65,12 @@ if [ "$CLUSTER_NODES" != "" ] ; then
     
     # Clear any existing configuration file.
 
-    echo > $config_path
+    touch $config_path
     chmod 644 $config_path
 
-    echo "# Static config-based cluster discovery."                                        >> $config_path
-    echo                                                                                   >> $config_path
-    echo "cluster_formation.peer_discovery_backend = rabbit_peer_discovery_classic_config" >> $config_path
+    echo "# Static config-based cluster discovery."                                             >> $config_path
+    echo                                                                                        >> $config_path
+    echo "cluster_formation.peer_discovery_backend    = rabbit_peer_discovery_classic_config"   >> $config_path
 
     cluster_nodes=$(echo $CLUSTER_NODES | tr "," "\n")
 
@@ -73,7 +80,7 @@ if [ "$CLUSTER_NODES" != "" ] ; then
         node_name=$(echo $node | cut -d '@' -f 1)
         node_host=$(echo $node | cut -d '@' -f 2)
 
-        echo "cluster_formation.classic_config.nodes.$index = $node_name@$node_host" >> $config_path
+        echo "cluster_formation.classic_config.nodes.$index = $node_name@$node_host"            >> $config_path
         index=$((index + 1))
     done
 fi
@@ -81,8 +88,6 @@ fi
 if [ "$ERL_EPMD_PORT" == "" ] ; then
     export ERL_EPMD_PORT=4369
 fi
-
-export ERL_EPMD_ADDRESS=0.0.0.0
 
 if [ "$RABBITMQ_DEFAULT_USER" == "" ] ; then
     export RABBITMQ_DEFAULT_USER=sysadmin
@@ -118,7 +123,7 @@ fi
 
 # TLS related configuration.
 
-if [[ "$RABBITMQ_SSL_CERTFILE" != "" && "$RABBITMQ_SSL_KEYFILE" != "" && "TODO" == "" ]] ; then
+if [[ "$RABBITMQ_SSL_CERTFILE" != "" && "$RABBITMQ_SSL_KEYFILE" != "" ]] ; then
 
     . log-info.sh "TLS is enabled."
 
@@ -148,29 +153,30 @@ if [[ "$RABBITMQ_SSL_CERTFILE" != "" && "$RABBITMQ_SSL_KEYFILE" != "" && "TODO" 
     chmod 777 /etc/rabbitmq/cert
     cp "$RABBITMQ_SSL_CERTFILE"   /etc/rabbitmq/cert/hive.crt
     cp "$RABBITMQ_SSL_KEYFILE"    /etc/rabbitmq/cert/hive.key
-    cp "$RABBITMQ_SSL_CACERTFILE" /etc/rabbitmq/cert/hiveca.crt
+    cp "$RABBITMQ_SSL_CACERTFILE" /etc/rabbitmq/cert/hive.ca.crt
     chmod 666 /etc/rabbitmq/cert/*
 
     export RABBITMQ_SSL_CERTFILE=/etc/rabbitmq/cert/hive.crt
     export RABBITMQ_SSL_KEYFILE=/etc/rabbitmq/cert/hive.key
-    export RABBITMQ_SSL_CACERTFILE=/etc/rabbitmq/cert/hiveca.crt
+    export RABBITMQ_SSL_CACERTFILE=/etc/rabbitmq/cert/hive.ca.crt
 
     echo                                                                                    >> $config_path
     echo "# Connection Settings"                                                            >> $config_path
     echo                                                                                    >> $config_path
     echo "listeners.tcp.default                       = none"                               >> $config_path
-    echo "listeners.ssl.default                       = $RABBITMQ_NODE_PORT"                >> $config_path
+    echo "listeners.ssl.default                       = 0.0.0.0:$RABBITMQ_NODE_PORT"        >> $config_path
     echo "ssl_options.certfile                        = /etc/rabbitmq/cert/hive.crt"        >> $config_path
     echo "ssl_options.keyfile                         = /etc/rabbitmq/cert/hive.key"        >> $config_path
-    echo "ssl_options.cacertfile                      = /etc/rabbitmq/cert/hiveca.crt"      >> $config_path
+    echo "ssl_options.cacertfile                      = /etc/rabbitmq/cert/hive.ca.crt"     >> $config_path
     echo "ssl_options.verify                          = verify_none"                        >> $config_path
     echo "ssl_options.fail_if_no_peer_cert            = false"                              >> $config_path
     echo                                                                                    >> $config_path
+    echo "management.listener.ip                      = 0.0.0.0"                            >> $config_path
     echo "management.listener.port                    = $RABBITMQ_MANAGEMENT_PORT"          >> $config_path
     echo "management.listener.ssl                     = true"                               >> $config_path
     echo "management.listener.ssl_opts.certfile       = /etc/rabbitmq/cert/hive.crt"        >> $config_path
     echo "management.listener.ssl_opts.keyfile        = /etc/rabbitmq/cert/hive.key"        >> $config_path
-    echo "management.listener.ssl_opts.cacertfile     = /etc/rabbitmq/cert/hiveca.crt"      >> $config_path
+    echo "management.listener.ssl_opts.cacertfile     = /etc/rabbitmq/cert/hive.ca.crt"     >> $config_path
 
 elif [[ "$TLS_CERT_FILE" == "" && "$TLS_KEY_FILE" == "" ]] ; then
 
@@ -184,9 +190,9 @@ elif [[ "$TLS_CERT_FILE" == "" && "$TLS_KEY_FILE" == "" ]] ; then
     echo "# Connection Settings"                                                            >> $config_path
     echo                                                                                    >> $config_path
     echo "listeners.tcp.default                       = 0.0.0.0:$RABBITMQ_NODE_PORT"        >> $config_path
-    echo "listeners.ssl.default                       = none"                               >> $config_path
     echo                                                                                    >> $config_path
-    echo "management.listener.port                    = 0.0.0.0:$RABBITMQ_MANAGEMENT_PORT"  >> $config_path
+    echo "management.listener.ip                      = 0.0.0.0"                            >> $config_path
+    echo "management.listener.port                    = $RABBITMQ_MANAGEMENT_PORT"          >> $config_path
     echo "management.listener.ssl                     = false"                              >> $config_path
 else
     . log-error.sh "One of [RABBITMQ_SSL_CERTFILE] or [RABBITMQ_SSL_KEYFILE_FILE] is missing."
@@ -230,25 +236,25 @@ if [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
     }' /sys/fs/cgroup/memory/memory.limit_in_bytes)"
 fi
 if [ -n "$memLimitB" ]; then
-    echo "total_memory_available_override_value       = $memLimitB"                 >> $config_path
+    echo "total_memory_available_override_value       = $memLimitB"                         >> $config_path
 fi
 
-# RABBITMQ_VM_MEMORY_HIGH_WATERMARK is relative number to available RAM between [0.0 ... 1.0] (with a decimal point)
-# or an absolute number of bytes.
+# RABBITMQ_VM_MEMORY_HIGH_WATERMARK is relative number to available RAM between [0.0 ... 1.0] 
+# (with a decimal point) or an absolute number of bytes.
 
 if [[ $RABBITMQ_VM_MEMORY_HIGH_WATERMARK =~ ^\d*\.\d*$ ]] ; then
-    echo "vm_memory_high_watermark.relative.relative  = $RABBITMQ_VM_MEMORY_HIGH_WATERMARK" >> $config_path
+    echo "vm_memory_high_watermark.relative           = $RABBITMQ_VM_MEMORY_HIGH_WATERMARK" >> $config_path
 else
-    echo "vm_memory_high_watermark.relative.absolute  = $RABBITMQ_VM_MEMORY_HIGH_WATERMARK" >> $config_path
+    echo "vm_memory_high_watermark.absolute           = $RABBITMQ_VM_MEMORY_HIGH_WATERMARK" >> $config_path
 fi
 
 # RABBITMQ_DISK_FREE_LIMIT is relative to available RAM between [0.0 ... 1.0] (with a decimal point)
 # or an absolute number of bytes.
 
 if [[ $RABBITMQ_DISK_FREE_LIMIT =~ ^\d*\.\d*$ ]] ; then
-    echo "disk_free_limit.relative                    = $RABBITMQ_DISK_FREE_LIMIT"  >> $config_path
+    echo "disk_free_limit.relative                    = $RABBITMQ_DISK_FREE_LIMIT"          >> $config_path
 else
-    echo "disk_free_limit.absolute                    = $RABBITMQ_DISK_FREE_LIMIT"  >> $config_path
+    echo "disk_free_limit.absolute                    = $RABBITMQ_DISK_FREE_LIMIT"          >> $config_path
 fi
 
 # $todo(jeff.lill):
@@ -256,8 +262,8 @@ fi
 # I'm not sure if these statistics related settings are a good
 # idea.  This appeared to cause some trouble a few years back.
 
-echo "collect_statistics                          = fine"                           >> $config_path
-echo "collect_statistics_interval                 = 30000"                          >> $config_path
+echo "collect_statistics                          = fine"                                   >> $config_path
+echo "collect_statistics_interval                 = 30000"                                  >> $config_path
 
 # Generate the Erlang cookie if the environment variable doesn't specify one.
 
@@ -286,12 +292,13 @@ fi
 
 export RABBITMQ_USE_LONGNAME=true
 
-# Set the cluster name if specified.
+# Log the configuration variables and files to make debugging easier.
 
-if [ "$CLUSTER_NAME" != "" ] ; then
-    # rabbitmqctl set_cluster_name $CLUSTER_NAME
-    echo TODO
-fi
+echo "Environment Variables ***************************************************************"
+env | sort
+echo "Config File *************************************************************************"
+cat $config_path
+echo "*************************************************************************************"
 
 # Enable the management components.
 
@@ -299,8 +306,14 @@ fi
 rabbitmq-plugins enable rabbitmq_management
 . log-info.sh "Management plugin enabled."
 
-env | sort
-# . /rabbitmq-entrypoint.sh rabbitmq-server
-# bash /rabbitmq-entrypoint.sh rabbitmq-server
-rabbitmq-server 
-sleep 100000000000
+# Before starting RabbitMQ, execute a script that will run in parallel, waiting for
+# the server to report being ready before setting the cluster name (if there is one).
+
+if [ "$CLUSTER_NAME" != "" ] ; then
+    bash set-cluster-name.sh "$CLUSTER_NAME" &
+fi
+
+# Start RabbitMQ via its modified Docker entrypoint.
+
+rabbitmq-entrypoint.sh rabbitmq-server
+

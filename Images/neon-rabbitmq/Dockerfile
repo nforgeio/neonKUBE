@@ -43,8 +43,14 @@ RUN apt-get update \
 # Configure the service.
 
 COPY docker-entrypoint.sh   /
+COPY rabbitmq-entrypoint.sh /
+COPY set-cluster-name.sh    /
 COPY _common/*.sh           /
 
-RUN chmod 777 /*.sh
+RUN chmod 777 /*.sh \
+    && sed -i 's/15671/$RABBITMQ_MANAGEMENT_PORT/g' /rabbitmq-entrypoint.sh \
+    && sed -i 's/15672/$RABBITMQ_MANAGEMENT_PORT/g' /rabbitmq-entrypoint.sh \
+    && sed -i 's/5671/$RABBITMQ_NODE_PORT/g' /rabbitmq-entrypoint.sh \
+    && sed -i 's/5672/$RABBITMQ_NODE_PORT/g' /rabbitmq-entrypoint.sh
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

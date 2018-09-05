@@ -591,7 +591,13 @@ namespace NeonCli
                     sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.RabbitMQ}", ",");
                 }
 
-                var precompile = hive.Definition.RabbitMQ.Precompile ? "1" : "0";
+                var hipeCompile = new List<string>();
+
+                if (hive.Definition.RabbitMQ.Precompile)
+                {
+                    hipeCompile.Add("--env");
+                    hipeCompile.Add("RABBITMQ_HIPE_COMPILE=1");
+                }
 
                 var response = node.DockerCommand(
                     "docker run",
@@ -601,7 +607,7 @@ namespace NeonCli
                     "--env", $"CLUSTER_NODES={sbCluster}",
                     "--env", $"CLUSTER_PARTITION_MODE=autoheal",
                     "--env", $"NODENAME={node.Name}@{node.Name}.{hive.Definition.Hostnames.RabbitMQ}",
-                    "--env", $"ERL_EPMD_PORT={HiveHostPorts.RabbitMQEPMD}",
+                    "--env", $"RABBITMQ_USE_LONGNAME=true",
                     "--env", $"RABBITMQ_DEFAULT_USER=sysadmin",
                     "--env", $"RABBITMQ_DEFAULT_PASS=password",
                     "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.RabbitMQAMPQ}",
@@ -609,10 +615,11 @@ namespace NeonCli
                     "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.RabbitMQDashboard}",
                     "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.RabbitMQ.ErlangCookie}",
                     "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.RabbitMQ.RamHighWatermark}",
-                    "--env", $"RABBITMQ_HIPE_COMPILE={precompile}",
+                    hipeCompile,
                     "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.DiskFreeLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.DiskFreeLimit))}",
                     "--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
                     "--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",
+                    "--env", $"ERL_EPMD_PORT={HiveHostPorts.RabbitMQEPMD}",
                     "--mount", "type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq",
                     "--mount", "type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly",
                     "--publish", $"{HiveHostPorts.RabbitMQEPMD}:{HiveHostPorts.RabbitMQEPMD}",
