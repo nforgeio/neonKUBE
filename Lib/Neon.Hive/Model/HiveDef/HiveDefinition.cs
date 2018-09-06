@@ -1121,7 +1121,6 @@ namespace Neon.Hive
         /// <returns></returns>
         public Dictionary<string, List<NodeDefinition>> GetNodeGroups(bool excludeAllGroup = false)
         {
-Neon.Diagnostics.LogManager.Default.GetLogger().LogInfo($"GetNodeGroups-0: NODE-COUNT={this.Nodes.Count()}");
             var groups = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
 
             // Add explicit group assignments.  Note that we're going to ignore
