@@ -140,10 +140,11 @@ namespace NeonCli
                     hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster",
                         () =>
                         {
-                            // We're going to start list the hive nodes that will host the
+                            // We're going to list the hive nodes that will host the
                             // RabbitMQ cluster and sort them by node name.  Then we're
-                            // going to ensure that the first node is started and ready
-                            // before configuring the rest of the cluster.
+                            // going to ensure that the first RabbitMQ node/container
+                            // is started and ready before configuring the rest of the
+                            // cluster.
 
                             var rabbitMQNodes = hive.Nodes
                                 .Where(n => n.Metadata.Labels.RabbitMQ)
@@ -163,6 +164,36 @@ namespace NeonCli
                             }
 
                             NeonHelper.WaitForParallel(actions);
+
+                            // The RabbitMQ cluster is created with the [/] vhost and the
+                            // [sysadmin] user by default.  We need to create the [/neon]
+                            // and [/app] vhosts along with the [neon] and [app] users
+                            // and then set the appropriate permissions.
+                            //
+                            // We're going to run [rabbitmqctl] within the first RabbitMQ
+                            // to accomplish this.
+
+                            var rabbitNode = rabbitMQNodes.First();
+
+                            // Create the vhosts.
+
+                            hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster-vhost-app", () => rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl add_vhost /app"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster-vhost-neon", () => rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl add_vhost /neon"));
+
+                            // Create the users.
+
+                            hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster-user-app", () => rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl add_user '{hive.Definition.RabbitMQ.AppAccount}' '{hive.Definition.RabbitMQ.AppAccount}'"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster-user-neon", () => rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl add_user '{hive.Definition.RabbitMQ.NeonAccount}' '{hive.Definition.RabbitMQ.NeonPassword}'"));
+
+                            // Grant the [app] account full access to the [app] vhost, the [neon] account full
+                            // access to the [neon] vhost, and the [sysadmin] account full access to both.
+                            // Note that this doesn't need to be idempotent.
+
+                            rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl set_permissions -p /app app \".*\" \".*\" \".*\"");
+                            rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl set_permissions -p /neon neon \".*\" \".*\" \".*\"");
+
+                            rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
+                            rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
                         });
 
                     //---------------------------------------------------------

@@ -455,7 +455,7 @@ namespace Neon.Hive
             // healthy manager from the list (as sorted by name).
             //
             // This will consistently return the first manager node by name
-            // if it's health, otherwise it will fail over to the next, etc.
+            // if it's healthy, otherwise it will fail over to the next, etc.
 
             const int tryCount = 3;
 
