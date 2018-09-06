@@ -672,9 +672,9 @@ USAGE:
         ""NeonPassword"": ""password"",
 
         // Specifies the password used to secure the message cluster's
-        // [user] account.  This defaults to [password].
+        // [app] account.  This defaults to [password].
 
-        ""UserPassword"": ""password"",
+        ""AppPassword"": ""password"",
 
         // Specifies the shared secret clustered RabbitMQ nodes will use for mutual authentication.
         // A secure password will be generated if this isn't specified.

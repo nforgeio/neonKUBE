@@ -2052,7 +2052,7 @@ namespace Neon.Hive
                 throw new ArgumentException($"Credentials at [secret:{secretName}] do not include a username and password.");
             }
 
-            return connectionSettings.OpenBroker(credentials);
+            return connectionSettings.Connect(credentials);
         }
 
         /// <summary>

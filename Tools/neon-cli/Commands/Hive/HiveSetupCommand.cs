@@ -59,17 +59,18 @@ OPTIONS:
                           for debugging hive setup  issues.  
                           Do not use for production hives.
 ";
-        private const string    logBeginMarker  = "# HIVE-BEGIN-SETUP ############################################################";
-        private const string    logEndMarker    = "# HIVE-END-SETUP ##############################################################";
-        private const string    logFailedMarker = "# HIVE-END-SETUP-FAILED #######################################################";
+        private const string        logBeginMarker  = "# HIVE-BEGIN-SETUP ############################################################";
+        private const string        logEndMarker    = "# HIVE-END-SETUP ##############################################################";
+        private const string        logFailedMarker = "# HIVE-END-SETUP-FAILED #######################################################";
 
-        private string          hiveLoginPath;
-        private HiveLogin       hiveLogin;
-        private HiveProxy       hive;
-        private string          managerNodeNames     = string.Empty;
-        private string          managerNodeAddresses = string.Empty;
-        private int             managerCount         = 0;
-        private bool            sshTlsAuth;
+        private string              hiveLoginPath;
+        private HiveLogin           hiveLogin;
+        private HiveProxy           hive;
+        private string              managerNodeNames     = string.Empty;
+        private string              managerNodeAddresses = string.Empty;
+        private int                 managerCount         = 0;
+        private bool                sshTlsAuth;
+        private RabbitMQSettings    sysadminRabbitMQSettings;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -3465,10 +3466,13 @@ systemctl start neon-volume-plugin
                     {
                         Hosts       = rabbitMQHosts,
                         Port        = HiveHostPorts.RabbitMQAMPQ,
+                        TlsEnabled  = false,
                         Username    = hive.Definition.RabbitMQ.SysadminAccount,
                         Password    = hive.Definition.RabbitMQ.SysadminPassword,
                         VirtualHost = "/"
                     };
+
+                    sysadminRabbitMQSettings = NeonHelper.JsonClone(rabbitSettings);    // Save a copy of the [sysadmin] settings for later.
 
                     hive.Docker.Secret.Set("neon-rabbitmq-sysadmin", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
 
@@ -3478,11 +3482,11 @@ systemctl start neon-volume-plugin
 
                     hive.Docker.Secret.Set("neon-rabbitmq-neon", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
 
-                    rabbitSettings.Username    = hive.Definition.RabbitMQ.UserAccount;
-                    rabbitSettings.Password    = hive.Definition.RabbitMQ.UserPassword;
-                    rabbitSettings.VirtualHost = "/user";
+                    rabbitSettings.Username    = hive.Definition.RabbitMQ.AppAccount;
+                    rabbitSettings.Password    = hive.Definition.RabbitMQ.AppPassword;
+                    rabbitSettings.VirtualHost = "/app";
 
-                    hive.Docker.Secret.Set("neon-rabbitmq-user", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
+                    hive.Docker.Secret.Set("neon-rabbitmq-app", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
                 });
         }
 

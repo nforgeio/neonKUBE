@@ -69,6 +69,13 @@ namespace Neon.RabbitMQ
         public int Port { get; set; } = NetworkPorts.AMQP;
 
         /// <summary>
+        /// Enables TLS.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "TlsEnabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool TlsEnabled { get; set; } = false;
+
+        /// <summary>
         /// The username used to authenticate against RabbitMQ.
         /// </summary>
         [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

@@ -121,10 +121,10 @@ namespace Neon.Hive
         public string NeonAccount => "neon";
 
         /// <summary>
-        /// Returns the <b>user</b> username.
+        /// Returns the <b>app</b> username.
         /// </summary>
         [JsonIgnore]
-        public string UserAccount => "sysadmin";
+        public string AppAccount => "app";
 
         /// <summary>
         /// Specifies the password used to secure the <b>sysadmin</b> account.  This defaults to <b>password</b>>.
@@ -141,11 +141,11 @@ namespace Neon.Hive
         public string NeonPassword { get; set; } = defaultPassword;
 
         /// <summary>
-        /// Specifies the password used to secure the <b>user</b> account.  This defaults to <b>password</b>>.
+        /// Specifies the password used to secure the <b>app</b> account.  This defaults to <b>password</b>>.
         /// </summary>
-        [JsonProperty(PropertyName = "UserPassword", Required = Required.Default)]
+        [JsonProperty(PropertyName = "AppPassword", Required = Required.Default)]
         [DefaultValue(defaultPassword)]
-        public string UserPassword { get; set; } = defaultPassword;
+        public string AppPassword { get; set; } = defaultPassword;
 
         /// <summary>
         /// Specifies the shared secret clustered RabbitMQ nodes will use for mutual authentication.
@@ -201,7 +201,7 @@ namespace Neon.Hive
             RamHighWatermark = RamHighWatermark ?? defaultRamHighWatermark;
             SysadminPassword = SysadminPassword ?? defaultPassword;
             NeonPassword     = NeonPassword ?? defaultPassword;
-            UserPassword     = UserPassword ?? defaultPassword;
+            AppPassword     = AppPassword ?? defaultPassword;
             PartitionMode    = PartitionMode ?? defaultPartitionMode;
             PartitionMode    = PartitionMode.ToLowerInvariant();
             RabbitMQImage    = RabbitMQImage ?? defaultRabbitMQImage;
