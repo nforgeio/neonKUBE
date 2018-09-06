@@ -64,7 +64,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
         /// <inheritdoc/>
         public override string SplitItem
         {
-            get { return "consul"; }
+            get { return "--"; }
         }
 
         /// <inheritdoc/>
@@ -82,10 +82,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            // Split the command line on "consul".
-
-            var split = commandLine.Split("consul");
-
+            var split            = commandLine.Split(SplitItem);
             var leftCommandLine  = split.Left;
             var rightCommandLine = split.Right;
 
@@ -105,8 +102,8 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
 
             // Determine which node we're going to target.
 
-            SshProxy<NodeDefinition>    node;
-            var                         nodeName = leftCommandLine.GetOption("--node", null);
+            var node     = (SshProxy<NodeDefinition>)null;
+            var nodeName = leftCommandLine.GetOption("--node", null);
 
             if (!string.IsNullOrEmpty(nodeName))
             {
