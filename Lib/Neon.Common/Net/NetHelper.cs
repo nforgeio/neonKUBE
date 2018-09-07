@@ -10,6 +10,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -577,6 +578,102 @@ namespace Neon.Net
             catch (SocketException)
             {
                 return await Task.FromResult(new IPAddress[0]);
+            }
+        }
+
+        /// <summary>
+        /// Pings one or more hostnames or IP addresses in parallel to identify one that
+        /// appears to be online and reachable via the network.
+        /// </summary>
+        /// <param name="hosts">The hostname or IP addresses to be tested.</param>
+        /// <param name="failureMode">
+        /// Specifies what should happen when there are no reachabvle hosts.  
+        /// This defaults to <see cref="ReachableHostMode.ReturnFirst"/>.
+        /// </param>
+        /// <returns>The hostname or IP address of the reachable host or <c>null</c>.</returns>
+        /// <exception cref="NetworkException">
+        /// Thrown if no hosts are reachable and <paramref name="failureMode"/> is 
+        /// passed as <see cref="ReachableHostMode.Throw"/>.
+        /// </exception>
+        public static string GetReachableHost(IEnumerable<string> hosts, ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
+        {
+            Covenant.Requires<ArgumentNullException>(hosts != null);
+            Covenant.Requires<ArgumentNullException>(hosts.Count() > 0);
+
+            // Try sending up to three pings to each host in parallel to get a 
+            // list of the reachable ones.  Then we'll return the first reachable
+            // host from the list.
+            //
+            // This will consistently return the first host by name if it's reachable, 
+            // otherwise it will fail over to the next, etc.
+
+            const int tryCount = 3;
+
+            var reachableHosts = new List<string>();
+            var pingOptions    = new PingOptions(ttl: 32, dontFragment: true);
+            var pingTimeout    = TimeSpan.FromSeconds(1);
+
+            for (int i = 0; i < tryCount; i++)
+            {
+                Parallel.ForEach(hosts,
+                    host =>
+                    {
+                        using (var ping = new Ping())
+                        {
+                            try
+                            {
+                                var reply = ping.Send(host, (int)pingTimeout.TotalMilliseconds);
+
+                                if (reply.Status == IPStatus.Success)
+                                {
+                                    lock (reachableHosts)
+                                    {
+                                        reachableHosts.Add(host);
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Intentially ignoring these.
+                            }
+                        }
+                    });
+
+                if (reachableHosts.Count > 0)
+                {
+                    foreach (var host in hosts)
+                    {
+                        foreach (var reachableHost in reachableHosts)
+                        {
+                            if (host == reachableHost)
+                            {
+                                return host;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // None of the hosts responded so the result is determined by the
+            // failure mode.
+
+            switch (failureMode)
+            {
+                case ReachableHostMode.ReturnFirst:
+
+                    return hosts.First();
+
+                case ReachableHostMode.ReturnNull:
+
+                    return null;
+
+                case ReachableHostMode.Throw:
+
+                    throw new NetworkException("None of the hosts responded.");
+
+                default:
+
+                    throw new NotImplementedException($"Unexpected failure [mode={failureMode}].");
             }
         }
     }
