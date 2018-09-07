@@ -182,8 +182,8 @@ namespace NeonCli
 
                             // Create the users.
 
-                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.RabbitMQ.AppAccount}' '{hive.Definition.RabbitMQ.AppAccount}'"));
-                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.RabbitMQ.NeonAccount}' '{hive.Definition.RabbitMQ.NeonPassword}'"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.HiveMQ.AppAccount}' '{hive.Definition.HiveMQ.AppAccount}'"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.HiveMQ.NeonAccount}' '{hive.Definition.HiveMQ.NeonPassword}'"));
 
                             // Grant the [app] account full access to the [app] vhost, the [neon] account full
                             // access to the [neon] vhost, and the [sysadmin] account full access to both.
@@ -567,7 +567,7 @@ namespace NeonCli
 
                 var hipeCompileArgs = new List<string>();
 
-                if (hive.Definition.RabbitMQ.Precompile)
+                if (hive.Definition.HiveMQ.Precompile)
                 {
                     hipeCompileArgs.Add("--env");
                     hipeCompileArgs.Add("RABBITMQ_HIPE_COMPILE=1");
@@ -607,11 +607,11 @@ namespace NeonCli
                                     "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.HiveMQAMPQ}",
                                     "--env", $"RABBITMQ_DIST_PORT={HiveHostPorts.HiveMQDIST}",
                                     "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.HiveMQDashboard}",
-                                    "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.RabbitMQ.ErlangCookie}",
-                                    "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.RabbitMQ.RamHighWatermark}",
+                                    "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.HiveMQ.ErlangCookie}",
+                                    "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.HiveMQ.RamHighWatermark}",
                                     hipeCompileArgs,
                                     managementPluginArgs,
-                                    "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.DiskFreeLimit, typeof(HiveMQOptions), nameof(hive.Definition.RabbitMQ.DiskFreeLimit))}",
+                                    "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.HiveMQ.DiskFreeLimit, typeof(HiveMQOptions), nameof(hive.Definition.HiveMQ.DiskFreeLimit))}",
                                     //"--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
                                     //"--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",
                                     "--env", $"ERL_EPMD_PORT={HiveHostPorts.HiveMQEPMD}",
@@ -621,9 +621,9 @@ namespace NeonCli
                                     "--publish", $"{HiveHostPorts.HiveMQAMPQ}:{HiveHostPorts.HiveMQAMPQ}",
                                     "--publish", $"{HiveHostPorts.HiveMQDIST}:{HiveHostPorts.HiveMQDIST}",
                                     "--publish", $"{HiveHostPorts.HiveMQDashboard}:{HiveHostPorts.HiveMQDashboard}",
-                                    "--memory", HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.RamLimit, typeof(HiveMQOptions), nameof(hive.Definition.RabbitMQ.RamLimit)),
+                                    "--memory", HiveDefinition.ValidateSize(hive.Definition.HiveMQ.RamLimit, typeof(HiveMQOptions), nameof(hive.Definition.HiveMQ.RamLimit)),
                                     "--restart", "always",
-                                    Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
+                                    Program.ResolveDockerImage(hive.Definition.HiveMQ.RabbitMQImage));
 
                         node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-hivemq.sh"), response.BashCommand);
                     });

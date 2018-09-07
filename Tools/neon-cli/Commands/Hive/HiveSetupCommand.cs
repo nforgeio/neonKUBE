@@ -1786,7 +1786,7 @@ fi
 
                     if (pullAll || node.Metadata.Labels.HiveMQ)
                     {
-                        images.Add(Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.HiveMQ.RabbitMQImage));
                     }
 
                     foreach (var image in images)
@@ -3467,8 +3467,8 @@ systemctl start neon-volume-plugin
                         Hosts       = rabbitMQHosts,
                         Port        = HiveHostPorts.HiveMQAMPQ,
                         TlsEnabled  = false,
-                        Username    = hive.Definition.RabbitMQ.SysadminAccount,
-                        Password    = hive.Definition.RabbitMQ.SysadminPassword,
+                        Username    = hive.Definition.HiveMQ.SysadminAccount,
+                        Password    = hive.Definition.HiveMQ.SysadminPassword,
                         VirtualHost = "/"
                     };
 
@@ -3476,14 +3476,14 @@ systemctl start neon-volume-plugin
 
                     hive.Docker.Secret.Set("neon-hivemq-sysadmin", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
 
-                    rabbitSettings.Username    = hive.Definition.RabbitMQ.NeonAccount;
-                    rabbitSettings.Password    = hive.Definition.RabbitMQ.NeonPassword;
+                    rabbitSettings.Username    = hive.Definition.HiveMQ.NeonAccount;
+                    rabbitSettings.Password    = hive.Definition.HiveMQ.NeonPassword;
                     rabbitSettings.VirtualHost = "/neon";
 
                     hive.Docker.Secret.Set("neon-hivemq-neon", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
 
-                    rabbitSettings.Username    = hive.Definition.RabbitMQ.AppAccount;
-                    rabbitSettings.Password    = hive.Definition.RabbitMQ.AppPassword;
+                    rabbitSettings.Username    = hive.Definition.HiveMQ.AppAccount;
+                    rabbitSettings.Password    = hive.Definition.HiveMQ.AppPassword;
                     rabbitSettings.VirtualHost = "/app";
 
                     hive.Docker.Secret.Set("neon-hivemq-app", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));

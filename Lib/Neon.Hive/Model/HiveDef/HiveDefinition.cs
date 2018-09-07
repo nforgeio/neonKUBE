@@ -507,9 +507,9 @@ namespace Neon.Hive
         /// <summary>
         /// Integrated <a href="https://rabbitmq.org/">RabbitMQ Message Queue</a> options.
         /// </summary>
-        [JsonProperty(PropertyName = "RabbitMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "HiveMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public HiveMQOptions RabbitMQ{ get; set; } = new HiveMQOptions();
+        public HiveMQOptions HiveMQ{ get; set; } = new HiveMQOptions();
 
         /// <summary>
         /// The Docker image to be used to provision public and private proxies and proxy bridges.
@@ -791,7 +791,7 @@ namespace Neon.Hive
             Dashboard         = Dashboard ?? new DashboardOptions();
             Ceph              = Ceph ?? new CephOptions();
             Varnish           = Varnish ?? new VarnishOptions();
-            RabbitMQ          = RabbitMQ ?? new HiveMQOptions();
+            HiveMQ          = HiveMQ ?? new HiveMQOptions();
 
             ProxyImage        = ProxyImage ?? defaultProxyImage;
             ProxyVaultImage   = ProxyVaultImage ?? defaultProxyVaultImage;
@@ -813,7 +813,7 @@ namespace Neon.Hive
             Dashboard.Validate(this);
             Ceph.Validate(this);
             Varnish.Validate(this);
-            RabbitMQ.Validate(this);
+            HiveMQ.Validate(this);
 
             new HostingManagerFactory().Validate(this);
 
