@@ -108,7 +108,7 @@ COMMAND SUMMARY:
     neon hive setup         [HIVE-DEF]
     neon hive verify        [HIVE-DEF]
     neon hive update        ARGS
-    neon load-balancer|lb   CMD...
+    neon loadbalancer|lb    CMD...
     neon login              [--no-vpn] USER@HIVE
     neon login clean
     neon login export       USER@HIVE
