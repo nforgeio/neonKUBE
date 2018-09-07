@@ -114,6 +114,12 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
                 node = hive.GetReachableManager();
             }
 
+            if (rightCommandLine == null)
+            {
+                Console.Error.WriteLine("*** ERROR: The [consul] command requires the \"--\" argument.");
+                Program.Exit(1);
+            }
+
             var command = rightCommandLine.Arguments.FirstOrDefault();
 
             switch (command)

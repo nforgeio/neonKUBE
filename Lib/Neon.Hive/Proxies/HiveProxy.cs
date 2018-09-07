@@ -412,8 +412,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns a manager node that is appears to reachable via the network 
-        /// because it answers a ping.
+        /// Returns a manager node that is reachable via the network because it answers a ping.
         /// </summary>
         /// <param name="failureMode">Specifies what should happen when there are no reachable managers.</param>
         /// <returns>The reachable manager node or <c>null</c>.</returns>
@@ -429,6 +428,36 @@ namespace Neon.Hive
                 .ToList();
 
             var reachableAddress = NetHelper.GetReachableHost(managerAddresses, failureMode);
+
+            if (reachableAddress == null)
+            {
+                return null;
+            }
+
+            // Return the node that is assigned the reachable address.
+
+            return Nodes.Where(n => n.PrivateAddress.ToString() == reachableAddress).First();
+        }
+
+        /// <summary>
+        /// Selects a hive node from the set of nodes that match a predicate that is 
+        /// reachable via the network because it answers a ping.
+        /// </summary>
+        /// <param name="predicate">Predicate used to select the candidate nodes.</param>
+        /// <param name="failureMode">Specifies what should happen when there are no reachable managers.</param>
+        /// <returns>The reachable node or <c>null</c>.</returns>
+        /// <exception cref="HiveException">
+        /// Thrown if no nodes matching the predicate are reachable and <paramref name="failureMode"/> 
+        /// is passed as <see cref="ReachableHostMode.Throw"/>.
+        /// </exception>
+        public SshProxy<NodeDefinition> GetReachableNode(Func<SshProxy<NodeDefinition>, bool> predicate, ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
+        {
+            var nodeAddresses = Nodes
+                .Where(predicate)
+                .Select(n => n.PrivateAddress.ToString())
+                .ToList();
+
+            var reachableAddress = NetHelper.GetReachableHost(nodeAddresses, failureMode);
 
             if (reachableAddress == null)
             {

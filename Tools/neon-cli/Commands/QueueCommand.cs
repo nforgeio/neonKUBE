@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Hive;
+using Neon.Net;
 
 namespace NeonCli
 {
@@ -103,19 +104,55 @@ COMMANDS:
 
             if (!string.IsNullOrEmpty(nodeName))
             {
-                node = hive.GetNode(nodeName);
+                try
+                {
+                    node = hive.GetNode(nodeName);
+                }
+                catch (KeyNotFoundException)
+                {
+                    Console.Error.WriteLine($"*** ERROR: Node [{nodeName}] does not exist.");
+                    Program.Exit(1);
+                }
             }
             else
             {
-                node = hive.GetReachableManager();
+                node = hive.GetReachableNode(n => n.Metadata.Labels.HiveMQ, ReachableHostMode.ReturnNull);
+
+                if (node == null)
+                {
+                    Console.Error.WriteLine($"*** ERROR: None of the HiveMQ nodes appear to be online.");
+                    Program.Exit(1);
+                }
             }
 
-            var command = rightCommandLine.Arguments.FirstOrDefault();
+            var command = leftCommandLine.Arguments.Skip(1).FirstOrDefault();
+
+            if (command == null)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(1);
+            }
 
             switch (command)
             {
                 case "ctl":
 
+                    if (rightCommandLine == null)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: The [{command}] command requires the \"--\" argument.");
+                        Program.Exit(1);
+                    }
+
+                    var response = node.SudoCommand("docker exec neon-hivemq rabbitmqctl", RunOptions.None, rightCommandLine.Items);
+
+                    Console.WriteLine(response.AllText);
+                    Program.Exit(response.ExitCode);
+                    break;
+
+                default:
+
+                    Console.Error.WriteLine($"*** ERROR: Unexpected [{command}] command.");
+                    Program.Exit(1);
                     break;
             }
         }

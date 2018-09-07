@@ -120,6 +120,7 @@ COMMAND SUMMARY:
     neon login status
     neon reboot             NODE...
     neon registry           CMD...
+    neon queue              CMD...
     neon run                -- CMD...
     neon scp                [NODE]
     neon ssh                [NODE]
@@ -302,6 +303,7 @@ OPTIONS:
                     new LoginRemoveCommand(),
                     new LoginStatusCommand(),
                     new LogoutCommand(),
+                    new QueueCommand(),
                     new RebootCommand(),
                     new RegistryCommand(),
                     new RunCommand(),
