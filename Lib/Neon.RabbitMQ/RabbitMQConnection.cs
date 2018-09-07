@@ -219,7 +219,7 @@ namespace RabbitMQ.Client
         /// <inheritdoc/>
         public IModel CreateModel()
         {
-            return connection.CreateModel();
+            return new RabbitMQChannel(connection.CreateModel());
         }
 
         /// <inheritdoc/>

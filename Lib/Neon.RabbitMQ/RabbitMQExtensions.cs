@@ -46,7 +46,7 @@ namespace RabbitMQ.Client
                 connectionFactory.Ssl = new SslOption() { Enabled = true };
             }
 
-            return connectionFactory.CreateConnection(settings.Hosts);
+            return new RabbitMQConnection(connectionFactory.CreateConnection(settings.Hosts));
         }
 
         /// <summary>
