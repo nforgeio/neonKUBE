@@ -111,7 +111,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
             }
             else
             {
-                node = hive.GetHealthyManager();
+                node = hive.GetReachableManager();
             }
 
             var command = rightCommandLine.Arguments.FirstOrDefault();

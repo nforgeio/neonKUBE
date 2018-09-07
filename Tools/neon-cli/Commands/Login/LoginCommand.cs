@@ -213,7 +213,7 @@ ARGUMENTS:
 
             try
             {
-                hiveProxy.GetHealthyManager().Connect();
+                hiveProxy.GetReachableManager().Connect();
 
                 var currentLogin =
                     new CurrentHiveLogin()

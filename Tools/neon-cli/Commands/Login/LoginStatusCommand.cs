@@ -121,7 +121,7 @@ USAGE:
 
                 try
                 {
-                    hive.GetHealthyManager().Connect();
+                    hive.GetReachableManager().Connect();
                     Console.Error.WriteLine("Authenticated");
                 }
                 catch (Exception e)

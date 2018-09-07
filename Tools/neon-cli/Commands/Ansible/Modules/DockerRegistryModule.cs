@@ -283,7 +283,7 @@ namespace NeonCli.Ansible
                 return;
             }
 
-            var manager      = hive.GetHealthyManager();
+            var manager      = hive.GetReachableManager();
             var sbErrorNodes = new StringBuilder();
 
             // Determine whether the registry service is already deployed and 

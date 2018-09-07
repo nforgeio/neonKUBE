@@ -66,7 +66,7 @@ ARGUMENTS:
 
             if (commandLine.Arguments.Length == 0)
             {
-                node = HiveHelper.Hive.GetHealthyManager().Metadata;
+                node = HiveHelper.Hive.GetReachableManager().Metadata;
             }
             else
             {

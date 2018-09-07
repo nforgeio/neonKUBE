@@ -233,7 +233,7 @@ does this on the first manager node:
             {
                 // Default to a healthy manager.
 
-                nodeDefinitions.Add(hive.GetHealthyManager().Metadata);
+                nodeDefinitions.Add(hive.GetReachableManager().Metadata);
             }
 
             // Create the command bundle by appending the right command.

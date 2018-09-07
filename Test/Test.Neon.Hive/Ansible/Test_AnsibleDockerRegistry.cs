@@ -46,7 +46,7 @@ namespace TestNeonCluster
             // Ensure that tests start without a local registry
             // and related assets.
 
-            var manager = this.hive.GetHealthyManager();
+            var manager = this.hive.GetReachableManager();
 
             if (this.hive.Docker.InspectService("neon-registry") != null)
             {
@@ -600,7 +600,7 @@ namespace TestNeonCluster
                 // Verify that the new registry is actually working by pushing and
                 // pulling an image from it.
 
-                var manager = hive.GetHealthyManager();
+                var manager = hive.GetReachableManager();
 
                 // Ensure that any test images are removed from previous test runs.
 
@@ -754,7 +754,7 @@ namespace TestNeonCluster
                 //-------------------------------------------------------------
                 // Verify that the registry is read/write after pruning.
 
-                var manager = hive.GetHealthyManager();
+                var manager = hive.GetReachableManager();
 
                 // Ensure that any test images are removed from previous test runs.
 

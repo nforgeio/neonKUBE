@@ -33,34 +33,6 @@ namespace Neon.Hive
     /// </summary>
     public class HiveProxy : IDisposable
     {
-        //---------------------------------------------------------------------
-        // Local types
-
-        /// <summary>
-        /// Enumerates how <see cref="GetHealthyManager(HealthyManagerMode)"/> should
-        /// behave when no there are no healthy hive managers.
-        /// </summary>
-        public enum HealthyManagerMode
-        {
-            /// <summary>
-            /// Throw an exception when no managers are healthy.
-            /// </summary>
-            Throw,
-
-            /// <summary>
-            /// Return the first manager when no managers are healthy.
-            /// </summary>
-            ReturnFirst,
-
-            /// <summary>
-            /// Return <c>null</c> when no managers are healthy.
-            /// </summary>
-            ReturnNull
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private RunOptions                                                          defaultRunOptions;
         private Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>>     nodeProxyCreator;
         private bool                                                                appendLog;
@@ -440,72 +412,32 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns a manager node that appears to be healthy.
+        /// Returns a manager node that is appears to reachable via the network 
+        /// because it answers a ping.
         /// </summary>
-        /// <param name="failureMode">Specifies what should happen when there are no healthy managers.</param>
-        /// <returns>The healthy manager node.</returns>
+        /// <param name="failureMode">Specifies what should happen when there are no reachable managers.</param>
+        /// <returns>The reachable manager node or <c>null</c>.</returns>
         /// <exception cref="HiveException">
-        /// Thrown if no healthy managers are present and
-        /// <paramref name="failureMode"/>=<see cref="HealthyManagerMode.Throw"/>.
+        /// Thrown if no managers are reachable and <paramref name="failureMode"/> 
+        /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
-        public SshProxy<NodeDefinition> GetHealthyManager(HealthyManagerMode failureMode = HealthyManagerMode.ReturnFirst)
+        public SshProxy<NodeDefinition> GetReachableManager(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
-            // Try sending up to three pings to each manager node in parallel
-            // to get a list of the health ones.  Then we'll return the first
-            // healthy manager from the list (as sorted by name).
-            //
-            // This will consistently return the first manager node by name
-            // if it's healthy, otherwise it will fail over to the next, etc.
+            var managerAddresses = Nodes
+                .Where(n => n.Metadata.IsManager)
+                .Select(n => n.PrivateAddress.ToString())
+                .ToList();
 
-            const int tryCount = 3;
+            var reachableAddress = NetHelper.GetReachableHost(managerAddresses, failureMode);
 
-            var healthyManagers = new List<SshProxy<NodeDefinition>>();
-            var pingOptions     = new PingOptions(ttl: 32, dontFragment: true);
-            var pingTimeout     = TimeSpan.FromSeconds(1);
-
-            for (int i = 0; i < tryCount; i++)
+            if (reachableAddress == null)
             {
-                Parallel.ForEach(Nodes.Where(n => n.Metadata.IsManager),
-                    manager =>
-                    {
-                        using (var ping = new Ping())
-                        {
-                            var reply = ping.Send(manager.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
-
-                            if (reply.Status == IPStatus.Success)
-                            {
-                                lock (healthyManagers)
-                                {
-                                    healthyManagers.Add(manager);
-                                }
-                            }
-                        }
-                    });
-
-                if (healthyManagers.Count > 0)
-                {
-                    return healthyManagers.OrderBy(n => n.Name).First();
-                }
+                return null;
             }
 
-            switch (failureMode)
-            {
-                case HealthyManagerMode.ReturnFirst:
+            // Return the node that is assigned the reachable address.
 
-                    return FirstManager;
-
-                case HealthyManagerMode.ReturnNull:
-
-                    return null;
-
-                case HealthyManagerMode.Throw:
-
-                    throw new HiveException("Could not locate a healthy hive manager node.");
-
-                default:
-
-                    throw new NotImplementedException($"Unexpected failure [mode={failureMode}].");
-            }
+            return Nodes.Where(n => n.PrivateAddress.ToString() == reachableAddress).First();
         }
 
         /// <summary>

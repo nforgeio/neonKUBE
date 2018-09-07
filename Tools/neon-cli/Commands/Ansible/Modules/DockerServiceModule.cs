@@ -597,7 +597,7 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{service.Name}] service.");
 
-            var manager        = hive.GetHealthyManager();
+            var manager        = hive.GetReachableManager();
             var response       = manager.DockerCommand(RunOptions.None, "docker service inspect", service.Name);
             var serviceDetails = (ServiceDetails)null;
 

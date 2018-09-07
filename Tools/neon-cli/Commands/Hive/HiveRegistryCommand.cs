@@ -148,7 +148,7 @@ when these aren't specified.
 
                     // Verify the credentials on a single node first.
 
-                    var manager = hive.GetHealthyManager();
+                    var manager = hive.GetReachableManager();
 
                     Console.WriteLine($"Verifying registry credentials on [{manager.Name}].");
 

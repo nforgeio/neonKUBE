@@ -61,7 +61,7 @@ namespace Neon.Hive
         /// <returns>The <see cref="ServiceDetails"/> or <c>null</c> if the service doesn't exist.</returns>
         public ServiceDetails InspectService(string name, bool strict = false)
         {
-            var response = hive.GetHealthyManager().DockerCommand(RunOptions.None, "docker", "service", "inspect", name);
+            var response = hive.GetReachableManager().DockerCommand(RunOptions.None, "docker", "service", "inspect", name);
 
             if (response.ExitCode != 0)
             {
@@ -105,7 +105,7 @@ namespace Neon.Hive
 
             // I've see transient errors, so we'll retry a few times.
             
-            var manager = hive.GetHealthyManager();
+            var manager = hive.GetReachableManager();
             var retry   = new LinearRetryPolicy(typeof(Exception), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
             retry.InvokeAsync(
@@ -158,7 +158,7 @@ namespace Neon.Hive
 
             // I've see transient errors, so we'll retry a few times.
 
-            var manager = hive.GetHealthyManager();
+            var manager = hive.GetReachableManager();
             var retry   = new LinearRetryPolicy(typeof(Exception), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
             retry.InvokeAsync(

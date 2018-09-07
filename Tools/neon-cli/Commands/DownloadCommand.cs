@@ -80,7 +80,7 @@ ARGUMENTS:
 
             if (commandLine.Arguments.Length == 1)
             {
-                node = hive.GetHealthyManager();
+                node = hive.GetReachableManager();
             }
             else if (commandLine.Arguments.Length == 2)
             {

@@ -655,7 +655,7 @@ namespace NeonHiveManager
             {
                 while (true)
                 {
-                    var manager = hive.GetHealthyManager();
+                    var manager = hive.GetReachableManager();
 
                     try
                     {

@@ -228,7 +228,7 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(command != null);
 
-            return Command(hive.GetHealthyManager(), command, args);
+            return Command(hive.GetReachableManager(), command, args);
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ export VAULT_TOKEN={hive.HiveLogin.VaultCredentials.RootToken}
         {
             Covenant.Requires<ArgumentNullException>(command != null);
 
-            return CommandNoFault(hive.GetHealthyManager(), command, args);
+            return CommandNoFault(hive.GetReachableManager(), command, args);
         }
 
         /// <summary>
@@ -346,7 +346,7 @@ vault policy-write {policy.Name} policy.hcl
 
             bundle.AddFile("policy.hcl", policy);
 
-            var response = hive.GetHealthyManager().SudoCommand(bundle,hive.SecureRunOptions | RunOptions.FaultOnError);
+            var response = hive.GetReachableManager().SudoCommand(bundle,hive.SecureRunOptions | RunOptions.FaultOnError);
 
             response.BashCommand = bundle.ToBash();
 

@@ -128,7 +128,7 @@ NOTE: The following Vault commands are not supported:
             }
             else
             {
-                node = hive.GetHealthyManager();
+                node = hive.GetReachableManager();
             }
 
             var command = rightCommandLine.Arguments.FirstOrDefault(); ;

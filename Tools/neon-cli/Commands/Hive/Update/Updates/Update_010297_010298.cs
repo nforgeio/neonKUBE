@@ -291,7 +291,7 @@ namespace NeonCli
                         Name        = "kibana",
                         Title       = "Kibana",
                         Folder      = HiveConst.DashboardSystemFolder,
-                        Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateKibanaDashboard}",
+                        Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateKibanaDashboard}",
                         Description = "Kibana hive monitoring dashboard"
                     };
 

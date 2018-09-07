@@ -169,7 +169,7 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{configName}] config.");
 
-            var manager = hive.GetHealthyManager();
+            var manager = hive.GetReachableManager();
             var exists  = hive.Docker.Config.Exists(configName);
             var bytes   = (byte[])null;
 

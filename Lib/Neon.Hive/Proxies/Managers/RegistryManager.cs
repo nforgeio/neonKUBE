@@ -467,7 +467,7 @@ fi
 
             progress?.Invoke($"Creating [neon-registry] service.");
 
-            var manager = hive.GetHealthyManager();
+            var manager = hive.GetReachableManager();
 
             var createResponse = manager.DockerCommand(RunOptions.None,
                 "docker service create",
@@ -507,7 +507,7 @@ fi
             }
 
             var syncLock = new object();
-            var manager  = hive.GetHealthyManager();
+            var manager  = hive.GetReachableManager();
             var hostname = hive.Registry.GetLocalHostname();
 
             // Logout of the registry.
@@ -612,7 +612,7 @@ fi
             // The nice thing about this is that the operation will continue to
             // completion on the manager node even if we lose the SSH connection.
 
-            var manager      = hive.GetHealthyManager();
+            var manager      = hive.GetReachableManager();
             var updateScript =
 @"#!/bin/bash
 # Update [neon-registry] to READ-ONLY mode:

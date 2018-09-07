@@ -1608,12 +1608,12 @@ retries = 4
             // IMPLEMENTATION NOTE:
             //
             // We need a clean way to target Docker Swarm related modules at a healthy
-            // swarm manager node.  We're going to use [HiveHelper.GetHealthyManager()]
+            // swarm manager node.  We're going to use [HiveHelper.GetReachableManager()]
             // to look for a healthy node (via pings) and then this to the inventory as
             // the [swarm-manager] host and to [/etc/hosts] as [health-swarm-manager] with
             // the manager's IP address.   We'll also generate related host variables.
             // 
-            // If [HiveHelper.GetHealthyManager()] fails, we'll create a host
+            // If [HiveHelper.GetReachableManager()] fails, we'll create a host
             // for the first manager as a fallback.  In this case, any playbooks 
             // targeting the unhealthy first manager will fail with a timeout, which
             // is what the operator should expect.
@@ -1622,7 +1622,7 @@ retries = 4
 
             try
             {
-                swarmManager = hive.GetHealthyManager();
+                swarmManager = hive.GetReachableManager();
             }
             catch (HiveException)
             {

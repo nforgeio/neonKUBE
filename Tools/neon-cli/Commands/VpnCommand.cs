@@ -748,7 +748,7 @@ nsCertType              = server
         /// <returns>The <see cref="VpnCaFiles"/>.</returns>
         private VpnCaFiles GetVpnCaFiles()
         {
-            var manager  = hive.GetHealthyManager();
+            var manager  = hive.GetReachableManager();
             var response = manager.SudoCommand($"export VAULT_TOKEN={hiveLogin.VaultCredentials.RootToken} && vault read -format=json /neon-secret/vpn/ca.zip.encrypted", RunOptions.Redact);
 
             if (response.ExitCode != 0)

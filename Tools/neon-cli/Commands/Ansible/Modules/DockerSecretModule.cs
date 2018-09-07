@@ -169,7 +169,7 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{secretName}] secret.");
 
-            var manager = hive.GetHealthyManager();
+            var manager = hive.GetReachableManager();
             var exists  = hive.Docker.Secret.Exists(secretName);
             var bytes   = (byte[])null;
 

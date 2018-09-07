@@ -3815,7 +3815,7 @@ systemctl restart sshd
                                 Name        = "ceph",
                                 Title       = "Ceph File System",
                                 Folder      = HiveConst.DashboardSystemFolder,
-                                Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
+                                Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
                                 Description = "Ceph distributed file system"
                             };
 
@@ -3880,7 +3880,7 @@ systemctl restart sshd
                                 Name        = "ceph",
                                 Title       = "Ceph File System",
                                 Folder      = HiveConst.DashboardSystemFolder,
-                                Url         = $"https://healthy-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
+                                Url         = $"https://reachable-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
                                 Description = "Ceph distributed file system"
                             };
 
@@ -3938,7 +3938,7 @@ systemctl restart sshd
                             Name        = "consul",
                             Title       = "Consul",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"{hive.Definition.Consul.Scheme}://healthy-manager:{NetworkPorts.Consul}/ui",
+                            Url         = $"{hive.Definition.Consul.Scheme}://reachable-manager:{NetworkPorts.Consul}/ui",
                             Description = "Hive Consul key/value store"
                         };
 
@@ -3957,7 +3957,7 @@ systemctl restart sshd
                             Name        = "kibana",
                             Title       = "Kibana",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateKibanaDashboard}",
+                            Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateKibanaDashboard}",
                             Description = "Kibana hive monitoring dashboard"
                         };
 
@@ -3976,7 +3976,7 @@ systemctl restart sshd
                             Name        = "vault",
                             Title       = "Vault",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"https://healthy-manager:{hive.Definition.Vault.Port}/ui",
+                            Url         = $"https://reachable-manager:{hive.Definition.Vault.Port}/ui",
                             Description = "Hive Vault secure storage"
                         };
 
@@ -3993,8 +3993,8 @@ systemctl restart sshd
                             Name        = "hivemq",
                             Title       = "Hive Messaging System",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHiveMQDashboard}",
-                            //Url         = $"https://healthy-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
+                            Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHiveMQDashboard}",
+                            //Url         = $"https://reachable-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
                             Description = "Hive messaging system"
                         };
 

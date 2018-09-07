@@ -57,8 +57,8 @@ namespace Neon.Hive
         /// The dashboard URL.
         /// </para>
         /// <note>
-        /// You may set the URL hostname to <b>healthy-manager</b> to target
-        /// the private IP address of the first healthy hive manager node.
+        /// You may set the URL hostname to <b>reachable-manager</b> to target
+        /// the private IP address of the first reachable hive manager node.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Url", Required = Required.Always)]

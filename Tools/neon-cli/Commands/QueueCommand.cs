@@ -107,7 +107,7 @@ COMMANDS:
             }
             else
             {
-                node = hive.GetHealthyManager();
+                node = hive.GetReachableManager();
             }
 
             var command = rightCommandLine.Arguments.FirstOrDefault();

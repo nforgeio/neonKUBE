@@ -46,7 +46,7 @@ namespace Neon.Hive
         /// <exception cref="HiveException">Thrown if the operation failed.</exception>
         public bool Exists(string configName)
         {
-            var manager  = hive.GetHealthyManager();
+            var manager  = hive.GetReachableManager();
             var response = manager.DockerCommand(RunOptions.None, "docker config inspect", configName);
 
             if (response.ExitCode == 0)
@@ -133,7 +133,7 @@ fi
 ",
                 isExecutable: true);
 
-            var response = hive.GetHealthyManager().SudoCommand(bundle, options);
+            var response = hive.GetReachableManager().SudoCommand(bundle, options);
 
             if (response.ExitCode != 0)
             {
@@ -164,7 +164,7 @@ else
 fi
 ",              isExecutable: true);
 
-            var response = hive.GetHealthyManager().SudoCommand(bundle, RunOptions.None);
+            var response = hive.GetReachableManager().SudoCommand(bundle, RunOptions.None);
 
             if (response.ExitCode != 0)
             {

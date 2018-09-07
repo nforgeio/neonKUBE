@@ -992,7 +992,7 @@ namespace Neon.Hive
             // Initialize some properties.
 
             var hiveDefinition = Hive.Definition;
-            var healthyManager = Hive.GetHealthyManager(HiveProxy.HealthyManagerMode.ReturnFirst);
+            var healthyManager = Hive.GetReachableManager(ReachableHostMode.ReturnFirst);
 
             // Simulate the environment variables initialized by a mounted [host-env] script.
 
@@ -1450,7 +1450,7 @@ namespace Neon.Hive
 
             if (remoteConnection)
             {
-                settings = new DockerSettings(Hive.GetHealthyManager().PrivateAddress);
+                settings = new DockerSettings(Hive.GetReachableManager().PrivateAddress);
             }
             else
             {
@@ -1504,7 +1504,7 @@ namespace Neon.Hive
             if (remoteConnection && cachedDefinition != null)
             {
                 var hive    = new HiveProxy(cachedDefinition);
-                var manager = hive.GetHealthyManager(HiveProxy.HealthyManagerMode.ReturnNull);
+                var manager = hive.GetReachableManager(ReachableHostMode.ReturnNull);
 
                 if (manager == null)
                 {

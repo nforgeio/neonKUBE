@@ -129,7 +129,7 @@ the [neon exec] command.
             }
             else
             {
-                node = hive.GetHealthyManager();
+                node = hive.GetReachableManager();
             }
 
             // A handful commands upload files and need to be run as a bundle.

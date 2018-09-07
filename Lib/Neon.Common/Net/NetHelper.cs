@@ -583,11 +583,11 @@ namespace Neon.Net
 
         /// <summary>
         /// Pings one or more hostnames or IP addresses in parallel to identify one that
-        /// appears to be online and reachable via the network.
+        /// appears to be online and reachable via the network (because it answers a ping).
         /// </summary>
         /// <param name="hosts">The hostname or IP addresses to be tested.</param>
         /// <param name="failureMode">
-        /// Specifies what should happen when there are no reachabvle hosts.  
+        /// Specifies what should happen when there are no reachable hosts.  
         /// This defaults to <see cref="ReachableHostMode.ReturnFirst"/>.
         /// </param>
         /// <returns>The hostname or IP address of the reachable host or <c>null</c>.</returns>
