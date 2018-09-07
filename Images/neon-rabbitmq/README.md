@@ -46,6 +46,8 @@ RabbitMQ configuration is performed using environment variables as described [he
 
 * `RABBITMQ_SSL_KEYFILE` - (*optional*) enables TLS security for both the AMPQ endpoint as well as the RabbitMQ dashboard by specifying the path to the TLS private key file.
 
+* `MANAGEMENT_PLUGIN` - (*optional*) enables the RabbitMQ management plugin for the node.  This defaults to `false`.
+
 * `DEBUG` - (*optional*) currently logs some additional configuration information while starting RabbitMQ.  This defaults to `false`.  Set to `true` to enable.
 
 RabbitMQ persists its operational data to the `/var/lib/rabbitmq` directory within the container.  Production deployments will typically mount a named Docker volume here so the data will persist across container restarts.

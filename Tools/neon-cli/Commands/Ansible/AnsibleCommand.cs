@@ -1663,7 +1663,7 @@ retries = 4
             // Note that we're going to special-case the [swarm-manager] host, which won't
             // belong to any groups.
 
-            var groups = login.Definition.GetNodeGroups(excludeAllGroup: true);
+            var groups = login.Definition.GetHostGroups(excludeAllGroup: true);
 
             using (var writer = new StreamWriter(new FileStream(Path.Combine(ansibleConfigFolder, "hosts"), FileMode.Create, FileAccess.ReadWrite), Encoding.ASCII))
             {

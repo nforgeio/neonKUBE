@@ -443,7 +443,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
 
             // Check for errors.
 
-            var errors = dnsEntry.Validate(hive.Definition, hive.Definition.GetNodeGroups(excludeAllGroup: true));
+            var errors = dnsEntry.Validate(hive.Definition, hive.Definition.GetHostGroups(excludeAllGroup: true));
 
             if (errors.Count > 0)
             {

@@ -201,7 +201,7 @@ namespace Neon.Hive
             RamHighWatermark = RamHighWatermark ?? defaultRamHighWatermark;
             SysadminPassword = SysadminPassword ?? defaultPassword;
             NeonPassword     = NeonPassword ?? defaultPassword;
-            AppPassword     = AppPassword ?? defaultPassword;
+            AppPassword      = AppPassword ?? defaultPassword;
             PartitionMode    = PartitionMode ?? defaultPartitionMode;
             PartitionMode    = PartitionMode.ToLowerInvariant();
             RabbitMQImage    = RabbitMQImage ?? defaultRabbitMQImage;
@@ -331,16 +331,34 @@ namespace Neon.Hive
             }
 
             // We need to assign hive nodes to host the RabbitMQ instances.  We're going to do
-            // this by examining and possibly setting the RabbitMQ node labels.  If no hive nodes
-            // have this label set, then we'll set these for all manager nodes.  Otherwise, we'll
-            // deploy to the marked nodes.
+            // this by examining and possibly setting the RabbitMQ and RabbitMQManager node labels.  
+            // If no hive nodes have this label set, then we'll set both of these for all manager 
+            // nodes.  Otherwise, we'll deploy to the nodes marked with [RabbitMQ=true].
+            //
+            // Note that we always need to deploy at least one node enabling the management
+            // plugin.  If [RabbitMQManager] is not set for any nodes then we'll set it for
+            // the first node (as sorted by name).
+            //
+            // Note also that [RabbitMQManager=true] implies [RabbitMQ=true].
+
+            foreach (var node in hiveDefinition.Nodes.Where(n => n.Labels.RabbitMQManager))
+            {
+                node.Labels.RabbitMQ = true;
+            }
 
             if (hiveDefinition.Nodes.Count(n => n.Labels.RabbitMQ) == 0)
             {
                 foreach (var manager in hiveDefinition.Managers)
                 {
-                    manager.Labels.RabbitMQ = true;
+                    manager.Labels.RabbitMQ        = true;
+                    manager.Labels.RabbitMQManager = true;
                 }
+            }
+            else if (hiveDefinition.Nodes.Count(n => n.Labels.RabbitMQManager) == 0)
+            {
+                var firstRabbitMQNode = hiveDefinition.Nodes.First(n => n.Labels.RabbitMQ);
+
+                firstRabbitMQNode.Labels.RabbitMQManager = true;
             }
         }
     }

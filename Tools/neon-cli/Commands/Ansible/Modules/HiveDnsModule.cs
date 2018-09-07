@@ -341,7 +341,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, "Validating DNS entry.");
 
-                    var errors = newEntry.Validate(hive.Definition, hive.Definition.GetNodeGroups(excludeAllGroup: true));
+                    var errors = newEntry.Validate(hive.Definition, hive.Definition.GetHostGroups(excludeAllGroup: true));
 
                     if (errors.Count > 0)
                     {

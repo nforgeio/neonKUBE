@@ -520,7 +520,7 @@ namespace Neon.Xunit.Hive
 
                 if (nodeGroups != null)
                 {
-                    nodeGroups = hive.Definition.GetNodeGroups(excludeAllGroup: true);
+                    nodeGroups = hive.Definition.GetHostGroups(excludeAllGroup: true);
                 }
 
                 return nodeGroups;

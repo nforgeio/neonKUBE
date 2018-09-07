@@ -263,7 +263,8 @@ namespace Neon.Hive
                 "ceph-mon",
                 "ceph-mds",
                 "ceph-osd",
-                "rabbitmq"
+                "rabbitmq",
+                "rabbitmq-manager"
             };
 
         //---------------------------------------------------------------------
@@ -1119,7 +1120,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="excludeAllGroup">Optionally exclude the built-in <b>all</b> group from the results.</param>
         /// <returns></returns>
-        public Dictionary<string, List<NodeDefinition>> GetNodeGroups(bool excludeAllGroup = false)
+        public Dictionary<string, List<NodeDefinition>> GetHostGroups(bool excludeAllGroup = false)
         {
             var groups = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -1260,12 +1261,23 @@ namespace Neon.Hive
 
             members.Clear();
 
-            foreach (var node in SortedNodes.Where(n => n.Labels.RabbitMQ))
+            foreach (var node in SortedNodes.Where(n => n.Labels.RabbitMQ || n.Labels.RabbitMQManager))
             {
                 members.Add(node);
             }
 
             groups.Add("rabbitmq", members);
+
+            // [rabbitmq-manager] group
+
+            members.Clear();
+
+            foreach (var node in SortedNodes.Where(n => n.Labels.RabbitMQManager))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("rabbitmq-manager", members);
 
             return groups;
         }

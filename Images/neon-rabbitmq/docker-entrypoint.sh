@@ -118,6 +118,10 @@ if [ "$RABBITMQ_ERLANG_COOKIE" == "" ] ; then
     fi
 fi
 
+if [ "$MANAGEMENT_PLUGIN" == "" ] ; then
+    MANAGEMENT_PLUGIN=false
+fi
+
 if [ "$RABBITMQ_DISK_FREE_LIMIT" == "" ] ; then
     RABBITMQ_DISK_FREE_LIMIT=500MB
 fi
@@ -309,11 +313,13 @@ if [ "$DEBUG" == "true" ] ; then
     echo "====================================================================================="
 fi
 
-# Enable the management components.
+# Enable the management plugin.
 
-. log-info.sh "Enabling management plugin..."
-rabbitmq-plugins enable rabbitmq_management
-. log-info.sh "Management plugin enabled."
+if [ "$$MANAGEMENT_PLUGIN" == "true" ] ; then
+    . log-info.sh "Enabling management plugin..."
+    rabbitmq-plugins enable rabbitmq_management
+    . log-info.sh "Management plugin enabled."
+fi
 
 # Before starting RabbitMQ, execute a script that will run in parallel, waiting for
 # the server to report being ready before setting the cluster name (if there is one).

@@ -253,12 +253,12 @@ namespace NeonCli
                     {
                         firstManager.Status = "start: neon-varnish";
 
-                        var constraint = new List<string>();
+                        var constraintArgs = new List<string>();
 
                         if (hive.Workers.Count() > 0)
                         {
-                            constraint.Add("--constraint");
-                            constraint.Add("node.role!=manager");
+                            constraintArgs.Add("--constraint");
+                            constraintArgs.Add("node.role!=manager");
                         }
 
                         firstManager.IdempotentDockerCommand("setup/neon-varnish",
@@ -279,7 +279,7 @@ namespace NeonCli
                             "--detach=false",
                             "--mount", "type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true",
                             "--env", "LOG_LEVEL=INFO",
-                            constraint,
+                            constraintArgs,
                             "--replicas", 1,
                             "--restart-delay", hive.Definition.Docker.RestartDelay,
                             Program.ResolveDockerImage(hive.Definition.VarnishImage));
@@ -354,11 +354,11 @@ namespace NeonCli
                     //
                     //      https://docs.docker.com/engine/swarm/services/#publish-ports
 
-                    var publicPublish   = new List<string>();
-                    var privatePublish  = new List<string>();
-                    var proxyConstraint = new List<string>();
-                    var proxyReplicas   = new List<string>();
-                    var proxyMode       = new List<string>();
+                    var publicPublishArgs   = new List<string>();
+                    var privatePublishArgs  = new List<string>();
+                    var proxyConstraintArgs = new List<string>();
+                    var proxyReplicasArgs   = new List<string>();
+                    var proxyModeArgs       = new List<string>();
 
                     if (hive.Definition.Docker.GetAvoidIngressNetwork(hive.Definition))
                     {
@@ -367,87 +367,87 @@ namespace NeonCli
 
                         foreach (var port in HiveConst.PublicProxyPorts.Ports)
                         {
-                            publicPublish.Add($"--publish");
-                            publicPublish.Add($"mode=host,published={port},target={port}");
+                            publicPublishArgs.Add($"--publish");
+                            publicPublishArgs.Add($"mode=host,published={port},target={port}");
                         }
 
                         for (int port = HiveConst.PublicProxyPorts.PortRange.FirstPort; port <= HiveConst.PublicProxyPorts.PortRange.LastPort; port++)
                         {
-                            publicPublish.Add($"--publish");
-                            publicPublish.Add($"mode=host,published={port},target={port}");
+                            publicPublishArgs.Add($"--publish");
+                            publicPublishArgs.Add($"mode=host,published={port},target={port}");
                         }
 
                         foreach (var port in HiveConst.PrivateProxyPorts.Ports)
                         {
-                            privatePublish.Add($"--publish");
-                            privatePublish.Add($"mode=host,published={port},target={port}");
+                            privatePublishArgs.Add($"--publish");
+                            privatePublishArgs.Add($"mode=host,published={port},target={port}");
                         }
 
                         for (int port = HiveConst.PrivateProxyPorts.PortRange.FirstPort; port <= HiveConst.PrivateProxyPorts.PortRange.LastPort; port++)
                         {
-                            privatePublish.Add($"--publish");
-                            privatePublish.Add($"mode=host,published={port},target={port}");
+                            privatePublishArgs.Add($"--publish");
+                            privatePublishArgs.Add($"mode=host,published={port},target={port}");
                         }
 
-                        proxyMode.Add("--mode");
-                        proxyMode.Add("global");
+                        proxyModeArgs.Add("--mode");
+                        proxyModeArgs.Add("global");
                     }
                     else
                     {
                         foreach (var port in HiveConst.PublicProxyPorts.Ports)
                         {
-                            publicPublish.Add($"--publish");
-                            publicPublish.Add($"{port}:{port}");
+                            publicPublishArgs.Add($"--publish");
+                            publicPublishArgs.Add($"{port}:{port}");
                         }
 
-                        publicPublish.Add($"--publish");
-                        publicPublish.Add($"{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PublicProxyPorts.PortRange.LastPort}:{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PublicProxyPorts.PortRange.LastPort}");
+                        publicPublishArgs.Add($"--publish");
+                        publicPublishArgs.Add($"{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PublicProxyPorts.PortRange.LastPort}:{HiveConst.PublicProxyPorts.PortRange.FirstPort}-{HiveConst.PublicProxyPorts.PortRange.LastPort}");
 
                         foreach (var port in HiveConst.PrivateProxyPorts.Ports)
                         {
-                            privatePublish.Add($"--publish");
-                            privatePublish.Add($"{port}:{port}");
+                            privatePublishArgs.Add($"--publish");
+                            privatePublishArgs.Add($"{port}:{port}");
                         }
 
-                        privatePublish.Add($"--publish");
-                        privatePublish.Add($"{HiveConst.PrivateProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}:{HiveConst.PrivateProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}");
+                        privatePublishArgs.Add($"--publish");
+                        privatePublishArgs.Add($"{HiveConst.PrivateProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}:{HiveConst.PrivateProxyPorts.PortRange.FirstPort}-{HiveConst.PrivateProxyPorts.PortRange.LastPort}");
 
-                        proxyConstraint.Add($"--constraint");
-                        proxyReplicas.Add("--replicas");
+                        proxyConstraintArgs.Add($"--constraint");
+                        proxyReplicasArgs.Add("--replicas");
 
                         if (hive.Definition.Workers.Count() > 0)
                         {
                             // Constrain proxies to worker nodes if there are any.
 
-                            proxyConstraint.Add($"node.role!=manager");
+                            proxyConstraintArgs.Add($"node.role!=manager");
 
                             if (hive.Definition.Workers.Count() == 1)
                             {
-                                proxyReplicas.Add("1");
+                                proxyReplicasArgs.Add("1");
                             }
                             else
                             {
-                                proxyReplicas.Add("2");
+                                proxyReplicasArgs.Add("2");
                             }
                         }
                         else
                         {
                             // Constrain proxies to manager nodes nodes if there are no workers.
 
-                            proxyConstraint.Add($"node.role==manager");
+                            proxyConstraintArgs.Add($"node.role==manager");
 
                             if (hive.Definition.Managers.Count() == 1)
                             {
-                                proxyReplicas.Add("1");
+                                proxyReplicasArgs.Add("1");
                             }
                             else
                             {
-                                proxyReplicas.Add("2");
+                                proxyReplicasArgs.Add("2");
                             }
                         }
 
-                        proxyMode.Add("--mode");
-                        proxyMode.Add("replicated");
+                        proxyModeArgs.Add("--mode");
+                        proxyModeArgs.Add("replicated");
                     }
 
                     // Deploy: neon-proxy-public
@@ -482,10 +482,10 @@ namespace NeonCli
                         "--env", "DEBUG=false",
                         "--env", "VAULT_SKIP_VERIFY=true",
                         "--secret", "neon-proxy-public-credentials",
-                        publicPublish,
-                        proxyConstraint,
-                        proxyReplicas,
-                        proxyMode,
+                        publicPublishArgs,
+                        proxyConstraintArgs,
+                        proxyReplicasArgs,
+                        proxyModeArgs,
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         "--network", HiveConst.PublicNetwork,
                         Program.ResolveDockerImage(hive.Definition.ProxyImage));
@@ -522,10 +522,10 @@ namespace NeonCli
                         "--env", "DEBUG=false",
                         "--env", "VAULT_SKIP_VERIFY=true",
                         "--secret", "neon-proxy-private-credentials",
-                        privatePublish,
-                        proxyConstraint,
-                        proxyReplicas,
-                        proxyMode,
+                        privatePublishArgs,
+                        proxyConstraintArgs,
+                        proxyReplicasArgs,
+                        proxyModeArgs,
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         "--network", HiveConst.PrivateNetwork,
                         Program.ResolveDockerImage(hive.Definition.ProxyImage));
@@ -565,12 +565,20 @@ namespace NeonCli
                     sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.RabbitMQ}", ",");
                 }
 
-                var hipeCompile = new List<string>();
+                var hipeCompileArgs = new List<string>();
 
                 if (hive.Definition.RabbitMQ.Precompile)
                 {
-                    hipeCompile.Add("--env");
-                    hipeCompile.Add("RABBITMQ_HIPE_COMPILE=1");
+                    hipeCompileArgs.Add("--env");
+                    hipeCompileArgs.Add("RABBITMQ_HIPE_COMPILE=1");
+                }
+
+                var managementPluginArgs = new List<string>();
+
+                if (node.Metadata.Labels.RabbitMQManager)
+                {
+                    hipeCompileArgs.Add("--env");
+                    hipeCompileArgs.Add("MANAGEMENT_PLUGIN=true");
                 }
 
                 // $todo(jeff.lill):
@@ -601,7 +609,8 @@ namespace NeonCli
                                     "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.RabbitMQDashboard}",
                                     "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.RabbitMQ.ErlangCookie}",
                                     "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.RabbitMQ.RamHighWatermark}",
-                                    hipeCompile,
+                                    hipeCompileArgs,
+                                    managementPluginArgs,
                                     "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.DiskFreeLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.DiskFreeLimit))}",
                                     //"--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
                                     //"--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",

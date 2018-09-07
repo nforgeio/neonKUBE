@@ -209,7 +209,7 @@ does this on the first manager node:
 
             if (!string.IsNullOrEmpty(groupName))
             {
-                var nodeGroups = hive.Definition.GetNodeGroups();
+                var nodeGroups = hive.Definition.GetHostGroups();
 
                 if (!nodeGroups.TryGetValue(groupName, out var group))
                 {

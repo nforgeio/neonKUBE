@@ -326,7 +326,7 @@ namespace NeonDnsMon
             // each of those tasks will create a task for each endpoint that
             // requires a health check.
 
-            var nodeGroups = hiveDefinition.GetNodeGroups();
+            var nodeGroups = hiveDefinition.GetHostGroups();
             var entryTasks = new List<Task>();
             var warnings   = new List<string>();
 

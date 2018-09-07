@@ -50,7 +50,7 @@ namespace NeonCli.Ansible.Couchbase
         public static CouchbaseArgs Parse(ModuleContext context)
         {
             var hive          = HiveHelper.Hive;
-            var nodeGroups    = hive.Definition.GetNodeGroups(excludeAllGroup: true);
+            var nodeGroups    = hive.Definition.GetHostGroups(excludeAllGroup: true);
             var couchbaseArgs = new CouchbaseArgs();
 
             var servers = context.ParseStringArray("servers");

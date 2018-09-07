@@ -4023,7 +4023,7 @@ systemctl restart sshd
                         rule.Backends.Add(
                             new LoadBalancerTcpBackend()
                             {
-                                Group      = "rabbitmq",
+                                Group      = "rabbitmq-management",
                                 GroupLimit = 5,
                                 Port       = HiveHostPorts.RabbitMQDashboard
                             });

@@ -814,6 +814,10 @@ USAGE:
     //      CephDriveSizeGB               Ceph OSD drive size in GB (int)
     //      CephCacheSizeMB               Caph OSD cache size in MB (int)
     //
+    //      RabbitMQ                      Deploy RabbitMQ to the node (bool)
+    //      RabbitMQManager               Deploy RabbitMQ with the management 
+    //                                    plugin to the node (bool)
+    //
     // IMPORTANT: Be sure to set [StorageSSD=true] if your node is backed 
     //            by a SSD so that hive setup will tune Linux for better 
     //            performance.

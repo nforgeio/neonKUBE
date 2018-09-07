@@ -192,7 +192,7 @@ namespace NeonCli.Ansible
         public void Run(ModuleContext context)
         {
             var hive       = HiveHelper.Hive;
-            var nodeGroups = hive.Definition.GetNodeGroups(excludeAllGroup: true);
+            var nodeGroups = hive.Definition.GetHostGroups(excludeAllGroup: true);
 
             //-----------------------------------------------------------------
             // Parse the module arguments.

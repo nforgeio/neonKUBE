@@ -530,7 +530,7 @@ namespace NeonProxyManager
 
             string                  proxyPrefix = $"{proxyConfKey}/{loadBalancerName}";
             var                     rules       = new Dictionary<string, LoadBalancerRule>();
-            var                     hostGroups  = hiveDefinition.GetNodeGroups(excludeAllGroup: false);
+            var                     hostGroups  = hiveDefinition.GetHostGroups(excludeAllGroup: false);
             LoadBalancerSettings    settings;
 
             try
