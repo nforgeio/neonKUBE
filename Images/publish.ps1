@@ -139,6 +139,6 @@ if ($other)
 	Publish "$image_root\\neon-log-host"
 	Publish "$image_root\\neon-proxy"
 	Publish "$image_root\\neon-proxy-vault"
-	Publish "$image_root\\neon-rabbitmq"
+	Publish "$image_root\\neon-hivemq"
 	Publish "$image_root\\test"
 }

@@ -147,7 +147,7 @@ namespace NeonCli
                             // cluster.
 
                             var rabbitMQNodes = hive.Nodes
-                                .Where(n => n.Metadata.Labels.RabbitMQ)
+                                .Where(n => n.Metadata.Labels.HiveMQ)
                                 .OrderBy(n => n.Name)
                                 .ToList();
 
@@ -177,23 +177,23 @@ namespace NeonCli
 
                             // Create the vhosts.
 
-                            hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster-vhost-app", () => rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl add_vhost /app"));
-                            hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster-vhost-neon", () => rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl add_vhost /neon"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost /app"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-neon", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost /neon"));
 
                             // Create the users.
 
-                            hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster-user-app", () => rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl add_user '{hive.Definition.RabbitMQ.AppAccount}' '{hive.Definition.RabbitMQ.AppAccount}'"));
-                            hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster-user-neon", () => rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl add_user '{hive.Definition.RabbitMQ.NeonAccount}' '{hive.Definition.RabbitMQ.NeonPassword}'"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.RabbitMQ.AppAccount}' '{hive.Definition.RabbitMQ.AppAccount}'"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.RabbitMQ.NeonAccount}' '{hive.Definition.RabbitMQ.NeonPassword}'"));
 
                             // Grant the [app] account full access to the [app] vhost, the [neon] account full
                             // access to the [neon] vhost, and the [sysadmin] account full access to both.
                             // Note that this doesn't need to be idempotent.
 
-                            rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl set_permissions -p /app app \".*\" \".*\" \".*\"");
-                            rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl set_permissions -p /neon neon \".*\" \".*\" \".*\"");
+                            rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app app \".*\" \".*\" \".*\"");
+                            rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /neon neon \".*\" \".*\" \".*\"");
 
-                            rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
-                            rabbitNode.SudoCommand($"docker exec neon-rabbitmq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
+                            rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
+                            rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
                         });
 
                     //---------------------------------------------------------
@@ -552,17 +552,17 @@ namespace NeonCli
         {
             // Deploy RabbitMQ only on the labeled nodes.
 
-            if (node.Metadata.Labels.RabbitMQ)
+            if (node.Metadata.Labels.HiveMQ)
             {
                 // Build a comma separated list of fully qualified RabbitMQ hostnames so we
                 // can pass them as the CLUSTER environment variable.
 
-                var rabbitNodes = hive.Definition.SortedNodes.Where(n => n.Labels.RabbitMQ).ToList();
+                var rabbitNodes = hive.Definition.SortedNodes.Where(n => n.Labels.HiveMQ).ToList();
                 var sbCluster   = new StringBuilder();
 
                 foreach (var rabbitNode in rabbitNodes)
                 {
-                    sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.RabbitMQ}", ",");
+                    sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.HiveMQ}", ",");
                 }
 
                 var hipeCompileArgs = new List<string>();
@@ -575,7 +575,7 @@ namespace NeonCli
 
                 var managementPluginArgs = new List<string>();
 
-                if (node.Metadata.Labels.RabbitMQManager)
+                if (node.Metadata.Labels.HiveMQManager)
                 {
                     hipeCompileArgs.Add("--env");
                     hipeCompileArgs.Add("MANAGEMENT_PLUGIN=true");
@@ -596,36 +596,36 @@ namespace NeonCli
                         var response = node.DockerCommand(
                                     "docker run",
                                     "--detach",
-                                    "--name", "neon-rabbitmq",
+                                    "--name", "neon-hivemq",
                                     "--env", $"CLUSTER_NAME={hive.Definition.Name}",
                                     "--env", $"CLUSTER_NODES={sbCluster}",
                                     "--env", $"CLUSTER_PARTITION_MODE=autoheal",
-                                    "--env", $"NODENAME={node.Name}@{node.Name}.{hive.Definition.Hostnames.RabbitMQ}",
+                                    "--env", $"NODENAME={node.Name}@{node.Name}.{hive.Definition.Hostnames.HiveMQ}",
                                     "--env", $"RABBITMQ_USE_LONGNAME=true",
                                     "--env", $"RABBITMQ_DEFAULT_USER=sysadmin",
                                     "--env", $"RABBITMQ_DEFAULT_PASS=password",
-                                    "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.RabbitMQAMPQ}",
-                                    "--env", $"RABBITMQ_DIST_PORT={HiveHostPorts.RabbitMQDIST}",
-                                    "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.RabbitMQDashboard}",
+                                    "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.HiveMQAMPQ}",
+                                    "--env", $"RABBITMQ_DIST_PORT={HiveHostPorts.HiveMQDIST}",
+                                    "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.HiveMQDashboard}",
                                     "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.RabbitMQ.ErlangCookie}",
                                     "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.RabbitMQ.RamHighWatermark}",
                                     hipeCompileArgs,
                                     managementPluginArgs,
-                                    "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.DiskFreeLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.DiskFreeLimit))}",
+                                    "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.DiskFreeLimit, typeof(HiveMQOptions), nameof(hive.Definition.RabbitMQ.DiskFreeLimit))}",
                                     //"--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
                                     //"--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",
-                                    "--env", $"ERL_EPMD_PORT={HiveHostPorts.RabbitMQEPMD}",
-                                    "--mount", "type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq",
+                                    "--env", $"ERL_EPMD_PORT={HiveHostPorts.HiveMQEPMD}",
+                                    "--mount", "type=volume,source=neon-hivemq,target=/var/lib/rabbitmq",
                                     "--mount", "type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly",
-                                    "--publish", $"{HiveHostPorts.RabbitMQEPMD}:{HiveHostPorts.RabbitMQEPMD}",
-                                    "--publish", $"{HiveHostPorts.RabbitMQAMPQ}:{HiveHostPorts.RabbitMQAMPQ}",
-                                    "--publish", $"{HiveHostPorts.RabbitMQDIST}:{HiveHostPorts.RabbitMQDIST}",
-                                    "--publish", $"{HiveHostPorts.RabbitMQDashboard}:{HiveHostPorts.RabbitMQDashboard}",
-                                    "--memory", HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.RamLimit, typeof(RabbitMQOptions), nameof(hive.Definition.RabbitMQ.RamLimit)),
+                                    "--publish", $"{HiveHostPorts.HiveMQEPMD}:{HiveHostPorts.HiveMQEPMD}",
+                                    "--publish", $"{HiveHostPorts.HiveMQAMPQ}:{HiveHostPorts.HiveMQAMPQ}",
+                                    "--publish", $"{HiveHostPorts.HiveMQDIST}:{HiveHostPorts.HiveMQDIST}",
+                                    "--publish", $"{HiveHostPorts.HiveMQDashboard}:{HiveHostPorts.HiveMQDashboard}",
+                                    "--memory", HiveDefinition.ValidateSize(hive.Definition.RabbitMQ.RamLimit, typeof(HiveMQOptions), nameof(hive.Definition.RabbitMQ.RamLimit)),
                                     "--restart", "always",
                                     Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
 
-                        node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-rabbitmq.sh"), response.BashCommand);
+                        node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-hivemq.sh"), response.BashCommand);
                     });
 
                 // Wait for the RabbitMQ node to report that it's ready.
@@ -640,7 +640,7 @@ namespace NeonCli
                     NeonHelper.WaitFor(
                     () =>
                     {
-                        var readyReponse = node.SudoCommand("docker exec neon-rabbitmq rabbitmqctl status", node.DefaultRunOptions & ~RunOptions.FaultOnError);
+                        var readyReponse = node.SudoCommand("docker exec neon-hivemq rabbitmqctl status", node.DefaultRunOptions & ~RunOptions.FaultOnError);
 
                         return readyReponse.ExitCode == 0;
                     },

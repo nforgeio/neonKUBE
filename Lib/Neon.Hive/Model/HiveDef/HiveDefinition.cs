@@ -263,8 +263,8 @@ namespace Neon.Hive
                 "ceph-mon",
                 "ceph-mds",
                 "ceph-osd",
-                "rabbitmq",
-                "rabbitmq-manager"
+                "hivemq",
+                "hivemq-manager"
             };
 
         //---------------------------------------------------------------------
@@ -509,7 +509,7 @@ namespace Neon.Hive
         /// </summary>
         [JsonProperty(PropertyName = "RabbitMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public RabbitMQOptions RabbitMQ{ get; set; } = new RabbitMQOptions();
+        public HiveMQOptions RabbitMQ{ get; set; } = new HiveMQOptions();
 
         /// <summary>
         /// The Docker image to be used to provision public and private proxies and proxy bridges.
@@ -791,7 +791,7 @@ namespace Neon.Hive
             Dashboard         = Dashboard ?? new DashboardOptions();
             Ceph              = Ceph ?? new CephOptions();
             Varnish           = Varnish ?? new VarnishOptions();
-            RabbitMQ          = RabbitMQ ?? new RabbitMQOptions();
+            RabbitMQ          = RabbitMQ ?? new HiveMQOptions();
 
             ProxyImage        = ProxyImage ?? defaultProxyImage;
             ProxyVaultImage   = ProxyVaultImage ?? defaultProxyVaultImage;
@@ -1257,27 +1257,27 @@ namespace Neon.Hive
 
             groups.Add("ceph-osd", members);
 
-            // [rabbitmq] group
+            // [hivemq] group
 
             members.Clear();
 
-            foreach (var node in SortedNodes.Where(n => n.Labels.RabbitMQ || n.Labels.RabbitMQManager))
+            foreach (var node in SortedNodes.Where(n => n.Labels.HiveMQ || n.Labels.HiveMQManager))
             {
                 members.Add(node);
             }
 
-            groups.Add("rabbitmq", members);
+            groups.Add("hivemq", members);
 
-            // [rabbitmq-manager] group
+            // [hivemq-manager] group
 
             members.Clear();
 
-            foreach (var node in SortedNodes.Where(n => n.Labels.RabbitMQManager))
+            foreach (var node in SortedNodes.Where(n => n.Labels.HiveMQManager))
             {
                 members.Add(node);
             }
 
-            groups.Add("rabbitmq-manager", members);
+            groups.Add("hivemq-manager", members);
 
             return groups;
         }

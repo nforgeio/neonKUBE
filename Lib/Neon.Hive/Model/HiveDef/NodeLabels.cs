@@ -437,38 +437,39 @@ namespace Neon.Hive
         public bool LogEsData { get; set; } = false;
 
         //---------------------------------------------------------------------
-        // Build-in hive RabbitMQ queue related labels.
+        // Build-in hive HiveMQ queue related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="RabbitMQ"/>.
+        /// Reserved label name for <see cref="HiveMQ"/>.
         /// </summary>
-        public const string LabelRabbitMQ = HiveDefinition.ReservedLabelPrefix + ".rabbitmq";
+        public const string LabelHiveMQ = HiveDefinition.ReservedLabelPrefix + ".hivemq";
 
         /// <summary>
-        /// Reserved label name for <see cref="RabbitMQManager"/>.
+        /// Reserved label name for <see cref="HiveMQManager"/>.
         /// </summary>
-        public const string LabelRabbitMQManager = HiveDefinition.ReservedLabelPrefix + ".rabbitmq-manager";
+        public const string LabelHiveMQManager = HiveDefinition.ReservedLabelPrefix + ".hivemq-manager";
 
         /// <summary>
-        /// <b>io.neonhive.rabbitmq</b> [<c>bool</c>]: Indicates that the node should host a
+        /// <b>io.neonhive.hivemq</b> [<c>bool</c>]: Indicates that the node should host a
         /// RabbitMQ instance. This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "RabbitMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "HiveMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
-        public bool RabbitMQ { get; set; } = false;
+        public bool HiveMQ { get; set; } = false;
 
         /// <summary>
         /// <para>
-        /// <b>io.neonhive.rabbitmq-manager</b> [<c>bool</c>]: Indicates that a with <see cref="RabbitMQ"/><c>=true</c> 
-        /// node should also host the management plugin. This defaults to <c>false</c>.
+        /// <b>io.neonhive.hivemq-manager</b> [<c>bool</c>]: Indicates that the node should
+        /// host a RabbitMQ instance with the management plugin when <see cref="HiveMQ"/><c>=true</c> .
+        /// This defaults to <c>false</c>.
         /// </para>
         /// <note>
-        /// Setting this to <c>true</c> implicitly sets <see cref="RabbitMQ"/> to <c>true</c>.
+        /// Setting this to <c>true</c> implicitly sets <see cref="HiveMQ"/> to <c>true</c>.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "RabbitMQManager", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "HiveMQManager", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
-        public bool RabbitMQManager { get; set; } = false;
+        public bool HiveMQManager { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Ceph Storage Cluster related labels.
@@ -726,8 +727,8 @@ namespace Neon.Hive
 
                 list.Add(new KeyValuePair<string, object>(LabelLogEsData,               LogEsData));
 
-                list.Add(new KeyValuePair<string, object>(LabelRabbitMQ,                RabbitMQ));
-                list.Add(new KeyValuePair<string, object>(LabelRabbitMQManager,         RabbitMQManager));
+                list.Add(new KeyValuePair<string, object>(LabelHiveMQ,                  HiveMQ));
+                list.Add(new KeyValuePair<string, object>(LabelHiveMQManager,           HiveMQManager));
 
                 list.Add(new KeyValuePair<string, object>(LabelCephMON,                 CephMON));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 CephOSD));
@@ -814,8 +815,8 @@ namespace Neon.Hive
 
                     case LabelLogEsData:                node.Labels.LogEsData = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
-                    case LabelRabbitMQ:                 node.Labels.RabbitMQ = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelRabbitMQManager:          node.Labels.RabbitMQManager = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelHiveMQ:                   node.Labels.HiveMQ = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelHiveMQManager:            node.Labels.HiveMQManager = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
                     case LabelCephMON:                  node.Labels.CephMON = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephOSD:                  node.Labels.CephOSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
@@ -894,6 +895,9 @@ namespace Neon.Hive
             target.CephOSDCacheSizeMB   = this.CephOSDCacheSizeMB;
             target.CephOSDJournalSizeMB = this.CephOSDJournalSizeMB;
             target.CephMDSCacheSizeMB   = this.CephMDSCacheSizeMB;
+
+            target.HiveMQ               = this.HiveMQ;
+            target.HiveMQManager        = this.HiveMQManager;
 
             foreach (var item in this.Custom)
             {

@@ -292,16 +292,16 @@ export HiveHostPorts_LogHostSysLog=5007
 export HiveHostPorts_CephDashboard=5008
 
 # The RabbitMQ/Erlang peer discovery protocol port.
-export HiveHostPorts_RabbitMQEPMD=5009
+export HiveHostPorts_HiveMQEPMD=5009
 
 # The RabbitMQ message broker AMPQ port.
-export HiveHostPorts_RabbitMQAMPQ=5010
+export HiveHostPorts_HiveMQAMPQ=5010
 
 # The RabbitMQ message broker cluster internal communication port.
-export HiveHostPorts_RabbitMQDIST=5011
+export HiveHostPorts_HiveMQDIST=5011
 
 # The RabbitMQ management dashboard port.
-export HiveHostPorts_RabbitMQDashboard=5012
+export HiveHostPorts_HiveMQDashboard=5012
 
 # This port is reserved and must not be assigned to any service.  This is
 # currently referenced by the manager load balancer rule for Azure deployments

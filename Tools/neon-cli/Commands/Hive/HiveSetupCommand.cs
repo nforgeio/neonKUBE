@@ -941,7 +941,7 @@ export HiveHostnames_RegistryCache=neon-registry-cache.$NEON_HIVE.nhive.io
 export HiveHostnames_LogEsData=neon-log-esdata.$NEON_HIVE.nhive.io
 export HiveHostnames_Consul=neon-consul.$NEON_HIVE.nhive.io
 export HiveHostnames_Vault=neon-vault.$NEON_HIVE.nhive.io
-export HiveHostnames_RabbitMQ=neon-rabbitmq.$NEON_HIVE.nhive.io
+export HiveHostnames_RabbitMQ=neon-hivemq.$NEON_HIVE.nhive.io
 export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.$NEON_HIVE.nhive.io
 
 if [ -d /mnt/host/ca-certificates ] ; then
@@ -1784,7 +1784,7 @@ fi
                         }
                     }
 
-                    if (pullAll || node.Metadata.Labels.RabbitMQ)
+                    if (pullAll || node.Metadata.Labels.HiveMQ)
                     {
                         images.Add(Program.ResolveDockerImage(hive.Definition.RabbitMQ.RabbitMQImage));
                     }
@@ -3439,19 +3439,19 @@ systemctl start neon-volume-plugin
                     hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
                 });
 
-            // Create the [neon-rabbitmq-settings] Docker secrets for the [sysadmin],
+            // Create the [neon-hivemq-settings] Docker secrets for the [sysadmin],
             // [neon], and [user] accounts.
 
-            firstManager.InvokeIdempotentAction("setup/neon-rabbitmq-settings",
+            firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings",
                 () =>
                 {
                     firstManager.Status = "secret: RabbitMQ settings";
 
                     var rabbitMQHosts = new List<string>();
 
-                    foreach (var node in hive.Definition.SortedNodes.Where(n => n.Labels.RabbitMQ))
+                    foreach (var node in hive.Definition.SortedNodes.Where(n => n.Labels.HiveMQ))
                     {
-                        rabbitMQHosts.Add($"{node.Name}.{hive.Definition.Hostnames.RabbitMQ}");
+                        rabbitMQHosts.Add($"{node.Name}.{hive.Definition.Hostnames.HiveMQ}");
                     }
 
                     // $todo(jeff.lill):
@@ -3465,7 +3465,7 @@ systemctl start neon-volume-plugin
                     var rabbitSettings = new RabbitMQSettings()
                     {
                         Hosts       = rabbitMQHosts,
-                        Port        = HiveHostPorts.RabbitMQAMPQ,
+                        Port        = HiveHostPorts.HiveMQAMPQ,
                         TlsEnabled  = false,
                         Username    = hive.Definition.RabbitMQ.SysadminAccount,
                         Password    = hive.Definition.RabbitMQ.SysadminPassword,
@@ -3474,19 +3474,19 @@ systemctl start neon-volume-plugin
 
                     sysadminRabbitMQSettings = NeonHelper.JsonClone(rabbitSettings);    // Save a copy of the [sysadmin] settings for later.
 
-                    hive.Docker.Secret.Set("neon-rabbitmq-sysadmin", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
+                    hive.Docker.Secret.Set("neon-hivemq-sysadmin", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
 
                     rabbitSettings.Username    = hive.Definition.RabbitMQ.NeonAccount;
                     rabbitSettings.Password    = hive.Definition.RabbitMQ.NeonPassword;
                     rabbitSettings.VirtualHost = "/neon";
 
-                    hive.Docker.Secret.Set("neon-rabbitmq-neon", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
+                    hive.Docker.Secret.Set("neon-hivemq-neon", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
 
                     rabbitSettings.Username    = hive.Definition.RabbitMQ.AppAccount;
                     rabbitSettings.Password    = hive.Definition.RabbitMQ.AppPassword;
                     rabbitSettings.VirtualHost = "/app";
 
-                    hive.Docker.Secret.Set("neon-rabbitmq-app", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
+                    hive.Docker.Secret.Set("neon-hivemq-app", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
                 });
         }
 
@@ -3990,19 +3990,19 @@ systemctl restart sshd
                     {
                         var rabbitDashboard = new HiveDashboard()
                         {
-                            Name        = "rabbitmq",
-                            Title       = "RabbitMQ Messaging System",
+                            Name        = "hivemq",
+                            Title       = "Hive Messaging System",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
+                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHiveMQDashboard}",
                             //Url         = $"https://healthy-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
-                            Description = "RabbitMQ messaging system"
+                            Description = "Hive messaging system"
                         };
 
                         hive.Dashboard.Set(rabbitDashboard);
 
                         var rule = new LoadBalancerTcpRule()
                         {
-                            Name     = "neon-rabbitmq-dashboard",
+                            Name     = "neon-hivemq-dashboard",
                             System   = true,
                             Resolver = null
                         };
@@ -4017,7 +4017,7 @@ systemctl restart sshd
                         rule.Frontends.Add(
                             new LoadBalancerTcpFrontend()
                             {
-                                ProxyPort = HiveHostPorts.ProxyPrivateRabbitMQDashboard
+                                ProxyPort = HiveHostPorts.ProxyPrivateHiveMQDashboard
                             });
 
                         rule.Backends.Add(
@@ -4025,7 +4025,7 @@ systemctl restart sshd
                             {
                                 Group      = "rabbitmq-management",
                                 GroupLimit = 5,
-                                Port       = HiveHostPorts.RabbitMQDashboard
+                                Port       = HiveHostPorts.HiveMQDashboard
                             });
 
                         hive.PrivateLoadBalancer.SetRule(rule);

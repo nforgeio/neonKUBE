@@ -49,7 +49,7 @@
   "Ceph": {
     "Enabled": true
   },
-  "RabbitMQ": {
+  "HiveMQ": {
     "Precompile":  true
   },
   "Nodes": {

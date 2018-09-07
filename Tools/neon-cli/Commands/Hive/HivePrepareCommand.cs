@@ -466,7 +466,7 @@ Server Requirements:
                     $"*.{hive.Name}.nhive.io",
                     $"*.neon-vault.{hive.Name}.nhive.io",
                     $"*.neon-registry-cache.{hive.Name}.nhive.io",
-                    $"*.neon-rabbitmq.{hive.Name}.nhive.io"
+                    $"*.neon-hivemq.{hive.Name}.nhive.io"
                 };
 
                 hiveLogin.HiveCertificate = TlsCertificate.CreateSelfSigned(hostnames, bitCount, validDays, 

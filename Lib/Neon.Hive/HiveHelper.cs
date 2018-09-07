@@ -1047,9 +1047,9 @@ namespace Neon.Hive
                 hosts.Add($"{node.Name}.{hiveDefinition.Hostnames.Base}", IPAddress.Parse(node.PrivateAddress));
             }
 
-            foreach (var node in hiveDefinition.Nodes.Where(n => n.Labels.RabbitMQ))
+            foreach (var node in hiveDefinition.Nodes.Where(n => n.Labels.HiveMQ))
             {
-                hosts.Add($"{node.Name}.{hiveDefinition.Hostnames.RabbitMQ}", IPAddress.Parse(node.PrivateAddress));
+                hosts.Add($"{node.Name}.{hiveDefinition.Hostnames.HiveMQ}", IPAddress.Parse(node.PrivateAddress));
             }
 
             hosts.Add(hiveDefinition.Hostnames.LogEsData, healthyManager.PrivateAddress);

@@ -696,7 +696,7 @@ USAGE:
 
         ""Precompile"": false,
 
-        // The Docker image to be used to provision the [neon-rabbitmq] service.
+        // The Docker image to be used to provision the [neon-hivemq] cluster nodes.
         // This defaults to [nhive/rabbitmq:latest].
 
          ""RabbitMQImage"": ""nhive/rabbitmq:latest""

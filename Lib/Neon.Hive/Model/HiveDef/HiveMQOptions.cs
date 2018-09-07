@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RabbitMQOptions.cs
+// FILE:	    HiveMQOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -31,7 +31,7 @@ namespace Neon.Hive
     /// <a href="https://rabbitmq.com/">RabbitMQ message queue</a>
     /// cluster.
     /// </summary>
-    public class RabbitMQOptions
+    public class HiveMQOptions
     {
         private const string defaultRamLimit         = "250MB";
         private const string defaultCompiledRamLimit = "500MB";
@@ -39,7 +39,7 @@ namespace Neon.Hive
         private const string defaultPassword         = HiveConst.DefaultPassword;
         private const bool   defaultPrecompile       = false;
         private const string defaultPartitionMode    = "autoheal";
-        private const string defaultRabbitMQImage    = HiveConst.NeonPublicRegistry + "/neon-rabbitmq:latest";
+        private const string defaultRabbitMQImage    = HiveConst.NeonPublicRegistry + "/neon-hivemq:latest";
 
         private string ramLimit = null;
 
@@ -182,7 +182,7 @@ namespace Neon.Hive
         public string PartitionMode { get; set; } = defaultPartitionMode;
 
         /// <summary>
-        /// The Docker image to be used to provision the <b>neon-rabbitmq</b> service.
+        /// The Docker image to be used to provision the <b>neon-hivemq</b> service.
         /// This defaults to <b>nhive/rabbitmq:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "RabbitMQImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -226,7 +226,7 @@ namespace Neon.Hive
 
                 if (!double.TryParse(numberPart, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number) || number <= 0.0 || number >= 100.0)
                 {
-                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] is not within: 0% < {nameof(RamHighWatermark)} <= 100%");
+                    throw new HiveDefinitionException($"[{nameof(HiveMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] is not within: 0% < {nameof(RamHighWatermark)} <= 100%");
                 }
 
                 RamHighWatermark = (number / 100).ToString("0.00#", CultureInfo.InvariantCulture);
@@ -237,7 +237,7 @@ namespace Neon.Hive
 
                 if (!double.TryParse(RamHighWatermark, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number) || number <= 0.0 || number >= 1.0)
                 {
-                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] is not within: 0.0 < {nameof(RamHighWatermark)} <= 1.0");
+                    throw new HiveDefinitionException($"[{nameof(HiveMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] is not within: 0.0 < {nameof(RamHighWatermark)} <= 1.0");
                 }
 
                 RamHighWatermark = number.ToString("0.00#", CultureInfo.InvariantCulture);
@@ -250,7 +250,7 @@ namespace Neon.Hive
 
                 if (number <= 0)
                 {
-                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] must be greater than 0.");
+                    throw new HiveDefinitionException($"[{nameof(HiveMQOptions)}.{nameof(RamHighWatermark)}={RamHighWatermark}] must be greater than 0.");
                 }
 
                 RamHighWatermark = number.ToString();
@@ -260,11 +260,11 @@ namespace Neon.Hive
 
             if (Precompile && ramSize < 500 * NeonHelper.Mega)
             {
-                throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamLimit)}={RamLimit}] cannot be less than [500MB] when [{nameof(RabbitMQOptions)}.{nameof(Precompile)}={Precompile}].");
+                throw new HiveDefinitionException($"[{nameof(HiveMQOptions)}.{nameof(RamLimit)}={RamLimit}] cannot be less than [500MB] when [{nameof(HiveMQOptions)}.{nameof(Precompile)}={Precompile}].");
             }
             else if (!Precompile && ramSize < 250 * NeonHelper.Mega)
             {
-                throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(RamLimit)}={RamLimit}] cannot be less than [250MB] when [{nameof(RabbitMQOptions)}.{nameof(Precompile)}={Precompile}].");
+                throw new HiveDefinitionException($"[{nameof(HiveMQOptions)}.{nameof(RamLimit)}={RamLimit}] cannot be less than [250MB] when [{nameof(HiveMQOptions)}.{nameof(Precompile)}={Precompile}].");
             }
 
             // DiskFreeLimit: We're going to keep things simple and convert relative
@@ -287,7 +287,7 @@ namespace Neon.Hive
 
                 if (!double.TryParse(numberPart, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number) || number <= 0.0 || number >= 100.0)
                 {
-                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] is not within: 0% < {nameof(DiskFreeLimit)} <= 100%");
+                    throw new HiveDefinitionException($"[{nameof(HiveMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] is not within: 0% < {nameof(DiskFreeLimit)} <= 100%");
                 }
 
                 DiskFreeLimit = (number / 100).ToString("0.00#", CultureInfo.InvariantCulture);
@@ -298,7 +298,7 @@ namespace Neon.Hive
 
                 if (!double.TryParse(DiskFreeLimit, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number) || number <= 0.0 || number >= 1.0)
                 {
-                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] is not within: 0.0 < {nameof(DiskFreeLimit)} <= 1.0");
+                    throw new HiveDefinitionException($"[{nameof(HiveMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] is not within: 0.0 < {nameof(DiskFreeLimit)} <= 1.0");
                 }
 
                 DiskFreeLimit = number.ToString("0.00#", CultureInfo.InvariantCulture);
@@ -311,7 +311,7 @@ namespace Neon.Hive
 
                 if (number < 1 * NeonHelper.Giga)
                 {
-                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] must be greater than [1GB].");
+                    throw new HiveDefinitionException($"[{nameof(HiveMQOptions)}.{nameof(DiskFreeLimit)}={DiskFreeLimit}] must be greater than [1GB].");
                 }
 
                 DiskFreeLimit = number.ToString();
@@ -327,7 +327,7 @@ namespace Neon.Hive
 
                 default:
 
-                    throw new HiveDefinitionException($"[{nameof(RabbitMQOptions)}.{nameof(PartitionMode)}={PartitionMode}] is not valid.  Specify one of [autoheal], [pause_minority], or [pause_if_all_down].");
+                    throw new HiveDefinitionException($"[{nameof(HiveMQOptions)}.{nameof(PartitionMode)}={PartitionMode}] is not valid.  Specify one of [autoheal], [pause_minority], or [pause_if_all_down].");
             }
 
             // We need to assign hive nodes to host the RabbitMQ instances.  We're going to do
@@ -341,24 +341,24 @@ namespace Neon.Hive
             //
             // Note also that [RabbitMQManager=true] implies [RabbitMQ=true].
 
-            foreach (var node in hiveDefinition.Nodes.Where(n => n.Labels.RabbitMQManager))
+            foreach (var node in hiveDefinition.Nodes.Where(n => n.Labels.HiveMQManager))
             {
-                node.Labels.RabbitMQ = true;
+                node.Labels.HiveMQ = true;
             }
 
-            if (hiveDefinition.Nodes.Count(n => n.Labels.RabbitMQ) == 0)
+            if (hiveDefinition.Nodes.Count(n => n.Labels.HiveMQ) == 0)
             {
                 foreach (var manager in hiveDefinition.Managers)
                 {
-                    manager.Labels.RabbitMQ        = true;
-                    manager.Labels.RabbitMQManager = true;
+                    manager.Labels.HiveMQ        = true;
+                    manager.Labels.HiveMQManager = true;
                 }
             }
-            else if (hiveDefinition.Nodes.Count(n => n.Labels.RabbitMQManager) == 0)
+            else if (hiveDefinition.Nodes.Count(n => n.Labels.HiveMQManager) == 0)
             {
-                var firstRabbitMQNode = hiveDefinition.Nodes.First(n => n.Labels.RabbitMQ);
+                var firstRabbitMQNode = hiveDefinition.Nodes.First(n => n.Labels.HiveMQ);
 
-                firstRabbitMQNode.Labels.RabbitMQManager = true;
+                firstRabbitMQNode.Labels.HiveMQManager = true;
             }
         }
     }

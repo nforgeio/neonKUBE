@@ -1,4 +1,4 @@
-RabbitMQ message queue with the management plugin base image deployed by neonHIVE.
+RabbitMQ message queue with the management plugin base image deployed to provide messaging services for neonHIVE.
 
 # Image Tags
 
@@ -73,7 +73,7 @@ cluster_secret=shared-secret
 # Create the [myrabbit-0] RabbitMQ node on the [server-0.mydomain.com] server.
 docker run \
     --detach \
-    --name neon-rabbitmq \
+    --name neon-hivemq \
     --env CLUSTER_NAME=my-message-cluster \
     --env CLUSTER_NODES=myrabbit-0@server-0.mydomain.com,myrabbit-1@server-1.mydomain",
     --env CLUSTER_PARTITION_MODE=autoheal \
@@ -81,14 +81,14 @@ docker run \
     --env RABBITMQ_ERLANG_COOKIE=$cluster_secret \
     --env RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt \
     --env RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key \
-    --mount type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq \
+    --mount type=volume,source=neon-hivemq,target=/var/lib/rabbitmq \
     --mount type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly \
     --restart always
 
 # Create the [myrabbit-1] RabbitMQ node on the [server-1.mydomain.com] server.
 docker run \
     --detach \
-    --name neon-rabbitmq \
+    --name neon-hivemq \
     --env CLUSTER_NAME=my-message-cluster \
     --env CLUSTER_NODES=myrabbit-0@server-0.mydomain.com,myrabbit-1@server-1.mydomain",
     --env CLUSTER_PARTITION_MODE=autoheal \
@@ -96,7 +96,7 @@ docker run \
     --env RABBITMQ_ERLANG_COOKIE=$cluster_secret \
     --env RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt \
     --env RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key \
-    --mount type=volume,source=neon-rabbitmq,target=/var/lib/rabbitmq \
+    --mount type=volume,source=neon-hivemq,target=/var/lib/rabbitmq \
     --mount type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly \
     --restart always
 ```
@@ -107,9 +107,9 @@ Another more flexible way, is to start the nodes and then use the `rabbitmqctl` 
 
 # Hive Deployment
 
-RabbitMQ is deployed automatically as one or more containers during hive setup.  By default, it'll be deployed to hive managers but you can target specific swarm or pet nodes by setting the `io.neonhive.rabbitmq` label to `true` for the target nodes.
+RabbitMQ is deployed automatically as one or more containers during hive setup.  By default, it'll be deployed to hive managers but you can target specific swarm or pet nodes by setting the `io.neonhive.hivemq` and/or `io.neonhive.hivemq-manager` label to `true` for the target nodes.
 
-Each RabbitMQ container will be named `neon-rabbitmq` and will also have a local named volume `neon-rabbitmq` for persistent storage.  A local hive DNS entry for each container will defined like `NODENAME.neon-rabbitmq.HIVENAME.nhive.io`, where *NODENAME* is the name of the hosting node and *HIVENAME* is the have name.  The management components are always enabled.
+Each RabbitMQ container will be named `neon-hivemq` and will also have a local named volume `neon-hivemq` for persistent storage.  A local hive DNS entry for each container will defined like `NODENAME.neon-hivemq.HIVENAME.nhive.io`, where *NODENAME* is the name of the hosting node and *HIVENAME* is the have name.  The management components are always enabled.
 
 The hive deployed containers also use these settings:
 
@@ -118,7 +118,7 @@ The hive deployed containers also use these settings:
 `RABBITMQ_DIST_PORT=5011`
 `RABBITMQ_MANAGEMENT_PORT=5012`
 
-Each built-in RabbitMQ instance deployed for the hive will have mount a local Docker volume named `neon-rabbitmq`.  This will be mapped to the `/var/lib/rabbitmq` directory within the container so that the message related data will persist across container restarts.
+Each built-in RabbitMQ instance deployed for the hive will have mount a local Docker volume named `neon-hivemq`.  This will be mapped to the `/var/lib/rabbitmq` directory within the container so that the message related data will persist across container restarts.
 
 neonHIVEs default to deploying RabbitMQ without precompiling and allocating 250MB RAM per each instance deployed to hive manager nodes.  We do this to reduce the overhead for very small development or testing hives.
 

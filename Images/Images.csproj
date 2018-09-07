@@ -159,8 +159,8 @@
     <Content Include="neon-varnish\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="neon-rabbitmq\rabbitmq-entrypoint.sh" />
-    <None Include="neon-rabbitmq\set-cluster-name.sh" />
+    <None Include="neon-hivemq\rabbitmq-entrypoint.sh" />
+    <None Include="neon-hivemq\set-cluster-name.sh" />
     <None Include="neon-varnish\build.ps1" />
     <None Include="neon-varnish\docker-entrypoint.sh" />
     <None Include="neon-varnish\Dockerfile">
@@ -168,16 +168,16 @@
     </None>
     <None Include="neon-varnish\publish.ps1" />
     <None Include="neon-varnish\README.md" />
-    <Content Include="neon-rabbitmq\.dockerignore">
+    <Content Include="neon-hivemq\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="neon-rabbitmq\build.ps1" />
-    <None Include="neon-rabbitmq\docker-entrypoint.sh" />
-    <None Include="neon-rabbitmq\Dockerfile">
+    <None Include="neon-hivemq\build.ps1" />
+    <None Include="neon-hivemq\docker-entrypoint.sh" />
+    <None Include="neon-hivemq\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="neon-rabbitmq\publish.ps1" />
-    <None Include="neon-rabbitmq\README.md" />
+    <None Include="neon-hivemq\publish.ps1" />
+    <None Include="neon-hivemq\README.md" />
     <None Include="test\docker-entrypoint.sh" />
     <None Include="test\Dockerfile" />
     <Content Include="_artifacts\README.txt" />

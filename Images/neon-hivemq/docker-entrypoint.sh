@@ -61,7 +61,7 @@ if [ "$CLUSTER_NODES" != "" ] ; then
     # This environment variable lists necessary information about the RabbitMQ
     # cluster nodes.  Each cluster node will have an entry like NODENAME@HOSTNAME,
     # where NODENAME is a simple name like "manager-0" and hostname is the resolvable
-    # hostname or IP address of the node like "manager-0.neon-rabbitmq.MYHIVE.nhive.io".
+    # hostname or IP address of the node like "manager-0.neon-hivemq.MYHIVE.nhive.io".
     # The node definitions are to be separated by commas.
     
     # Clear any existing configuration file.

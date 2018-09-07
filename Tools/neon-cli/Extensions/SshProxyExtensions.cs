@@ -183,9 +183,9 @@ namespace NeonCli
             sbHosts.AppendLineLinux("# Internal hive RabbitMQ related mappings:");
             sbHosts.AppendLineLinux();
 
-            foreach (var node in hiveDefinition.SortedNodes.Where(n => n.Labels.RabbitMQ))
+            foreach (var node in hiveDefinition.SortedNodes.Where(n => n.Labels.HiveMQ))
             {
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(node)} {node.Name}.{hiveDefinition.Hostnames.RabbitMQ}");
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(node)} {node.Name}.{hiveDefinition.Hostnames.HiveMQ}");
             }
 
             return sbHosts.ToString();

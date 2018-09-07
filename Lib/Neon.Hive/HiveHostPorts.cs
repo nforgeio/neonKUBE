@@ -128,22 +128,22 @@ namespace Neon.Hive
         /// <summary>
         /// The RabbitMQ/Erlang peer discovery protocol port.
         /// </summary>
-        public const int RabbitMQEPMD = 5009;
+        public const int HiveMQEPMD = 5009;
 
         /// <summary>
         /// The RabbitMQ message broker AMPQ port.
         /// </summary>
-        public const int RabbitMQAMPQ = 5010;
+        public const int HiveMQAMPQ = 5010;
 
         /// <summary>
         /// The RabbitMQ message broker cluster internal communication port.
         /// </summary>
-        public const int RabbitMQDIST = 5011;
+        public const int HiveMQDIST = 5011;
 
         /// <summary>
         /// The RabbitMQ management dashboard port.
         /// </summary>
-        public const int RabbitMQDashboard = 5012;
+        public const int HiveMQDashboard = 5012;
 
         /// <summary>
         /// This port is reserved and must not be assigned to any service.  This is
@@ -261,9 +261,9 @@ namespace Neon.Hive
         public const int ProxyPrivateKibanaDashboard = 5305;
 
         /// <summary>
-        /// The port assigned to the load balanced RabbitMQ dashboard.
+        /// The port assigned to the load balanced HiveMQ dashboard.
         /// </summary>
-        public const int ProxyPrivateRabbitMQDashboard = 5306;
+        public const int ProxyPrivateHiveMQDashboard = 5306;
 
         /// <summary>
         /// The first <b>neon-proxy-private</b> port available for routing custom
