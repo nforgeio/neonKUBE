@@ -137,7 +137,7 @@ namespace NeonCli
                     //---------------------------------------------------------
                     // Deploy the RabbitMQ cluster.
 
-                    hive.FirstManager.InvokeIdempotentAction("setup/rabbitmq-cluster",
+                    hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster",
                         () =>
                         {
                             // We're going to list the hive nodes that will host the
@@ -146,21 +146,20 @@ namespace NeonCli
                             // is started and ready before configuring the rest of the
                             // cluster.
 
-                            var rabbitMQNodes = hive.Nodes
+                            var hiveMQNodes = hive.Nodes
                                 .Where(n => n.Metadata.Labels.HiveMQ)
                                 .OrderBy(n => n.Name)
                                 .ToList();
 
-                            DeployRabbitMQ(rabbitMQNodes.First());
-                            Thread.Sleep(TimeSpan.FromSeconds(30));     // Give the first node a chance to initialize
+                            DeployHiveMQ(hiveMQNodes.First());
 
                             // Start the remaining nodes in parallel.
 
                             var actions = new List<Action>();
 
-                            foreach (var node in rabbitMQNodes.Skip(1))
+                            foreach (var node in hiveMQNodes.Skip(1))
                             {
-                                actions.Add(() => DeployRabbitMQ(node));
+                                actions.Add(() => DeployHiveMQ(node));
                             }
 
                             NeonHelper.WaitForParallel(actions);
@@ -173,31 +172,34 @@ namespace NeonCli
                             // We're going to run [rabbitmqctl] within the first RabbitMQ
                             // to accomplish this.
 
-                            var rabbitNode = rabbitMQNodes.First();
-
-                            // Wait for the RabbitMQ node to start and report being ready.
-
-
+                            var hiveMQNode = hiveMQNodes.First();
 
                             // Create the vhosts.
 
-                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost /app"));
-                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-neon", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost /neon"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost /app"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost /neon"));
 
                             // Create the users.
 
-                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.HiveMQ.AppAccount}' '{hive.Definition.HiveMQ.AppAccount}'"));
-                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.HiveMQ.NeonAccount}' '{hive.Definition.HiveMQ.NeonPassword}'"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.HiveMQ.AppAccount}' '{hive.Definition.HiveMQ.AppAccount}'"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.HiveMQ.NeonAccount}' '{hive.Definition.HiveMQ.NeonPassword}'"));
 
                             // Grant the [app] account full access to the [app] vhost, the [neon] account full
                             // access to the [neon] vhost, and the [sysadmin] account full access to both.
                             // Note that this doesn't need to be idempotent.
 
-                            rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app app \".*\" \".*\" \".*\"");
-                            rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /neon neon \".*\" \".*\" \".*\"");
+                            hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app app \".*\" \".*\" \".*\"");
+                            hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /neon neon \".*\" \".*\" \".*\"");
 
-                            rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
-                            rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
+                            hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
+                            hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
+
+                            // Clear the UX status for the HiveMQ nodes.
+
+                            foreach (var node in hiveMQNodes)
+                            {
+                                node.Status = string.Empty;
+                            }
                         });
 
                     //---------------------------------------------------------
@@ -552,7 +554,7 @@ namespace NeonCli
         /// Deploys RabbitMQ to a cluster node as a container.
         /// </summary>
         /// <param name="node">The target hive node.</param>
-        private void DeployRabbitMQ(SshProxy<NodeDefinition> node)
+        private void DeployHiveMQ(SshProxy<NodeDefinition> node)
         {
             // Deploy RabbitMQ only on the labeled nodes.
 
