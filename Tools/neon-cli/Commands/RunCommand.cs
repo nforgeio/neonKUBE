@@ -249,32 +249,11 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
                                     Program.Exit(result.ExitCode);
                                 }
 
-                                varContents = result.OutputText;
+                                varContents = NeonHelper.StripAnsibleWarnings(result.OutputText);
 
-                                // $hack(jeff.lill):
-                                //
-                                // Ansible has recently made change where they write this warning out to STDOUT:
-                                // 
-                                //      [WARNING] Ansible is in a world writable directory...
-                                //
-                                // There's an issue surrounding this:
-                                //
-                                //      https://github.com/ansible/ansible/issues/42388
-                                //
-                                // I requested that they write this out to STDERR but for now we're going
-                                // to look for this on the first line and strip it out if present.
+                                // $todo(jeff.lill): DELETE THIS!
 
-                                var trimmed = varContents.TrimStart();
-
-                                if (trimmed.StartsWith("[WARNING] Ansible is in a world writable directory"))
-                                {
-                                    var posLF = trimmed.IndexOf('\n');
-
-                                    if (posLF != -1)
-                                    {
-                                        varContents = trimmed.Substring(posLF + 1);
-                                    }
-                                }
+                                File.WriteAllText(@"C:\Temp\test.yaml", varContents);
                             }
 
                             // [varContents] now holds the decrypted variables formatted as YAML.
@@ -288,7 +267,7 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
 
                             try
                             {
-                                yaml.Load(new StringReader(varContents));
+                                yaml.Load(varContents);
                             }
                             catch (Exception e)
                             {

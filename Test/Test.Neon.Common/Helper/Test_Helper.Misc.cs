@@ -539,5 +539,28 @@ namespace TestCommon
             Assert.True(didTask2);
             Assert.True(didTask3);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void StripAnsibleWarnings()
+        {
+            var text =
+@" [WARNING] Ansible is being run in a world writable directory (/cwd), ignoring it as an ansible.cfg source. For more information see https://docs.ansible.com/ansible/devel/reference_appendices/config.html#cfg-in-world-writable-dir
+# WARNING! 
+#
+# This file includes the secrets required to setup and configure the 
+# WRT-00-MAIN cluster.  This must always be encrypted at rest and
+# also when committed to Git.  You can use the following commands to
+# view or edit this file using the [tarukino-git] encryption password:
+#
+#		neon file view secrets.yaml tarukino-git
+#		neon file edit secrets.yaml tarukino-git
+# Devops credentials
+DEVOPS:
+";
+            var stripped = NeonHelper.StripAnsibleWarnings(text);
+
+            Assert.StartsWith("# WARNING!", stripped);
+        }
     }
 }

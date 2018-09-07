@@ -199,8 +199,8 @@ This can be easily accomplished with a custom script.
             //
             // I tried to call [Program.ExecuteRecurse()] here to recurse into
             // the [neon vault -- COMMAND --vault-password-file=NAME PATH] commands
-            // but it didn't work for [edit].  It looks like the command did run but then
-            // gets stuck.  I could have sworn that I had this working at one
+            // but it didn't work for [edit].  It looks like the command did run but 
+            // then gets stuck.  I could have sworn that I had this working at one
             // point but I can't get it working again.  I think the standard 
             // I/O streams being redirect might be confusing Docker and Ansible,
             // since Ansible needs to access the Docker TTY.
@@ -312,7 +312,7 @@ This can be easily accomplished with a custom script.
 
         /// <summary>
         /// Strips off a weird prefix and suffix from Ansible error messages 
-        /// if present.  I'm  assuming that these are TTY formatting codes.
+        /// if present.  I assume that these are TTY formatting codes.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
