@@ -250,10 +250,6 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
                                 }
 
                                 varContents = NeonHelper.StripAnsibleWarnings(result.OutputText);
-
-                                // $todo(jeff.lill): DELETE THIS!
-
-                                File.WriteAllText(@"C:\Temp\test.yaml", varContents);
                             }
 
                             // [varContents] now holds the decrypted variables formatted as YAML.
