@@ -26,7 +26,7 @@ using Neon.Hive;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>load-balancer|lb</b> command.
+    /// Implements the <b>loadbalancer|lb</b> command.
     /// </summary>
     public class LoadBalancerCommand : CommandBase
     {
@@ -38,17 +38,17 @@ Manages the hive's public and private proxies.
 
 USAGE:
 
-    neon load-balancer|lb help
-    neon load-balancer|lb NAME build
-    neon load-balancer|lb NAME get [--yaml] RULE
-    neon load-balancer|lb NAME inspect
-    neon load-balancer|lb NAME [--all] [--sys] list|ls
-    neon load-balancer|lb NAME remove|rm RULE
-    neon load-balancer|lb NAME set FILE
-    neon load-balancer|lb NAME set -
-    neon load-balancer|lb NAME settings FILE
-    neon load-balancer|lb NAME settings -
-    neon load-balancer|lb NAME status
+    neon loadbalancer|lb help
+    neon loadbalancer|lb NAME build
+    neon loadbalancer|lb NAME get [--yaml] RULE
+    neon loadbalancer|lb NAME inspect
+    neon loadbalancer|lb NAME [--all] [--sys] list|ls
+    neon loadbalancer|lb NAME remove|rm RULE
+    neon loadbalancer|lb NAME set FILE
+    neon loadbalancer|lb NAME set -
+    neon loadbalancer|lb NAME settings FILE
+    neon loadbalancer|lb NAME settings -
+    neon loadbalancer|lb NAME status
 
 ARGUMENTS:
 
@@ -163,7 +163,7 @@ See the documentation for more load balancer rule and setting details.
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "load-balancer" }; }
+            get { return new string[] { "loadbalancer" }; }
         }
 
         public override string[] AltWords
