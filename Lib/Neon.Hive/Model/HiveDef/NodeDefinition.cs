@@ -570,7 +570,7 @@ namespace Neon.Hive
                 {
                     throw new HiveDefinitionException($"Node [{Name}] assigns an empty group in [{nameof(HostGroups)}].");
                 }
-                else if (HiveDefinition.StandardHostGroups.Contains(group))
+                else if (HiveHostGroups.BuiltIn.Contains(group))
                 {
                     throw new HiveDefinitionException($"Node [{Name}] assigns the standard [{group}] in [{nameof(HostGroups)}].  Standard groups cannot be explicitly assigned since [neon-cli] handles them automatically.");
                 }

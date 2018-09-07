@@ -247,26 +247,6 @@ namespace Neon.Hive
             return size;
         }
 
-        /// <summary>
-        /// Returns the set of the standard built-in hive host groups.
-        /// </summary>
-        public static HashSet<string> StandardHostGroups { get; private set; } =
-            new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
-            {
-                "all",
-                "hive",
-                "swarm",
-                "managers",
-                "workers",
-                "pets",
-                "ceph",
-                "ceph-mon",
-                "ceph-mds",
-                "ceph-osd",
-                "hivemq",
-                "hivemq-manager"
-            };
-
         //---------------------------------------------------------------------
         // Instance members
 
@@ -1132,7 +1112,7 @@ namespace Neon.Hive
             {
                 foreach (var group in node.HostGroups)
                 {
-                    if (StandardHostGroups.Contains(group))
+                    if (HiveHostGroups.BuiltIn.Contains(group))
                     {
                         continue;   // Ignore explicit built-in group assignments.
                     }
@@ -1166,7 +1146,7 @@ namespace Neon.Hive
                     members.Add(node);
                 }
 
-                groups.Add("all", members);
+                groups.Add(HiveHostGroups.All, members);
             }
 
             // [swarm] group
@@ -1178,7 +1158,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("swarm", members);
+            groups.Add(HiveHostGroups.Swarm, members);
 
             // [managers] group
 
@@ -1189,7 +1169,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("managers", members);
+            groups.Add(HiveHostGroups.Managers, members);
 
             // [workers] group
 
@@ -1200,7 +1180,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("workers", members);
+            groups.Add(HiveHostGroups.Workers, members);
 
             // [pets] group
 
@@ -1211,7 +1191,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("pets", members);
+            groups.Add(HiveHostGroups.Pets, members);
 
             // [ceph] group
 
@@ -1222,7 +1202,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("ceph", members);
+            groups.Add(HiveHostGroups.Ceph, members);
 
             // [ceph-mon] group
 
@@ -1233,7 +1213,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("ceph-mon", members);
+            groups.Add(HiveHostGroups.CephMON, members);
 
             // [ceph-mds] group
 
@@ -1244,7 +1224,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("ceph-mds", members);
+            groups.Add(HiveHostGroups.CephMDS, members);
 
             // [ceph-osd] group
 
@@ -1255,7 +1235,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("ceph-osd", members);
+            groups.Add(HiveHostGroups.CephOSD, members);
 
             // [hivemq] group
 
@@ -1266,7 +1246,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("hivemq", members);
+            groups.Add(HiveHostGroups.HiveMQ, members);
 
             // [hivemq-manager] group
 
@@ -1277,7 +1257,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add("hivemq-manager", members);
+            groups.Add(HiveHostGroups.HiveMQManager, members);
 
             return groups;
         }

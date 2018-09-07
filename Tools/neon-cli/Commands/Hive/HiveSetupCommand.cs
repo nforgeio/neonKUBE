@@ -3916,7 +3916,7 @@ systemctl restart sshd
                             rule.Backends.Add(
                                 new LoadBalancerTcpBackend()
                                 {
-                                    Group      = "ceph-mon",
+                                    Group      = HiveHostGroups.CephMON,
                                     GroupLimit = 5,
                                     Port       = HiveHostPorts.CephDashboard
                                 });
@@ -3984,10 +3984,12 @@ systemctl restart sshd
                         firstManager.Status = string.Empty;
                     }
 
-                    // Configure the RabbitMQ dashboard.
+                    // Configure the HiveMQ dashboard.
 
                     if (hive.Definition.Dashboard.RabbitMQ)
                     {
+                        firstManager.Status = "hivemq dashboard";
+
                         var rabbitDashboard = new HiveDashboard()
                         {
                             Name        = "hivemq",
@@ -4023,7 +4025,7 @@ systemctl restart sshd
                         rule.Backends.Add(
                             new LoadBalancerTcpBackend()
                             {
-                                Group      = "rabbitmq-management",
+                                Group      = "hivemq-management",
                                 GroupLimit = 5,
                                 Port       = HiveHostPorts.HiveMQDashboard
                             });

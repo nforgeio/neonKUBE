@@ -183,7 +183,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The Docker image to be used to provision the <b>neon-hivemq</b> service.
-        /// This defaults to <b>nhive/rabbitmq:latest</b>.
+        /// This defaults to <b>nhive/neon-hivemq:latest</b>.
         /// </summary>
         [JsonProperty(PropertyName = "RabbitMQImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultRabbitMQImage)]

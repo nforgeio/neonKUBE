@@ -120,7 +120,7 @@ namespace Neon.Hive
         public List<NodeDefinition> SelectGroupNodes(Dictionary<string, List<NodeDefinition>> hostGroups)
         {
             Covenant.Requires<ArgumentNullException>(hostGroups != null);
-            Covenant.Assert(hostGroups.Count(g => g.Key.Equals("all", StringComparison.InvariantCultureIgnoreCase)) > 0, "Expecting the [all] group to be present.");
+            Covenant.Assert(hostGroups.Count(g => g.Key.Equals(HiveHostGroups.All, StringComparison.InvariantCultureIgnoreCase)) > 0, "Expecting the [all] group to be present.");
 
             if (string.IsNullOrEmpty(Group))
             {

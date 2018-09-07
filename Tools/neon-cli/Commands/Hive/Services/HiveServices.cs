@@ -591,7 +591,7 @@ namespace NeonCli
                 node.InvokeIdempotentAction("setup/rabbitmq-node",
                     () =>
                     {
-                        node.Status = "rabbitmq: start";
+                        node.Status = "hivemq: start";
 
                         var response = node.DockerCommand(
                                     "docker run",
@@ -633,7 +633,7 @@ namespace NeonCli
                 var timeout  = TimeSpan.FromMinutes(4);
                 var pollTime = TimeSpan.FromSeconds(2);
 
-                node.Status = "rabbitmq: waiting";
+                node.Status = "hivemq: waiting";
 
                 try
                 {
@@ -653,7 +653,7 @@ namespace NeonCli
                     return;
                 }
 
-                node.Status = "rabbitmq: ready";
+                node.Status = "hivemq: ready";
             }
         }
 
