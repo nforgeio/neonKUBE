@@ -77,7 +77,7 @@ namespace Neon.Hive
         /// Includes all hive hosts running HiveMQ (aka RabbitMQ) services that also
         /// enable the management plugin.
         /// </summary>
-        public const string HiveMQManager = "hivemq-manager";
+        public const string HiveMQManagers = "hivemq-managers";
 
         /// <summary>
         /// Returns the set of the standard built-in hive host groups.
@@ -95,7 +95,7 @@ namespace Neon.Hive
                 CephMDS,
                 CephOSD,
                 HiveMQ,
-                HiveMQManager
+                HiveMQManagers
             };
     }
 }

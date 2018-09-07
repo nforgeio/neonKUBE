@@ -54,14 +54,14 @@ ARGUMENTS:
 
     NAME    - Load balancer name: [public] or [private].
     RULE    - Rule name.
-    FILE    - Path to a JSON file.
+    FILE    - Path to a JSON or YAML file.
     -       - Indicates that JSON/YAML is read from standard input.
 
 COMMANDS:
 
     help            - Prints load balacer rule details.
-    build           - Forces the [neon-proxy-manager] to rebuild
-                      the load balancer configuration.
+    deploy          - Signals [neon-proxy-manager] to quickly deploy
+                      any pending changes.
     get             - Output a specific rule as JSON by default.
                       Use [--yaml] to return as YAML.
     haproxy         - Outputs the HAProxy configuration.
@@ -355,9 +355,9 @@ See the documentation for more load balancer rule and setting details.
                     Console.WriteLine();
                     break;
 
-                case "build":
+                case "deploy":
 
-                    loadBalancer.Build();
+                    loadBalancer.Deploy();
                     break;
 
                 case "remove":

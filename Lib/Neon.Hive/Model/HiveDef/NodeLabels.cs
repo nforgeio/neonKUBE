@@ -447,7 +447,7 @@ namespace Neon.Hive
         /// <summary>
         /// Reserved label name for <see cref="HiveMQManager"/>.
         /// </summary>
-        public const string LabelHiveMQManager = HiveDefinition.ReservedLabelPrefix + ".hivemq-manager";
+        public const string LabelHiveMQManager = HiveDefinition.ReservedLabelPrefix + ".hivemq.manager";
 
         /// <summary>
         /// <b>io.neonhive.hivemq</b> [<c>bool</c>]: Indicates that the node should host a
@@ -459,7 +459,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// <b>io.neonhive.hivemq-manager</b> [<c>bool</c>]: Indicates that the node should
+        /// <b>io.neonhive.hivemq.manager</b> [<c>bool</c>]: Indicates that the node should
         /// host a RabbitMQ instance with the management plugin when <see cref="HiveMQ"/><c>=true</c> .
         /// This defaults to <c>false</c>.
         /// </para>
@@ -684,9 +684,11 @@ namespace Neon.Hive
         {
             get
             {
-                // $note(jeff.lill): 
+                // WARNING: 
                 //
                 // This method will need to be updated whenever new standard labels are added or changed.
+                // The [nhive/neon-hive-manager] and [nhive/neon-proxy-manager] service images will also 
+                // need to be rebuilt.
 
                 var list = new List<KeyValuePair<string, object>>(20);
 
@@ -767,6 +769,12 @@ namespace Neon.Hive
         /// <param name="labels">The label dictionary.</param>
         internal void Parse(Dictionary<string, string> labels)
         {
+            // WARNING: 
+            //
+            // This method will need to be updated whenever new standard labels are added or changed.
+            // The [nhive/neon-hive-manager] and [nhive/neon-proxy-manager] service images will also 
+            // need to be rebuilt.
+
             foreach (var label in labels)
             {
                 switch (label.Key)
@@ -868,6 +876,12 @@ namespace Neon.Hive
         internal void CopyTo(NodeLabels target)
         {
             Covenant.Requires<ArgumentNullException>(target != null);
+
+            // WARNING: 
+            //
+            // This method will need to be updated whenever new standard labels are added or changed.
+            // The [nhive/neon-hive-manager] and [nhive/neon-proxy-manager] service images will also 
+            // need to be rebuilt.
 
             target.StorageCapacityGB    = this.StorageCapacityGB;
             target.StorageLocal         = this.StorageLocal;

@@ -111,9 +111,9 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Forces the <b>neon-proxy-manager</b> to regenerate the configuration for the load balancer.
+        /// Signals the <b>neon-proxy-manager</b> to regenerate the load balancer and proxy configurations.
         /// </summary>
-        public void Build()
+        public void Deploy()
         {
             hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/proxy-hash", Convert.ToBase64String(new byte[16])).Wait();
             hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();

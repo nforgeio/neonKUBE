@@ -175,6 +175,10 @@ namespace NeonCli
 
                             var rabbitNode = rabbitMQNodes.First();
 
+                            // Wait for the RabbitMQ node to start and report being ready.
+
+
+
                             // Create the vhosts.
 
                             hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => rabbitNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost /app"));
@@ -640,7 +644,7 @@ namespace NeonCli
                     NeonHelper.WaitFor(
                     () =>
                     {
-                        var readyReponse = node.SudoCommand("docker exec neon-hivemq rabbitmqctl status", node.DefaultRunOptions & ~RunOptions.FaultOnError);
+                        var readyReponse = node.SudoCommand($"docker exec neon-hivemq rabbitmqctl node_health_check -n {node.Name}@{node.Name}.{hive.Definition.Hostnames.HiveMQ}", node.DefaultRunOptions & ~RunOptions.FaultOnError);
 
                         return readyReponse.ExitCode == 0;
                     },

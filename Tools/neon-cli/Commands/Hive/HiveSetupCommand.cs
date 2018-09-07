@@ -1683,7 +1683,7 @@ fi
 
                         if (labelDefinitions.Count == 0)
                         {
-                            // This should never happen but better to be safe.
+                            // This should never happen but it's better to be safe.
 
                             continue;
                         }
@@ -4002,30 +4002,25 @@ systemctl restart sshd
 
                         hive.Dashboard.Set(rabbitDashboard);
 
-                        var rule = new LoadBalancerTcpRule()
+                        var rule = new LoadBalancerHttpRule()
                         {
                             Name     = "neon-hivemq-dashboard",
                             System   = true,
                             Resolver = null
                         };
 
-                        rule.CheckMode   = LoadBalancerCheckMode.Http;
-                        //rule.CheckTls    = true;
-                        rule.CheckTls    = false;
-                        rule.CheckExpect = @"rstatus ^2\d\d";
-
                         // Initialize the frontends and backends.
 
                         rule.Frontends.Add(
-                            new LoadBalancerTcpFrontend()
+                            new LoadBalancerHttpFrontend()
                             {
                                 ProxyPort = HiveHostPorts.ProxyPrivateHiveMQDashboard
                             });
 
                         rule.Backends.Add(
-                            new LoadBalancerTcpBackend()
+                            new LoadBalancerHttpBackend()
                             {
-                                Group      = "hivemq-management",
+                                Group      = HiveHostGroups.HiveMQManagers,
                                 GroupLimit = 5,
                                 Port       = HiveHostPorts.HiveMQDashboard
                             });

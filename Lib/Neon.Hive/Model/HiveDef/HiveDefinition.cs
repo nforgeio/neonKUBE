@@ -771,7 +771,7 @@ namespace Neon.Hive
             Dashboard         = Dashboard ?? new DashboardOptions();
             Ceph              = Ceph ?? new CephOptions();
             Varnish           = Varnish ?? new VarnishOptions();
-            HiveMQ          = HiveMQ ?? new HiveMQOptions();
+            HiveMQ            = HiveMQ ?? new HiveMQOptions();
 
             ProxyImage        = ProxyImage ?? defaultProxyImage;
             ProxyVaultImage   = ProxyVaultImage ?? defaultProxyVaultImage;
@@ -1248,7 +1248,7 @@ namespace Neon.Hive
 
             groups.Add(HiveHostGroups.HiveMQ, members);
 
-            // [hivemq-manager] group
+            // [hivemq-managers] group
 
             members.Clear();
 
@@ -1257,7 +1257,7 @@ namespace Neon.Hive
                 members.Add(node);
             }
 
-            groups.Add(HiveHostGroups.HiveMQManager, members);
+            groups.Add(HiveHostGroups.HiveMQManagers, members);
 
             return groups;
         }
