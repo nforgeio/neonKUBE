@@ -110,6 +110,12 @@ Server Requirements:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
+            if (commandLine.HasHelpOption)
+            {
+                Help();
+                Program.Exit(0);
+            }
+
             // Special-case handling of the [--remove-templates] option.
 
             if (commandLine.HasOption("--remove-templates"))
