@@ -65,7 +65,7 @@ RabbitMQ is often deployed as a cluster of multiple instances for resilience and
 
 The simplest way to configure node discovery is to pass the list of nodes in `CLUSTER_NODES` when launching each RabbitMQ instance also passing the specific RabbitMQ node name in `NODENAME`.  This statically configures the cluster using the RabbitMQ configuration file.
 
-Here's an example that creates a two node cluster on two different machines (**server-0.mydomain.com** and **server-1.mydomain.com**):
+Here's an example that creates a two node cluster on two different machines `server-0.mydomain.com` and `server-1.mydomain.com`:
 ```
 # Set the secret used to mutually authenticate the nodes.
 cluster_secret=shared-secret

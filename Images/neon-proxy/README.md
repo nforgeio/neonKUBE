@@ -1,19 +1,19 @@
-This is the standard neonHIVE network proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.  This can be deployed as a Docker container or service.
+This is the standard neonHIVE network proxy service based on `HAProxy` , `Consul`, and `Vault`.  This is typically deployed alongside the `neon-proxy-manager` service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.  This can be deployed as a Docker container or service.
 
 # Image Tags
 
-Images are tagged with the Git branch, image build date, and Git commit and an optional **-dirty** suffix if the image was built from a branch with uncommitted changes or untracked files.
+Images are tagged with the Git branch, image build date, and Git commit and an optional `-dirty` suffix if the image was built from a branch with uncommitted changes or untracked files.
 
-The most recent production build will be tagged as **latest**.
+The most recent production build will be tagged as `latest`
 
-From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
 # Additional Packages
 
 This image includes the following packages:
 
-* **jq** JSON parser
-* **unzip** zip archive utilities
+* `jq` JSON parser
+* `unzip` zip archive utilities
 * [tini](https://github.com/krallin/tini) is a simple init manager that can be used to ensure that zombie processes are reaped and that Linux signals are forwarded to sub-processes.
 
 # Basic Configuration
@@ -34,31 +34,31 @@ All you need to do is pass the **UPDATE_KEY** environment variable as the Consul
 
 # Environment Variables
 
-* **CONFIG_KEY** (*required*) - Consul key holding the HAProxy ZIP archive configuration.
+* `CONFIG_KEY` (*required*) - Consul key holding the HAProxy ZIP archive configuration.
 
-* **CONFIG_HASH_KEY** (*required*) - Consul key holding MD5 hash of the configuration used when polling for changes.
+* `CONFIG_HASH_KEY` (*required*) - Consul key holding MD5 hash of the configuration used when polling for changes.
 
-* **VAULT_CREDENTIALS** (*required*) - optionally names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.  If this is not specified or is blank, then the the proxy won't be able to handle HTTPS routes but HTTP and TCP routes will still work.
+* `VAULT_CREDENTIALS` (*required*) - optionally names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.  If this is not specified or is blank, then the the proxy won't be able to handle HTTPS routes but HTTP and TCP routes will still work.
 
-* **WARN_SECONDS** (*optional*) - seconds between logging warning while HAProxy is running with an out-of-date configuration.  This defaults to 300 (5 minutes).
+* `WARN_SECONDS` (*optional*) - seconds between logging warning while HAProxy is running with an out-of-date configuration.  This defaults to 300 (5 minutes).
 
-* **START_SECONDS** (*optional*) - seconds to give the chance HAProxy to start cleanly before processing configuration changes.  This defaults to 10 seconds.
+* `START_SECONDS` (*optional*) - seconds to give the chance HAProxy to start cleanly before processing configuration changes.  This defaults to 10 seconds.
 
-* **POLL_SECONDS** (*optional*) - seconds between polling **UPDATE_KEY** for changes.  This defaults to 15 seconds.
+* `POLL_SECONDS` (*optional*) - seconds between polling `UPDATE_KEY` for changes.  This defaults to 15 seconds.
 
-* **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
+* `LOG_LEVEL` (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
-* **DEBUG** (*optional*) - set to `true` to enable debug mode.  In this mode, the service will not delete the proxy configuration and certificate after HAProxy loads them into memory so these can be examined for debugging purposes.  HAProxy will also be started in debug mode so that it will emit extensive activity information to standard output.
+* `DEBUG` (*optional*) - set to `true` to enable debug mode.  In this mode, the service will not delete the proxy configuration and certificate after HAProxy loads them into memory so these can be examined for debugging purposes.  HAProxy will also be started in debug mode so that it will emit extensive activity information to standard output.
 
   **WARNING:** Never enable DEBUG for production hives other than temporarily for debugging.
 
-* **VAULT_SKIP_VERIFY** (*optional*) - defined if the service is not to validate the Vault TLS certificate authority.  This is used when Vault is secured by a self-signed certificate, the default condition.
+* `VAULT_SKIP_VERIFY` (*optional*) - defined if the service is not to validate the Vault TLS certificate authority.  This is used when Vault is secured by a self-signed certificate, the default condition.
 
 # HAProxy ZIP Archive
 
 This image expects the Consul **UPDATE_KEY** key value to be a ZIP archive holding the `haproxy.cfg` configuration file as well as another assets such as site certificate files.  `haproxy.cfg` file format is described at [haproxy.org](http://www.haproxy.org/#docs).
 
-To use TLS certificates or certificate authorities, you'll need to use the **HAPROXY_CONFIG_FOLDER** environment variable when specifying the base locations.  This is set to the path to the folder where the HAProxy configuration archive contents were extracted.
+To use TLS certificates or certificate authorities, you'll need to use the `HAPROXY_CONFIG_FOLDER` environment variable when specifying the base locations.  This is set to the path to the folder where the HAProxy configuration archive contents were extracted.
 
 For example, the configuration fragment below specifies that certificate authorities and certificates are to be loaded from this folder:
 
@@ -66,7 +66,7 @@ For example, the configuration fragment below specifies that certificate authori
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`ca-base "${HAPROXY_CONFIG_FOLDER}"`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`crt-base "${HAPROXY_CONFIG_FOLDER}"`
 
-You should also specify a DNS resolvers section that points to the embedded Docker DNS server so you'll be able to resolve Docker service names.  You can use the **HiveConst_DockerDnsEndpoint** environment variable for this (which is set to `127.0.0.11:53`), like:
+You should also specify a DNS resolvers section that points to the embedded Docker DNS server so you'll be able to resolve Docker service names.  You can use the `HiveConst_DockerDnsEndpoint` environment variable for this (which is set to `127.0.0.11:53`), like:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`resolvers docker`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`nameserver docker "${HiveConst_DockerDnsEndpoint}"`
@@ -88,7 +88,7 @@ When the `.certs` file is present, the container will retrieve the Vault keys an
 
 Credentials are required to obtain TLS certificates Vault if the HTTPS routes are required.  These credentials will be passed as JSON using the **Docker secrets** feature and will be persisted within the container at `/run/secrets/${VAULT_CREDENTIALS}`, where **VAULT_CREDENTIALS** is an environment variable that identifies the secret file.
 
-Two types of credentials are currently supported: **vault-token** and **vault-approle**.
+Two types of credentials are currently supported: `vault-token` and `vault-approle`.
 
 **token:**
 &nbsp;&nbsp;&nbsp;&nbsp;`{`

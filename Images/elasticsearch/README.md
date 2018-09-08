@@ -2,7 +2,7 @@
 
 Supported images are tagged with the Elasticsearch version plus the image build date.  The most recent production build is also tagged with `:latest`.
 
-From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
 **NOTE:**
 
@@ -14,25 +14,25 @@ This image hosts [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/r
 
 # Configuration
 
-You need to specify the following environment variables when running the container (these are referenced by the **elasticsearch.yml** configuration file):
+You need to specify the following environment variables when running the container (these are referenced by the `elasticsearch.yml` configuration file):
 
-* **ELASTICSEARCH_CLUSTER** (*required*) - identifies the Elasticsearch cluster
+* `ELASTICSEARCH_CLUSTER` (*required*) - identifies the Elasticsearch cluster
 
-* **ELASTICSEARCH_NODE_MASTER** (*optional*) - indicates that this eligible to be a master (defaults to **true**)
+* `ELASTICSEARCH_NODE_MASTER` (*optional*) - indicates that this eligible to be a master (defaults to `true`)
 
-* **ELASTICSEARCH_NODE_DATA** (*optional*) - indicates that this node will host data vs. being a dedicated master or just a router (defaults to **true**)
+* `ELASTICSEARCH_NODE_DATA` (*optional*) - indicates that this node will host data vs. being a dedicated master or just a router (defaults to `true`
 
-* **ELASTICSEARCH_TCP_PORT** (*required*) - Inter-node TCP communication ports
+* `ELASTICSEARCH_TCP_PORT` (*required*) - Inter-node TCP communication ports
 
-* **ELASTICSEARCH_HTTP_PORT** (*required*) - HTTP API port
+* `ELASTICSEARCH_HTTP_PORT` (*required*) - HTTP API port
 
-* **ELASTICSEARCH_NODE_COUNT** (*required*) - number of nodes in the cluster
+* `ELASTICSEARCH_NODE_COUNT` (*required*) - number of nodes in the cluster
 
-* **ELASTICSEARCH_QUORUM** (*required*) - minimum number of master nodes to be present for the cluster to be considered healthy.
+* `ELASTICSEARCH_QUORUM` (*required*) - minimum number of master nodes to be present for the cluster to be considered healthy.
 
-* **ELASTICSEARCH_BOOTSTRAP_NODES** (*required*) - comma separated list of one or more IP addresses or DNS names of nodes that will be used for bootstrapping the cluster.
+* `ELASTICSEARCH_BOOTSTRAP_NODES` (*required*) - comma separated list of one or more IP addresses or DNS names of nodes that will be used for bootstrapping the cluster.
 
-* **ES_JAVA_OPTS** (*optional*) - Elasticsearch related Java runtime options. ([reference](https://www.elastic.co/guide/en/elasticsearch/reference/current/heap-size.html))
+* `ES_JAVA_OPTS` (*optional*) - Elasticsearch related Java runtime options. ([reference](https://www.elastic.co/guide/en/elasticsearch/reference/current/heap-size.html))
 
 This container is designed be run as a standard Docker container connected to the host's network `--network host`.  This container cannot not be deployed as a Docker swarm mode service because:
 

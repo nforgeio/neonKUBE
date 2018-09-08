@@ -2,7 +2,7 @@
 
 Supported images are tagged with the Metricbeat version plus the image build date.
 
-From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
 **NOTE:**
 
@@ -22,27 +22,27 @@ By default, this container launches Metricbeat configured to capture the followi
 * Memory
 * Network
 
-You may may modify these behaviors by creating a derived image, modifying the `/metricbeat.yml.sh` configuration script and then redeploying the hive's **neon-log-metricbeat** containers as described below.
+You may may modify these behaviors by creating a derived image, modifying the `/metricbeat.yml.sh` configuration script and then redeploying the hive's `neon-log-metricbeat` containers as described below.
 
 # Environment Variables
 
-* **ELASTICSEARCH_URL** (*required*) - URL of the Elasticsearch cluster where the metrics are to be persisted.
+* `ELASTICSEARCH_URL` (*required*) - URL of the Elasticsearch cluster where the metrics are to be persisted.
 
-* **PERIOD** (*optional*) - interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to **60s**.
+* `PERIOD` (*optional*) - interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to `60s`
 
-* **DOCKER_ENDPOINT** (*optional*) - specifies the Docker endpoint to be monitored.  This defaults to the local Docker unix domain socket `unix:///var/run/docker.sock` which must be explicitly bound to the Metricbeat container.  You may also specify a URL.
+* `DOCKER_ENDPOINT` (*optional*) - specifies the Docker endpoint to be monitored.  This defaults to the local Docker unix domain socket `unix:///var/run/docker.sock` which must be explicitly bound to the Metricbeat container.  You may also specify a URL.
 
-* **PROCESSES** (*optional*) - JSON array specifying the regex's of the process names for which statistics are to be gathered.  This defaults to **['dockerd','consul','vault']**.
+* `PROCESSES` (*optional*) - JSON array specifying the regex's of the process names for which statistics are to be gathered.  This defaults to `dockerd','consul','vault`
 
-* **LOG_LEVEL** (*optional*) - Metricbeat log level.  This may be one of *critical*, *error*, *warning*, *info*, or *debug*.  This defaults to **debug**.
+* `LOG_LEVEL` (*optional*) - Metricbeat log level.  This may be one of *critical*, *error*, *warning*, *info*, or *debug*.  This defaults to `debug`
 
 # Deployment
 
-**metricbeat** is deployed as a container to all hive nodes.  The container expects some volumes to be mounted and must be run on the host network as explained [here](https://www.elastic.co/guide/en/beats/metricbeat/current/running-in-container.html).
+`metricbeat` is deployed as a container to all hive nodes.  The container expects some volumes to be mounted and must be run on the host network as explained [here](https://www.elastic.co/guide/en/beats/metricbeat/current/running-in-container.html).
 
 You may also run this image with the `import-dashboards` argument.  This loads the metrics Kibana dashboards into the Elasticsearch log cluster.  
 
-**neon-cli** handles **neon-log-metricbeat** container deployment and dashboard initialization when the hive is provisioned using the following Docker commands:
+`neon-cli` handles `neon-log-metricbeat` container deployment and dashboard initialization when the hive is provisioned using the following Docker commands:
 
 ````
 # Deploy the container.

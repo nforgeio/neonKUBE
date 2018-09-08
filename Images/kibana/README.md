@@ -2,7 +2,7 @@
 
 Supported are be tagged with the Kibana version plus the image build date.
 
-From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
 **NOTE:**
 
@@ -16,15 +16,15 @@ Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined
 
 You need to specify the following environment variables when running the container (these are referenced by the `elasticsearch.yam` configuration file):
 
-* **ELASTICSEARCH_URL** - URL to the Elasticsearch cluster.
+* `ELASTICSEARCH_URL` - URL to the Elasticsearch cluster.
 
 **NOTE**: This URL should not include a trailing "/".
 
-Kibana listens internally on the default **port 5601**.
+Kibana listens internally on the default `port 5601`
 
 # Deployment
 
-This image is typically deployed as a Docker service like (where **HIVENAME** is the hive's name):
+This image is typically deployed as a Docker service like (where *HIVENAME* is the hive's name):
 
 ````
 docker service create \

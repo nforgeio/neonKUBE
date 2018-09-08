@@ -2,11 +2,11 @@ This base image derives from the offical [registry](https://hub.docker.com/_/reg
 
 # Image Tags
 
-Supported images are tagged with the Git branch, image build date, and Git commit and an optional **-dirty** suffix if the image was built from a branch with uncommitted changes or untracked files.
+Supported images are tagged with the Git branch, image build date, and Git commit and an optional `-dirty` suffix if the image was built from a branch with uncommitted changes or untracked files.
 
-The most recent production build will be tagged as **latest**.
+The most recent production build will be tagged as `latest`.
 
-From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
 # Description
 
@@ -14,41 +14,41 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 # Environment Variables
 
-* **HOSTNAME** (*required*) - hostname for this instance.
+* `HOSTNAME` (*required*) - hostname for this instance.
 
-* **REGISTRY** (*optional*) - URL of the remote registry being cached.  This defaults to the Docker Public registry at https://docker.io.
+* `REGISTRY` (*optional*) - URL of the remote registry being cached.  This defaults to the Docker Public registry at https://docker.io.
 
-* **USERNAME** (*optional*) - user ID used to authenticate with the cache and the remote registry.
+* `USERNAME` (*optional*) - user ID used to authenticate with the cache and the remote registry.
 
-* **PASSWORD** (*optional*) - password used to authenticate with the cache and the remote registry.
+* `PASSWORD` (*optional*) - password used to authenticate with the cache and the remote registry.
 
-* **LOG_LEVEL** (*optional*) - registry logging level, one of: `error`, `warn`, `info`, or `debug`.  This defaults to `info`.
+* `LOG_LEVEL` (*optional*) - registry logging level, one of: `error`, `warn`, `info`, or `debug`.  This defaults to `info`.
 
 # Volumes
 
 This image expects two volumes to be mounted to it:
 
-The **/etc/neon-registry-cache** directory should be mounted as read-only and must include the cache's TLS certificate and private key files named **cache.crt** and **cache.key**.  The **neon-cli** maps this to the same directory on the host when the container is started.
+The `etc/neon-registry-cache` directory should be mounted as read-only and must include the cache's TLS certificate and private key files named `cache.crt` and `cache.key`  The `neon-cli` maps this to the same directory on the host when the container is started.
 
-The **/var/lib/neon-registry-cache** directory should be mounted as a named read/write Docker volume, especially for production environments.  This is where the cached data will be stored.  **neon-cli** handles this configuration as well.
+The `var/lib/neon-registry-cache` directory should be mounted as a named read/write Docker volume, especially for production environments.  This is where the cached data will be stored.  `neon-cli` handles this configuration as well.
 
 # Operation
 
 The registry caches are deployed such that hive Docker daemons will attempt to download cached images beginning at the first manager node (as lexigraphically sorted by name).  If this fails, Docker will failover to the next manager.  If all managers fail, then the daemon will download directly from the authoritative external registry.
 
-This configuration makes a NeonCluser self-bootstrapping where even this **neon-registry-cache** image can be deployed during hive setup, even before any other caches have been deployed.
+This configuration makes a NeonCluser self-bootstrapping where even this `neon-registry-cache` image can be deployed during hive setup, even before any other caches have been deployed.
 
 # Deployment
 
-The neonHIVE **neon-cli** handles the deployment of Docker pull-thru registry caches to the hive manager nodes unless disabled in the hive definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
+The neonHIVE `neon-cli` handles the deployment of Docker pull-thru registry caches to the hive manager nodes unless disabled in the hive definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
 
-1. Generates a self-signed certificate for each hive manager with the certificate hosts matching **<MANAGERNAME>.neon-registry-cache.HIVENAME.nhive.io**, where *MANAGERNAME* is the name of the manager node and *HIVENAME* identifies the hive.
+1. Generates a self-signed certificate for each hive manager with the certificate hosts matching `MANAGERNAME>.neon-registry-cache.HIVENAME.nhive.io` where *MANAGERNAME* is the name of the manager node and *HIVENAME* identifies the hive.
 
-2. Copies the generated certificates to every hive node as **/etc/docker/certs.d/<hostname>:5002/ca.crt**.
+2. Copies the generated certificates to every hive node as `/etc/docker/certs.d/<hostname>:5002/ca.crt`.
 
 3. Configures Linux on all nodes to trust the certificates as well.
 
-4. Updates **/etc/hosts** on all hive nodes with A records that map each manager node IP address to the corresponding hostname.
+4. Updates `/etc/hosts` on all hive nodes with A records that map each manager node IP address to the corresponding hostname.
 
 5. Configures the Docker systemd unit file with the list of with the manager registry cache URIs followed by the external authoritative registry URI. 
 
