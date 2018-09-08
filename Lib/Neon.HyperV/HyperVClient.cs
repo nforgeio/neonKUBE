@@ -307,7 +307,7 @@ namespace Neon.HyperV
 
                     var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
 
-                    powershell.Execute($"New-VHD -Path \"{drive.Path}\" {fixedOrDynamic} -SizeBytes {drive.Size}");
+                    powershell.Execute($"New-VHD -Path \"{drive.Path}\" {fixedOrDynamic} -SizeBytes {drive.Size} -BlockSizeBytes 1MB");
                     powershell.Execute($"Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\"");
 
                     diskNumber++;
