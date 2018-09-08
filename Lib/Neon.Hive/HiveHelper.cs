@@ -2034,7 +2034,7 @@ namespace Neon.Hive
         {
             VerifyConnected();
 
-            var connectionSettings = await Consul.KV.GetObject<RabbitMQSettings>(connectionKey, cancellationToken);
+            var connectionSettings = await Consul.KV.GetObject<HiveMQSettings>(connectionKey, cancellationToken);
             var credentials        = GetSecret<Credentials>(secretName);
 
             if (credentials == null)

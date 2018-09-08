@@ -70,7 +70,7 @@ OPTIONS:
         private string              managerNodeAddresses = string.Empty;
         private int                 managerCount         = 0;
         private bool                sshTlsAuth;
-        private RabbitMQSettings    sysadminRabbitMQSettings;
+        private HiveMQSettings      sysadminHiveMQSettings;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -3462,7 +3462,7 @@ systemctl start neon-volume-plugin
                     // still work even if RabbitMQ cluster nodes are moved to different
                     // hosts.
 
-                    var rabbitSettings = new RabbitMQSettings()
+                    var rabbitSettings = new HiveMQSettings()
                     {
                         Hosts       = rabbitMQHosts,
                         Port        = HiveHostPorts.HiveMQAMPQ,
@@ -3472,7 +3472,7 @@ systemctl start neon-volume-plugin
                         VirtualHost = "/"
                     };
 
-                    sysadminRabbitMQSettings = NeonHelper.JsonClone(rabbitSettings);    // Save a copy of the [sysadmin] settings for later.
+                    sysadminHiveMQSettings = NeonHelper.JsonClone(rabbitSettings);    // Save a copy of the [sysadmin] settings for later.
 
                     hive.Docker.Secret.Set("neon-hivemq-sysadmin", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
 

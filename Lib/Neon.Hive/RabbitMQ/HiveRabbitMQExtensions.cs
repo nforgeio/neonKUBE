@@ -33,7 +33,7 @@ namespace RabbitMQ.Client
         /// The credentials must be formatted as JSON as serialized by the <see cref="Credentials"/>
         /// class.
         /// </remarks>
-        public static IConnection ConnectUsingSecret(this RabbitMQSettings settings, string secretName, bool dispatchConsumersAsync = false)
+        public static IConnection ConnectUsingSecret(this HiveMQSettings settings, string secretName, bool dispatchConsumersAsync = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.VirtualHost));
             Covenant.Requires<ArgumentNullException>(settings.Hosts != null && settings.Hosts.Count > 0);
@@ -41,7 +41,7 @@ namespace RabbitMQ.Client
 
             var credentials = NeonHelper.JsonDeserialize<Credentials>(HiveHelper.GetSecret(secretName), dispatchConsumersAsync);
 
-            return new RabbitMQConnection(RabbitMQExtensions.Connect(settings, credentials));
+            return new HiveMQConnection(settings.Connect(credentials));
         }
     }
 }
