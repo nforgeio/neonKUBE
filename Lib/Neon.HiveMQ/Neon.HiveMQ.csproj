@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>Neon.RabbitMQ</RootNamespace>
+    <RootNamespace>Neon.HiveMQ</RootNamespace>
     <Version>7.0.0-preview.2</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>

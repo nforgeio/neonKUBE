@@ -11,7 +11,7 @@ using RabbitMQ.Client;
 
 using Neon.Common;
 using Neon.Hive;
-using Neon.RabbitMQ;
+using Neon.HiveMQ;
 
 namespace RabbitMQ.Client
 {

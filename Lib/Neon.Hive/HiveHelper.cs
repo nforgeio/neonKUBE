@@ -28,8 +28,8 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.HiveMQ;
 using Neon.Net;
-using Neon.RabbitMQ;
 
 // $todo(jeff.lill): 
 //

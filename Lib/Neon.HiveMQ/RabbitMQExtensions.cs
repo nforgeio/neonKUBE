@@ -10,9 +10,8 @@ using RabbitMQ;
 using RabbitMQ.Client;
 
 using Neon.Common;
-using Neon.RabbitMQ;
 
-namespace RabbitMQ.Client
+namespace Neon.HiveMQ
 {
     /// <summary>
     /// RabbitMQ related extensions.

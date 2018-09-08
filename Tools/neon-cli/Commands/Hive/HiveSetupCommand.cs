@@ -29,8 +29,8 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Hive;
+using Neon.HiveMQ;
 using Neon.Net;
-using Neon.RabbitMQ;
 using Neon.Retry;
 using Neon.Time;
 

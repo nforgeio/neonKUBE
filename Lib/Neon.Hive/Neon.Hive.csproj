@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -54,7 +54,7 @@
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
     <ProjectReference Include="..\Neon.Docker\Neon.Docker.csproj" />
-    <ProjectReference Include="..\Neon.RabbitMQ\Neon.RabbitMQ.csproj" />
+    <ProjectReference Include="..\Neon.HiveMQ\Neon.HiveMQ.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -49,7 +49,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Docker\Neon.Docker.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.RabbitMQ\Neon.RabbitMQ.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.HiveMQ\Neon.HiveMQ.csproj" />
   </ItemGroup>
 
   <ItemGroup>

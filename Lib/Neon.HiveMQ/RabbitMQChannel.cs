@@ -4,20 +4,19 @@
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
 using RabbitMQ;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 using Neon.Common;
-using Neon.RabbitMQ;
-using RabbitMQ.Client.Events;
-using System.Collections.Generic;
 
 #pragma warning disable 0618    // Allow calls to wrapped obsolete members.
 #pragma warning disable 0067    // Disable warning "unused" warnings for the events.
 
-namespace RabbitMQ.Client
+namespace Neon.HiveMQ
 {
     /// <summary>
     /// Wraps RabbbitMQ <see cref="IModel"/> instances to provide additional functionality.

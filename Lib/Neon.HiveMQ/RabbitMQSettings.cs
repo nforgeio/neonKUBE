@@ -14,7 +14,7 @@ using Neon.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Neon.RabbitMQ
+namespace Neon.HiveMQ
 {
     /// <summary>
     /// Settings used to connect a RabbitMQ client to a message broker.

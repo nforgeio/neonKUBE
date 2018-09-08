@@ -37,8 +37,8 @@ SetVersion Neon.Hive.HyperV
 SetVersion Neon.Hive.HyperVDev
 SetVersion Neon.Hive.Machine
 SetVersion Neon.Hive.Xen
+SetVersion Neon.HiveMQ
 SetVersion Neon.HyperV
-SetVersion Neon.RabbitMQ
 SetVersion Neon.Web
 SetVersion Neon.Xen
 SetVersion Neon.Xunit
@@ -57,10 +57,10 @@ Publish Neon.Hive.HyperV
 Publish Neon.Hive.HyperVDev
 Publish Neon.Hive.Machine
 Publish Neon.Hive.Xen
+Publish Neon.HiveMQ
 Publish Neon.HyperV
 Publish Neon.Couchbase
 Publish Neon.Docker
-Publish Neon.RabbitMQ
 Publish Neon.Web
 Publish Neon.Xen
 Publish Neon.Xunit
