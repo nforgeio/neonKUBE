@@ -33,9 +33,9 @@ namespace Neon.Data
         }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "__EntityType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public string Type { get; set; }
+        public string __EntityType { get; set; }
 
         /// <inheritdoc/>
         public virtual bool Equals(T other)

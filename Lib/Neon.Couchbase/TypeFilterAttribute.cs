@@ -46,9 +46,9 @@ namespace Couchbase
         public string Type { get; set; }
 
         /// <summary>
-        /// The entity's JSON property name to query.  This defaults to <b>"Type"</b>.
+        /// The entity's JSON property name to query.  This defaults to <b>"__EntityType"</b>.
         /// </summary>
-        public string JsonProperty { get; set; } = "Type";
+        public string JsonProperty { get; set; } = "__EntityType";
 
         /// <summary>
         /// Creates a new DocumentTypeFilterAttribute

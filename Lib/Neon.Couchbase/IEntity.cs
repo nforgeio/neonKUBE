@@ -36,7 +36,7 @@ namespace Neon.Data
         /// <summary>
         /// Identifies the entity type.
         /// </summary>
-        string Type { get; set; }
+        string __EntityType { get; set; }
 
         /// <summary>
         /// Ensures that the entity properties are properly initialized.  The default 
@@ -52,7 +52,7 @@ namespace Neon.Data
     /// </summary>
     /// <remarks>
     /// <para>
-    /// All entities must implement the <see cref="IEntity.Type"/> property such that it returns
+    /// All entities must implement the <see cref="IEntity.__EntityType"/> property such that it returns
     /// the bucket unique string that identifies the entity type.  This string will be
     /// used to distinguish entity types within a Couchbase bucket.
     /// </para>
