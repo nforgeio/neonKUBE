@@ -43,19 +43,20 @@ namespace Neon.Hive
         /// </summary>
         public const string VirtualSwarmManagerName = "swarm-manager";
 
-        private const string        defaultDatacenter         = "DATACENTER";
-        private const string        defaultProvisioner        = "unknown";
-        private readonly string[]   defaultTimeSources        = new string[] { "pool.ntp.org" };
-        private const string        defaultProxyImage         = HiveConst.NeonPublicRegistry + "/neon-proxy:latest";
-        private const string        defaultProxyVaultImage    = HiveConst.NeonPublicRegistry + "/neon-proxy-vault:latest";
-        private const string        defaultProxyManagerImage  = HiveConst.NeonPublicRegistry + "/neon-proxy-manager:latest";
-        private const string        defaultHiveManagerImage   = HiveConst.NeonPublicRegistry + "/neon-hive-manager:latest";
-        private const string        defaultDnsImage           = HiveConst.NeonPublicRegistry + "/neon-dns:latest";
-        private const string        defaultDnsMonImage        = HiveConst.NeonPublicRegistry + "/neon-dns-mon:latest";
-        private const string        defaultVarnishImage       = HiveConst.NeonPublicRegistry + "/neon-varnish:latest";
-        private const string        defaultDrivePrefix        = "sd";
-        private const int           defaultStepStaggerSeconds = 5;
-        private const bool          defaultAllowUnitTesting   = false;
+        private const string        defaultDatacenter           = "DATACENTER";
+        private const string        defaultProvisioner          = "unknown";
+        private readonly string[]   defaultTimeSources          = new string[] { "pool.ntp.org" };
+        private const string        defaultProxyImage           = HiveConst.NeonPublicRegistry + "/neon-proxy:latest";
+        private const string        defaultProxyVaultImage      = HiveConst.NeonPublicRegistry + "/neon-proxy-vault:latest";
+        private const string        defaultProxyManagerImage    = HiveConst.NeonPublicRegistry + "/neon-proxy-manager:latest";
+        private const string        defaultHiveManagerImage     = HiveConst.NeonPublicRegistry + "/neon-hive-manager:latest";
+        private const string        defaultDnsImage             = HiveConst.NeonPublicRegistry + "/neon-dns:latest";
+        private const string        defaultDnsMonImage          = HiveConst.NeonPublicRegistry + "/neon-dns-mon:latest";
+        private const string        defaultVarnishImage         = HiveConst.NeonPublicRegistry + "/neon-varnish:latest";
+        private const string        defaultSecretRetrieverImage = HiveConst.NeonPublicRegistry + "/neon-secret-retriever:latest";
+        private const string        defaultDrivePrefix          = "sd";
+        private const int           defaultStepStaggerSeconds   = 5;
+        private const bool          defaultAllowUnitTesting     = false;
 
         /// <summary>
         /// Regex for verifying hive names for hosts, routes, groups, etc.
@@ -548,6 +549,14 @@ namespace Neon.Hive
         public string VarnishImage { get; set; } = defaultVarnishImage;
 
         /// <summary>
+        /// The Docker image to be used to retrieve Docker secrets.
+        /// This defaults to <b>nhive/neon-secret-retriever:latest</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "SecretRetrieverImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultSecretRetrieverImage)]
+        public string SecretRetrieverImage { get; set; } = defaultSecretRetrieverImage;
+
+        /// <summary>
         /// Describes the Docker host nodes in the hive.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
@@ -773,13 +782,14 @@ namespace Neon.Hive
             Varnish           = Varnish ?? new VarnishOptions();
             HiveMQ            = HiveMQ ?? new HiveMQOptions();
 
-            ProxyImage        = ProxyImage ?? defaultProxyImage;
-            ProxyVaultImage   = ProxyVaultImage ?? defaultProxyVaultImage;
-            ProxyManagerImage = ProxyManagerImage ?? defaultProxyManagerImage;
-            HiveManagerImage  = HiveManagerImage ?? defaultHiveManagerImage;
-            DnsImage          = DnsImage ?? defaultDnsImage;
-            DnsMonImage       = DnsMonImage ?? defaultDnsMonImage;
-            VarnishImage      = VarnishImage ?? defaultVarnishImage;
+            ProxyImage           = ProxyImage ?? defaultProxyImage;
+            ProxyVaultImage      = ProxyVaultImage ?? defaultProxyVaultImage;
+            ProxyManagerImage    = ProxyManagerImage ?? defaultProxyManagerImage;
+            HiveManagerImage     = HiveManagerImage ?? defaultHiveManagerImage;
+            DnsImage             = DnsImage ?? defaultDnsImage;
+            DnsMonImage          = DnsMonImage ?? defaultDnsMonImage;
+            VarnishImage         = VarnishImage ?? defaultVarnishImage;
+            SecretRetrieverImage = SecretRetrieverImage ?? defaultSecretRetrieverImage;
 
             Setup.Validate(this);
             Network.Validate(this);

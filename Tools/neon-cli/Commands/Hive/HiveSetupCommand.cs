@@ -1760,6 +1760,7 @@ fi
                         images.Add(Program.ResolveDockerImage(hive.Definition.ProxyManagerImage));
                         images.Add(Program.ResolveDockerImage(hive.Definition.DnsImage));
                         images.Add(Program.ResolveDockerImage(hive.Definition.DnsMonImage));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.SecretRetrieverImage));
                     }
 
                     if (hive.Definition.Log.Enabled)

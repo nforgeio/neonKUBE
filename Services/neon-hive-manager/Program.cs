@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +40,7 @@ namespace NeonHiveManager
         private static readonly string nodePollSecondsKey    = $"{serviceRootKey}/node_poll_seconds";
         private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
+        private static readonly string secretPollSecondsKey  = $"{serviceRootKey}/secret_poll_seconds";
         private static readonly string logPollSecondsKey     = $"{serviceRootKey}/log_poll_seconds";
         private static readonly string hiveDefinitionKey     = $"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}";
 
@@ -52,6 +54,7 @@ namespace NeonHiveManager
         private static TimeSpan                 vaultPollInterval;
         private static TimeSpan                 managerPollInterval;
         private static TimeSpan                 logPollInterval;
+        private static TimeSpan                 secretPollInterval;
         private static HiveDefinition           cachedHiveDefinition;
         private static List<string>             vaultUris;
 
@@ -221,15 +224,23 @@ namespace NeonHiveManager
                 await consul.KV.PutDouble(logPollSecondsKey, 300);
             }
 
+            if (!await consul.KV.Exists(secretPollSecondsKey))
+            {
+                log.LogInfo($"Persisting setting [{secretPollSecondsKey}=300.0]");
+                await consul.KV.PutDouble(secretPollSecondsKey, 300);
+            }
+
             nodePollInterval    = TimeSpan.FromSeconds(await consul.KV.GetDouble(nodePollSecondsKey));
             vaultPollInterval   = TimeSpan.FromSeconds(await consul.KV.GetDouble(vaultPollSecondsKey));
             managerPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(managerPollSecondsKey));
             logPollInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(logPollSecondsKey));
+            secretPollInterval  = TimeSpan.FromSeconds(await consul.KV.GetDouble(secretPollSecondsKey));
 
             log.LogInfo(() => $"Using setting [{nodePollSecondsKey}={nodePollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{vaultPollSecondsKey}={vaultPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{managerPollSecondsKey}={managerPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{logPollSecondsKey}={logPollInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{secretPollSecondsKey}={secretPollInterval.TotalSeconds}]");
 
             // Parse the Vault credentials from the [neon-hive-manager-vaultkeys] 
             // secret, if it exists.
@@ -281,6 +292,11 @@ namespace NeonHiveManager
             // that are older than the number of retention days.
 
             tasks.Add(LogPurgerAsync());
+
+            // Start a task that checks for old [neon-secret-retriever-*] service instances
+            // as well as old persisted secrets and removes them.
+
+            tasks.Add(SecretPurgerAsync());
 
             // Wait for all tasks to exit cleanly for a normal shutdown.
 
@@ -740,6 +756,125 @@ namespace NeonHiveManager
 
                     await Task.Delay(logPollInterval);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles purging of old <b>neon-secret-retriever-*</b> service instances as well
+        /// as any persisted secrets..
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task SecretPurgerAsync()
+        {
+            while (true)
+            {
+                var manager = hive.GetReachableManager();
+
+                try
+                {
+                    if (terminator.CancellationToken.IsCancellationRequested)
+                    {
+                        log.LogDebug(() => "SECRET-PURGER: Terminating.");
+                        return;
+                    }
+
+                    // Commpute the minimum creation time for the retriever service and
+                    // the retrieved Consul key.  We're hardcoding the maximum age to
+                    // 1 hour.
+
+                    var utcNow        = DateTime.UtcNow;
+                    var minCreateTime = utcNow - TimeSpan.FromHours(1);
+
+                    // Scan for and remove old [neon-service-retriever] services.
+
+                    log.LogDebug(() => "SECRET-PURGER: Scanning for old [neon-secret-retriver] services ready for removal.");
+
+                    var response = manager.SudoCommand("docker service ls --format {{.Name}}");
+
+                    if (response.ExitCode != 0)
+                    {
+                        throw new HiveException(response.ErrorSummary);
+                    }
+
+                    List<string> retrieverServices;
+
+                    using (var reader = new StringReader(response.OutputText))
+                    {
+                        retrieverServices = reader.Lines()
+                            .Where(l => l.StartsWith("neon-secret-retriever-"))
+                            .ToList();
+                    }
+
+                    if (retrieverServices.Count > 0)
+                    {
+                        log.LogInfo($"SECRET-PURGER: Discovered [{retrieverServices.Count}] services named like [neon-secret-retriever-*].");
+
+                        foreach (var service in retrieverServices)
+                        {
+                            // Inspect the service to obtain its creation date.
+
+                            response = manager.SudoCommand($"docker service inspect {service}");
+
+                            if (response.ExitCode != 0)
+                            {
+                                throw new HiveException(response.ErrorSummary);
+                            }
+
+                            var serviceDetails = NeonHelper.JsonDeserialize<ServiceDetails>(response.OutputText);
+
+                            if (serviceDetails.CreatedAtUtc < minCreateTime)
+                            {
+                                log.LogInfo($"Removing service [service].");
+
+                                response = manager.SudoCommand($"docker service rm {service}");
+
+                                if (response.ExitCode != 0)
+                                {
+                                    throw new HiveException(response.ErrorSummary);
+                                }
+                            }
+                        }
+                    }
+
+                    // Scan for and remove old retrieved secrets persisted as Consul
+                    // keys under [neon/service/neon-secret-retriever].
+
+                    log.LogDebug(() => "SECRET-PURGER: Scanning for old [neon-secret-retriver] secrets persisted to Consul.");
+
+                    var secretKeys = consul.KV.ListKeys("neon/service/neon-secret-retriever").Result
+                        .Where(k => k.Contains('~'))    // Secret keys use "~" to separate the timestamp and GUID
+                        .ToList();
+
+                    if (secretKeys.Count > 0)
+                    {
+                        log.LogInfo($"SECRET-PURGER: Discovered [{secretKeys.Count}] keys under [neon/service/neon-secret-retriever].");
+
+                        foreach (var key in secretKeys)
+                        {
+                            // Split the key on the '~' character and parse the first
+                            // field as the timestamp.  We're going to ignore keys that
+                            // can't be parsed for resilience.
+
+                            if (DateTime.TryParseExact(key.Split('~')[0], NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var timestamp) &&
+                                timestamp < minCreateTime)
+                            {
+                                log.LogInfo($"SECRET-PURGER: Removing Consul key [{key}].");
+                                consul.KV.Delete(key).Wait();
+                            }
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    log.LogDebug(() => "SECRET-PURGER: Terminating.");
+                    return;
+                }
+                catch (Exception e)
+                {
+                    log.LogError($"SECRET-PURGER", e);
+                }
+
+                await Task.Delay(secretPollInterval);
             }
         }
     }

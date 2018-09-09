@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Consul;
+
 using Neon.Common;
 using Neon.IO;
 using Neon.Net;
@@ -170,6 +172,95 @@ fi
             {
                 throw new HiveException(response.ErrorSummary);
             }
+        }
+
+        /// <summary>
+        /// Retrieves a Docker secret.  Note that this will take several seconds.
+        /// </summary>
+        /// <param name="secretName">The secret name.</param>
+        /// <param name="options">Optional command run options.</param>
+        /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
+        /// <exception cref="HiveException">Thrown if the operation failed.</exception>
+        public byte[] Retrieve(string secretName, RunOptions options = RunOptions.None)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName));
+
+            // This works by mounting the secret into a new [neon-secret-retriever]
+            // service instance, passing arguments requesting that the secret be
+            // persisted to a Consul key.
+            //
+            // We'll monitor the Consul for the new key and once we've detected that
+            // [neon-secret-retriever] has persisted the secret, we'll read it and then
+            // we'll remove the secret key and the service.
+            //
+            // As a convention, we're going to persist the secrets to Consul keys like:
+            //
+            //      [timestamp-GUID]
+            //
+            // where [timestamp] will be set to something like [2018-06-05T14:30:13.000Z] 
+            // indicating the time when the secret was requested and GUID is a generated 
+            // unique ID.  We're also going to name the service [neon-secret-retriever-GUID].
+            //
+            // To help prevent the accumulation of secret keys and [neon-secret-retriever]
+            // service instances, [neon-hive-manager] removes secrets with timestamps
+            // older than an hour and Docker services whose name start with "neon-secret-retriever-"
+            // that have been running for more than an hour.
+
+            var timeout   = TimeSpan.FromSeconds(30);     // It should never take this long
+            var timestamp = DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ);
+            var guid      = Guid.NewGuid().ToString("D").ToLowerInvariant();
+            var consulKey = $"neon/service/neon-secret-retriever/{timestamp}~{guid}";
+            var manager   = hive.GetReachableManager();
+
+            // Start the [neon-secret-retriever] service.
+
+            var response = manager.SudoCommand($"docker service create {hive.Definition.SecretRetrieverImage}", options, secretName, consulKey);
+
+            if (response.ExitCode != 0)
+            {
+                throw new HiveException(response.ErrorSummary);
+            }
+
+            // Wait for service to write the secret to Consul.
+
+            var secret = (byte[])null;
+
+            NeonHelper.WaitFor(
+                () =>
+                {
+                    try
+                    {
+                        secret = hive.Consul.Client.KV.GetBytesOrDefault(consulKey).Result;
+
+                        if (secret != null)
+                        {
+                            // [neon-secret-retriever] has written the secret.
+
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                        // Intentionally ignoring this.
+                    }
+
+                    return false;
+                },
+                timeout: timeout,
+                pollTime: TimeSpan.FromSeconds(0.5));
+
+            // We have the secret so remove the consul key and the service.
+
+            hive.Consul.Client.KV.Delete(consulKey);
+
+            response = manager.SudoCommand($"docker service rm {hive.Definition.SecretRetrieverImage}", options);
+
+            if (response.ExitCode != 0)
+            {
+                throw new HiveException(response.ErrorSummary);
+            }
+
+            return secret;
         }
     }
 }
