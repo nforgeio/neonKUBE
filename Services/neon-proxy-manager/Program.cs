@@ -96,9 +96,7 @@ namespace NeonProxyManager
                 var vaultCredentialsSecret = "neon-proxy-manager-credentials";
 
                 Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
-
-                HiveHelper.OpenHiveRemote(
-                    new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
+                HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
             }
             else
             {
