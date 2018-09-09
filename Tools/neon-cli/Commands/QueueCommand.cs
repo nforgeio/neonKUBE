@@ -32,7 +32,7 @@ Manages the built-in RabbitMQ messaging cluster.
 
 USAGE:
 
-    neon [OPTIONS] queue ctl -- [ARGS...]  - Invokes [rabbitmqctl]
+    neon [OPTIONS] queue control|ctl -- [ARGS...]
 
 OPTIONS :
 
@@ -42,7 +42,7 @@ OPTIONS :
 
 COMMANDS:
 
-    queue ctl -- ARGS...
+    queue control|ctl -- ARGS...
     --------------------
     Executes the [rabbitmqctl] management utility on one of the RabbitMQ
     cluster nodes, passing any ARGS to the tool.  This can be used to 
@@ -135,6 +135,7 @@ COMMANDS:
 
             switch (command)
             {
+                case "control":
                 case "ctl":
 
                     if (rightCommandLine == null)
