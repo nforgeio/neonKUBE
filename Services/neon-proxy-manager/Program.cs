@@ -3,12 +3,6 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
-// $todo(jeff.lill):
-//
-// Temporarily disabling leader locking because of [https://github.com/jefflill/NeonForge/issues/80].
-// This shouldn't really be a problem since we're deploying only one service replica and the changes
-// are committed to Consul via a transaction.
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
