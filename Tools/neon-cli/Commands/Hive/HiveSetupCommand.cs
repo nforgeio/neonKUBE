@@ -3447,25 +3447,51 @@ systemctl start neon-volume-plugin
                 {
                     firstManager.Status = "secret: RabbitMQ settings";
 
-                    var rabbitMQHosts = new List<string>();
+                    // $note(jeff.lill):
+                    //
+                    // We're going to assign up to 10 swarm nodes as the hosts for both
+                    // the AMQP and Admin traffic, favoring non-manager nodes if possible.
+                    // This works because the services are behind a load balancer rule
+                    // so all we're using these hosts for is to have the Docker ingress
+                    // network forward traffic to the load balancer which will forward
+                    // it on to a healthy RabbitMQ node.
+                    //
+                    // This should work pretty well and this will tolerate some changes
+                    // to the hosts, as long as at least one of the listed hive hosts
+                    // is still active.
 
-                    foreach (var node in hive.Definition.SortedNodes.Where(n => n.Labels.HiveMQ))
+                    var hosts    = new List<string>();
+                    var maxHosts = 10;
+
+                    foreach (var node in hive.Definition.SortedWorkers)
                     {
-                        rabbitMQHosts.Add($"{node.Name}.{hive.Definition.Hostnames.HiveMQ}");
+                        hosts.Add($"{node.Name}.{hive.Definition.Hostnames.HiveMQ}");
+
+                        if (hosts.Count >= maxHosts)
+                        {
+                            break;
+                        }
                     }
 
-                    // $todo(jeff.lill):
-                    //
-                    // Should I configure and use a private load balancer rule instead of
-                    // explicitly specifying each cluster host?  The nice thing about this
-                    // is that I could use a hive host group so that the settings would
-                    // still work even if RabbitMQ cluster nodes are moved to different
-                    // hosts.
+                    if (hosts.Count < maxHosts)
+                    {
+                        foreach (var node in hive.Definition.SortedManagers)
+                        {
+                            hosts.Add($"{node.Name}.{hive.Definition.Hostnames.HiveMQ}");
+
+                            if (hosts.Count >= maxHosts)
+                            {
+                                break;
+                            }
+                        }
+                    }
 
                     var rabbitSettings = new HiveMQSettings()
                     {
-                        Hosts       = rabbitMQHosts,
-                        Port        = HiveHostPorts.HiveMQAMPQ,
+                        AmqpHosts   = hosts,
+                        AmqpPort    = HiveHostPorts.ProxyPrivateHiveMQAMPQ,
+                        AdminHosts  = hosts,
+                        AdminPort   = HiveHostPorts.ProxyPrivateHiveMQAdmin,
                         TlsEnabled  = false,
                         Username    = hive.Definition.HiveMQ.SysadminAccount,
                         Password    = hive.Definition.HiveMQ.SysadminPassword,
@@ -3995,37 +4021,12 @@ systemctl restart sshd
                             Name        = "hivemq",
                             Title       = "Hive Messaging System",
                             Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHiveMQDashboard}",
-                            //Url         = $"https://reachable-manager:{HiveHostPorts.ProxyPrivateRabbitMQDashboard}",
+                            Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHiveMQAdmin}",
+                            //Url         = $"https://reachable-manager:{HiveHostPorts.ProxyPrivateHiveMQManagement}",
                             Description = "Hive messaging system"
                         };
 
                         hive.Dashboard.Set(rabbitDashboard);
-
-                        var rule = new LoadBalancerHttpRule()
-                        {
-                            Name     = "neon-hivemq-dashboard",
-                            System   = true,
-                            Resolver = null
-                        };
-
-                        // Initialize the frontends and backends.
-
-                        rule.Frontends.Add(
-                            new LoadBalancerHttpFrontend()
-                            {
-                                ProxyPort = HiveHostPorts.ProxyPrivateHiveMQDashboard
-                            });
-
-                        rule.Backends.Add(
-                            new LoadBalancerHttpBackend()
-                            {
-                                Group      = HiveHostGroups.HiveMQManagers,
-                                GroupLimit = 5,
-                                Port       = HiveHostPorts.HiveMQDashboard
-                            });
-
-                        hive.PrivateLoadBalancer.SetRule(rule);
                     }
 
                     firstManager.Status = string.Empty;

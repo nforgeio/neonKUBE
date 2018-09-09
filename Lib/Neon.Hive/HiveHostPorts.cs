@@ -141,9 +141,10 @@ namespace Neon.Hive
         public const int HiveMQDIST = 5011;
 
         /// <summary>
-        /// The RabbitMQ management dashboard port.
+        /// The RabbitMQ management plugin port.  This serves the management
+        /// REST API as well as the dashboard.
         /// </summary>
-        public const int HiveMQDashboard = 5012;
+        public const int HiveMQManagement = 5012;
 
         /// <summary>
         /// This port is reserved and must not be assigned to any service.  This is
@@ -261,9 +262,16 @@ namespace Neon.Hive
         public const int ProxyPrivateKibanaDashboard = 5305;
 
         /// <summary>
-        /// The port assigned to the load balanced HiveMQ dashboard.
+        /// The port assigned to the load balanced HiveMQ AMPQ endpoint.
         /// </summary>
-        public const int ProxyPrivateHiveMQDashboard = 5306;
+        public const int ProxyPrivateHiveMQAMPQ = 5306;
+
+        /// <summary>
+        /// The port assigned to the load balanced HiveMQ management 
+        /// plugin.  This serves the management REST API as well as
+        /// the dashboard.
+        /// </summary>
+        public const int ProxyPrivateHiveMQAdmin = 5307;
 
         /// <summary>
         /// The first <b>neon-proxy-private</b> port available for routing custom

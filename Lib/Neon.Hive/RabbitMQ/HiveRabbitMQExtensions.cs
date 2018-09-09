@@ -36,7 +36,7 @@ namespace RabbitMQ.Client
         public static IConnection ConnectUsingSecret(this HiveMQSettings settings, string secretName, bool dispatchConsumersAsync = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.VirtualHost));
-            Covenant.Requires<ArgumentNullException>(settings.Hosts != null && settings.Hosts.Count > 0);
+            Covenant.Requires<ArgumentNullException>(settings.AmqpHosts != null && settings.AmqpHosts.Count > 0);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName));
 
             var credentials = NeonHelper.JsonDeserialize<Credentials>(HiveHelper.GetSecret(secretName), dispatchConsumersAsync);

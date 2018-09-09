@@ -301,7 +301,7 @@ export HiveHostPorts_HiveMQAMPQ=5010
 export HiveHostPorts_HiveMQDIST=5011
 
 # The RabbitMQ management dashboard port.
-export HiveHostPorts_HiveMQDashboard=5012
+export HiveHostPorts_HiveMQManagement=5012
 
 # This port is reserved and must not be assigned to any service.  This is
 # currently referenced by the manager load balancer rule for Azure deployments
@@ -381,8 +381,13 @@ export HiveHostPorts_ProxyPrivateHttpCephDashboard=5304
 # The port assigned to the load balanced Kibana dashboard.
 export HiveHostPorts_ProxyPrivateKibanaDashboard=5305
 
-# The port assigned to the load balanced RabbitMQ dashboard.
-export HiveHostPorts_ProxyPrivateRabbitMQDashboard=5306
+# The port assigned to the load balanced HiveMQ AMPQ endpoint.
+export HiveHostPorts_ProxyPrivateHiveMQAMPQ=5306
+
+# The port assigned to the load balanced HiveMQ management 
+# plugin.  This serves the management REST API as well as
+# the dashboard.
+export HiveHostPorts_ProxyPrivateHiveMQManagement=5307
 
 # The first [neon-proxy-private] port available for routing custom
 # HTTP/S or TCP services.
