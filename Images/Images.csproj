@@ -161,6 +161,16 @@
     </Content>
     <None Include="neon-hivemq\rabbitmq-entrypoint.sh" />
     <None Include="neon-hivemq\set-cluster-name.sh" />
+    <Content Include="neon-secret-retriever\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-secret-retriever\build.ps1" />
+    <None Include="neon-secret-retriever\docker-entrypoint.sh" />
+    <None Include="neon-secret-retriever\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-secret-retriever\publish.ps1" />
+    <None Include="neon-secret-retriever\README.md" />
     <None Include="neon-varnish\build.ps1" />
     <None Include="neon-varnish\docker-entrypoint.sh" />
     <None Include="neon-varnish\Dockerfile">

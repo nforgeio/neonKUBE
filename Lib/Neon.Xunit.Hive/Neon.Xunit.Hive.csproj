@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Neon.HiveMQ\Neon.HiveMQ.csproj" />
     <ProjectReference Include="..\Neon.Hive\Neon.Hive.csproj" />
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Xunit\Neon.Xunit.csproj" />
