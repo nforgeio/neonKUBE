@@ -142,7 +142,6 @@ docker service create \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \
-    --log-driver fluentd \
     nhive/neon-proxy-manager
 ````
 &nbsp;
