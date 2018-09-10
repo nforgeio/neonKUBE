@@ -9,7 +9,7 @@ function SetVersion
         [string]$project
     )
 
-	text pack-version "$env:NF_ROOT\nuget-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"\
+	text pack-version "$env:NF_ROOT\nuget-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
 }
 
 function Publish
