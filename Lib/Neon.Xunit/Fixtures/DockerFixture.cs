@@ -783,10 +783,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm services.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonHIVE services whose names start with <b>neon-</b>.</param>
+        /// <param name="includeCore">Optionally include core built-in neonHIVE services whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ServiceInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<ServiceInfo> ListServices(bool includeSystem = false)
+        public List<ServiceInfo> ListServices(bool includeCore = false)
         {
             base.CheckDisposed();
 
@@ -806,7 +806,7 @@ namespace Neon.Xunit
                     var fields   = line.Split('~');
                     var replicas = fields[2].Split('/');
 
-                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE services.
                     }
@@ -953,19 +953,25 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all deployed services.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system services as well.</param>
+        /// <param name="removeCore">Optionally remove core neonHIVE services as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonHIVE system services
+        /// By default, this method will not remove core neonHIVE services
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// passing <paramref name="removeCore"/><c>=true</c>.
         /// </remarks>
-        public void ClearServices(bool removeSystem = false)
+        public void ClearServices(bool removeCore = false)
         {
+            // Note that we're always going to remove any [neon-secret-retriever-*] 
+            // services regardless of [removeCore].
+
             var names = new List<string>();
 
-            foreach (var service in ListServices(removeSystem))
+            foreach (var service in ListServices(includeCore: true))
             {
-                names.Add(service.Name);
+                if (removeCore || !service.Name.StartsWith("neon-") || service.Name.StartsWith("neon-secret-retriever-"))
+                {
+                    names.Add(service.Name);
+                }
             }
 
             if (names.Count > 0)
@@ -1023,10 +1029,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current Docker containers.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
+        /// <param name="includeCore">Optionally include core built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ContainerInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<ContainerInfo> ListContainers(bool includeSystem = false)
+        public List<ContainerInfo> ListContainers(bool includeCore = false)
         {
             base.CheckDisposed();
 
@@ -1045,7 +1051,7 @@ namespace Neon.Xunit
                 {
                     var fields = line.Split('~');
 
-                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE containers.
                     }
@@ -1094,17 +1100,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all running containers.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system services as well.</param>
+        /// <param name="removeCore">Optionally remove core neonHIVE containers as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonHIVE system containers
+        /// By default, this method will not remove core neonHIVE containers
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// passing <paramref name="removeCore"/><c>=true</c>.
         /// </remarks>
-        public void ClearContainers(bool removeSystem = false)
+        public void ClearContainers(bool removeCore = false)
         {
             var ids = new List<string>();
 
-            foreach (var container in ListContainers(removeSystem))
+            foreach (var container in ListContainers(removeCore))
             {
                 ids.Add(container.ID);
             }
@@ -1180,7 +1186,7 @@ namespace Neon.Xunit
 
             while (true)
             {
-                var services = ListServices(includeSystem: true);
+                var services = ListServices(includeCore: true);
 
                 foreach (var stackService in stackDefinition.Services)
                 {
@@ -1217,10 +1223,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm stacks.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonHIVE stacks whose names start with <b>neon-</b>.</param>
+        /// <param name="includeCore">Optionally include core built-in neonHIVE stacks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="StackInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<StackInfo> ListStacks(bool includeSystem = false)
+        public List<StackInfo> ListStacks(bool includeCore = false)
         {
             base.CheckDisposed();
 
@@ -1239,7 +1245,7 @@ namespace Neon.Xunit
                 {
                     var fields = line.Split('~');
 
-                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE stacks.
                     }
@@ -1285,17 +1291,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all deployed stacks.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system stacks as well.</param>
+        /// <param name="removeCore">Optionally remove core neonHIVE stacks as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonHIVE system stacks
+        /// By default, this method will not remove core neonHIVE stacks
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// passing <paramref name="removeCore"/><c>=true</c>.
         /// </remarks>
-        public void ClearStacks(bool removeSystem = false)
+        public void ClearStacks(bool removeCore = false)
         {
             var names = new List<string>();
 
-            foreach (var stack in ListStacks(removeSystem))
+            foreach (var stack in ListStacks(removeCore))
             {
                 names.Add(stack.Name);
             }
@@ -1372,10 +1378,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm secrets.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonHIVE secrets whose names start with <b>neon-</b>.</param>
+        /// <param name="includeCore">Optionally include core built-in neonHIVE secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="SecretInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<SecretInfo> ListSecrets(bool includeSystem = false)
+        public List<SecretInfo> ListSecrets(bool includeCore = false)
         {
             base.CheckDisposed();
 
@@ -1394,7 +1400,7 @@ namespace Neon.Xunit
                 {
                     var fields = line.Split('~');
 
-                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE secrets.
                     }
@@ -1436,17 +1442,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all swarm secrets.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system secrets as well.</param>
+        /// <param name="removeCore">Optionally remove core neonHIVE secrets as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonHIVE system secrets
+        /// By default, this method will not remove neonHIVE neonHIVE secrets
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// passing <paramref name="removeCore"/><c>=true</c>.
         /// </remarks>
-        public void ClearSecrets(bool removeSystem = false)
+        public void ClearSecrets(bool removeCore = false)
         {
             var names = new List<string>();
 
-            foreach (var secret in ListSecrets(removeSystem))
+            foreach (var secret in ListSecrets(removeCore))
             {
                 names.Add(secret.Name);
             }
@@ -1523,10 +1529,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm configs.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonHIVE configs whose names start with <b>neon-</b>.</param>
+        /// <param name="includeCore">Optionally include core built-in neonHIVE configs whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ConfigInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<ConfigInfo> ListConfigs(bool includeSystem = false)
+        public List<ConfigInfo> ListConfigs(bool includeCore = false)
         {
             base.CheckDisposed();
 
@@ -1545,7 +1551,7 @@ namespace Neon.Xunit
                 {
                     var fields = line.Split('~');
 
-                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE configs.
                     }
@@ -1587,17 +1593,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all swarm configs.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system configs as well.</param>
+        /// <param name="removeCore">Optionally remove core neonHIVE configs as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonHIVE system configs
+        /// By default, this method will not remove core neonHIVE configs
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// passing <paramref name="removeCore"/><c>=true</c>.
         /// </remarks>
-        public void ClearConfigs(bool removeSystem = false)
+        public void ClearConfigs(bool removeCore = false)
         {
             var names = new List<string>();
 
-            foreach (var config in ListConfigs(removeSystem))
+            foreach (var config in ListConfigs(removeCore))
             {
                 names.Add(config.Name);
             }
@@ -1635,7 +1641,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm networks.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonHIVE networks whose names start with <b>neon-</b>.</param>
+        /// <param name="includeCore">Optionally include core built-in neonHIVE networks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="NetworkInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <remarks>
@@ -1645,7 +1651,7 @@ namespace Neon.Xunit
         /// or <b>none</b> in the listed networks.
         /// </note>
         /// </remarks>
-        public List<NetworkInfo> ListNetworks(bool includeSystem = false)
+        public List<NetworkInfo> ListNetworks(bool includeCore = false)
         {
             base.CheckDisposed();
 
@@ -1669,7 +1675,7 @@ namespace Neon.Xunit
                         continue;   // Ignore built-in Docker networks.
                     }
 
-                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE networks.
                     }
@@ -1724,17 +1730,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all swarm networks.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system networks as well.</param>
+        /// <param name="removeCore">Optionally remove core neonHIVE networks as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonHIVE system networks
+        /// By default, this method will not remove core neonHIVE networks
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// passing <paramref name="removeCore"/><c>=true</c>.
         /// </remarks>
-        public void ClearNetworks(bool removeSystem = false)
+        public void ClearNetworks(bool removeCore = false)
         {
             var names = new List<string>();
 
-            foreach (var network in ListNetworks(removeSystem))
+            foreach (var network in ListNetworks(removeCore))
             {
                 names.Add(network.Name);
             }
@@ -1751,13 +1757,13 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all hive volumes.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system volumes as well.</param>
+        /// <param name="removeCore">Optionally remove core neonHIVE volumes as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonHIVE system volumes
+        /// By default, this method will not remove core neonHIVE volumes
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// passing <paramref name="removeCore"/><c>=true</c>.
         /// </remarks>
-        public void ClearVolumes(bool removeSystem = false)
+        public void ClearVolumes(bool removeCore = false)
         {
             base.CheckDisposed();
 
@@ -1774,7 +1780,7 @@ namespace Neon.Xunit
             {
                 foreach (var line in reader.Lines(ignoreBlank: true))
                 {
-                    if (!removeSystem && line.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!removeCore && line.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }

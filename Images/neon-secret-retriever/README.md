@@ -34,18 +34,19 @@ Here's an example that writes the Docker secret named *MYSECRET* to Consul at *M
 
 ````
 docker service create \
-    --name neon-secret-retriever \
+    --name secret-retriever \
     --detach=false \
     --mount type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true \
     --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
+    --health-start-period 1s \
     --secret MYSECRET \
     nhive/neon-secret-retriever MYSECRET MYCONSULKEY
 
 sleep 5
-docker service rm neon-secret-retriever
+docker service rm secret-retriever
 ````
 &nbsp;
 This example starts the service passing the Docker secret and the Consul key path and then waits 5 seconds to be sure the service had a chance to perform the capture.  Then the service is removed.
 
-Sleeping for 5 seconds is a bit clumsy.  A more advanced script or code could start the service and then poll Consul until it sees the secret written there.  Then it removes the service.
+Sleeping for 5 seconds is a bit clumsy.  A more advanced script or code could start the service and then poll Consul until it sees the secret written there.  Then it removes the service along with the Consul key.

@@ -99,7 +99,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -133,7 +133,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -180,7 +180,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Empty(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Empty(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Empty(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Empty(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Empty(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -210,7 +210,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Empty(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Empty(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Empty(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Empty(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Empty(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -270,7 +270,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -321,7 +321,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -372,7 +372,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -423,7 +423,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -474,7 +474,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -508,7 +508,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -571,7 +571,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
@@ -700,7 +700,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(hiveFixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(hiveFixture.ListServices(includeCore: true).Where(s => s.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Single(hiveFixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(hiveFixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));

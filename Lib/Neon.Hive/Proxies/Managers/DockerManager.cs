@@ -54,6 +54,27 @@ namespace Neon.Hive
         public DockerSecretManager Secret { get; private set; }
 
         /// <summary>
+        /// Lists the Docker services running on the hive.
+        /// </summary>
+        /// <returns>The service names.</returns>
+        /// <exception cref="HiveException">Thrown if the operation failed.</exception>
+        public IEnumerable<string> ListServices()
+        {
+            var manager  = hive.GetReachableManager();
+            var response = manager.SudoCommand("docker service ls --format {{.Name}}");
+
+            if (response.ExitCode != 0)
+            {
+                throw new HiveException(response.ErrorSummary);
+            }
+
+            using (var reader = new StringReader(response.OutputText))
+            {
+                return reader.Lines().ToArray();
+            }
+        }
+
+        /// <summary>
         /// Inspects a service, returning details about its current state.
         /// </summary>
         /// <param name="name">The service name.</param>

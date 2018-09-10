@@ -175,15 +175,21 @@ fi
         }
 
         /// <summary>
-        /// Retrieves a Docker secret.  Note that this will take several seconds.
+        /// Retrieves a Docker secret as bytes.  Note that this will take several seconds.
         /// </summary>
         /// <param name="secretName">The secret name.</param>
         /// <param name="options">Optional command run options.</param>
+        /// <returns>The secret as a byte array or <c>null</c> if the secret doesn't exist.</returns>
         /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
         /// <exception cref="HiveException">Thrown if the operation failed.</exception>
-        public byte[] Retrieve(string secretName, RunOptions options = RunOptions.None)
+        public byte[] GetBytes(string secretName, RunOptions options = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName));
+
+            if (!Exists(secretName))
+            {
+                return null;
+            }
 
             // This works by mounting the secret into a new [neon-secret-retriever]
             // service instance, passing arguments requesting that the secret be
@@ -197,24 +203,38 @@ fi
             //
             //      [timestamp-GUID]
             //
-            // where [timestamp] will be set to something like [2018-06-05T14:30:13.000Z] 
+            // where [timestamp] will be set to something like [2018-06-05T14_0_13.000Z] 
             // indicating the time when the secret was requested and GUID is a generated 
             // unique ID.  We're also going to name the service [neon-secret-retriever-GUID].
             //
+            // NOTE: The timestamp replaces colon (:) characters with underscore (_) to
+            // prevent Consul from escaping these so they'll be easier to read.
+            //
             // To help prevent the accumulation of secret keys and [neon-secret-retriever]
             // service instances, [neon-hive-manager] removes secrets with timestamps
-            // older than an hour and Docker services whose name start with "neon-secret-retriever-"
+            // older than an hour and Docker services whose names start with "neon-secret-retriever-"
             // that have been running for more than an hour.
 
-            var timeout   = TimeSpan.FromSeconds(30);     // It should never take this long
-            var timestamp = DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ);
-            var guid      = Guid.NewGuid().ToString("D").ToLowerInvariant();
-            var consulKey = $"neon/service/neon-secret-retriever/{timestamp}~{guid}";
-            var manager   = hive.GetReachableManager();
+            var timeout     = TimeSpan.FromSeconds(30);     // It should never take this long
+            var timestamp   = DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ).Replace(':', '_');
+            var guid        = Guid.NewGuid().ToString("D").ToLowerInvariant();
+            var serviceName = $"neon-secret-retriever-{guid}";
+            var consulKey   = $"neon/service/neon-secret-retriever/{timestamp}~{guid}";
+            var manager     = hive.GetReachableManager();
 
             // Start the [neon-secret-retriever] service.
 
-            var response = manager.SudoCommand($"docker service create {hive.Definition.SecretRetrieverImage}", options, secretName, consulKey);
+            var response = manager.SudoCommand("docker service create", options,
+                "--detach=false",
+                "--name", serviceName,
+                "--mount", $"type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true",
+                "--mount", $"type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
+                "--mount", $"type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
+                "--health-start-period", $"1s",
+                "--secret", secretName,
+                hive.Definition.SecretRetrieverImage,
+                secretName,
+                consulKey);
 
             if (response.ExitCode != 0)
             {
@@ -253,7 +273,7 @@ fi
 
             hive.Consul.Client.KV.Delete(consulKey);
 
-            response = manager.SudoCommand($"docker service rm {hive.Definition.SecretRetrieverImage}", options);
+            response = manager.SudoCommand($"docker service rm {serviceName}", options);
 
             if (response.ExitCode != 0)
             {
@@ -261,6 +281,26 @@ fi
             }
 
             return secret;
+        }
+
+        /// <summary>
+        /// Retrieves a Docker secret as a string.  Note that this will take several seconds.
+        /// </summary>
+        /// <param name="secretName">The secret name.</param>
+        /// <param name="options">Optional command run options.</param>
+        /// <returns>The secret as a byte array or <c>null</c> if the secret doesn't exist.</returns>
+        /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
+        /// <exception cref="HiveException">Thrown if the operation failed.</exception>
+        public string GetString(string secretName, RunOptions options = RunOptions.None)
+        {
+            var bytes = GetBytes(secretName, options);
+
+            if (bytes == null)
+            {
+                return null;
+            }
+
+            return Encoding.UTF8.GetString(bytes);
         }
     }
 }
