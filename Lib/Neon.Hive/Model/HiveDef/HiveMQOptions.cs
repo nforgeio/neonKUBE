@@ -127,6 +127,18 @@ namespace Neon.Hive
         public string AppAccount => "app";
 
         /// <summary>
+        /// Returns the <b>neon</b> VHost.
+        /// </summary>
+        [JsonIgnore]
+        public string NeonVHost => "/neon";
+
+        /// <summary>
+        /// Returns the <b>app</b> VHost.
+        /// </summary>
+        [JsonIgnore]
+        public string AppVHost => "/app";
+
+        /// <summary>
         /// Specifies the password used to secure the <b>sysadmin</b> account.  This defaults to <b>password</b>>.
         /// </summary>
         [JsonProperty(PropertyName = "SysadminPassword", Required = Required.Default)]

@@ -470,23 +470,23 @@ namespace NeonCli
 
                         // Create the vhosts.
 
-                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost /app"));
-                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost /neon"));
+                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {hive.Definition.HiveMQ.AppVHost}"));
+                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {hive.Definition.HiveMQ. NeonVHost}"));
 
                         // Create the users.
 
-                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.HiveMQ.AppAccount}' '{hive.Definition.HiveMQ.AppAccount}'"));
-                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user '{hive.Definition.HiveMQ.NeonAccount}' '{hive.Definition.HiveMQ.NeonPassword}'"));
+                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {hive.Definition.HiveMQ.AppAccount} {hive.Definition.HiveMQ.AppAccount}"));
+                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {hive.Definition.HiveMQ.NeonAccount} {hive.Definition.HiveMQ.NeonPassword}"));
 
                         // Grant the [app] account full access to the [app] vhost, the [neon] account full
                         // access to the [neon] vhost, and the [sysadmin] account full access to both.
                         // Note that this doesn't need to be idempotent.
 
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app app \".*\" \".*\" \".*\"");
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /neon neon \".*\" \".*\" \".*\"");
+                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ.AppVHost} {hive.Definition.HiveMQ.AppAccount} \".*\" \".*\" \".*\"");
+                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ. NeonVHost} {hive.Definition.HiveMQ.NeonAccount} \".*\" \".*\" \".*\"");
 
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p /app sysadmin \".*\" \".*\" \".*\"");
+                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ.AppVHost} {hive.Definition.HiveMQ.SysadminAccount} \".*\" \".*\" \".*\"");
+                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ.NeonVHost} {hive.Definition.HiveMQ.SysadminAccount} \".*\" \".*\" \".*\"");
 
                         // Clear the UX status for the HiveMQ nodes.
 

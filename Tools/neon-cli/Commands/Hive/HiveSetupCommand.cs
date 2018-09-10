@@ -3505,13 +3505,13 @@ systemctl start neon-volume-plugin
 
                     rabbitSettings.Username    = hive.Definition.HiveMQ.NeonAccount;
                     rabbitSettings.Password    = hive.Definition.HiveMQ.NeonPassword;
-                    rabbitSettings.VirtualHost = "/neon";
+                    rabbitSettings.VirtualHost = hive.Definition.HiveMQ.NeonVHost;
 
                     hive.Docker.Secret.Set("neon-hivemq-neon", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
 
                     rabbitSettings.Username    = hive.Definition.HiveMQ.AppAccount;
                     rabbitSettings.Password    = hive.Definition.HiveMQ.AppPassword;
-                    rabbitSettings.VirtualHost = "/app";
+                    rabbitSettings.VirtualHost = hive.Definition.HiveMQ.AppVHost;
 
                     hive.Docker.Secret.Set("neon-hivemq-app", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
                 });
