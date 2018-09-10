@@ -216,7 +216,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Releases", "Releases", "{2B
 		Releases\18.08-alpha.0.md = Releases\18.08-alpha.0.md
 		Releases\18.08-preview.1.md = Releases\18.08-preview.1.md
 		Releases\18.08-preview.2.md = Releases\18.08-preview.2.md
-		Releases\18.08-preview.3.md = Releases\18.08-preview.3.md
+		Releases\18.09-preview.0.md = Releases\18.09-preview.0.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small2", "home-small2", "{18973726-A5D3-4706-8658-9ED658C631CE}"
@@ -248,7 +248,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xen", "Lib\Neon.Xen\Ne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-vault", "Services\neon-vault\neon-vault.csproj", "{9D1C7D89-D972-4F73-AAFF-3D7E0691CAAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-secret-retriever", "Services\neon-secret-retriever\neon-secret-retriever.csproj", "{8168805E-1F13-4475-83B5-859FFA663062}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-secret-retriever", "Services\neon-secret-retriever\neon-secret-retriever.csproj", "{8168805E-1F13-4475-83B5-859FFA663062}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

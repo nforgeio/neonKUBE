@@ -37,7 +37,6 @@ function Publish
 SetVersion Neon.Common
 SetVersion Neon.Couchbase
 SetVersion Neon.Docker
-SetVersion Neon.RabbitMQ
 SetVersion Neon.Hive
 SetVersion Neon.Hive.Aws
 SetVersion Neon.Hive.Azure
@@ -47,6 +46,7 @@ SetVersion Neon.Hive.HyperV
 SetVersion Neon.Hive.HyperVDev
 SetVersion Neon.Hive.Machine
 SetVersion Neon.Hive.Xen
+SetVersion Neon.HiveMQ
 SetVersion Neon.Web
 SetVersion Neon.Xunit
 SetVersion Neon.Xunit.Couchbase
@@ -66,7 +66,7 @@ Publish Neon.Hive.HyperV
 Publish Neon.Hive.HyperVDev
 Publish Neon.Hive.Machine
 Publish Neon.Hive.Xen
-Publish Neon.RabbitMQ
+Publish Neon.HiveMQ
 Publish Neon.Web
 Publish Neon.Xunit
 Publish Neon.Xunit.Couchbase
