@@ -3446,7 +3446,7 @@ systemctl start neon-volume-plugin
             firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings",
                 () =>
                 {
-                    firstManager.Status = "secret: RabbitMQ settings";
+                    firstManager.Status = "secret: HiveMQ";
 
                     // $note(jeff.lill):
                     //

@@ -143,6 +143,9 @@ namespace Neon.Hive
             this.defaultRunOptions   = defaultRunOptions;
             this.nodeProxyCreator    = nodeProxyCreator;
             this.appendLog           = appendLog;
+            this.Headend             = new HeadendClient();
+
+            // Initialize the managers.
 
             this.Docker              = new DockerManager(this);
             this.Certificate         = new CertificateManager(this);
@@ -154,7 +157,7 @@ namespace Neon.Hive
             this.Globals             = new GlobalsManager(this);
             this.Consul              = new ConsulManager(this);
             this.Vault               = new VaultManager(this);
-            this.Headend             = new HeadendClient();
+            this.HiveMQ              = new HiveMQManager(this);
 
             CreateNodes();
         }
@@ -286,6 +289,11 @@ namespace Neon.Hive
         /// Manages the hive Vault.
         /// </summary>
         public VaultManager Vault { get; private set; }
+
+        /// <summary>
+        /// Manages the hive messaging cluster.
+        /// </summary>
+        public HiveMQManager HiveMQ { get; private set; }
 
         /// <summary>
         /// Provides access to neonHIVE headend services.
