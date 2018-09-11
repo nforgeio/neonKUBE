@@ -26,7 +26,7 @@ namespace TestCommon
 {
     public partial class Test_JsonClient
     {
-        private const string baseUri = "http://127.0.0.10:64843/";
+        private const string baseUri = "http://127.0.0.1:888/";
 
         public class RequestDoc
         {
