@@ -24,6 +24,7 @@ namespace NeonCli
     /// <summary>
     /// Updates a hive from version <b>1.2.97</b> to <b>1.2.98</b>.
     /// </summary>
+    [HiveUpdate]
     public class Update_010297_010298 : HiveUpdate
     {
         /// <inheritdoc/>

@@ -198,7 +198,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             // Use a temporary controller to determine how  many hive
             // updates are pending.
 
-            var controller = new SetupController<NodeDefinition>("hive check", hive.Nodes)
+            var controller = new SetupController<NodeDefinition>("hive update check", hive.Nodes)
             {
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
@@ -220,7 +220,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             // We should do something similar for the host services like:
             // consul, docker, powerdns, and vault.
 
-            controller = new SetupController<NodeDefinition>("hive check", hive.Nodes)
+            controller = new SetupController<NodeDefinition>("hive update check", hive.Nodes)
             {
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
@@ -499,7 +499,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
 
             var firstManager = hive.FirstManager;
             
-            var controller = new SetupController<NodeDefinition>("hive linux update", hive.Nodes)
+            var controller = new SetupController<NodeDefinition>("hive update linux", hive.Nodes)
             {
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
@@ -631,7 +631,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 Program.Exit(0);
             }
 
-            var controller = new SetupController<NodeDefinition>("hive images", hive.Nodes)
+            var controller = new SetupController<NodeDefinition>("hive update images", hive.Nodes)
             {
                 MaxParallel = maxParallel,
                 ShowStatus  = true
@@ -683,7 +683,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             this.version = version;
             this.package = hive.Headend.GetDockerPackage(version, out message);
 
-            var controller = new SetupController<NodeDefinition>($"hive docker update: {version}", hive.Nodes)
+            var controller = new SetupController<NodeDefinition>($"hive update docker: {version}", hive.Nodes)
             {
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
@@ -786,7 +786,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
 
             this.version = version;
 
-            var controller = new SetupController<NodeDefinition>($"hive consul update: {version}", hive.Nodes)
+            var controller = new SetupController<NodeDefinition>($"hive update consul: {version}", hive.Nodes)
             {
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
@@ -896,7 +896,7 @@ rm /tmp/consul
 
             this.version = version;
 
-            var controller = new SetupController<NodeDefinition>($"hive vault update: {version}", hive.Nodes)
+            var controller = new SetupController<NodeDefinition>($"hive update vault: {version}", hive.Nodes)
             {
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet

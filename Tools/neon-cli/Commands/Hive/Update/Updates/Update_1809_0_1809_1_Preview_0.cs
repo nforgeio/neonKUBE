@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Update_010297_010298.cs
+// FILE:	    Update_1809_0_1809_1_Preview_0.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,7 +24,8 @@ namespace NeonCli
     /// <summary>
     /// Updates a hive from version <b>18.9.0-preview.0</b> to <b>18.9.1-preview.0</b>.
     /// </summary>
-    public class Update_18090_18091_Preview_0 : HiveUpdate
+    [HiveUpdate]
+    public class Update_1809_0_1809_1_Preview_0 : HiveUpdate
     {
         /// <inheritdoc/>
         public override SemanticVersion FromVersion { get; protected set; } = SemanticVersion.Parse("18.9.0-preview.0");
@@ -39,6 +40,7 @@ namespace NeonCli
 
             controller.AddGlobalStep(GetStepLabel("hive version"), () => UpdateHiveVersion());
         }
+
         /// <summary>
         /// Updates the hive version.
         /// </summary>

@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,11 +30,31 @@ namespace NeonCli
         /// </summary>
         static HiveUpdateManager()
         {
-            Updates = new List<IHiveUpdate>()
+            // Reflect the current assembly to locate any update classes.
+
+            var updateList = new List<IHiveUpdate>();
+
+            foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
             {
-                new Update_010297_010298(),
-                new Update_18090_18091_Preview_0()
-            };
+                if (type.GetCustomAttribute<HiveUpdateAttribute>() != null)
+                {
+                    if (!type.Implements<IHiveUpdate>())
+                    {
+                        throw new TypeLoadException($"Type [{type.FullName}] is not a valid update class because it doesn't implement [{nameof(IHiveUpdate)}].");
+                    }
+
+                    var constructor = type.GetConstructor(new Type[0]);
+
+                    if (constructor == null)
+                    {
+                        throw new TypeLoadException($"Type [{type.FullName}] is not a valid update class because it doesn't have a default constructor.");
+                    }
+
+                    updateList.Add((IHiveUpdate)constructor.Invoke(new object[0]));
+                }
+            }
+
+            Updates = updateList;
         }
 
         /// <summary>
