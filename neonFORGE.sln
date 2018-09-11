@@ -217,6 +217,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Releases", "Releases", "{2B
 		Releases\18.08-preview.1.md = Releases\18.08-preview.1.md
 		Releases\18.08-preview.2.md = Releases\18.08-preview.2.md
 		Releases\18.9.0-preview.0.md = Releases\18.9.0-preview.0.md
+		Releases\18.9.1-preview.0.md = Releases\18.9.1-preview.0.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small2", "home-small2", "{18973726-A5D3-4706-8658-9ED658C631CE}"
