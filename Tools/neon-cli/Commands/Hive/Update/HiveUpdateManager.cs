@@ -31,7 +31,8 @@ namespace NeonCli
         {
             Updates = new List<IHiveUpdate>()
             {
-                new Update_010297_010298()
+                new Update_010297_010298(),
+                new Update_18090_18091_Preview_0()
             };
         }
 
