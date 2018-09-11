@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Xunit.Hive</RootNamespace>
     <PackageId>Neon.Xunit.Hive</PackageId>
-    <Version>7.0.0-preview.2</Version>
+    <Version>18.9.0-preview.0</Version>
     <Authors>Jeff Lill</Authors>
     <Product>neonHIVE</Product>
     <Description>neonHIVE Xunit testing helpers.</Description>

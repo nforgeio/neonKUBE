@@ -55,6 +55,7 @@ HIVE IDENTIFIERS:
     username                - root account username
     uuid                    - Hive UUID
     vault-token             - Vault root token
+    version                 - Hive software version
 
 NODE IDENTIFIERS:
 
@@ -275,6 +276,19 @@ NODE IDENTIFIERS:
                         }
 
                         Console.Write(hiveLogin.VaultCredentials.RootToken);
+                        break;
+
+                    case HiveGlobals.Version:
+
+                        if (hive.Globals.TryGetString(HiveGlobals.Version, out var version))
+                        {
+                            Console.Write(version);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Hive setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
                         break;
 
                     default:

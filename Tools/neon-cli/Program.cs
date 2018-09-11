@@ -37,7 +37,7 @@ namespace NeonCli
         /// if the <b>--version=VERSION</b> option was specified to force a specific
         /// version.
         /// </summary>
-        public const string ActualVersion  = "18.09-preview.0";
+        public const string ActualVersion  = "18.9.1-preview.0";
 
         /// <summary>
         /// Returns the <b>neon-cli</b> version.  This may be different from <see cref="ActualVersion"/>
@@ -51,7 +51,7 @@ namespace NeonCli
         /// hive.  <b>neon-cli</b> checks this to ensure that it is capable of
         /// managing a hive or if it is too old.
         /// </summary>
-        public const string MinimumVersion = "18.08-alpha.1";
+        public const string MinimumVersion = "18.9.0-preview.0";
 
         /// <summary>
         /// CURL command common options.

@@ -1,4 +1,4 @@
-# Publishes DEBUG builds of the NeonForge Nuget packages to the
+# Publishes RELEASE builds of the NeonForge Nuget packages to the
 # local file system and public Nuget.org repositories.
 
 function SetVersion
