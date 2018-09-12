@@ -33,7 +33,6 @@
     //"Version": "test",
     //"Version": "experimental",
     "RegistryCache": true,
-    "AvoidIngressNetwork": true,
     "Experimental": false
   },
   "Vault": {

@@ -178,6 +178,36 @@ namespace Neon.Hive
             Covenant.Requires<ArgumentNullException>(rule != null);
             Covenant.Requires<ArgumentNullException>(HiveDefinition.IsValidName(rule.Name));
 
+            if (!Name.Equals("public", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // Ensure that the [PublicPort] is disabled for non-public rules
+                // just to be absolutely sure that these endpoints are not exposed
+                // to the Internet for cloud deployments and to avoid operators
+                // being freaked out if they see a non-zero port here.
+
+                var httpRule = rule as LoadBalancerHttpRule;
+
+                if (httpRule != null)
+                {
+                    foreach (var frontEnd in httpRule.Frontends)
+                    {
+                        frontEnd.PublicPort = 0;
+                    }
+                }
+                else
+                {
+                    var tcpRule = rule as LoadBalancerTcpRule;
+
+                    if (tcpRule != null)
+                    {
+                        foreach (var frontEnd in tcpRule.Frontends)
+                        {
+                            frontEnd.PublicPort = 0;
+                        }
+                    }
+                }
+            }
+
             var ruleKey = GetProxyRuleKey(rule.Name);
             var update  = hive.Consul.Client.KV.Exists(ruleKey).Result;
 

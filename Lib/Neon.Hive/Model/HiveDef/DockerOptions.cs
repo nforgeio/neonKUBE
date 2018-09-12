@@ -190,7 +190,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// Controls whether the Docker Ingress network is used for for hive proxies.  This defaults to <c>null</c>
-        /// which is currently equivalent to <c>false</c>.
+        /// which is currently equivalent to <c>true</c> for hives deployed locally on <see cref="HostingEnvironments.HyperVDev"/>
+        /// and <c>false</c> for all other hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "AvoidIngressNetwork", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -220,9 +221,7 @@ namespace Neon.Hive
             //
             //      https://github.com/jefflill/NeonForge/issues/104
 
-            //return hiveDefinition.Hosting.Environment == HostingEnvironments.HyperVDev;
-
-            return false;
+            return hiveDefinition.Hosting.Environment == HostingEnvironments.HyperVDev;
         }
 
         /// <summary>
