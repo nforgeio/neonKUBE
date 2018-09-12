@@ -34,10 +34,8 @@
     //"Version": "test",
     //"Version": "experimental",
     "RegistryCache": true,
-    "AvoidIngressNetwork": false,
+    "AvoidIngressNetwork": true,
     "Experimental": false
-  },
-  "Consul": {
   },
   "Vault": {
     "KeyCount": 1,

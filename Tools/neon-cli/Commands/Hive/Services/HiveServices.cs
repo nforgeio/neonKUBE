@@ -459,8 +459,8 @@ namespace NeonCli
                         NeonHelper.WaitForParallel(actions);
 
                         // The RabbitMQ cluster is created with the [/] vhost and the
-                        // [sysadmin] user by default.  We need to create the [/neon]
-                        // and [/app] vhosts along with the [neon] and [app] users
+                        // [sysadmin] user by default.  We need to create the [neon]
+                        // and [app] vhosts along with the [neon] and [app] users
                         // and then set the appropriate permissions.
                         //
                         // We're going to run [rabbitmqctl] within the first RabbitMQ
@@ -479,14 +479,10 @@ namespace NeonCli
                         hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {hive.Definition.HiveMQ.NeonAccount} {hive.Definition.HiveMQ.NeonPassword}"));
 
                         // Grant the [app] account full access to the [app] vhost, the [neon] account full
-                        // access to the [neon] vhost, and the [sysadmin] account full access to both.
-                        // Note that this doesn't need to be idempotent.
+                        // access to the [neon] vhost.  Note that this doesn't need to be idempotent.
 
                         hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ.AppVHost} {hive.Definition.HiveMQ.AppAccount} \".*\" \".*\" \".*\"");
                         hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ. NeonVHost} {hive.Definition.HiveMQ.NeonAccount} \".*\" \".*\" \".*\"");
-
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ.AppVHost} {hive.Definition.HiveMQ.SysadminAccount} \".*\" \".*\" \".*\"");
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ.NeonVHost} {hive.Definition.HiveMQ.SysadminAccount} \".*\" \".*\" \".*\"");
 
                         // Clear the UX status for the HiveMQ nodes.
 

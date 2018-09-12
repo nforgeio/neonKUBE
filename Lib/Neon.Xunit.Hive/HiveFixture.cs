@@ -106,6 +106,7 @@ namespace Neon.Xunit.Hive
     ///     <term><b>Misc</b></term>
     ///     <description>
     ///     <see cref="ClearConsul()"/>
+    ///     <see cref="ClearHiveMQ()"/>
     ///     <see cref="ClearVault()"/>
     ///     <see cref="Hive"/><br/>
     ///     <see cref="DockerExecute(string)"/><br/>
@@ -429,6 +430,11 @@ namespace Neon.Xunit.Hive
             {
                 throw new NotSupportedException($"The [{hive.Name}] hive does not support unit testing.  Use the [neon hive set allow-unit-testing=true] command to enable this.");
             }
+
+            // Enable Docker secret retrieval so we'll be able to obtain
+            // secrets like the HiveMQ settings.
+
+            HiveHelper.EnableSecretRetrival();
 
             // We needed to defer the [Reset()] call until after the hive
             // was connected.
@@ -1518,103 +1524,48 @@ namespace Neon.Xunit.Hive
         //---------------------------------------------------------------------
         // HiveMQ
 
-        private HiveMQSettings      cachedHiveMQSettings;
-        private IConnection         cachedHiveMQConnection;
-        private IBus                cachedHiveMQBus;
-        private ManagementClient    cachedHiveMQManagement;
-
         /// <summary>
-        /// Returns the [sysadmin] HiveMQ cluster settings.
+        /// Returns HiveMQ cluster settings for the <b>sysadmin</b> user.
         /// </summary>
-        public HiveMQSettings HiveMQSettings
+        public HiveMQSettings GetHiveMQSettings()
         {
-            get
-            {
-                lock (syncLock)
-                {
-                    if (cachedHiveMQSettings != null)
-                    {
-                        return cachedHiveMQSettings;
-                    }
-
-                    return cachedHiveMQSettings = NeonHelper.JsonDeserialize<HiveMQSettings>(hive.Docker.Secret.GetString("neon-hivemq-sysadmin"));
-                }
-            }
+            return HiveHelper.GetSecret<HiveMQSettings>("neon-hivemq-sysadmin");
         }
 
         /// <summary>
-        /// <para>
         /// Returns a lower-level <see cref="IConnection"/> that can be used to
-        /// perform messaging operations on HiveMQ.
-        /// </para>
-        /// <note>
-        /// <b>WARNING:</b> Do not dispose the object returned.
-        /// </note>
+        /// perform messaging operations on HiveMQ.  This connects as the 
+        /// <b>sysadmin</b> user.
         /// </summary>
-        public IConnection HiveMQConnection
+        public IConnection ConnectHiveMQConnection()
         {
-            get
-            {
-                lock (syncLock)
-                {
-                    if (cachedHiveMQConnection != null)
-                    {
-                        return cachedHiveMQConnection;
-                    }
-
-                    return cachedHiveMQConnection = HiveMQSettings.Connect();
-                }
-            }
+            return GetHiveMQSettings().Connect();
         }
 
         /// <summary>
-        /// <para>
         /// Returns a high-level <see cref="IBus"/> instance that can be used to 
-        /// perform messaging operations on the HiveMQ.
-        /// </para>
-        /// <note>
-        /// <b>WARNING:</b> Do not dispose the object returned.
-        /// </note>
+        /// perform messaging operations on the HiveMQ.  This connects as the
+        /// <b>sysadmin</b> user.
         /// </summary>
-        public IBus HiveMQBus
+        public IBus ConnectHiveMQBus()
         {
-            get
-            {
-                lock (syncLock)
-                {
-                    if (cachedHiveMQBus != null)
-                    {
-                        return cachedHiveMQBus;
-                    }
-
-                    return cachedHiveMQBus = HiveMQSettings.ConnectBus();
-                }
-            }
+            return GetHiveMQSettings().ConnectBus();
         }
 
         /// <summary>
-        /// <para>
-        /// Returns a <see cref="ManagementClient"/> instance that can be used to perform
-        /// management related operations on the HiveMQ.
-        /// </para>
-        /// <note>
-        /// <b>WARNING:</b> Do not dispose the object returned.
-        /// </note>
+        /// Returns a <see cref="ManagementClient"/> you can use the manage
+        /// the HiveMQ.  This connects as the <b>sysadmin</b> user.
         /// </summary>
-        public ManagementClient HiveMQManagement
+        public ManagementClient ConnectHiveMQManager()
         {
-            get
-            {
-                lock (syncLock)
-                {
-                    if (cachedHiveMQBus != null)
-                    {
-                        return cachedHiveMQManagement;
-                    }
+            var hiveMQSettings = GetHiveMQSettings();
 
-                    return cachedHiveMQManagement = HiveMQSettings.ConnectManager();
-                }
+            if (hiveMQSettings == null)
+            {
+                throw new HiveException("Unable to obtain the [neon-hivemq-sysadmin] Docker secret.  This needs to be mounted into the current application.");
             }
+
+            return hiveMQSettings.ConnectManager();
         }
 
         /// <summary>
@@ -1628,54 +1579,46 @@ namespace Neon.Xunit.Hive
             //
             // So here's what we need to do to reset the state:
             //
-            //      1. Remove any vhosts besides [/] and [/neon].  This will
+            //      1. Remove any vhosts besides [/] and [neon].  This will
             //         remove any related queues and other state.
             //      2. Remove any users besides [sysadmin] and [neon].  This
             //         will remove [app].
             //      3. Recreate the [app] user.
-            //      4. Recreate the [/app] vhost.
-            //      5. Set the [app] user permissions for the [/app] vhost.
-            //      6. Grant [sysadmin] permissions for [/app] as well.
+            //      4. Recreate the [app] vhost.
+            //      5. Set the [app] user permissions for the [app] vhost.
 
-            var management = HiveMQManagement;
-
-            // Remove the vhosts.
-
-            foreach (var vhost in management.GetVHostsAsync().Result)
+            using (var mqManager = ConnectHiveMQManager())
             {
-                if (vhost.Name != "/" && vhost.Name != hive.Definition.HiveMQ.NeonVHost)
+                // Remove vhosts other than [/] and [neon].
+
+                foreach (var vhost in mqManager.GetVHostsAsync().Result)
                 {
-                    management.DeleteVirtualHostAsync(vhost).Wait();
+                    if (vhost.Name != "/" && vhost.Name != hive.Definition.HiveMQ.NeonVHost)
+                    {
+                        mqManager.DeleteVirtualHostAsync(vhost).Wait();
+                    }
                 }
-            }
 
-            // Remove the users.
+                // Remove users other than [sysadmin] and [neon].
 
-            foreach (var user in management.GetUsersAsync().Result)
-            {
-                if (user.Name != hive.Definition.HiveMQ.SysadminAccount && user.Name != hive.Definition.HiveMQ.NeonAccount)
+                foreach (var user in mqManager.GetUsersAsync().Result)
                 {
-                    management.DeleteUserAsync(user).Wait();
+                    if (user.Name != hive.Definition.HiveMQ.SysadminAccount && user.Name != hive.Definition.HiveMQ.NeonAccount)
+                    {
+                        mqManager.DeleteUserAsync(user).Wait();
+                    }
                 }
+
+                // Recreate the [app] vhost.
+
+                var appVHost = mqManager.CreateVirtualHostAsync(hive.Definition.HiveMQ.AppVHost).Result;
+
+                // Recreate the [app] user and set its permissions for the [app] vhost.
+
+                var appUser = mqManager.CreateUserAsync(new EasyNetQ.Management.Client.Model.UserInfo(hive.Definition.HiveMQ.AppAccount, hive.Definition.HiveMQ.AppPassword)).Result;
+
+                mqManager.CreatePermissionAsync(new EasyNetQ.Management.Client.Model.PermissionInfo(appUser, appVHost));
             }
-
-            // Recreate the [/app] vhost.
-
-            management.CreateVirtualHostAsync(hive.Definition.HiveMQ.AppVHost).Wait();
-
-            // Recreate the [app] user and set its permissions for the [/app] vhost.
-
-            var appVHost = management.GetVhostAsync(hive.Definition.HiveMQ.AppVHost).Result;
-            var appUser  = management.GetUserAsync(hive.Definition.HiveMQ.AppAccount).Result;
-
-            management.CreateUserAsync(new EasyNetQ.Management.Client.Model.UserInfo(hive.Definition.HiveMQ.AppAccount, hive.Definition.HiveMQ.AppPassword)).Wait();
-            management.CreatePermissionAsync(new EasyNetQ.Management.Client.Model.PermissionInfo(appUser, appVHost));
-
-            // We also need to grant permission for [sysadmin] to the [/app] vhost.
-
-            var sysadminUser = management.GetUserAsync(hive.Definition.HiveMQ.SysadminAccount).Result;
-
-            management.CreatePermissionAsync(new EasyNetQ.Management.Client.Model.PermissionInfo(sysadminUser, appVHost));
         }
     }
 }

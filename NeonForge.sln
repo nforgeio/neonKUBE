@@ -252,6 +252,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-vault", "Services\neon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-secret-retriever", "Services\neon-secret-retriever\neon-secret-retriever.csproj", "{8168805E-1F13-4475-83B5-859FFA663062}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt-jeff", "wrt-jeff", "{7B918008-009F-49F4-BE01-9130E635634B}"
+	ProjectSection(SolutionItems) = preProject
+		Devops\test\hives\wrt-jeff\hive.json = Devops\test\hives\wrt-jeff\hive.json
+		Devops\test\hives\wrt-jeff\secrets.yaml = Devops\test\hives\wrt-jeff\secrets.yaml
+		Devops\test\hives\wrt-jeff\secrets2.yaml = Devops\test\hives\wrt-jeff\secrets2.yaml
+		Devops\test\hives\wrt-jeff\vars.yaml = Devops\test\hives\wrt-jeff\vars.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
@@ -849,6 +857,7 @@ Global
 		{1A6C061D-83FD-4B53-8E96-80A1546C8F4B} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{9D1C7D89-D972-4F73-AAFF-3D7E0691CAAB} = {319CF481-DCE8-4114-B13F-FC7CFC48496D}
 		{8168805E-1F13-4475-83B5-859FFA663062} = {319CF481-DCE8-4114-B13F-FC7CFC48496D}
+		{7B918008-009F-49F4-BE01-9130E635634B} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

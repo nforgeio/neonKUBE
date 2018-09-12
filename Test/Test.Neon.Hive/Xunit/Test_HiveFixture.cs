@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Consul;
+using EasyNetQ.Management.Client.Model;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -46,6 +47,19 @@ namespace TestNeonCluster
                         () => hive.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }),
                         () => hive.CreateNetwork("test-network"),
                         () => hive.CreateService("test-service", "nhive/test"),
+                        async () =>
+                        {
+                            // Create the HiveMQ [test] user, [test] vhost along with the [test-queue].
+
+                            using (var mqManager = hive.ConnectHiveMQManager())
+                            {
+                                var mqUser  = await mqManager.CreateUserAsync(new UserInfo("test-user", "password"));
+                                var mqVHost = await mqManager.CreateVirtualHostAsync("test-vhost");
+                                var mqQueue = await mqManager.CreateQueueAsync(new QueueInfo("test-queue", autoDelete: false, durable: true, arguments: new InputArguments()), mqVHost);
+
+                                await mqManager.CreatePermissionAsync(new PermissionInfo(mqUser, mqVHost));
+                            }
+                        },
                         () =>
                         {
                             var composeText =
@@ -92,6 +106,14 @@ services:
             this.hive = hive.Hive;
         }
 
+        /// <summary>
+        /// Returns a self-signed PEM encoded certificate and private key for testing purposes.
+        /// </summary>
+        private TlsCertificate TestCertificate
+        {
+            get { return TlsCertificate.CreateSelfSigned("test.com"); }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void VerifyState()
@@ -129,6 +151,13 @@ services:
             Assert.Equal("three", hiveFixture.Consul.KV.GetString("test/folder/value3").Result);
             Assert.Equal("four", hiveFixture.Consul.KV.GetString("test/folder/value4").Result);
 
+            using (var mqManager = hive.HiveMQ.ConnectHiveMQManager())
+            {
+                Assert.Single(mqManager.GetUsersAsync().Result.Where(u => u.Name == "test-user"));
+                Assert.Single(mqManager.GetVHostsAsync().Result.Where(vh => vh.Name == "test-vhost"));
+                Assert.Single(mqManager.GetQueuesAsync().Result.Where(q => q.Name == "test-queue"));
+            }
+
             // Now reset the hive and verify that all state was cleared.
 
             hiveFixture.Reset();
@@ -146,6 +175,13 @@ services:
             Assert.False(hiveFixture.Consul.KV.Exists("test/value2").Result);
             Assert.False(hiveFixture.Consul.KV.Exists("test/folder/value3").Result);
             Assert.False(hiveFixture.Consul.KV.Exists("test/folder/value4").Result);
+            
+            using (var mqManager = hive.HiveMQ.ConnectHiveMQManager())
+            {
+                Assert.Empty(mqManager.GetUsersAsync().Result.Where(u => u.Name == "test-user"));
+                Assert.Empty(mqManager.GetVHostsAsync().Result.Where(vh => vh.Name == "test-vhost"));
+                Assert.Empty(mqManager.GetQueuesAsync().Result.Where(q => q.Name == "test-queue"));
+            }
         }
 
         [Fact]
@@ -207,14 +243,6 @@ services:
 
             NeonHelper.WaitForParallel(actions);
             Assert.Empty(sbUncleared.ToString());
-        }
-
-        /// <summary>
-        /// Returns a self-signed PEM encoded certificate and private key for testing purposes.
-        /// </summary>
-        private TlsCertificate TestCertificate
-        {
-            get { return TlsCertificate.CreateSelfSigned("test.com"); }
         }
     }
 }

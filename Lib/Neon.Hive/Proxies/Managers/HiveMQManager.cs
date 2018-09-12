@@ -22,6 +22,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
+using EasyNetQ.Management.Client;
 
 namespace Neon.Hive
 {
@@ -41,6 +42,15 @@ namespace Neon.Hive
             Covenant.Requires<ArgumentNullException>(hive != null);
 
             this.hive = hive;
+        }
+
+        /// <summary>
+        /// Returns a <see cref="ManagementClient"/> instance that can be used to perform
+        /// management related operations on the HiveMQ.
+        /// </summary>
+        public ManagementClient ConnectHiveMQManager()
+        {
+            return SystemSettings.ConnectManager();
         }
 
         /// <summary>

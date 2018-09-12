@@ -63,6 +63,7 @@ namespace Neon.Hive
         private static Dictionary<string, string>   secrets;
         private static Dictionary<string, string>   configs;
         private static bool                         remoteConnection;
+        private static bool                         enableSecretRetrival;
 
         /// <summary>
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
@@ -718,8 +719,8 @@ namespace Neon.Hive
             secrets?.Realize(Hive, HiveLogin);
             configs?.Realize(Hive, HiveLogin);
 
-            HiveHelper.secrets = secrets;
-            HiveHelper.configs = configs;
+            HiveHelper.secrets = secrets ?? new DebugSecrets();
+            HiveHelper.configs = configs ?? new DebugConfigs();
 
             return HiveHelper.Hive;
         }
@@ -1072,9 +1073,10 @@ namespace Neon.Hive
                 return;
             }
 
-            Hive             = null;
-            IsConnected      = false;
-            remoteConnection = false;
+            Hive                 = null;
+            IsConnected          = false;
+            remoteConnection     = false;
+            enableSecretRetrival = false;
         }
 
         /// <summary>
@@ -1224,6 +1226,29 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// <para>
+        /// Enables <see cref="GetSecret(string)"/> and <see cref="GetSecret{T}(string)"/> to retrieve
+        /// Docker secrets from Docker itself.  This works only if the current user is logged into
+        /// the cluster, which will almost never be the case for services or containers actually
+        /// running in the hive. 
+        /// </para>
+        /// <para>
+        /// This is typically used for unit tests (e.g. by the <c>HiveFixture</c> test fixture class)
+        /// so that tests can obtain secrets.
+        /// </para>
+        /// </summary>
+        /// <exception cref="HiveException">Thrown if the current user is not remotely logged into a hive.</exception>
+        public static void EnableSecretRetrival()
+        {
+            if (!remoteConnection)
+            {
+                throw new HiveException($"Cannot enable secret retrieval when not remotely logged into the hive.");
+            }
+
+            enableSecretRetrival = true;
+        }
+
+        /// <summary>
         /// Returns the value of a named secret.
         /// </summary>
         /// <param name="name">The secret name.</param>
@@ -1240,9 +1265,16 @@ namespace Neon.Hive
         /// When the application is not running in debug mode, this method simply attempts to read
         /// the requested secret from the named file in this folder.
         /// </para>
+        /// <note>
+        /// Unit test fixtures like <c>HiveFixture</c> call <see cref="EnableSecretRetrival"/>
+        /// so that this method will attempt to retrieve and cache the requested secret directly
+        /// from Docker.
+        /// </note>
         /// </remarks>
         public static string GetSecret(string name)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
             var secretPath = Path.Combine(HiveConst.ContainerSecretsFolder, name);
 
             try
@@ -1257,15 +1289,25 @@ namespace Neon.Hive
                 return null;
             }
 
-            if (secrets == null)
-            {
-                return null;
-            }
-
             string secret;
 
             if (secrets.TryGetValue(name, out secret))
             {
+                return secret;
+            }
+            else if (enableSecretRetrival && Hive != null)
+            {
+                secret = Hive.Docker.Secret.GetString(name);
+
+                if (secret == null)
+                {
+                    return null;
+                }
+
+                // This effectively caches the secret so we won't need
+                // to retrieve it again.
+
+                secrets.Add(name, secret);
                 return secret;
             }
             else
@@ -1292,10 +1334,17 @@ namespace Neon.Hive
         /// When the application is not running in debug mode, this method simply attempts to read
         /// the requested secret from the named file in this folder.
         /// </para>
+        /// <note>
+        /// Unit test fixtures like <c>HiveFixture</c> call <see cref="EnableSecretRetrival"/>
+        /// so that this method will attempt to retrieve and cache the requested secret directly
+        /// from Docker.
+        /// </note>
         /// </remarks>
         public static T GetSecret<T>(string name)
             where T : class, new()
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
             var secretJson = GetSecret(name);
 
             if (secretJson == null)

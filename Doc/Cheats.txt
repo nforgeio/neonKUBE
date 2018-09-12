@@ -1,9 +1,6 @@
 #------------------------------------------------------------------------------
 # Cheats for JEFF home environment.
 
-#------------------------------------------------------------------------------
-# [neon]: Ubuntu 16.04
-
 neon logout
 neon login rm root@home-small --force
 powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-small jeff-latest
@@ -27,9 +24,9 @@ powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-bare jeff-latest
 neon logout
 neon login rm root@home-small --force
 neon hive prepare %NF_ROOT%\Devops\test\hives\home-small\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
-neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small
+neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small --image-tag=jeff-latest
 neon hive set allow-unit-testing=true
-# neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small --image-tag=jeff-latest
+# neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small
 
 neon logout
 neon login rm root@home-small2 --force
@@ -37,48 +34,9 @@ neon hive prepare %NF_ROOT%\Devops\test\hives\home-small2\hive.json --log-folder
 neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small2 --image-tag=jeff-latest
 neon hive set allow-unit-testing=true
 
-#------------------------------------------------------------------------------
-# RabbitMQ
-
-sudo cat <<EOF > /usr/bin/sbash
-# Starts Bash with elevated permissions while also inheriting
-# the current environment variables.
-
-/usr/bin/sudo -E bash \$@
-EOF
-
-sbash
-
-echo mq > /etc/hostname
-sed -i "s/ubuntu/mq/g" /etc/hosts
-systemctl restart networking
-
-chmod a+x /usr/bin/sbash
-
-wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
-dpkg -i erlang-solutions_1.0_all.deb
-
-wget https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
-apt-key add erlang_solutions.asc
-
-apt-get update
-apt-get install -yq esl-erlang socat
-
-# $todo(jeff.lill): 
-#
-# Couldn't get High-Performance Erlang (HiPE) to install for better performnce.
-# come back and investigate later.
-#
-# apt-get install erlang-base-hipe
-
-curl -L http://www.rabbitmq.com/releases/rabbitmq-server/v3.6.10/rabbitmq-server_3.6.10-1_all.deb -o rabbitmq.deb
-dpkg --install rabbitmq.deb
-
-rabbitmq-plugins enable rabbitmq_management
-rabbitmqctl add_user admin password
-rabbitmqctl set_user_tags admin administrator
-
-# Dashboard: http://10.0.0.93:15672
-# UID/PWD:   admin/password
-
-rm *.deb
+neon logout
+neon login rm root@wrt-jeff --force
+neon hive prepare %NF_ROOT%\Devops\test\hives\wrt-jeff\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
+neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@wrt-jeff --image-tag=jeff-latest
+neon hive set allow-unit-testing=true
+# neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@wrt-jeff
