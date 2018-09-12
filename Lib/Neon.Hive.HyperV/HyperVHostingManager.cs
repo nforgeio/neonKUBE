@@ -82,7 +82,7 @@ namespace Neon.Hive
         {
             // Identify the OSD Bluestore block device for OSD nodes.
 
-            if (hive.Definition.Ceph.Enabled)
+            if (hive.Definition.HiveFS.Enabled)
             {
                 foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
                 {

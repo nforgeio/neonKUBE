@@ -517,7 +517,7 @@ namespace Neon.Hive
         /// <summary>
         /// <b>io.neonhive.ceph.monitor</b> [<c>bool</c>]: Indicates that the Ceph 
         /// monitor and manager services  will be deployed to this node if 
-        /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  This defaults 
+        /// <see cref="HiveFSOptions.Enabled"/> is <c>true</c>.  This defaults 
         /// to <c>false</c>.
         /// </summary>
         /// <remarks>
@@ -545,7 +545,7 @@ namespace Neon.Hive
         /// <summary>
         /// <b>io.neonhive.ceph.osd</b> [<c>bool</c>]: Indicates that a Ceph OSD 
         /// (object storage daemon) will be deployed to this node if 
-        /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  
+        /// <see cref="HiveFSOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
         /// <remarks>
@@ -569,7 +569,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <b>io.neonhive.ceph.mds</b> [<c>bool</c>]: Indicates that a Ceph MDS 
-        /// (metadata server) will be deployed to this node if <see cref="CephOptions.Enabled"/> 
+        /// (metadata server) will be deployed to this node if <see cref="HiveFSOptions.Enabled"/> 
         /// is <c>true</c>.  This defaults to <c>false</c>.
         /// </summary>
         /// <remarks>
@@ -587,7 +587,7 @@ namespace Neon.Hive
         /// <b>io.neonhive.ceph.drivesize_gb</b> [<c>int</c>]: Specifies the size in gigabytes
         /// of the Ceph OSD drive created for cloud and hypervisor based environments if the
         /// integrated Ceph storage cluster is enabled and <see cref="CephOSD"/>
-        /// is <c>true</c> for this node.  This defaults to <see cref="CephOptions.OSDDriveSize"/>
+        /// is <c>true</c> for this node.  This defaults to <see cref="HiveFSOptions.OSDDriveSize"/>
         /// (<b>128GB</b>).
         /// </summary>
         [JsonProperty(PropertyName = "CephOSDDriveSizeGB", Required = Required.Default)]
@@ -599,7 +599,7 @@ namespace Neon.Hive
         /// <b>io.neonhive.ceph.cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
         /// to assign to the Ceph OSDs for caching if the integrated Ceph storage cluster 
         /// is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
-        /// This defaults to <see cref="CephOptions.OSDCacheSize"/> (<b>1GB</b>) (which is 
+        /// This defaults to <see cref="HiveFSOptions.OSDCacheSize"/> (<b>1GB</b>) (which is 
         /// probably too small for production hives).
         /// </para>
         /// <note>
@@ -623,7 +623,7 @@ namespace Neon.Hive
         /// <b>io.neonhive.ceph.journalsize_mb</b> [<c>int</c>]: Specifies the disk capacity
         /// in megabytes to assign to the Ceph OSD journal if the integrated Ceph storage 
         /// cluster is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
-        /// This defaults to <see cref="CephOptions.OSDJournalSize"/>.
+        /// This defaults to <see cref="HiveFSOptions.OSDJournalSize"/>.
         /// </summary>
         [JsonProperty(PropertyName = "CephOSDJournalSizeMB", Required = Required.Default)]
         [DefaultValue(0)]
@@ -634,7 +634,7 @@ namespace Neon.Hive
         /// <b>io.neonhive.ceph.mds_cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
         /// to assign to the Ceph MDS services for caching if the integrated Ceph storage cluster 
         /// is enabled and <see cref="CephMDS"/> is <c>true</c> for this node.
-        /// This defaults to <see cref="CephOptions.MDSCacheSize"/> (<b>1GB</b>) (which is 
+        /// This defaults to <see cref="HiveFSOptions.MDSCacheSize"/> (<b>1GB</b>) (which is 
         /// probably too small for production hives).
         /// </para>
         /// <note>
@@ -929,7 +929,7 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
-            if (hiveDefinition.Ceph.Enabled)
+            if (hiveDefinition.HiveFS.Enabled)
             {
                 if (CephOSDDriveSizeGB > 0 && CephOSDDriveSizeGB < 1)
                 {

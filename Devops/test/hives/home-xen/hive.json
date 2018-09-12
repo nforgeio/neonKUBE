@@ -23,7 +23,7 @@
   "Vpn": {
     "Enabled": false
   },
-  "HostNode": {
+  "HiveNode": {
     "OperatingSystem": "ubuntu-16.04",
     "Upgrade": "full",
     "SshAuth": "tls",
@@ -49,7 +49,7 @@
   "Log": {
     "Enabled": true
   },
-  "Ceph": {
+  "HiveFS": {
     "Enabled": true
   },
   "Nodes": {

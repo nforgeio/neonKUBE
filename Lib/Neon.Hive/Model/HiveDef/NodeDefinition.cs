@@ -401,7 +401,7 @@ namespace Neon.Hive
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
         public long GetCephOSDDriveSize(HiveDefinition hiveDefinition)
         {
-            if (!hiveDefinition.Ceph.Enabled)
+            if (!hiveDefinition.HiveFS.Enabled)
             {
                 return 0;
             }
@@ -412,7 +412,7 @@ namespace Neon.Hive
             }
             else
             {
-                Labels.CephOSDDriveSizeGB = (int)(HiveDefinition.ValidateSize(hiveDefinition.Ceph.OSDDriveSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Ceph.OSDDriveSize))/NeonHelper.Giga);
+                Labels.CephOSDDriveSizeGB = (int)(HiveDefinition.ValidateSize(hiveDefinition.HiveFS.OSDDriveSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.HiveFS.OSDDriveSize))/NeonHelper.Giga);
 
                 return (long)Labels.CephOSDDriveSizeGB * NeonHelper.Giga;
             }
@@ -427,7 +427,7 @@ namespace Neon.Hive
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
         public long GetCephOSDCacheSize(HiveDefinition hiveDefinition)
         {
-            if (!hiveDefinition.Ceph.Enabled)
+            if (!hiveDefinition.HiveFS.Enabled)
             {
                 return 0;
             }
@@ -438,7 +438,7 @@ namespace Neon.Hive
             }
             else
             {
-                Labels.CephOSDCacheSizeMB = (int)(HiveDefinition.ValidateSize(hiveDefinition.Ceph.OSDCacheSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Ceph.OSDCacheSize))/NeonHelper.Mega);
+                Labels.CephOSDCacheSizeMB = (int)(HiveDefinition.ValidateSize(hiveDefinition.HiveFS.OSDCacheSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.HiveFS.OSDCacheSize))/NeonHelper.Mega);
 
                 return (long)Labels.CephOSDCacheSizeMB * NeonHelper.Mega;
             }
@@ -453,7 +453,7 @@ namespace Neon.Hive
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
         public long GetCephOSDJournalSize(HiveDefinition hiveDefinition)
         {
-            if (!hiveDefinition.Ceph.Enabled)
+            if (!hiveDefinition.HiveFS.Enabled)
             {
                 return 0;
             }
@@ -464,7 +464,7 @@ namespace Neon.Hive
             }
             else
             {
-                Labels.CephOSDJournalSizeMB = (int)(HiveDefinition.ValidateSize(hiveDefinition.Ceph.OSDJournalSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Ceph.OSDJournalSize)) / NeonHelper.Mega);
+                Labels.CephOSDJournalSizeMB = (int)(HiveDefinition.ValidateSize(hiveDefinition.HiveFS.OSDJournalSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.HiveFS.OSDJournalSize)) / NeonHelper.Mega);
 
                 return (long)Labels.CephOSDJournalSizeMB * NeonHelper.Mega;
             }
@@ -479,7 +479,7 @@ namespace Neon.Hive
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
         public long GetCephMDSCacheSize(HiveDefinition hiveDefinition)
         {
-            if (!hiveDefinition.Ceph.Enabled)
+            if (!hiveDefinition.HiveFS.Enabled)
             {
                 return 0;
             }
@@ -490,7 +490,7 @@ namespace Neon.Hive
             }
             else
             {
-                Labels.CephMDSCacheSizeMB = (int)(HiveDefinition.ValidateSize(hiveDefinition.Ceph.MDSCacheSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Ceph.MDSCacheSize)) / NeonHelper.Mega);
+                Labels.CephMDSCacheSizeMB = (int)(HiveDefinition.ValidateSize(hiveDefinition.HiveFS.MDSCacheSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.HiveFS.MDSCacheSize)) / NeonHelper.Mega);
 
                 return (long)Labels.CephMDSCacheSizeMB * NeonHelper.Mega;
             }

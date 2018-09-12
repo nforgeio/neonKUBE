@@ -425,9 +425,9 @@ namespace Neon.Hive
         /// <summary>
         /// Specifies host node options.
         /// </summary>
-        [JsonProperty(PropertyName = "HostNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "HiveNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public HostNodeOptions HostNode { get; set; } = new HostNodeOptions();
+        public HiveNodeOptions HiveNode { get; set; } = new HiveNodeOptions();
 
         /// <summary>
         /// Describes the Docker configuration.
@@ -474,9 +474,9 @@ namespace Neon.Hive
         /// <summary>
         /// Integrated <a href="http://ceph.com">Ceph distributed storage cluster</a> options.
         /// </summary>
-        [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "HiveFS", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public CephOptions Ceph { get; set; } = new CephOptions();
+        public HiveFSOptions HiveFS { get; set; } = new HiveFSOptions();
 
         /// <summary>
         /// Integrated <a href="https://varnish-cache.org/">Kong API Gateway</a> options.
@@ -771,14 +771,14 @@ namespace Neon.Hive
             Setup             = Setup ?? new SetupOptions();
             Hosting           = Hosting ?? new HostingOptions();
             Vpn               = Vpn ?? new VpnOptions();
-            HostNode          = HostNode ?? new HostNodeOptions();
+            HiveNode          = HiveNode ?? new HiveNodeOptions();
             Docker            = Docker ?? new DockerOptions();
             Network           = Network ?? new NetworkOptions();
             Consul            = Consul ?? new ConsulOptions();
             Vault             = Vault ?? new VaultOptions();
             Log               = Log ?? new LogOptions();
             Dashboard         = Dashboard ?? new DashboardOptions();
-            Ceph              = Ceph ?? new CephOptions();
+            HiveFS              = HiveFS ?? new HiveFSOptions();
             Varnish           = Varnish ?? new VarnishOptions();
             HiveMQ            = HiveMQ ?? new HiveMQOptions();
 
@@ -795,13 +795,13 @@ namespace Neon.Hive
             Network.Validate(this);
             Hosting.Validate(this);
             Vpn.Validate(this);
-            HostNode.Validate(this);
+            HiveNode.Validate(this);
             Docker.Validate(this);
             Consul.Validate(this);
             Vault.Validate(this);
             Log.Validate(this);
             Dashboard.Validate(this);
-            Ceph.Validate(this);
+            HiveFS.Validate(this);
             Varnish.Validate(this);
             HiveMQ.Validate(this);
 

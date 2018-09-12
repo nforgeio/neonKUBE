@@ -445,7 +445,7 @@ namespace Neon.Hive
         {
             // Identify the OSD Bluestore block device for OSD nodes.
 
-            if (hive.Definition.Ceph.Enabled)
+            if (hive.Definition.HiveFS.Enabled)
             {
                 throw new NotImplementedException("$todo(jeff.lill): Implement this.");
             }

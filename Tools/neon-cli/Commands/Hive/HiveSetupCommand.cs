@@ -197,7 +197,7 @@ OPTIONS:
 
             controller.AddWaitUntilOnlineStep("connect");
 
-            switch (hive.Definition.HostNode.SshAuth)
+            switch (hive.Definition.HiveNode.SshAuth)
             {
                 case AuthMethods.Password:
 
@@ -211,7 +211,7 @@ OPTIONS:
 
                 default:
 
-                    throw new NotSupportedException($"Unsupported SSH authentication method [{hive.Definition.HostNode.SshAuth}].");
+                    throw new NotSupportedException($"Unsupported SSH authentication method [{hive.Definition.HiveNode.SshAuth}].");
             }
 
             if (sshTlsAuth)
@@ -315,7 +315,7 @@ OPTIONS:
 
             if (!hive.Definition.BareDocker)
             {
-                if (hive.Definition.Ceph.Enabled)
+                if (hive.Definition.HiveFS.Enabled)
                 {
                     controller.AddStep("ceph user",
                         (node, stepDelay) =>
@@ -487,9 +487,9 @@ OPTIONS:
 
             if (!hiveLogin.HasStrongSshPassword)
             {
-                if (hive.Definition.HostNode.PasswordLength > 0)
+                if (hive.Definition.HiveNode.PasswordLength > 0)
                 {
-                    hiveLogin.SshPassword          = NeonHelper.GetRandomPassword(hive.Definition.HostNode.PasswordLength);
+                    hiveLogin.SshPassword          = NeonHelper.GetRandomPassword(hive.Definition.HiveNode.PasswordLength);
                     hiveLogin.HasStrongSshPassword = true;
                 }
                 else
@@ -500,7 +500,7 @@ OPTIONS:
                 hiveLogin.Save();
             }
 
-            if (hive.Definition.HostNode.PasswordLength > 0)
+            if (hive.Definition.HiveNode.PasswordLength > 0)
             {
                 controller.AddStep("strong password",
                     (node, stepDelay) =>
@@ -1270,7 +1270,7 @@ fi
                     // Upgrade Linux packages if requested.  We're doing this after
                     // deploying the APT package proxy so it'll be faster.
 
-                    switch (hive.Definition.HostNode.Upgrade)
+                    switch (hive.Definition.HiveNode.Upgrade)
                     {
                         case OsUpgrade.Partial:
 
@@ -1486,7 +1486,7 @@ fi
                     // Upgrade Linux packages if requested.  We're doing this after
                     // deploying the APT package proxy so it'll be faster.
 
-                    switch (hive.Definition.HostNode.Upgrade)
+                    switch (hive.Definition.HiveNode.Upgrade)
                     {
                         case OsUpgrade.Partial:
 
@@ -1867,7 +1867,7 @@ StartLimitBurst=1051200";
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void CephPackages (SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            if (!hive.Definition.Ceph.Enabled)
+            if (!hive.Definition.HiveFS.Enabled)
             {
                 return;
             }
@@ -1898,7 +1898,7 @@ StartLimitBurst=1051200";
                     // Extract the Ceph release and version from the configuration.
                     // Note that the version is optional and is currently ignored.
 
-                    var parts       = hive.Definition.Ceph.Release.Split('/');
+                    var parts       = hive.Definition.HiveFS.Release.Split('/');
                     var cephRelease = parts[0].Trim().ToLowerInvariant();
 
                     // Configure the Ceph Debian package repositories and install
@@ -2095,7 +2095,7 @@ WantedBy=ceph-osd.target
         /// </summary>
         private void CephSettings()
         {
-            if (!hive.Definition.Ceph.Enabled)
+            if (!hive.Definition.HiveFS.Enabled)
             {
                 return;
             }
@@ -2216,7 +2216,7 @@ WantedBy=ceph-osd.target
 $@"
 [mds.{node.Name}]
 host = {node.Name}
-mds cache memory limit = {(int)(node.Metadata.GetCephMDSCacheSize(hive.Definition) * CephOptions.CacheSizeFudge)}
+mds cache memory limit = {(int)(node.Metadata.GetCephMDSCacheSize(hive.Definition) * HiveFSOptions.CacheSizeFudge)}
 mds_standby_replay = true
 ";
             }
@@ -2232,18 +2232,18 @@ public network = {hiveSubnet}
 auth cluster required = cephx
 auth service required = cephx
 auth client required = cephx
-osd journal size = {HiveDefinition.ValidateSize(hive.Definition.Ceph.OSDJournalSize, hive.Definition.Ceph.GetType(), nameof(hive.Definition.Ceph.OSDJournalSize)) / NeonHelper.Mega}
-osd pool default size = {hive.Definition.Ceph.OSDReplicaCount}
-osd pool default min size = {hive.Definition.Ceph.OSDReplicaCountMin}
-osd pool default pg num = {hive.Definition.Ceph.OSDPlacementGroups}
-osd pool default pgp num = {hive.Definition.Ceph.OSDPlacementGroups}
+osd journal size = {HiveDefinition.ValidateSize(hive.Definition.HiveFS.OSDJournalSize, hive.Definition.HiveFS.GetType(), nameof(hive.Definition.HiveFS.OSDJournalSize)) / NeonHelper.Mega}
+osd pool default size = {hive.Definition.HiveFS.OSDReplicaCount}
+osd pool default min size = {hive.Definition.HiveFS.OSDReplicaCountMin}
+osd pool default pg num = {hive.Definition.HiveFS.OSDPlacementGroups}
+osd pool default pgp num = {hive.Definition.HiveFS.OSDPlacementGroups}
 osd crush chooseleaf type = 1
-bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition) * CephOptions.CacheSizeFudge) / NeonHelper.Mega}
+bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition) * HiveFSOptions.CacheSizeFudge) / NeonHelper.Mega}
 {mdsConf}
 ");
             if (!configOnly)
             {
-                var cephUser         = hive.Definition.Ceph.Username;
+                var cephUser         = hive.Definition.HiveFS.Username;
                 var adminKeyringPath = "/etc/ceph/ceph.client.admin.keyring";
 
                 node.UploadText(adminKeyringPath, hiveLogin.Ceph.AdminKeyring);
@@ -2304,7 +2304,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             node.InvokeIdempotentAction("setup/ceph-user",
                 () =>
                 {
-                    var cephUser = hive.Definition.Ceph.Username;
+                    var cephUser = hive.Definition.HiveFS.Username;
 
                     // Ensure that the Ceph lib folder exists because this acts as
                     // the HOME directory for the user.
@@ -2333,7 +2333,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                 {
                     Thread.Sleep(stepDelay);
 
-                    var cephUser = hive.Definition.Ceph.Username;
+                    var cephUser = hive.Definition.HiveFS.Username;
                     var tempPath = "/tmp/ceph";
 
                     // Create a temporary folder.
@@ -2415,7 +2415,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                     Thread.Sleep(TimeSpan.FromSeconds(15));
 
-                    if (hive.Definition.Dashboard.Ceph)
+                    if (hive.Definition.Dashboard.HiveFS)
                     {
                         // Enable the Ceph dashboard.
 
@@ -2424,7 +2424,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                         // Ceph versions after [luminous] require additional configuration
                         // to setup the TLS certificate and login credentials.
 
-                        if (hive.Definition.Ceph.Release != "luminous")
+                        if (hive.Definition.HiveFS.Release != "luminous")
                         {
                             node.SudoCommand($"ceph config-key set mgr/dashboard/crt -i /etc/neon/certs/hive.crt");
                             node.SudoCommand($"ceph config-key set mgr/dashboard/key -i /etc/neon/certs/hive.key");
@@ -2498,7 +2498,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
         {
             var status = new CephClusterStatus();
 
-            if (!hive.Definition.Ceph.Enabled)
+            if (!hive.Definition.HiveFS.Enabled)
             {
                 return status;
             }
@@ -2612,7 +2612,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                     node.Status = "ceph-osd config";
 
-                    var cephUser = hive.Definition.Ceph.Username;
+                    var cephUser = hive.Definition.HiveFS.Username;
 
                     // All nodes need the config file.
 
@@ -2741,8 +2741,8 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     () =>
                     {
                         node.Status = "create file system";
-                        node.SudoCommand($"ceph osd pool create hivefs_data {hive.Definition.Ceph.OSDPlacementGroups}");
-                        node.SudoCommand($"ceph osd pool create hivefs_metadata {hive.Definition.Ceph.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph osd pool create hivefs_data {hive.Definition.HiveFS.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph osd pool create hivefs_metadata {hive.Definition.HiveFS.OSDPlacementGroups}");
                         node.SudoCommand($"ceph fs new hivefs hivefs_metadata hivefs_data");
                     });
             }
@@ -2920,7 +2920,7 @@ WantedBy=docker.service
                     installCommand.AddFile("install.sh",
 $@"# Download and install the plugin.
 
-curl {Program.CurlOptions} {hive.Definition.Ceph.VolumePluginPackage} -o /tmp/neon-volume-plugin-deb 1>&2
+curl {Program.CurlOptions} {hive.Definition.HiveFS.VolumePluginPackage} -o /tmp/neon-volume-plugin-deb 1>&2
 dpkg --install /tmp/neon-volume-plugin-deb
 rm /tmp/neon-volume-plugin-deb
 
@@ -3831,26 +3831,26 @@ systemctl restart sshd
                     //
                     //      https://github.com/jefflill/NeonForge/issues/222
 
-                    if (hive.Definition.Ceph.Enabled && hive.Definition.Dashboard.Ceph)
+                    if (hive.Definition.HiveFS.Enabled && hive.Definition.Dashboard.HiveFS)
                     {
-		                firstManager.Status = "ceph dashboard";
+		                firstManager.Status = "hivefs dashboard";
 
-                        if (hive.Definition.Ceph.Release == "luminous")
+                        if (hive.Definition.HiveFS.Release == "luminous")
                         {
-                            var cephDashboard = new HiveDashboard()
+                            var hiveFSDashboard = new HiveDashboard()
                             {
-                                Name        = "ceph",
-                                Title       = "Ceph File System",
+                                Name        = "hivefs",
+                                Title       = "Hive File System",
                                 Folder      = HiveConst.DashboardSystemFolder,
                                 Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
                                 Description = "Ceph distributed file system"
                             };
 
-                            hive.Dashboard.Set(cephDashboard);
+                            hive.Dashboard.Set(hiveFSDashboard);
 
                             var rule = new LoadBalancerHttpRule()
                             {
-                                Name     = "neon-ceph-dashboard",
+                                Name     = "neon-hivefs-dashboard",
                                 System   = true,
                                 Resolver = null
                             };
@@ -3902,20 +3902,20 @@ systemctl restart sshd
                             // We're going to consider only servers that return 2xx status codes
                             // as healthy so we'll always direct traffic to the lead MGR.
 
-                            var cephDashboard = new HiveDashboard()
+                            var hiveFSDashboard = new HiveDashboard()
                             {
-                                Name        = "ceph",
-                                Title       = "Ceph File System",
+                                Name        = "hivefs",
+                                Title       = "Hive File System",
                                 Folder      = HiveConst.DashboardSystemFolder,
                                 Url         = $"https://reachable-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
                                 Description = "Ceph distributed file system"
                             };
 
-                            hive.Dashboard.Set(cephDashboard);
+                            hive.Dashboard.Set(hiveFSDashboard);
 
                             var rule = new LoadBalancerTcpRule()
                             {
-                                Name     = "neon-ceph-dashboard",
+                                Name     = "neon-hivefs-dashboard",
                                 System   = true,
                                 Resolver = null
                             };
@@ -4013,7 +4013,7 @@ systemctl restart sshd
 
                     // Configure the HiveMQ dashboard.
 
-                    if (hive.Definition.Dashboard.RabbitMQ)
+                    if (hive.Definition.Dashboard.HiveMQ)
                     {
                         firstManager.Status = "hivemq dashboard";
 
@@ -4024,7 +4024,7 @@ systemctl restart sshd
                             Folder      = HiveConst.DashboardSystemFolder,
                             Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHiveMQAdmin}",
                             //Url         = $"https://reachable-manager:{HiveHostPorts.ProxyPrivateHiveMQManagement}",
-                            Description = "Hive messaging system"
+                            Description = "RabbitMQ based messaging system"
                         };
 
                         hive.Dashboard.Set(rabbitDashboard);

@@ -167,7 +167,7 @@ Server Requirements:
                 Program.Exit(1);
             }
 
-            Program.OSProperties = OSProperties.For(hiveDefinition.HostNode.OperatingSystem);
+            Program.OSProperties = OSProperties.For(hiveDefinition.HiveNode.OperatingSystem);
 
             // Configure global options.
 

@@ -1,4 +1,3 @@
-
 {
   "Name": "home-small2",
   "Datacenter": "woodinville",
@@ -17,7 +16,7 @@
   "Vpn": {
     "Enabled": false
   },
-  "HostNode": {
+  "HiveNode": {
     "OperatingSystem": "ubuntu-16.04",
     "Upgrade": "none",
     "SshAuth": "tls",
@@ -43,7 +42,7 @@
   "Log": {
     "Enabled": true
   },
-  "Ceph": {
+  "HiveFS": {
     "Enabled": true
   },
   "Nodes": {

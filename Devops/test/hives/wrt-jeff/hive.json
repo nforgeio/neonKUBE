@@ -41,7 +41,7 @@
   "Vpn": {
     "Enabled": true
   },
-  "HostNode": {
+  "HiveNode": {
     "OperatingSystem": "ubuntu-16.04",
     "Upgrade": "none",
     "SshAuth": "tls",
@@ -54,7 +54,7 @@
     //"Version": "17.09.1-ce",
     "RegistryCache": true
   },
-  "Ceph": {
+  "HiveFS": {
     "Enabled": true,
     "OSDDriveSize": "32GB",
     "OSDCacheSize": "64MB",

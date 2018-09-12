@@ -442,7 +442,7 @@ fi
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secret));
             Covenant.Requires<ArgumentNullException>(certificate != null);
 
-            if (!hive.Definition.Ceph.Enabled)
+            if (!hive.Definition.HiveFS.Enabled)
             {
                 throw new NotSupportedException("Cannot deploy a local Docker registry to the hive because the hive's Cepf file system is not enabled.");
             }

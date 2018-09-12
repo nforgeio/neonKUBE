@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CephOptions.cs
+// FILE:	    HiveFSOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -30,7 +30,7 @@ namespace Neon.Hive
     /// <a href="https://ceph.com/">Ceph Distributed Storage</a>
     /// cluster.
     /// </summary>
-    public class CephOptions
+    public class HiveFSOptions
     {
         private const string defaultRelease             = "mimic";
         private const string defaultOSDDriveSize        = "16GB";
@@ -267,7 +267,7 @@ namespace Neon.Hive
 
             if (string.IsNullOrEmpty(VolumePluginPackage) || !Uri.TryCreate(VolumePluginPackage, UriKind.Absolute, out var uri))
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(VolumePluginPackage)}={VolumePluginPackage}] must be set to a valid package URL.");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(VolumePluginPackage)}={VolumePluginPackage}] must be set to a valid package URL.");
             }
 
             Release = Release ?? defaultRelease;
@@ -356,32 +356,32 @@ namespace Neon.Hive
 
             if (Release == string.Empty)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(Release)}={Release}] is not valid.  Please specify something like [{defaultRelease}].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(Release)}={Release}] is not valid.  Please specify something like [{defaultRelease}].");
             }
 
             if (HiveDefinition.ValidateSize(OSDDriveSize, this.GetType(), nameof(OSDDriveSize)) < NeonHelper.Giga)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDDriveSize)}={OSDDriveSize}] cannot be less than [1GB].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDDriveSize)}={OSDDriveSize}] cannot be less than [1GB].");
             }
 
             if (HiveDefinition.ValidateSize(OSDCacheSize, this.GetType(), nameof(OSDCacheSize)) < 64 * NeonHelper.Mega)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDCacheSize)}={OSDCacheSize}] cannot be less than [64MB].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDCacheSize)}={OSDCacheSize}] cannot be less than [64MB].");
             }
 
             if (HiveDefinition.ValidateSize(OSDJournalSize, this.GetType(), nameof(OSDJournalSize)) < 64 * NeonHelper.Mega)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDJournalSize)}={OSDJournalSize}] cannot be less than [64MB].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDJournalSize)}={OSDJournalSize}] cannot be less than [64MB].");
             }
 
             if (HiveDefinition.ValidateSize(OSDObjectSizeMax, this.GetType(), nameof(OSDObjectSizeMax)) < 64 * NeonHelper.Mega)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDObjectSizeMax)}={OSDObjectSizeMax}] cannot be less than [64MB].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDObjectSizeMax)}={OSDObjectSizeMax}] cannot be less than [64MB].");
             }
 
             if (HiveDefinition.ValidateSize(MDSCacheSize, this.GetType(), nameof(MDSCacheSize)) < 64 * NeonHelper.Mega)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [64MB].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [64MB].");
             }
 
             if (cephMONCount == 0)
@@ -408,12 +408,12 @@ namespace Neon.Hive
 
             if (OSDReplicaCount < 0)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be less than zero.");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be less than zero.");
             }
 
             if (OSDReplicaCount > cephOSDCount)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
             }
 
             if (OSDReplicaCountMin == 0)
@@ -432,22 +432,22 @@ namespace Neon.Hive
 
             if (OSDReplicaCountMin < 0)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than zero.");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than zero.");
             }
 
             if (OSDReplicaCountMin > OSDReplicaCount)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than [{nameof(OSDReplicaCount)}={OSDReplicaCount}].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than [{nameof(OSDReplicaCount)}={OSDReplicaCount}].");
             }
 
             if (OSDReplicaCountMin > cephOSDCount)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
             }
 
             if (OSDPlacementGroups < 8)
             {
-                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDPlacementGroups)}={OSDPlacementGroups}] cannot be less than [8].");
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(OSDPlacementGroups)}={OSDPlacementGroups}] cannot be less than [8].");
             }
         }
     }

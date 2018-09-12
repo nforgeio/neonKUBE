@@ -80,9 +80,9 @@ namespace Neon.Hive
             summary.ManagerCount       = definition.Managers.Count();
             summary.WorkerCount        = definition.Workers.Count();
             summary.PetCount           = definition.Pets.Count();
-            summary.OperatingSystem    = definition.HostNode.OperatingSystem;
+            summary.OperatingSystem    = definition.HiveNode.OperatingSystem;
             summary.HostingEnvironment = definition.Hosting.Environment;
-            summary.CephEnabled        = definition.Ceph.Enabled;
+            summary.HiveFSEnabled      = definition.HiveFS.Enabled;
             summary.LogEnabled         = definition.Log.Enabled;
             summary.VpnEnabled         = definition.Vpn.Enabled;
 
@@ -244,9 +244,9 @@ namespace Neon.Hive
         /// <summary>
         /// Indicates that Ceph is enabled.
         /// </summary>
-        [JsonProperty(PropertyName = "CephEnabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "HiveFSEnabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
-        public bool CephEnabled { get; set; }
+        public bool HiveFSEnabled { get; set; }
 
         /// <summary>
         /// Indicates that hive logging is enabled.

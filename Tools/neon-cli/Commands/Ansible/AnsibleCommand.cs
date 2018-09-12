@@ -836,9 +836,9 @@ MODULES:
                         Program.Exit(0);
                     }
 
-                    if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
+                    if (login.Definition.HiveNode.SshAuth != AuthMethods.Tls)
                     {
-                        Console.Error.WriteLine($"*** ERROR: The [ansible exec] command requires that the hive nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
+                        Console.Error.WriteLine($"*** ERROR: The [ansible exec] command requires that the hive nodes were deployed with [{nameof(HiveNodeOptions)}.{nameof(HiveNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
                         Program.Exit(1);
                     }
 
@@ -873,9 +873,9 @@ MODULES:
                         Program.Exit(0);
                     }
 
-                    if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
+                    if (login.Definition.HiveNode.SshAuth != AuthMethods.Tls)
                     {
-                        Console.Error.WriteLine($"*** ERROR: The [ansible play] command requires that the hive nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
+                        Console.Error.WriteLine($"*** ERROR: The [ansible play] command requires that the hive nodes were deployed with [{nameof(HiveNodeOptions)}.{nameof(HiveNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
                         Program.Exit(1);
                     }
 

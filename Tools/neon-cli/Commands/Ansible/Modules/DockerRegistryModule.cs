@@ -460,7 +460,7 @@ namespace NeonCli.Ansible
 
                 case "present":
 
-                    if (!hive.Definition.Ceph.Enabled)
+                    if (!hive.Definition.HiveFS.Enabled)
                     {
                         context.WriteErrorLine("The local registry service requires hive CephFS.");
                         return;

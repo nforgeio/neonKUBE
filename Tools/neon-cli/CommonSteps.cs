@@ -225,7 +225,7 @@ TCPKeepAlive yes
             }
 
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
-            sb.AppendLine($"NEON_NODE_FS={hiveDefinition.Ceph.Enabled.ToString().ToLowerInvariant()}");
+            sb.AppendLine($"NEON_NODE_FS={hiveDefinition.HiveFS.Enabled.ToString().ToLowerInvariant()}");
 
             if (node.Metadata != null)
             {
@@ -327,7 +327,7 @@ TCPKeepAlive yes
             //-----------------------------------------------------------------
             // Package manager configuration.
 
-            if (!hiveDefinition.HostNode.AllowPackageManagerIPv6)
+            if (!hiveDefinition.HiveNode.AllowPackageManagerIPv6)
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
                 // with the package mirrors, since IPv6 often doesn't work.
@@ -338,7 +338,7 @@ TCPKeepAlive yes
 
             // Configure [apt] to retry.
 
-            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{hiveDefinition.HostNode.PackageManagerRetries}\";");
+            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{hiveDefinition.HiveNode.PackageManagerRetries}\";");
             node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries");
 
             //-----------------------------------------------------------------

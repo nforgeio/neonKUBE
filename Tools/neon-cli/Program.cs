@@ -1030,7 +1030,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 }
                 else if (HiveHelper.Hive != null)
                 {
-                    return OSProperties.For(HiveHelper.Hive.Definition.HostNode.OperatingSystem);
+                    return OSProperties.For(HiveHelper.Hive.Definition.HiveNode.OperatingSystem);
                 }
                 else
                 {

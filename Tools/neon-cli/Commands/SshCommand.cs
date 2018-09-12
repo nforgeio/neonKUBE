@@ -120,7 +120,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            switch (hiveLogin.Definition.HostNode.SshAuth)
+            switch (hiveLogin.Definition.HiveNode.SshAuth)
             {
                 case AuthMethods.Tls:
 
@@ -183,7 +183,7 @@ ARGUMENTS:
 
                 default:
 
-                    throw new NotSupportedException($"Unsupported SSH authentication method [{hiveLogin.Definition.HostNode.SshAuth}].");
+                    throw new NotSupportedException($"Unsupported SSH authentication method [{hiveLogin.Definition.HiveNode.SshAuth}].");
             }
         }
 

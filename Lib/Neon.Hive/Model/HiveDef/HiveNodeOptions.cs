@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HostNodeOptions.cs
+// FILE:	    HiveNodeOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,7 +28,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes hive host node options.
     /// </summary>
-    public class HostNodeOptions
+    public class HiveNodeOptions
     {
         private const TargetOS      defaultOperatingSystem         = TargetOS.Ubuntu_16_04;
         private const AuthMethods   defaultSshAuth                 = AuthMethods.Tls;
@@ -108,7 +108,7 @@ namespace Neon.Hive
         {
             if (PasswordLength > 0 && PasswordLength < 8)
             {
-                throw new HiveDefinitionException($"[{nameof(HostNodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
+                throw new HiveDefinitionException($"[{nameof(HiveNodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
             }
         }
     }

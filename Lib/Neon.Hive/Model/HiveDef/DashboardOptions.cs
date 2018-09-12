@@ -57,18 +57,18 @@ namespace Neon.Hive
         public bool Vault { get; set; } = defaultVault;
 
         /// <summary>
-        /// Enables the Ceph dashboard.  This defaults to <c>true</c>.
+        /// Enables the HiveFS dashboard.  This defaults to <c>true</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "HiveFS", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultCeph)]
-        public bool Ceph { get; set; } = defaultCeph;
+        public bool HiveFS { get; set; } = defaultCeph;
 
         /// <summary>
-        /// Enables the RabbitMQ dashboard.  This defaults to <c>true</c>.
+        /// Enables the HiveMQ dashboard.  This defaults to <c>true</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "RabbitMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "HiveMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultRabbitMQ)]
-        public bool RabbitMQ { get; set; } = defaultRabbitMQ;
+        public bool HiveMQ { get; set; } = defaultRabbitMQ;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
