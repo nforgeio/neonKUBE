@@ -3,21 +3,10 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Hive;
+using System;
+using System.Linq;
 
 namespace NeonCli
 {
@@ -46,6 +35,7 @@ HIVE IDENTIFIERS:
     allow-unit-testing      - enables HiveFixture unit testing (bool)
     create-date-utc         - hive creation date (UTC)
     disable-auto-unseal     - disables automatic Vault unsealing (bool)
+    hivemq-bootstrap        - HiveMQ bootstrap settings
     log-retention-days      - number of days of logs to retain
     password                - root account password
     registries              - lists the Docker registries and credentials
@@ -252,6 +242,19 @@ NODE IDENTIFIERS:
                     case "username":
 
                         Console.Write(hiveLogin.SshUsername);
+                        break;
+
+                    case HiveGlobals.HiveMQBootstrap:
+
+                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQBootstrap, out var bootstrapSettings))
+                        {
+                            Console.Write(bootstrapSettings);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Hive setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
                         break;
 
                     case HiveGlobals.Uuid:

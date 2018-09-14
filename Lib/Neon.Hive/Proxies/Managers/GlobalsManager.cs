@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Consul;
+using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -249,6 +250,49 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Attempts to retrieve a named hive global setting as a <typeparamref name="T"/>
+        /// deserialized from JSON.
+        /// </summary>
+        /// <typeparam name="T">The type being deserialized.</typeparam>
+        /// <param name="name">The setting name.</param>
+        /// <param name="output">Returns as the setting value.</param>
+        /// <param name="strict">Optionally require that all input properties map to to <typeparamref name="T"/> properties.</param>
+        /// <returns><c>true</c> if the setting exists and was returned.</returns>
+        /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
+        /// <remarks>
+        /// <note>
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
+        /// </note>
+        /// </remarks>
+        public bool TryGetJson<T>(string name, out T output, bool strict = false)
+        {
+            Covenant.Requires(!string.IsNullOrEmpty(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
+
+            output = default(T);
+
+            var key   = $"{HiveConst.GlobalKey}/{name}";
+            var value = hive.Consul.Client.KV.GetStringOrDefault(key).Result;
+
+            if (value == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                output = NeonHelper.JsonDeserialize<T>(value, strict);
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+
+        /// <summary>
         /// Sets or removes a hive global setting, verifying that the setting 
         /// is intended to be modified by end users, that it is allowed to be
         /// removed and that the value is reasonable.
@@ -480,6 +524,34 @@ namespace Neon.Hive
             else
             {
                 hive.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
+            }
+        }
+
+        /// <summary>
+        /// Sets or removes a named hive global setting, serialized saved objects as JSON.
+        /// </summary>
+        /// <param name="name">The setting name.</param>
+        /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
+        /// </note>
+        /// </remarks>
+        public void SetJson(string name, object value)
+        {
+            Covenant.Requires(!string.IsNullOrEmpty(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
+
+            var key = $"{HiveConst.GlobalKey}/{name}";
+
+            if (value == null)
+            {
+                hive.Consul.Client.KV.Delete(key).Wait();
+            }
+            else
+            {
+                hive.Consul.Client.KV.PutString(key, NeonHelper.JsonSerialize(value, Formatting.Indented)).Wait();
             }
         }
     }

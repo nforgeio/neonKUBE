@@ -33,7 +33,8 @@ infrastructure related services and containers.
 
 USAGE:
 
-    neon hive update          [OPTIONS]         - updates hive and containers/services
+    neon hive update          [OPTIONS]         - updates hive version as well as
+                                                  containers/services
     neon hive update check                      - checks for available updates 
     neon hive update consul   [OPTIONS] VERSION - updates HashiCorp Consul
     neon hive update docker   [OPTIONS] VERSION - updates the Docker engine

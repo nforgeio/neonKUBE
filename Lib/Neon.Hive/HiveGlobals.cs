@@ -55,6 +55,23 @@ namespace Neon.Hive
         /// </summary>
         public const string Version = "version";
 
+        /// <summary>
+        /// <para>
+        /// Serialized <c>HiveMQSettings</c> that reference the RabbitMQ hosts directly rather 
+        /// than via a <b>private</b> load balancer rule.  This is updated periodically by
+        /// <b>neon-proxy-manager</b> when it detects HiveMQ topology changes and is used
+        /// by <b>neon-proxy-manager</b> and the <b>neon-proxy</b> instances to avoid a
+        /// configuration cycle.
+        /// </para>
+        /// <note>
+        /// The <c>HiveMQSettings</c> persisted here will not include any credentials
+        /// (the username and password) will be <c>null</c>.  You'll generally need to
+        /// combine these settings with the credentials obtained from the <b>neon-hivemq-neon</b>
+        /// Docker secret.
+        /// </note>
+        /// </summary>
+        public const string HiveMQBootstrap = "hivemq-bootstrap";
+
         //---------------------------------------------------------------------
         // These settings are considered to be user modifiable.
 

@@ -3440,13 +3440,13 @@ systemctl start neon-volume-plugin
                     hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
                 });
 
-            // Create the [neon-hivemq-settings] Docker secrets for the [sysadmin],
+            // Create the [neon-hivemq-neon] Docker secrets for the [sysadmin],
             // [neon], and [user] accounts.
 
             firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings",
                 () =>
                 {
-                    firstManager.Status = "secret: HiveMQ";
+                    firstManager.Status = "secrets: HiveMQ";
 
                     // $note(jeff.lill):
                     //
@@ -3499,21 +3499,31 @@ systemctl start neon-volume-plugin
                         VirtualHost = "/"
                     };
 
-                    sysadminHiveMQSettings = NeonHelper.JsonClone(rabbitSettings);    // Save a copy of the [sysadmin] settings for later.
+                    // Save a copy of the [sysadmin] settings for later.
 
-                    hive.Docker.Secret.Set("neon-hivemq-sysadmin", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
+                    sysadminHiveMQSettings = NeonHelper.JsonClone(rabbitSettings);
+
+                    firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-sysadmin",
+                        () => hive.Docker.Secret.Set("neon-hivemq-sysadmin", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented)));
 
                     rabbitSettings.Username    = hive.Definition.HiveMQ.NeonAccount;
                     rabbitSettings.Password    = hive.Definition.HiveMQ.NeonPassword;
                     rabbitSettings.VirtualHost = hive.Definition.HiveMQ.NeonVHost;
 
-                    hive.Docker.Secret.Set("neon-hivemq-neon", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
+                    firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-neon",
+                        () => hive.Docker.Secret.Set("neon-hivemq-neon", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented)));
 
                     rabbitSettings.Username    = hive.Definition.HiveMQ.AppAccount;
                     rabbitSettings.Password    = hive.Definition.HiveMQ.AppPassword;
                     rabbitSettings.VirtualHost = hive.Definition.HiveMQ.AppVHost;
 
-                    hive.Docker.Secret.Set("neon-hivemq-app", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented));
+                    firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-app",
+                        () => hive.Docker.Secret.Set("neon-hivemq-app", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented)));
+
+                    // Persist the HiveMQ bootstrap settings to Consul.  These settings have no credentials
+                    // and reference the RabbitMQ nodes directly (not via a load balancer rule).
+
+                    hive.HiveMQ.SaveBootstrapSettings();
                 });
         }
 
