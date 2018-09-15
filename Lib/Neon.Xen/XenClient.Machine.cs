@@ -146,8 +146,8 @@ namespace Neon.Xen
                 //
                 //      https://github.com/jefflill/NeonForge/issues/326
                 //
-                // Unfortunately, there doesn't appear to be a clean way to inspect a VM template to
-                // list its disks and determine where they live.  So, we'll list the virtual disk
+                // Unfortunately, there doesn't appear to be a clean way to inspect a VM template 
+                // to list its disks and determine where they live.  So we'll list the virtual disk
                 // interfaces and look for the disk named like:
                 //
                 //      <template-name> 0
