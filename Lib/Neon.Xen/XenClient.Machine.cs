@@ -137,9 +137,51 @@ namespace Neon.Xen
                     throw new XenException($"Template [{templateName}] does not exist.");
                 }
 
-                var primarySR = client.Repository.Find(name: primaryStorageRepository, mustExist: true);
-                var response  = client.SafeInvoke("vm-install", $"template={templateName}", $"new-name-label={name}", $"sr-uuid={primarySR.Uuid}");
-                var uuid      = response.OutputText.Trim();
+                // We need to determine whether the VM template is persisted to the same storage
+                // repository as the desired target for the VM.  If the storage repos are the same,
+                // we won't pass the [sr-uuid] parameter so that XenServer will do a fast clone.
+                // This is necessary because the xe command looks like it never does a fast clone
+                // when [sr-uuid] is passed, even if the template and target VM storage repositories
+                // are the same.
+                //
+                //      https://github.com/jefflill/NeonForge/issues/326
+                //
+                // Unfortunately, there doesn't appear to be a clean way to inspect a VM template to
+                // list its disks and determine where they live.  So, we'll list the virtual disk
+                // interfaces and look for the disk named like:
+                //
+                //      <template-name> 0
+                //
+                // where <template-name> identifies the template and "0" indicates the disk number.
+                //
+                // NOTE: This assumes that neonHIVE VM templates have only a single disk, which
+                //       will probably always be the case since we only add disks after the VMs
+                //       are created.
+
+                var primarySR       = client.Repository.Find(name: primaryStorageRepository, mustExist: true);
+                var vdiListResponse = client.InvokeItems("vdi-list");
+                var templateVdiName = $"{templateName} 0";
+                var templateSrUuid  = (string)null;
+                var srUuidArg       = (string)null;
+
+                foreach (var vdiProperties in vdiListResponse.Results)
+                {
+                    if (vdiProperties["name-label"] == templateVdiName)
+                    {
+                        templateSrUuid = vdiProperties["sr-uuid"];
+                        break;
+                    }
+                }
+
+                if (templateSrUuid != primarySR.Uuid)
+                {
+                    srUuidArg = $"sr-uuid={primarySR.Uuid}";
+                }
+
+                // Create the VM.
+
+                var vmInstallResponse = client.SafeInvoke("vm-install", $"template={templateName}", $"new-name-label={name}", srUuidArg);
+                var uuid              = vmInstallResponse.OutputText.Trim();
 
                 // Configure processors
 
