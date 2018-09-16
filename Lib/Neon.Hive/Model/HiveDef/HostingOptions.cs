@@ -100,7 +100,7 @@ namespace Neon.Hive
         public MachineOptions Machine { get; set; } = null;
 
         /// <summary>
-        /// Specifies the hosting settings when hosting on Citrix XenServer hypervisor.
+        /// Specifies the hosting settings when hosting on Citrix XenServer or the XCP-ng hypervisors.
         /// </summary>
         [JsonProperty(PropertyName = "XenServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

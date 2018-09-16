@@ -21,6 +21,7 @@ namespace Neon.Hive
         private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.xva";
         private const string defaultTemplate          = "neon-ubuntu-16.04-template";
         private const string defaultStorageRepository = "Local storage";
+        private const bool   defaultUseSnapshot       = false;
 
         /// <summary>
         /// Default constructor.
@@ -73,6 +74,36 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "OsdStorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultStorageRepository)]
         public string OsdStorageRepository { get; set; } = defaultStorageRepository;
+
+        /// <summary>
+        /// Optionally directs XenCenter to create the virtual machines using a snapshot of
+        /// the virtual machine template rather than creating a full copy.  This defaults
+        /// to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Virtual machines created via a snapshot will be ready within seconds where as
+        /// creation can take something like 4 minutes on a SSD or 9 minutes on a spinning
+        /// drive.  We don't enable snapshots though by default, because some web posts
+        /// from around 2014 indicate that operators may encounter problems when something
+        /// like 30 virtual machines have been created as snapshots from the same template.
+        /// </para>
+        /// <para>
+        /// We figure that it's best to default to safe setting for production hives and
+        /// then allow operators to override this when provisioning temporary test hives 
+        /// or when provisioning on a storage repository that doesn't have these limitations.
+        /// </para>
+        /// <note>
+        /// For snapshots to work, the storage repository must support them and the virtual
+        /// machine template must reside in the same repository where the virtual machines
+        /// are being created.  The current <c>neon-cli</c> implementation persists the
+        /// hive VM templates to the local storage repository, so support for non-local
+        /// storage repositories is not support out-of-the-box at this time.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "UseSnapshot", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultUseSnapshot)]
+        public bool UseSnapshot { get; set; } = defaultUseSnapshot;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
