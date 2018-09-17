@@ -39,15 +39,6 @@ function Build
 	. ./build.ps1 -registry $registry -varnishVersion $varnishVersion -tag $tag
     PushImage "${registry}:$tag"
 
-	if (IsProd)
-	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$varnishVersion" }
-		PushImage "${registry}:$varnishVersion"
-
-		Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
-		PushImage "${registry}:${branch}-latest"
-	}
-
 	if ($latest)
 	{
 		if (IsProd)

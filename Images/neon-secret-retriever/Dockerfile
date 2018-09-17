@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# .NET Core based image that implements the [neon-proxy-retriever].
+# .NET Core based image that implements the [neon-proxy-retriever] service.
 #
 # ARGUMENTS:
 #

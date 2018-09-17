@@ -17,17 +17,27 @@ param
 "* NEON-VARNISH:" + $tag
 "======================================="
 
-# Copy the common scripts.
+$appname = "neon-varnish"
 
-DeleteFolder _common
+# Build and publish the app to a local [bin] folder.
 
-mkdir _common
-copy ..\_common\*.* .\_common
+if (Test-Path bin)
+{
+	rm -r bin
+}
+
+Exec { mkdir bin }
+Exec { dotnet publish "$src_services_path\\$appname\\$appname.csproj" -c Release -o "$pwd\bin" }
+
+# Split the build binaries into [__app] application and [__dep] dependency subfolders
+# so we can tune the image layers.
+
+Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "FAMILY=$varnishFamily" --build-arg "BRANCH=$branch" --build-arg "VERSION=$varnishVersion" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "FAMILY=$varnishFamily" --build-arg "BRANCH=$branch" --build-arg "VERSION=$varnishVersion" --build-arg "APPNAME=$appname" . }
 
 # Clean up
 
-DeleteFolder _common
+Exec { rm -r bin }
