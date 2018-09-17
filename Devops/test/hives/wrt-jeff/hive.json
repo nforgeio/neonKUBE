@@ -30,7 +30,10 @@
         "Name": "WRT-00-XEN-04",
         "Address": "10.100.128.109"
       }
-    ]
+    ],
+    "XenServer": {
+      "Snapshot": true
+    }
   },
   "Network": {
     "PremiseSubnet": "10.100.0.0/16",

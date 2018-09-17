@@ -101,7 +101,7 @@ namespace Neon.Xen
             /// <param name="processors">Optionally specifies the number of processors to assign.  This defaults to <b>2</b>.</param>
             /// <param name="memoryBytes">Optionally specifies the memory assigned to the machine (overriding the template).</param>
             /// <param name="diskBytes">Optionally specifies the disk assigned to the machine (overriding the template).</param>
-            /// <param name="useSnapshot">Optionally specifies that the virtual machine should snapshot the template.  This defaults to <c>false</c>.</param>
+            /// <param name="snapshot">Optionally specifies that the virtual machine should snapshot the template.  This defaults to <c>false</c>.</param>
             /// <param name="extraDrives">
             /// Optionally specifies any additional virtual drives to be created and 
             /// then attached to the new virtual machine (e.g. for Ceph OSD).
@@ -118,7 +118,7 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             /// <remarks>
             /// <note>
-            /// <paramref name="useSnapshot"/> is ignored if the virtual machine template is not 
+            /// <paramref name="snapshot"/> is ignored if the virtual machine template is not 
             /// hosted by the same storage repository where the virtual machine is to be created.
             /// </note>
             /// </remarks>
@@ -128,7 +128,7 @@ namespace Neon.Xen
                 int                             processors  = 2, 
                 long                            memoryBytes = 0, 
                 long                            diskBytes   = 0, 
-                bool                            useSnapshot = false,
+                bool                            snapshot    = false,
                 IEnumerable<XenVirtualDrive>    extraDrives = null,
                 string                          primaryStorageRepository = "Local storage",
                 string                          extraStorageRespository  = "Local storage")
@@ -181,7 +181,7 @@ namespace Neon.Xen
                     }
                 }
 
-                if (!useSnapshot || templateSrUuid != primarySR.Uuid)
+                if (!snapshot || templateSrUuid != primarySR.Uuid)
                 {
                     srUuidArg = $"sr-uuid={primarySR.Uuid}";
                 }

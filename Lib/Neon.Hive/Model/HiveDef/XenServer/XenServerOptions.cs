@@ -21,7 +21,7 @@ namespace Neon.Hive
         private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.xva";
         private const string defaultTemplate          = "neon-ubuntu-16.04-template";
         private const string defaultStorageRepository = "Local storage";
-        private const bool   defaultUseSnapshot       = false;
+        private const bool   defaultSnapshot          = false;
 
         /// <summary>
         /// Default constructor.
@@ -101,9 +101,9 @@ namespace Neon.Hive
         /// storage repositories is not support out-of-the-box at this time.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "UseSnapshot", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultUseSnapshot)]
-        public bool UseSnapshot { get; set; } = defaultUseSnapshot;
+        [JsonProperty(PropertyName = "Snapshot", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultSnapshot)]
+        public bool Snapshot { get; set; } = defaultSnapshot;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
