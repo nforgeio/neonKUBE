@@ -240,10 +240,10 @@ namespace NeonCli
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(hive.Definition.ProxyManagerImage));
 
-                    // Docker mesh routing seemed unstable on versions 17.03.0-ce
-                    // thru 17.06.0-ce so we're going to provide an option to work
-                    // around this by running the PUBLIC, PRIVATE and VAULT proxies 
-                    // on all nodes and  publishing the ports to the host (not the mesh).
+                    // Docker mesh routing seemed unstable on versions so we're going
+                    // to provide an option to work around this by running the PUBLIC, 
+                    // PRIVATE and VAULT proxies on all nodes and  publishing the ports
+                    // to the host (not the mesh).
                     //
                     //      https://github.com/jefflill/NeonForge/issues/104
                     //
