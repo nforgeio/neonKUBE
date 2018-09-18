@@ -19,4 +19,4 @@ fi
 
 # Launch the service.
 
-neon-dns-mon
+exec neon-dns-mon

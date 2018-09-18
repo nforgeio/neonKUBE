@@ -38,7 +38,7 @@ COPY docker-entrypoint.sh   /
 
 RUN chmod 700 /docker-entrypoint.sh \
     && echo "#!/bin/sh" > /usr/bin/$APPNAME \ 
-    && echo "dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
+    && echo "exec dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
     && chmod 770 /usr/bin/$APPNAME
 
 ENTRYPOINT ["tini","-g","--","/docker-entrypoint.sh"]

@@ -80,7 +80,7 @@ COPY modules/*              /usr/share/ansible/plugins/modules/
 RUN chmod 700 /docker-entrypoint.sh \
     && chmod 666 /etc/ssh/ssh_config \
     && echo "#!/bin/bash" > /usr/bin/$APPNAME \ 
-    && echo "dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
+    && echo "exec dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
     && chmod 770 /usr/bin/$APPNAME \
     && chmod 770 /usr/share/ansible/plugins/modules/*
 

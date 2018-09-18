@@ -19,4 +19,4 @@ fi
 
 # Launch the service.
 
-neon-hive-manager
+exec neon-hive-manager

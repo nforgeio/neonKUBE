@@ -18,4 +18,4 @@ fi
 
 # Launch the service.
 
-neon-secret-retriever "$@"
+exec neon-secret-retriever "$@"

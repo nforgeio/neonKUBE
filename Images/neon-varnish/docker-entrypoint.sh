@@ -18,4 +18,4 @@ fi
 
 # Launch the service.
 
-neon-varnish
+exec neon-varnish

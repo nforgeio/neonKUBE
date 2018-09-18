@@ -18,4 +18,4 @@ fi
 
 # Launch the service.
 
-neon-proxy-manager
+exec neon-proxy-manager

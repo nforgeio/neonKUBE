@@ -15,4 +15,4 @@ fi
 
 # Launch the service.
 
-neon-vegomatic $@
+exec neon-vegomatic $@
