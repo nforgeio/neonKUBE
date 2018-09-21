@@ -55,7 +55,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveMQOptions.SysadminAccount"/>.
+        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveMQOptions.SysadminUser"/>.
         /// You can use this to retrieve a client that can perform messaging operations within the
         /// root <b>/</b>, <see cref="HiveMQOptions.AppVHost"/>, or <see cref="HiveMQOptions.NeonVHost"/>
         /// virtual hosts.
@@ -84,7 +84,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveMQOptions.NeonAccount"/>.
+        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveMQOptions.NeonUser"/>.
         /// You can use this to retrieve a client that can perform messaging operations within the
         /// <see cref="HiveMQOptions.NeonVHost"/> virtual host.
         /// </para>
@@ -112,7 +112,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveMQOptions.AppAccount"/>.
+        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveMQOptions.AppUser"/>.
         /// You can use this to retrieve a client that can perform messaging operations within the
         /// <see cref="HiveMQOptions.AppVHost"/> virtual host.
         /// </para>

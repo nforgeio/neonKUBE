@@ -1556,6 +1556,11 @@ namespace Neon.Xunit.Hive
         /// Returns a <see cref="ManagementClient"/> you can use the manage
         /// the HiveMQ.  This connects as the <b>sysadmin</b> user.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// The instance returned should be disposed when your done with it.
+        /// </note>
+        /// </remarks>
         public ManagementClient ConnectHiveMQManager()
         {
             var hiveMQSettings = GetHiveMQSettings();
@@ -1603,7 +1608,7 @@ namespace Neon.Xunit.Hive
 
                 foreach (var user in mqManager.GetUsersAsync().Result)
                 {
-                    if (user.Name != hive.Definition.HiveMQ.SysadminAccount && user.Name != hive.Definition.HiveMQ.NeonAccount)
+                    if (user.Name != hive.Definition.HiveMQ.SysadminUser && user.Name != hive.Definition.HiveMQ.NeonUser)
                     {
                         mqManager.DeleteUserAsync(user).Wait();
                     }
@@ -1615,7 +1620,7 @@ namespace Neon.Xunit.Hive
 
                 // Recreate the [app] user and set its permissions for the [app] vhost.
 
-                var appUser = mqManager.CreateUserAsync(new EasyNetQ.Management.Client.Model.UserInfo(hive.Definition.HiveMQ.AppAccount, hive.Definition.HiveMQ.AppPassword)).Result;
+                var appUser = mqManager.CreateUserAsync(new EasyNetQ.Management.Client.Model.UserInfo(hive.Definition.HiveMQ.AppUser, hive.Definition.HiveMQ.AppPassword)).Result;
 
                 mqManager.CreatePermissionAsync(new EasyNetQ.Management.Client.Model.PermissionInfo(appUser, appVHost));
             }

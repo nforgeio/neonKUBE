@@ -475,14 +475,14 @@ namespace NeonCli
 
                         // Create the users.
 
-                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {hive.Definition.HiveMQ.AppAccount} {hive.Definition.HiveMQ.AppAccount}"));
-                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {hive.Definition.HiveMQ.NeonAccount} {hive.Definition.HiveMQ.NeonPassword}"));
+                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {hive.Definition.HiveMQ.AppUser} {hive.Definition.HiveMQ.AppUser}"));
+                        hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {hive.Definition.HiveMQ.NeonUser} {hive.Definition.HiveMQ.NeonPassword}"));
 
                         // Grant the [app] account full access to the [app] vhost, the [neon] account full
                         // access to the [neon] vhost.  Note that this doesn't need to be idempotent.
 
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ.AppVHost} {hive.Definition.HiveMQ.AppAccount} \".*\" \".*\" \".*\"");
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ. NeonVHost} {hive.Definition.HiveMQ.NeonAccount} \".*\" \".*\" \".*\"");
+                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ.AppVHost} {hive.Definition.HiveMQ.AppUser} \".*\" \".*\" \".*\"");
+                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {hive.Definition.HiveMQ. NeonVHost} {hive.Definition.HiveMQ.NeonUser} \".*\" \".*\" \".*\"");
 
                         // Clear the UX status for the HiveMQ nodes.
 

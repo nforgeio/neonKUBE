@@ -112,19 +112,19 @@ namespace Neon.Hive
         /// Returns the <b>sysadmin</b> username.
         /// </summary>
         [JsonIgnore]
-        public string SysadminAccount => "sysadmin";
+        public string SysadminUser => "sysadmin";
 
         /// <summary>
         /// Returns the <b>neon</b> username.
         /// </summary>
         [JsonIgnore]
-        public string NeonAccount => "neon";
+        public string NeonUser => "neon";
 
         /// <summary>
         /// Returns the <b>app</b> username.
         /// </summary>
         [JsonIgnore]
-        public string AppAccount => "app";
+        public string AppUser => "app";
 
         /// <summary>
         /// Returns the <b>neon</b> VHost.

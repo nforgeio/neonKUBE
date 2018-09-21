@@ -3494,7 +3494,7 @@ systemctl start neon-volume-plugin
                         AdminHosts  = hosts,
                         AdminPort   = HiveHostPorts.ProxyPrivateHiveMQAdmin,
                         TlsEnabled  = false,
-                        Username    = hive.Definition.HiveMQ.SysadminAccount,
+                        Username    = hive.Definition.HiveMQ.SysadminUser,
                         Password    = hive.Definition.HiveMQ.SysadminPassword,
                         VirtualHost = "/"
                     };
@@ -3506,14 +3506,14 @@ systemctl start neon-volume-plugin
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-sysadmin",
                         () => hive.Docker.Secret.Set("neon-hivemq-sysadmin", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented)));
 
-                    rabbitSettings.Username    = hive.Definition.HiveMQ.NeonAccount;
+                    rabbitSettings.Username    = hive.Definition.HiveMQ.NeonUser;
                     rabbitSettings.Password    = hive.Definition.HiveMQ.NeonPassword;
                     rabbitSettings.VirtualHost = hive.Definition.HiveMQ.NeonVHost;
 
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-neon",
                         () => hive.Docker.Secret.Set("neon-hivemq-neon", NeonHelper.JsonSerialize(rabbitSettings, Formatting.Indented)));
 
-                    rabbitSettings.Username    = hive.Definition.HiveMQ.AppAccount;
+                    rabbitSettings.Username    = hive.Definition.HiveMQ.AppUser;
                     rabbitSettings.Password    = hive.Definition.HiveMQ.AppPassword;
                     rabbitSettings.VirtualHost = hive.Definition.HiveMQ.AppVHost;
 

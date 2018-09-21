@@ -316,6 +316,11 @@ namespace Neon.HiveMQ
         /// <param name="username">Optional username (overrides <see cref="Username"/>).</param>
         /// <param name="password">Optional password (overrides <see cref="Password"/>).</param>
         /// <returns>The connected management client.</returns>
+        /// <remarks>
+        /// <note>
+        /// The instance returned should be disposed when your done with it.
+        /// </note>
+        /// </remarks>
         public ManagementClient ConnectManager(string username = null, string password = null)
         {
             Covenant.Requires<NotImplementedException>(!TlsEnabled, "$todo(jeff.lill): We don't support RabbitMQ TLS yet.");
