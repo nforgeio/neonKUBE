@@ -205,7 +205,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 ShowStatus  = !Program.Quiet
             };
 
-            var hiveUpdateCount = HiveUpdateManager.AddHiveUpdateSteps(hive, controller, serviceUpdateParallism: Program.MaxParallel);
+            var hiveUpdateCount = HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, serviceUpdateParallism: Program.MaxParallel);
 
             // Create another controller to actually scan the hive nodes to
             // count the pending Linux updates as well as the system containers
@@ -326,7 +326,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
             Console.WriteLine(title);
             Console.WriteLine(new string('-', title.Length));
 
-            var hiveStatus          = (hiveUpdateCount == 0 && maxUpdates == 0) ? "CURRENT" : hiveUpdateCount.ToString();
+            var restartStatus       = restartRequired ? "    *** hive restart required ***" : string.Empty;
+            var hiveStatus          = (hiveUpdateCount == 0 && maxUpdates == 0) ? "CURRENT" : hiveUpdateCount.ToString() + restartStatus;
             var linuxPackageStatus  = (maxUpdates == 0) ? "CURRENT" : maxUpdates.ToString();
             var linuxSecurityStatus = (maxSecurityUpdates == 0) ? "CURRENT" : maxSecurityUpdates.ToString();
 
@@ -550,7 +551,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
         /// Updates Linux on a specific node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step selay.</param>
+        /// <param name="stepDelay">The step delay.</param>
         private void UpdateLinux(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             if (node.Metadata.InSwarm)
@@ -600,7 +601,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
 
             controller.MaxParallel = maxParallel;
 
-            var hiveUpdateCount = HiveUpdateManager.AddHiveUpdateSteps(hive, controller, serviceUpdateParallism: Program.MaxParallel);
+            var hiveUpdateCount = HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, serviceUpdateParallism: Program.MaxParallel);
 
             if (controller.StepCount == 0)
             {
@@ -638,7 +639,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 ShowStatus  = true
             };
 
-            HiveUpdateManager.AddHiveUpdateSteps(hive, controller, servicesOnly: true, serviceUpdateParallism: Program.MaxParallel);
+            HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, servicesOnly: true, serviceUpdateParallism: Program.MaxParallel);
 
             if (controller.StepCount == 0)
             {
@@ -725,7 +726,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
         /// Updates Docker on a specific node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step selay.</param>
+        /// <param name="stepDelay">The step delay.</param>
         private void UpdateDocker(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             if (node.GetDockerVersion() >= (SemanticVersion)version)
@@ -828,7 +829,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
         /// Updates Consul on a specific node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step selay.</param>
+        /// <param name="stepDelay">The step delay.</param>
         private void UpdateConsul(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             if (node.GetConsulVersion() >= (SemanticVersion)version)
@@ -938,7 +939,7 @@ rm /tmp/consul
         /// Updates Vault on a specific node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step selay.</param>
+        /// <param name="stepDelay">The step delay.</param>
         private void UpdateVault(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             if (node.GetVaultVersion() >= (SemanticVersion)version)

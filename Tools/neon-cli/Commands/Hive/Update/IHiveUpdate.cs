@@ -82,6 +82,11 @@ namespace NeonCli
         HiveLogin HiveLogin { get; }
 
         /// <summary>
+        /// Indicates that the cluster nodes will be restarted during the update.
+        /// </summary>
+        bool RestartRequired { get; }
+
+        /// <summary>
         /// Adds the update steps to a setup controller.
         /// </summary>
         /// <paramref name="controller">The setup controller.</paramref>

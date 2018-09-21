@@ -300,21 +300,5 @@ namespace NeonCli
                     firstManager.Status = string.Empty;
                 });
         }
-
-        /// <summary>
-        /// Updates the hive version.
-        /// </summary>
-        private void UpdateHiveVersion()
-        {
-            var firstManager = Hive.FirstManager;
-
-            firstManager.InvokeIdempotentAction(GetIdempotentTag("hive-version"),
-                () =>
-                {
-                    firstManager.Status = "update: hive version";
-                    Hive.Globals.Set(HiveGlobals.Version,(string)ToVersion);
-                    firstManager.Status = string.Empty;
-                });
-        }
     }
 }

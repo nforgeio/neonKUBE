@@ -40,21 +40,5 @@ namespace NeonCli
 
             controller.AddGlobalStep(GetStepLabel("hive version"), () => UpdateHiveVersion());
         }
-
-        /// <summary>
-        /// Updates the hive version.
-        /// </summary>
-        private void UpdateHiveVersion()
-        {
-            var firstManager = Hive.FirstManager;
-
-            firstManager.InvokeIdempotentAction(GetIdempotentTag("hive-version"),
-                () =>
-                {
-                    firstManager.Status = "update: hive version";
-                    Hive.Globals.Set(HiveGlobals.Version,(string)ToVersion);
-                    firstManager.Status = string.Empty;
-                });
-        }
     }
 }

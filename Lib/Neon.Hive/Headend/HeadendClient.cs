@@ -67,7 +67,7 @@ namespace Neon.Hive
 
             var versions = new HiveComponentVersions();
 
-            versions.Docker        = "18.03.1-ce";
+            versions.Docker        = "18.06.1-ce";
             versions.DockerPackage = "docker-ce=18.03.1~ce-0~ubuntu";
 
             versions.Consul        = "1.1.0";

@@ -36,7 +36,7 @@ namespace NeonCli
         /// <inheritdoc/>
         public override string ToString()
         {
-            return $"[{FromVersion}-->{ToVersion}]";
+            return $"[{FromVersion} --> {ToVersion}]";
         }
 
         /// <inheritdoc/>
@@ -44,6 +44,9 @@ namespace NeonCli
 
         /// <inheritdoc/>
         public HiveLogin HiveLogin => Hive?.HiveLogin;
+
+        /// <inheritdoc/>
+        public virtual bool RestartRequired => false;
 
         /// <inheritdoc/>
         public string GetIdempotentTag(string operation)
@@ -80,6 +83,24 @@ namespace NeonCli
                 },
                 noParallelLimit: true,
                 position: 0);
+        }
+
+        /// <summary>
+        /// Updates the hive version.  This should be added as the last update step to
+        /// a <see cref="SetupController{NodeMetadata}"/> as a <b>global step</b> by
+        /// cluster update implementations.
+        /// </summary>
+        protected void UpdateHiveVersion()
+        {
+            var firstManager = Hive.FirstManager;
+
+            // Update the hive version.  Note that we're not making this operation
+            // idempotent so that it'll be easier to manually change the hive version
+            // in Consul when testing hive update code.
+
+            firstManager.Status = "update: hive version";
+            Hive.Globals.Set(HiveGlobals.Version, (string)ToVersion);
+            firstManager.Status = string.Empty;
         }
     }
 }

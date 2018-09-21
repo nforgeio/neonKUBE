@@ -84,6 +84,11 @@ sed -i '/^ENABLED="false"/c\ENABLED="true"' /etc/default/sysstat
 # We need to increase the number of file descriptors and also how much memory
 # can be locked by root processes.  We're simply going to overwrite the default
 # version of [/etc/security/limits.conf] with our own copy.
+#
+# Note that [systemd] ignores [limits.conf] when starting services, etc.  It
+# has its own configuration which we'll update below.  Note that [limits.conf]
+# is still important because the kernel uses those settings when sStarting
+# [systemd] as the init process 1.
 
 cat <<EOF > /etc/security/limits.conf
 # /etc/security/limits.conf
@@ -130,19 +135,54 @@ cat <<EOF > /etc/security/limits.conf
 #
 #<domain>   <type>  <item>  <value>
 
-root        soft    nofile  unlimited
-root        hard    nofile  unlimited
-root        soft    memlock unlimited
-root        hard    memlock unlimited
+root    soft    nofile  unlimited
+root    hard    nofile  unlimited
+root    soft    memlock unlimited
+root    hard    memlock unlimited
+root    soft    nproc   unlimited
+root    hard    nproc   unlimited
 
-*           soft    nofile  unlimited
-*           hard    nofile  unlimited
+*       soft    nofile  unlimited
+*       hard    nofile  unlimited
+*       soft    memlock unlimited
+*       hard    memlock unlimited
+*       soft    nproc   unlimited
+*       hard    nproc   unlimited
 
 # End of file
 EOF
 
 #------------------------------------------------------------------------------
-# Tuning some kernel network settings.
+# [systemd] has its own configuration limits configuration files and ignores
+# [/etc/security/limits.conf] so we need to update the [systemd] settings 
+# as well.
+
+mkdir -p /etc/systemd/user.conf.d
+chmod 764 /etc/systemd/user.conf.d
+
+cat <<EOF > /etc/systemd/user.conf.d/50-neon.conf
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+#
+# You can override the directives in this file by creating files in
+# /etc/systemd/user.conf.d/*.conf.
+#
+# See systemd-user.conf(5) for details
+
+[Manager]
+DefaultLimitNOFILE=infinity
+DefaultLimitNPROC=infinity
+DefaultLimitMEMLOCK=infinity
+EOF
+
+chmod 664 /etc/systemd/user.conf.d/50-neon.conf
+
+#------------------------------------------------------------------------------
+# Tweak some kernel settings.
 
 cat <<EOF > /etc/sysctl.conf
 #
@@ -228,11 +268,12 @@ net.ipv4.ip_forward=1
 ###################################################################
 # neonHIVE settings
 
-# Disable the Linux OOM Killer 
-vm.oom-kill = 0
+# Explicitly set the maximum number of file descriptors for the
+# entire system.  This looks like it defaults to [398327] for
+# Ubuntu 16.04 so we're going to pin this value to enforce
+# consistency across Linux updates, etc.
 
-# Disable memory overcommit
-# vm.overcommit_memory = 2
+fs.file-max=398327
 EOF
 
 #--------------------------------------------------------------------------

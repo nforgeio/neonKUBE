@@ -68,13 +68,16 @@ namespace NeonCli
         /// </summary>
         /// <param name="hive">The target hive proxy.</param>
         /// <param name="controller">The setup controller.</param>
+        /// <param name="restartRequired">Returns as <c>true</c> if one or more cluster nodes will be restarted during the update.</param>
         /// <param name="servicesOnly">Optionally indicate that only hive service and container images should be updated.</param>
         /// <param name="serviceUpdateParallism">Optionally specifies the parallism to use when updating services.</param>
         /// <returns>The number of pending updates.</returns>
         /// <exception cref="HiveException">Thrown if there was an error selecting the updates.</exception>
-        public static int AddHiveUpdateSteps(HiveProxy hive, SetupController<NodeDefinition> controller, bool servicesOnly = false, int serviceUpdateParallism = 1)
+        public static int AddHiveUpdateSteps(HiveProxy hive, SetupController<NodeDefinition> controller, out bool restartRequired, bool servicesOnly = false, int serviceUpdateParallism = 1)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
+
+            restartRequired = false;
 
             var pendingUpdateCount = 0;
 
@@ -116,6 +119,11 @@ namespace NeonCli
                             if (!servicesOnly)
                             {
                                 update.AddUpdateSteps(controller);
+
+                                if (update.RestartRequired)
+                                {
+                                    restartRequired = true;
+                                }
                             }
                         }
                     }
@@ -437,6 +445,96 @@ namespace NeonCli
             {
                 node.Fault("[docker] update failed.");
             }
+        }
+
+        /// <summary>
+        /// Adds a global step that restarts the designated cluster nodes one-by-one.
+        /// </summary>
+        /// <param name="hive">The hive proxy.</param>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="predicate">
+        /// Optionally specifies the predicate to be used to select the hive nodes
+        /// to be rebooted.  This defaults to <c>null</c> indicating that all nodes
+        /// will be rebooted.
+        /// </param>
+        /// <param name="stepLabel">
+        /// Optionally specifies the step label.  This default to <b>restart nodes</b>.
+        /// </param>
+        /// <param name="stablizeTime">
+        /// The time to wait after the node has been restarted for things
+        /// to stablize.  This defaults to <see cref="Program.WaitSeconds"/>.
+        /// </param>
+        public static void AddRestartClusterStep(
+            HiveProxy                           hive, 
+            SetupController<NodeDefinition>     controller, 
+            Func<NodeDefinition, bool>          predicate    = null, 
+            string                              stepLabel    = null, 
+            TimeSpan                            stablizeTime = default(TimeSpan))
+        {
+            Covenant.Requires<ArgumentNullException>(hive != null);
+            Covenant.Requires<ArgumentNullException>(controller != null);
+
+            predicate = predicate ?? (node => true);
+
+            stepLabel = stepLabel ?? "restart nodes";
+
+            if (stablizeTime <= TimeSpan.Zero)
+            {
+                stablizeTime = TimeSpan.FromSeconds(Program.WaitSeconds);
+            }
+
+            controller.AddGlobalStep(stepLabel,
+                () =>
+                {
+                    foreach (var node in hive.Nodes.Where(n => predicate(n.Metadata)))
+                    {
+                        node.Status = "restart pending";
+                    }
+
+                    // We're going to restart selected nodes by type in this order:
+                    //
+                    //      Managers
+                    //      Workers
+                    //      Pets
+
+                    var restartNode = new Action<SshProxy<NodeDefinition>>(
+                        node =>
+                        {
+                            node.Status = "restart";
+                            node.Reboot(wait: true);
+                            node.Status = $"stabilize ({stablizeTime.TotalSeconds}s)";
+                            Thread.Sleep(stablizeTime);
+                            node.Status = "READY";
+                        });
+
+                    // Manager nodes.
+
+                    foreach (var node in hive.Nodes.Where(n => n.Metadata.IsManager && predicate(n.Metadata)))
+                    {
+                        restartNode(node);
+                    }
+
+                    // Worker nodes.
+
+                    foreach (var node in hive.Nodes.Where(n => n.Metadata.IsWorker && predicate(n.Metadata)))
+                    {
+                        restartNode(node);
+                    }
+
+                    // Pet nodes.
+
+                    foreach (var node in hive.Nodes.Where(n => n.Metadata.IsPet && predicate(n.Metadata)))
+                    {
+                        restartNode(node);
+                    }
+
+                    // Clear the node status.
+
+                    foreach (var node in hive.Nodes)
+                    {
+                        node.Status = string.Empty;
+                    }
+                });
         }
     }
 }
