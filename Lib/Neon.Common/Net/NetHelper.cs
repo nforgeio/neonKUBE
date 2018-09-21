@@ -590,12 +590,12 @@ namespace Neon.Net
         /// Specifies what should happen when there are no reachable hosts.  
         /// This defaults to <see cref="ReachableHostMode.ReturnFirst"/>.
         /// </param>
-        /// <returns>The hostname or IP address of the reachable host or <c>null</c>.</returns>
+        /// <returns>A <see cref="ReachableHost"/> instance describing the host or <c>null</c>.</returns>
         /// <exception cref="NetworkException">
         /// Thrown if no hosts are reachable and <paramref name="failureMode"/> is 
         /// passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
-        public static string GetReachableHost(IEnumerable<string> hosts, ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
+        public static ReachableHost GetReachableHost(IEnumerable<string> hosts, ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
             Covenant.Requires<ArgumentNullException>(hosts != null);
             Covenant.Requires<ArgumentNullException>(hosts.Count() > 0);
@@ -609,7 +609,7 @@ namespace Neon.Net
 
             const int tryCount = 3;
 
-            var reachableHosts = new List<string>();
+            var reachableHosts = new List<ReachableHost>();
             var pingOptions    = new PingOptions(ttl: 32, dontFragment: true);
             var pingTimeout    = TimeSpan.FromSeconds(1);
 
@@ -628,7 +628,7 @@ namespace Neon.Net
                                 {
                                     lock (reachableHosts)
                                     {
-                                        reachableHosts.Add(host);
+                                        reachableHosts.Add(new ReachableHost(host, reply));
                                     }
                                 }
                             }
@@ -639,15 +639,18 @@ namespace Neon.Net
                         }
                     });
 
+                // We want to favor reachable hosts that appear earlier in the
+                // hosts list passed over hosts that appear later.
+
                 if (reachableHosts.Count > 0)
                 {
                     foreach (var host in hosts)
                     {
                         foreach (var reachableHost in reachableHosts)
                         {
-                            if (host == reachableHost)
+                            if (host == reachableHost.Host)
                             {
-                                return host;
+                                return reachableHost;
                             }
                         }
                     }
@@ -661,7 +664,9 @@ namespace Neon.Net
             {
                 case ReachableHostMode.ReturnFirst:
 
-                    return hosts.First();
+                    var firstHost = hosts.First();
+
+                    return new ReachableHost(firstHost, null, TimeSpan.Zero, unreachable: true);
 
                 case ReachableHostMode.ReturnNull:
 

@@ -435,16 +435,16 @@ namespace Neon.Hive
                 .Select(n => n.PrivateAddress.ToString())
                 .ToList();
 
-            var reachableAddress = NetHelper.GetReachableHost(managerAddresses, failureMode);
+            var reachableHost = NetHelper.GetReachableHost(managerAddresses, failureMode);
 
-            if (reachableAddress == null)
+            if (reachableHost == null)
             {
                 return null;
             }
 
             // Return the node that is assigned the reachable address.
 
-            return Nodes.Where(n => n.PrivateAddress.ToString() == reachableAddress).First();
+            return Nodes.Where(n => n.PrivateAddress.ToString() == reachableHost.Host).First();
         }
 
         /// <summary>
@@ -465,16 +465,16 @@ namespace Neon.Hive
                 .Select(n => n.PrivateAddress.ToString())
                 .ToList();
 
-            var reachableAddress = NetHelper.GetReachableHost(nodeAddresses, failureMode);
+            var reachableHost = NetHelper.GetReachableHost(nodeAddresses, failureMode);
 
-            if (reachableAddress == null)
+            if (reachableHost == null)
             {
                 return null;
             }
 
             // Return the node that is assigned the reachable address.
 
-            return Nodes.Where(n => n.PrivateAddress.ToString() == reachableAddress).First();
+            return Nodes.Where(n => n.PrivateAddress.ToString() == reachableHost.Host).First();
         }
 
         /// <summary>
