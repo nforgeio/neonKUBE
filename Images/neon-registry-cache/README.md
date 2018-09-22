@@ -16,7 +16,7 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 * `HOSTNAME` (*required*) - hostname for this instance.
 
-* `REGISTRY` (*optional*) - URL of the remote registry being cached.  This defaults to the Docker Public registry at https://docker.io.
+* `REGISTRY` (*optional*) - URL of the remote registry being cached.  This defaults to the Docker Public registry at https://registry-1.docker.io.
 
 * `USERNAME` (*optional*) - user ID used to authenticate with the cache and the remote registry.
 

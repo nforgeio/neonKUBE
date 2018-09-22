@@ -8,6 +8,10 @@
 
 PATH=${PATH}:/
 
+if [ "${LOG_LEVEL}" == "" ] ; then
+    export LOG_LEVEL=info
+fi
+
 # Log startup information.
 
 . log-info.sh "Starting [neon-registry-cache]"
@@ -19,22 +23,24 @@ if [ "${HOSTNAME}" == "" ] ; then
     exit 1
 fi
 
-if [ "${HOSTNAME}" == "docker.io" ] ; then
-    . log-info.sh "Transforming HOSTNAME from [docker.io] to [https://registry.docker.io]"
-    export HOSTNAME=https://registry.docker.io
-fi
-
-if [ "${HOSTNAME}" =~ ^https:// ] ; then
-    . log-info.sh "Prefixing HOSTNAME with https://"
-    export HOSTNAME=https://${HOSTNAME}
-fi
+# Configure the upstream registry.
 
 if [ "${REGISTRY}" == "" ] ; then
-    export REGISTRY=https://docker.io
+    export REGISTRY=https://registry-1.docker.io
 fi
 
-if [ "${LOG_LEVEL}" == "" ] ; then
-    export LOG_LEVEL=info
+if [ "${REGISTRY}" == "docker.io" ] ; then
+    . log-info.sh "Transforming HOSTNAME from [docker.io] to [https://registry-1.docker.io]"
+    export REGISTRY=https://registry-1.docker.io
+fi
+
+# This is the [sh] compatible way of testing for:
+#
+#   "${REGISTRY}" =~ ^https://
+
+if [ echo "${REGISTRY}" | grep -q '^https://' ] ; then
+    . log-info.sh "Prefixing HOSTNAME with https://"
+    export REGISTRY=https://${REGISTRY}
 fi
 
 . log-info.sh "HOSTNAME=${HOSTNAME}"
@@ -68,7 +74,7 @@ fi
 
 if [ "${USERNAME}" != "" ] ; then
 
-    # Append the proxy config including the upstream credentials.
+    # Append the proxy config including the upstream registry credentials.
 
     cat <<EOF >> registry.yml
 proxy:
