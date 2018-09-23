@@ -46,4 +46,4 @@ COPY geoip/         /geoip/
 
 RUN chmod 700 /*.sh
 
-ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]

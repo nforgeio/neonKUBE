@@ -37,4 +37,4 @@ COPY _common/*.sh           /
 RUN chmod 700 /*.sh \
     && apk add --no-cache bash unzip jq
 
-ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]

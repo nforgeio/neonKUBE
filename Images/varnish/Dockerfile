@@ -34,4 +34,4 @@ RUN chmod 700 /*.sh \
     && apt-get update \
     && apt-get install -yq nano
 
-ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]

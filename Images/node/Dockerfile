@@ -19,4 +19,4 @@ RUN apk add --no-cache tini ca-certificates \
 
 EXPOSE 80
 
-ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]

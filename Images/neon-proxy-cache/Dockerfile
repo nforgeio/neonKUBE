@@ -22,4 +22,4 @@ COPY _common/*.sh           /
 RUN chmod 700 /*.sh \
     && apk add --no-cache varnish
 
-ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
