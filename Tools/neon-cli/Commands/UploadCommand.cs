@@ -165,16 +165,17 @@ NOTES:
 
             // Perform the upload.
 
-            var hive      = new HiveProxy(hiveLogin);
-            var operation = 
-                new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
-                {
-                    ShowStatus  = !Program.Quiet,
-                    MaxParallel = Program.MaxParallel
-                };
+            var hive       = new HiveProxy(hiveLogin);
+            var controller = new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
+            {
+                ShowStatus  = !Program.Quiet,
+                MaxParallel = Program.MaxParallel
+            };
 
-            operation.AddWaitUntilOnlineStep();
-            operation.AddStep("upload",
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
+
+            controller.AddWaitUntilOnlineStep();
+            controller.AddStep("upload",
                 (node, stepDelay) =>
                 {
                     Thread.Sleep(stepDelay);
@@ -197,7 +198,7 @@ NOTES:
                     node.SudoCommand("chmod", permissions, target);
                 });
 
-            if (!operation.Run())
+            if (!controller.Run())
             {
                 Console.Error.WriteLine("*** ERROR: The upload to one or more nodes failed.");
                 Program.Exit(1);

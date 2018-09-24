@@ -301,15 +301,16 @@ does this on the first manager node:
             {
                 // Run the command on multiple nodes and return an overall exit code.
 
-                var operation = 
-                    new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
-                    {
-                        ShowStatus  = !Program.Quiet,
-                        MaxParallel = Program.MaxParallel
-                    };
+                var controller = new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
+                {
+                    ShowStatus  = !Program.Quiet,
+                    MaxParallel = Program.MaxParallel
+                };
 
-                operation.AddWaitUntilOnlineStep();
-                operation.AddStep($"run: {bundle.Command}",
+                controller.SetDefaultRunOptions(RunOptions.FaultOnError);
+
+                controller.AddWaitUntilOnlineStep();
+                controller.AddStep($"run: {bundle.Command}",
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
@@ -324,7 +325,7 @@ does this on the first manager node:
                         }
                     });
 
-                if (!operation.Run())
+                if (!controller.Run())
                 {
                     Console.Error.WriteLine("*** ERROR: [exec] on one or more nodes failed.");
                     Program.Exit(1);

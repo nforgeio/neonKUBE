@@ -133,6 +133,19 @@ namespace Neon.Hive
         public int StepCount => steps.Count;
 
         /// <summary>
+        /// Sets the <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for
+        /// all nodes managed by the controller.
+        /// </summary>
+        /// <param name="options">The options to be set.</param>
+        public void SetDefaultRunOptions(RunOptions options)
+        {
+            foreach (var node in nodes)
+            {
+                node.DefaultRunOptions = options;
+            }
+        }
+
+        /// <summary>
         /// Appends a configuration step.
         /// </summary>
         /// <param name="stepLabel">Brief step summary.</param>

@@ -2777,15 +2777,15 @@ echo $? > {cmdFolder}/exit
         {
             // $todo(jeff.lill): Hardcoding transient error handling for now.
 
-            CommandResponse     response = null;
-            int                 attempt = 0;
+            CommandResponse     response    = null;
+            int                 attempt     = 0;
             int                 maxAttempts = 10;
-            TimeSpan            delay = TimeSpan.FromSeconds(15);
-            string              orgStatus = Status;
+            TimeSpan            delay       = TimeSpan.FromSeconds(15);
+            string              orgStatus   = Status;
 
             while (attempt++ < maxAttempts)
             {
-                response = SudoCommand(command, runOptions, args);
+                response             = SudoCommand(command, runOptions, args);
                 response.BashCommand = ToBash(command, args);
 
                 if (response.ExitCode == 0)
@@ -2845,7 +2845,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse DockerCommand(string command, params object[] args)
         {
-            return DockerCommand(RunOptions.LogOutput, command, args);
+            return DockerCommand(RunOptions.LogOutput | RunOptions.Defaults, command, args);
         }
 
         /// <summary>

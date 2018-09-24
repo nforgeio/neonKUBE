@@ -113,16 +113,17 @@ command.
 
             // Perform the reboots.
 
-            var hive      = new HiveProxy(hiveLogin);
-            var operation = 
-                new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
-                {
-                    ShowStatus  = !Program.Quiet,
-                    MaxParallel = Program.MaxParallel
-                };
+            var hive       = new HiveProxy(hiveLogin);
+            var controller = new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
+            {
+                ShowStatus  = !Program.Quiet,
+                MaxParallel = Program.MaxParallel
+            };
 
-            operation.AddWaitUntilOnlineStep();
-            operation.AddStep("reboot nodes",
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
+
+            controller.AddWaitUntilOnlineStep();
+            controller.AddStep("reboot nodes",
                 (node, stepDelay) =>
                 {
                     Thread.Sleep(stepDelay);
@@ -134,7 +135,7 @@ command.
                     Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
                 });
 
-            if (!operation.Run())
+            if (!controller.Run())
             {
                 Console.Error.WriteLine("*** ERROR: The reboot for one or more nodes failed.");
                 Program.Exit(1);
