@@ -1667,8 +1667,6 @@ defaults
 frontend haproxy_stats
     bind                *:{HiveConst.HAProxyStatsPort}
     mode                http
-    log                 global
-    option              httplog
     option              http-keep-alive
     use_backend         haproxy_stats
 
