@@ -1557,8 +1557,13 @@ namespace Neon.Xunit.Hive
         /// the HiveMQ.  This connects as the <b>sysadmin</b> user.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// The object returned is thread-safe and most applications should
+        /// establish a single connection and then share that for all operations.  
+        /// Creating and disposing connections for each operation will be inefficient.
+        /// </para>
         /// <note>
-        /// The instance returned should be disposed when your done with it.
+        /// The instance returned should be disposed when you are done with it.
         /// </note>
         /// </remarks>
         public ManagementClient ConnectHiveMQManager()
@@ -1578,6 +1583,10 @@ namespace Neon.Xunit.Hive
         /// </summary>
         private void ClearHiveMQ()
         {
+            // $todo(jeff.lill): Fix this!
+
+            return;
+
             // We're going to assume that unit tests do not use the [neon]
             // vhost or user and have not modified the [sysadmin] user
             // credentials or permissions.

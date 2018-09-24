@@ -44,7 +44,7 @@ namespace Neon.Hive
     /// as its text or binary data.  You may also indicate whether each file is to be marked as executable.
     /// </para>
     /// </remarks>
-    public class CommandBundle : List<CommandFile>
+    public class CommandBundle : List<CommandFile>, IBashCommandFormatter
     {
         //---------------------------------------------------------------------
         // Static members

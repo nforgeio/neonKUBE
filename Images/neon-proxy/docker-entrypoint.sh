@@ -88,7 +88,7 @@ fi
 # be set to an empty string resulting in the container being unable to pull
 # TLS certificates from Vault.  This mode is used for deploying the 
 # [neon-proxy-public-bridge] and [neon-proxy-private-bridge] containers on 
-# pet nodes to forward traffic from the pets to thw hive's Swarm.  This
+# pet nodes to forward traffic from the pets to the hive's Swarm.  This
 # works because these proxies handle only TCP traffic.
 
 if [ "${VAULT_CREDENTIALS}" != "" ] ; then

@@ -317,8 +317,13 @@ namespace Neon.HiveMQ
         /// <param name="password">Optional password (overrides <see cref="Password"/>).</param>
         /// <returns>The connected management client.</returns>
         /// <remarks>
+        /// <para>
+        /// The object returned is thread-safe and most applications should
+        /// establish a single connection and then share that for all operations.  
+        /// Creating and disposing connections for each operation will be inefficient.
+        /// </para>
         /// <note>
-        /// The instance returned should be disposed when your done with it.
+        /// The instance returned should be disposed when you are done with it.
         /// </note>
         /// </remarks>
         public ManagementClient ConnectManager(string username = null, string password = null)
@@ -331,7 +336,7 @@ namespace Neon.HiveMQ
             username = username ?? Username;
             password = password ?? Password;
 
-            return new ManagementClient($"{scheme}://{reachableHost}", username, password, AdminPort, ssl: TlsEnabled);
+            return new ManagementClient($"{scheme}://{reachableHost.Host}", username, password, AdminPort, ssl: TlsEnabled);
         }
     }
 }

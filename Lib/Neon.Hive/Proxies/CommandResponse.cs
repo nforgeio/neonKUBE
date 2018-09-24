@@ -31,7 +31,7 @@ namespace Neon.Hive
     /// <see cref="SshProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/> 
     /// or <see cref="SshProxy{TMetadata}.SudoCommand(string, object[])"/>.
     /// </summary>
-    public class CommandResponse
+    public class CommandResponse : IBashCommandFormatter
     {
         /// <summary>
         /// Returns the original command line.
@@ -135,6 +135,25 @@ namespace Neon.Hive
                 }
 
                 return $"[exitcode={ExitCode}]: {ErrorText}";
+            }
+        }
+
+        ///<inheritdic/>
+        public string ToBash(string comment = null)
+        {
+            if (string.IsNullOrEmpty(comment))
+            {
+                return BashCommand;
+            }
+            else
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendLine($"# {comment}");
+                sb.AppendLine();
+                sb.Append(BashCommand);
+
+                return sb.ToString();
             }
         }
     }

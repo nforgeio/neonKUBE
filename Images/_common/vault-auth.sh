@@ -5,7 +5,8 @@
 #
 # This script logs the container into Vault by reading the Vault credentials
 # at [/run/secrets/${VAULT_CREDENTIALS}] and then setting the VAULT_TOKEN environment
-# variable to the Vault authentication token.
+# variable to the Vault authentication token.  The script will log a warning if
+# the credentials file doesn't exist and set VAULT_TOKEN to the empty string.
 #
 # This script handles [vault-token] and [vault-approle] credentials.
 #
@@ -19,8 +20,14 @@ if [ "${VAULT_CREDENTIALS}" == "" ] ; then
     . log-critical.sh "[VAULT_CREDENTIALS] environment variable is not set."
     exit 1
 elif [ ! -f "/run/secrets/${VAULT_CREDENTIALS}" ] ; then
-    . log-critical.sh "[/run/secrets/${VAULT_CREDENTIALS}] file does not exist."
-    exit 1
+
+    # Note that this will be normal in some situations.  For example, the
+    # proxy bridge containers running on pet nodes won't have or need 
+    # Vault credentials.
+
+    . log-warn.sh "[/run/secrets/${VAULT_CREDENTIALS}] file does not exist."
+    export VAULT_TOKEN=
+    return
 else
     # Extract the credentials type.
 

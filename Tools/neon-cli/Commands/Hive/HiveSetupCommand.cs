@@ -3002,26 +3002,23 @@ systemctl start neon-volume-plugin
 
                     // Deploy [neon-proxy-vault].
 
-                    var steps   = new ConfigStepList();
-                    var command = CommandStep.CreateIdempotentDocker(hive.FirstManager.Name, "setup/neon-proxy-vault",
-                        "docker service create",
-                        "--name", "neon-proxy-vault",
-                        "--detach=false",
-                        "--mode", "global",
-                        "--endpoint-mode", "vip",
-                        "--network", HiveConst.PrivateNetwork,
-                        options,
-                        "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
-                        "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
-                        "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
-                        "--env", $"LOG_LEVEL=INFO",
-                        "--restart-delay", hive.Definition.Docker.RestartDelay,
-                        Program.ResolveDockerImage(hive.Definition.ProxyVaultImage));
+                    var services = new ServicesBase(hive);
 
-                    steps.Add(command);
-                    steps.Add(hive.GetFileUploadSteps(hive.Managers, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
-
-                    hive.Configure(steps);
+                    services.StartService("neon-proxy-vault", hive.Definition.ProxyVaultImage,
+                        new CommandBundle(
+                            "docker service create",
+                            "--name", "neon-proxy-vault",
+                            "--detach=false",
+                            "--mode", "global",
+                            "--endpoint-mode", "vip",
+                            "--network", HiveConst.PrivateNetwork,
+                            options,
+                            "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
+                            "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
+                            "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
+                            "--env", $"LOG_LEVEL=INFO",
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
+                            ServicesBase.ImagePlaceholderArg));
                 });
 
 
@@ -3029,34 +3026,30 @@ systemctl start neon-volume-plugin
             // to forward any Vault related traffic to the primary Vault instance running on onez
             // of the managers because pets aren't part of the Swarm.
 
-            var vaultTasks = new List<Task>();
+            var vaultTasks   = new List<Task>();
+            var servicesBase = new ServicesBase(hive);
 
             foreach (var pet in hive.Pets)
             {
                 var task = Task.Run(
                     () =>
                     {
-                        pet.InvokeIdempotentAction("setup/proxy-vault",
-                            () =>
-                            {
-                                var steps   = new ConfigStepList();
-                                var command = CommandStep.CreateIdempotentDocker(pet.Name, "setup-neon-proxy-vault",
-                                    "docker run",
-                                    "--name", "neon-proxy-vault",
-                                    "--detach",
-                                    "--publish", $"{HiveHostPorts.ProxyVault}:{NetworkPorts.Vault}",
-                                    "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
-                                    "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
-                                    "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
-                                    "--env", $"LOG_LEVEL=INFO",
-                                    "--restart", "always",
-                                    Program.ResolveDockerImage(hive.Definition.ProxyVaultImage));
+                        var steps = new ConfigStepList();
 
-                                steps.Add(command);
-                                steps.Add(hive.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
+                        servicesBase.AddContainerStartSteps(steps, pet, "neon-proxy-vault", hive.Definition.ProxyVaultImage,
+                            new CommandBundle(
+                                "docker run",
+                                "--name", "neon-proxy-vault",
+                                "--detach",
+                                "--publish", $"{HiveHostPorts.ProxyVault}:{NetworkPorts.Vault}",
+                                "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
+                                "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
+                                "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
+                                "--env", $"LOG_LEVEL=INFO",
+                                "--restart", "always",
+                                ServicesBase.ImagePlaceholderArg));
 
-                                hive.Configure(steps);
-                            });
+                        hive.Configure(steps);
                     });
 
                 vaultTasks.Add(task);

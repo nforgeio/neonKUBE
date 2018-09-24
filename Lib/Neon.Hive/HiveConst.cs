@@ -180,10 +180,11 @@ namespace Neon.Hive
         public static IEnumerable<string> DockerContainers =>
             new List<string>()
             {
+                "neon-log-esdata",
                 "neon-log-host",
                 "neon-log-metricbeat",
                 "neon-registry-cache",
-                "rabbitmq"
+                "neon-hivemq"
             };
 
         /// <summary>

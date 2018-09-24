@@ -1525,6 +1525,7 @@ namespace Neon.Hive
         /// </param>
         /// <param name="inputEncoding">Optionally specifies the input text encoding (defaults to UTF-8).</param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
+        /// <param name="permissions">Optionally specifies the file permissions (must be <c>chmod</c> compatible).</param>
         /// <remarks>
         /// <note>
         /// Any Unicode Byte Order Markers (BOM) at start of the input stream will be removed.
@@ -1543,7 +1544,7 @@ namespace Neon.Hive
         /// </para>
         /// </note>
         /// </remarks>
-        public void UploadText(string target, Stream textStream, int tabStop = 0, Encoding inputEncoding = null, Encoding outputEncoding = null)
+        public void UploadText(string target, Stream textStream, int tabStop = 0, Encoding inputEncoding = null, Encoding outputEncoding = null, string permissions = null)
         {
             Covenant.Requires<ArgumentNullException>(textStream != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
@@ -1572,6 +1573,11 @@ namespace Neon.Hive
                     Upload(target, binaryStream);
                 }
             }
+
+            if (!string.IsNullOrEmpty(permissions))
+            {
+                SudoCommand("chmod", permissions, target);
+            }
         }
 
         /// <summary>
@@ -1585,6 +1591,7 @@ namespace Neon.Hive
         /// a series of leading spaces into tabs if less than zero.
         /// </param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
+        /// <param name="permissions">Optionally specifies the file permissions (must be <c>chmod</c> compatible).</param>
         /// <remarks>
         /// <note>
         /// <para>
@@ -1600,14 +1607,14 @@ namespace Neon.Hive
         /// </para>
         /// </note>
         /// </remarks>
-        public void UploadText(string target, string text, int tabStop = 0, Encoding outputEncoding = null)
+        public void UploadText(string target, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
             Covenant.Requires<ArgumentNullException>(text != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
 
             using (var textStream = new MemoryStream(Encoding.UTF8.GetBytes(text)))
             {
-                UploadText(target, textStream, tabStop, Encoding.UTF8, outputEncoding);
+                UploadText(target, textStream, tabStop, Encoding.UTF8, outputEncoding, permissions);
             }
         }
 

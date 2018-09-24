@@ -492,24 +492,44 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns steps that upload a text file to a set of node proxies.
+        /// Returns steps that upload a text file to a set of hive nodes.
         /// </summary>
-        /// <param name="nodes">The node proxies to receive the upload.</param>
+        /// <param name="nodes">The hive nodes to receive the upload.</param>
         /// <param name="path">The target path on the Linux node.</param>
         /// <param name="text">The input text.</param>
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
+        /// <param name="permissions">Optionally specifies target file permissions (must be <c>chmod</c> compatible).</param>
         /// <returns>The steps.</returns>
-        public IEnumerable<ConfigStep> GetFileUploadSteps(IEnumerable<SshProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null)
+        public IEnumerable<ConfigStep> GetFileUploadSteps(IEnumerable<SshProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
+            Covenant.Requires<ArgumentNullException>(nodes != null);
+
             var steps = new ConfigStepList();
 
             foreach (var node in nodes)
             {
-                steps.Add(UploadStep.Text(node.Name, path, text, tabStop, outputEncoding));
+                steps.Add(UploadStep.Text(node.Name, path, text, tabStop, outputEncoding, permissions));
             }
 
             return steps;
+        }
+
+        /// <summary>
+        /// Returns steps that upload a text file to a hive node.
+        /// </summary>
+        /// <param name="node">The hive node to receive the upload.</param>
+        /// <param name="path">The target path on the Linux node.</param>
+        /// <param name="text">The input text.</param>
+        /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
+        /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
+        /// <param name="permissions">Optionally specifies target file permissions (must be <c>chmod</c> compatible).</param>
+        /// <returns>The steps.</returns>
+        public IEnumerable<ConfigStep> GetFileUploadSteps(SshProxy<NodeDefinition> node, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null);
+
+            return GetFileUploadSteps(new List<SshProxy<NodeDefinition>>() { node }, path, text, tabStop, outputEncoding, permissions);
         }
 
         /// <summary>

@@ -80,19 +80,15 @@ namespace NeonCli
     /// as the logging dashboard.
     /// </para>
     /// </remarks>
-    public class LogServices
+    public class LogServices : ServicesBase
     {
-        private HiveProxy hive;
-
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
         public LogServices(HiveProxy hive)
+            : base(hive)
         {
-            Covenant.Requires<ArgumentNullException>(hive != null);
-
-            this.hive = hive;
         }
 
         /// <summary>
@@ -101,7 +97,7 @@ namespace NeonCli
         /// <param name="firstManager">The first hive proxy manager.</param>
         public void Configure(SshProxy<NodeDefinition> firstManager)
         {
-            if (!hive.Definition.Log.Enabled)
+            if (!Hive.Definition.Log.Enabled)
             {
                 return;
             }
@@ -113,13 +109,13 @@ namespace NeonCli
 
                     AddElasticsearchSteps(steps);
 
-                    if (hive.Definition.Dashboard.Kibana)
+                    if (Hive.Definition.Dashboard.Kibana)
                     {
                         AddKibanaSteps(steps);
                     }
 
                     AddCollectorSteps(steps);
-                    hive.Configure(steps);
+                    Hive.Configure(steps);
 
                     firstManager.Status = string.Empty;
                 });
@@ -131,7 +127,7 @@ namespace NeonCli
         /// <param name="firstManager">The first hive proxy manager.</param>
         public void ConfigureKibana(SshProxy<NodeDefinition> firstManager)
         {
-            if (!hive.Definition.Log.Enabled)
+            if (!Hive.Definition.Log.Enabled)
             {
                 return;
             }
@@ -141,7 +137,7 @@ namespace NeonCli
                 {
                     using (var jsonClient = new JsonClient())
                     {
-                        var baseLogEsDataUri = hive.Definition.LogEsDataUri;
+                        var baseLogEsDataUri = Hive.Definition.LogEsDataUri;
                         var baseKibanaUri    = $"http://{firstManager.PrivateAddress}:{HiveHostPorts.Kibana}";
                         var timeout          = TimeSpan.FromMinutes(5);
                         var retry             = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(2));
@@ -247,7 +243,7 @@ namespace NeonCli
                                 Port   = NetworkPorts.Kibana
                             });
 
-                        hive.PrivateLoadBalancer.SetRule(rule);
+                        Hive.PrivateLoadBalancer.SetRule(rule);
 
                         firstManager.Status = string.Empty;
                     }
@@ -262,9 +258,9 @@ namespace NeonCli
         {
             var esNodes = new List<SshProxy<NodeDefinition>>();
 
-            foreach (var nodeDefinition in hive.Definition.Nodes.Where(n => n.Labels.LogEsData))
+            foreach (var nodeDefinition in Hive.Definition.Nodes.Where(n => n.Labels.LogEsData))
             {
-                esNodes.Add(hive.GetNode(nodeDefinition.Name));
+                esNodes.Add(Hive.GetNode(nodeDefinition.Name));
             }
 
             // Determine number of manager nodes and the quorum size.
@@ -304,7 +300,7 @@ namespace NeonCli
             // as well as Java heap within.  The guidance is to set the heap size to half
             // the container RAM up to a maximum of 31GB.
 
-            var esContainerRam = hive.Definition.Log.EsMemoryBytes;
+            var esContainerRam = Hive.Definition.Log.EsMemoryBytes;
             var esHeapBytes    = Math.Min(esContainerRam / 2, 31L * NeonHelper.Giga);
 
             // We're going to use explicit docker commands to deploy the Elasticsearch cluster
@@ -328,42 +324,40 @@ namespace NeonCli
             for (int i = 0; i < esNodes.Count; i++)
             {
                 var esNode        = esNodes[i];
-                var containerName = $"neon-log-esdata-{i}";
+                var containerName = $"neon-log-esdata";
                 var isMaster      = managerEsNodes.Contains(esNode) ? "true" : "false";
                 var volumeCommand = CommandStep.CreateSudo(esNode.Name, "docker-volume-create", containerName);
 
                 steps.Add(volumeCommand);
 
-                var command = CommandStep.CreateIdempotentDocker(esNode.Name, "setup/neon-log-esdata",
-                    "docker run",
-                    "--name", containerName,
-                    "--detach",
-                    "--restart", "always",
-                    "--volume", "/etc/neon/host-env:/etc/neon/host-env:ro",
-                    "--volume", $"{containerName}:/mnt/esdata",
-                    "--env", $"ELASTICSEARCH_CLUSTER={hive.Definition.Datacenter}.{hive.Definition.Name}.neon-log-esdata",
-                    "--env", $"ELASTICSEARCH_NODE_MASTER={isMaster}",
-                    "--env", $"ELASTICSEARCH_NODE_DATA=true",
-                    "--env", $"ELASTICSEARCH_NODE_COUNT={esNodes.Count}",
-                    "--env", $"ELASTICSEARCH_HTTP_PORT={HiveHostPorts.LogEsDataHttp}",
-                    "--env", $"ELASTICSEARCH_TCP_PORT={HiveHostPorts.LogEsDataTcp}",
-                    "--env", $"ELASTICSEARCH_QUORUM={quorumCount}",
-                    "--env", $"ELASTICSEARCH_BOOTSTRAP_NODES={esBootstrapNodes}",
-                    "--env", $"ES_JAVA_OPTS=-Xms{esHeapBytes / NeonHelper.Mega}M -Xmx{esHeapBytes / NeonHelper.Mega}M",
-                    "--memory", $"{esContainerRam / NeonHelper.Mega}M",
-                    "--memory-reservation", $"{esContainerRam / NeonHelper.Mega}M",
-                    "--memory-swappiness", "0",
-                    "--network", "host",
-                    "--log-driver", "json-file",
-                    Program.ResolveDockerImage(hive.Definition.Log.EsImage));
-
-                steps.Add(command);
-                steps.Add(UploadStep.Text(esNode.Name, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-esdata.sh"), command.ToBash()));
+                AddContainerStartSteps(steps, esNode, containerName, Hive.Definition.Log.EsImage,
+                    new CommandBundle(
+                        "docker run",
+                        "--name", esNode.Name,
+                        "--detach",
+                        "--restart", "always",
+                        "--volume", "/etc/neon/host-env:/etc/neon/host-env:ro",
+                        "--volume", $"{containerName}:/mnt/esdata",
+                        "--env", $"ELASTICSEARCH_CLUSTER={Hive.Definition.Datacenter}.{Hive.Definition.Name}.neon-log-esdata",
+                        "--env", $"ELASTICSEARCH_NODE_MASTER={isMaster}",
+                        "--env", $"ELASTICSEARCH_NODE_DATA=true",
+                        "--env", $"ELASTICSEARCH_NODE_COUNT={esNodes.Count}",
+                        "--env", $"ELASTICSEARCH_HTTP_PORT={HiveHostPorts.LogEsDataHttp}",
+                        "--env", $"ELASTICSEARCH_TCP_PORT={HiveHostPorts.LogEsDataTcp}",
+                        "--env", $"ELASTICSEARCH_QUORUM={quorumCount}",
+                        "--env", $"ELASTICSEARCH_BOOTSTRAP_NODES={esBootstrapNodes}",
+                        "--env", $"ES_JAVA_OPTS=-Xms{esHeapBytes / NeonHelper.Mega}M -Xmx{esHeapBytes / NeonHelper.Mega}M",
+                        "--memory", $"{esContainerRam / NeonHelper.Mega}M",
+                        "--memory-reservation", $"{esContainerRam / NeonHelper.Mega}M",
+                        "--memory-swappiness", "0",
+                        "--network", "host",
+                        "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
+                        ImagePlaceholderArg));
             }
 
             // Configure a private hive proxy route to the Elasticsearch nodes.
 
-            steps.Add(ActionStep.Create(hive.FirstManager.Name, "setup/elasticsearch-lbrule",
+            steps.Add(ActionStep.Create(Hive.FirstManager.Name, "setup/elasticsearch-lbrule",
                 node =>
                 {
                     var rule = new LoadBalancerHttpRule()
@@ -390,7 +384,7 @@ namespace NeonCli
                             });
                     }
 
-                    hive.PrivateLoadBalancer.SetRule(rule);
+                    Hive.PrivateLoadBalancer.SetRule(rule);
                 }));
 
             // Wait for the elasticsearch cluster to become ready and then save the
@@ -401,17 +395,17 @@ namespace NeonCli
             // This works because [neon-log-collector] is the main service responsible
             // for persisting events to this index.
 
-            steps.Add(ActionStep.Create(hive.FirstManager.Name, operationName: null,
+            steps.Add(ActionStep.Create(Hive.FirstManager.Name, operationName: null,
                 node =>
                 {
                     node.Status = "wait for elasticsearch cluster";
 
                     using (var jsonClient = new JsonClient())
                     {
-                        var baseLogEsDataUri = hive.Definition.LogEsDataUri;
+                        var baseLogEsDataUri = Hive.Definition.LogEsDataUri;
                         var timeout          = TimeSpan.FromMinutes(5);
                         var timeoutTime      = DateTime.UtcNow + timeout;
-                        var esNodeCount      = hive.Definition.Nodes.Count(n => n.Labels.LogEsData);
+                        var esNodeCount      = Hive.Definition.Nodes.Count(n => n.Labels.LogEsData);
 
                         // Wait for the Elasticsearch cluster.
 
@@ -464,10 +458,9 @@ namespace NeonCli
                     }
                 }));
         }
-    
 
         /// <summary>
-        /// Adds the steps required to configure the Kibana Elasticsearch/log user interface.
+        /// Adds the steps required to configure the Kibana Elasticsearch/logging user interface.
         /// </summary>
         /// <param name="steps">The configuration step list.</param>
         private void AddKibanaSteps(ConfigStepList steps)
@@ -475,23 +468,21 @@ namespace NeonCli
             // This is super simple: All we need to do is to launch the Kibana 
             // service on the hive managers.
 
-            var command = CommandStep.CreateIdempotentDocker(hive.FirstManager.Name, "setup/neon-log-kibana",
-                "docker service create",
-                "--name", "neon-log-kibana",
-                "--detach=false",
-                "--mode", "global",
-                "--endpoint-mode", "vip",
-                "--restart-delay", hive.Definition.Docker.RestartDelay,
-                "--network", HiveConst.PrivateNetwork,
-                "--constraint", $"node.role==manager",
-                "--publish", $"{HiveHostPorts.Kibana}:{NetworkPorts.Kibana}",
-                "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
-                "--env", $"ELASTICSEARCH_URL={hive.Definition.LogEsDataUri}",
-                "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
-                Program.ResolveDockerImage(hive.Definition.Log.KibanaImage));
-
-            steps.Add(command);
-            steps.Add(hive.GetFileUploadSteps(hive.Managers, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-kibana.sh"), command.ToBash()));
+            AddServiceStartSteps(steps, "neon-log-kibana", Hive.Definition.Log.KibanaImage,
+                new CommandBundle(
+                    "docker service create",
+                    "--name", "neon-log-kibana",
+                    "--detach=false",
+                    "--mode", "global",
+                    "--endpoint-mode", "vip",
+                    "--restart-delay", Hive.Definition.Docker.RestartDelay,
+                    "--network", HiveConst.PrivateNetwork,
+                    "--constraint", $"node.role==manager",
+                    "--publish", $"{HiveHostPorts.Kibana}:{NetworkPorts.Kibana}",
+                    "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
+                    "--env", $"ELASTICSEARCH_URL={Hive.Definition.LogEsDataUri}",
+                    "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
+                    ImagePlaceholderArg));
         }
 
         /// <summary>
@@ -501,27 +492,25 @@ namespace NeonCli
         /// <param name="steps">The configuration step list.</param>
         private void AddCollectorSteps(ConfigStepList steps)
         {
-            // Create the service and upload the script.
+            // Add the steps to create the service.
 
-            var command = CommandStep.CreateIdempotentDocker(hive.FirstManager.Name, "setup/neon-log-collector",
-                "docker service create",
-                "--name", "neon-log-collector",
-                "--detach=false",
-                "--mode", "global",
-                "--restart-delay", hive.Definition.Docker.RestartDelay,
-                "--endpoint-mode", "vip",
-                "--network", $"{HiveConst.PrivateNetwork}",
-                "--constraint", $"node.role==manager",
-                "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
-                "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
-                Program.ResolveDockerImage(hive.Definition.Log.CollectorImage));
-
-            steps.Add(command);
-            steps.Add(hive.GetFileUploadSteps(hive.Managers, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-collector.sh"), command.ToBash()));
+            AddServiceStartSteps(steps, "neon-log-collector", Hive.Definition.Log.CollectorImage,
+                new CommandBundle(
+                    "docker service create",
+                    "--name", "neon-log-collector",
+                    "--detach=false",
+                    "--mode", "global",
+                    "--restart-delay", Hive.Definition.Docker.RestartDelay,
+                    "--endpoint-mode", "vip",
+                    "--network", $"{HiveConst.PrivateNetwork}",
+                    "--constraint", $"node.role==manager",
+                    "--mount", "type=bind,source=/etc/neon/host-env,destination=/etc/neon/host-env,readonly=true",
+                    "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
+                    ImagePlaceholderArg));
 
             // Deploy the [neon-log-collector] load balancer rule.
 
-            steps.Add(ActionStep.Create(hive.FirstManager.Name, "setup/neon-log-collection-lbrule",
+            steps.Add(ActionStep.Create(Hive.FirstManager.Name, "setup/neon-log-collection-lbrule",
                 node =>
                 {
                     node.Status = "set neon-log-collector load balancer rule";
@@ -549,59 +538,45 @@ namespace NeonCli
                             Port   = NetworkPorts.TDAgentForward
                         });
 
-                    hive.PrivateLoadBalancer.SetRule(rule);
+                    Hive.PrivateLoadBalancer.SetRule(rule);
                 }));
         }
 
         /// <summary>
-        /// Deploys the log related containers on a node.
+        /// Deploys the log related containers to a node.
         /// </summary>
         /// <param name="node">The target hive node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         public void DeployContainers(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            node.InvokeIdempotentAction("setup/neon-log-host",
-                () =>
-                {
-                    Thread.Sleep(stepDelay);
+            Thread.Sleep(stepDelay);
 
-                    node.Status = "start: neon-log-host";
+            StartContainer(node, "neon-log-host", Hive.Definition.Log.HostImage, RunOptions.FaultOnError,
+                new CommandBundle(
+                    "docker run",
+                    "--name", "neon-log-host",
+                    "--detach",
+                    "--restart", "always",
+                    "--volume", "/etc/neon/host-env:/etc/neon/host-env:ro",
+                    "--volume", "/var/log:/hostfs/var/log",
+                    "--network", "host",
+                    "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
+                    ImagePlaceholderArg));
 
-                    var response = node.DockerCommand(
-                        "docker run",
-                        "--name", "neon-log-host",
-                        "--detach",
-                        "--restart", "always",
-                        "--volume", "/etc/neon/host-env:/etc/neon/host-env:ro",
-                        "--volume", "/var/log:/hostfs/var/log",
-                        "--network", "host",
-                        "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
-                        Program.ResolveDockerImage(hive.Definition.Log.HostImage));
-
-                    node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-host.sh"), response.BashCommand);
-                });
-
-            node.InvokeIdempotentAction("setup/metricbeat",
-                () =>
-                {
-                    node.Status = "start: neon-log-metricbeat";
-
-                    var response = node.DockerCommand(
-                        "docker run",
-                        "--name", "neon-log-metricbeat",
-                        "--detach",
-                        "--net", "host",
-                        "--restart", "always",
-                        "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
-                        "--volume", "/etc/neon/host-env:/etc/neon/host-env:ro",
-                        "--volume", "/proc:/hostfs/proc:ro",
-                        "--volume", "/:/hostfs:ro",
-                        "--env", $"ELASTICSEARCH_URL={hive.Definition.LogEsDataUri}",
-                        "--log-driver", "json-file",
-                        Program.ResolveDockerImage(hive.Definition.Log.MetricbeatImage));
-
-                    node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
-                });
+            StartContainer(node, "neon-log-metricbeat", Hive.Definition.Log.MetricbeatImage, RunOptions.FaultOnError,
+                new CommandBundle(
+                    "docker run",
+                    "--name", "neon-log-metricbeat",
+                    "--detach",
+                    "--net", "host",
+                    "--restart", "always",
+                    "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
+                    "--volume", "/etc/neon/host-env:/etc/neon/host-env:ro",
+                    "--volume", "/proc:/hostfs/proc:ro",
+                    "--volume", "/:/hostfs:ro",
+                    "--env", $"ELASTICSEARCH_URL={Hive.Definition.LogEsDataUri}",
+                    "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
+                    ImagePlaceholderArg));
         }
     }
 }

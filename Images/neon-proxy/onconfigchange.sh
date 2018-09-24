@@ -119,6 +119,14 @@ if [ -f ${CONFIG_NEW_FOLDER}/.certs ] ; then
     done
 fi
 
+# Dump the new configuration to the logs when in DEBUG mode.
+
+if [ "${DEBUG}" == "true" ] ; then
+    . log-info.sh "*** BEGIN: New HAProxy config ***"
+    cat ${CONFIG_NEW_PATH}
+    . log-info.sh "*** END: New HAProxy config ***"
+fi
+
 # Verify the configuration.  Note that HAProxy will return a
 # 0 error code if the configuration is OK and specifies at
 # least one route.  It will return 2 if the configuration is

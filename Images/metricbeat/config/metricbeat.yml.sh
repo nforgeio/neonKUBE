@@ -72,7 +72,7 @@ output.elasticsearch:
 #================================ Kibana ======================================
 
 setup.kibana:
-  host: "${NEON_NODE_IP}:${HiveHostPorts_Kibana}"
+  host: "${NEON_NODE_IP}:${HiveHostPorts_ProxyPrivateKibanaDashboard}"
 
 #================================ Logging =====================================
 

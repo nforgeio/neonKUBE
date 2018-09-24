@@ -71,9 +71,10 @@ namespace NeonCli
         /// <param name="restartRequired">Returns as <c>true</c> if one or more cluster nodes will be restarted during the update.</param>
         /// <param name="servicesOnly">Optionally indicate that only hive service and container images should be updated.</param>
         /// <param name="serviceUpdateParallism">Optionally specifies the parallism to use when updating services.</param>
+        /// <param name="imageTag">Optionally overrides the default image tag.</param>
         /// <returns>The number of pending updates.</returns>
         /// <exception cref="HiveException">Thrown if there was an error selecting the updates.</exception>
-        public static int AddHiveUpdateSteps(HiveProxy hive, SetupController<NodeDefinition> controller, out bool restartRequired, bool servicesOnly = false, int serviceUpdateParallism = 1)
+        public static int AddHiveUpdateSteps(HiveProxy hive, SetupController<NodeDefinition> controller, out bool restartRequired, bool servicesOnly = false, int serviceUpdateParallism = 1, string imageTag = null)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 
@@ -133,14 +134,19 @@ namespace NeonCli
             // $todo(jeff.lill):
             //
             // We're going to hack this for now by updating all known neonHIVE service
-            // and container images to the [:latest] tag.  This is not really correct for
-            // these reasons:
+            // and container images to the [:latest] tag unless [imageTag] is specified
+            // This is not really correct for these reasons:
             //
             //      1. Hives may have been deployed using images from another branch
             //         like [jeff-latest].  This implementation will replace these with
             //         [latest].  Perhaps we should add a hive global that identifies
             //         the branch.  This may become more important if we make the concepts
             //         of DEV and EDGE (and perhaps ENTERPRISE) releases public.
+            //
+            //         One workaround for the time being is to use the [--image-tag]
+            //         option for the update command.  This will force all system
+            //         services and containers to restart using images with the
+            //         specified tag.
             //
             //         This also doesn't support obtaining images from other registries
             //         or with image names that don't match the service/container name.
@@ -150,21 +156,17 @@ namespace NeonCli
             //      2. It's possible that specific versions of the hive might require
             //         images to be pinned to a specific version.
             //
-            //      3. The service/container create scripts deployed the the nodes are
-            //         not being updated resulting in potential inconsistencies.
-            //
-            //      4. We should really be querying a service that returns the images
+            //      3. We should really be querying a service that returns the images
             //         required for a specific hive version and then pin the containers
             //         and services to specific image tags, perhaps by HASH.
             //
-            //      5. Once we've done #4, we should scan hive containers and services
+            //      4. Once we've done #3, we should scan hive containers and services
             //         to determine whether they actually need to be updated.  The code
-            //         below simply add steps to update everything.
+            //         below simply adds steps to update everything.
             //
-            //      6. We're going to update containers by stopping and removing them,
-            //         then we'll pull the new image and then use the container setup 
-            //         script as is to relaunch the container.  This assumes that the
-            //         container script uses the [:latest] tag.
+            //      5. We're going to update containers by stopping and removing them,
+            //         then we'll edit the container setup script to update the image
+            //         and then call it pull the image and restart the container.
             //
             // We're currently using a stubbed implementation of neonHIVE headend
             // services to implement some of this.
@@ -181,11 +183,7 @@ namespace NeonCli
                     {
                         foreach (var container in systemContainers)
                         {
-                            if (!versions.Images.TryGetValue(container, out var image))
-                            {
-                                firstManager.LogLine($"WARNING: Could not resolve [{container}] to a specific image.");
-                                continue;
-                            }
+                            var image = GetUpdateImage(hive, versions, container, imageTag);
 
                             firstManager.Status = $"run: docker pull {image}";
                             firstManager.SudoCommand($"docker pull {image}");
@@ -194,11 +192,7 @@ namespace NeonCli
 
                         foreach (var service in systemServices)
                         {
-                            if (!versions.Images.TryGetValue(service, out var image))
-                            {
-                                firstManager.LogLine($"WARNING: Could not resolve [{service}] to a specific image.");
-                                continue;
-                            }
+                            var image = GetUpdateImage(hive, versions, service, imageTag);
 
                             firstManager.Status = $"run: docker pull {image}";
                             firstManager.SudoCommand($"docker pull {image}");
@@ -225,15 +219,20 @@ namespace NeonCli
 
                     foreach (var service in systemServices.Where(s => services.Contains(s)))
                     {
-                        if (!versions.Images.TryGetValue(service, out var image))
-                        {
-                            firstManager.LogLine($"WARNING: Could not resolve [{service}] to a specific image.");
-                            continue;
-                        }
+                        var image = GetUpdateImage(hive, versions, service, imageTag);
 
                         firstManager.Status = $"update: {image}";
                         node.SudoCommand($"docker service update --image {image} --max-parallelism {serviceUpdateParallism} {service}");
                         firstManager.Status = string.Empty;
+
+                        // Update the service creation scripts on all manager nodes for all built-in 
+                        // services.  Note that this depends on how [ServicesBase.CreateStartScript()]
+                        // formatted the generated code at the top of the script.
+
+                        foreach (var manager in hive.Managers)
+                        {
+                            UpdateStartScript(manager, service, $"{image}:{imageTag}");
+                        }
                     }
                 },
                 node => node == firstManager);
@@ -279,34 +278,27 @@ namespace NeonCli
 
                     foreach (var container in systemContainers.Where(s => containers.Contains(s)))
                     {
-                        if (!versions.Images.TryGetValue(container, out var image))
+                        var image = GetUpdateImage(hive, versions, container, imageTag);
+
+                        var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{container}.sh");
+
+                        if (node.FileExists(scriptPath))
                         {
-                            firstManager.LogLine($"WARNING: Could not resolve [{container}] to a specific image.");
-                            continue;
-                        }
+                            // The container has a creation script, so update the script, stop/remove the
+                            // container and then run the script to restart the container.
 
-                        var containerStartScriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{container}.sh");
-
-                        if (node.FileExists(containerStartScriptPath))
-                        {
-                            // The container has a creation script, so pull the image and then
-                            // restart the container.
-
-                            // $hack(jeff.lill): I'm baking in the image tag here as ":latest"
-
-                            node.Status = $"pull: {image}";
-                            node.DockerCommand("docker", "pull", image);
+                            UpdateStartScript(node, container, $"{image}:{imageTag}");
 
                             node.Status = $"stop: {container}";
                             node.DockerCommand("docker", "rm", "--force", container);
 
                             node.Status = $"restart: {container}";
-                            node.SudoCommand("bash", containerStartScriptPath);
+                            node.SudoCommand("bash", scriptPath);
                         }
                         else
                         {
-                            node.Status = $"WARNING: Container script [{containerStartScriptPath}] is not present so we can't update the [{container}] container.";
-                            node.Log($"WARNING: Container script [{containerStartScriptPath}] is not present on this node so we can't update the [{container}] container.");
+                            node.Status = $"WARNING: Container script [{scriptPath}] is not present so we can't update the [{container}] container.";
+                            node.Log($"WARNING: Container script [{scriptPath}] is not present on this node so we can't update the [{container}] container.");
                             Thread.Sleep(TimeSpan.FromSeconds(5));
                         }
                     }
@@ -314,6 +306,91 @@ namespace NeonCli
                 noParallelLimit: hive.Definition.Docker.RegistryCache);
 
             return pendingUpdateCount;
+        }
+
+        /// <summary>
+        /// Returns the fully qualified image name to upgrade a container or service. 
+        /// </summary>
+        /// <param name="hive">The hive proxy.</param>
+        /// <param name="versions">The known image versions.</param>
+        /// <param name="imageName">The image name.</param>
+        /// <param name="imageTag"></param>
+        /// <returns>The fully qualified image.</returns>
+        private static string GetUpdateImage(HiveProxy hive, HiveComponentVersions versions, string imageName, string imageTag = null)
+        {
+            if (!string.IsNullOrEmpty(imageTag))
+            {
+                return $"{imageName}:{imageTag}";
+            }
+            else if (versions.Images.TryGetValue(imageName, out var image))
+            {
+                return image;
+            }
+            else
+            {
+                hive.FirstManager.LogLine($"WARNING: Could not resolve [{imageName}] to a specific image.");
+                return $"{imageName}:latest";
+            }
+        }
+
+        /// <summary>
+        /// Updates a service or container start script on a hive node with a new image.
+        /// </summary>
+        /// <param name="node">The target hive node.</param>
+        /// <param name="scriptName">The script name (without the <b>.sh</b>).</param>
+        /// <param name="image">The fully qualified image name.</param>
+        private static void UpdateStartScript(SshProxy<NodeDefinition> node, string scriptName, string image)
+        {
+            var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{scriptName}.sh");
+
+            node.Status = $"edit: {scriptPath}";
+
+            if (node.FileExists(scriptPath))
+            {
+                var curScript   = node.DownloadText(scriptPath);
+                var sbNewScript = new StringBuilder();
+
+                // Scan for the generated code section and then replace the first
+                // line that looks like:
+                //
+                //      TARGET_IMAGE=OLD-IMAGE
+                //
+                // with the the new image and then upload the change.
+
+                using (var reader = new StringReader(curScript))
+                {
+                    var inGenerated = false;
+                    var wasEdited   = false;
+
+                    foreach (var line in reader.Lines())
+                    {
+                        if (wasEdited)
+                        {
+                            sbNewScript.AppendLine(line);
+                            continue;
+                        }
+
+                        if (!inGenerated && line.StartsWith(ServicesBase.ParamSectionMarker))
+                        {
+                            inGenerated = true;
+                        }
+
+                        if (line.StartsWith("TARGET_IMAGE="))
+                        {
+                            sbNewScript.AppendLine($"TARGET_IMAGE={image}");
+                            wasEdited = true;
+                        }
+                        else
+                        {
+                            sbNewScript.AppendLine(line);
+                        }
+                    }
+                }
+
+                node.UploadText(scriptPath, sbNewScript.ToString(), permissions: "740");
+            }
+
+            node.Status = string.Empty;
         }
 
         /// <summary>

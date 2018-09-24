@@ -44,7 +44,10 @@ USAGE:
 
 OPTIONS:
 
-    --force     - performs the update without prompting
+    --force             - performs the update without prompting
+    --image-tag=TAG     - overrides the default image tag for the [neon hive update]
+                          and [neon hive update update services] commands
+                          (typically for testing/development purposes)
 
 REMARKS:
 
@@ -105,7 +108,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             {
                 case null:
 
-                    UpdateHive(force, maxParallel);
+                    UpdateHive(force, maxParallel, Program.DockerImageTag);
                     break;
 
                 case "check":
@@ -141,7 +144,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
 
                 case "services":
 
-                    UpdateServices(force, maxParallel);
+                    UpdateServices(force, maxParallel, Program.DockerImageTag);
                     break;
 
                 case "linux":
@@ -585,7 +588,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
         /// </summary>
         /// <param name="force"><c>true</c> to disable the update prompt.</param>
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
-        private void UpdateHive(bool force, int maxParallel)
+        /// <param name="imageTag">Optionally overrides the default image tag.</param>
+        private void UpdateHive(bool force, int maxParallel, string imageTag = null)
         {
             EnsureRootPivileges();
 
@@ -601,7 +605,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
 
             controller.MaxParallel = maxParallel;
 
-            var hiveUpdateCount = HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, serviceUpdateParallism: Program.MaxParallel);
+            var hiveUpdateCount = HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, serviceUpdateParallism: Program.MaxParallel, imageTag: imageTag);
 
             if (controller.StepCount == 0)
             {
@@ -624,7 +628,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
         /// </summary>
         /// <param name="force"><c>true</c> to disable the update prompt.</param>
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
-        private void UpdateServices(bool force, int maxParallel)
+        /// <param name="imageTag">Optionally overrides the default image tag.</param>
+        private void UpdateServices(bool force, int maxParallel, string imageTag = null)
         {
             EnsureRootPivileges();
 
@@ -639,7 +644,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 ShowStatus  = true
             };
 
-            HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, servicesOnly: true, serviceUpdateParallism: Program.MaxParallel);
+            HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, servicesOnly: true, serviceUpdateParallism: Program.MaxParallel, imageTag: imageTag);
 
             if (controller.StepCount == 0)
             {

@@ -32,9 +32,10 @@ namespace Neon.Hive
         /// <param name="text">The text to be uploaded.</param>
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
-        public static UploadStep Text (string nodeName, string path, string text, int tabStop = 0, Encoding outputEncoding = null)
+        /// <param name="permissions">Optionally specifies target file permissions (compatible with the <c>chmod</c> command).</param>
+        public static UploadStep Text(string nodeName, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
-            return new UploadStep(nodeName, path, text, tabStop, outputEncoding);
+            return new UploadStep(nodeName, path, text, tabStop, outputEncoding, permissions);
         }
 
         //---------------------------------------------------------------------
@@ -45,6 +46,7 @@ namespace Neon.Hive
         private string      text;
         private int         tabStop;
         private Encoding    outputEncoding;
+        private string      permissions;
 
         /// <summary>
         /// Constructs a configuration step that executes a command under <b>sudo</b>
@@ -55,7 +57,8 @@ namespace Neon.Hive
         /// <param name="text">The text to be uploaded.</param>
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
-        private UploadStep(string nodeName, string path, string text, int tabStop = 0, Encoding outputEncoding = null)
+        /// <param name="permissions">Optionally specifies target file permissions (compatible with the <c>chmod</c> command).</param>
+        private UploadStep(string nodeName, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
@@ -65,6 +68,7 @@ namespace Neon.Hive
             this.text           = text;
             this.tabStop        = tabStop;
             this.outputEncoding = outputEncoding;
+            this.permissions    = permissions;
         }
 
         /// <inheritdoc/>
@@ -76,6 +80,11 @@ namespace Neon.Hive
             var status = this.ToString();
 
             node.UploadText(path, text, tabStop, outputEncoding);
+
+            if (!string.IsNullOrEmpty(permissions))
+            {
+                node.SudoCommand("chmod", permissions, path);
+            }
 
             StatusPause();
 
