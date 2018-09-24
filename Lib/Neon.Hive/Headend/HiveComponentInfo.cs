@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HiveComponentVersions.cs
+// FILE:	    HiveComponentInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -27,7 +27,7 @@ namespace Neon.Hive
     /// Lists the latest versions of neonHIVE related infrastructure components
     /// that are compatible with a specific hive deployment.
     /// </summary>
-    public class HiveComponentVersions
+    public class HiveComponentInfo
     {
         /// <summary>
         /// The latest compatible Docker Engine.
@@ -63,7 +63,24 @@ namespace Neon.Hive
         /// image tag, like <b>nhive/neon-log-collector:latest</b> of the latest image that
         /// is compatible with a specific hive deployment.
         /// </summary>
-        [JsonProperty(PropertyName = "Vault", Required = Required.Always)]
-        public Dictionary<string, string> Images { get; set; } = new Dictionary<string, string>();
+        [JsonProperty(PropertyName = "ImageToFullyQualified", Required = Required.Always)]
+        public Dictionary<string, string> ImageToFullyQualified { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// <para>
+        /// Maps the name of a neonHIVE service or container like <b>neon-log-metricbeat</b>
+        /// to the name of the Docker image (without a repository or tag) that implements the
+        /// named component, like: <b>metricbeat</b>.
+        /// </para>
+        /// <note>
+        /// Many components map to images with the same name, like the <b>neon-hive-manager</b>
+        /// service and the <b>neon-hive-manager</b> image.  Thhis is not always the case though.
+        /// For example, the <b>neon-proxy-public</b> and <b>neon-proxy-private</b> services and
+        /// container are both implemented by the <b>neon-proxy</b> image and the <b>neon-log-metricbeat</b>
+        /// containers are implemented by the <b>metricbeat</b> image.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "ComponentToImage", Required = Required.Always)]
+        public Dictionary<string, string> ComponentToImage { get; set; } = new Dictionary<string, string>();
     }
 }

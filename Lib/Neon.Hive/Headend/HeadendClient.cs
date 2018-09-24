@@ -60,12 +60,12 @@ namespace Neon.Hive
         /// that is compatible with a specific version of a neonHIVE deployment.
         /// </summary>
         /// <param name="hiveVersion">The current hive version.</param>
-        /// <returns>The <see cref="HiveComponentVersions"/>.</returns>
-        public HiveComponentVersions GetComponentVersions(string hiveVersion)
+        /// <returns>The <see cref="HiveComponentInfo"/>.</returns>
+        public HiveComponentInfo GetComponentInfo(string hiveVersion)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveVersion));
 
-            var versions = new HiveComponentVersions();
+            var versions = new HiveComponentInfo();
 
             versions.Docker        = "18.06.1-ce";
             versions.DockerPackage = "docker-ce=18.03.1~ce-0~ubuntu";
@@ -80,12 +80,37 @@ namespace Neon.Hive
 
             foreach (var container in systemContainers)
             {
-                versions.Images[container] = $"nhive/{container}:latest";
+                versions.ImageToFullyQualified[container] = $"nhive/{container}:latest";
             }
 
             foreach (var service in systemServices)
             {
-                versions.Images[service] = $"nhive/{service}:latest";
+                versions.ImageToFullyQualified[service] = $"nhive/{service}:latest";
+            }
+
+            versions.ComponentToImage.Add("neon-log-esdata", "elasticsearch");
+            versions.ComponentToImage.Add("neon-log-host", "neon-log-host");
+            versions.ComponentToImage.Add("neon-log-metricbeat", "metricbeat");
+            versions.ComponentToImage.Add("neon-registry-cache", "neon-registry-cache");
+            versions.ComponentToImage.Add("neon-hivemq", "neon-hivemq");
+            versions.ComponentToImage.Add("neon-hive-manager", "neon-hive-manager");
+            versions.ComponentToImage.Add("neon-dns", "neon-dns");
+            versions.ComponentToImage.Add("neon-dns-mon", "neon-dns-mon");
+            versions.ComponentToImage.Add("neon-log-collector", "neon-log-collector");
+            versions.ComponentToImage.Add("neon-log-kibana", "kibana");
+            versions.ComponentToImage.Add("neon-proxy-manager", "neon-proxy-manager");
+            versions.ComponentToImage.Add("neon-proxy-private", "neon-proxy");
+            versions.ComponentToImage.Add("neon-proxy-public", "neon-proxy");
+            versions.ComponentToImage.Add("neon-proxy-vault", "neon-proxy-vault");
+
+            // Ensure that every system component has an image assignment.
+
+            foreach (var component in systemContainers.Union(systemServices))
+            {
+                if (!versions.ComponentToImage.ContainsKey(component))
+                {
+                    throw new NotImplementedException($"Hive container or service name [{component}] does not have an image assignment.");
+                }
             }
 
             return versions;

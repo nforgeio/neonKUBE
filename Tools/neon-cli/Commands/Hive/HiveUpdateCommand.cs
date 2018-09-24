@@ -233,7 +233,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             var syncLock           = new object();
             var maxUpdates         = 0;
             var maxSecurityUpdates = 0;
-            var componentVersions  = hive.Headend.GetComponentVersions(hive.Globals.Version);
+            var componentInfo      = hive.Headend.GetComponentInfo(hive.Globals.Version);
             var dockerVersions     = new Dictionary<SemanticVersion, int>();    // Counts the numbers versions installed
             var consulVersions     = new Dictionary<SemanticVersion, int>();    // on hive nodes.
             var vaultVersions      = new Dictionary<SemanticVersion, int>();
@@ -373,7 +373,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             {
                 dockerStatus = "WARNING: multiple versions installed";
             }
-            else if (dockerVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Docker)
+            else if (dockerVersions.Keys.Min(v => v) < (SemanticVersion)componentInfo.Docker)
             {
                 dockerStatus = "UPDATE AVAILABLE";
             }
@@ -385,7 +385,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             Console.WriteLine(dockerTitle);
             Console.WriteLine(new string('-', dockerTitle.Length));
             Console.WriteLine($"Current: {dockerVersionInfo}");
-            Console.WriteLine($"Latest:  {componentVersions.Docker}");
+            Console.WriteLine($"Latest:  {componentInfo.Docker}");
 
             //-------------------------------------------------------------
             // Consul status
@@ -422,7 +422,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             {
                 consulStatus = "WARNING: multiple versions installed";
             }
-            else if (consulVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Consul)
+            else if (consulVersions.Keys.Min(v => v) < (SemanticVersion)componentInfo.Consul)
             {
                 consulStatus = "UPDATE AVAILABLE";
             }
@@ -434,7 +434,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             Console.WriteLine(consulTitle);
             Console.WriteLine(new string('-', consulTitle.Length));
             Console.WriteLine($"Current: {consulVersionInfo}");
-            Console.WriteLine($"Latest:  {componentVersions.Consul}");
+            Console.WriteLine($"Latest:  {componentInfo.Consul}");
 
             //-------------------------------------------------------------
             // Vault status
@@ -471,7 +471,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             {
                 vaultStatus = "WARNING: multiple versions installed";
             }
-            else if (vaultVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Vault)
+            else if (vaultVersions.Keys.Min(v => v) < (SemanticVersion)componentInfo.Vault)
             {
                 vaultStatus = "UPDATE AVAILABLE";
             }
@@ -483,7 +483,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             Console.WriteLine(vaultTitle);
             Console.WriteLine(new string('-', vaultTitle.Length));
             Console.WriteLine($"Current: {vaultVersionInfo}");
-            Console.WriteLine($"Latest:  {componentVersions.Vault}");
+            Console.WriteLine($"Latest:  {componentInfo.Vault}");
         }
 
         /// <summary>

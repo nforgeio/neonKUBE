@@ -171,7 +171,7 @@ namespace NeonCli
             // We're currently using a stubbed implementation of neonHIVE headend
             // services to implement some of this.
 
-            var versions         = hive.Headend.GetComponentVersions(hive.Globals.Version);
+            var componentInfo    = hive.Headend.GetComponentInfo(hive.Globals.Version);
             var systemContainers = HiveConst.DockerContainers;
             var systemServices   = HiveConst.DockerServices;
             var firstManager     = hive.FirstManager;
@@ -183,20 +183,26 @@ namespace NeonCli
                     {
                         foreach (var container in systemContainers)
                         {
-                            var image = GetUpdateImage(hive, versions, container, imageTag);
+                            var image = GetUpdateImage(hive, componentInfo, container, imageTag);
 
-                            firstManager.Status = $"run: docker pull {image}";
-                            firstManager.SudoCommand($"docker pull {image}");
-                            firstManager.Status = string.Empty;
+                            if (image != null)
+                            {
+                                firstManager.Status = $"run: docker pull {image}";
+                                firstManager.SudoCommand($"docker pull {image}");
+                                firstManager.Status = string.Empty;
+                            }
                         }
 
                         foreach (var service in systemServices)
                         {
-                            var image = GetUpdateImage(hive, versions, service, imageTag);
+                            var image = GetUpdateImage(hive, componentInfo, service, imageTag);
 
-                            firstManager.Status = $"run: docker pull {image}";
-                            firstManager.SudoCommand($"docker pull {image}");
-                            firstManager.Status = string.Empty;
+                            if (image != null)
+                            {
+                                firstManager.Status = $"run: docker pull {image}";
+                                firstManager.SudoCommand($"docker pull {image}");
+                                firstManager.Status = string.Empty;
+                            }
                         }
                     });
             }
@@ -219,19 +225,22 @@ namespace NeonCli
 
                     foreach (var service in systemServices.Where(s => services.Contains(s)))
                     {
-                        var image = GetUpdateImage(hive, versions, service, imageTag);
+                        var image = GetUpdateImage(hive, componentInfo, service, imageTag);
 
-                        firstManager.Status = $"update: {image}";
-                        node.SudoCommand($"docker service update --image {image} --max-parallelism {serviceUpdateParallism} {service}");
-                        firstManager.Status = string.Empty;
-
-                        // Update the service creation scripts on all manager nodes for all built-in 
-                        // services.  Note that this depends on how [ServicesBase.CreateStartScript()]
-                        // formatted the generated code at the top of the script.
-
-                        foreach (var manager in hive.Managers)
+                        if (image != null)
                         {
-                            UpdateStartScript(manager, service, $"{image}:{imageTag}");
+                            firstManager.Status = $"update: {image}";
+                            node.SudoCommand($"docker service update --image {image} --max-parallelism {serviceUpdateParallism} {service}");
+                            firstManager.Status = string.Empty;
+
+                            // Update the service creation scripts on all manager nodes for all built-in 
+                            // services.  Note that this depends on how [ServicesBase.CreateStartScript()]
+                            // formatted the generated code at the top of the script.
+
+                            foreach (var manager in hive.Managers)
+                            {
+                                UpdateStartScript(manager, service, $"{image}");
+                            }
                         }
                     }
                 },
@@ -265,41 +274,46 @@ namespace NeonCli
                     // It could also be possible then to be able to scan for and repair missing
                     // or incorrect scripts.
 
-                    var containers = new HashSet<string>();
-                    var response   = node.SudoCommand("docker ps --format \"{{.Names}}\"");
+                    var existingContainers = new HashSet<string>();
+                    var response           = node.SudoCommand("docker ps --format \"{{.Names}}\"");
 
                     using (var reader = new StringReader(response.OutputText))
                     {
                         foreach (var container in reader.Lines())
                         {
-                            containers.Add(container);
+                            existingContainers.Add(container);
                         }
                     }
 
-                    foreach (var container in systemContainers.Where(s => containers.Contains(s)))
+                    foreach (var container in systemContainers.Where(s => existingContainers.Contains(s)))
                     {
-                        var image = GetUpdateImage(hive, versions, container, imageTag);
+                        var image = GetUpdateImage(hive, componentInfo, container, imageTag);
 
-                        var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{container}.sh");
-
-                        if (node.FileExists(scriptPath))
+                        if (image != null)
                         {
-                            // The container has a creation script, so update the script, stop/remove the
-                            // container and then run the script to restart the container.
+                            var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{container}.sh");
 
-                            UpdateStartScript(node, container, $"{image}:{imageTag}");
+                            if (node.FileExists(scriptPath))
+                            {
+                                // The container has a creation script, so update the script, stop/remove the
+                                // container and then run the script to restart the container.
 
-                            node.Status = $"stop: {container}";
-                            node.DockerCommand("docker", "rm", "--force", container);
+                                UpdateStartScript(node, container, $"{image}");
 
-                            node.Status = $"restart: {container}";
-                            node.SudoCommand("bash", scriptPath);
-                        }
-                        else
-                        {
-                            node.Status = $"WARNING: Container script [{scriptPath}] is not present so we can't update the [{container}] container.";
-                            node.Log($"WARNING: Container script [{scriptPath}] is not present on this node so we can't update the [{container}] container.");
-                            Thread.Sleep(TimeSpan.FromSeconds(5));
+                                node.Status = $"stop: {container}";
+                                node.DockerCommand("docker", "rm", "--force", container);
+
+                                node.Status = $"restart: {container}";
+                                node.SudoCommand(scriptPath);
+                            }
+                            else
+                            {
+                                var warning = $"WARNING: Container script [{scriptPath}] is not present on this node so we can't update the [{container}] container.";
+
+                                node.Status = warning;
+                                node.Log(warning);
+                                Thread.Sleep(TimeSpan.FromSeconds(5));
+                            }
                         }
                     }
                 },
@@ -309,27 +323,43 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Returns the fully qualified image name to upgrade a container or service. 
+        /// Returns the fully qualified image name required to upgrade a container or service. 
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
-        /// <param name="versions">The known image versions.</param>
-        /// <param name="imageName">The image name.</param>
+        /// <param name="componentInfo">The hive component version information.</param>
+        /// <param name="componentName">The service or container name.</param>
         /// <param name="imageTag"></param>
-        /// <returns>The fully qualified image.</returns>
-        private static string GetUpdateImage(HiveProxy hive, HiveComponentVersions versions, string imageName, string imageTag = null)
+        /// <returns>The fully qualified image or <c>null</c> if there is no known image for the service or container.</returns>
+        private static string GetUpdateImage(HiveProxy hive, HiveComponentInfo componentInfo, string componentName, string imageTag = null)
         {
+            if (!componentInfo.ComponentToImage.TryGetValue(componentName, out var imageName))
+            {
+                hive.FirstManager.LogLine($"WARNING: Cannot map service or container named [{componentName}] to an image.");
+                return null;
+            }
+
+            if (!componentInfo.ImageToFullyQualified.TryGetValue(imageName, out var image))
+            {
+                hive.FirstManager.LogLine($"WARNING: Cannot map unqualified image name [{imageName}] to a fully qualified image.");
+                return null;
+            }
+
             if (!string.IsNullOrEmpty(imageTag))
             {
-                return $"{imageName}:{imageTag}";
-            }
-            else if (versions.Images.TryGetValue(imageName, out var image))
-            {
-                return image;
+                // Replace the default image tag with the override.
+
+                var posColon = image.LastIndexOf(':');
+
+                if (posColon != -1)
+                {
+                    image = image.Substring(0, posColon);
+                }
+
+                return $"{image}:{imageTag}";
             }
             else
             {
-                hive.FirstManager.LogLine($"WARNING: Could not resolve [{imageName}] to a specific image.");
-                return $"{imageName}:latest";
+                return image;
             }
         }
 
