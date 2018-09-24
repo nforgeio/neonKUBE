@@ -39,8 +39,10 @@ Manages the hive's public and private proxies.
 USAGE:
 
     neon loadbalancer|lb help
-    neon loadbalancer|lb NAME build
+    neon loadbalancer|lb NAME deploy
     neon loadbalancer|lb NAME get [--yaml] RULE
+    neon loadbalancer|lb NAME haproxy
+    neon loadbalancer|lb NAME haproxy-bridge
     neon loadbalancer|lb NAME inspect
     neon loadbalancer|lb NAME [--all] [--sys] list|ls
     neon loadbalancer|lb NAME remove|rm RULE
@@ -64,7 +66,8 @@ COMMANDS:
                       any pending changes.
     get             - Output a specific rule as JSON by default.
                       Use [--yaml] to return as YAML.
-    haproxy         - Outputs the HAProxy configuration.
+    haproxy         - Outputs the load balancer's HAProxy configuration.
+    haproxy-bridge  - Outputs the pet bridge's HAProxy configuration.
     inspect         - Displays JSON details for all load balancer
                       rules and settings.
     list|ls         - Lists the rule names.
@@ -274,13 +277,15 @@ See the documentation for more load balancer rule and setting details.
                     break;
 
                 case "haproxy":
+                case "haproxy-bridge":
 
                     // We're going to download the load balancer's ZIP archive containing 
                     // the [haproxy.cfg] file, extract and write it to the console.
 
                     using (var consul = HiveHelper.OpenConsul())
                     {
-                        var confKey      = $"neon/service/neon-proxy-manager/proxies/{loadBalancerName}/proxy-conf";
+                        var proxy        = command.Equals("haproxy", StringComparison.InvariantCultureIgnoreCase) ? loadBalancerName : loadBalancerName + "-bridge";
+                        var confKey      = $"neon/service/neon-proxy-manager/proxies/{proxy}/proxy-conf";
                         var confZipBytes = consul.KV.GetBytesOrDefault(confKey).Result;
 
                         if (confZipBytes == null)
