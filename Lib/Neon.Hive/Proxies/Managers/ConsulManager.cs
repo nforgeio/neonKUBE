@@ -61,7 +61,7 @@ namespace Neon.Hive
                     }
                     catch (ObjectDisposedException)
                     {
-                        // Intentially ignoring these.
+                        // Intentionally ignoring these.
                     }
                     finally
                     {
