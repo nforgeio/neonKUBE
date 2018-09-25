@@ -600,58 +600,20 @@ namespace Neon.Net
             Covenant.Requires<ArgumentNullException>(hosts != null);
             Covenant.Requires<ArgumentNullException>(hosts.Count() > 0);
 
-            // Try sending up to three pings to each host in parallel to get a 
-            // list of the reachable ones.  Then we'll return the first reachable
-            // host from the list.
-            //
-            // This will consistently return the first host by name if it's reachable, 
-            // otherwise it will fail over to the next, etc.
+            var reachableHosts = GetReachableHosts(hosts);
 
-            const int tryCount = 3;
+            // We want to favor reachable hosts that appear earlier in the
+            // hosts list passed over hosts that appear later.
 
-            var reachableHosts = new List<ReachableHost>();
-            var pingOptions    = new PingOptions(ttl: 32, dontFragment: true);
-            var pingTimeout    = TimeSpan.FromSeconds(1);
-
-            for (int i = 0; i < tryCount; i++)
+            if (!reachableHosts.IsEmpty())
             {
-                Parallel.ForEach(hosts,
-                    host =>
-                    {
-                        using (var ping = new Ping())
-                        {
-                            try
-                            {
-                                var reply = ping.Send(host, (int)pingTimeout.TotalMilliseconds);
-
-                                if (reply.Status == IPStatus.Success)
-                                {
-                                    lock (reachableHosts)
-                                    {
-                                        reachableHosts.Add(new ReachableHost(host, reply));
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // Intentially ignoring these.
-                            }
-                        }
-                    });
-
-                // We want to favor reachable hosts that appear earlier in the
-                // hosts list passed over hosts that appear later.
-
-                if (reachableHosts.Count > 0)
+                foreach (var host in hosts)
                 {
-                    foreach (var host in hosts)
+                    foreach (var reachableHost in reachableHosts)
                     {
-                        foreach (var reachableHost in reachableHosts)
+                        if (host == reachableHost.Host)
                         {
-                            if (host == reachableHost.Host)
-                            {
-                                return reachableHost;
-                            }
+                            return reachableHost;
                         }
                     }
                 }
@@ -680,6 +642,68 @@ namespace Neon.Net
 
                     throw new NotImplementedException($"Unexpected failure [mode={failureMode}].");
             }
+        }
+
+
+        /// <summary>
+        /// Pings one or more hostnames or IP addresses in parallel to identify those that
+        /// appear to be online and reachable via the network (because it answers a ping).
+        /// </summary>
+        /// <param name="hosts">The hostname or IP addresses to be tested.</param>
+        /// <returns>The <see cref="ReachableHost"/> instances describing the reachable hosts (if any).</returns>
+        public static IEnumerable<ReachableHost> GetReachableHosts(IEnumerable<string> hosts)
+        {
+            Covenant.Requires<ArgumentNullException>(hosts != null);
+
+            if (hosts.IsEmpty())
+            {
+                return new List<ReachableHost>();   // No hosts were passed.
+            }
+
+            // Try sending up to three pings to each host in parallel to get a 
+            // list of the reachable ones.
+
+            const int tryCount = 3;
+
+            var reachableHosts = new Dictionary<string, ReachableHost>();
+            var pingOptions    = new PingOptions(ttl: 32, dontFragment: true);
+            var pingTimeout    = TimeSpan.FromSeconds(1);
+
+            for (int i = 0; i < tryCount; i++)
+            {
+                var remainingHosts = hosts.Where(h => !reachableHosts.ContainsKey(h));
+
+                if (remainingHosts.Count() == 0)
+                {
+                    break;  // All of the hosts have already answered.
+                }
+
+                Parallel.ForEach(remainingHosts,
+                    host =>
+                    {
+                        using (var ping = new Ping())
+                        {
+                            try
+                            {
+                                var reply = ping.Send(host, (int)pingTimeout.TotalMilliseconds);
+
+                                if (reply.Status == IPStatus.Success)
+                                {
+                                    lock (reachableHosts)
+                                    {
+                                        reachableHosts.Add(host, new ReachableHost(host, reply));
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Intentionally ignoring these.
+                            }
+                        }
+                    });
+            }
+
+            return reachableHosts.Values;
         }
     }
 }

@@ -86,7 +86,7 @@ namespace Xunit
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
         /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
-        public static void Equivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
+        public static void AssertEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
         {
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(collection != null);
@@ -124,14 +124,14 @@ namespace Xunit
         /// <param name="expected">The expected items.</param>
         /// <param name="collection">The collection being tested.</param>
         /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
-        public static void NotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
+        public static void AssertNotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
         {
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(collection != null);
 
             try
             {
-                Equivalent<T>(expected, collection);
+                AssertEquivalent<T>(expected, collection);
             }
             catch
             {
@@ -151,7 +151,7 @@ namespace Xunit
         /// <param name="collection">The collection being tested.</param>
         /// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
         /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
-        public static void Equivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
+        public static void AssertEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(collection != null);
@@ -191,7 +191,7 @@ namespace Xunit
         /// <param name="collection">The collection being tested.</param>
         /// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
         /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
-        public static void NotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
+        public static void AssertNotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(collection != null);
@@ -199,7 +199,7 @@ namespace Xunit
 
             try
             {
-                Equivalent<T>(expected, collection, comparer);
+                AssertEquivalent<T>(expected, collection, comparer);
             }
             catch
             {
@@ -212,11 +212,12 @@ namespace Xunit
         /// <summary>
         /// Ensures that two dictionaries contain the same items using the default equality comparer.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TKey">Specifies the dictionary key type.</typeparam>
+        /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
-        public static void Equivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
+        public static void AssertEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
         {
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(dictionary != null);
@@ -250,18 +251,19 @@ namespace Xunit
         /// <summary>
         /// Ensures that two dictionaries do not contain the same items using the default equality comparer.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TKey">Specifies the dictionary key type.</typeparam>
+        /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
-        public static void NotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
+        public static void AssertNotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
         {
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(dictionary != null);
 
             try
             {
-                Equivalent<TKey, TValue>(expected, dictionary);
+                AssertEquivalent<TKey, TValue>(expected, dictionary);
             }
             catch
             {
@@ -273,11 +275,12 @@ namespace Xunit
 
         /// <summary>Ensures that two dictionaries contain the same items using an equality comparer.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TKey">Specifies the dictionary key type.</typeparam>
+        /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
-        public static void Equivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
+        public static void AssertEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(dictionary != null);
@@ -311,11 +314,12 @@ namespace Xunit
 
         /// <summary>Ensures that two dictionaries do not contain the same items using an equality comparer.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TKey">Specifies the dictionary key type.</typeparam>
+        /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
-        public static void NotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
+        public static void AssertNotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(dictionary != null);
@@ -323,7 +327,7 @@ namespace Xunit
 
             try
             {
-                Equivalent<TKey, TValue>(expected, dictionary, comparer);
+                AssertEquivalent<TKey, TValue>(expected, dictionary, comparer);
             }
             catch
             {
