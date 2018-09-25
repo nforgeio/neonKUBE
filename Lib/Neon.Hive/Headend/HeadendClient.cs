@@ -76,32 +76,36 @@ namespace Neon.Hive
             var systemContainers = HiveConst.DockerContainers;
             var systemServices   = HiveConst.DockerServices;
 
-            // $todo(jeff.lill): Hardcoded
+            // $todo(jeff.lill): Hardcoded for now.
 
-            foreach (var container in systemContainers)
-            {
-                versions.ImageToFullyQualified[container] = $"nhive/{container}:latest";
-            }
+            versions.ComponentToImage.Add("neon-dns",                   "neon-dns");
+            versions.ComponentToImage.Add("neon-dns-mon",               "neon-dns-mon");
+            versions.ComponentToImage.Add("neon-hivemq",                "neon-hivemq");
+            versions.ComponentToImage.Add("neon-hive-manager",          "neon-hive-manager");
+            versions.ComponentToImage.Add("neon-log-esdata",            "elasticsearch");
+            versions.ComponentToImage.Add("neon-log-collector",         "neon-log-collector");
+            versions.ComponentToImage.Add("neon-log-kibana",            "kibana");
+            versions.ComponentToImage.Add("neon-log-host",              "neon-log-host");
+            versions.ComponentToImage.Add("neon-log-metricbeat",        "metricbeat");
+            versions.ComponentToImage.Add("neon-proxy-manager",         "neon-proxy-manager");
+            versions.ComponentToImage.Add("neon-proxy-private",         "neon-proxy");
+            versions.ComponentToImage.Add("neon-proxy-public",          "neon-proxy");
+            versions.ComponentToImage.Add("neon-proxy-vault",           "neon-proxy-vault");
+            versions.ComponentToImage.Add("neon-registry-cache",        "neon-registry-cache");
 
-            foreach (var service in systemServices)
-            {
-                versions.ImageToFullyQualified[service] = $"nhive/{service}:latest";
-            }
-
-            versions.ComponentToImage.Add("neon-log-esdata", "elasticsearch");
-            versions.ComponentToImage.Add("neon-log-host", "neon-log-host");
-            versions.ComponentToImage.Add("neon-log-metricbeat", "metricbeat");
-            versions.ComponentToImage.Add("neon-registry-cache", "neon-registry-cache");
-            versions.ComponentToImage.Add("neon-hivemq", "neon-hivemq");
-            versions.ComponentToImage.Add("neon-hive-manager", "neon-hive-manager");
-            versions.ComponentToImage.Add("neon-dns", "neon-dns");
-            versions.ComponentToImage.Add("neon-dns-mon", "neon-dns-mon");
-            versions.ComponentToImage.Add("neon-log-collector", "neon-log-collector");
-            versions.ComponentToImage.Add("neon-log-kibana", "kibana");
-            versions.ComponentToImage.Add("neon-proxy-manager", "neon-proxy-manager");
-            versions.ComponentToImage.Add("neon-proxy-private", "neon-proxy");
-            versions.ComponentToImage.Add("neon-proxy-public", "neon-proxy");
-            versions.ComponentToImage.Add("neon-proxy-vault", "neon-proxy-vault");
+            versions.ImageToFullyQualified.Add("elasticsearch",         "nhive/elasticsearch:latest");
+            versions.ImageToFullyQualified.Add("kibana",                "nhive/kibana:latest");
+            versions.ImageToFullyQualified.Add("metricbeat",            "nhive/metricbeat:latest");
+            versions.ImageToFullyQualified.Add("neon-dns",              "nhive/neon-dns:latest");
+            versions.ImageToFullyQualified.Add("neon-dns-mon",          "nhive/neon-dns-mon:latest");
+            versions.ImageToFullyQualified.Add("neon-hivemq",           "nhive/neon-hivemq:latest");
+            versions.ImageToFullyQualified.Add("neon-hive-manager",     "nhive/neon-hive-manager:latest");
+            versions.ImageToFullyQualified.Add("neon-log-collector",    "nhive/neon-log-collector:latest");
+            versions.ImageToFullyQualified.Add("neon-log-host",         "nhive/neon-log-host:latest");
+            versions.ImageToFullyQualified.Add("neon-proxy",            "nhive/neon-proxy:latest");
+            versions.ImageToFullyQualified.Add("neon-proxy-manager",    "nhive/neon-proxy-manager:latest");
+            versions.ImageToFullyQualified.Add("neon-proxy-vault",      "nhive/neon-proxy-vault:latest");
+            versions.ImageToFullyQualified.Add("neon-registry-cache",   "nhive/neon-registry-cache:latest");
 
             // Ensure that every system component has an image assignment.
 

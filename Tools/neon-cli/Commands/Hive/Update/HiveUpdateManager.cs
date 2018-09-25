@@ -131,46 +131,6 @@ namespace NeonCli
                 }
             }
 
-            // $todo(jeff.lill):
-            //
-            // We're going to hack this for now by updating all known neonHIVE service
-            // and container images to the [:latest] tag unless [imageTag] is specified
-            // This is not really correct for these reasons:
-            //
-            //      1. Hives may have been deployed using images from another branch
-            //         like [jeff-latest].  This implementation will replace these with
-            //         [latest].  Perhaps we should add a hive global that identifies
-            //         the branch.  This may become more important if we make the concepts
-            //         of DEV and EDGE (and perhaps ENTERPRISE) releases public.
-            //
-            //         One workaround for the time being is to use the [--image-tag]
-            //         option for the update command.  This will force all system
-            //         services and containers to restart using images with the
-            //         specified tag.
-            //
-            //         This also doesn't support obtaining images from other registries
-            //         or with image names that don't match the service/container name.
-            //         This could be a problem for air-gapped or other hive configs
-            //         in the future.
-            //
-            //      2. It's possible that specific versions of the hive might require
-            //         images to be pinned to a specific version.
-            //
-            //      3. We should really be querying a service that returns the images
-            //         required for a specific hive version and then pin the containers
-            //         and services to specific image tags, perhaps by HASH.
-            //
-            //      4. Once we've done #3, we should scan hive containers and services
-            //         to determine whether they actually need to be updated.  The code
-            //         below simply adds steps to update everything.
-            //
-            //      5. We're going to update containers by stopping and removing them,
-            //         then we'll edit the container setup script to update the image
-            //         and then call it pull the image and restart the container.
-            //
-            // We're currently using a stubbed implementation of neonHIVE headend
-            // services to implement some of this.
-
             var componentInfo    = hive.Headend.GetComponentInfo(hive.Globals.Version);
             var systemContainers = HiveConst.DockerContainers;
             var systemServices   = HiveConst.DockerServices;

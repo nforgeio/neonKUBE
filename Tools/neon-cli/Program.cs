@@ -790,6 +790,11 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         public const string MustLoginMessage = "*** ERROR: You must first log into a hive.";
 
         /// <summary>
+        /// Returns the Git source code branch.
+        /// </summary>
+        public static string GitBranch => ThisAssembly.Git.Branch;
+
+        /// <summary>
         /// Optionally set to the tag to be used to override any explicit or implicit <b>:latest</b>
         /// image tags specified when deploying a neonHIVE.
         /// </summary>
@@ -807,7 +812,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// then published to Docker Hub.
         /// </para>
         /// </remarks>
-        public static string DockerImageTag { get; set; } = null;
+        public static string DockerImageTag { get; private set; } = null;
 
         /// <summary>
         /// Resolves a Docker Image name/tag into the image specification to be actually deployed, taking

@@ -3582,5 +3582,11 @@ echo $? > {cmdFolder}/exit
 
             return SemanticVersion.Parse(version);
         }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

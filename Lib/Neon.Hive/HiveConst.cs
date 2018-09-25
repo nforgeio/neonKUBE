@@ -175,7 +175,7 @@ namespace Neon.Hive
         public const string DashboardSystemFolder = "system";
 
         /// <summary>
-        /// Enumerates the Docker containers that may be deployed to a neonHIVE by name.
+        /// Enumerates the names of the Docker containers that may be deployed to a neonHIVE by name.
         /// </summary>
         public static IEnumerable<string> DockerContainers =>
             new List<string>()
@@ -188,7 +188,7 @@ namespace Neon.Hive
             };
 
         /// <summary>
-        /// Enumerates the Docker services that may be deployed to a neonHIVE by name.
+        /// Enumerates the names of the Docker services that may be deployed to a neonHIVE by name.
         /// </summary>
         public static IEnumerable<string> DockerServices =>
             new List<string>()
