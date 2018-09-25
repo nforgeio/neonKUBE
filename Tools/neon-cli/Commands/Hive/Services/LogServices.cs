@@ -146,21 +146,6 @@ namespace NeonCli
 
                         jsonClient.DefaultRequestHeaders.Add("kbn-xsrf", "true");
 
-                        // Load the [logstash-*] index pattern directly into Elasticsearch.
-
-                        firstManager.Status = "load the [logstash-*] index pattern";
-
-                        retry.InvokeAsync(
-                            async () =>
-                            {
-                                var indexJson = ResourceFiles.Root.GetFolder("Elasticsearch").GetFile("logstash-index-pattern.json").Contents;
-
-                                indexJson = indexJson.Replace("$TIMESTAMP", DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ));
-
-                                await jsonClient.PutAsync($"{baseLogEsDataUri}/.kibana/doc/index-pattern:logstash-*", indexJson);
-
-                            }).Wait();
-
                         // Ensure that Kibana is ready before we submit any API requests.
 
                         firstManager.Status = "wait for kibana";

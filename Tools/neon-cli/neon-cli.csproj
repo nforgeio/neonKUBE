@@ -53,9 +53,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Elasticsearch\logstash-index-pattern.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\Elasticsearch\logstash-template.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
