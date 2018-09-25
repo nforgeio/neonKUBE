@@ -77,5 +77,18 @@ namespace TestCommon
             Assert.Throws<ArgumentException>(() => items.SelectRandom(0));
             Assert.Throws<ArgumentException>(() => items.SelectRandom(5));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void IsEmpty()
+        {
+            // Verify that both reference and value types work.
+
+            Assert.True((new List<string>()).IsEmpty());
+            Assert.True((new List<int>()).IsEmpty());
+
+            Assert.False((new List<string>() { "one", "two" }).IsEmpty());
+            Assert.False((new List<int>() { 1, 2 }).IsEmpty());
+        }
     }
 }
