@@ -1576,6 +1576,27 @@ backend http:{httpRule.Name}
             else
             {
                 // We're going to automatically select the target nodes.
+                //
+                // We're going to try to favor worker nodes that report being
+                // reachable and we're going to sort candidates by the hash of
+                // their node names, to try to select a consistent list of target
+                // swarm nodes that will be used to relay the traffic bridged
+                // from the pets.  This will avoid unnecessary bridge HAProxy
+                // configuration changes, as decribed here:
+                //
+                //      https://github.com/jefflill/NeonForge/issues/349
+                //
+                // The sort-by-hash is a way to consistently "randomize" the targets
+                // without sorting by name which may tend to concentrate traffic to 
+                // nodes having the same function or network subnets (depending on the
+                // hive node naming conventions).  Sorting by hash will tend to spread 
+                // traffic around better.
+                //
+                // We'll fall back to selecting random swarm nodes if none are 
+                // reachable (which should never happen because the [neon-proxy-manager]
+                // has to be running somewhere.
+
+                var targetCandidates = new List<DockerNode>();
 
                 swarmNodes = swarmNodes.Where(n => n.State == "ready").ToList();    // We want only READY Swarm nodes.
 
@@ -1588,20 +1609,40 @@ backend http:{httpRule.Name}
                     // work as possible because they may be busy handling global hive activities,
                     // especially for large hives.
 
-                    foreach (var worker in workers.SelectRandom(settings.BridgeTargetCount))
+                    foreach (var worker in workers)
                     {
-                        bridgeTargets.Add(worker.Addr);
+                        targetCandidates.Add(worker);
                     }
                 }
                 else
                 {
-                    // Otherwise for small hives, we'll select targets from managers
-                    // and workers.
+                    // Otherwise for small hives, we'll select targets from both
+                    // managers and workers.
 
-                    foreach (var node in swarmNodes.SelectRandom(Math.Min(settings.BridgeTargetCount, swarmNodes.Count)))
+                    foreach (var node in swarmNodes)
                     {
-                        bridgeTargets.Add(node.Addr);
+                        targetCandidates.Add(node);
                     }
+                }
+
+                if (targetCandidates.Count == 0)
+                {
+                    // No swarm nodes appear to be ready (which should never happen because this
+                    // program needs to be running somewhere) but we'll select all swarm nodes
+                    // as target candidates just to be safe.
+
+                    foreach (var node in swarmNodes)
+                    {
+                        targetCandidates.Add(node);
+                    }
+                }
+
+                // Semi-randomly select the swarm target nodes by sorting by the hash of the
+                // node name and then taking nodes from the front of the sorted list.
+
+                foreach (var node in targetCandidates.OrderBy(n => NeonHelper.ComputeMD5(n.Hostname)).Take(Math.Min(targetCandidates.Count, settings.BridgeTargetCount)))
+                {
+                    bridgeTargets.Add(node.Addr);
                 }
             }
 
