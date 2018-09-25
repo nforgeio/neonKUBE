@@ -482,5 +482,64 @@ namespace TestCommon
             Assert.Null(NetHelper.GetReachableHost(new string[] { badHost0, badHost1, badHost2 }, ReachableHostMode.ReturnNull));
             Assert.Throws<NetworkException>(() => NetHelper.GetReachableHost(new string[] { badHost0, badHost1, badHost2 }, ReachableHostMode.Throw));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void GetReachableHosts()
+        {
+            //-----------------------------------------------------------------
+            // IP address based hosts.
+
+            
+
+            Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Host);
+            Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Address.ToString());
+            Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }, ReachableHostMode.ReturnFirst).Host);
+
+            // The [192.0.2.0/24] subnet is never supposed to be routable so we'll use 
+            // some addresses in there to simulate offline hosts.
+
+            const string badIP0 = "192.0.2.1";
+            const string badIP1 = "192.0.2.2";
+            const string badIP2 = "192.0.2.3";
+
+            Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", badIP0, badIP1 }).Host);
+            Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { badIP0, "127.0.0.1", badIP1 }).Host);
+            Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { badIP0, badIP1, "127.0.0.1" }).Host);
+
+            // Verify the failure modes.
+
+            Assert.Equal(badIP0, NetHelper.GetReachableHost(new string[] { badIP0, badIP1, badIP2 }).Host);
+            Assert.Equal(badIP0, NetHelper.GetReachableHost(new string[] { badIP0, badIP1, badIP2 }, ReachableHostMode.ReturnFirst).Host);
+            Assert.True( NetHelper.GetReachableHost(new string[] { badIP0, badIP1, badIP2 }, ReachableHostMode.ReturnFirst).Unreachable);
+            Assert.Null(NetHelper.GetReachableHost(new string[] { badIP0, badIP1, badIP2 }, ReachableHostMode.ReturnNull));
+            Assert.Throws<NetworkException>(() => NetHelper.GetReachableHost(new string[] { badIP0, badIP1, badIP2 }, ReachableHostMode.Throw).Host);
+
+            //-----------------------------------------------------------------
+            // Hostname based hosts.
+
+            // Verify that we always return the first host if it's healthy
+            // when we're using [ReachableHostMode.ReturnFirst].
+
+            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }).Host);
+            Assert.Equal("www.google.com", NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }, ReachableHostMode.ReturnFirst).Host);
+            Assert.False(NetHelper.GetReachableHost(new string[] { "www.google.com", "www.microsoft.com", "www.facebook.com" }, ReachableHostMode.ReturnFirst).Unreachable);
+
+            const string badHost0 = "bad0.host.baddomain";
+            const string badHost1 = "bad1.host.baddomain";
+            const string badHost2 = "bad2.host.baddomain";
+
+            Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { "127.0.0.1", badHost0, badHost1 }).Host);
+            Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { badHost0, "127.0.0.1", badHost1 }).Host);
+            Assert.Equal("127.0.0.1", NetHelper.GetReachableHost(new string[] { badHost0, badHost1, "127.0.0.1" }).Host);
+
+            // Verify the failure modes.
+
+            Assert.Equal(badHost0, NetHelper.GetReachableHost(new string[] { badHost0, badHost1, badHost2 }).Host);
+            Assert.Equal(badHost0, NetHelper.GetReachableHost(new string[] { badHost0, badHost1, badHost2 }, ReachableHostMode.ReturnFirst).Host);
+            Assert.True(NetHelper.GetReachableHost(new string[] { badHost0, badHost1, badHost2 }, ReachableHostMode.ReturnFirst).Unreachable);
+            Assert.Null(NetHelper.GetReachableHost(new string[] { badHost0, badHost1, badHost2 }, ReachableHostMode.ReturnNull));
+            Assert.Throws<NetworkException>(() => NetHelper.GetReachableHost(new string[] { badHost0, badHost1, badHost2 }, ReachableHostMode.Throw));
+        }
     }
 }
