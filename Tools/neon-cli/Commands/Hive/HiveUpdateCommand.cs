@@ -208,6 +208,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 ShowStatus  = !Program.Quiet
             };
 
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
+
             var hiveUpdateCount = HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, serviceUpdateParallism: Program.MaxParallel);
 
             // Create another controller to actually scan the hive nodes to
@@ -229,6 +231,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
             };
+
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
 
             var syncLock           = new object();
             var maxUpdates         = 0;
@@ -510,6 +514,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 ShowStatus  = !Program.Quiet
             };
 
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
+
             controller.AddStep("fetch updates",
                 (node, stepDelay) =>
                 {
@@ -604,6 +610,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             };
 
             controller.MaxParallel = maxParallel;
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
 
             var hiveUpdateCount = HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, serviceUpdateParallism: Program.MaxParallel, imageTag: imageTag);
 
@@ -643,6 +650,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 MaxParallel = maxParallel,
                 ShowStatus  = true
             };
+
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
 
             HiveUpdateManager.AddHiveUpdateSteps(hive, controller, out var restartRequired, servicesOnly: true, serviceUpdateParallism: Program.MaxParallel, imageTag: imageTag);
 
@@ -695,6 +704,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
             };
+
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
 
             controller.AddStep("update managers",
                 UpdateDocker,
@@ -798,6 +809,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
             };
+
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
 
             controller.AddStep("update managers",
                 UpdateConsul,
@@ -908,6 +921,8 @@ rm /tmp/consul
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
             };
+
+            controller.SetDefaultRunOptions(RunOptions.FaultOnError);
 
             controller.AddStep("update managers",
                 UpdateVault,

@@ -212,25 +212,25 @@ namespace NeonCli
                 {
                     // List the neonHIVE services actually running and only update those.
 
-                    var services = new HashSet<string>();
-                    var response = node.SudoCommand("docker service ls --format \"{{.Name}}\"");
+                    var runningServices = new HashSet<string>();
+                    var response        = node.SudoCommand("docker service ls --format \"{{.Name}}\"");
 
                     using (var reader = new StringReader(response.OutputText))
                     {
                         foreach (var service in reader.Lines())
                         {
-                            services.Add(service);
+                            runningServices.Add(service);
                         }
                     }
 
-                    foreach (var service in systemServices.Where(s => services.Contains(s)))
+                    foreach (var service in systemServices.Where(s => runningServices.Contains(s)))
                     {
                         var image = GetUpdateImage(hive, componentInfo, service, imageTag);
 
                         if (image != null)
                         {
                             firstManager.Status = $"update: {image}";
-                            node.SudoCommand($"docker service update --image {image} --max-parallelism {serviceUpdateParallism} {service}");
+                            node.SudoCommand($"docker service update --image {image} --update-parallelism {serviceUpdateParallism} {service}");
                             firstManager.Status = string.Empty;
 
                             // Update the service creation scripts on all manager nodes for all built-in 
@@ -246,78 +246,87 @@ namespace NeonCli
                 },
                 node => node == firstManager);
 
-            controller.AddStep("update containers",
-                (node, stepDelay) =>
+            controller.AddGlobalStep("update containers",
+                () =>
                 {
-                    // We'll honor the step delay if the hive doesn't have a registry cache
-                    // so we don't overwhelm the network when pulling images to the nodes.
-
-                    if (!hive.Definition.Docker.RegistryCache)
-                    {
-                        Thread.Sleep(stepDelay);
-                    }
-
-                    // List the neonHIVE containers actually running and only update those.
-                    // Note that we're going to use the local script to start the container
-                    // so we don't need to hardcode the Docker options here.  We won't restart
-                    // the container if the script doesn't exist.
+                    // We're going to update containers on each node, one node at a time
+                    // and then stablize for a period of time before moving on to the 
+                    // next node.  This will help keep clustered applications like HiveMQ
+                    // and databases like Couchbase that are deployed as containers happy
+                    // by not blowing all of the application instances away at the same
+                    // time while updating.
                     //
-                    // Note that we'll update and restart the containers in parallel if the
-                    // hive has a local registry, otherwise we'll just go with the user
-                    // specified parallelism to avoid overwhelming the network with image
-                    // downloads.
+                    // Hopefully, there will be enough time after updating a clustered
+                    // application container for the container to rejoin the cluster
+                    // before we update the next node.
 
-                    // $todo(jeff.lill):
-                    //
-                    // A case could be made for having a central place for generating container
-                    // (and service) scripts for hive setup as well as situations like this.
-                    // It could also be possible then to be able to scan for and repair missing
-                    // or incorrect scripts.
-
-                    var existingContainers = new HashSet<string>();
-                    var response           = node.SudoCommand("docker ps --format \"{{.Names}}\"");
-
-                    using (var reader = new StringReader(response.OutputText))
+                    foreach (var node in hive.Nodes)
                     {
-                        foreach (var container in reader.Lines())
+                        // List the neonHIVE containers actually running and only update those.
+                        // Note that we're going to use the local script to start the container
+                        // so we don't need to hardcode the Docker options here.  We won't restart
+                        // the container if the script doesn't exist.
+                        //
+                        // Note that we'll update and restart the containers in parallel if the
+                        // hive has a local registry, otherwise we'll just go with the user
+                        // specified parallelism to avoid overwhelming the network with image
+                        // downloads.
+
+                        // $todo(jeff.lill):
+                        //
+                        // A case could be made for having a central place for generating container
+                        // (and service) scripts for hive setup as well as situations like this.
+                        // It could also be possible then to be able to scan for and repair missing
+                        // or incorrect scripts.
+
+                        var runningContainers = new HashSet<string>();
+                        var response          = node.SudoCommand("docker ps --format \"{{.Names}}\"");
+
+                        using (var reader = new StringReader(response.OutputText))
                         {
-                            existingContainers.Add(container);
-                        }
-                    }
-
-                    foreach (var container in systemContainers.Where(s => existingContainers.Contains(s)))
-                    {
-                        var image = GetUpdateImage(hive, componentInfo, container, imageTag);
-
-                        if (image != null)
-                        {
-                            var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{container}.sh");
-
-                            if (node.FileExists(scriptPath))
+                            foreach (var container in reader.Lines())
                             {
-                                // The container has a creation script, so update the script, stop/remove the
-                                // container and then run the script to restart the container.
-
-                                UpdateStartScript(node, container, $"{image}");
-
-                                node.Status = $"stop: {container}";
-                                node.DockerCommand("docker", "rm", "--force", container);
-
-                                node.Status = $"restart: {container}";
-                                node.SudoCommand(scriptPath);
-                            }
-                            else
-                            {
-                                var warning = $"WARNING: Container script [{scriptPath}] is not present on this node so we can't update the [{container}] container.";
-
-                                node.Status = warning;
-                                node.Log(warning);
-                                Thread.Sleep(TimeSpan.FromSeconds(5));
+                                runningContainers.Add(container);
                             }
                         }
+
+                        foreach (var container in systemContainers.Where(s => runningContainers.Contains(s)))
+                        {
+                            var image = GetUpdateImage(hive, componentInfo, container, imageTag);
+
+                            if (image != null)
+                            {
+                                var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{container}.sh");
+
+                                if (node.FileExists(scriptPath))
+                                {
+                                    // The container has a creation script, so update the script, stop/remove the
+                                    // container and then run the script to restart the container.
+
+                                    UpdateStartScript(node, container, $"{image}");
+
+                                    node.Status = $"stop: {container}";
+                                    node.DockerCommand("docker", "rm", "--force", container);
+
+                                    node.Status = $"restart: {container}";
+                                    node.SudoCommand(scriptPath);
+                                }
+                                else
+                                {
+                                    var warning = $"WARNING: Container script [{scriptPath}] is not present on this node so we can't update the [{container}] container.";
+
+                                    node.Status = warning;
+                                    node.Log(warning);
+                                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                                }
+                            }
+                        }
+
+                        node.Status = $"stablizing ({Program.WaitSeconds}s)";
+                        Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
+                        node.Status = "READY";
                     }
-                },
-                noParallelLimit: hive.Definition.Docker.RegistryCache);
+                });
 
             return pendingUpdateCount;
         }

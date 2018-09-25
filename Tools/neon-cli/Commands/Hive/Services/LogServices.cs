@@ -333,7 +333,7 @@ namespace NeonCli
                 AddContainerStartSteps(steps, esNode, containerName, Hive.Definition.Log.EsImage,
                     new CommandBundle(
                         "docker run",
-                        "--name", esNode.Name,
+                        "--name", containerName,
                         "--detach",
                         "--restart", "always",
                         "--volume", "/etc/neon/host-env:/etc/neon/host-env:ro",
