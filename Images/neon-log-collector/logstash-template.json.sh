@@ -8,12 +8,6 @@ mkdir -p /etc/td-agent/template
 chmod 600 /etc/td-agent
 chmod 600 /etc/td-agent/template
 
-# ******** WARNING ********
-#
-# This JSON content MUST MATCH the [neon-cli] resource file located at"
-#
-#       $\Tools\neon-cli\Resources\Elasticsearch\logstash-template.json
-
 cat <<EOF > /etc/td-agent/template/logstash-template.json
 {
   "template": "logstash-*",
@@ -161,6 +155,40 @@ cat <<EOF > /etc/td-agent/template/logstash-template.json
         "node_role": {
           "type": "keyword"
         },
+        "num": {
+          "properties": {
+            "0": {
+              "type": "double"
+            },
+            "1": {
+              "type": "double"
+            },
+            "2": {
+              "type": "double"
+            },
+            "3": {
+              "type": "double"
+            },
+            "4": {
+              "type": "double"
+            },
+            "5": {
+              "type": "double"
+            },
+            "6": {
+              "type": "double"
+            },
+            "7": {
+              "type": "double"
+            },
+            "8": {
+              "type": "double"
+            },
+            "9": {
+              "type": "double"
+            }
+          }
+        },
         "service": {
           "type": "keyword"
         },
@@ -172,6 +200,40 @@ cat <<EOF > /etc/td-agent/template/logstash-template.json
         },
         "tag": {
           "type": "keyword"
+        },
+        "txt": {
+          "properties": {
+            "0": {
+              "type": "keyword"
+            },
+            "1": {
+              "type": "keyword"
+            },
+            "2": {
+              "type": "keyword"
+            },
+            "3": {
+              "type": "keyword"
+            },
+            "4": {
+              "type": "keyword"
+            },
+            "5": {
+              "type": "keyword"
+            },
+            "6": {
+              "type": "keyword"
+            },
+            "7": {
+              "type": "keyword"
+            },
+            "8": {
+              "type": "keyword"
+            },
+            "9": {
+              "type": "keyword"
+            }
+          }
         },
         "proxy": {
           "properties": {
