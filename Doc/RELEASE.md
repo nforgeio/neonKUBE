@@ -1,6 +1,6 @@
 # Steps to publish the project NuGet packages:
 
-## Prepare the Release
+## Prepare
 
 1. Merge all desired changes into the **MASTER** branch.
 
@@ -14,7 +14,7 @@
 
 6. Run all unit tests against the test hive and fix any bugs until all tests pass.
 
-## Publish the Release 
+## Publish 
 
 1. Select the **PROD** branch.  Merge from **MASTER**.
 
