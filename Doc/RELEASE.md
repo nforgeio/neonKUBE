@@ -1,6 +1,22 @@
 # Steps to publish the project NuGet packages:
 
-1. Select the **PROD** branch.
+## Prepare the Release
+
+1. Merge all desired changes into the **MASTER** branch.
+
+2. Manually clean and rebuild the entire solution: RELEASE configuration.
+
+3. Make sure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
+
+4. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+
+5. Deploy a test hive.
+
+6. Run all unit tests against the test hive and fix any bugs until all tests pass.
+
+## Publish the Release 
+
+1. Select the **PROD** branch.  Merge from **MASTER**.
 
 2. Open the **Properties** each of the library projects and update the **Release notes**.
 
