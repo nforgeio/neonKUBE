@@ -646,6 +646,38 @@ namespace Neon.Xunit
                     throw new InvalidOperationException("Cannot reset the hive because it has more than one node.  Testing on multi-node hives is not allowed as a safety measure to avoid accidentially wiping out a production hive.");
                 }
 
+                // $hack(jeff.lill):
+                //
+                // I've seen situations where leaving the swarm below when one or more stacks with networks
+                // are still running, effectively orphans these networks.  The networks can be listed but
+                // cannot be deleted or purged.  This can only be corrected by resetting the local Docker
+                // instance running on the unit testing machine.
+                //
+                // I'm going to work around this by listing and explicitly removing all stacks before
+                // leaving swarm mode.
+
+                result = DockerExecute("stack", "ls", "--format", "{{.ID}}");
+
+                var stackIDs = new List<string>();
+
+                using (var reader = new StringReader(result.OutputText))
+                {
+                    foreach (var line in reader.Lines(ignoreBlank: true))
+                    {
+                        stackIDs.Add(line);
+                    }
+                }
+
+                if (stackIDs.Count > 0)
+                {
+                    result = DockerExecute("stack", "rm", stackIDs);
+
+                    if (result.ExitCode != 0)
+                    {
+                        throw new Exception(result.AllText);
+                    }
+                }
+
                 // Leave the swarm, effectively reseting all swarm state.
 
                 result = DockerExecute(new object[] { "swarm", "leave", "--force" });
