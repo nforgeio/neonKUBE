@@ -117,7 +117,16 @@ namespace Neon.Xunit
                 }
             }
 
-            // Start the container.
+            // Pull and then start the container.
+
+            var argsString = NeonHelper.NormalizeExecArgs("pull", image);
+
+            result = NeonHelper.ExecuteCapture($"docker", argsString);
+
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Cannot launch container [{image}]: {result.ErrorText}");
+            }
 
             var extraArgs = new List<string>();
 
@@ -136,7 +145,7 @@ namespace Neon.Xunit
                 }
             }
 
-            var argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, extraArgs.ToArray(), image, containerArgs);
+            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, extraArgs.ToArray(), image, containerArgs);
 
             result = NeonHelper.ExecuteCapture($"docker", argsString);
 
