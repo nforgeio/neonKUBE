@@ -59,10 +59,10 @@ namespace Xunit
         /// </summary>
         /// <param name="data">The file name</param>
         /// <param name="filename">The file data.</param>
-        /// <returns>The <see cref="Xunit.TempFolder"/>.</returns>
+        /// <returns>The <see cref="TempFolder"/>.</returns>
         /// <remarks>
         /// <note>
-        /// Ensure that the <see cref="Xunit.TempFolder"/> returned is disposed so it and
+        /// Ensure that the <see cref="TempFolder"/> returned is disposed so it and
         /// any files within will be deleted.
         /// </note>
         /// </remarks>
@@ -279,6 +279,7 @@ namespace Xunit
         /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
+        /// <param name="comparer">The equality comparer to be used.</param>
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
         public static void AssertEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
@@ -318,6 +319,7 @@ namespace Xunit
         /// <typeparam name="TValue">Specifies the dictionary value type.</typeparam>
         /// <param name="expected">The expected items.</param>
         /// <param name="dictionary">The collection being tested.</param>
+        /// <param name="comparer">The equality comparer to be used.</param>
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
         public static void AssertNotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
