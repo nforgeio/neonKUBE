@@ -69,7 +69,7 @@ namespace NeonCli
 
                     // Deploy: neon-dns-mon
 
-                    StartService("neon-dns-mon", Hive.Definition.DnsMonImage,
+                    StartService("neon-dns-mon", Hive.Definition.Image.DnsMon,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-dns-mon",
@@ -85,7 +85,7 @@ namespace NeonCli
 
                     // Deploy: neon-dns
 
-                    StartService("neon-dns", Hive.Definition.DnsImage,
+                    StartService("neon-dns", Hive.Definition.Image.Dns,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-dns",
@@ -122,7 +122,7 @@ namespace NeonCli
                         unsealSecretOption = "--secret=neon-hive-manager-vaultkeys";
                     }
 
-                    StartService("neon-hive-manager", Hive.Definition.HiveManagerImage,
+                    StartService("neon-hive-manager", Hive.Definition.Image.HiveManager,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-hive-manager",
@@ -168,7 +168,7 @@ namespace NeonCli
 
                     // Deploy the proxy manager service.
 
-                    StartService("neon-proxy-manager", Hive.Definition.ProxyManagerImage,
+                    StartService("neon-proxy-manager", Hive.Definition.Image.ProxyManager,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-proxy-manager",
@@ -296,7 +296,7 @@ namespace NeonCli
 
                     // Deploy: neon-proxy-public
 
-                    StartService("neon-proxy-public", Hive.Definition.ProxyImage,
+                    StartService("neon-proxy-public", Hive.Definition.Image.Proxy,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-proxy-public",
@@ -323,7 +323,7 @@ namespace NeonCli
 
                     // Deploy: neon-proxy-private
 
-                    StartService("neon-proxy-private", Hive.Definition.ProxyImage,
+                    StartService("neon-proxy-private", Hive.Definition.Image.Proxy,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-proxy-private",
@@ -551,7 +551,7 @@ namespace NeonCli
                 //
                 //      https://github.com/jefflill/NeonForge/issues/319
 
-                StartContainer(node, "neon-hivemq", Hive.Definition.HiveMQ.RabbitMQImage, RunOptions.FaultOnError,
+                StartContainer(node, "neon-hivemq", Hive.Definition.Image.HiveMQ, RunOptions.FaultOnError,
                     new CommandBundle(
                         "docker run",
                         "--detach",
@@ -628,7 +628,7 @@ namespace NeonCli
 
             if (node.Metadata.IsPet)
             {
-                StartContainer(node, "neon-proxy-public-bridge", Hive.Definition.ProxyImage, RunOptions.FaultOnError,
+                StartContainer(node, "neon-proxy-public-bridge", Hive.Definition.Image.Proxy, RunOptions.FaultOnError,
                     new CommandBundle(
                         "docker run",
                         "--detach",
@@ -648,7 +648,7 @@ namespace NeonCli
                         "--restart", "always",
                         ImagePlaceholderArg));
 
-                StartContainer(node, "neon-proxy-private-bridge", Hive.Definition.ProxyImage, RunOptions.FaultOnError,
+                StartContainer(node, "neon-proxy-private-bridge", Hive.Definition.Image.Proxy, RunOptions.FaultOnError,
                     new CommandBundle(
                         "docker run",
                         "--detach",

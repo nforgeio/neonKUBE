@@ -197,7 +197,7 @@ namespace NeonCli
                 () =>
                 {
                     firstManager.Status = "update: neon-hive-manager";
-                    firstManager.SudoCommand($"docker service update --image {Program.ResolveDockerImage(Hive.Definition.HiveManagerImage)} --secret-add neon-ssh-credentials neon-hive-manager");
+                    firstManager.SudoCommand($"docker service update --image {Program.ResolveDockerImage(Hive.Definition.Image.HiveManager)} --secret-add neon-ssh-credentials neon-hive-manager");
                     firstManager.Status = string.Empty;
                 });
 
@@ -226,7 +226,7 @@ namespace NeonCli
                         "--constraint", "node.role==manager",
                         "--replicas", 1,
                         "--restart-delay", Hive.Definition.Docker.RestartDelay,
-                        Program.ResolveDockerImage(Hive.Definition.HiveManagerImage));
+                        Program.ResolveDockerImage(Hive.Definition.Image.HiveManager));
 
                     var createScript = bundle.ToBash();
 

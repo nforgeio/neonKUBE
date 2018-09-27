@@ -33,13 +33,12 @@ namespace Neon.Hive
     /// </summary>
     public class HiveMQOptions
     {
-        private const string defaultRamLimit         = "250MB";
-        private const string defaultCompiledRamLimit = "500MB";
+        private const string defaultRamLimit         = "350MB";
+        private const string defaultCompiledRamLimit = "600MB";
         private const string defaultRamHighWatermark = "0.50";
         private const string defaultPassword         = HiveConst.DefaultPassword;
         private const bool   defaultPrecompile       = false;
         private const string defaultPartitionMode    = "autoheal";
-        private const string defaultRabbitMQImage    = HiveConst.NeonPublicRegistry + "/neon-hivemq:latest";
 
         private string ramLimit = null;
 
@@ -194,14 +193,6 @@ namespace Neon.Hive
         public string PartitionMode { get; set; } = defaultPartitionMode;
 
         /// <summary>
-        /// The Docker image to be used to provision the <b>neon-hivemq</b> service.
-        /// This defaults to <b>nhive/neon-hivemq:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "RabbitMQImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultRabbitMQImage)]
-        public string RabbitMQImage { get; set; } = defaultRabbitMQImage;
-
-        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -216,7 +207,6 @@ namespace Neon.Hive
             AppPassword      = AppPassword ?? defaultPassword;
             PartitionMode    = PartitionMode ?? defaultPartitionMode;
             PartitionMode    = PartitionMode.ToLowerInvariant();
-            RabbitMQImage    = RabbitMQImage ?? defaultRabbitMQImage;
 
             if (string.IsNullOrWhiteSpace(ErlangCookie))
             {

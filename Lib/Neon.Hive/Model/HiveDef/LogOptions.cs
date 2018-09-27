@@ -29,12 +29,7 @@ namespace Neon.Hive
     public class LogOptions
     {
         private const bool      defaultEnabled         = true;
-        private const string    defaultHostImage       = HiveConst.NeonPublicRegistry + "/neon-log-host:latest";
-        private const string    defaultCollectorImage  = HiveConst.NeonPublicRegistry + "/neon-log-collector:latest";
-        private const string    defaultEsImage         = HiveConst.NeonPublicRegistry + "/elasticsearch:latest";
-        private const string    defaultEsMemory        = "2GB";
-        private const string    defaultKibanaImage     = HiveConst.NeonPublicRegistry + "/kibana:latest";
-        private const string    defaultMetricbeatImage = HiveConst.NeonPublicRegistry + "/metricbeat:latest";
+        private const string    defaultEsMemory        = "1.5GB";
         private const int       defaultRetentionDays   = 14;
         
         /// <summary>
@@ -53,17 +48,9 @@ namespace Neon.Hive
         public bool Enabled { get; set; } = defaultEnabled;
 
         /// <summary>
-        /// Identifies the <b>Elasticsearch</b> container image to be deployed on the hive to persist
-        /// hive log events.  This defaults to <b>nhive/elasticsearch:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "EsImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultEsImage)]
-        public string EsImage { get; set; } = defaultEsImage;
-
-        /// <summary>
         /// The amount of RAM to dedicate to each hive log related Elasticsearch container.
         /// This can be expressed as the number of bytes or a number with one of these unit
-        /// suffixes: <b>B, K, KB, M, MB, G, or GB</b>.  This defaults to <b>2GB</b>.
+        /// suffixes: <b>B, K, KB, M, MB, G, or GB</b>.  This defaults to <b>1.5GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "EsMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultEsMemory)]
@@ -98,38 +85,6 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Identifies the <b>Kibana</b> container image to be deployed on the hive to present
-        /// the hive logging user interface.  This defaults to <b>nhive/kibana:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "KibanaImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultKibanaImage)]
-        public string KibanaImage { get; set; } = defaultKibanaImage;
-
-        /// <summary>
-        /// Identifies the <b>td-agent</b> service image to be run locally on every manager and worker node.  This container
-        /// acts as the entrypoint to the hive's log aggregation pipeline.  This defaults to <b>nhive/neon-log-host:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "HostImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultHostImage)]
-        public string HostImage { get; set; } = defaultHostImage;
-
-        /// <summary>
-        /// Identifies the <b>td-agent</b> container image to be run on the hive, acting as the downstream event 
-        /// aggregator for all of the hive nodes.  This defaults to <b>nhive/neon-log-collector:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "CollectorImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultCollectorImage)]
-        public string CollectorImage { get; set; } = defaultCollectorImage;
-
-        /// <summary>
-        /// Identifies the <b>Elastic Metricbeat</b> container image to be run on each node of the hive to capture
-        /// Docker host node metrics.  This defaults to <b>nhive/metricbeat:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "MetricbeatImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultMetricbeatImage)]
-        public string MetricbeatImage { get; set; } = defaultMetricbeatImage;
-
-        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -150,26 +105,6 @@ namespace Neon.Hive
             if (esNodeCount == 0)
             {
                 throw new HiveDefinitionException($"Invalid Log Configuration: At least one node must be labeled with [{NodeLabels.LabelLogEsData}=true].");
-            }
-
-            if (string.IsNullOrWhiteSpace(EsImage))
-            {
-                throw new HiveDefinitionException($"Missing [{nameof(LogOptions)}.{nameof(EsImage)} setting.");
-            }
-
-            if (string.IsNullOrWhiteSpace(KibanaImage))
-            {
-                throw new HiveDefinitionException($"Missing [{nameof(LogOptions)}.{nameof(KibanaImage)} setting.");
-            }
-
-            if (string.IsNullOrWhiteSpace(HostImage))
-            {
-                throw new HiveDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(HostImage)}={HostImage}].");
-            }
-
-            if (string.IsNullOrWhiteSpace(CollectorImage))
-            {
-                throw new HiveDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(CollectorImage)}={CollectorImage}].");
             }
 
             if (RetentionDays <= 0)

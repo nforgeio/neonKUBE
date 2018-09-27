@@ -315,7 +315,7 @@ namespace NeonCli
 
                 steps.Add(volumeCommand);
 
-                AddContainerStartSteps(steps, esNode, containerName, Hive.Definition.Log.EsImage,
+                AddContainerStartSteps(steps, esNode, containerName, Hive.Definition.Image.Elasticsearch,
                     new CommandBundle(
                         "docker run",
                         "--name", containerName,
@@ -453,7 +453,7 @@ namespace NeonCli
             // This is super simple: All we need to do is to launch the Kibana 
             // service on the hive managers.
 
-            AddServiceStartSteps(steps, "neon-log-kibana", Hive.Definition.Log.KibanaImage,
+            AddServiceStartSteps(steps, "neon-log-kibana", Hive.Definition.Image.Kibana,
                 new CommandBundle(
                     "docker service create",
                     "--name", "neon-log-kibana",
@@ -479,7 +479,7 @@ namespace NeonCli
         {
             // Add the steps to create the service.
 
-            AddServiceStartSteps(steps, "neon-log-collector", Hive.Definition.Log.CollectorImage,
+            AddServiceStartSteps(steps, "neon-log-collector", Hive.Definition.Image.LogCollector,
                 new CommandBundle(
                     "docker service create",
                     "--name", "neon-log-collector",
@@ -536,7 +536,7 @@ namespace NeonCli
         {
             Thread.Sleep(stepDelay);
 
-            StartContainer(node, "neon-log-host", Hive.Definition.Log.HostImage, RunOptions.FaultOnError,
+            StartContainer(node, "neon-log-host", Hive.Definition.Image.LogHost, RunOptions.FaultOnError,
                 new CommandBundle(
                     "docker run",
                     "--name", "neon-log-host",
@@ -548,7 +548,7 @@ namespace NeonCli
                     "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
                     ImagePlaceholderArg));
 
-            StartContainer(node, "neon-log-metricbeat", Hive.Definition.Log.MetricbeatImage, RunOptions.FaultOnError,
+            StartContainer(node, "neon-log-metricbeat", Hive.Definition.Image.Metricbeat, RunOptions.FaultOnError,
                 new CommandBundle(
                     "docker run",
                     "--name", "neon-log-metricbeat",

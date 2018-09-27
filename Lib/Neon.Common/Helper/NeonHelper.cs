@@ -234,8 +234,8 @@ namespace Neon.Common
 
         /// <summary>
         /// Parses a floating point count string that may include one of the following unit
-        /// suffixes: <b>B</b>, <b>K</b>, <b>KB</b>, <b>M</b>, <b>MB</b>, <b>G</b>, 
-        /// or <b>GB</b>.
+        /// suffixes: <b>B</b>, <b>K</b>, <b>KB</b>, <b>M</b>, <b>MB</b>, <b>G</b>,
+        /// <b>GB</b>, <b>T</b>, or <b>TB</b>.
         /// </summary>
         /// <param name="input">The input string.</param>
         /// <param name="value">Returns as the output value.</param>

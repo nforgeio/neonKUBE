@@ -3291,7 +3291,7 @@ echo $? > {cmdFolder}/exit
             // also determine Docker image being used so we can restart with
             // the same one (if it has been changed since hive deployment).
 
-            var image    = Hive.Definition.Docker.RegistryCacheImage;   // Default to this if there's no container.
+            var image    = Hive.Definition.Image.RegistryCache;    // Default to this if there's no container.
             var response = DockerCommand(RunOptions.None, "docker", "ps", "-a", "--filter", "name=neon-registry-cache", "--format", "{{.Image}}");
 
             if (response.ExitCode != 0)

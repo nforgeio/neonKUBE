@@ -43,25 +43,17 @@ namespace Neon.Hive
         /// </summary>
         public const string VirtualSwarmManagerName = "swarm-manager";
 
-        private const string        defaultDatacenter           = "DATACENTER";
-        private const string        defaultProvisioner          = "unknown";
-        private readonly string[]   defaultTimeSources          = new string[] { "pool.ntp.org" };
-        private const string        defaultProxyImage           = HiveConst.NeonPublicRegistry + "/neon-proxy:latest";
-        private const string        defaultProxyVaultImage      = HiveConst.NeonPublicRegistry + "/neon-proxy-vault:latest";
-        private const string        defaultProxyManagerImage    = HiveConst.NeonPublicRegistry + "/neon-proxy-manager:latest";
-        private const string        defaultHiveManagerImage     = HiveConst.NeonPublicRegistry + "/neon-hive-manager:latest";
-        private const string        defaultDnsImage             = HiveConst.NeonPublicRegistry + "/neon-dns:latest";
-        private const string        defaultDnsMonImage          = HiveConst.NeonPublicRegistry + "/neon-dns-mon:latest";
-        private const string        defaultVarnishImage         = HiveConst.NeonPublicRegistry + "/neon-varnish:latest";
-        private const string        defaultSecretRetrieverImage = HiveConst.NeonPublicRegistry + "/neon-secret-retriever:latest";
-        private const string        defaultDrivePrefix          = "sd";
-        private const int           defaultStepStaggerSeconds   = 5;
-        private const bool          defaultAllowUnitTesting     = false;
+        private const string defaultDatacenter = "DATACENTER";
+        private const string defaultProvisioner = "unknown";
+        private readonly string[] defaultTimeSources = new string[] { "pool.ntp.org" };
+        private const string defaultDrivePrefix = "sd";
+        private const int defaultStepStaggerSeconds = 5;
+        private const bool defaultAllowUnitTesting = false;
 
         /// <summary>
         /// Regex for verifying hive names for hosts, routes, groups, etc.
         /// </summary>
-        public static Regex NameRegex { get; private set; }    = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
+        public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Regex for verifying DNS hostnames.
@@ -437,6 +429,13 @@ namespace Neon.Hive
         public DockerOptions Docker { get; set; } = new DockerOptions();
 
         /// <summary>
+        /// Describes the Docker images to be used when deploying hive components.
+        /// </summary>
+        [JsonProperty(PropertyName = "Image", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public ImageOptions Image { get; set;} = new ImageOptions();
+
+        /// <summary>
         /// Describes the hive's network configuration.
         /// </summary>
         [JsonProperty(PropertyName = "Network", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -491,70 +490,6 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "HiveMQ", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public HiveMQOptions HiveMQ{ get; set; } = new HiveMQOptions();
-
-        /// <summary>
-        /// The Docker image to be used to provision public and private proxies and proxy bridges.
-        /// This defaults to <b>nhive/neon-proxy:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "ProxyImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultProxyImage)]
-        public string ProxyImage { get; set; } = defaultProxyImage;
-
-        /// <summary>
-        /// The Docker image to be used to provision HashiCorp Vault proxies.
-        /// This defaults to <b>nhive/neon-proxy-vault:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "ProxyVaultImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultProxyVaultImage)]
-        public string ProxyVaultImage { get; set; } = defaultProxyVaultImage;
-
-        /// <summary>
-        /// The Docker image to be used to provision the <b>neon-proxy-manager</b>
-        /// service.   This defaults to <b>nhive/neon-proxy-manager:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "ProxyManagerImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultProxyManagerImage)]
-        public string ProxyManagerImage { get; set; } = defaultProxyManagerImage;
-
-        /// <summary>
-        /// The Docker image to be used to provision the <b>neon-hive-manager</b>
-        /// service.   This defaults to <b>nhive/neon-hive-manager:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "HiveManagerImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultHiveManagerImage)]
-        public string HiveManagerImage { get; set; } = defaultHiveManagerImage;
-
-        /// <summary>
-        /// The Docker image to be used to provision the <b>neon-dns</b> service.
-        /// This defaults to <b>nhive/neon-dns:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "DnsImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultDnsImage)]
-        public string DnsImage { get; set; } = defaultDnsImage;
-
-        /// <summary>
-        /// The Docker image to be used to provision the <b>neon-dns-mon</b> service.
-        /// This defaults to <b>nhive/neon-dns-mon:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "DnsMonImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultDnsMonImage)]
-        public string DnsMonImage { get; set; } = defaultDnsMonImage;
-
-        /// <summary>
-        /// The Docker image to be used to provision the <b>neon-varnish</b> service.
-        /// This defaults to <b>nhive/neon-varnish:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "VarnishImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultVarnishImage)]
-        public string VarnishImage { get; set; } = defaultVarnishImage;
-
-        /// <summary>
-        /// The Docker image to be used to retrieve Docker secrets.
-        /// This defaults to <b>nhive/neon-secret-retriever:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "SecretRetrieverImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultSecretRetrieverImage)]
-        public string SecretRetrieverImage { get; set; } = defaultSecretRetrieverImage;
 
         /// <summary>
         /// Describes the Docker host nodes in the hive.
@@ -766,30 +701,22 @@ namespace Neon.Hive
         [Pure]
         public void Validate()
         {
-            Provisioner       = Provisioner ?? defaultProvisioner;
-            DrivePrefix       = DrivePrefix ?? defaultDrivePrefix;
-            Setup             = Setup ?? new SetupOptions();
-            Hosting           = Hosting ?? new HostingOptions();
-            Vpn               = Vpn ?? new VpnOptions();
-            HiveNode          = HiveNode ?? new HiveNodeOptions();
-            Docker            = Docker ?? new DockerOptions();
-            Network           = Network ?? new NetworkOptions();
-            Consul            = Consul ?? new ConsulOptions();
-            Vault             = Vault ?? new VaultOptions();
-            Log               = Log ?? new LogOptions();
-            Dashboard         = Dashboard ?? new DashboardOptions();
-            HiveFS              = HiveFS ?? new HiveFSOptions();
-            Varnish           = Varnish ?? new VarnishOptions();
-            HiveMQ            = HiveMQ ?? new HiveMQOptions();
-
-            ProxyImage           = ProxyImage ?? defaultProxyImage;
-            ProxyVaultImage      = ProxyVaultImage ?? defaultProxyVaultImage;
-            ProxyManagerImage    = ProxyManagerImage ?? defaultProxyManagerImage;
-            HiveManagerImage     = HiveManagerImage ?? defaultHiveManagerImage;
-            DnsImage             = DnsImage ?? defaultDnsImage;
-            DnsMonImage          = DnsMonImage ?? defaultDnsMonImage;
-            VarnishImage         = VarnishImage ?? defaultVarnishImage;
-            SecretRetrieverImage = SecretRetrieverImage ?? defaultSecretRetrieverImage;
+            Provisioner = Provisioner ?? defaultProvisioner;
+            DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
+            Setup       = Setup ?? new SetupOptions();
+            Hosting     = Hosting ?? new HostingOptions();
+            Vpn         = Vpn ?? new VpnOptions();
+            HiveNode    = HiveNode ?? new HiveNodeOptions();
+            Docker      = Docker ?? new DockerOptions();
+            Image       = Image ?? new ImageOptions();
+            Network     = Network ?? new NetworkOptions();
+            Consul      = Consul ?? new ConsulOptions();
+            Vault       = Vault ?? new VaultOptions();
+            Log         = Log ?? new LogOptions();
+            Dashboard   = Dashboard ?? new DashboardOptions();
+            HiveFS      = HiveFS ?? new HiveFSOptions();
+            Varnish     = Varnish ?? new VarnishOptions();
+            HiveMQ      = HiveMQ ?? new HiveMQOptions();
 
             Setup.Validate(this);
             Network.Validate(this);
@@ -797,6 +724,7 @@ namespace Neon.Hive
             Vpn.Validate(this);
             HiveNode.Validate(this);
             Docker.Validate(this);
+            Image.Validate(this);
             Consul.Validate(this);
             Vault.Validate(this);
             Log.Validate(this);

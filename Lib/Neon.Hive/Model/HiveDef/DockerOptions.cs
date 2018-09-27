@@ -31,7 +31,6 @@ namespace Neon.Hive
     {
         private const string    defaultLogOptions         = "--log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true";
         private const bool      defaultRegistryCache      = true;
-        private const string    defaultRegistryCacheImage = HiveConst.NeonPublicRegistry + "/neon-registry-cache:latest";
         private const bool      defaultUsernsRemap        = true;
         private const bool      defaultExperimental       = false;
 
@@ -134,14 +133,6 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "RegistryCache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultRegistryCache)]
         public bool RegistryCache { get; set; } = defaultRegistryCache;
-
-        /// <summary>
-        /// Optionally specifies the Docker image to be used to deploy the registry cache.
-        /// This defaults to <b>nhive/neon-registry-cache:latest</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "RegistryCacheImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultRegistryCacheImage)]
-        public string RegistryCacheImage { get; set; } = defaultRegistryCacheImage;
 
         /// <summary>
         /// <para>

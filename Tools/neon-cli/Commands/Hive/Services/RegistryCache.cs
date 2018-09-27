@@ -152,7 +152,7 @@ namespace NeonCli
                                 registry = "registry-1.docker.io";
                             }
 
-                            StartContainer(node, "neon-registry-cache", Hive.Definition.Docker.RegistryCacheImage, RunOptions.FaultOnError | Hive.SecureRunOptions,
+                            StartContainer(node, "neon-registry-cache", Hive.Definition.Image.RegistryCache, RunOptions.FaultOnError | Hive.SecureRunOptions,
                                 new CommandBundle(
                                     "docker run",
                                     "--name", "neon-registry-cache",

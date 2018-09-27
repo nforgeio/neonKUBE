@@ -89,15 +89,6 @@ USAGE:
     //
     //  AllowUnitTesting  Optionally enable unit testing on this hive.  
     //                    This defaults to [false]. 
-    //
-    //  These properties specify the Docker image to be deployed for various
-    //  hive level services.  The reasonable default values for each are
-    //  shown on the right.
-    //
-    //  ProxyImage              nhive/neon-proxy:latest
-    //  ProxyVaultImage         nhive/neon-proxy-vault:latest
-    //  ProxyManagerImage       nhive/neon-proxy-manager:latest
-    //  HiveManagerImage        nhive/neon-hive-manager:latest
 
     ""Name"": ""my-hive"",
     ""Datacenter"": ""Seattle"",
@@ -343,6 +334,62 @@ USAGE:
         ""LogOptions"": ""--log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true""
     },
 
+    // Docker imager overrides.  You can use this property to override the Docker images
+    // that will be deployed to a hive.  You should rarely need to override these but
+    // this can be handy for neonHIVE development and testing purposes or to workaround
+    // some classes of problems.
+
+    ""Image"": {
+
+        //  Elasticsearch         The [Elasticsearch] Docker image to be used
+        //                        to persist hive log events.  This defaults to 
+        //                        [nhive/elasticsearch:latest].
+        //
+        //  Kibana                The [Kibana] Docker image to be used to present the
+        //                        hive log user interface.  This defaults to
+        //                        [nhive/kibana:latest].
+        //
+        //  MetricBeat            Identifies the [Elastic Metricbeat] container image 
+        //                        to be run as a service on every node of the hive to
+        //                        capture Docker host node metrics.  This defaults to
+        //                        [nhive/metricbeat:latest].
+		//
+        //  LogHost               The Docker image to be run as a local container on
+        //                        every node to forward host log events to the hive
+        //                        log aggregator.  This defaults to
+        //                        [nhive/neon-log-host:latest].
+        //
+        //  LogCollector          The Docker image to be run as a service on the 
+        //                        hive that aggregates log events from the node
+        //                        log forwarders and pushes them into Elasticsearch.
+        //                        This defaults to  [nhive/neon-log-collector:latest].
+		//
+        // 	HiveMQ                The Docker image to be used to provision the [neon-hivemq] 
+		//                        cluster nodes.  This defaults to [nhive/neon-hivemq:latest].
+		//
+		//	Proxy			      The Docker image to be used to provision public and private 
+		//                        proxies and proxy bridges on hive pets.  This defaults to 
+		//						  [nhive/neon-proxy:latest].
+		//
+		//	ProxyVault			  The Docker image to be used to provision HashiCorp Vault proxies.
+        //						  This defaults to [nhive/neon-proxy-vault:latest].
+		//
+		//	ProxyManager		  The Docker image to be used to provision the <b>neon-proxy-manager</b>
+        //					      service.   This defaults to [nhive/neon-proxy-manager:latest].
+		//
+		//	HiveManager           The Docker image to be used to provision the [neon-hive-manager]
+        //					      service.   This defaults to [nhive/neon-hive-manager:latest].
+		//
+		//	RegistryCache		  The Docker image to be used to deploy the registry cache.
+        //                        This defaults to [nhive/neon-registry-cache:latest].
+		//
+		//  Dns					  The Docker image to be used to provision the [neon-dns] service.
+        //                        This defaults to [nhive/neon-dns:latest].
+		//
+		//  DnsMon				  The Docker image to be used to provision the [>neon-dns-mon] service.
+        //                        This defaults to [nhive/neon-dns-mon:latest].
+    },
+
     // Hive Network options:
 
     ""Network"": {
@@ -468,28 +515,16 @@ USAGE:
         //  Enabled               Indicates that the hive logging pipeline will be enabled.
         //                        This defaults to [true].
         //
-        //  EsImage               The [Elasticsearch] Docker image to be used
-        //                        to persist hive log events.  This defaults to 
-        //                        [nhive/elasticsearch:latest].
-        //
+        //                        WARNING: Don't disable this unless you really know what 
+        //                                 you're doing and you want to end up with a
+        //                                 functional hive
+
+        ""Enabled"": true
+
         //  EsMemory              The amount of RAM to dedicate to each hive log
         //                        related Elasticsearch container.  This can be expressed
         //                        as ### or ###B (bytes), ###K (kilobytes), ###M (megabytes),
-        //                        or ###G (gigabytes).  This defaults to 2G.
-        //
-        //  KibanaImage           The [Kibana] Docker image to be used to present the
-        //                        hive log user interface.  This defaults to
-        //                        [nhive/kibana:latest].
-        //
-        //  HostImage             The Docker image to be run as a local container on
-        //                        every node to forward host log events to the hive
-        //                        log aggregator.  This defaults to
-        //                        [nhive/neon-log-host:latest].
-        //
-        //  CollectorImage        The Docker image to be run as a service on the 
-        //                        hive that aggregates log events from the node
-        //                        log forwarders and pushes them into Elasticsearch.
-        //                        This defaults to  [nhive/neon-log-collector:latest].
+        //                        or ###G (gigabytes).  This defaults to 1.5G.
         //
         //  CollectorInstances    The number of TD-Agent based collectors to be deployed
         //                        to receive, transform, and persist events collected by
@@ -499,20 +534,6 @@ USAGE:
         //                        constraints referencing built-in or custom
         //                        node labels used to locate TD-Agent collector
         //                        containers.
-        //
-        //  MetricBeatImage       Identifies the [Elastic Metricbeat] container image 
-        //                        to be run as a service on every node of the hive to
-        ///                       capture Docker host node metrics.  This defaults to
-        //                        [nhive/metricbeat:latest].
-
-        // IMPORTANT: At least one node must have [Labels.LogEsData=true]
-        //            when logging is enabled.  This specifies where hive
-        //            log data is to be stored.
-
-        // IMPORTANT: The Elasticsearch and Kibana images must deploy compatible
-        //            versions of these service.
-
-        ""Enabled"": true
     },
 
     // Hive built-in dashboard options:
@@ -625,18 +646,18 @@ USAGE:
         ""Enabled"": true
     },
 
-    // Integrated RabbitMQ settings.
+    // Integrated HiveMQ (aka RabbitMQ) settings.
 
-    ""RabbitMQ"": {
+    ""HiveMQ"": {
 
         // Specifies the maximum RAM to be allocated to each RabbitMQ node container.
         // This can be a long byte count or a long with units like [512MB] or [2GB].
-        // This can be overridden  for specific nodes.  This defaults to [500MB] if
-        // the RabbitMQ Server is being precompiled and [250MB] if not.
+        // This can be overridden  for specific nodes.  This defaults to [600MB] if
+        // the RabbitMQ Server is being precompiled and [350MB] if not.
         //
         // NOTE: The default is probably too small for production environments
 
-        ""RamLimit"": ""500MB"",
+        ""RamLimit"": ""600MB"",
 
         // Specifies the how much of [RamLimit] each node can allocate for
         // caching and internal use expressed as a number between 0.0 - 1.0.
@@ -679,7 +700,7 @@ USAGE:
         // Specifies the shared secret clustered RabbitMQ nodes will use for mutual authentication.
         // A secure password will be generated if this isn't specified.
         
-        ""ErlangCookie"": ""MY-SECRET"",
+        // ""ErlangCookie"": ""MY-SECRET"",
 
         // Specifies how the RabbitMQ cluster will deal with network partitions.  The possible
         // values are [autoheal], [pause_minority], or [pause_if_all_down].  This defaults to 
@@ -691,15 +712,10 @@ USAGE:
         ""PartitionMode"": ""autoheal"",
 
         // Specifies that RabbitMQ should be precompiled for 20-50% better performance at the
-        // cost of 30-45 seconds longer for the nodes to start the first time and a minimum of
-        // 250MB of additional RAM per instance.  This defaults to [false].
+        // cost of 30-45 seconds longer for the nodes to start and a minimum of 250MB of additional
+        // RAM per instance.  This defaults to [false].
 
-        ""Precompile"": false,
-
-        // The Docker image to be used to provision the [neon-hivemq] cluster nodes.
-        // This defaults to [nhive/neon-hivemq:latest].
-
-         ""RabbitMQImage"": ""nhive/neon-hivemq:latest""
+        ""Precompile"": false
     },
 
     //-------------------------------------------------------------------------
@@ -814,8 +830,8 @@ USAGE:
     //      CephDriveSizeGB               Ceph OSD drive size in GB (int)
     //      CephCacheSizeMB               Caph OSD cache size in MB (int)
     //
-    //      RabbitMQ                      Deploy RabbitMQ to the node (bool)
-    //      RabbitMQManager               Deploy RabbitMQ with the management 
+    //      HiveMQ                        Deploy HiveMQ to the node (bool)
+    //      HiveMQManager                 Deploy HiveMQ with the management 
     //                                    plugin to the node (bool)
     //
     // IMPORTANT: Be sure to set [StorageSSD=true] if your node is backed 

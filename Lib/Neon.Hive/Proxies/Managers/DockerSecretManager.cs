@@ -232,7 +232,7 @@ fi
                 "--mount", $"type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
                 "--health-start-period", $"1s",
                 "--secret", secretName,
-                hive.Definition.SecretRetrieverImage,
+                hive.Definition.Image.SecretRetriever,
                 secretName,
                 consulKey);
 

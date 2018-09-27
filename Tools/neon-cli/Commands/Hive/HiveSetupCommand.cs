@@ -1750,44 +1750,44 @@ fi
                     {
                         Program.ResolveDockerImage("nhive/ubuntu-16.04"),
                         Program.ResolveDockerImage("nhive/ubuntu-16.04-dotnet"),
-                        Program.ResolveDockerImage(hive.Definition.ProxyImage),
-                        Program.ResolveDockerImage(hive.Definition.ProxyVaultImage)
+                        Program.ResolveDockerImage(hive.Definition.Image.Proxy),
+                        Program.ResolveDockerImage(hive.Definition.Image.ProxyVault)
                     };
 
                     if (node.Metadata.IsManager)
                     {
-                        images.Add(Program.ResolveDockerImage(hive.Definition.HiveManagerImage));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.ProxyManagerImage));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.DnsImage));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.DnsMonImage));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.SecretRetrieverImage));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.HiveManager));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.ProxyManager));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.Dns));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.DnsMon));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.SecretRetriever));
                     }
 
                     if (hive.Definition.Log.Enabled)
                     {
                         // All nodes pull these images:
 
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Log.HostImage));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Log.MetricbeatImage));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.LogHost));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.Metricbeat));
 
                         // [neon-log-collector] only runs on managers.
 
                         if (pullAll || node.Metadata.IsManager)
                         {
-                            images.Add(Program.ResolveDockerImage(hive.Definition.Log.CollectorImage));
+                            images.Add(Program.ResolveDockerImage(hive.Definition.Image.LogCollector));
                         }
 
                         // [elasticsearch] only runs on designated nodes.
 
                         if (pullAll || node.Metadata.Labels.LogEsData)
                         {
-                            images.Add(Program.ResolveDockerImage(hive.Definition.Log.EsImage));
+                            images.Add(Program.ResolveDockerImage(hive.Definition.Image.Elasticsearch));
                         }
                     }
 
                     if (pullAll || node.Metadata.Labels.HiveMQ)
                     {
-                        images.Add(Program.ResolveDockerImage(hive.Definition.HiveMQ.RabbitMQImage));
+                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.HiveMQ));
                     }
 
                     foreach (var image in images)
@@ -3004,7 +3004,7 @@ systemctl start neon-volume-plugin
 
                     var services = new ServicesBase(hive);
 
-                    services.StartService("neon-proxy-vault", hive.Definition.ProxyVaultImage,
+                    services.StartService("neon-proxy-vault", hive.Definition.Image.ProxyVault,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-proxy-vault",
@@ -3036,7 +3036,7 @@ systemctl start neon-volume-plugin
                     {
                         var steps = new ConfigStepList();
 
-                        servicesBase.AddContainerStartSteps(steps, pet, "neon-proxy-vault", hive.Definition.ProxyVaultImage,
+                        servicesBase.AddContainerStartSteps(steps, pet, "neon-proxy-vault", hive.Definition.Image.ProxyVault,
                             new CommandBundle(
                                 "docker run",
                                 "--name", "neon-proxy-vault",
