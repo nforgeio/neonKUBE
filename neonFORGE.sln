@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\Hive Load Balancers.docx = Doc\Hive Load Balancers.docx
 		Doc\Hive Notes.docx = Doc\Hive Notes.docx
 		Doc\Hive Secrets.docx = Doc\Hive Secrets.docx
-		Doc\PUBLISH.md = Doc\PUBLISH.md
+		Doc\RELEASE.md = Doc\RELEASE.md
 		Doc\SUDO and WinSCP.docx = Doc\SUDO and WinSCP.docx
 		Doc\Thumbs.db = Doc\Thumbs.db
 		Doc\Ubuntu-16.04 neonHIVE Deploy.docx = Doc\Ubuntu-16.04 neonHIVE Deploy.docx
@@ -261,7 +261,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt-jeff", "wrt-jeff", "{7B
 		Devops\test\hives\wrt-jeff\vars.yaml = Devops\test\hives\wrt-jeff\vars.yaml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-varnish", "Services\neon-varnish\neon-varnish.csproj", "{7FDE666C-FACB-401F-9ADB-19E7998A4E95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-varnish", "Services\neon-varnish\neon-varnish.csproj", "{7FDE666C-FACB-401F-9ADB-19E7998A4E95}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

@@ -17,7 +17,7 @@
 
 8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-9. Create a new Git branch from master named for the release and push to GitHub.
+9. Create a new Git branch from PROD named for the release (like **release-18.9.3-alpha**) and push to GitHub.
 
 10. Merge the changes into the **MASTER** branch and rebuild all of those images as well.
 
