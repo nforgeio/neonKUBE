@@ -783,10 +783,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm services.
         /// </summary>
-        /// <param name="includeCore">Optionally include core built-in neonHIVE services whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonHIVE services whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ServiceInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<ServiceInfo> ListServices(bool includeCore = false)
+        public List<ServiceInfo> ListServices(bool includeSystem = false)
         {
             base.CheckDisposed();
 
@@ -806,7 +806,7 @@ namespace Neon.Xunit
                     var fields   = line.Split('~');
                     var replicas = fields[2].Split('/');
 
-                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE services.
                     }
@@ -966,7 +966,7 @@ namespace Neon.Xunit
 
             var names = new List<string>();
 
-            foreach (var service in ListServices(includeCore: true))
+            foreach (var service in ListServices(includeSystem: true))
             {
                 if (removeCore || !service.Name.StartsWith("neon-") || service.Name.StartsWith("neon-secret-retriever-"))
                 {
@@ -1029,10 +1029,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current Docker containers.
         /// </summary>
-        /// <param name="includeCore">Optionally include core built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ContainerInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<ContainerInfo> ListContainers(bool includeCore = false)
+        public List<ContainerInfo> ListContainers(bool includeSystem = false)
         {
             base.CheckDisposed();
 
@@ -1051,7 +1051,7 @@ namespace Neon.Xunit
                 {
                     var fields = line.Split('~');
 
-                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE containers.
                     }
@@ -1186,7 +1186,7 @@ namespace Neon.Xunit
 
             while (true)
             {
-                var services = ListServices(includeCore: true);
+                var services = ListServices(includeSystem: true);
 
                 foreach (var stackService in stackDefinition.Services)
                 {
@@ -1223,10 +1223,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm stacks.
         /// </summary>
-        /// <param name="includeCore">Optionally include core built-in neonHIVE stacks whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonHIVE stacks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="StackInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<StackInfo> ListStacks(bool includeCore = false)
+        public List<StackInfo> ListStacks(bool includeSystem = false)
         {
             base.CheckDisposed();
 
@@ -1245,7 +1245,7 @@ namespace Neon.Xunit
                 {
                     var fields = line.Split('~');
 
-                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE stacks.
                     }
@@ -1378,10 +1378,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm secrets.
         /// </summary>
-        /// <param name="includeCore">Optionally include core built-in neonHIVE secrets whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonHIVE secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="SecretInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<SecretInfo> ListSecrets(bool includeCore = false)
+        public List<SecretInfo> ListSecrets(bool includeSystem = false)
         {
             base.CheckDisposed();
 
@@ -1400,7 +1400,7 @@ namespace Neon.Xunit
                 {
                     var fields = line.Split('~');
 
-                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE secrets.
                     }
@@ -1529,10 +1529,10 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm configs.
         /// </summary>
-        /// <param name="includeCore">Optionally include core built-in neonHIVE configs whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonHIVE configs whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ConfigInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
-        public List<ConfigInfo> ListConfigs(bool includeCore = false)
+        public List<ConfigInfo> ListConfigs(bool includeSystem = false)
         {
             base.CheckDisposed();
 
@@ -1551,7 +1551,7 @@ namespace Neon.Xunit
                 {
                     var fields = line.Split('~');
 
-                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE configs.
                     }
@@ -1641,7 +1641,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm networks.
         /// </summary>
-        /// <param name="includeCore">Optionally include core built-in neonHIVE networks whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonHIVE networks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="NetworkInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <remarks>
@@ -1651,7 +1651,7 @@ namespace Neon.Xunit
         /// or <b>none</b> in the listed networks.
         /// </note>
         /// </remarks>
-        public List<NetworkInfo> ListNetworks(bool includeCore = false)
+        public List<NetworkInfo> ListNetworks(bool includeSystem = false)
         {
             base.CheckDisposed();
 
@@ -1675,7 +1675,7 @@ namespace Neon.Xunit
                         continue;   // Ignore built-in Docker networks.
                     }
 
-                    if (!includeCore && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;   // Ignore built-in neonHIVE networks.
                     }

@@ -53,7 +53,7 @@ namespace TestNeonCluster
 
             // Verify that any [neon-secret-retriever] services were removed.
 
-            var services = hiveFixture.ListServices(includeCore: true);
+            var services = hiveFixture.ListServices(includeSystem: true);
 
             Assert.Empty(services.Where(s => s.Name.StartsWith("neon-secret-retriever")));
 
