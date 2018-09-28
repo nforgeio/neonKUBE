@@ -1,4 +1,4 @@
-# Steps to publish the project NuGet packages:
+# neonHIVE Release Process:
 
 ## Prepare
 
