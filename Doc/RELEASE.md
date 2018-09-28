@@ -16,7 +16,7 @@
 
 7. Run all unit tests against the test hive and fix any bugs until all tests pass.
 
-## Publish 
+## Release 
 
 1. Select the **PROD** branch.  Merge from **MASTER**.
 
@@ -37,6 +37,12 @@
 
 9. Create a new Git branch from PROD named for the release (like **release-18.9.3-alpha**) and push to GitHub.
 
-10. Merge the changes into the **MASTER** branch and rebuild all of those images as well.
+## Post Release
 
-11. Merge the changes into the **JEFF** and/or any other development brances and rebuild all of those images, as required.
+1. Bump the `neon-cli` version in `Program.cs`.
+
+2. Merge the changes into the **MASTER** branch and rebuild all of those images as well.
+
+3. Merge **MASTER** into the **JEFF** and/or any other development brances and rebuild all of those images, as required.
+
+ 
