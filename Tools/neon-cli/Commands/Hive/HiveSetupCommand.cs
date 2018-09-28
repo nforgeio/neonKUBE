@@ -851,7 +851,7 @@ OPTIONS:
         /// <param name="node">The hive node.</param>
         private void RebootAndWait(SshProxy<NodeDefinition> node)
         {
-            node.Status = "rebooting...";
+            node.Status = "restarting...";
             node.Reboot(wait: true);
         }
 

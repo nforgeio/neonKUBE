@@ -641,7 +641,7 @@ namespace Neon.Hive
         /// <param name="wait">Optionally wait for the server to reboot (defaults to <c>true</c>).</param>
         public void Reboot(bool wait = true)
         {
-            Status = "rebooting...";
+            Status = "restarting...";
 
             // We need to be very sure that the remote server has actually 
             // rebooted and that we're not logging into the same session.
