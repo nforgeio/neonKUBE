@@ -2,17 +2,19 @@
 
 ## Prepare
 
-1. Merge all desired changes into the **MASTER** branch.
+1. Merge all desired changes into the **MASTER** branch from the **JEFF** and/or other development branches.
 
-2. Manually clean and rebuild the entire solution: RELEASE configuration.
+2. Merge **PROD** into **MASTER** to ensure that we have any stray changes from there too.
 
-3. Make sure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
+3. Manually clean and rebuild the entire solution: RELEASE configuration.
 
-4. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+4. Make sure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
 
-5. Deploy a test hive.
+5. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-6. Run all unit tests against the test hive and fix any bugs until all tests pass.
+6. Deploy a test hive.
+
+7. Run all unit tests against the test hive and fix any bugs until all tests pass.
 
 ## Publish 
 
