@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsHostsManager.cs
+// FILE:	    DnsManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,9 +24,9 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles local hive DNS hosts related operations for a <see cref="HiveProxy"/>.
+    /// Handles local hive DNS related operations for a <see cref="HiveProxy"/>.
     /// </summary>
-    public sealed class DnsHostsManager
+    public sealed class DnsManager
     {
         //---------------------------------------------------------------------
         // Static members
@@ -56,7 +56,7 @@ namespace Neon.Hive
         /// Internal constructor.
         /// </summary>
         /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
-        internal DnsHostsManager(HiveProxy hive)
+        internal DnsManager(HiveProxy hive)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 

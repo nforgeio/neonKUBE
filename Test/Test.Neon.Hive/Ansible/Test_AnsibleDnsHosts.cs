@@ -112,7 +112,7 @@ $@"
 
             // Should start out without this entry.
 
-            Assert.Null(hive.Hive.DnsHosts.Get(host));
+            Assert.Null(hive.Hive.Dns.Get(host));
 
             //-----------------------------------------------------------------
             // Create a DNS entry and then verify that it was added.
@@ -139,7 +139,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
             
-            var entry = hive.Hive.DnsHosts.Get(host);
+            var entry = hive.Hive.Dns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
@@ -158,7 +158,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            entry = hive.Hive.DnsHosts.Get(host);
+            entry = hive.Hive.Dns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
@@ -173,7 +173,7 @@ $@"
 
             // Should start out without this entry.
 
-            Assert.Null(hive.Hive.DnsHosts.Get(host));
+            Assert.Null(hive.Hive.Dns.Get(host));
 
             // Create a DNS entry and then verify that it was added.
 
@@ -199,7 +199,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var entry = hive.Hive.DnsHosts.Get(host);
+            var entry = hive.Hive.Dns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
@@ -230,7 +230,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            entry = hive.Hive.DnsHosts.Get(host);
+            entry = hive.Hive.Dns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -249,7 +249,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            entry = hive.Hive.DnsHosts.Get(host);
+            entry = hive.Hive.Dns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -264,7 +264,7 @@ $@"
 
             // Should start out without this entry.
 
-            Assert.Null(hive.Hive.DnsHosts.Get(host));
+            Assert.Null(hive.Hive.Dns.Get(host));
 
             //-----------------------------------------------------------------
             // Create a DNS entry and then verify that it was added.
@@ -291,7 +291,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var entry = hive.Hive.DnsHosts.Get(host);
+            var entry = hive.Hive.Dns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -309,7 +309,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            entry = hive.Hive.DnsHosts.Get(host);
+            entry = hive.Hive.Dns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -338,7 +338,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Null(hive.Hive.DnsHosts.Get(host));
+            Assert.Null(hive.Hive.Dns.Get(host));
 
             //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
@@ -352,7 +352,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Null(hive.Hive.DnsHosts.Get(host));
+            Assert.Null(hive.Hive.Dns.Get(host));
         }
     }
 }

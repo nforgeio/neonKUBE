@@ -150,7 +150,7 @@ namespace Neon.Hive
             this.Docker              = new DockerManager(this);
             this.Certificate         = new CertificateManager(this);
             this.Dashboard           = new DashboardManager(this);
-            this.DnsHosts            = new DnsHostsManager(this);
+            this.Dns                 = new DnsManager(this);
             this.PublicLoadBalancer  = new LoadBalanceManager(this, "public");
             this.PrivateLoadBalancer = new LoadBalanceManager(this, "private");
             this.Registry            = new RegistryManager(this);
@@ -258,7 +258,7 @@ namespace Neon.Hive
         /// <summary>
         /// Manages the local hive DNS.
         /// </summary>
-        public DnsHostsManager DnsHosts { get; private set; }
+        public DnsManager Dns { get; private set; }
 
         /// <summary>
         /// Manages the hive's public load balancer.

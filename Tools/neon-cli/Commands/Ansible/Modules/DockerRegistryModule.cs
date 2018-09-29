@@ -455,7 +455,7 @@ namespace NeonCli.Ansible
                     // Remove the hive DNS host entry.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] registry DNS hosts entry.");
-                    hive.DnsHosts.Remove(hostname);
+                    hive.Dns.Remove(hostname);
                     break;
 
                 case "present":
@@ -611,7 +611,7 @@ namespace NeonCli.Ansible
                         hive.Registry.SetLocalSecret(secret);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Adding hive DNS host entry for [{hostname}].");
-                        hive.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
+                        hive.Dns.Set(dnsRedirect, waitUntilPropagated: true);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
                         hive.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
@@ -664,7 +664,7 @@ namespace NeonCli.Ansible
                             hive.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating hive DNS host entry for [{hostname}] (60 seconds).");
-                            hive.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
+                            hive.Dns.Set(dnsRedirect, waitUntilPropagated: true);
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local hive hostname [{hostname}].");
                             hive.Registry.SetLocalHostname(hostname);

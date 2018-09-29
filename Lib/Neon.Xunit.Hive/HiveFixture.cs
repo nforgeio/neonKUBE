@@ -838,11 +838,11 @@ namespace Neon.Xunit.Hive
         {
             var actions = new List<Action>();
 
-            foreach (var entry in hive.DnsHosts.List(includeSystem: true))
+            foreach (var entry in hive.Dns.List(includeSystem: true))
             {
                 if (removeSystem || !entry.IsSystem || entry.Hostname.StartsWith("xunit-"))
                 {
-                    actions.Add(() => hive.DnsHosts.Remove(entry.Hostname));
+                    actions.Add(() => hive.Dns.Remove(entry.Hostname));
                 }
             }
 
@@ -858,7 +858,7 @@ namespace Neon.Xunit.Hive
         /// <returns>The list of <see cref="DnsEntry"/> instances.</returns>
         public List<DnsEntry> ListDnsEntries(bool includeSystem = false)
         {
-            return hive.DnsHosts.List(includeSystem);
+            return hive.Dns.List(includeSystem);
         }
 
         /// <summary>
@@ -867,7 +867,7 @@ namespace Neon.Xunit.Hive
         /// <param name="name">The DNS entry name.</param>
         public void RemoveDnsEntry(string name)
         {
-            hive.DnsHosts.Remove(name);
+            hive.Dns.Remove(name);
         }
 
         /// <summary>
@@ -881,7 +881,7 @@ namespace Neon.Xunit.Hive
         /// </param>
         public void SetDnsEntry(DnsEntry entry, bool waitUntilPropagated = false)
         {
-            hive.DnsHosts.Set(entry, waitUntilPropagated);
+            hive.Dns.Set(entry, waitUntilPropagated);
         }
 
         /// <summary>
@@ -890,7 +890,7 @@ namespace Neon.Xunit.Hive
         /// </summary>
         public void ConvergeDns()
         {
-            hive.DnsHosts.Reload(wipe: true);
+            hive.Dns.Reload(wipe: true);
         }
 
         //---------------------------------------------------------------------

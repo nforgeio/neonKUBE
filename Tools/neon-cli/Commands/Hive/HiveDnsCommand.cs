@@ -210,7 +210,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
         {
             // We're simply going to download and parse [neon/dns/answers/hosts.txt].
 
-            var answers   = hive.DnsHosts.GetAnswers();
+            var answers   = hive.Dns.GetAnswers();
             var entryHost = commandLine.Arguments.ElementAtOrDefault(1);
 
             Console.WriteLine();
@@ -309,7 +309,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
 
             host = host.ToLowerInvariant();
 
-            var entry = hive.DnsHosts.Get(host);
+            var entry = hive.Dns.Get(host);
 
             if (entry == null)
             {
@@ -333,7 +333,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
         /// <param name="commandLine">The command line.</param>
         private void ListEntries(CommandLine commandLine)
         {
-            var entries = hive.DnsHosts.List();
+            var entries = hive.Dns.List();
 
             Console.WriteLine();
 
@@ -344,7 +344,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
             }
 
             var maxHostWidth = entries.Max(item => item.Hostname.Length);
-            var answers      = hive.DnsHosts.GetAnswers();
+            var answers      = hive.Dns.GetAnswers();
 
             foreach (var entry in entries)
             {
@@ -379,7 +379,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
                 Program.Exit(1);
             }
 
-            hive.DnsHosts.Remove(entryHost, waitUntilPropagated: wait);
+            hive.Dns.Remove(entryHost, waitUntilPropagated: wait);
             Console.WriteLine($"Removed [{entryHost}] (if it existed).");
         }
 
@@ -457,7 +457,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
 
             // Persist the entry.
 
-            hive.DnsHosts.Set(dnsEntry, waitUntilPropagated: wait);
+            hive.Dns.Set(dnsEntry, waitUntilPropagated: wait);
 
             Console.WriteLine();
             Console.WriteLine($"Saved [{dnsEntry.Hostname}] DNS host entry.");

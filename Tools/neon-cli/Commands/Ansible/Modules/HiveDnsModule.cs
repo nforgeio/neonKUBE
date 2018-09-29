@@ -272,7 +272,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Check if DNS entry [{hostname}] exists.");
 
-                    if (hive.DnsHosts.Get(hostname) != null)
+                    if (hive.Dns.Get(hostname) != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] does exist.");
                         context.WriteLine(AnsibleVerbosity.Info, $"Deleting DNS entry [{hostname}].");
@@ -283,7 +283,7 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
-                            hive.DnsHosts.Remove(hostname, waitUntilPropagated: wait.Value);
+                            hive.Dns.Remove(hostname, waitUntilPropagated: wait.Value);
                             context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] deleted.");
                         }
 
@@ -364,7 +364,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Look up existing DNS entry for [{hostname}].");
 
-                    var existingEntry = hive.DnsHosts.Get(hostname);
+                    var existingEntry = hive.Dns.Get(hostname);
                     var changed       = false;
 
                     if (existingEntry != null)
@@ -397,7 +397,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating DNS entry.");
-                            hive.DnsHosts.Set(newEntry, waitUntilPropagated: wait.Value);
+                            hive.Dns.Set(newEntry, waitUntilPropagated: wait.Value);
                             context.WriteLine(AnsibleVerbosity.Info, $"DNS entry updated.");
                         }
 

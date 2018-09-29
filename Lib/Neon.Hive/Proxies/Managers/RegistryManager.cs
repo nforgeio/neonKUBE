@@ -471,7 +471,7 @@ fi
             hive.Registry.SetLocalSecret(secret);
 
             progress?.Invoke($"Adding hive DNS host entry for [{hostname}] (60 seconds).");
-            hive.DnsHosts.Set(GetRegistryDnsEntry(hostname), waitUntilPropagated: true);
+            hive.Dns.Set(GetRegistryDnsEntry(hostname), waitUntilPropagated: true);
 
             progress?.Invoke($"Writing load balancer rule.");
             hive.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
@@ -605,7 +605,7 @@ fi
             // Remove the hive DNS host entry.
 
             progress?.Invoke($"Removing the [{hostname}] registry DNS hosts entry.");
-            hive.DnsHosts.Remove(hostname);
+            hive.Dns.Remove(hostname);
         }
 
         /// <summary>
