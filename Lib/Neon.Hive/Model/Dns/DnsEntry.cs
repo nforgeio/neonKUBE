@@ -73,5 +73,11 @@ namespace Neon.Hive
 
             return warnings;
         }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return Hostname;
+        }
     }
 }
