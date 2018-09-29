@@ -47,64 +47,64 @@ namespace TestNeonCluster
             NeonHelper.WaitForParallel(
                 new Action[]
                 {
-                        () => hive.CreateSecret("secret_text", "hello"),
-                        () => hive.CreateSecret("secret_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }),
-                        () => hive.CreateConfig("config_text", "hello"),
-                        () => hive.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }),
-                        () => hive.CreateNetwork("test-network"),
-                        () => hive.CreateService("test-service", "nhive/test"),
-                        async () =>
-                        {
-                            // Create the HiveMQ [test] user, [test] vhost along with the [test-queue].
+                    () => hive.CreateSecret("secret_text", "hello"),
+                    () => hive.CreateSecret("secret_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }),
+                    () => hive.CreateConfig("config_text", "hello"),
+                    () => hive.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }),
+                    () => hive.CreateNetwork("test-network"),
+                    () => hive.CreateService("test-service", "nhive/test"),
+                    async () =>
+                    {
+                        // Create the HiveMQ [test] user, [test] vhost along with the [test-queue].
 
-                            using (var mqManager = hive.ConnectHiveMQManager())
-                            {
-                                var mqUser  = await mqManager.CreateUserAsync(new UserInfo("test-user", "password"));
-                                var mqVHost = await mqManager.CreateVirtualHostAsync("test-vhost");
-                                var mqQueue = await mqManager.CreateQueueAsync(new QueueInfo("test-queue", autoDelete: false, durable: true, arguments: new InputArguments()), mqVHost);
-
-                                await mqManager.CreatePermissionAsync(new PermissionInfo(mqUser, mqVHost));
-                            }
-                        },
-                        () =>
+                        using (var mqManager = hive.ConnectHiveMQManager())
                         {
-                            var composeText =
+                            var mqUser  = await mqManager.CreateUserAsync(new UserInfo("test-user", "password"));
+                            var mqVHost = await mqManager.CreateVirtualHostAsync("test-vhost");
+                            var mqQueue = await mqManager.CreateQueueAsync(new QueueInfo("test-queue", autoDelete: false, durable: true, arguments: new InputArguments()), mqVHost);
+
+                            await mqManager.CreatePermissionAsync(new PermissionInfo(mqUser, mqVHost));
+                        }
+                    },
+                    () =>
+                    {
+                        var composeText =
 @"version: '3'
 
 services:
-  sleeper:
-    image: nhive/test
-    deploy:
-      replicas: 2
+sleeper:
+image: nhive/test
+deploy:
+    replicas: 2
 ";
-                            hive.DeployStack("test-stack", composeText);
-                        },
-                        () =>
-                        {
-                            var publicRule = new LoadBalancerTcpRule();
+                        hive.DeployStack("test-stack", composeText);
+                    },
+                    () =>
+                    {
+                        var publicRule = new LoadBalancerTcpRule();
 
-                            publicRule.Name = "test-rule";
-                            publicRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPublicFirstUserPort });
-                            publicRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
+                        publicRule.Name = "test-rule";
+                        publicRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPublicFirstUserPort });
+                        publicRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-                            hive.PutLoadBalancerRule("public", publicRule);
-                        },
-                        () =>
-                        {
-                            var privateRule = new LoadBalancerTcpRule();
+                        hive.PutLoadBalancerRule("public", publicRule);
+                    },
+                    () =>
+                    {
+                        var privateRule = new LoadBalancerTcpRule();
 
-                            privateRule.Name = "test-rule";
-                            privateRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPrivateFirstUserPort });
-                            privateRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
+                        privateRule.Name = "test-rule";
+                        privateRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPrivateFirstUserPort });
+                        privateRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-                            hive.PutLoadBalancerRule("private", privateRule);
-                            hive.PutCertificate("test-certificate", TestCertificate.CombinedPem);
-                            hive.SetSelfSignedCertificate("test-certificate2", "*.foo.com");
-                        },
-                        async () => await hive.Consul.KV.PutString("test/value1", "one"),
-                        async () => await hive.Consul.KV.PutString("test/value2", "two"),
-                        async () => await hive.Consul.KV.PutString("test/folder/value3", "three"),
-                        async () => await hive.Consul.KV.PutString("test/folder/value4", "four")
+                        hive.PutLoadBalancerRule("private", privateRule);
+                        hive.PutCertificate("test-certificate", TestCertificate.CombinedPem);
+                        hive.SetSelfSignedCertificate("test-certificate2", "*.foo.com");
+                    },
+                    async () => await hive.Consul.KV.PutString("test/value1", "one"),
+                    async () => await hive.Consul.KV.PutString("test/value2", "two"),
+                    async () => await hive.Consul.KV.PutString("test/folder/value3", "three"),
+                    async () => await hive.Consul.KV.PutString("test/folder/value4", "four")
                 });
         }
 

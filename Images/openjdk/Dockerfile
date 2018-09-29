@@ -17,5 +17,5 @@ ARG         VERSION
 # Install OpenJDK
 
 RUN apt-get update \
-    && apt-get install -yq openjdk-${VERSION}-jre \
+    && apt-get install -yq openjdk-${VERSION}-jre-headless \
     && apt-get clean -yq
