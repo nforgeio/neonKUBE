@@ -416,9 +416,6 @@ namespace NeonCli.Ansible
                         newRule.Normalize(isPublic);
                         existingRule.Normalize(isPublic);
 
-                        context.WriteLine(AnsibleVerbosity.Info, "NEW RULE: " + NeonHelper.JsonSerialize(newRule));
-                        context.WriteLine(AnsibleVerbosity.Info, "CUR RULE: " + NeonHelper.JsonSerialize(existingRule));
-
                         changed = !NeonHelper.JsonEquals(newRule, existingRule);
 
                         if (changed)
