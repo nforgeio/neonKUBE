@@ -186,7 +186,25 @@ module Fluent
 
                 if headers.length > 0
 
-                    proxy["http_host"] = headers[0];
+                    # Many (all?) HTTP clients include the port number in the host header for
+                    # non-standard ports other than 80 and 443, like:
+                    #
+                    #       mysite.com:8080
+                    #
+                    # This is allowed in the HTTP standard but isn't helpful for Kibana 
+                    # because we already have the port available as another field.  We're
+                    # going to go ahead and strip the colon and port off if present.
+                    #
+                    #       https://github.com/jefflill/NeonForge/issues/342
+
+                    host     = headers[0];
+                    colonPos = host.index(':')
+
+                    if !colonPos.nil?
+                        host = host[0..colonPos]
+                    end
+
+                    proxy["http_host"] = host;
 
                     if headers.length > 1
                         userAgent                = headers[1];
