@@ -25,8 +25,8 @@ namespace TestNeonCluster
 {
     public class Test_HiveFixture : IClassFixture<HiveFixture>
     {
-        private HiveFixture     hiveFixture;
-        private HiveProxy       hive;
+        private HiveFixture hiveFixture;
+        private HiveProxy hive;
 
         public Test_HiveFixture(HiveFixture hive)
         {
@@ -37,10 +37,16 @@ namespace TestNeonCluster
             if (hive.LoginAndInitialize())
             {
                 hive.Reset();
+            }
 
-                NeonHelper.WaitForParallel(
-                    new Action[]
-                    {
+            this.hiveFixture = hive;
+            this.hive = hive.Hive;
+
+            // Initialize the hive state.
+
+            NeonHelper.WaitForParallel(
+                new Action[]
+                {
                         () => hive.CreateSecret("secret_text", "hello"),
                         () => hive.CreateSecret("secret_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }),
                         () => hive.CreateConfig("config_text", "hello"),
@@ -99,11 +105,7 @@ services:
                         async () => await hive.Consul.KV.PutString("test/value2", "two"),
                         async () => await hive.Consul.KV.PutString("test/folder/value3", "three"),
                         async () => await hive.Consul.KV.PutString("test/folder/value4", "four")
-                    });
-            }
-
-            this.hiveFixture = hive;
-            this.hive = hive.Hive;
+                });
         }
 
         /// <summary>
@@ -118,7 +120,7 @@ services:
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void VerifyState()
         {
-            // Verify that the various hive objects were created by the constructor.
+            // Verify that the various hive objects were initialized by the constructor.
 
             Assert.Single(hiveFixture.ListSecrets().Where(item => item.Name == "secret_text"));
             Assert.Single(hiveFixture.ListSecrets().Where(item => item.Name == "secret_data"));
@@ -175,7 +177,7 @@ services:
             Assert.False(hiveFixture.Consul.KV.Exists("test/value2").Result);
             Assert.False(hiveFixture.Consul.KV.Exists("test/folder/value3").Result);
             Assert.False(hiveFixture.Consul.KV.Exists("test/folder/value4").Result);
-            
+
             using (var mqManager = hive.HiveMQ.ConnectHiveMQManager())
             {
                 Assert.Empty(mqManager.GetUsersAsync().Result.Where(u => u.Name == "test-user"));
