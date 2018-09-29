@@ -6,6 +6,8 @@
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <RootNamespace>NeonClusterManager</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

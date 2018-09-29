@@ -6,6 +6,8 @@
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <RootNamespace>neon_vault</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>
