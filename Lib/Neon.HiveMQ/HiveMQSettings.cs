@@ -52,7 +52,7 @@ namespace Neon.HiveMQ
         // Instance members
 
         /// <summary>
-        /// Specifies the virtual host namespace.  This defaults to <b>"/"</b>.
+        /// Specifies the virtual host namespace.  This defaults to the root virtual host <b>"/"</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VirtualHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

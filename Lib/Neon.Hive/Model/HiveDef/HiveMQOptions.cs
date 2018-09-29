@@ -108,6 +108,24 @@ namespace Neon.Hive
         public string DiskFreeLimit { get; set; }
 
         /// <summary>
+        /// Returns the root <b>/</b> VHost.
+        /// </summary>
+        [JsonIgnore]
+        public string RootVHost => "/";
+
+        /// <summary>
+        /// Returns the <b>neon</b> VHost.
+        /// </summary>
+        [JsonIgnore]
+        public string NeonVHost => "neon";
+
+        /// <summary>
+        /// Returns the <b>app</b> VHost.
+        /// </summary>
+        [JsonIgnore]
+        public string AppVHost => "app";
+
+        /// <summary>
         /// Returns the <b>sysadmin</b> username.
         /// </summary>
         [JsonIgnore]
@@ -124,18 +142,6 @@ namespace Neon.Hive
         /// </summary>
         [JsonIgnore]
         public string AppUser => "app";
-
-        /// <summary>
-        /// Returns the <b>neon</b> VHost.
-        /// </summary>
-        [JsonIgnore]
-        public string NeonVHost => "neon";
-
-        /// <summary>
-        /// Returns the <b>app</b> VHost.
-        /// </summary>
-        [JsonIgnore]
-        public string AppVHost => "app";
 
         /// <summary>
         /// Specifies the password used to secure the <b>sysadmin</b> account.  This defaults to <b>password</b>>.

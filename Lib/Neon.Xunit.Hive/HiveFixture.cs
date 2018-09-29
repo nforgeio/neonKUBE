@@ -1583,12 +1583,8 @@ namespace Neon.Xunit.Hive
         /// </summary>
         private void ClearHiveMQ()
         {
-            // $todo(jeff.lill): Fix this!
-
-            return;
-
-            // We're going to assume that unit tests do not use the [neon]
-            // vhost or user and have not modified the [sysadmin] user
+            // We're going to assume that unit tests do not use or modify
+            // the [neon] vhost or user and have not modified the [sysadmin] 
             // credentials or permissions.
             //
             // So here's what we need to do to reset the state:
@@ -1596,7 +1592,7 @@ namespace Neon.Xunit.Hive
             //      1. Remove any vhosts besides [/] and [neon].  This will
             //         remove any related queues and other state.
             //      2. Remove any users besides [sysadmin] and [neon].  This
-            //         will remove [app].
+            //         will remove [app] too.
             //      3. Recreate the [app] user.
             //      4. Recreate the [app] vhost.
             //      5. Set the [app] user permissions for the [app] vhost.
@@ -1631,7 +1627,7 @@ namespace Neon.Xunit.Hive
 
                 var appUser = mqManager.CreateUserAsync(new EasyNetQ.Management.Client.Model.UserInfo(hive.Definition.HiveMQ.AppUser, hive.Definition.HiveMQ.AppPassword)).Result;
 
-                mqManager.CreatePermissionAsync(new EasyNetQ.Management.Client.Model.PermissionInfo(appUser, appVHost));
+                mqManager.CreatePermissionAsync(new EasyNetQ.Management.Client.Model.PermissionInfo(appUser, appVHost)).Wait();
             }
         }
     }

@@ -67,7 +67,7 @@ namespace TestNeonCluster
             {
                 // Ensure that the "/" and "neon" virtual hosts are still there.
 
-                Assert.Single((await mqManager.GetVHostsAsync()).Where(vh => vh.Name == "/"));
+                Assert.Single((await mqManager.GetVHostsAsync()).Where(vh => vh.Name == hive.Definition.HiveMQ.RootVHost));
                 Assert.Single((await mqManager.GetVHostsAsync()).Where(vh => vh.Name == hive.Definition.HiveMQ.NeonVHost));
 
                 // Ensure that the "sysadmin", "neon", and "app" users are still around and have the
@@ -80,8 +80,7 @@ namespace TestNeonCluster
                 var permissions = await mqManager.GetPermissionsAsync();
                 var allRights   = ".*";
 
-                Assert.Equal(3, permissions.Count());
-                Assert.Single(permissions.Where(p => p.User == hive.Definition.HiveMQ.SysadminUser && p.Vhost == "/" && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
+                Assert.Single(permissions.Where(p => p.User == hive.Definition.HiveMQ.SysadminUser && p.Vhost == hive.Definition.HiveMQ.RootVHost && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
                 Assert.Single(permissions.Where(p => p.User == hive.Definition.HiveMQ.NeonUser && p.Vhost == hive.Definition.HiveMQ.NeonVHost && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
                 Assert.Single(permissions.Where(p => p.User == hive.Definition.HiveMQ.AppUser && p.Vhost == hive.Definition.HiveMQ.AppVHost && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
 
