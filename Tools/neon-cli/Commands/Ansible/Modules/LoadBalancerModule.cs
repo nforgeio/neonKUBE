@@ -205,16 +205,20 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[rule_name={ruleName}] is not a valid load balancer rule name.");
             }
 
+            var isPublic = false;
+
             switch (name)
             {
                 case "private":
 
                     loadBalancer = HiveHelper.Hive.PrivateLoadBalancer;
+                    isPublic     = false;
                     break;
 
                 case "public":
 
                     loadBalancer = HiveHelper.Hive.PublicLoadBalancer;
+                    isPublic     = true;
                     break;
 
                 default:
@@ -405,6 +409,15 @@ namespace NeonCli.Ansible
                     if (existingRule != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"Rule exists: checking for differences.");
+
+                        // Normalize the new and existing rules so the JSON text comparision
+                        // will work properly.
+
+                        newRule.Normalize(isPublic);
+                        existingRule.Normalize(isPublic);
+
+                        context.WriteLine(AnsibleVerbosity.Info, "NEW RULE: " + NeonHelper.JsonSerialize(newRule));
+                        context.WriteLine(AnsibleVerbosity.Info, "CUR RULE: " + NeonHelper.JsonSerialize(existingRule));
 
                         changed = !NeonHelper.JsonEquals(newRule, existingRule);
 

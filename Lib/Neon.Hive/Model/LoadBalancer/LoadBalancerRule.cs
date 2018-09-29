@@ -331,6 +331,18 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Normalizes the rule by clearing any unnecessary properties.
+        /// </summary>
+        /// <param name="isPublic">Indicates that this is a <b>public</b> rule.</param>
+        public virtual void Normalize(bool isPublic)
+        {
+            if (CheckHeaders?.Count > 0)
+            {
+                CheckHeaders = null;
+            }
+        }
+
+        /// <summary>
         /// Renders the rule as JSON.
         /// </summary>
         /// <returns>JSON text.</returns>

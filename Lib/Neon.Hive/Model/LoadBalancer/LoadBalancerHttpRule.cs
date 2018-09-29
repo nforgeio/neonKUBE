@@ -358,5 +358,19 @@ namespace Neon.Hive
                 }
             }
         }
+
+        /// <inheritdoc/>
+        public override void Normalize(bool isPublic)
+        {
+            base.Normalize(isPublic);
+
+            if (!isPublic)
+            {
+                foreach (var frontend in Frontends)
+                {
+                    frontend.PublicPort = 0;
+                }
+            }
+        }
     }
 }

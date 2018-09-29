@@ -199,10 +199,10 @@ See the documentation for more load balancer rule and setting details.
 
             // Process the command arguments.
 
-            var loadBalancer = (LoadBalanceManager)null;
-            var yaml         = commandLine.HasOption("--yaml");
-
+            var loadBalancer     = (LoadBalanceManager)null;
+            var yaml             = commandLine.HasOption("--yaml");
             var loadBalancerName = commandLine.Arguments.FirstOrDefault();
+            var isPublic         = false;
 
             switch (loadBalancerName)
             {
@@ -217,11 +217,13 @@ See the documentation for more load balancer rule and setting details.
                 case "public":
 
                     loadBalancer = HiveHelper.Hive.PublicLoadBalancer;
+                    isPublic     = true;
                     break;
 
                 case "private":
 
                     loadBalancer = HiveHelper.Hive.PrivateLoadBalancer;
+                    isPublic     = false;
                     break;
 
                 default:
@@ -456,6 +458,7 @@ See the documentation for more load balancer rule and setting details.
                     };
 
                     clonedRule.Validate(context, addImplicitFrontends: true);
+                    clonedRule.Normalize(isPublic);
 
                     if (context.HasErrors)
                     {
