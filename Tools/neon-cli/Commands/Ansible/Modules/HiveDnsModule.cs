@@ -93,7 +93,7 @@ namespace NeonCli.Ansible
         // check        no          no          yes/no      Require endpoint health checks
         //
         //
-        // NOTE: DNS hostnames prefixed by "(neon)-" identify built-in 
+        // NOTE: DNS hostnames prefixed by "neon-" identify built-in 
         //       system DNS entries used to resolve things like the local 
         //       Docker registry service [neon-registry] if deployed.  You
         //       should leave the system entries alone unless you really 

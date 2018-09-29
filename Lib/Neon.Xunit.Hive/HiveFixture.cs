@@ -817,7 +817,7 @@ namespace Neon.Xunit.Hive
         }
 
         //---------------------------------------------------------------------
-        // DNS
+        // Hive DNS
 
         /// <summary>
         /// Removes all local hive DNS entries.
@@ -825,7 +825,7 @@ namespace Neon.Xunit.Hive
         /// <param name="removeSystem">Optionally remove system entries as well.</param>
         /// <remarks>
         /// By default, this method will not remove neonHIVE system en tries
-        /// whose names begin with <b>(neon)-</b>.  You can remove these too by
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
         public void ClearDnsEntries(bool removeSystem = false)
@@ -845,7 +845,7 @@ namespace Neon.Xunit.Hive
         /// </summary>
         /// <param name="includeSystem">
         /// Optionally include the built-in system images whose names are 
-        /// prefixed by <b>(neon)-</b>.
+        /// prefixed by <b>neon-</b>.
         /// </param>
         /// <returns>The list of <see cref="DnsEntry"/> instances.</returns>
         public List<DnsEntry> ListDnsEntries(bool includeSystem = false)
@@ -858,7 +858,7 @@ namespace Neon.Xunit.Hive
         /// </summary>
         /// <param name="name">
         /// The DNS entry name.  Note that system entry names are 
-        /// prefixed by <b>(neon)-</b>.
+        /// prefixed by <b>neon-</b>.
         /// </param>
         public void RemoveDnsEntry(string name)
         {
