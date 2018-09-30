@@ -173,12 +173,12 @@ namespace TestSamples
 
             // Use the [HostsFixture] to initialize a couple DNS entries and then verify that these work.
 
-            hosts.AddHostAddress("foo.com", "127.0.0.1", deferCommit: true);
-            hosts.AddHostAddress("bar.com", "127.0.0.1", deferCommit: true);
+            hosts.AddHostAddress("test-foo.com", "127.0.0.1", deferCommit: true);
+            hosts.AddHostAddress("test-bar.com", "127.0.0.1", deferCommit: true);
             hosts.Commit();
 
-            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("foo.com"));
-            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("bar.com"));
+            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("test-foo.com"));
+            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("test-bar.com"));
 
             // Spin up a couple of NodeJS services configuring them to return
             // different text using the OUTPUT environment variable.
@@ -213,8 +213,8 @@ services:
 
             using (var client = new HttpClient())
             {
-                Assert.Equal("FOO", client.GetStringAsync("http://foo.com:8080").Result.Trim());
-                Assert.Equal("BAR", client.GetStringAsync("http://bar.com:8081").Result.Trim());
+                Assert.Equal("FOO", client.GetStringAsync("http://test-foo.com:8080").Result.Trim());
+                Assert.Equal("BAR", client.GetStringAsync("http://test-bar.com:8081").Result.Trim());
             }
 
             // Do some Couchbase operations to prove that we can.
@@ -248,12 +248,12 @@ services:
 
             // Use the [HostsFixture] to initialize a couple DNS entries and then verify that these work.
 
-            hosts.AddHostAddress("foo.com", "127.0.0.1", deferCommit: true);
-            hosts.AddHostAddress("bar.com", "127.0.0.1", deferCommit: true);
+            hosts.AddHostAddress("test-foo.com", "127.0.0.1", deferCommit: true);
+            hosts.AddHostAddress("test-bar.com", "127.0.0.1", deferCommit: true);
             hosts.Commit();
 
-            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("foo.com"));
-            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("bar.com"));
+            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("test-foo.com"));
+            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("test-bar.com"));
 
             // Spin up a couple of NodeJS as stacks configuring them to return
             // different text using the OUTPUT environment variable.
@@ -265,8 +265,8 @@ services:
 
             using (var client = new HttpClient())
             {
-                Assert.Equal("FOO", client.GetStringAsync("http://foo.com:8080").Result.Trim());
-                Assert.Equal("BAR", client.GetStringAsync("http://bar.com:8081").Result.Trim());
+                Assert.Equal("FOO", client.GetStringAsync("http://test-foo.com:8080").Result.Trim());
+                Assert.Equal("BAR", client.GetStringAsync("http://test-bar.com:8081").Result.Trim());
             }
 
             // Do some Couchbase operations to prove that we can.
