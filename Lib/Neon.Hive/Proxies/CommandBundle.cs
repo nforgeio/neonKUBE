@@ -119,7 +119,7 @@ namespace Neon.Hive
                         }
                         else if (valueString.Contains(' '))
                         {
-                            valueString = "\"" + valueString + "\"";
+                            valueString = SafeArg(valueString);
                         }
 
                         normalized.Add(valueString);
@@ -143,6 +143,30 @@ namespace Neon.Hive
             }
 
             return normalized;
+        }
+
+        /// <summary>
+        /// Ensures that a Bash command argument is escaped as necessary.
+        /// </summary>
+        /// <param name="arg">The argument string.</param>
+        /// <returns>The safe argument.</returns>
+        private static string SafeArg(string arg)
+        {
+            Covenant.Requires<ArgumentNullException>(arg != null);
+
+            if (arg.Length >= 2 && arg.StartsWith("\"") && arg.EndsWith("\""))
+            {
+                return arg; // Don't quote an already quoted argument.
+            }
+
+            if (arg.IndexOfAny(new char[] { ' ', '\t', '"' }) != -1)
+            {
+                arg = arg.Replace('\t', ' ');
+                arg = arg.Replace("\"", "\\\"");
+                arg = "\"" + arg + "\"";
+            }
+
+            return arg;
         }
 
         //---------------------------------------------------------------------
@@ -251,23 +275,6 @@ namespace Neon.Hive
         /// <exception cref="InvalidOperationException">Thrown when the bundle is not valid.</exception>
         public void Validate()
         {
-        }
-
-        /// <summary>
-        /// Ensures that a Bash command argument is escaped as necessary.
-        /// </summary>
-        /// <param name="arg">The argument string.</param>
-        /// <returns>The safe argument.</returns>
-        private string SafeArg(string arg)
-        {
-            if (arg.IndexOfAny(new char[] { ' ', '\t', '"' }) != -1)
-            {
-                arg = arg.Replace('\t', ' ');
-                arg = arg.Replace("\"", "\\\"");
-                arg = "\"" + arg + "\"";
-            }
-
-            return arg;
         }
 
         /// <summary>
