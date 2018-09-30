@@ -17,7 +17,7 @@ using Neon.Xunit.Hive;
 
 using Xunit;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public class Test_HiveRegistry : IClassFixture<HiveFixture>
     {
@@ -36,7 +36,7 @@ namespace TestNeonCluster
         }
 
         [Fact(Skip = "todo")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void RegistryCredentials()
         {
             // $todo(jeff.lill):

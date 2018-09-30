@@ -19,7 +19,7 @@ using Neon.Xunit.Hive;
 
 using Xunit;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public class Test_HiveState : IClassFixture<HiveFixture>
     {
@@ -38,7 +38,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void SecretGet()
         {
             // Verify that we can set and retrieve a Docker secret.

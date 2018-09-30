@@ -17,7 +17,7 @@ using Neon.Xunit.Hive;
 
 using Xunit;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public partial class Test_AnsibleDockerService : IClassFixture<HiveFixture>
     {

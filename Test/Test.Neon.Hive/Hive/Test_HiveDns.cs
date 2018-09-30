@@ -17,7 +17,7 @@ using Neon.Xunit.Hive;
 
 using Xunit;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public class Test_HiveDns : IClassFixture<HiveFixture>
     {
@@ -41,7 +41,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Test()
         {
             //-----------------------------------------------------------------

@@ -29,7 +29,7 @@ using Neon.Xunit.Hive;
 
 using Xunit;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public class Test_AnsibleDockerRegistry : IClassFixture<HiveFixture>
     {

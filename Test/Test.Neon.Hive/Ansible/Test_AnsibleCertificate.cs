@@ -17,7 +17,7 @@ using Neon.Xunit.Hive;
 
 using Xunit;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public class Test_AnsibleCertificate : IClassFixture<HiveFixture>
     {

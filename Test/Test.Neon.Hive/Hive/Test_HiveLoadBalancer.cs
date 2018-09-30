@@ -18,7 +18,7 @@ using Neon.Xunit.Hive;
 
 using Xunit;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public class Test_HiveLoadBalancer : IClassFixture<HiveFixture>
     {
@@ -37,7 +37,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Basic()
         {
             // $todo(jeff.lill): We actually need add some load balancer rules and test those.

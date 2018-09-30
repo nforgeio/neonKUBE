@@ -22,7 +22,7 @@ using Neon.Xunit.Hive;
 
 using Xunit;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     /// <summary>
     /// Verifies that the <see cref="ServiceDetails"/> class maps correctly to

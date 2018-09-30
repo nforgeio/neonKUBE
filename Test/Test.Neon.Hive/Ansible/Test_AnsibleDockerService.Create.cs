@@ -22,7 +22,7 @@ using Xunit;
 // We could add tests to verify that CHECK-MODE doesn't
 // actually make any changes.
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public partial class Test_AnsibleDockerService : IClassFixture<HiveFixture>
     {

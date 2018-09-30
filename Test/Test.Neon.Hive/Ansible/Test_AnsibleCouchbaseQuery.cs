@@ -26,7 +26,7 @@ using Neon.Xunit.Hive;
 using Xunit;
 using Neon.Data;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public class Test_AnsibleCouchbaseQuery : IClassFixture<CouchbaseFixture>
     {

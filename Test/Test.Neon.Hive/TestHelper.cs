@@ -19,7 +19,7 @@ using Neon.Xunit.Hive;
 
 using Xunit;
 
-namespace TestNeonCluster
+namespace TestHive
 {
     /// <summary>
     /// Misc local unit test helpers.

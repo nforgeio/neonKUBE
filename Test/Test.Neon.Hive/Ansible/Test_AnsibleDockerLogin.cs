@@ -33,7 +33,7 @@ using Xunit;
 // registry cache credentials when we're logging into or out of
 // the Docker public registry.
 
-namespace TestNeonCluster
+namespace TestHive
 {
     public class Test_AnsibleDockerLogin : IClassFixture<HiveFixture>
     {
