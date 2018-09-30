@@ -157,7 +157,7 @@ namespace TestNeonCluster
                 Assert.Null(hive.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
 
                 // Verify the logout by ensuring that the [/home/USER/.docker/conf.json]
-                // and [/root/.docker.conf.json] doesn't exist on one of the nodes or that
+                // and [/root/.docker/conf.json] doesn't exist on one of the nodes or that
                 // it lacks credentials for [docker.io].
 
                 if (firstManager.FileExists(userDockerConfPath))

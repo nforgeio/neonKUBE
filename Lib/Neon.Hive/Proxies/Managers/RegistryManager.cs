@@ -108,6 +108,7 @@ namespace Neon.Hive
 
                                 if (response.ExitCode == 0)
                                 {
+                                    SyncDockerConf(node);
                                     return;
                                 }
 
@@ -252,8 +253,8 @@ namespace Neon.Hive
             // for the root and sysadmin account never diverge, which is probably
             // a reasonable assumption given that these are managed hosts.
             //
-            // We're also going to ensure that these file have the correct owners
-            // if they exist.
+            // We're also going to ensure that these directories and files have the
+            // correct owners and permissions.
 
             var bundle = new CommandBundle("./sync.sh");
 
@@ -272,12 +273,14 @@ else
     fi
 fi
 
-if [ -f /root/.docker/config.json ] ; then
-    chown root /root/.docker/config.json
+if [ -d /root/.docker ] ; then
+    chown -R root:root /root/.docker
+    chmod 660 /root/.docker/*
 fi
 
-if [ -f /{node.Username}/.docker/config.json ] ; then
-    chown {node.Username} /home/{node.Username}/.docker/config.json
+if [ -d /home/{node.Username}/.docker ] ; then
+    chown -R {node.Username}:{node.Username} /home/{node.Username}/.docker
+    chmod 660 /home/{node.Username}/.docker/*
 fi
 ",
                 isExecutable: true);

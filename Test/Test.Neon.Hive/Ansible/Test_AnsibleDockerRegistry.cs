@@ -657,6 +657,43 @@ namespace TestNeonCluster
                 response = manager.DockerCommand(RunOptions.None, "docker", "image", "ls");
                 Assert.Contains("xunit-registry.neonforge.net/test-image", response.AllText);
 
+                // Remove the local image we just pulled and verify.
+
+                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "xunit-registry.neonforge.net/test-image:latest");
+
+                response = manager.DockerCommand(RunOptions.None, "docker", "image", "ls");
+
+                Assert.Equal(0, response.ExitCode);
+                Assert.DoesNotContain("xunit-registry.neonforge.net/test-image", response.AllText);
+
+                //-------------------------------------------------------------
+                // Pull the image via Ansible and verify.
+
+                playbook =
+$@"
+- name: test
+  hosts: {manager.Name}
+  tasks:
+    - name: pull
+      command: docker pull xunit-registry.neonforge.net/test-image
+";
+                results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
+                taskResult = results.GetTaskResult("pull");
+
+                Assert.True(taskResult.Success);
+
+                response = manager.DockerCommand(RunOptions.None, "docker", "image", "ls");
+                Assert.Contains("xunit-registry.neonforge.net/test-image", response.AllText);
+
+                // Remove the local image we just pulled and verify.
+
+                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "xunit-registry.neonforge.net/test-image:latest");
+
+                response = manager.DockerCommand(RunOptions.None, "docker", "image", "ls");
+
+                Assert.Equal(0, response.ExitCode);
+                Assert.DoesNotContain("xunit-registry.neonforge.net/test-image", response.AllText);
+
                 //-------------------------------------------------------------
                 // Verify that the registry is using [Ceph] to persist the images,
                 // as opposed to a standard Docker volume.
@@ -810,6 +847,20 @@ namespace TestNeonCluster
 
                 response = manager.DockerCommand(RunOptions.None, "docker", "image", "ls");
                 Assert.Contains("xunit-registry.neonforge.net/test-image", response.AllText);
+
+                // Remove the local image we just pulled and verify.
+
+                manager.DockerCommand(RunOptions.None, "docker", "image", "rm", "xunit-registry.neonforge.net/test-image:latest");
+
+                response = manager.DockerCommand(RunOptions.None, "docker", "image", "ls");
+
+                Assert.Equal(0, response.ExitCode);
+                Assert.DoesNotContain("xunit-registry.neonforge.net/test-image", response.AllText);
+
+                //-------------------------------------------------------------
+                // Pull the image via Ansible and verify.
+
+                
             }
         }
     }
