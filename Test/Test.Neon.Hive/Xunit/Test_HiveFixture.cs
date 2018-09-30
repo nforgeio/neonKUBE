@@ -72,10 +72,10 @@ namespace TestNeonCluster
 @"version: '3'
 
 services:
-sleeper:
-image: nhive/test
-deploy:
-    replicas: 2
+  sleeper:
+    image: nhive/test
+    deploy:
+      replicas: 2
 ";
                         hive.DeployStack("test-stack", composeText);
                     },
