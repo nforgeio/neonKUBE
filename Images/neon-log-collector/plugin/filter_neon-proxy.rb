@@ -201,7 +201,7 @@ module Fluent
                     colonPos = host.index(':')
 
                     if !colonPos.nil?
-                        host = host[0..colonPos]
+                        host = host[0..colonPos-1]
                     end
 
                     proxy["http_host"] = host;
