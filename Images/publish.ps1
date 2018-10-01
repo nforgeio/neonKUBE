@@ -16,6 +16,7 @@ param
 	[switch]$dotnet      = $False,        # Rebuild .NET based images
 	[switch]$other       = $False,        # Rebuild all other images (usually script based)
     [switch]$nopush      = $False,        # Don't push to the registry
+    [switch]$noprune     = $False,        # Don't prune the local Docker state
 	[switch]$allVersions = $False         # Rebuild all image versions
 )
 
@@ -83,7 +84,10 @@ elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 # This also purges everything else Docker as a side effect.  We
 # need to do this to ensure that we get a clean build.
 
-docker system prune -af
+if (-not $noprune)
+{
+	docker system prune -af
+}
 
 # NOTE: 
 #
