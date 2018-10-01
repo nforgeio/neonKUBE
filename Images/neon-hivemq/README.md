@@ -60,7 +60,7 @@ After some experimentation, I've seen that setting `RABBITMQ_HIPE_COMPILE=1` req
 
 RabbitMQ is often deployed as a cluster of multiple instances for resilience and scalability.  You need to do two things to make this work:
 
-1. Generate a password string and assign it to `RABBITMQ_ERLANG_COOKIE` for each RabbitMQ instance so they can mutually authenticate each other.\
+1. Generate a password string and assign it to `RABBITMQ_ERLANG_COOKIE` for each RabbitMQ instance so they can mutually authenticate each other.
 2. Implement a node discovery mechanism.
 
 The simplest way to configure node discovery is to pass the list of nodes in `CLUSTER_NODES` when launching each RabbitMQ instance also passing the specific RabbitMQ node name in `NODENAME`.  This statically configures the cluster using the RabbitMQ configuration file.
@@ -75,7 +75,7 @@ docker run \
     --detach \
     --name neon-hivemq \
     --env CLUSTER_NAME=my-message-cluster \
-    --env CLUSTER_NODES=myrabbit-0@server-0.mydomain.com,myrabbit-1@server-1.mydomain",
+    --env CLUSTER_NODES=myrabbit-0@server-0.mydomain.com,myrabbit-1@server-1.mydomain \
     --env CLUSTER_PARTITION_MODE=autoheal \
     --env NODENAME=myrabbit-0@server-0.mydomain.com \
     --env RABBITMQ_ERLANG_COOKIE=$cluster_secret \
@@ -90,7 +90,7 @@ docker run \
     --detach \
     --name neon-hivemq \
     --env CLUSTER_NAME=my-message-cluster \
-    --env CLUSTER_NODES=myrabbit-0@server-0.mydomain.com,myrabbit-1@server-1.mydomain",
+    --env CLUSTER_NODES=myrabbit-0@server-0.mydomain.com,myrabbit-1@server-1.mydomain \
     --env CLUSTER_PARTITION_MODE=autoheal \
     --env NODENAME=myrabbit-1@server-1.mydomain.com \
     --env RABBITMQ_ERLANG_COOKIE=$cluster_secret \

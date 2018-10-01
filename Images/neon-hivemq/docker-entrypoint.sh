@@ -21,7 +21,7 @@ fi
 . /neonhive.sh
 
 # This is the path to a temporary RabbitMQ config file.  We're going to completely
-# manage the contents of the configuration file by writing our settings here And
+# manage the contents of the configuration file by writing our settings here and
 # then relying on a modified RabbitMQ docker entrypoint script (created by the 
 # image Dockerfile) to copy this to the standard configuration file just before
 # launching the RabbitMQ server.
@@ -47,7 +47,7 @@ if [ "$NODENAME" != "" ] ; then
     echo $node_host > /etc/hostname
     export HOSTNAME=$node_host
 
-    # And we also need to set RABBITMQ_NODE_HOSTNAME
+    # And we also need to set RABBITMQ_NODENAME
 
     export RABBITMQ_NODENAME=$NODENAME
 fi
@@ -328,6 +328,6 @@ if [ "$CLUSTER_NAME" != "" ] ; then
     bash set-cluster-name.sh "$CLUSTER_NAME" &
 fi
 
-# Start RabbitMQ via its modified Docker entrypoint.
+# Start RabbitMQ via its modified Docker entrypoint script.
 
 rabbitmq-entrypoint.sh rabbitmq-server
