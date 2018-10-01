@@ -109,7 +109,6 @@ if ($base)
 	Publish "$image_root\\couchbase-test"
 	Publish "$image_root\\golang"
 	Publish "$image_root\\aspnet"
-	Publish "$image_root\\openjdk"
 	Publish "$image_root\\elasticsearch"
 	Publish "$image_root\\kibana"
 	Publish "$image_root\\kong"

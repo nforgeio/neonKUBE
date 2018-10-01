@@ -241,9 +241,6 @@
     </None>
     <None Include="neon-cli\publish.ps1" />
     <None Include="neon-cli\README.md" />
-    <Content Include="openjdk\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="neon-registry\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -265,14 +262,6 @@
     </None>
     <None Include="neon-vegomatic\publish.ps1" />
     <None Include="neon-vegomatic\README.md" />
-    <None Include="openjdk\build.ps1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="openjdk\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="openjdk\publish.ps1" />
-    <None Include="openjdk\README.md" />
     <None Include="td-agent\Dockerfile" />
     <Content Include="ubuntu-16.04-dotnet\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
