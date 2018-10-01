@@ -36,7 +36,7 @@ namespace NeonCli
         /// <inheritdoc/>
         public override string ToString()
         {
-            return $"[{FromVersion} --> {ToVersion}]";
+            return $"[{ToVersion}]";
         }
 
         /// <inheritdoc/>
