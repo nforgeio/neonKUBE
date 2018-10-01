@@ -64,14 +64,14 @@ namespace NeonCli
             // To ensure that this feature is enabled in favor of the 
             // old hacked memory level setting.
 
-            var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, "neon-elasticsearch.sh");
+            var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-esdata.sh");
 
-            node.InvokeIdempotentAction(GetIdempotentTag("elasticsearch"),
+            node.InvokeIdempotentAction(GetIdempotentTag("neon-log-esdata"),
                 () =>
                 {
                     if (node.FileExists(scriptPath))
                     {
-                        node.Status = "updating";
+                        node.Status = $"edit: {scriptPath}";
 
                         var orgScript   = node.DownloadText(scriptPath);
                         var sbNewScript = new StringBuilder();
@@ -90,7 +90,7 @@ namespace NeonCli
 
                         node.UploadText(scriptPath, sbNewScript.ToString(), permissions: "");
 
-                        node.Status = "done";
+                        node.Status = string.Empty;
                     }
                 });
         }
