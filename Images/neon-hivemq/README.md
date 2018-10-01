@@ -54,7 +54,7 @@ RabbitMQ persists its operational data to the `/var/lib/rabbitmq` directory with
 
 **NOTE:**
 
-After some experimentation, I've seen that setting `RABBITMQ_HIPE_COMPILE=1` requires something like 500MB or memory to start successfully.  Without precompiling, RabbitMQ can start with `250MB` RAM.
+After some experimentation, I've seen that setting `RABBITMQ_HIPE_COMPILE=1` requires something like 600MB or memory to start successfully.  Without precompiling, RabbitMQ can start with `350MB` RAM.
 
 # Clustering
 
