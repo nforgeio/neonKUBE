@@ -110,7 +110,6 @@ if ($base)
 
 	# Other base images:
 
-	Publish "$image_root\\couchbase-test"
 	Publish "$image_root\\golang"
 	Publish "$image_root\\aspnet"
 	Publish "$image_root\\elasticsearch"
@@ -144,5 +143,7 @@ if ($other)
 	Publish "$image_root\\neon-proxy"
 	Publish "$image_root\\neon-proxy-vault"
 	Publish "$image_root\\neon-hivemq"
+	Publish "$image_root\\couchbase-test"
+	Publish "$image_root\\rabbitmq-test"
 	Publish "$image_root\\test"
 }

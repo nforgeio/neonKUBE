@@ -264,6 +264,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt-jeff", "wrt-jeff", "{7B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-varnish", "Services\neon-varnish\neon-varnish.csproj", "{7FDE666C-FACB-401F-9ADB-19E7998A4E95}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Xunit.RabbitMQ", "Lib\Neon.Xunit.RabbitMQ\Neon.Xunit.RabbitMQ.csproj", "{BA0CABF0-06A8-4640-9264-E1611D95FEB3}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
@@ -810,6 +812,18 @@ Global
 		{7FDE666C-FACB-401F-9ADB-19E7998A4E95}.Release|x64.Build.0 = Release|Any CPU
 		{7FDE666C-FACB-401F-9ADB-19E7998A4E95}.Release|x86.ActiveCfg = Release|Any CPU
 		{7FDE666C-FACB-401F-9ADB-19E7998A4E95}.Release|x86.Build.0 = Release|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Debug|x64.Build.0 = Debug|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Debug|x86.Build.0 = Debug|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Release|x64.ActiveCfg = Release|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Release|x64.Build.0 = Release|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Release|x86.ActiveCfg = Release|Any CPU
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -875,6 +889,7 @@ Global
 		{8168805E-1F13-4475-83B5-859FFA663062} = {319CF481-DCE8-4114-B13F-FC7CFC48496D}
 		{7B918008-009F-49F4-BE01-9130E635634B} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
 		{7FDE666C-FACB-401F-9ADB-19E7998A4E95} = {319CF481-DCE8-4114-B13F-FC7CFC48496D}
+		{BA0CABF0-06A8-4640-9264-E1611D95FEB3} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
