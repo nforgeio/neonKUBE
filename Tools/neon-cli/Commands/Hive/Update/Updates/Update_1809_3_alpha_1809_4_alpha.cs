@@ -62,7 +62,7 @@ namespace NeonCli
             //      --env ES_JAVA_OPTS=-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap \
             //
             // To ensure that this feature is enabled in favor of the 
-            // old hacked memory level setting.
+            // old hacked memory level settings.
 
             var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-esdata.sh");
 
@@ -78,9 +78,9 @@ namespace NeonCli
 
                         foreach (var line in new StringReader(orgScript).Lines())
                         {
-                            if (line.Contains("ES_JAVA_OPTS"))
+                            if (line.Contains("ES_JAVA_OPTS="))
                             {
-                                sbNewScript.AppendLine("    --env ES_JAVA_OPTS=-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap \\");
+                                sbNewScript.AppendLine("    --env \"ES_JAVA_OPTS=-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap\" \\");
                             }
                             else
                             {
