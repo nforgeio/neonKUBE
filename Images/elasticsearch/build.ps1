@@ -12,8 +12,9 @@
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $version,
-	[parameter(Mandatory=$True,Position=3)][string] $tag
+	[parameter(Mandatory=$True,Position=2)][string] $baseImage,
+	[parameter(Mandatory=$True,Position=3)][string] $version,
+	[parameter(Mandatory=$True,Position=4)][string] $tag
 )
 
 "   "
@@ -30,7 +31,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "BASE_IMAGE=$baseImage" --build-arg "VERSION=$version" . }
 
 # Clean up
 

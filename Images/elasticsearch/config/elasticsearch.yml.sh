@@ -178,4 +178,3 @@ EOF
 
 chown elasticsearch:elasticsearch /usr/share/elasticsearch/config/*
 chmod 644 /usr/share/elasticsearch/config/*
-

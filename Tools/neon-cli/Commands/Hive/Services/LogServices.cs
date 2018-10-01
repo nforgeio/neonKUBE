@@ -331,7 +331,7 @@ namespace NeonCli
                         "--env", $"ELASTICSEARCH_TCP_PORT={HiveHostPorts.LogEsDataTcp}",
                         "--env", $"ELASTICSEARCH_QUORUM={quorumCount}",
                         "--env", $"ELASTICSEARCH_BOOTSTRAP_NODES={esBootstrapNodes}",
-                        "--env", $"ES_JAVA_OPTS=-Xms{esHeapBytes / NeonHelper.Mega}M -Xmx{esHeapBytes / NeonHelper.Mega}M",
+                        "--env", $"ES_JAVA_OPTS=-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap",
                         "--memory", $"{esContainerRam / NeonHelper.Mega}M",
                         "--memory-reservation", $"{esContainerRam / NeonHelper.Mega}M",
                         "--memory-swappiness", "0",

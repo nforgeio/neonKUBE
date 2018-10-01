@@ -15,6 +15,7 @@
 #
 # ARGUMENTS:
 #
+#   BASE_IMAGE      - The base OpenJDK image (e.g. "openjdk:10-jre-slim")
 #   VERSION         - The Elasticsearch version (e.g. "5.0.1")
 #
 # REMARKS:
@@ -41,13 +42,19 @@
 #
 #       /mnt/esdata
 
-FROM        nhive/openjdk:8
+ARG         BASE_IMAGE
+FROM        ${BASE_IMAGE}
 MAINTAINER  jeff@lilltek.com
 ARG         VERSION
 
-# Overwrite the default Elasticsearch entrypoint to load the Docker host environment 
-# variables from [/etc/neon/node-env] so they can be referenced by the Elasticsearch
-# configuration file.
+# Install any required packages in a separate layer.  Note that we're
+# going to create a symlink to tini at [/sbin/tini] so the ENTRYPOINT
+# will be consistent with all of the other Docker images.
+
+RUN apt-get update \
+    && apt-get install -yq wget tini gosu \
+    && apt-get clean -yq \
+    && ln -s /usr/bin/tini /sbin/tini
 
 # Install Elasticsearch to: /usr/share/elasticsearch
 #

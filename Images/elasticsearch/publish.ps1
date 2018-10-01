@@ -26,6 +26,7 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$True, Position=1)][string] $version,
+		[parameter(Mandatory=$True, Position=2)][string] $baseImage,
 		[switch]$latest = $False
 	)
 
@@ -36,7 +37,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -baseImage $baseImage -version $version -tag $tag
     PushImage "${registry}:$tag"
 
 	if (IsProd)
@@ -65,7 +66,7 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-	Build 6.1.1
+	Build 6.1.1 openjdk:9-jre-slim
 }
 
-Build 6.4.1 -latest
+Build 6.4.1 openjdk:10-jre-slim -latest
