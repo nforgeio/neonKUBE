@@ -63,7 +63,7 @@ namespace TestSamples
         {
             // Ensure that the database starts out empty.
 
-            couchbase.Flush();
+            couchbase.Clear();
 
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("one"));
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("two"));
@@ -75,7 +75,7 @@ namespace TestSamples
 
             // Do another flush just for fun.
 
-            couchbase.Flush();
+            couchbase.Clear();
 
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("one"));
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("two"));
@@ -87,7 +87,7 @@ namespace TestSamples
         {
             // Ensure that the database starts out empty.
 
-            couchbase.Flush();
+            couchbase.Clear();
 
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("one"));
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("two"));
@@ -104,7 +104,7 @@ namespace TestSamples
         {
             // Ensure that the database starts out empty.
 
-            couchbase.Flush();
+            couchbase.Clear();
 
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("jack"));
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("jill"));

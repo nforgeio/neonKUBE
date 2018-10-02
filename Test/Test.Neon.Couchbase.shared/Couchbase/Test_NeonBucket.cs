@@ -87,7 +87,7 @@ namespace TestCouchbase
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DurabilityOverrides()
         {
-            couchbase.Flush();
+            couchbase.Clear();
 
             // Verify that the NeonBucket durability overrides work.  We're going
             // to be modifying the DEV_WORKSTATION environment variable so we

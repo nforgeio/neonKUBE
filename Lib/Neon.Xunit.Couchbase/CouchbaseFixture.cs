@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading;
 
 using Couchbase;
+using Couchbase.Linq;
 using Couchbase.N1QL;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -18,21 +19,18 @@ using Xunit;
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
-using Couchbase.Linq;
-using System.Threading.Tasks;
-using System.Text;
 
 namespace Neon.Xunit.Couchbase
 {
     /// <summary>
-    /// Used to run a Docker container on the current machine as a test 
-    /// fixture while tests are being performed and then deletes the
-    /// container when the fixture is disposed.
+    /// Used to run the Docker <b>nhive.couchbase-test</b> container on 
+    /// the current machine as a test fixture while tests are being performed 
+    /// and then deletes the container when the fixture is disposed.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This fixture assumes that Couchbase is not currently running on the
-    /// local workstation or as a container that is not named <b>cb-test</b>.
+    /// local workstation or as a container that is named <b>cb-test</b>.
     /// You may see port conflict errors if either of these assumptions are
     /// not true.
     /// </para>
@@ -107,7 +105,7 @@ namespace Neon.Xunit.Couchbase
         /// <term><b>initialize every test</b></term>
         /// <description>
         /// For scenarios where Couchbase must be cleared before every test,
-        /// you can use the <see cref="Flush()"/> method to reset its
+        /// you can use the <see cref="Clear()"/> method to reset its
         /// state within each test method, populate the database as necessary,
         /// and then perform your tests.
         /// </description>
@@ -271,7 +269,7 @@ namespace Neon.Xunit.Couchbase
         /// Removes all data and indexes from the database bucket and then recreates the
         /// primary index if an index was specified when the fixture was started.
         /// </summary>
-        public void Flush()
+        public void Clear()
         {
             CheckDisposed();
 
@@ -306,7 +304,7 @@ namespace Neon.Xunit.Couchbase
 
         /// <summary>
         /// This method completely resets the fixture by removing the Couchbase 
-        /// container from Docker.  Use <see cref="Flush"/> if you just want to 
+        /// container from Docker.  Use <see cref="Clear"/> if you just want to 
         /// clear the database.
         /// </summary>
         public override void Reset()

@@ -68,7 +68,7 @@ namespace TestSamples
 
                 hosts.Reset();
                 fixture.Reset();
-                couchbase.Flush();
+                couchbase.Clear();
             }
         }
 

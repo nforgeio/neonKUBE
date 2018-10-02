@@ -57,7 +57,7 @@ namespace TestHive
             {
                 // Flush the database if we didn't just start it.
 
-                couchbase.Flush();
+                couchbase.Clear();
             }
 
             bucket = couchbase.Bucket;
