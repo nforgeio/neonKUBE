@@ -41,7 +41,7 @@ namespace RabbitMQ.Client
 
             var credentials = NeonHelper.JsonDeserialize<Credentials>(HiveHelper.GetSecret(secretName), dispatchConsumersAsync);
 
-            return new HiveMQConnection(settings.Connect(credentials));
+            return new RabbitMQConnection(settings.ConnectRabbitMQ(credentials));
         }
     }
 }

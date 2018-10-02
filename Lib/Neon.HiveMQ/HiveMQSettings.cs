@@ -197,7 +197,7 @@ namespace Neon.HiveMQ
         /// <param name="password">Optional password.</param>
         /// <param name="dispatchConsumersAsync">Optionally enables <c>async</c> message consumers.  This defaults to <c>false</c>.</param>
         /// <returns>The RabbitMQ <see cref="IConnection"/>.</returns>
-        public IConnection Connect(string username = null, string password = null, bool dispatchConsumersAsync = false)
+        public IConnection ConnectRabbitMQ(string username = null, string password = null, bool dispatchConsumersAsync = false)
         {
             Covenant.Requires<ArgumentNullException>(AmqpHosts != null && AmqpHosts.Count > 0);
 
@@ -214,7 +214,7 @@ namespace Neon.HiveMQ
                 connectionFactory.Ssl = new SslOption() { Enabled = true };
             }
 
-            return new HiveMQConnection(connectionFactory.CreateConnection(AmqpHosts));
+            return new RabbitMQConnection(connectionFactory.CreateConnection(AmqpHosts));
         }
 
         /// <summary>
@@ -223,13 +223,13 @@ namespace Neon.HiveMQ
         /// <param name="credentials">The credentials.</param>
         /// <param name="dispatchConsumersAsync">Optionally enables <c>async</c> message consumers.  This defaults to <c>false</c>.</param>
         /// <returns>The RabbitMQ <see cref="IConnection"/>.</returns>
-        public IConnection Connect(Credentials credentials, bool dispatchConsumersAsync = false)
+        public IConnection ConnectRabbitMQ(Credentials credentials, bool dispatchConsumersAsync = false)
         {
             Covenant.Requires<ArgumentNullException>(credentials != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(VirtualHost));
             Covenant.Requires<ArgumentNullException>(AmqpHosts != null && AmqpHosts.Count > 0);
 
-            return Connect(credentials.Username, credentials.Password, dispatchConsumersAsync);
+            return ConnectRabbitMQ(credentials.Username, credentials.Password, dispatchConsumersAsync);
         }
 
         /// <summary>
@@ -237,27 +237,43 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <param name="username">Optional username (overrides <see cref="Username"/>).</param>
         /// <param name="password">Optional password (overrides <see cref="Password"/>).</param>
+        /// <param name="virtualHost">Optional target virtual host (defaults to <b>"/"</b>).</param>
         /// <param name="settings">Optional message bus client settings.</param>
         /// <param name="customServiceAction">
         /// Optionally specifies an action that overrides the default the EasyNetQ
-        /// client  configuration via dependency injection.
+        /// client configuration via dependency injection.
         /// </param>
         /// <returns>The connected <see cref="IBus"/>.</returns>
-        public IBus ConnectBus(string username = null, string password = null, BusSettings settings = null, Action<IServiceRegister> customServiceAction = null)
+        public IBus ConnectEasyNetQ(
+            string                      username = null, 
+            string                      password = null, 
+            string                      virtualHost = "/", 
+            BusSettings                 settings = null, 
+            Action<IServiceRegister>    customServiceAction = null)
         {
             Covenant.Requires<NotImplementedException>(!TlsEnabled, "$todo(jeff.lill): We don't support RabbitMQ TLS yet.");
 
             var config = new ConnectionConfiguration()
             {
-                Port     = (ushort)AmqpPort,
-                UserName = username ?? Username,
-                Password = password ?? Password
+                Port        = (ushort)AmqpPort,
+                UserName    = username ?? Username,
+                Password    = password ?? Password,
+                VirtualHost = virtualHost
             };
 
             if (settings != null)
             {
                 settings.ApplyTo(config);
             }
+
+            var hostConfigs = new List<HostConfiguration>();
+
+            foreach (var host in AmqpHosts)
+            {
+                hostConfigs.Add(new HostConfiguration() { Host = host, Port = (ushort)AmqpPort });
+            }
+
+            config.Hosts = hostConfigs;
 
             // Enable Neon based logging if requested (which is the default).
 
@@ -267,21 +283,25 @@ namespace Neon.HiveMQ
 
                 var sourceModule = "EasyNetQ";
                 var product      = settings?.Product ?? string.Empty;
-                var app          = settings?.Name ?? string.Empty;
+                var appName      = settings?.Name ?? string.Empty;
 
-                if (!string.IsNullOrEmpty(product) || !string.IsNullOrEmpty(app))
+                if (!string.IsNullOrEmpty(product) || !string.IsNullOrEmpty(appName))
                 {
                     if (string.IsNullOrEmpty(product))
                     {
-                        sourceModule = app;
+                        sourceModule = appName;
                     }
-                    else if (string.IsNullOrEmpty(app))
+                    else if (string.IsNullOrEmpty(appName))
                     {
                         sourceModule = product;
                     }
+                    else if (product != appName)
+                    {
+                        sourceModule = $"{product}/{appName}";
+                    }
                     else
                     {
-                        sourceModule = $"{product}/{app}";
+                        sourceModule = appName;
                     }
                 }
                 else
@@ -304,6 +324,13 @@ namespace Neon.HiveMQ
                 var neonLogProvider = new NeonLoggingProvider(neonLogger);
 
                 LogProvider.SetCurrentLogProvider(neonLogProvider);
+            }
+
+            if (customServiceAction == null)
+            {
+                // Use a NOP service action.
+
+                customServiceAction = r => { };
             }
 
             return RabbitHutch.CreateBus(config, customServiceAction);

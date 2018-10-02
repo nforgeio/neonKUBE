@@ -1544,7 +1544,7 @@ namespace Neon.Xunit.Hive
         /// </summary>
         public IConnection ConnectHiveMQConnection()
         {
-            return GetHiveMQSettings().Connect();
+            return GetHiveMQSettings().ConnectRabbitMQ();
         }
 
         /// <summary>
@@ -1554,7 +1554,7 @@ namespace Neon.Xunit.Hive
         /// </summary>
         public IBus ConnectHiveMQBus()
         {
-            return GetHiveMQSettings().ConnectBus();
+            return GetHiveMQSettings().ConnectEasyNetQ();
         }
 
         /// <summary>

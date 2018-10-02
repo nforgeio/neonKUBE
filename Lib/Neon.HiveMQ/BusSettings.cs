@@ -64,6 +64,14 @@ namespace Neon.HiveMQ
         public string Product { get; set; }
 
         /// <summary>
+        /// The platform name.  This effectively defaults to the hostname of the machine
+        /// hosting the client application.
+        /// </summary>
+        [JsonProperty(PropertyName = "Platform", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Platform { get; set; }
+
+        /// <summary>
         /// Specifies that the RabbitMQ broker should persist messages sent to it.
         /// This defaults to <c>false</c>.
         /// </summary>
@@ -139,7 +147,8 @@ namespace Neon.HiveMQ
 
             target.UseBackgroundThreads   = UseBackgroundThreads ?? target.UseBackgroundThreads;
             target.Name                   = Name ?? target.Name;
-            target.Product                = Product ?? target.Name;
+            target.Product                = Product ?? target.Product;
+            target.Platform               = Platform ?? target.Platform;
             target.PersistentMessages     = PersistentMessages ?? target.PersistentMessages;
             target.PublisherConfirms      = PublisherConfirms ?? target.PublisherConfirms;
             target.Timeout                = Timeout ?? target.Timeout;

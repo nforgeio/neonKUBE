@@ -138,7 +138,7 @@ namespace Neon.Xunit.RabbitMQ
                 {
                     try
                     {
-                        using (Settings.Connect(Username, Password, dispatchConsumersAsync: false))
+                        using (Settings.ConnectRabbitMQ(Username, Password, dispatchConsumersAsync: false))
                         {
                             return true;
                         }

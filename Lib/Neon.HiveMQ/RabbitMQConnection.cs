@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HiveMQConnection.cs
+// FILE:	    RabbitMQConnection.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,7 +25,7 @@ namespace Neon.HiveMQ
     /// Currently this class simply augments <see cref="Dispose"/> so that it also ensures that
     /// the connection is closed (it's a bit weird that the base RabbitMQ class doesn't do this).
     /// </remarks>
-    public class HiveMQConnection : IConnection
+    public class RabbitMQConnection : IConnection
     {
         private object          syncLock = new object();
         private IConnection     connection;
@@ -36,7 +36,7 @@ namespace Neon.HiveMQ
         /// Constructor.
         /// </summary>
         /// <param name="connection">The underlying connection.</param>
-        public HiveMQConnection(IConnection connection)
+        public RabbitMQConnection(IConnection connection)
         {
             Covenant.Requires<ArgumentNullException>(connection != null);
 
@@ -218,7 +218,7 @@ namespace Neon.HiveMQ
         /// <inheritdoc/>
         public IModel CreateModel()
         {
-            return new HiveMQChannel(connection.CreateModel());
+            return new RabbitMQChannel(connection.CreateModel());
         }
 
         /// <inheritdoc/>
