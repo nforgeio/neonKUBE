@@ -43,6 +43,7 @@ Deployment is typically handled transparently by the `RabbitMQFixture` class for
 docker run \
     --detach \
     --name rabbitmq-test \
+    --mount type=volume,target=/var/lib/rabbitmq \
     --env RABBITMQ_VM_MEMORY_HIGH_WATERMARK=0.5 \
     --env RABBITMQ_HIPE_COMPILE=0 \
     --env RABBITMQ_DISK_FREE_LIMIT=1GB \

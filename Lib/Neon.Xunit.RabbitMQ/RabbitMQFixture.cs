@@ -111,9 +111,10 @@ namespace Neon.Xunit.RabbitMQ
                 image,
                 new string[] {
                     "--detach",
+                    "--mount", "type=volume,target=/var/lib/rabbitmq",
                     "--publish", $"{NetworkPorts.AMQP}:{NetworkPorts.AMQP}",
                     "--publish", $"{NetworkPorts.RabbitMQAdmin}:{NetworkPorts.RabbitMQAdmin}",
-                    "--env", "DEBUG=true"
+                    "--env", "DEBUG=false"
                 }, 
                 env: env);
 
