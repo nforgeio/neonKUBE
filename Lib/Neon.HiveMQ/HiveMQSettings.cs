@@ -365,5 +365,25 @@ namespace Neon.HiveMQ
 
             return new ManagementClient($"{scheme}://{reachableHost.Host}", username, password, AdminPort, ssl: TlsEnabled);
         }
+
+        /// <summary>
+        /// Returns an <see cref="IMessageBus"/> instance that provides more advanced 
+        /// capabilites over the very simple <b>EasyNetQ</b> capabilities returned by
+        /// <see cref="ConnectEasyNetQ(string, string, string, BusSettings, Action{IServiceRegister})"/>
+        /// while still being very easy to use.
+        /// </summary>
+        /// <param name="username">Optional username (overrides <see cref="Username"/>).</param>
+        /// <param name="password">Optional password (overrides <see cref="Password"/>).</param>
+        /// <param name="virtualHost">Optional target virtual host (defaults to <b>"/"</b>).</param>
+        /// <param name="settings">Optional message bus client settings.</param>
+        /// <returns></returns>
+        public MessageBus ConnectBus(
+            string username      = null,
+            string password      = null,
+            string virtualHost   = "/",
+            BusSettings settings = null)
+        {
+            return null;
+        }
     }
 }
