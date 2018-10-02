@@ -122,6 +122,10 @@ if [ "$MANAGEMENT_PLUGIN" == "" ] ; then
     MANAGEMENT_PLUGIN=false
 fi
 
+if [ "$RABBITMQ_VM_MEMORY_HIGH_WATERMARK" == "" ] ; then
+    export RABBITMQ_VM_MEMORY_HIGH_WATERMARK=0.5
+fi
+
 if [ "$RABBITMQ_DISK_FREE_LIMIT" == "" ] ; then
     RABBITMQ_DISK_FREE_LIMIT=500MB
 fi
