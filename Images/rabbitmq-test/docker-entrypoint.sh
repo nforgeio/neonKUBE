@@ -37,7 +37,7 @@ if [ "$ERL_EPMD_PORT" == "" ] ; then
 fi
 
 if [ "$RABBITMQ_DEFAULT_USER" == "" ] ; then
-    export RABBITMQ_DEFAULT_USER=sysadmin
+    export RABBITMQ_DEFAULT_USER=Administrator
 fi
 
 if [ "$RABBITMQ_DEFAULT_PASS" == "" ] ; then
@@ -66,6 +66,10 @@ fi
 
 MANAGEMENT_PLUGIN=true
 
+if [ "$RABBITMQ_VM_MEMORY_HIGH_WATERMARK" == "" ] ; then
+    export RABBITMQ_VM_MEMORY_HIGH_WATERMARK=0.5
+fi
+
 if [ "$RABBITMQ_DISK_FREE_LIMIT" == "" ] ; then
     RABBITMQ_DISK_FREE_LIMIT=1GB
 fi
@@ -75,6 +79,13 @@ fi
 unset RABBITMQ_SSL_CERTFILE
 unset RABBITMQ_SSL_KEYFILE
 unset RABBITMQ_SSL_CACERTFILE
+
+# The hostname needs to be a FQDN.
+
+export HOSTNAME=rmq-test.hive
+echo 127.0.0.1 rmq-test.hive >> /etc/hosts
+
+# Generate the RabbitMQ config file.
 
 echo                                                                                    >> $config_path
 echo "# Connection Settings"                                                            >> $config_path

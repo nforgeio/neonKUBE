@@ -21,4 +21,10 @@
     <DocumentationFile>bin\Release\netstandard2.0\Neon.Xunit.RabbitMQ.xml</DocumentationFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.HiveMQ\Neon.HiveMQ.csproj" />
+    <ProjectReference Include="..\Neon.Xunit\Neon.Xunit.csproj" />
+  </ItemGroup>
+
 </Project>

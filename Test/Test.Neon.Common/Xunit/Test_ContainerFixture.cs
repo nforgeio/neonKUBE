@@ -35,7 +35,7 @@ namespace TestCommon
                     // sleeps for a (long) time.
 
                     fixture.RunContainer(
-                        name: "couchbase",
+                        name: "test",
                         image: "nhive/test",
                         dockerArgs: new string[] { "--detach" });
                 });

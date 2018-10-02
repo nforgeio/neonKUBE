@@ -83,8 +83,8 @@ namespace Neon.HiveMQ
 
         /// <summary>
         /// Specifies the hostnames or IP addresses of the RabbitMQ nodes available for
-        /// <see cref="AdminPort"/>.
         /// handling management REST API requests.  These endpoints must be listening on
+        /// <see cref="AdminPort"/>.
         /// </summary>
         /// <remarks>
         /// You must specify the hostname/address for at least one operating RabbitMQ node.  

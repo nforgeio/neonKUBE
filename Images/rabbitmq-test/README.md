@@ -12,7 +12,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* iden
 
 This image is intended for development and testing purposes.  It provisions the root virtual host **"/"** and an administrator account with full permissions.  Here are the default settings:
 
-Admin Username: **sysadmin**
+Admin Username: **Administrator**
 Admin Password: **password**
 
 The container exposes the AMPQ service on its standard port **5672** and the administrative REST API on its standard port **15672**.
