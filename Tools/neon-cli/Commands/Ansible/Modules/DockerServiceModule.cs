@@ -1364,7 +1364,7 @@ namespace NeonCli.Ansible
         /// <param name="value">The option value.</param>
         /// <param name="defaultValue">Optionally specifies the default value.</param>
         /// <param name="units">Optional units to be appended to ther value.</param>
-        private void AppendCreateOption<T>(List<object> args, string option, T? value, T defaultValue = default(T), string units = null)
+        private void AppendCreateOption<T>(List<object> args, string option, T? value, T defaultValue = default, string units = null)
             where T : struct
         {
             Covenant.Requires<ArgumentNullException>(args != null);
@@ -1419,7 +1419,7 @@ namespace NeonCli.Ansible
         /// <param name="option">The command line option (with leading dashes).</param>
         /// <param name="value">The option value.</param>
         /// <param name="defaultValue">Optionally specifies the default value.</param>
-        private void AppendCreateOptionEnum<TEnum>(List<object> args, string option, TEnum? value, TEnum defaultValue = default(TEnum))
+        private void AppendCreateOptionEnum<TEnum>(List<object> args, string option, TEnum? value, TEnum defaultValue = default)
             where TEnum : struct
         {
             Covenant.Requires<ArgumentNullException>(args != null);

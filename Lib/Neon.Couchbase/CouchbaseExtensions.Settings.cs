@@ -193,9 +193,9 @@ namespace Couchbase
         /// </para>
         /// </remarks>
         public static NeonBucket OpenBucket(this CouchbaseSettings settings, 
-            Credentials credentials,
-            TimeSpan timeout = default(TimeSpan),
-            bool? ignoreDurability = null)
+            Credentials     credentials,
+            TimeSpan        timeout = default,
+            bool?           ignoreDurability = null)
         {
             Covenant.Requires<ArgumentNullException>(credentials != null);
 

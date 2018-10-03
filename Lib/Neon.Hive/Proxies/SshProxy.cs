@@ -848,7 +848,7 @@ namespace Neon.Hive
         /// Establishes a connection to the server.
         /// </summary>
         /// <param name="timeout">Maximum amount of time to wait for a connection (defaults to <see cref="ConnectTimeout"/>).</param>
-        public void Connect(TimeSpan timeout = default(TimeSpan))
+        public void Connect(TimeSpan timeout = default)
         {
             if (timeout == default(TimeSpan))
             {
@@ -3377,7 +3377,7 @@ echo $? > {cmdFolder}/exit
         /// a change to an existing DNS entry has been propagated.
         /// </note>
         /// </remarks>
-        public void WaitForDnsHost(string hostname, TimeSpan timeout = default(TimeSpan))
+        public void WaitForDnsHost(string hostname, TimeSpan timeout = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
             Covenant.Requires<ArgumentNullException>(HiveDefinition.DnsHostRegex.IsMatch(hostname));

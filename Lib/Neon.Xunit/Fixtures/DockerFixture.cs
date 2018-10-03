@@ -1171,7 +1171,7 @@ namespace Neon.Xunit
         /// </param>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <exception cref="TimeoutException">Thrown if the stack tasks were not deployed after waiting <paramref name="timeout"/>.</exception>
-        public void DeployStack(string name, string composeYaml, string[] dockerArgs = null, TimeSpan timeout = default(TimeSpan), TimeSpan convergeTime = default(TimeSpan))
+        public void DeployStack(string name, string composeYaml, string[] dockerArgs = null, TimeSpan timeout = default, TimeSpan convergeTime = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeYaml));
