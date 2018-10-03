@@ -367,7 +367,7 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
-        /// Returns an <see cref="IMessageBus"/> instance that provides more advanced 
+        /// Returns an <see cref="MessageBus"/> instance that provides more advanced 
         /// capabilites over the very simple <b>EasyNetQ</b> capabilities returned by
         /// <see cref="ConnectEasyNetQ(string, string, string, BusSettings, Action{IServiceRegister})"/>
         /// while still being very easy to use.

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IMessageQueue.cs
+// FILE:	    BasicChannel.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,23 +28,45 @@ using Neon.Net;
 namespace Neon.HiveMQ
 {
     /// <summary>
-    /// Manages operations on a message queue managed by an <see cref="IMessageBus"/>.
+    /// <para>
+    /// Implements basic messaging operations for a <see cref="MessageBus"/>.  
+    /// Message producers and consumers each need to declare a channel with the 
+    /// same name by calling one of the <see cref="MessageBus"/> to be able to
+    /// publish and consume messages.
+    /// </para>
+    /// <note>
+    /// <see cref="BasicChannel"/> has nothing to do with an underlying
+    /// RabbitMQ channel.  These are two entirely different concepts.
+    /// </note>
     /// </summary>
-    public interface IMessageQueue : IDisposable
+    public class BasicChannel : Channel
     {
         /// <summary>
-        /// Synchronously publishes a message to the queue.
+        /// Internal constructor.
         /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="message">The message.</param>
-        void Publish<TMessage>(TMessage message);
+        /// <param name="messageBus">The <see cref="MessageBus"/>.</param>
+        /// <param name="name">The channel name.</param>
+        internal BasicChannel(MessageBus messageBus, string name)
+            : base(messageBus, name)
+        {
+        }
 
         /// <summary>
-        /// Asynchronously publishes a message to the queue.
+        /// Asynchronously publishes a message to the channel.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message.</param>
-        Task PublishAsync<TMessage>(TMessage message);
+        public Task PublishAsync<TMessage>(TMessage message)
+        {
+            Covenant.Requires<ArgumentNullException>(message != null);
+
+            lock (SyncLock)
+            {
+                CheckDisposed();
+            }
+
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Registers a synchronous callback that will be called as messages of type
@@ -52,7 +74,7 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <returns>An <see cref="IConsumerSubscription"/> instance.</returns>
+        /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
         /// This method is suitable for many graphical client applications but 
@@ -60,12 +82,22 @@ namespace Neon.HiveMQ
         /// which should register an asynchronous callback.
         /// </note>
         /// <para>
-        /// To cancel the subscription, dispose the <see cref="IConsumerSubscription"/>
+        /// To cancel the subscription, dispose the <see cref="Subscription"/>
         /// returned by this method.
         /// </para>
         /// </remarks>
-        IConsumerSubscription Consume<TMessage>(Action<IMessage<TMessage>> onMessage)
-            where TMessage : class, new();
+        public Subscription Consume<TMessage>(Action<IMessage<TMessage>> onMessage) 
+            where TMessage : class, new()
+        {
+            Covenant.Requires<ArgumentNullException>(onMessage != null);
+
+            lock (SyncLock)
+            {
+                CheckDisposed();
+            }
+
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Registers a synchronous callback that will be called as messages of type
@@ -75,7 +107,7 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <returns>An <see cref="IConsumerSubscription"/> instance.</returns>
+        /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
         /// This method is suitable for many graphical client applications but 
@@ -83,12 +115,22 @@ namespace Neon.HiveMQ
         /// which should register an asynchronous callback.
         /// </note>
         /// <para>
-        /// To cancel the subscription, dispose the <see cref="IConsumerSubscription"/>
+        /// To cancel the subscription, dispose the <see cref="Subscription"/>
         /// returned by this method.
         /// </para>
         /// </remarks>
-        IConsumerSubscription Consume<TMessage>(Action<IMessage<TMessage>, MessageReceivedInfo> onMessage)
-            where TMessage : class, new();
+        public Subscription Consume<TMessage>(Action<IMessage<TMessage>, MessageReceivedInfo> onMessage) 
+            where TMessage : class, new()
+        {
+            Covenant.Requires<ArgumentNullException>(onMessage != null);
+
+            lock (SyncLock)
+            {
+                CheckDisposed();
+            }
+
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Registers an asynchronous callback that will be called as messages of type
@@ -96,19 +138,29 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <returns>An <see cref="IConsumerSubscription"/> instance.</returns>
+        /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
         /// Most applications (especially services) should register asynchronous
         /// callbacks using this method for better performance under load.
         /// </note>
         /// <para>
-        /// To cancel the subscription, dispose the <see cref="IConsumerSubscription"/>
+        /// To cancel the subscription, dispose the <see cref="Subscription"/>
         /// returned by this method.
         /// </para>
         /// </remarks>
-        IConsumerSubscription Consume<TMessage>(Func<IMessage<TMessage>, Task> onMessage)
-            where TMessage : class, new();
+        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, Task> onMessage)
+            where TMessage : class, new()
+        {
+            Covenant.Requires<ArgumentNullException>(onMessage != null);
+
+            lock (SyncLock)
+            {
+                CheckDisposed();
+            }
+
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Registers an asynchronous callback that will be called as messages of type
@@ -118,18 +170,28 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <returns>An <see cref="IConsumerSubscription"/> instance.</returns>
+        /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
         /// Most applications (especially services) should register asynchronous
         /// callbacks using this method for better performance under load.
         /// </note>
         /// <para>
-        /// To cancel the subscription, dispose the <see cref="IConsumerSubscription"/>
+        /// To cancel the subscription, dispose the <see cref="Subscription"/>
         /// returned by this method.
         /// </para>
         /// </remarks>
-        IConsumerSubscription Consume<TMessage>(Func<IMessage<TMessage>, MessageReceivedInfo, Task> onMessage)
-            where TMessage : class, new();
+        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, MessageReceivedInfo, Task> onMessage) 
+            where TMessage : class, new()
+        {
+            Covenant.Requires<ArgumentNullException>(onMessage != null);
+
+            lock (SyncLock)
+            {
+                CheckDisposed();
+            }
+
+            throw new NotImplementedException();
+        }
     }
 }
