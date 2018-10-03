@@ -383,7 +383,7 @@ namespace Neon.HiveMQ
             string virtualHost   = "/",
             BusSettings settings = null)
         {
-            return null;
+            return new MessageBus(this, username, password, virtualHost);
         }
     }
 }

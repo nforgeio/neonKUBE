@@ -60,11 +60,12 @@ namespace Neon.Xunit.RabbitMQ
         /// was already initialized.
         /// </returns>
         public bool Start(
-            string      image     = "nhive/rabbitmq-test:latest",
-            string      name      = "rmq-test",
-            string[]    env       = null,
-            string      username  = "Administrator",
-            string      password  = "password")
+            string      image      = "nhive/rabbitmq-test:latest",
+            string      name       = "rmq-test",
+            string[]    env        = null,
+            string      username   = "Administrator",
+            string      password   = "password",
+            bool        precompile = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 

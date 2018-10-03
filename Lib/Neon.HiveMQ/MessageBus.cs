@@ -80,9 +80,7 @@ namespace Neon.HiveMQ
     /// <para>
     /// <see cref="MessageBus"/> implementations combine the RabbitMQ concepts of exchanges and
     /// queues into a <see cref="BasicChannel"/>, <see cref="BroadcastChannel"/>, or <see cref="QueryChannel"/>.  
-    /// The bus transparently creates and manages the underlying  queues and exchanges.  The bus prefixes the 
-    /// names of the entities it creates with <see cref="MessageBus.NamePrefix"/> (<b>"nbus-"</b> short for "neon bus") 
-    /// to help avoid conflicts with entities created by other frameworks.
+    /// The bus transparently creates and manages the underlying  queues and exchanges.
     /// </para>
     /// <para>
     /// Three types of channels are currently implemented:
@@ -92,14 +90,14 @@ namespace Neon.HiveMQ
     ///     <term><see cref="BasicChannel"/></term>
     ///     <description>
     ///     Basic channels deliver each message to a <b>single consumer</b>.  A typical use is
-    ///     to load balance work across multiple consumers.  Call <see cref="DeclareBasicChannel(string, bool, bool, TimeSpan?, int?, int?)"/>
+    ///     to load balance work across multiple consumers.  Call <see cref="CreateBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>
     ///     to create a basic channel.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="BroadcastChannel"/></term>
     ///     <description>
-    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="DeclareBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
+    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="CreateBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
     ///     to create a broadcast channel.
     ///     </description>
     /// </item>
@@ -107,7 +105,7 @@ namespace Neon.HiveMQ
     ///     <term><see cref="QueryChannel"/></term>
     ///     <description>
     ///     Query channels deliver a message to a <b>consumer</b> and then waits for a reply.  
-    ///     Call <see cref="DeclareQueryChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
+    ///     Call <see cref="CreateQueryChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/> 
     ///     to create a query channel.
     ///     </description>
     /// </item>
@@ -121,16 +119,12 @@ namespace Neon.HiveMQ
     /// to be a useful overview of RabbitMQ features and how they compare to Kafka.
     /// </note>
     /// </remarks>
-    public class MessageBus
+    public class MessageBus : IDisposable
     {
-        private object  syncLock   = new object();
-        private bool    isDisposed = false;
-
-        /// <summary>
-        /// The string used to prefix RabbitMQ exchange and queue names to distinguish
-        /// these from items created via the RabbitMQ or EasyNetQ APIs.
-        /// </summary>
-        public const string NamePrefix = "nbus-";
+        private object          syncLock     = new object();
+        private bool            isDisposed   = false;
+        private bool            disposingNow = false;
+        private List<Channel>   channels     = new List<Channel>();
 
         /// <summary>
         /// Constructor.
@@ -158,8 +152,32 @@ namespace Neon.HiveMQ
                 {
                     if (disposing)
                     {
-                        EasyBus.Dispose();
-                        EasyBus = null;
+                        try
+                        {
+                            disposingNow = true;
+
+                            foreach (var channel in channels)
+                            {
+                                try
+                                {
+                                    channel.Dispose();
+                                }
+                                catch
+                                {
+                                    // Intentionally ignoring these.
+                                }
+                            }
+
+                            channels.Clear();
+                            channels = null;
+
+                            EasyBus.Dispose();
+                            EasyBus = null;
+                        }
+                        finally
+                        {
+                            disposingNow = false;
+                        }
                     }
 
                     isDisposed = true;
@@ -195,7 +213,7 @@ namespace Neon.HiveMQ
         /// is delivered to a <b>single consumer</b>.  This is typically used for load balancing
         /// work across multiple consumers.
         /// </summary>
-        /// <param name="name">The channel name.  This can be a maximum of 250 characters.</param>
+        /// <param name="name">The channel name.  This can be a maximum of 255 characters.</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
@@ -203,6 +221,10 @@ namespace Neon.HiveMQ
         /// <param name="autoDelete">
         /// Optionally specifies that the channel should be deleted once all consumers have 
         /// disconnected.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="exclusive">
+        /// Optionally specifies that this channel instance will exclusively receive
+        /// messages from the queue.  This defaults to <c>false</c>.
         /// </param>
         /// <param name="messageTTL">
         /// Optionally specifies the maximum time a message can remain in the channel before 
@@ -216,7 +238,8 @@ namespace Neon.HiveMQ
         /// <param name="maxLengthBytes">
         /// Optionally specifies the maximum total bytes of messages that can be waiting in 
         /// the channel before messages at the front of the channel will be deleted.  This 
-        /// defaults to unconstrained.</param>
+        /// defaults to unconstrained.
+        /// </param>
         /// <returns>The <see cref="BasicChannel"/> created.</returns>
         /// <remarks>
         /// <note>
@@ -227,16 +250,17 @@ namespace Neon.HiveMQ
         /// under 24 days.  An <see cref="ArgumentException"/> will be thrown if this is exceeded.
         /// </note>
         /// </remarks>
-        public BasicChannel DeclareBasicChannel(
+        public BasicChannel CreateBasicChannel(
             string      name, 
             bool        durable = false, 
+            bool        exclusive = false,
             bool        autoDelete = false, 
             TimeSpan?   messageTTL = null, 
             int?        maxLength = null, 
             int?        maxLengthBytes = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentException>(name.Length <= 255 - NamePrefix.Length);
+            Covenant.Requires<ArgumentException>(name.Length <= 255);
             Covenant.Requires<ArgumentException>(!messageTTL.HasValue || messageTTL.Value >= TimeSpan.Zero);
             Covenant.Requires<ArgumentException>(!maxLength.HasValue || maxLength.Value > 0);
             Covenant.Requires<ArgumentException>(!maxLengthBytes.HasValue || maxLengthBytes.Value > 0);
@@ -250,7 +274,20 @@ namespace Neon.HiveMQ
                     throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] cannot exceed about 24.85 days (2^31-1 milliseconds).");
                 }
 
-                return new BasicChannel(this, name);
+                var channel = new BasicChannel(this, name,
+                    durable: durable,
+                    exclusive: exclusive,
+                    autoDelete: autoDelete,
+                    messageTTL: messageTTL,
+                    maxLength: maxLength,
+                    maxLengthBytes: maxLengthBytes);
+
+                lock (syncLock)
+                {
+                    channels.Add(channel);
+                }
+
+                return channel;
             }
         }
 
@@ -259,7 +296,7 @@ namespace Neon.HiveMQ
         /// are used to forward messages to one or more consumers such that each message
         /// is delivered to <b>all consumers</b>.
         /// </summary>
-        /// <param name="name">The channel name.  This can be a maximum of 250 characters.</param>
+        /// <param name="name">The channel name.  This can be a maximum of 255 characters.</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
@@ -292,7 +329,7 @@ namespace Neon.HiveMQ
         /// under 24 days.  An <see cref="ArgumentException"/> will be thrown if this is exceeded.
         /// </note>
         /// </remarks>
-        public BroadcastChannel DeclareBroadcastChannel(
+        public BroadcastChannel CreateBroadcastChannel(
             string      name,
             bool        durable = false,
             bool        autoDelete = false,
@@ -301,7 +338,7 @@ namespace Neon.HiveMQ
             int?        maxLengthBytes = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentException>(name.Length <= 255 - NamePrefix.Length);
+            Covenant.Requires<ArgumentException>(name.Length <= 255);
             Covenant.Requires<ArgumentException>(!messageTTL.HasValue || messageTTL.Value >= TimeSpan.Zero);
             Covenant.Requires<ArgumentException>(!maxLength.HasValue || maxLength.Value > 0);
             Covenant.Requires<ArgumentException>(!maxLengthBytes.HasValue || maxLengthBytes.Value > 0);
@@ -315,17 +352,28 @@ namespace Neon.HiveMQ
                     throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] cannot exceed about 24.85 days (2^31-1 milliseconds).");
                 }
 
-                return new BroadcastChannel(this, name);
+                var channel = new BroadcastChannel(this, name,
+                    durable: durable,
+                    autoDelete: autoDelete,
+                    messageTTL: messageTTL,
+                    maxLength: maxLength,
+                    maxLengthBytes: maxLengthBytes);
+
+                lock (syncLock)
+                {
+                    channels.Add(channel);
+                }
+
+                return channel;
             }
         }
 
-#if TODO
         /// <summary>
         /// Creates a query message channel if it doesn't already exist.  Query message channels
         /// are used to implement a query/response pattern by sending a message to a consumer and
         /// then waiting for it to send a reply message.
         /// </summary>
-        /// <param name="name">The channel name.  This can be a maximum of 250 characters.</param>
+        /// <param name="name">The channel name.  This can be a maximum of 255 characters.</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
@@ -333,6 +381,10 @@ namespace Neon.HiveMQ
         /// <param name="autoDelete">
         /// Optionally specifies that the channel should be deleted once all consumers have 
         /// disconnected.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="exclusive">
+        /// Optionally specifies that this channel instance will exclusively receive
+        /// messages from the queue.  This defaults to <c>false</c>.
         /// </param>
         /// <param name="messageTTL">
         /// Optionally specifies the maximum time a message can remain in the channel before 
@@ -358,20 +410,22 @@ namespace Neon.HiveMQ
         /// under 24 days.  An <see cref="ArgumentException"/> will be thrown if this is exceeded.
         /// </note>
         /// </remarks>
-        public QueryChannel DeclareQueryChannel(
+        public QueryChannel CreateQueryChannel(
             string      name,
             bool        durable = false,
             bool        autoDelete = false,
+            bool        exclusive = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
             int?        maxLengthBytes = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentException>(name.Length <= 255 - NamePrefix.Length);
+            Covenant.Requires<ArgumentException>(name.Length <= 255);
             Covenant.Requires<ArgumentException>(!messageTTL.HasValue || messageTTL.Value >= TimeSpan.Zero);
             Covenant.Requires<ArgumentException>(!maxLength.HasValue || maxLength.Value > 0);
             Covenant.Requires<ArgumentException>(!maxLengthBytes.HasValue || maxLengthBytes.Value > 0);
 
+#if TODO
             lock (syncLock)
             {
                 CheckDisposed();
@@ -381,9 +435,39 @@ namespace Neon.HiveMQ
                     throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] cannot exceed about 24.85 days (2^31-1 milliseconds).");
                 }
 
-                return new QueryChannel(this, name);
+                var channel = new QueryChannel(this, name, 
+                    durable: durable,
+                    exclusive: exclusive,
+                    autoDelete: autoDelete,
+                    messageTTL: messageTTL,
+                    maxLength: maxLength,
+                    maxLengthBytes: maxLengthBytes);
+
+                lock (syncLock)
+                {
+                    channels.Add(channel);
+                }
+
+                return channel;
+            }
+#else
+            throw new NotImplementedException();
+#endif
+        }
+
+        /// <summary>
+        /// Removes a disposed channel from the bus.
+        /// </summary>
+        /// <param name="channel">The channel to be removed.</param>
+        internal void RemoveChannel(Channel channel)
+        {
+            lock (syncLock)
+            {
+                if (!disposingNow)
+                {
+                    channels.Remove(channel);
+                }
             }
         }
-#endif
     }
 }

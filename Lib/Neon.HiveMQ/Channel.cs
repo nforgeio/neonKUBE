@@ -47,6 +47,7 @@ namespace Neon.HiveMQ
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
             this.MessageBus    = messageBus;
+            this.EasyBus       = messageBus.EasyBus.Advanced;
             this.Name          = name;
             this.subscriptions = new List<Subscription>();
         }
@@ -67,6 +68,9 @@ namespace Neon.HiveMQ
                         {
                             subscription.Dispose();
                         }
+
+                        subscriptions.Clear();
+                        MessageBus.RemoveChannel(this);
                     }
 
                     isDisposed = true;
@@ -105,6 +109,30 @@ namespace Neon.HiveMQ
         /// Returns the message bus.
         /// </summary>
         protected MessageBus MessageBus { get; private set; }
+
+        /// <summary>
+        /// Returns the lower level EasyNetQ <see cref="IAdvancedBus"/> implementation.
+        /// </summary>
+        protected IAdvancedBus EasyBus { get; private set; }
+
+        /// <summary>
+        /// Returns <c>true</c> if the channel is currently connected to a RabbitMQ broker.
+        /// </summary>
+        public bool IsConnected => EasyBus.IsConnected;
+
+        /// <summary>
+        /// Addes a message consumption subscription the the channel.
+        /// </summary>
+        /// <param name="subscription">The subscription.</param>
+        protected void AddSubscription(Subscription subscription)
+        {
+            Covenant.Requires<ArgumentNullException>(subscription != null);
+
+            lock (syncLock)
+            {
+                subscriptions.Add(subscription);
+            }
+        }
 
         /// <summary>
         /// Removes a message consumption subscription from the channel.

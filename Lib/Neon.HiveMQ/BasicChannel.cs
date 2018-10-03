@@ -14,6 +14,7 @@ using EasyNetQ;
 using EasyNetQ.DI;
 using EasyNetQ.Logging;
 using EasyNetQ.Management.Client;
+using EasyNetQ.Topology;
 
 using RabbitMQ;
 using RabbitMQ.Client;
@@ -41,14 +42,125 @@ namespace Neon.HiveMQ
     /// </summary>
     public class BasicChannel : Channel
     {
+        private IQueue      queue;
+        private IExchange   exchange;
+
         /// <summary>
         /// Internal constructor.
         /// </summary>
         /// <param name="messageBus">The <see cref="MessageBus"/>.</param>
-        /// <param name="name">The channel name.</param>
-        internal BasicChannel(MessageBus messageBus, string name)
+        /// <param name="name">The channel name (maximum of 250 characters).</param>
+        /// <param name="durable">
+        /// Optionally specifies that the channel should survive message cluster restarts.  
+        /// This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="exclusive">
+        /// Optionally specifies that this channel instance will exclusively receive
+        /// messages from the queue.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="autoDelete">
+        /// Optionally specifies that the channel should be deleted once all consumers have 
+        /// disconnected.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="messageTTL">
+        /// Optionally specifies the maximum time a message can remain in the channel before 
+        /// being deleted.  This defaults to <c>null</c> which disables this feature.
+        /// </param>
+        /// <param name="maxLength">
+        /// Optionally specifies the maximum number of messages that can be waiting in the channel
+        /// before messages at the front of the channel will be deleted.  This defaults 
+        /// to unconstrained.
+        /// </param>
+        /// <param name="maxLengthBytes">
+        /// Optionally specifies the maximum total bytes of messages that can be waiting in 
+        /// the channel before messages at the front of the channel will be deleted.  This 
+        /// defaults to unconstrained.
+        /// </param>
+        internal BasicChannel(MessageBus messageBus, string name,
+            bool durable = false,
+            bool exclusive = false,
+            bool autoDelete = false,
+            TimeSpan? messageTTL = null,
+            int? maxLength = null,
+            int? maxLengthBytes = null)
+
             : base(messageBus, name)
         {
+            Covenant.Requires<ArgumentNullException>(messageBus != null);
+
+            queue = EasyBus.QueueDeclare(
+                name: name,
+                passive: false,
+                durable: durable,
+                exclusive: exclusive,
+                autoDelete: autoDelete,
+                perQueueMessageTtl: messageTTL.HasValue ? (int?)messageTTL.Value.TotalMilliseconds : null,
+                maxLength: maxLength,
+                maxLengthBytes: maxLengthBytes);
+
+            // We're going to use the default exchange which automatically
+            // routes messages to the queue by name.
+
+            exchange = Exchange.GetDefault();
+        }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            queue    = null;
+            exchange = null;
+
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// Ensures that the channel isn't disposed and returns the queue instance.
+        /// </summary>
+        /// <returns>The queue instance.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the channel is disposed.</exception>
+        private IQueue GetQueue()
+        {
+            var queue = this.queue;
+
+            if (queue == null)
+            {
+                throw new ObjectDisposedException(nameof(BasicChannel));
+            }
+
+            return queue;
+        }
+
+        /// <summary>
+        /// Ensures that the channel isn't disposed and returns the exchange instance.
+        /// </summary>
+        /// <returns>The exchange instance.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the channel is disposed.</exception>
+        private IExchange GetExchange()
+        {
+            var exchange = this.exchange;
+
+            if (exchange == null)
+            {
+                throw new ObjectDisposedException(nameof(BasicChannel));
+            }
+
+            return exchange;
+        }
+
+        /// <summary>
+        /// Synchronously publishes a message to the channel.
+        /// </summary>
+        /// <typeparam name="TMessage">The message type.</typeparam>
+        /// <param name="message">The message.</param>
+        public void Publish<TMessage>(TMessage message)
+            where TMessage : class, new()
+        {
+            Covenant.Requires<ArgumentNullException>(message != null);
+
+            var exchange = GetExchange();
+            var envelope = new Message<TMessage>(message);
+
+            EasyBus.PublishAsync(exchange, Name, mandatory: false, message: envelope).Wait();
         }
 
         /// <summary>
@@ -56,16 +168,15 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message.</param>
-        public Task PublishAsync<TMessage>(TMessage message)
+        public async Task PublishAsync<TMessage>(TMessage message)
+            where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var exchange = GetExchange();
+            var envelope = new Message<TMessage>(message);
 
-            throw new NotImplementedException();
+            await EasyBus.PublishAsync(exchange, Name, mandatory: false, message: envelope);
         }
 
         /// <summary>
@@ -91,19 +202,21 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var queue        = GetQueue();
+            var subscription = EasyBus.Consume<TMessage>(queue,
+                (message, info) =>
+                {
+                    onMessage(message);
+                });
 
-            throw new NotImplementedException();
+            return new Subscription(this, subscription);
         }
 
         /// <summary>
         /// Registers a synchronous callback that will be called as messages of type
         /// <typeparamref name="TMessage"/> are delivered to the consumer.  This override
-        /// also passed additional context information via the <see cref="MessageReceivedInfo"/>
-        /// callback parameter.
+        /// also passes an additional <see cref="ConsumerContext"/> parameter to
+        /// the callback.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
@@ -119,17 +232,19 @@ namespace Neon.HiveMQ
         /// returned by this method.
         /// </para>
         /// </remarks>
-        public Subscription Consume<TMessage>(Action<IMessage<TMessage>, MessageReceivedInfo> onMessage) 
+        public Subscription Consume<TMessage>(Action<IMessage<TMessage>, ConsumerContext> onMessage) 
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var queue = GetQueue();
+            var subscription = EasyBus.Consume<TMessage>(queue,
+                (message, info) =>
+                {
+                    onMessage(message, ConsumerContext.Create(info));
+                });
 
-            throw new NotImplementedException();
+            return new Subscription(this, subscription);
         }
 
         /// <summary>
@@ -138,6 +253,10 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
+        /// <param name="exclusive">
+        /// Optionally indicates that this is is to be the exclusive consumer 
+        /// of messages on the channel.  This defaults to <c>false</c>.
+        /// </param>
         /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
@@ -149,27 +268,33 @@ namespace Neon.HiveMQ
         /// returned by this method.
         /// </para>
         /// </remarks>
-        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, Task> onMessage)
+        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, Task> onMessage, bool exclusive = false)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var queue = GetQueue();
+            var subscription = EasyBus.Consume<TMessage>(queue,
+                async (message, info) =>
+                {
+                    await onMessage(message);
+                });
 
-            throw new NotImplementedException();
+            return new Subscription(this, subscription);
         }
 
         /// <summary>
         /// Registers an asynchronous callback that will be called as messages of type
         /// <typeparamref name="TMessage"/> are delivered to the consumer.  This override
-        /// also passed additional context information via the <see cref="MessageReceivedInfo"/>
-        /// callback parameter.
+        /// also passes an additional <see cref="ConsumerContext"/> parameter to the
+        /// callback.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
+        /// <param name="exclusive">
+        /// Optionally indicates that this is is to be the exclusive consumer 
+        /// of messages on the channel.  This defaults to <c>false</c>.
+        /// </param>
         /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
@@ -181,17 +306,19 @@ namespace Neon.HiveMQ
         /// returned by this method.
         /// </para>
         /// </remarks>
-        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, MessageReceivedInfo, Task> onMessage) 
+        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, ConsumerContext, Task> onMessage, bool exclusive = false) 
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var queue = GetQueue();
+            var subscription = EasyBus.Consume<TMessage>(queue,
+                async (message, info) =>
+                {
+                    await onMessage(message, ConsumerContext.Create(info));
+                });
 
-            throw new NotImplementedException();
+            return new Subscription(this, subscription);
         }
     }
 }

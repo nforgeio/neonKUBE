@@ -14,6 +14,7 @@ using EasyNetQ;
 using EasyNetQ.DI;
 using EasyNetQ.Logging;
 using EasyNetQ.Management.Client;
+using EasyNetQ.Topology;
 
 using RabbitMQ;
 using RabbitMQ.Client;
@@ -48,9 +49,44 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <param name="messageBus">The <see cref="MessageBus"/>.</param>
         /// <param name="name">The channel name.</param>
-        internal BroadcastChannel(MessageBus messageBus, string name)
+        /// <param name="durable">
+        /// Optionally specifies that the channel should survive message cluster restarts.  
+        /// This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="autoDelete">
+        /// Optionally specifies that the channel should be deleted once all consumers have 
+        /// disconnected.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="messageTTL">
+        /// Optionally specifies the maximum time a message can remain in the channel before 
+        /// being deleted.  This defaults to <c>null</c> which disables this feature.
+        /// </param>
+        /// <param name="maxLength">
+        /// Optionally specifies the maximum number of messages that can be waiting in the channel
+        /// before messages at the front of the channel will be deleted.  This defaults 
+        /// to unconstrained.
+        /// </param>
+        /// <param name="maxLengthBytes">
+        /// Optionally specifies the maximum total bytes of messages that can be waiting in 
+        /// the channel before messages at the front of the channel will be deleted.  This 
+        /// defaults to unconstrained.
+        /// </param>
+        internal BroadcastChannel(MessageBus messageBus, string name,
+            bool durable = false,
+            bool autoDelete = false,
+            TimeSpan? messageTTL = null,
+            int? maxLength = null,
+            int? maxLengthBytes = null)
+
             : base(messageBus, name)
         {
+            Covenant.Requires<ArgumentNullException>(messageBus != null);
+        }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -59,6 +95,7 @@ namespace Neon.HiveMQ
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message.</param>
         public void Broadcast<TMessage>(TMessage message)
+            where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
@@ -74,6 +111,7 @@ namespace Neon.HiveMQ
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message.</param>
         public Task BroadcastAsync<TMessage>(TMessage message)
+            where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
@@ -120,8 +158,8 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Registers a synchronous callback that will be called as messages of type
         /// <typeparamref name="TMessage"/> are delivered to the consumer.  This override
-        /// also passed additional context information via the <see cref="MessageReceivedInfo"/>
-        /// callback parameter.
+        /// also passes an additional <see cref="ConsumerContext"/> parameter to the
+        /// callback.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
@@ -138,7 +176,7 @@ namespace Neon.HiveMQ
         /// returned by this method.
         /// </para>
         /// </remarks>
-        public Subscription Consume<TMessage>(Action<IMessage<TMessage>, MessageReceivedInfo> onMessage, bool filterSelf = false) 
+        public Subscription Consume<TMessage>(Action<IMessage<TMessage>, ConsumerContext> onMessage, bool filterSelf = false) 
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
@@ -185,8 +223,8 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Registers an asynchronous callback that will be called as messages of type
         /// <typeparamref name="TMessage"/> are delivered to the consumer.  This override
-        /// also passed additional context information via the <see cref="MessageReceivedInfo"/>
-        /// callback parameter.
+        /// also passes an additional <see cref="ConsumerContext"/> parameter to the
+        /// callback.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
@@ -202,7 +240,7 @@ namespace Neon.HiveMQ
         /// returned by this method.
         /// </para>
         /// </remarks>
-        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, MessageReceivedInfo, Task> onMessage, bool filterSelf = false)
+        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, ConsumerContext, Task> onMessage, bool filterSelf = false)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);

@@ -15,6 +15,7 @@ using EasyNetQ;
 using EasyNetQ.DI;
 using EasyNetQ.Logging;
 using EasyNetQ.Management.Client;
+using EasyNetQ.Topology;
 
 using RabbitMQ;
 using RabbitMQ.Client;
@@ -25,8 +26,6 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
-
-#if TODO
 
 namespace Neon.HiveMQ
 {
@@ -51,9 +50,51 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <param name="messageBus">The <see cref="MessageBus"/>.</param>
         /// <param name="name">The channel name.</param>
-        internal QueryChannel(MessageBus messageBus, string name)
+        /// <param name="durable">
+        /// Optionally specifies that the channel should survive message cluster restarts.  
+        /// This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="exclusive">
+        /// Optionally specifies that this channel instance will exclusively receive
+        /// messages from the queue.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="autoDelete">
+        /// Optionally specifies that the channel should be deleted once all consumers have 
+        /// disconnected.  This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="messageTTL">
+        /// Optionally specifies the maximum time a message can remain in the channel before 
+        /// being deleted.  This defaults to <c>null</c> which disables this feature.
+        /// </param>
+        /// <param name="maxLength">
+        /// Optionally specifies the maximum number of messages that can be waiting in the channel
+        /// before messages at the front of the channel will be deleted.  This defaults 
+        /// to unconstrained.
+        /// </param>
+        /// <param name="maxLengthBytes">
+        /// Optionally specifies the maximum total bytes of messages that can be waiting in 
+        /// the channel before messages at the front of the channel will be deleted.  This 
+        /// defaults to unconstrained.
+        /// </param>
+        internal QueryChannel(
+            MessageBus  messageBus, 
+            string      name,
+            bool        durable = false,
+            bool        exclusive = false,
+            bool        autoDelete = false,
+            TimeSpan?   messageTTL = null,
+            int?        maxLength = null,
+            int?        maxLengthBytes = null)
+
             : base(messageBus, name)
         {
+            Covenant.Requires<ArgumentNullException>(messageBus != null);
+        }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -124,23 +165,27 @@ namespace Neon.HiveMQ
         /// <param name="onRequest">The synchronous request handler.</param>
         /// <exception cref="QueryException">Thrown when the remote handler throws an exception.</exception>
         public void Receive<TRequest, TResponse>(TRequest request, Func<TRequest, TResponse> onRequest)
+            where TRequest : class, new()
+            where TResponse : class, new()
         {
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Asynchronously handles a query request.
+        /// Asynchronously handles a query request.  This override also
+        /// passes an additional <see cref="ConsumerContext"/> parameter
+        /// to the callback.
         /// </summary>
         /// <typeparam name="TRequest">The request message type.</typeparam>
         /// <typeparam name="TResponse">The response message type.</typeparam>
         /// <param name="request">The request message.</param>
         /// <param name="onRequest">The asynchronous request handler.</param>
         /// <exception cref="QueryException">Thrown when the remote handler throws an exception.</exception>
-        public void Receive<TRequest, TResponse>(TRequest request, Func<TRequest, Task<TResponse>> onRequest)
+        public void Receive<TRequest, TResponse>(TRequest request, Func<TRequest, ConsumerContext, Task<TResponse>> onRequest)
+            where TRequest : class, new()
+            where TResponse : class, new()
         {
             throw new NotImplementedException();
         }
     }
 }
-
-#endif // TODO
