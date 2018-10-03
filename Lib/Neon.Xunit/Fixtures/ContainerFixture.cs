@@ -84,7 +84,7 @@ namespace Neon.Xunit
         /// debugging before ensuring that the container is stopped.
         /// </note>
         /// </remarks>
-        public void RunContainer(string name, string image, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
+        public void RunContainer(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));

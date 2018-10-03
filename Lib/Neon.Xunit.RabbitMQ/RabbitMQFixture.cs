@@ -54,31 +54,36 @@ namespace Neon.Xunit.RabbitMQ
         /// <param name="env">Optional environment variables to be passed to the RabbitMQ container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional RabbitMQ username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional RabbitMQ password (defaults to <b>password</b>).</param>
+        /// <param name="precompile">
+        /// Optionally configure RabbitMQ precompiling.  This may improve RabbitMQ performance by
+        /// 20-50% at the cost of an additional 30-45 seconds of startup time.  This can be
+        /// enabled for performance oriented unit tests.  This defaults to <c>false</c>.
+        /// </param>
         /// <returns>
         /// <c>true</c> if the fixture wasn't previously initialized and
         /// this method call initialized it or <c>false</c> if the fixture
         /// was already initialized.
         /// </returns>
         public bool Start(
-            string      image      = "nhive/rabbitmq-test:latest",
-            string      name       = "rmq-test",
-            string[]    env        = null,
-            string      username   = "Administrator",
-            string      password   = "password",
-            bool        precompile = false)
+            string          image      = "nhive/rabbitmq-test:latest",
+            string          name       = "rmq-test",
+            List<string>    env        = null,
+            string          username   = "Administrator",
+            string          password   = "password",
+            bool            precompile = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
             return base.Initialize(
                 () =>
                 {
-                    StartInAction(image, name, env, username, password);
+                    StartInAction(image, name, env, username, password, precompile);
                 });
         }
 
         /// <summary>
         /// Actually starts RabbitMQ within the initialization <see cref="Action"/>.  You'll
-        /// generally want to use <see cref="Start(string, string, string[], string, string)"/>
+        /// generally want to use <see cref="Start(string, string, List{string}, string, string, bool)"/>
         /// but this method is used internally or for special situations.
         /// </summary>
         /// <param name="image">Optionally specifies the RabbitMQ container image (defaults to <b>nhive/rabbitmq-test:latest</b>).</param>
@@ -86,17 +91,23 @@ namespace Neon.Xunit.RabbitMQ
         /// <param name="env">Optional environment variables to be passed to the RabbitMQ container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional RabbitMQ username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional RabbitMQ password (defaults to <b>password</b>).</param>
+        /// <param name="precompile">
+        /// Optionally configure RabbitMQ precompiling.  This may improve RabbitMQ performance by
+        /// 20-50% at the cost of an additional 30-45 seconds of startup time.  This can be
+        /// enabled for performance oriented unit tests.  This defaults to <c>false</c>.
+        /// </param>
         /// <returns>
         /// <c>true</c> if the fixture wasn't previously initialized and
         /// this method call initialized it or <c>false</c> if the fixture
         /// was already initialized.
         /// </returns>
         public void StartInAction(
-            string      image     = "nhive/rabbitmq-test:latest",
-            string      name      = "rmq-test",
-            string[]    env       = null,
-            string      username  = "Administrator",
-            string      password  = "password")
+            string          image      = "nhive/rabbitmq-test:latest",
+            string          name       = "rmq-test",
+            List<string>    env        = null,
+            string          username   = "Administrator",
+            string          password   = "password",
+            bool            precompile = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
@@ -105,6 +116,16 @@ namespace Neon.Xunit.RabbitMQ
             if (IsInitialized)
             {
                 return;
+            }
+
+            if (precompile)
+            {
+                if (env == null)
+                {
+                    env = new List<string>();
+                }
+
+                env.Add("RABBITMQ_HIPE_COMPILE=1");
             }
 
             RunContainer(
@@ -149,7 +170,7 @@ namespace Neon.Xunit.RabbitMQ
                         return false;
                     }
                 },
-                timeout: TimeSpan.FromSeconds(30),
+                timeout: TimeSpan.FromSeconds(precompile ? 120 : 30),
                 pollTime: TimeSpan.FromSeconds(0.5));
 
             NeonHelper.WaitFor(
