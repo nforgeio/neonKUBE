@@ -26,6 +26,8 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
 
+#if TODO
+
 namespace Neon.HiveMQ
 {
     /// <summary>
@@ -57,7 +59,7 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Synchronously sends a query message on the channel and waits for a response.  
         /// </summary>
-        /// <typeparam name="TQuery">The query message type.</typeparam>
+        /// <typeparam name="TRequest">The request message type.</typeparam>
         /// <typeparam name="TResponse">The response message type.</typeparam>
         /// <param name="request">The request message.</param>
         /// <param name="timeout">The maximum time to wait (defaults to <b>15 seconds</b>).</param>
@@ -72,8 +74,8 @@ namespace Neon.HiveMQ
         /// instead.
         /// </note>
         /// </remarks>
-        public TResponse Query<TQuery, TResponse>(TQuery request, TimeSpan timeout = default)
-            where TQuery : class, new()
+        public TResponse Query<TRequest, TResponse>(TRequest request, TimeSpan timeout = default)
+            where TRequest : class, new()
             where TResponse : class, new()
         {
             Covenant.Requires<ArgumentNullException>(request != null);
@@ -90,15 +92,15 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Asynchronously sends a query message on the channel and waits for a response.
         /// </summary>
-        /// <typeparam name="TQuery">The query message type.</typeparam>
+        /// <typeparam name="TRequest">The request message type.</typeparam>
         /// <typeparam name="TResponse">The response message type.</typeparam>
         /// <param name="request">The request message.</param>
         /// <param name="timeout">The maximum time to wait (defaults to <b>15 seconds</b>).</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The response message.</returns>
         /// <exception cref="TimeoutException">Thrown if the timeout expired before a response was received.</exception>
-        public async Task<TResponse> QueryAsync<TQuery, TResponse>(TQuery request, TimeSpan timeout = default, CancellationToken cancellationToken = default)
-            where TQuery : class, new()
+        public async Task<TResponse> QueryAsync<TRequest, TResponse>(TRequest request, TimeSpan timeout = default, CancellationToken cancellationToken = default)
+            where TRequest : class, new()
             where TResponse : class, new()
         {
             Covenant.Requires<ArgumentNullException>(request != null);
@@ -112,5 +114,33 @@ namespace Neon.HiveMQ
             await Task.CompletedTask;
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Synchronously handles a query request.
+        /// </summary>
+        /// <typeparam name="TRequest">The request message type.</typeparam>
+        /// <typeparam name="TResponse">The response message type.</typeparam>
+        /// <param name="request">The request message.</param>
+        /// <param name="onRequest">The synchronous request handler.</param>
+        /// <exception cref="QueryException">Thrown when the remote handler throws an exception.</exception>
+        public void Receive<TRequest, TResponse>(TRequest request, Func<TRequest, TResponse> onRequest)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Asynchronously handles a query request.
+        /// </summary>
+        /// <typeparam name="TRequest">The request message type.</typeparam>
+        /// <typeparam name="TResponse">The response message type.</typeparam>
+        /// <param name="request">The request message.</param>
+        /// <param name="onRequest">The asynchronous request handler.</param>
+        /// <exception cref="QueryException">Thrown when the remote handler throws an exception.</exception>
+        public void Receive<TRequest, TResponse>(TRequest request, Func<TRequest, Task<TResponse>> onRequest)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
+
+#endif // TODO

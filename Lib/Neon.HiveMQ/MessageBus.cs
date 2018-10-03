@@ -24,6 +24,13 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
 
+// $note(jeff.lill):
+//
+// The link below is to a series of great articles from 2017 comparing RabbitMQ
+// to Kafka.  It's probably the best overview of RabbitMQ that I've found so far.
+//
+//      https://jack-vanlightly.com/blog/2017/12/3/rabbitmq-vs-kafka-series-introduction
+
 namespace Neon.HiveMQ
 {
     /// <summary>
@@ -108,6 +115,10 @@ namespace Neon.HiveMQ
     /// <note>
     /// A <c>channel</c> in this context has nothing to do with an underlying
     /// RabbitMQ channel.  These are two entirely different concepts.
+    /// </note>
+    /// <note>
+    /// <b>FYI:</b> I found this <a href="https://jack-vanlightly.com/blog/2017/12/3/rabbitmq-vs-kafka-series-introduction">link</a> 
+    /// to be a useful overview of RabbitMQ features and how they compare to Kafka.
     /// </note>
     /// </remarks>
     public class MessageBus
@@ -308,6 +319,7 @@ namespace Neon.HiveMQ
             }
         }
 
+#if TODO
         /// <summary>
         /// Creates a query message channel if it doesn't already exist.  Query message channels
         /// are used to implement a query/response pattern by sending a message to a consumer and
@@ -372,5 +384,6 @@ namespace Neon.HiveMQ
                 return new QueryChannel(this, name);
             }
         }
+#endif
     }
 }
