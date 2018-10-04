@@ -33,15 +33,8 @@ namespace Neon.Hive
         private const string defaultCacheSize = "100MB";
 
         /// <summary>
-        /// Indicates whether Varnish cache is to be enabled for the hive.  
-        /// This defaults to <c>true</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Enabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(true)]
-        public bool Enabled { get; set; } = true;
-
-        /// <summary>
-        /// Specifies the size of the varnish cache 
+        /// Specifies the size of the varnish cache.  This can be a byte count or a number with units like
+        /// <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "CacheSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultCacheSize)]
@@ -55,10 +48,6 @@ namespace Neon.Hive
         /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(HiveDefinition hiveDefinition)
         {
-            if (!Enabled)
-            {
-                return;
-            }
         }
     }
 }
