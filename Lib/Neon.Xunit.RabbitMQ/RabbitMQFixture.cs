@@ -170,7 +170,7 @@ namespace Neon.Xunit.RabbitMQ
                         return false;
                     }
                 },
-                timeout: TimeSpan.FromSeconds(precompile ? 120 : 30),
+                timeout: TimeSpan.FromSeconds(precompile ? 120 : 30),   // We need to wait longer then precompiling (it takes an additional 45-60 seconds to compile).
                 pollTime: TimeSpan.FromSeconds(0.5));
 
             NeonHelper.WaitFor(
@@ -178,9 +178,11 @@ namespace Neon.Xunit.RabbitMQ
                 {
                     try
                     {
-                        using (Settings.ConnectManager(Username, Password))
+                        using (var manager = Settings.ConnectManager(Username, Password))
                         {
-                            return true;
+                            // Ensure that the manager can actually process requests.
+
+                            return !manager.GetVHostsAsync().Result.IsEmpty();
                         }
                     }
                     catch

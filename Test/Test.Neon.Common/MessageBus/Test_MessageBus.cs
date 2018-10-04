@@ -35,7 +35,6 @@ namespace TestCommon
         private readonly TimeSpan timeout = TimeSpan.FromSeconds(15);
 
         private RabbitMQFixture fixture;
-        private MessageBus      bus;
 
         public Test_MessageBus(RabbitMQFixture fixture)
         {

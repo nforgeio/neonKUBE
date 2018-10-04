@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 using EasyNetQ;
@@ -40,9 +41,44 @@ namespace Neon.HiveMQ
     /// RabbitMQ channel.  These are two entirely different concepts.
     /// </note>
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 
+    /// </para>
+    /// <note>
+    /// We recommend that most applications, particularily services, use the
+    /// asynchronous versions of the publication and consumption APIs for better
+    /// performance under load.
+    /// </note>
+    /// <para><b>Implementation:</b></para>
+    /// <para>
+    /// This is currently implemented by creating a fanout exchange using
+    /// the channel name.  Then each channel instance is assigned an internal UUID
+    /// and then each channel creates an auto-delete queue named like:
+    /// </para>
+    /// <code>
+    /// CHANNEL-UUID
+    /// </code>
+    /// <para>
+    /// Each channel also creates an binding that routes messages from the 
+    /// exchange to the specific channel created by the instance.  This
+    /// implements the broadcast semantics.
+    /// </para>
+    /// <para>
+    /// Channels add an <see cref="SourceHeader"/> specifying the unique
+    /// UUID to each broadcasted message.  Consumers that were created
+    /// passing <c>filterSelf=true</c> will compare this header to the
+    /// local UUID to drop messages that originated from the channel.
+    /// </para>
+    /// </remarks>
     public class BroadcastChannel : Channel
     {
-        private string instanceId = Guid.NewGuid().ToString("D").ToLowerInvariant();
+        private const string SourceHeader = "x-source";
+
+        private string      sourceID;           // Unique channel ID
+        private byte[]      sourceIDBytes;      // Channel ID converted to bytes for faster comparisions
+        private IQueue      queue;
+        private IExchange   exchange;
 
         /// <summary>
         /// Internal constructor.
@@ -71,16 +107,35 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
-        internal BroadcastChannel(MessageBus messageBus, string name,
-            bool durable = false,
-            bool autoDelete = false,
-            TimeSpan? messageTTL = null,
-            int? maxLength = null,
-            int? maxLengthBytes = null)
+        internal BroadcastChannel(
+            MessageBus  messageBus, 
+            string      name,
+            bool        durable = false,
+            bool        autoDelete = false,
+            TimeSpan?   messageTTL = null,
+            int?        maxLength = null,
+            int?        maxLengthBytes = null)
 
             : base(messageBus, name)
         {
             Covenant.Requires<ArgumentNullException>(messageBus != null);
+
+            sourceID      = Guid.NewGuid().ToString("D").ToLowerInvariant();
+            sourceIDBytes = Encoding.UTF8.GetBytes(sourceID);
+
+            exchange = EasyBus.ExchangeDeclare(name, EasyNetQ.Topology.ExchangeType.Fanout, durable, autoDelete);
+
+            queue = EasyBus.QueueDeclare(
+                name: $"{name}-{sourceID}",
+                passive: false,
+                durable: durable,
+                exclusive: false,
+                autoDelete: true,
+                perQueueMessageTtl: messageTTL.HasValue ? (int?)messageTTL.Value.TotalMilliseconds : null,
+                maxLength: maxLength,
+                maxLengthBytes: maxLengthBytes);
+
+            EasyBus.Bind(exchange, queue, routingKey: "#");
         }
 
         /// <inheritdoc/>
@@ -90,19 +145,55 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
+        /// Ensures that the channel isn't disposed and returns the queue instance.
+        /// </summary>
+        /// <returns>The queue instance.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the channel is disposed.</exception>
+        private IQueue GetQueue()
+        {
+            var queue = this.queue;
+
+            if (queue == null)
+            {
+                throw new ObjectDisposedException(nameof(BasicChannel));
+            }
+
+            return queue;
+        }
+
+        /// <summary>
+        /// Ensures that the channel isn't disposed and returns the exchange instance.
+        /// </summary>
+        /// <returns>The exchange instance.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the channel is disposed.</exception>
+        private IExchange GetExchange()
+        {
+            var exchange = this.exchange;
+
+            if (exchange == null)
+            {
+                throw new ObjectDisposedException(nameof(BasicChannel));
+            }
+
+            return exchange;
+        }
+
+        /// <summary>
         /// Synchronously broadcasts a message to the channel consumers.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message.</param>
-        public void Broadcast<TMessage>(TMessage message)
+        public void Publish<TMessage>(TMessage message)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var exchange = GetExchange();
+            var envelope = new Message<TMessage>(message);
+
+            envelope.Properties.Headers[SourceHeader] = sourceID;
+
+            EasyBus.PublishAsync(exchange, Name, mandatory: false, message: envelope).Wait();
         }
 
         /// <summary>
@@ -110,17 +201,17 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message.</param>
-        public Task BroadcastAsync<TMessage>(TMessage message)
+        public async Task PublishAsync<TMessage>(TMessage message)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var exchange = GetExchange();
+            var envelope = new Message<TMessage>(message);
 
-            throw new NotImplementedException();
+            envelope.Properties.Headers[SourceHeader] = sourceID;
+
+            await EasyBus.PublishAsync(exchange, Name, mandatory: false, message: envelope);
         }
 
         /// <summary>
@@ -147,12 +238,26 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var queue = GetQueue();
+            var subscription = EasyBus.Consume<TMessage>(queue,
+                (envelope, info) =>
+                {
+                    if (filterSelf && envelope.Properties.HeadersPresent)
+                    {
+                        if (envelope.Properties.Headers.TryGetValue(SourceHeader, out var senderIDBytes) &&
+                            NeonHelper.ArrayEquals((byte[])senderIDBytes, sourceIDBytes))
+                        {
+                            // This channel instance originally broadcasted this message
+                            // and [filterSelf] is true, so we're going to drop it.
 
-            throw new NotImplementedException();
+                            return;
+                        }
+                    }
+
+                    onMessage(envelope);
+                });
+
+            return new Subscription(this, subscription);
         }
 
         /// <summary>
@@ -181,12 +286,26 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var queue = GetQueue();
+            var subscription = EasyBus.Consume<TMessage>(queue,
+                (envelope, info) =>
+                {
+                    if (filterSelf && envelope.Properties.HeadersPresent)
+                    {
+                        if (envelope.Properties.Headers.TryGetValue(SourceHeader, out var senderIDBytes) &&
+                            NeonHelper.ArrayEquals((byte[])senderIDBytes, sourceIDBytes))
+                        {
+                            // This channel instance originally broadcasted this message
+                            // and [filterSelf] is true, so we're going to drop it.
 
-            throw new NotImplementedException();
+                            return;
+                        }
+                    }
+
+                    onMessage(envelope, ConsumerContext.Create(info));
+                });
+
+            return new Subscription(this, subscription);
         }
 
         /// <summary>
@@ -212,12 +331,26 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var queue = GetQueue();
+            var subscription = EasyBus.Consume<TMessage>(queue,
+                async (envelope, info) =>
+                {
+                    if (filterSelf && envelope.Properties.HeadersPresent)
+                    {
+                        if (envelope.Properties.Headers.TryGetValue(SourceHeader, out var senderIDBytes) &&
+                            NeonHelper.ArrayEquals((byte[])senderIDBytes, sourceIDBytes))
+                        {
+                            // This channel instance originally broadcasted this message
+                            // and [filterSelf] is true, so we're going to drop it.
 
-            throw new NotImplementedException();
+                            return;
+                        }
+                    }
+
+                    await onMessage(envelope);
+                });
+
+            return new Subscription(this, subscription);
         }
 
         /// <summary>
@@ -245,12 +378,26 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            lock (SyncLock)
-            {
-                CheckDisposed();
-            }
+            var queue = GetQueue();
+            var subscription = EasyBus.Consume<TMessage>(queue,
+                async (envelope, info) =>
+                {
+                    if (filterSelf && envelope.Properties.HeadersPresent)
+                    {
+                        if (envelope.Properties.Headers.TryGetValue(SourceHeader, out var senderIDBytes) &&
+                            NeonHelper.ArrayEquals((byte[])senderIDBytes, sourceIDBytes))
+                        {
+                            // This channel instance originally broadcasted this message
+                            // and [filterSelf] is true, so we're going to drop it.
 
-            throw new NotImplementedException();
+                            return;
+                        }
+                    }
+
+                    await onMessage(envelope, ConsumerContext.Create(info));
+                });
+
+            return new Subscription(this, subscription);
         }
     }
 }

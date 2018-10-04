@@ -40,6 +40,47 @@ namespace Neon.HiveMQ
     /// RabbitMQ channel.  These are two entirely different concepts.
     /// </note>
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This channel provides a way to distribute work across one or more
+    /// message consumers.  Each message published to the channel will be
+    /// delivered to one of the consumers.  To use this class:
+    /// </para>
+    /// <list type="number">
+    /// <item>
+    /// Construct an instance call <see cref="MessageBus.CreateBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>,
+    /// passing the channel name any required optional parameters to control
+    /// the channel durability, exclusivity, message TTL, and length constraints.
+    /// </item>
+    /// <item>
+    /// Call <see cref="Consume{TMessage}(Action{IMessage{TMessage}})"/>,
+    /// <see cref="Consume{TMessage}(Action{IMessage{TMessage}, ConsumerContext})"/>,
+    /// <see cref="Consume{TMessage}(Func{IMessage{TMessage}, Task}, bool)"/>, or
+    /// <see cref="Consume{TMessage}(Func{IMessage{TMessage}, ConsumerContext, Task}, bool)"/>
+    /// to register message consumption callbacks for each of the message types you
+    /// need to handle.  Your callback will be passed an <see cref="IMessage{TMessage}"/>
+    /// parameter as the message envelope.  Your message can be accessed via  <see cref="IMessage.GetBody()"/>
+    /// There are method overrides that register both synchronous and asynchronous callbacks as well
+    /// as callbacks that accept the a <see cref="ConsumerContext"/> that provides additional 
+    /// information about the message as well as extended message related operations.
+    /// </item>
+    /// <item>
+    /// Call <see cref="Publish{TMessage}(TMessage)"/> or <see cref="PublishAsync{TMessage}(TMessage)"/>
+    /// to send a message.  This will result in one of the consumer callbacks registered
+    /// for the type to be called.
+    /// </item>
+    /// </list>
+    /// <note>
+    /// We recommend that most applications, particularily services, use the
+    /// asynchronous versions of the publication and consumption APIs for better
+    /// performance under load.
+    /// </note>
+    /// <para><b>Implementation:</b></para>
+    /// <para>
+    /// This is currently implemented using the built-in direct exchange routing
+    /// to a single underyling RabbitMQ queue created using the channel name.
+    /// </para>
+    /// </remarks>
     public class BasicChannel : Channel
     {
         private IQueue      queue;
@@ -76,13 +117,15 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
-        internal BasicChannel(MessageBus messageBus, string name,
-            bool durable = false,
-            bool exclusive = false,
-            bool autoDelete = false,
-            TimeSpan? messageTTL = null,
-            int? maxLength = null,
-            int? maxLengthBytes = null)
+        internal BasicChannel(
+            MessageBus  messageBus, 
+            string      name,
+            bool        durable = false,
+            bool        exclusive = false,
+            bool        autoDelete = false,
+            TimeSpan?   messageTTL = null,
+            int?        maxLength = null,
+            int?        maxLengthBytes = null)
 
             : base(messageBus, name)
         {
@@ -204,9 +247,9 @@ namespace Neon.HiveMQ
 
             var queue        = GetQueue();
             var subscription = EasyBus.Consume<TMessage>(queue,
-                (message, info) =>
+                (envelope, info) =>
                 {
-                    onMessage(message);
+                    onMessage(envelope);
                 });
 
             return new Subscription(this, subscription);
@@ -239,9 +282,9 @@ namespace Neon.HiveMQ
 
             var queue = GetQueue();
             var subscription = EasyBus.Consume<TMessage>(queue,
-                (message, info) =>
+                (envelope, info) =>
                 {
-                    onMessage(message, ConsumerContext.Create(info));
+                    onMessage(envelope, ConsumerContext.Create(info));
                 });
 
             return new Subscription(this, subscription);
@@ -275,9 +318,9 @@ namespace Neon.HiveMQ
 
             var queue = GetQueue();
             var subscription = EasyBus.Consume<TMessage>(queue,
-                async (message, info) =>
+                async (envelope, info) =>
                 {
-                    await onMessage(message);
+                    await onMessage(envelope);
                 });
 
             return new Subscription(this, subscription);
@@ -313,9 +356,9 @@ namespace Neon.HiveMQ
 
             var queue = GetQueue();
             var subscription = EasyBus.Consume<TMessage>(queue,
-                async (message, info) =>
+                async (envelope, info) =>
                 {
-                    await onMessage(message, ConsumerContext.Create(info));
+                    await onMessage(envelope, ConsumerContext.Create(info));
                 });
 
             return new Subscription(this, subscription);

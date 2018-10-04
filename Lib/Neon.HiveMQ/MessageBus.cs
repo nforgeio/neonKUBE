@@ -213,7 +213,7 @@ namespace Neon.HiveMQ
         /// is delivered to a <b>single consumer</b>.  This is typically used for load balancing
         /// work across multiple consumers.
         /// </summary>
-        /// <param name="name">The channel name.  This can be a maximum of 255 characters.</param>
+        /// <param name="name">The channel name.  This can be a maximum of 250 characters.</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
@@ -260,7 +260,7 @@ namespace Neon.HiveMQ
             int?        maxLengthBytes = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentException>(name.Length <= 255);
+            Covenant.Requires<ArgumentException>(name.Length <= 250);
             Covenant.Requires<ArgumentException>(!messageTTL.HasValue || messageTTL.Value >= TimeSpan.Zero);
             Covenant.Requires<ArgumentException>(!maxLength.HasValue || maxLength.Value > 0);
             Covenant.Requires<ArgumentException>(!maxLengthBytes.HasValue || maxLengthBytes.Value > 0);
@@ -274,7 +274,9 @@ namespace Neon.HiveMQ
                     throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] cannot exceed about 24.85 days (2^31-1 milliseconds).");
                 }
 
-                var channel = new BasicChannel(this, name,
+                var channel = new BasicChannel(
+                    this, 
+                    name,
                     durable: durable,
                     exclusive: exclusive,
                     autoDelete: autoDelete,
@@ -296,7 +298,7 @@ namespace Neon.HiveMQ
         /// are used to forward messages to one or more consumers such that each message
         /// is delivered to <b>all consumers</b>.
         /// </summary>
-        /// <param name="name">The channel name.  This can be a maximum of 255 characters.</param>
+        /// <param name="name">The channel name.  This can be a maximum of 250 characters.</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
@@ -338,7 +340,7 @@ namespace Neon.HiveMQ
             int?        maxLengthBytes = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentException>(name.Length <= 255);
+            Covenant.Requires<ArgumentException>(name.Length <= 250);
             Covenant.Requires<ArgumentException>(!messageTTL.HasValue || messageTTL.Value >= TimeSpan.Zero);
             Covenant.Requires<ArgumentException>(!maxLength.HasValue || maxLength.Value > 0);
             Covenant.Requires<ArgumentException>(!maxLengthBytes.HasValue || maxLengthBytes.Value > 0);
@@ -352,7 +354,9 @@ namespace Neon.HiveMQ
                     throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] cannot exceed about 24.85 days (2^31-1 milliseconds).");
                 }
 
-                var channel = new BroadcastChannel(this, name,
+                var channel = new BroadcastChannel(
+                    this,
+                    name,
                     durable: durable,
                     autoDelete: autoDelete,
                     messageTTL: messageTTL,
@@ -373,7 +377,7 @@ namespace Neon.HiveMQ
         /// are used to implement a query/response pattern by sending a message to a consumer and
         /// then waiting for it to send a reply message.
         /// </summary>
-        /// <param name="name">The channel name.  This can be a maximum of 255 characters.</param>
+        /// <param name="name">The channel name.  This can be a maximum of 250 characters.</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
@@ -420,7 +424,7 @@ namespace Neon.HiveMQ
             int?        maxLengthBytes = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentException>(name.Length <= 255);
+            Covenant.Requires<ArgumentException>(name.Length <= 250);
             Covenant.Requires<ArgumentException>(!messageTTL.HasValue || messageTTL.Value >= TimeSpan.Zero);
             Covenant.Requires<ArgumentException>(!maxLength.HasValue || maxLength.Value > 0);
             Covenant.Requires<ArgumentException>(!maxLengthBytes.HasValue || maxLengthBytes.Value > 0);
@@ -435,7 +439,9 @@ namespace Neon.HiveMQ
                     throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] cannot exceed about 24.85 days (2^31-1 milliseconds).");
                 }
 
-                var channel = new QueryChannel(this, name, 
+                var channel = new QueryChannel(
+                    this, 
+                    name, 
                     durable: durable,
                     exclusive: exclusive,
                     autoDelete: autoDelete,
