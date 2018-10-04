@@ -40,8 +40,8 @@ namespace NeonCli
         /// <summary>
         /// Use this argument to specify the target image in a <b>docker service create ...</b>
         /// or <b>docker run ...</b> command that will eventually be passed to one of 
-        /// <see cref="StartService(string, string, IBashCommandFormatter[])"/> or 
-        /// <see cref="StartContainer(string, string, IBashCommandFormatter[])"/> so
+        /// <see cref="StartService(string, string, IBashCommandFormatter, RunOptions)"/> or 
+        /// <see cref="StartContainer(SshProxy{NodeDefinition}, string, string, RunOptions, IBashCommandFormatter[])"/> so
         /// those methods can generate a more useful script that includes a parameter
         /// so that images and services can be easily upgraded.
         /// </summary>

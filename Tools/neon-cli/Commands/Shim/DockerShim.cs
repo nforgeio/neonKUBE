@@ -196,10 +196,7 @@ namespace NeonCli
         /// <remarks>
         /// <para>
         /// Commands that accept file references on the command line will need to call
-        /// this method to add the file to the shim.  Pass <paramref name="path"/> as the
-        /// path to the file and <paramref name="name"/> as the name of the file as 
-        /// it will appear in the command line passed to the container tool and in
-        /// the mounted folder.
+        /// this method to add the file to the shim.  Pass <paramref name="path"/>.
         /// </para>
         /// <para>
         /// By default, this command replaces the first exact reference to the

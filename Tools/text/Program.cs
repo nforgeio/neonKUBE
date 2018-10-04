@@ -20,7 +20,6 @@ namespace Text
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <para>
     /// Usage:
     /// </para>
     /// <code language="none">

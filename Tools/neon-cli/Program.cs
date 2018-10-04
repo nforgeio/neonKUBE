@@ -986,7 +986,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
         /// <summary>
         /// Returns the command line as a string with sensitive information like a password
-        /// are redacted.  This is suitable for using as a <see cref="SetupController"/>'s
+        /// are redacted.  This is suitable for using as a <see cref="SetupController{NodeMetadata}"/>'s
         /// operation summary.
         /// </summary>
         public static string SafeCommandLine
@@ -1121,7 +1121,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// Uses <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, string)"/> to 
+        /// Uses <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> to 
         /// ensure that there's a currently logged-in hive and that the VPN connection
         /// is established if required.
         /// </summary>

@@ -98,8 +98,8 @@ namespace NeonCli
         /// <param name="operation">The operation name consisting of letters, digits, and dashes.</param>
         /// <returns>The idempotent tag.</returns>
         /// <remarks>
-        /// The value returned must be look like <b>update/TO-VERSION/PREFIX</b> where
-        /// <b>TO-VERSION</b> is the post update version, and PREFIX is <see cref="IdempotentPrefix"/>.
+        /// The value returned must be look like <b>update/TO-VERSION/OPERATION</b> where
+        /// <b>TO-VERSION</b> is the post update version, and OPERATION identifies the operation.
         /// </remarks>
         string GetIdempotentTag(string operation);
 

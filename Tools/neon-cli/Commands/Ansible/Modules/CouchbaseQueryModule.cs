@@ -142,6 +142,7 @@ namespace NeonCli.Ansible
             /// <summary>
             /// Constructor.
             /// </summary>
+            /// <param name="context">The Ansible module context.</param>
             /// <param name="format">Specifies the output format.</param>
             /// <param name="path">Optional output file path.</param>
             public CouchbaseQueryResultWriter(ModuleContext context, CouchbaseFileFormat format, string path = null)

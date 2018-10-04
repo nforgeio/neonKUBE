@@ -63,7 +63,7 @@ namespace NeonCli
         public static IEnumerable<IHiveUpdate> Updates { get; private set; }
 
         /// <summary>
-        /// Scans the hive and adds the steps to a <see cref="SetupController"/> required
+        /// Scans the hive and adds the steps to a <see cref="SetupController{NodeMetadata}"/> required
         /// to update the hive to the most recent version.
         /// </summary>
         /// <param name="hive">The target hive proxy.</param>
@@ -393,7 +393,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Scans the hive and adds the steps to a <see cref="SetupController"/> required
+        /// Scans the hive and adds the steps to a <see cref="SetupController{NodeMetadata}"/> required
         /// to update the hive to the most recent version.
         /// </summary>
         /// <param name="hive">The target hive proxy.</param>

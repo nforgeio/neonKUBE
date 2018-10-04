@@ -23,12 +23,32 @@ namespace NeonCli.Ansible.Docker
     /// </summary>
     public class PublishPort
     {
+        /// <summary>
+        /// The port name.
+        /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// The port to be published on the Docker host.
+        /// </summary>
         public int? Published { get; set; }
+
+        /// <summary>
+        /// The internal container port being published.
+        /// </summary>
         public int? Target { get; set; }
+
+        /// <summary>
+        /// The publication mode.
+        /// </summary>
         public ServicePortMode? Mode { get; set; }
+
+        /// <summary>
+        /// The port protocol.
+        /// </summary>
         public ServicePortProtocol? Protocol { get; set; }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -57,6 +77,7 @@ namespace NeonCli.Ansible.Docker
             return sb.ToString();
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             var other = obj as PublishPort;
@@ -83,6 +104,7 @@ namespace NeonCli.Ansible.Docker
             }
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return base.GetHashCode();
@@ -94,19 +116,68 @@ namespace NeonCli.Ansible.Docker
     /// </summary>
     public class Mount
     {
+        /// <summary>
+        /// The mount type.
+        /// </summary>
         public ServiceMountType? Type { get; set; }
+
+        /// <summary>
+        /// The mount source on the Docker host.
+        /// </summary>
         public string Source { get; set; }
+
+        /// <summary>
+        /// The mount target within the container.
+        /// </summary>
         public string Target { get; set; }
+
+        /// <summary>
+        /// Optionally indicates that the mount is read-only.
+        /// </summary>
         public bool? ReadOnly { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the mount consistency mode.
+        /// </summary>
         public ServiceMountConsistency? Consistency { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the mount propagation mode.
+        /// </summary>
         public ServiceMountBindPropagation? BindPropagation { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the Docker volume driver to be used.
+        /// </summary>
         public string VolumeDriver { get; set; }
+
+        /// <summary>
+        /// Optionally specifies any volume labels.
+        /// </summary>
         public List<string> VolumeLabel { get; private set; } = new List<string>();
+
+        /// <summary>
+        /// Optionally specifies that existing files within the container target
+        /// folder should be copied into the mounted volume.
+        /// </summary>
         public bool? VolumeNoCopy { get; set; }
+
+        /// <summary>
+        /// Volume options.
+        /// </summary>
         public List<string> VolumeOpt { get; private set; } = new List<string>();
+
+        /// <summary>
+        /// Specifies the size of the mounted TMPFS in bytes.  This defaults to 64MB.
+        /// </summary>
         public long? TmpfsSize { get; set; }
+
+        /// <summary>
+        /// Specifies the TMPFS mode (e.g. "640").
+        /// </summary>
         public string TmpfsMode { get; set; }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -205,6 +276,7 @@ namespace NeonCli.Ansible.Docker
             return sb.ToString();
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             var other = obj as Mount;
@@ -231,6 +303,7 @@ namespace NeonCli.Ansible.Docker
             }
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return base.GetHashCode();
@@ -242,12 +315,33 @@ namespace NeonCli.Ansible.Docker
     /// </summary>
     public class Secret
     {
+        /// <summary>
+        /// Identifies the source Docker secret.
+        /// </summary>
         public string Source { get; set; }
+
+        /// <summary>
+        /// Specifies the name of the secret file as mounted within the container.
+        /// </summary>
         public string Target { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the target container file's owner.
+        /// </summary>
         public string UID { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the target container files's group.
+        /// </summary>
         public string GID { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the permissions to be used for the 
+        /// target secret file (e.g. "640").
+        /// </summary>
         public string Mode { get; set; }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -280,6 +374,7 @@ namespace NeonCli.Ansible.Docker
             return sb.ToString();
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             var other = obj as Secret;
@@ -306,6 +401,7 @@ namespace NeonCli.Ansible.Docker
             }
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return base.GetHashCode();
@@ -317,12 +413,33 @@ namespace NeonCli.Ansible.Docker
     /// </summary>
     public class Config
     {
+        /// <summary>
+        /// Identifies the source Docker config.
+        /// </summary>
         public string Source { get; set; }
+
+        /// <summary>
+        /// Specifies the file were the config will be mapped into the container.
+        /// </summary>
         public string Target { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the target file owner.
+        /// </summary>
         public string UID { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the target file group.
+        /// </summary>
         public string GID { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the permissions to be used for the 
+        /// target secret file (e.g. "640").
+        /// </summary>
         public string Mode { get; set; }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -355,6 +472,7 @@ namespace NeonCli.Ansible.Docker
             return sb.ToString();
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             var other = obj as Config;
@@ -381,6 +499,7 @@ namespace NeonCli.Ansible.Docker
             }
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return base.GetHashCode();
@@ -1505,7 +1624,6 @@ namespace NeonCli.Ansible.Docker
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
         /// </summary>
-        /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
         /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
@@ -1542,7 +1660,6 @@ namespace NeonCli.Ansible.Docker
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
         /// </summary>
-        /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
         /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
@@ -1579,7 +1696,6 @@ namespace NeonCli.Ansible.Docker
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
         /// </summary>
-        /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
         /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
@@ -1659,7 +1775,6 @@ namespace NeonCli.Ansible.Docker
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
         /// </summary>
-        /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
         /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
@@ -1696,7 +1811,6 @@ namespace NeonCli.Ansible.Docker
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
         /// </summary>
-        /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
         /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
@@ -1733,7 +1847,6 @@ namespace NeonCli.Ansible.Docker
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
         /// </summary>
-        /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
         /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
@@ -2019,7 +2132,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property token or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static JToken GetJTokenProperty(JObject jObject, string name)
         {
@@ -2046,7 +2159,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property string or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static string GetStringProperty(JObject jObject, string name)
         {
@@ -2070,7 +2183,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property boolean or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static bool? GetBoolProperty(JObject jObject, string name)
         {
@@ -2120,7 +2233,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property int or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static int? GetIntProperty(JObject jObject, string name)
         {
@@ -2162,7 +2275,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property int or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static long? GetLongProperty(JObject jObject, string name)
         {
@@ -2204,7 +2317,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property int or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static double? GetDoubleProperty(JObject jObject, string name)
         {
@@ -2249,7 +2362,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property value or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static string GetFileModeProperty(JObject jObject, string name)
         {
@@ -2273,7 +2386,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property int or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static TEnum? GetEnumProperty<TEnum>(JObject jObject, string name)
             where TEnum : struct
@@ -2298,7 +2411,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property object or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static JObject GetObjectProperty(JObject jObject, string name)
         {
@@ -2323,7 +2436,7 @@ namespace NeonCli.Ansible.Docker
         /// <param name="name">The property name.</param>
         /// <returns>
         /// The property array or <c>null</c> if the property doesn't exist or
-        /// if <see cref="jObject"/> is <c>null</c>.
+        /// if <see cref="JObject"/> is <c>null</c>.
         /// </returns>
         private static JArray GetArrayProperty(JObject jObject, string name)
         {

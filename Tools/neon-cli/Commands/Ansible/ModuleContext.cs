@@ -384,6 +384,7 @@ namespace NeonCli.Ansible
         /// Attempts to parse an enumeration value.
         /// </summary>
         /// <param name="input">The input string.</param>
+        /// <param name="defaultValue">The default value.</param>
         /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
         /// <returns>The parsed value or <paramref name="defaultValue"/> if the input was <c>null</c> or invalid.</returns>
         public TEnum? ParseEnumValue<TEnum>(string input, TEnum defaultValue, string errorMessage = null)
@@ -435,6 +436,7 @@ namespace NeonCli.Ansible
         /// Parses a <c>string</c> argument.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
+        /// <param name="validator">Optional validation function.</param>
         /// <returns>The parsed string or <c>null</c>.</returns>
         public string ParseString(string argName, Func<string, bool> validator = null)
         {
@@ -855,7 +857,6 @@ namespace NeonCli.Ansible
         /// <summary>
         /// Parses an argument as a string array.
         /// </summary>
-        /// <param name="array">The output array.</param>
         /// <param name="argName">The argument name.</param>
         public List<String> ParseStringArray(string argName)
         {

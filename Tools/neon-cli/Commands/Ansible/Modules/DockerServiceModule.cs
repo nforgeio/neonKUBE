@@ -1395,7 +1395,6 @@ namespace NeonCli.Ansible
         /// Appends a command line option for a <c>string</c> value if it's not
         /// <c>null</c> or empty.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
         /// <param name="args">The argument list being appended.</param>
         /// <param name="option">The command line option (with leading dashes).</param>
         /// <param name="value">The option value.</param>

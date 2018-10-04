@@ -169,6 +169,7 @@ See the documentation for more load balancer rule and setting details.
             get { return new string[] { "loadbalancer" }; }
         }
 
+        /// <inheritdoc/>
         public override string[] AltWords
         {
             get { return new string[] { "lb" }; }

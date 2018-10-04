@@ -57,7 +57,7 @@ namespace NeonCli
     /// <para>
     /// The <b>neon-log-esdata</b> containers are deployed behind the hive's <b>private</b>
     /// proxy, with a route defined for each Elasticsearch container.  Hive TD-Agents and Kibana 
-    /// use the built-in <see cref="HiveHostNames.LogEsData"/> DNS name to submit HTTP requests on
+    /// use the built-in <see cref="HiveHostnames.LogEsData"/> DNS name to submit HTTP requests on
     /// port <see cref="HiveHostPorts.ProxyPrivateHttpLogEsData"/> to Elasticsearch via the proxy.
     /// </para>
     /// <para>
