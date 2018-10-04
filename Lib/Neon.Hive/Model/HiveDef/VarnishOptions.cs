@@ -33,8 +33,17 @@ namespace Neon.Hive
         private const string defaultCacheSize = "100MB";
 
         /// <summary>
+        /// Specifies the number of Varnish instances to be deployed.  You can specify <b>0</b> to 
+        /// disable caching even if load balancer rules specify caching.  This defaults to <b>1</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Count", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(1)]
+        public int Count { get; set; } = 1;
+
+        /// <summary>
         /// Specifies the size of the varnish cache.  This can be a byte count or a number with units like
-        /// <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.
+        /// <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to <b>100MB</b> and
+        /// cannot be less than <b>50MB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "CacheSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultCacheSize)]
@@ -48,6 +57,15 @@ namespace Neon.Hive
         /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         public void Validate(HiveDefinition hiveDefinition)
         {
+            if (Count < 0)
+            {
+                throw new HiveDefinitionException($"[{nameof(VarnishOptions)}.{nameof(Count)}={Count}] is not valid.");
+            }
+
+            if (HiveDefinition.ValidateSize(CacheSize, this.GetType(), nameof(CacheSize)) < 50 * NeonHelper.Mega)
+            {
+                throw new HiveDefinitionException($"[{nameof(HiveFSOptions)}.{nameof(CacheSize)}={CacheSize}] cannot be less than [50MB].");
+            }
         }
     }
 }
