@@ -30,9 +30,9 @@ namespace Neon.HiveMQ
 {
     /// <summary>
     /// <para>
-    /// Implements basic messaging operations for a <see cref="MessageBus"/>.  
+    /// Implements basic messaging operations for a <see cref="HiveBus"/>.  
     /// Message producers and consumers each need to declare a channel with the 
-    /// same name by calling one of the <see cref="MessageBus"/> to be able to
+    /// same name by calling one of the <see cref="HiveBus"/> to be able to
     /// publish and consume messages.
     /// </para>
     /// <note>
@@ -48,7 +48,7 @@ namespace Neon.HiveMQ
     /// </para>
     /// <list type="number">
     /// <item>
-    /// Construct an instance call <see cref="MessageBus.CreateBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>,
+    /// Construct an instance call <see cref="HiveBus.CreateBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>,
     /// passing the channel name any required optional parameters to control
     /// the channel durability, exclusivity, message TTL, and length constraints.
     /// </item>
@@ -89,7 +89,7 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="messageBus">The <see cref="MessageBus"/>.</param>
+        /// <param name="messageBus">The <see cref="HiveBus"/>.</param>
         /// <param name="name">The channel name (maximum of 250 characters).</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
@@ -118,7 +118,7 @@ namespace Neon.HiveMQ
         /// defaults to unconstrained.
         /// </param>
         internal BasicChannel(
-            MessageBus  messageBus, 
+            HiveBus     messageBus, 
             string      name,
             bool        durable = false,
             bool        exclusive = false,

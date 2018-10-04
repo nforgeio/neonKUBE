@@ -31,9 +31,9 @@ namespace Neon.HiveMQ
 {
     /// <summary>
     /// <para>
-    /// Implements query/response messaging operations for a <see cref="MessageBus"/>.  
+    /// Implements query/response messaging operations for a <see cref="HiveBus"/>.  
     /// Message producers and consumers each need to declare a channel with the 
-    /// same name by calling one of the <see cref="MessageBus"/> to be able to
+    /// same name by calling one of the <see cref="HiveBus"/> to be able to
     /// broadcast and consume messages.
     /// </para>
     /// <note>
@@ -48,7 +48,7 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="messageBus">The <see cref="MessageBus"/>.</param>
+        /// <param name="messageBus">The <see cref="HiveBus"/>.</param>
         /// <param name="name">The channel name.</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
@@ -77,7 +77,7 @@ namespace Neon.HiveMQ
         /// defaults to unconstrained.
         /// </param>
         internal QueryChannel(
-            MessageBus  messageBus, 
+            HiveBus     messageBus, 
             string      name,
             bool        durable = false,
             bool        exclusive = false,

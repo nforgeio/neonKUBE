@@ -39,15 +39,15 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Protected constructor.
         /// </summary>
-        /// <param name="messageBus">The <see cref="MessageBus"/>.</param>
+        /// <param name="hiveBus">The <see cref="HiveMQ.HiveBus"/>.</param>
         /// <param name="name">The channel name.</param>
-        protected Channel(MessageBus messageBus, string name)
+        protected Channel(HiveBus hiveBus, string name)
         {
-            Covenant.Requires<ArgumentNullException>(messageBus != null);
+            Covenant.Requires<ArgumentNullException>(hiveBus != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            this.MessageBus    = messageBus;
-            this.EasyBus       = messageBus.EasyBus.Advanced;
+            this.HiveBus       = hiveBus;
+            this.EasyBus       = hiveBus.EasyBus.Advanced;
             this.Name          = name;
             this.subscriptions = new List<Subscription>();
         }
@@ -70,7 +70,7 @@ namespace Neon.HiveMQ
                         }
 
                         subscriptions.Clear();
-                        MessageBus.RemoveChannel(this);
+                        HiveBus.RemoveChannel(this);
                     }
 
                     isDisposed = true;
@@ -91,7 +91,7 @@ namespace Neon.HiveMQ
         {
             if (isDisposed)
             {
-                throw new ObjectDisposedException(nameof(MessageBus));
+                throw new ObjectDisposedException(nameof(HiveBus));
             }
         }
 
@@ -106,9 +106,9 @@ namespace Neon.HiveMQ
         protected object SyncLock => syncLock;
 
         /// <summary>
-        /// Returns the message bus.
+        /// Returns the hive message bus.
         /// </summary>
-        protected MessageBus MessageBus { get; private set; }
+        protected HiveBus HiveBus { get; private set; }
 
         /// <summary>
         /// Returns the lower level EasyNetQ <see cref="IAdvancedBus"/> implementation.

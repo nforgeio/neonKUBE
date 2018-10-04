@@ -248,7 +248,7 @@ namespace Neon.HiveMQ
             string                      username = null, 
             string                      password = null, 
             string                      virtualHost = "/", 
-            BusSettings                 settings = null, 
+            EasyBusSettings             settings = null, 
             Action<IServiceRegister>    customServiceAction = null)
         {
             Covenant.Requires<NotImplementedException>(!TlsEnabled, "$todo(jeff.lill): We don't support RabbitMQ TLS yet.");
@@ -367,9 +367,9 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
-        /// Returns an <see cref="MessageBus"/> instance that provides more advanced 
+        /// Returns an <see cref="HiveBus"/> instance that provides more advanced 
         /// capabilites over the very simple <b>EasyNetQ</b> capabilities returned by
-        /// <see cref="ConnectEasyNetQ(string, string, string, BusSettings, Action{IServiceRegister})"/>
+        /// <see cref="ConnectEasyNetQ(string, string, string, EasyBusSettings, Action{IServiceRegister})"/>
         /// while still being very easy to use.
         /// </summary>
         /// <param name="username">Optional username (overrides <see cref="Username"/>).</param>
@@ -377,13 +377,13 @@ namespace Neon.HiveMQ
         /// <param name="virtualHost">Optional target virtual host (defaults to <b>"/"</b>).</param>
         /// <param name="settings">Optional message bus client settings.</param>
         /// <returns></returns>
-        public MessageBus ConnectBus(
-            string username      = null,
-            string password      = null,
-            string virtualHost   = "/",
-            BusSettings settings = null)
+        public HiveBus ConnectBus(
+            string          username    = null,
+            string          password    = null,
+            string          virtualHost = "/",
+            EasyBusSettings settings    = null)
         {
-            return new MessageBus(this, username, password, virtualHost);
+            return new HiveBus(this, username, password, virtualHost);
         }
     }
 }

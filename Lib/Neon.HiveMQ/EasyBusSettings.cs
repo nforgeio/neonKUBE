@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    BusSettings.cs
+// FILE:	    EasyBusSettings.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -30,12 +30,12 @@ namespace Neon.HiveMQ
     /// the default <see cref="ConnectionConfiguration"/> settings when the
     /// property values aren't <c>null</c>.
     /// </remarks>
-    public class BusSettings
+    public class EasyBusSettings
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public BusSettings()
+        public EasyBusSettings()
         {
         }
 
@@ -137,7 +137,7 @@ namespace Neon.HiveMQ
         public TimeSpan? ConnectIntervalAttempt { get; set; }
 
         /// <summary>
-        /// Applies any overriding properties from this <see cref="BusSettings"/> instance
+        /// Applies any overriding properties from this <see cref="EasyBusSettings"/> instance
         /// to a <see cref="ConnectionConfiguration"/>.
         /// </summary>
         /// <param name="target">The target configuration.</param>

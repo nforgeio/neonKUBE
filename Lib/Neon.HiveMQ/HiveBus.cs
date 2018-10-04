@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MessageBus.cs
+// FILE:	    HiveBus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -72,13 +72,13 @@ namespace Neon.HiveMQ
     /// </para>
     /// <para>
     /// Message buses are typically constructed by instantiating a <see cref="HiveMQSettings"/> 
-    /// instance and then calling its <see cref="HiveMQSettings.ConnectBus(string, string, string, BusSettings)"/>
+    /// instance and then calling its <see cref="HiveMQSettings.ConnectBus(string, string, string, EasyBusSettings)"/>
     /// method.  The instance returned is thread-safe and generally most applications will instantiate
-    /// a single <see cref="MessageBus"/> instance, use it throughout the lifespan of the application
+    /// a single <see cref="HiveBus"/> instance, use it throughout the lifespan of the application
     /// and then dispose the bus when it's done.
     /// </para>
     /// <para>
-    /// <see cref="MessageBus"/> implementations combine the RabbitMQ concepts of exchanges and
+    /// <see cref="HiveBus"/> implementations combine the RabbitMQ concepts of exchanges and
     /// queues into a <see cref="BasicChannel"/>, <see cref="BroadcastChannel"/>, or <see cref="QueryChannel"/>.  
     /// The bus transparently creates and manages the underlying  queues and exchanges.
     /// </para>
@@ -119,7 +119,7 @@ namespace Neon.HiveMQ
     /// to be a useful overview of RabbitMQ features and how they compare to Kafka.
     /// </note>
     /// </remarks>
-    public class MessageBus : IDisposable
+    public class HiveBus : IDisposable
     {
         private object          syncLock     = new object();
         private bool            isDisposed   = false;
@@ -133,7 +133,7 @@ namespace Neon.HiveMQ
         /// <param name="username">Optional username (overrides <see cref="HiveMQSettings.Username"/>).</param>
         /// <param name="password">Optional password (overrides <see cref="HiveMQSettings.Password"/>).</param>
         /// <param name="virtualHost">Optional target virtual host (overrides <see cref="HiveMQSettings.VirtualHost"/>).</param>
-        public MessageBus(HiveMQSettings settings, string username = null, string password = null, string virtualHost = null)
+        public HiveBus(HiveMQSettings settings, string username = null, string password = null, string virtualHost = null)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
@@ -198,7 +198,7 @@ namespace Neon.HiveMQ
         {
             if (isDisposed)
             {
-                throw new ObjectDisposedException(nameof(MessageBus));
+                throw new ObjectDisposedException(nameof(HiveBus));
             }
         }
 
