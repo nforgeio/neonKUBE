@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\Hive Load Balancers.docx = Doc\Hive Load Balancers.docx
 		Doc\Hive Notes.docx = Doc\Hive Notes.docx
 		Doc\Hive Secrets.docx = Doc\Hive Secrets.docx
+		Doc\Release Versioning.docx = Doc\Release Versioning.docx
 		Doc\RELEASE.md = Doc\RELEASE.md
 		Doc\SUDO and WinSCP.docx = Doc\SUDO and WinSCP.docx
 		Doc\Thumbs.db = Doc\Thumbs.db
@@ -216,11 +217,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Releases", "Releases", "{2B
 		Releases\18.08-alpha.0.md = Releases\18.08-alpha.0.md
 		Releases\18.08-preview.1.md = Releases\18.08-preview.1.md
 		Releases\18.08-preview.2.md = Releases\18.08-preview.2.md
+		Releases\18.10.0-alpha.4.md = Releases\18.10.0-alpha.4.md
 		Releases\18.9.0-preview.0.md = Releases\18.9.0-preview.0.md
 		Releases\18.9.1-preview.0.md = Releases\18.9.1-preview.0.md
 		Releases\18.9.2-alpha.md = Releases\18.9.2-alpha.md
 		Releases\18.9.3-alpha.md = Releases\18.9.3-alpha.md
-		Releases\18.9.4-alpha.md = Releases\18.9.4-alpha.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small2", "home-small2", "{18973726-A5D3-4706-8658-9ED658C631CE}"
@@ -264,7 +265,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt-jeff", "wrt-jeff", "{7B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-varnish", "Services\neon-varnish\neon-varnish.csproj", "{7FDE666C-FACB-401F-9ADB-19E7998A4E95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Xunit.RabbitMQ", "Lib\Neon.Xunit.RabbitMQ\Neon.Xunit.RabbitMQ.csproj", "{BA0CABF0-06A8-4640-9264-E1611D95FEB3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.RabbitMQ", "Lib\Neon.Xunit.RabbitMQ\Neon.Xunit.RabbitMQ.csproj", "{BA0CABF0-06A8-4640-9264-E1611D95FEB3}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
