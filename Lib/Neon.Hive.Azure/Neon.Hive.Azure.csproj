@@ -14,11 +14,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netstandard2.0\Neon.Hive.Azure.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.Hive.Azure.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard2.0\Neon.Hive.Azure.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.Hive.Azure.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

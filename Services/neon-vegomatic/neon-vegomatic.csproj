@@ -11,12 +11,15 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netcoreapp2.0\neon-vegomatic.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\neon-vegomatic.xml</DocumentationFile>
     <LangVersion>7.1</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netcoreapp2.0\neon-vegomatic.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\neon-vegomatic.xml</DocumentationFile>
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 

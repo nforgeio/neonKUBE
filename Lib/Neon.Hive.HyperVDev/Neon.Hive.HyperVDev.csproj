@@ -14,11 +14,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netstandard2.0\Neon.Hive.HyperVDev.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.Hive.HyperVDev.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard2.0\Neon.Hive.HyperVDev.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.Hive.HyperVDev.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

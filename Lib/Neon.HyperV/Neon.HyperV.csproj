@@ -16,12 +16,12 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Debug\netstandard2.0\\Neon.HyperV.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.HyperV.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Release\netstandard2.0\\Neon.HyperV.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.HyperV.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

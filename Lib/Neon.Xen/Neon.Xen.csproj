@@ -15,12 +15,12 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Debug\netstandard2.0\Neon.Xen.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.Xen.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Debug\netstandard2.0\Neon.Xen.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.Xen.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

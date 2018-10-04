@@ -11,11 +11,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netcoreapp2.0\neon-cluster-manager.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\neon-cluster-manager.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netcoreapp2.0\neon-cluster-manager.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\neon-cluster-manager.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

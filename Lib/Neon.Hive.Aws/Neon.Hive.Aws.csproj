@@ -18,7 +18,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Debug\netstandard2.0\Neon.Hive.Aws.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.Hive.Aws.xml</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>NU1605</WarningsAsErrors>
@@ -26,7 +26,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Release\netstandard2.0\Neon.Hive.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.Hive.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
