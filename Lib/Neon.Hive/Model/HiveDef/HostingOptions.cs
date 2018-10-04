@@ -143,7 +143,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// Specifies the default maximum amount of memory to allocate to each hive virtual machine.  This is specified as a string
-        /// that can be a long byte count or a long with units like <b>512MB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to <b>4GB</b>.
+        /// that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  
+        /// This defaults to <b>4GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultVmMemory)]
@@ -152,7 +153,7 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// Specifies the minimum amount of memory to allocate to each hive virtual machine.  This is specified as a string that
-        /// can be a a long byte count or a long with units like <b>512MB</b>, <b>2GB</b>, or <b>1TB</b> or may be set to <c>null</c> to set
+        /// can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b> or may be set to <c>null</c> to set
         /// the same value as <see cref="VmMemory"/>.  This defaults to <c>2GB</c>, which is half of the default value of <see cref="VmMemory"/>
         /// which is <b>4GB</b>.
         /// </para>
@@ -167,8 +168,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// Specifies the maximum amount of memory to allocate to each hive virtual machine.  This is specified as a string
-        /// that can be a long byte count or a long with units like <b>512MB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults
-        /// to <b>64GB</b>.
+        /// that can be a long byte count or a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, 
+        /// or <b>1TB</b>.  This defaults to <b>64GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultVmDisk)]

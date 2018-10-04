@@ -145,8 +145,8 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// Specifies the default size to allocate for the OSD journals.  This can be a 
-        /// long byte count or a long with units like <b>512MB</b>, <b>2GB</b>, or <b>1TB</b>. 
-        /// This  can be overridden for specific nodes.  This defaults to <b>1GB</b>.
+        /// byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, 
+        /// or <b>1TB</b>.  This  can be overridden for specific nodes.  This defaults to <b>1GB</b>.
         /// </para>
         /// <note>
         /// The default is probably too small for production environments
@@ -158,8 +158,9 @@ namespace Neon.Hive
 
         /// <summary>
         /// Specifies the maximum size of a Ceph RADOS object in bytes.  This can be a 
-        /// long byte count or a long with units like <b>512MB</b>, <b>2GB</b>, or <b>1TB</b>.
-        /// This can be overridden for specific nodes.  This defaults to <b>5GB</b>.
+        /// byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, 
+        /// or <b>1TB</b>.  This can be overridden for specific nodes.  This defaults to 
+        /// <b>5GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OSDObjectSizeMax", Required = Required.Default)]
         [DefaultValue(defaultOSDObjectSizeMax)]
@@ -195,7 +196,7 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// Specifies the default amount of RAM to allocate to Ceph MDS processes for 
-        /// caching.  This can be a long byte count or a long with units like <b>512MB</b>, 
+        /// caching.  byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, 
         /// <b>2GB</b>, or <b>1TB</b>.  This can be overridden for specific nodes.  This
         /// defaults to <b>64MB</b>.
         /// </para>

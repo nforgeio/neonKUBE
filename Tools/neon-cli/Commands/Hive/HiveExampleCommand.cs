@@ -155,14 +155,16 @@ USAGE:
 
         // Specifies the default maximum amount of memory to allocate to each hive 
         // virtual machine.  This is specified as a string that can be a long byte count 
-        // or a long with units like [512MB], [2GB], [1TB].  This defaults to [4GB].
+        // or a byte count or a number with units like [512MB], [0.5GB], [2GB], or [1TB].
+        // This defaults to [4GB].
         //
         // ""VmMemory"": ""4GB""
 
-        // Specifies the minimum amount of memory to allocate to each hive virtual machine.  This is specified as a string that
-        // can be a a long byte count or a long with units like [512MB], [2GB], [1TB] or may be set to [null] to set
-        // the same value as [VmMemory].  This defaults to [2GB], which is half of the default value of [VmMemory].
-        // which is [4GB].
+        // Specifies the minimum amount of memory to allocate to each hive virtual machine.
+        // This is specified as a string that can be a a long byte count or a byte count or
+        // a number with units like [512MB], [0.5GB], [2GB], or [1TB] or may be set to [null] 
+        // to set the same value as [VmMemory].  This defaults to [2GB], which is half of 
+        // the default value of [VmMemory] which is [4GB].
         //
         // This is currently honored only when provisioning to a local Hyper-V instance 
         // (typically as a developer).  This is ignored for XenServer and when provisioning 
@@ -171,8 +173,8 @@ USAGE:
         // ""VmMinimumMemory"": ""2GB""
 
         // Specifies the maximum amount of memory to allocate to each hive virtual machine.
-        // This is specified as a string that can be a long byte count or a long with units like 
-        // [512MB], [2GB], [1TB].  This defaults to [64GB].
+        // This is specified as a string that can be a long byte count or a byte count or a 
+        // number with units like [512MB], [0.5GB], [2GB], or [1TB].  This defaults to [64GB].
         // 
         // ""VmDisk"": ""64GB""
 
@@ -576,26 +578,26 @@ USAGE:
         ""OSDDriveSize"": ""16GB"", 
 
         // Specifies the default amount of RAM to allocate to Ceph for caching.
-        // This can be a long byte count or a long with units like [512MB],
-        // [2GB]. or [1TB].  This can be overridden for specific nodes.  This 
-        // defaults to [256MB].
+        // This can be a long byte count or a byte count or a number with units 
+        // like [512MB], [0.5GB], [2GB], or [1TB].  This can be overridden for 
+        // specific nodes.  This defaults to [256MB].
         //
         // NOTE: The default is probably too small for production environments.
 
         ""OSDCacheSize"": ""256MB"",
 
         // Specifies the disk capacity in megabytes to assign to the Ceph OSD 
-        // journal This can be a long byte count or a long with units like [512MB],
-        // [2GB], or [1TB].  This can be overridden for specific nodes.  This 
-        // defaults to [1GB].
+        // journal This can be a long byte count or a byte count or a number with
+        // units like [512MB], [0.5GB], [2GB], or [1TB].  This can be overridden 
+        // for specific nodes.  This defaults to [1GB].
         //
         // NOTE: The default is probably too small for production environments.
 
         ""OSDJournalSize"": ""1GB"",
 
         // Specifies the maximum size of a Ceph RADOS object in bytes.  This can be a 
-        // long byte count or a long with units like [512MB], [2GB], or [1TB].  This 
-        // is a global hive setting that defaults to [5GB].
+        // long byte count or a byte count or a number with units like [512MB], [0.5GB],
+        // [2GB], or [1TB].  This is a global hive setting that defaults to [5GB].
 
         ""OSDObjectSizeMax"": ""5GB"",
 
@@ -618,9 +620,9 @@ USAGE:
         ""OSDPlacementGroups"": ""100"",
 
         // Specifies the default amount of RAM to allocate to Ceph MDS processes for 
-        // caching.  This can be a long byte count or a long with units like [512MB],
-        // [2GB] or [1TB].  This can be overridden for specific nodes.  This defaults
-        // to [64MB].
+        // caching.  This can be a long byte count or a byte count or a number with 
+        // units like [512MB], [0.5GB], [2GB], or [1TB].  This can be overridden for
+        // specific nodes.  This defaults to [64MB].
         //
         // NOTE: The Ceph documentation states that MDS may tend to underestimate the 
         //       RAM it's  using by up to 1.5 times.  To avoid potential memory issues, 
@@ -651,9 +653,10 @@ USAGE:
     ""HiveMQ"": {
 
         // Specifies the maximum RAM to be allocated to each RabbitMQ node container.
-        // This can be a long byte count or a long with units like [512MB] or [2GB].
-        // This can be overridden  for specific nodes.  This defaults to [600MB] if
-        // the RabbitMQ Server is being precompiled and [350MB] if not.
+        // This can be a long byte count or a byte count or a number with units like
+        // [512MB], [0.5GB], [2GB], or [1TB].  This can be overridden for specific 
+        // nodes.  This defaults to [600MB] if the RabbitMQ Server is being precompiled
+        // and [350MB] if not.
         //
         // NOTE: The default is probably too small for production environments
 
@@ -775,22 +778,21 @@ USAGE:
     //      VmMemory            Specifies the maximum amount of memory to 
     //                          allocate to this node when provisioned on a 
     //                          hypervisor.   This is specified as a string 
-    //                          that can be a long byte count or a long with
-    //                          units like [512MB] or [2GB].
+    //                          that can be a long byte count or a byte count
+    //                          or a number with units like [512MB], [0.5GB], 
+    //                          [2GB], or [1TB].
     //
     //      VmMinimumMemory     Specifies the minimum amount of memory to 
-    //                          allocate to each hive virtual machine.  
-    //                          This is specified as a string that can be 
-    //                          a long byte count or a long with units like
-    //                          [512MB], [2GB] or [1TB].
+    //                          allocate to each hive virtual machine.  This
+    //                          is specified as a string that can be a 
+    //                          byte count or a number with units like 
+    //                          [512MB], [0.5GB], [2GB], or [1TB].
     //
     //      VmDisk              The amount of disk space to allocate to this
     //                          node when when provisioned on a hypervisor.  
     //                          This is specified as a string that can be a
-    //                          long byte count or a long with units like 
-    //                          [512MB], [2GB], or [1TB].
-    //
-    //  
+    //                          byte count or a number with units like 
+    //                          [512MB], [0.5GB], [2GB], or [1TB].
     //
     // Node Labels
     // -----------

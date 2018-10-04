@@ -45,7 +45,8 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// Specifies the maximum RAM to be allocated to each RabbitMQ node container.
-        /// This can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.
+        /// This can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, 
+        /// <b>2GB</b>, or <b>1TB</b>.
         /// </para>
         /// <para>
         /// This defaults to <b>500MB</b> if <see cref="Precompile"/><c>true</c> or
