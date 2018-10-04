@@ -31,7 +31,7 @@ can use this as a starting point for creating a customized definition.
 
 USAGE:
 
-    neon hive example
+neon hive example
 ";
         /// <inheritdoc/>
         public override string[] Words
