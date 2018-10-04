@@ -10,15 +10,21 @@ From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* iden
 
 This service dynamically generates HAProxy configurations from load balancer rules and certificates persisted to Consul and Vault for neonHIVE proxies based on the [neon-proxy](https://hub.docker.com/r/nhive/neon-proxy/) image.
 
-neonHIVEs deploy two general purpose reverse HTTP/TCP proxy services:
+neonHIVEs deploy three related reverse HTTP/TCP proxy services:
 
 * `neon-proxy-public` which implements the public load balancer and is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to hive services.
 
 * `neon-proxy-private` which implements the private load balancer is used for internal routing for the scenarios the Docker overlay ingress network doesn't address out-of-the-box (e.g. load balancing and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
 
+* `neon-varnish` which can provide caching services for both the public and private proxies.
+
 These proxy services are based on the [neon-proxy](https://hub.docker.com/r/nhive/neon-proxy/) image which deploys [HAProxy](http://haproxy.org) that actually handles the routing, along with some scripts that can dynamically download the proxy configuration from HashiCorp Consul and TLS certificates from HashiCorp Vault.
 
-The `neon-proxy-manager` image handles the generation and updating of the proxy service configuration in Consul based on proxy definitions and TLS certificates loaded into Consul by the `neon-cli`.
+The `neon-proxy-manager` image handles the generation and updating of the proxy service configurations in Consul based on proxy definitions and TLS certificates loaded into Consul by the `neon-cli`.  These configurations are consumed by the HAProxy `neon-proxy-public` and `neon-proxy-private` services as well as the `neon-varnish` service.
+
+`neon-proxy-manager` automatically manages the lifecycle of the `neon-varnish` service by starting it when one or more load balancer rules enable caching stopping it when no rules enable caching.  This means that `neon-proxy-manager` may only be deployed to hive managers and that the Docker Unix domain socket must be mapped into the service.
+
+**HiveMQ** broadcast channels are used by `neon-proxy-manager` to notify the proxy and service instances of configuration changes.  A change notification message is published to the **proxy-public-update** channel when the public proxy configuration has changed or to **proxy-private-update** for private changes.  The `neon-proxy-public` service listens to the **proxy-public-update** channel and `neon-proxy-private` to the **neon-private-update** channel.  `neon-varnish` listens to both of these channels because it can cache either or both.
 
 # Environment Variables
 
@@ -95,15 +101,11 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 * `cert-warn-days` (*double*) - number of days in advance to begin warning of certificate expirations.
 
-* `proxies/*/cache-conf` - Holds public or private proxy�s generated Varnish Cache VCL configuration file as plain text.
+* `proxies/*/proxy-conf` - public or private proxy's generated HAProxy and Varnish configurations as a ZIP archive.
 
-* `proxies/*/cache-hash` - MD5 hash of the public or private proxy�s `cache-conf`  This is used by `neon-proxy-cache` service instances to detect when the caching configuration has changed.
+* `proxies/*/proxy-hash` - MD5 hash of the public or private load balancer's `*-proxy-conf` archive combined with the hash of all of the referenced certificates.  This is used by `neon-proxy` instances to detect when the proxy configuration has changed.
 
-* `proxies/.../proxy-conf` - public or private proxy's generated HAProxy configuration as a ZIP archive.
-
-* `proxies/.../proxy-hash` - MD5 hash of the public or private load balancer's `-proxy-conf` archive combined with the hash of all of the referenced certificates.  This is used by `neon-proxy` instances to detect when the proxy configuration has changed.
-
-* `status/...*` (*json*) - proxy rule status at the time the `neon-proxy-manager` last processed hive rules for the named load balancer.
+* `status/*` (*json*) - proxy rule status at the time the `neon-proxy-manager` last processed hive rules for the named load balancer.
 
 * `conf` - root key for proxy settings that need to be monitored for changes.
 
@@ -136,6 +138,7 @@ docker service create \
     --mount type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true \
     --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
+    --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
     --env VAULT_CREDENTIALS=neon-proxy-manager-credentials \
     --env LOG_LEVEL=INFO \
     --secret neon-proxy-manager-credentials \
