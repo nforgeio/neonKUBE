@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    BroadcastChannel.cs
+// FILE:	    BasicChannel.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 using EasyNetQ;
@@ -31,20 +30,46 @@ namespace Neon.HiveMQ
 {
     /// <summary>
     /// <para>
-    /// Implements broadcast messaging operations for a <see cref="HiveBus"/>.  
+    /// Implements basic messaging operations for a <see cref="HiveBus"/>.  
     /// Message producers and consumers each need to declare a channel with the 
     /// same name by calling one of the <see cref="HiveBus"/> to be able to
-    /// broadcast and consume messages.
+    /// publish and consume messages.
     /// </para>
     /// <note>
-    /// <see cref="BroadcastChannel"/> has nothing to do with an underlying
+    /// <see cref="BasicChannel"/> has nothing to do with an underlying
     /// RabbitMQ channel.  These are two entirely different concepts.
     /// </note>
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 
+    /// This channel provides a way to distribute work across one or more
+    /// message consumers.  Each message published to the channel will be
+    /// delivered to one of the consumers.  To use this class:
     /// </para>
+    /// <list type="number">
+    /// <item>
+    /// Construct an instance call <see cref="HiveBus.CreateBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>,
+    /// passing the channel name any required optional parameters to control
+    /// the channel durability, exclusivity, message TTL, and length constraints.
+    /// </item>
+    /// <item>
+    /// Call <see cref="Consume{TMessage}(Action{IMessage{TMessage}})"/>,
+    /// <see cref="Consume{TMessage}(Action{IMessage{TMessage}, ConsumerContext})"/>,
+    /// <see cref="Consume{TMessage}(Func{IMessage{TMessage}, Task}, bool)"/>, or
+    /// <see cref="Consume{TMessage}(Func{IMessage{TMessage}, ConsumerContext, Task}, bool)"/>
+    /// to register message consumption callbacks for each of the message types you
+    /// need to handle.  Your callback will be passed an <see cref="IMessage{TMessage}"/>
+    /// parameter as the message envelope.  Your message can be accessed via  <see cref="IMessage.GetBody()"/>
+    /// There are method overrides that register both synchronous and asynchronous callbacks as well
+    /// as callbacks that accept the a <see cref="ConsumerContext"/> that provides additional 
+    /// information about the message as well as extended message related operations.
+    /// </item>
+    /// <item>
+    /// Call <see cref="Publish{TMessage}(TMessage)"/> or <see cref="PublishAsync{TMessage}(TMessage)"/>
+    /// to send a message.  This will result in one of the consumer callbacks registered
+    /// for the type to be called.
+    /// </item>
+    /// </list>
     /// <note>
     /// We recommend that most applications, particularily services, use the
     /// asynchronous versions of the publication and consumption APIs for better
@@ -52,31 +77,12 @@ namespace Neon.HiveMQ
     /// </note>
     /// <para><b>Implementation:</b></para>
     /// <para>
-    /// This is currently implemented by creating a fanout exchange using
-    /// the channel name.  Then each channel instance is assigned an internal UUID
-    /// and then each channel creates an auto-delete queue named like:
-    /// </para>
-    /// <code>
-    /// CHANNEL-UUID
-    /// </code>
-    /// <para>
-    /// Each channel also creates an binding that routes messages from the 
-    /// exchange to the specific channel created by the instance.  This
-    /// implements the broadcast semantics.
-    /// </para>
-    /// <para>
-    /// Channels add an <see cref="SourceHeader"/> specifying the unique
-    /// UUID to each broadcasted message.  Consumers that were created
-    /// passing <c>filterSelf=true</c> will compare this header to the
-    /// local UUID to drop messages that originated from the channel.
+    /// This is currently implemented using the built-in direct exchange routing
+    /// to a single underyling RabbitMQ queue created using the channel name.
     /// </para>
     /// </remarks>
-    public class BroadcastChannel : Channel
+    public class BasicChannel : Channel
     {
-        private const string SourceHeader = "x-source";
-
-        private string      sourceID;           // Unique channel ID
-        private byte[]      sourceIDBytes;      // Channel ID converted to bytes for faster comparisions
         private IQueue      queue;
         private IExchange   exchange;
 
@@ -84,10 +90,14 @@ namespace Neon.HiveMQ
         /// Internal constructor.
         /// </summary>
         /// <param name="messageBus">The <see cref="HiveBus"/>.</param>
-        /// <param name="name">The channel name.</param>
+        /// <param name="name">The channel name (maximum of 250 characters).</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
+        /// </param>
+        /// <param name="exclusive">
+        /// Optionally specifies that this channel instance will exclusively receive
+        /// messages from the queue.  This defaults to <c>false</c>.
         /// </param>
         /// <param name="autoDelete">
         /// Optionally specifies that the channel should be deleted once all consumers have 
@@ -107,10 +117,11 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
-        internal BroadcastChannel(
+        internal BasicChannel(
             HiveBus     messageBus, 
             string      name,
             bool        durable = false,
+            bool        exclusive = false,
             bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
@@ -120,27 +131,28 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(messageBus != null);
 
-            sourceID      = Guid.NewGuid().ToString("D").ToLowerInvariant();
-            sourceIDBytes = Encoding.UTF8.GetBytes(sourceID);
-
-            exchange = EasyBus.ExchangeDeclare(name, EasyNetQ.Topology.ExchangeType.Fanout, durable, autoDelete);
-
             queue = EasyBus.QueueDeclare(
-                name: $"{name}-{sourceID}",
+                name: name,
                 passive: false,
                 durable: durable,
-                exclusive: false,
-                autoDelete: true,
+                exclusive: exclusive,
+                autoDelete: autoDelete,
                 perQueueMessageTtl: messageTTL.HasValue ? (int?)messageTTL.Value.TotalMilliseconds : null,
                 maxLength: maxLength,
                 maxLengthBytes: maxLengthBytes);
 
-            EasyBus.Bind(exchange, queue, routingKey: "#");
+            // We're going to use the default exchange which automatically
+            // routes messages to the queue by name.
+
+            exchange = Exchange.GetDefault();
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
+            queue    = null;
+            exchange = null;
+
             base.Dispose(disposing);
         }
 
@@ -179,7 +191,7 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
-        /// Synchronously broadcasts a message to the channel consumers.
+        /// Synchronously publishes a message to the channel.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message.</param>
@@ -191,13 +203,11 @@ namespace Neon.HiveMQ
             var exchange = GetExchange();
             var envelope = new Message<TMessage>(message);
 
-            envelope.Properties.Headers[SourceHeader] = sourceID;
-
             EasyBus.PublishAsync(exchange, Name, mandatory: false, message: envelope).Wait();
         }
 
         /// <summary>
-        /// Asynchronously broadcasts a message to the channel consumers.
+        /// Asynchronously publishes a message to the channel.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message.</param>
@@ -209,8 +219,6 @@ namespace Neon.HiveMQ
             var exchange = GetExchange();
             var envelope = new Message<TMessage>(message);
 
-            envelope.Properties.Headers[SourceHeader] = sourceID;
-
             await EasyBus.PublishAsync(exchange, Name, mandatory: false, message: envelope);
         }
 
@@ -220,7 +228,6 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="filterSelf">Optionally filter messages broadcast by this channel instance.</param>
         /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
@@ -233,43 +240,30 @@ namespace Neon.HiveMQ
         /// returned by this method.
         /// </para>
         /// </remarks>
-        public Subscription Consume<TMessage>(Action<IMessage<TMessage>> onMessage, bool filterSelf = false) 
+        public Subscription Consume<TMessage>(Action<IMessage<TMessage>> onMessage) 
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            var queue = GetQueue();
+            var queue        = GetQueue();
             var subscription = EasyBus.Consume<TMessage>(queue,
                 (envelope, info) =>
                 {
-                    if (filterSelf && envelope.Properties.HeadersPresent)
-                    {
-                        if (envelope.Properties.Headers.TryGetValue(SourceHeader, out var senderIDBytes) &&
-                            NeonHelper.ArrayEquals((byte[])senderIDBytes, sourceIDBytes))
-                        {
-                            // This channel instance originally broadcasted this message
-                            // and [filterSelf] is true, so we're going to drop it.
-
-                            return;
-                        }
-                    }
-
                     onMessage(envelope);
                 });
 
-            return new Subscription(this, subscription);
+            return base.AddSubscription(new Subscription(this, typeof(TMessage), subscription));
         }
 
         /// <summary>
         /// Registers a synchronous callback that will be called as messages of type
         /// <typeparamref name="TMessage"/> are delivered to the consumer.  This override
-        /// also passes an additional <see cref="ConsumerContext"/> parameter to the
-        /// callback.
+        /// also passes an additional <see cref="ConsumerContext"/> parameter to
+        /// the callback.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="filterSelf">Optionally filter messages broadcast by this channel instance.</param>
-        /// <returns>n <see cref="Subscription"/> instance.</returns>
+        /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
         /// This method is suitable for many graphical client applications but 
@@ -281,7 +275,7 @@ namespace Neon.HiveMQ
         /// returned by this method.
         /// </para>
         /// </remarks>
-        public Subscription Consume<TMessage>(Action<IMessage<TMessage>, ConsumerContext> onMessage, bool filterSelf = false) 
+        public Subscription Consume<TMessage>(Action<IMessage<TMessage>, ConsumerContext> onMessage) 
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
@@ -290,22 +284,10 @@ namespace Neon.HiveMQ
             var subscription = EasyBus.Consume<TMessage>(queue,
                 (envelope, info) =>
                 {
-                    if (filterSelf && envelope.Properties.HeadersPresent)
-                    {
-                        if (envelope.Properties.Headers.TryGetValue(SourceHeader, out var senderIDBytes) &&
-                            NeonHelper.ArrayEquals((byte[])senderIDBytes, sourceIDBytes))
-                        {
-                            // This channel instance originally broadcasted this message
-                            // and [filterSelf] is true, so we're going to drop it.
-
-                            return;
-                        }
-                    }
-
                     onMessage(envelope, ConsumerContext.Create(info));
                 });
 
-            return new Subscription(this, subscription);
+            return base.AddSubscription(new Subscription(this, typeof(TMessage), subscription));
         }
 
         /// <summary>
@@ -314,7 +296,10 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="filterSelf">Optionally filter messages broadcast by this channel instance.</param>
+        /// <param name="exclusive">
+        /// Optionally indicates that this is is to be the exclusive consumer 
+        /// of messages on the channel.  This defaults to <c>false</c>.
+        /// </param>
         /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
@@ -326,7 +311,7 @@ namespace Neon.HiveMQ
         /// returned by this method.
         /// </para>
         /// </remarks>
-        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, Task> onMessage, bool filterSelf = false) 
+        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, Task> onMessage, bool exclusive = false)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
@@ -335,22 +320,10 @@ namespace Neon.HiveMQ
             var subscription = EasyBus.Consume<TMessage>(queue,
                 async (envelope, info) =>
                 {
-                    if (filterSelf && envelope.Properties.HeadersPresent)
-                    {
-                        if (envelope.Properties.Headers.TryGetValue(SourceHeader, out var senderIDBytes) &&
-                            NeonHelper.ArrayEquals((byte[])senderIDBytes, sourceIDBytes))
-                        {
-                            // This channel instance originally broadcasted this message
-                            // and [filterSelf] is true, so we're going to drop it.
-
-                            return;
-                        }
-                    }
-
                     await onMessage(envelope);
                 });
 
-            return new Subscription(this, subscription);
+            return base.AddSubscription(new Subscription(this, typeof(TMessage), subscription));
         }
 
         /// <summary>
@@ -361,7 +334,10 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="filterSelf">Optionally filter messages broadcast by this channel instance.</param>
+        /// <param name="exclusive">
+        /// Optionally indicates that this is is to be the exclusive consumer 
+        /// of messages on the channel.  This defaults to <c>false</c>.
+        /// </param>
         /// <returns>A <see cref="Subscription"/> instance.</returns>
         /// <remarks>
         /// <note>
@@ -373,7 +349,7 @@ namespace Neon.HiveMQ
         /// returned by this method.
         /// </para>
         /// </remarks>
-        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, ConsumerContext, Task> onMessage, bool filterSelf = false)
+        public Subscription Consume<TMessage>(Func<IMessage<TMessage>, ConsumerContext, Task> onMessage, bool exclusive = false) 
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
@@ -382,22 +358,10 @@ namespace Neon.HiveMQ
             var subscription = EasyBus.Consume<TMessage>(queue,
                 async (envelope, info) =>
                 {
-                    if (filterSelf && envelope.Properties.HeadersPresent)
-                    {
-                        if (envelope.Properties.Headers.TryGetValue(SourceHeader, out var senderIDBytes) &&
-                            NeonHelper.ArrayEquals((byte[])senderIDBytes, sourceIDBytes))
-                        {
-                            // This channel instance originally broadcasted this message
-                            // and [filterSelf] is true, so we're going to drop it.
-
-                            return;
-                        }
-                    }
-
                     await onMessage(envelope, ConsumerContext.Create(info));
                 });
 
-            return new Subscription(this, subscription);
+            return base.AddSubscription(new Subscription(this, typeof(TMessage), subscription));
         }
     }
 }

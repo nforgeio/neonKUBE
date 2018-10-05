@@ -24,6 +24,26 @@ namespace TestCommon
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
+        public void BroadcastDuplicateSubscription()
+        {
+            // Verify that the broadcast channel doesn't allow multiple
+            // subscriptions to the same message type.
+
+            using (var bus = fixture.Settings.ConnectBus())
+            {
+                var channel = bus.CreateBroadcastChannel("test");
+
+                channel.Consume<TestMessage>(message => { });
+
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>(message => { }));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>((message, context) => { }));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>(message => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>((message, context) => Task.CompletedTask));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
         public void Broadcast()
         {
             // Verify that we can synchronously publish and consume from

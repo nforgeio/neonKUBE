@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using EasyNetQ;
@@ -124,14 +125,23 @@ namespace Neon.HiveMQ
         /// Addes a message consumption subscription the the channel.
         /// </summary>
         /// <param name="subscription">The subscription.</param>
-        protected void AddSubscription(Subscription subscription)
+        /// <returns>The scibscription.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if a subscription for the related message type is already present for the channel.</exception>
+        protected Subscription AddSubscription(Subscription subscription)
         {
             Covenant.Requires<ArgumentNullException>(subscription != null);
 
             lock (syncLock)
             {
+                if (!subscriptions.Where(s => s.MessageType == subscription.MessageType).IsEmpty())
+                {
+                    throw new InvalidOperationException($"Channel [{Name}] already has a subscription for message type [{subscription.MessageType.FullName}].");
+                }
+
                 subscriptions.Add(subscription);
             }
+
+            return subscription;
         }
 
         /// <summary>

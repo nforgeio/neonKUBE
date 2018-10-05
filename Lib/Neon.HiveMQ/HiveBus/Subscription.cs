@@ -46,13 +46,16 @@ namespace Neon.HiveMQ
         /// Constructor.
         /// </summary>
         /// <param name="channel">The associated channel.</param>
+        /// <param name="messageType">The type of the message being subscribed.</param>
         /// <param name="easyNetQSubscription">The lower-level consumption subscription.</param>
-        public Subscription(Channel channel, IDisposable easyNetQSubscription)
+        public Subscription(Channel channel, Type messageType, IDisposable easyNetQSubscription)
         {
             Covenant.Requires<ArgumentNullException>(channel != null);
+            Covenant.Requires<ArgumentNullException>(messageType != null);
             Covenant.Requires<ArgumentNullException>(easyNetQSubscription != null);
 
             this.channel              = channel;
+            this.MessageType          = messageType;
             this.easyNetQSubscription = easyNetQSubscription;
         }
 
@@ -76,6 +79,11 @@ namespace Neon.HiveMQ
                 isDisposed = true;
             }
         }
+
+        /// <summary>
+        /// Returns the message type being subscribed.
+        /// </summary>
+        public Type MessageType { get; private set; }
 
         /// <inheritdoc/>
         public void Dispose()
