@@ -25,29 +25,19 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $alpineVersion,
-		[parameter(Mandatory=$True, Position=2)][string] $varnishVersion,
+		[parameter(Mandatory=$True, Position=2)][string] $varnishVersion,   # Specific base varnish image version (like "6.0.0")
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/varnish"
+	$registry = "nhive/neon-proxy-cache"
 	$date     = UtcDate
 	$branch   = GitBranch
-	$tag      = "$branch-$varnishVersion"
+	$tag      = "$branch-$date"
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -alpineVersion $alpineVersion -varnishVersion $varnishVersion -tag $tag
+	. ./build.ps1 -registry $registry -varnishVersion $varnishVersion -tag $tag
     PushImage "${registry}:$tag"
-
-	if (IsProd)
-	{
-		Exec { docker tag "${registry}:$tag" "${registry}:$varnishVersion" }
-		PushImage "${registry}:$varnishVersion"
-
-		Exec { docker tag "${registry}:$tag" "${registry}:$version-$date" }
-		PushImage "${registry}:$version-$date"
-	}
 
 	if ($latest)
 	{
@@ -68,4 +58,4 @@ if ($allVersions)
 {
 }
 
-Build "3.7" "5.2.1-r0" -latest
+Build "6.0.0" -latest

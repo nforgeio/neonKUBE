@@ -54,6 +54,7 @@ namespace NeonProxyManager
         private const string pollSecondsKey         = consulPrefix + "/poll-seconds";
         private const string fallbackPollSecondsKey = consulPrefix + "/fallback-poll-seconds";
         private const string certWarnDaysKey        = consulPrefix + "/cert-warn-days";
+        private const string cacheRemoveSecondsKey  = consulPrefix + "/cache-remove-seconds";
         private const string proxyConfKey           = consulPrefix + "/conf";
         private const string proxyStatusKey         = consulPrefix + "/status";
         private const string proxyReloadKey         = proxyConfKey + "/reload";
@@ -69,6 +70,7 @@ namespace NeonProxyManager
         private static TimeSpan                 pollInterval;
         private static TimeSpan                 fallbackPollInterval;
         private static TimeSpan                 certWarnTime;
+        private static TimeSpan                 cacheRemoveDelay;
         private static HiveDefinition           hiveDefinition;
         private static bool                     hiveDefinitionChanged;
         private static Task                     monitorTask;
@@ -223,9 +225,16 @@ namespace NeonProxyManager
                 await consul.KV.PutDouble(certWarnDaysKey, 30.0);
             }
 
+            if (!await consul.KV.Exists(cacheRemoveSecondsKey))
+            {
+                log.LogInfo($"Persisting setting [{cacheRemoveSecondsKey}=300.0]");
+                await consul.KV.PutDouble(cacheRemoveSecondsKey, 300.0);
+            }
+
             pollInterval         = TimeSpan.FromSeconds(await consul.KV.GetDouble(pollSecondsKey));
             fallbackPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(fallbackPollSecondsKey));
             certWarnTime         = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
+            cacheRemoveDelay     = TimeSpan.FromDays(await consul.KV.GetDouble(cacheRemoveSecondsKey));
 
             log.LogInfo(() => $"Using setting [{pollSecondsKey}={pollInterval.TotalSeconds}]");
 
@@ -236,6 +245,7 @@ namespace NeonProxyManager
 
             log.LogInfo(() => $"Using setting [{fallbackPollSecondsKey}={fallbackPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{certWarnDaysKey}={certWarnTime.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{cacheRemoveSecondsKey}={cacheRemoveDelay.TotalSeconds}]");
 
             // The implementation is pretty straightforward: We're going to watch
             // the [neon/service/neon-proxy-manager/conf/reload] hash for changes 

@@ -32,10 +32,10 @@ namespace NeonCli
 {
     /// <summary>
     /// Handles the provisioning of the global hive proxy services including: 
-    /// <b>neon-hive-manager</b>, <b>neon-proxy-manager</b>, <b>neon-varnish</b>,
-    /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b>, <b>neon-dns</b>, 
-    /// <b>neon-dns-mon</b> as well as the <b>neon-proxy-public-bridge</b> and
-    /// <b>neon-proxy-private-bridge</b> containers on any pet nodes.
+    /// <b>neon-hive-manager</b>, <b>neon-proxy-manager</b>, <b>neon-proxy-public</b>
+    /// and <b>neon-proxy-private</b>, <b>neon-dns</b>, <b>neon-dns-mon</b> as\
+    /// well as the <b>neon-proxy-public-bridge</b> and <b>neon-proxy-private-bridge</b> 
+    /// containers on any pet nodes.
     /// </summary>
     public class HiveServices : ServicesBase
     {
@@ -467,33 +467,6 @@ namespace NeonCli
                         Hive.PrivateLoadBalancer.SetRule(rule);
                     });
 
-                //---------------------------------------------------------
-                // Deploy the Varnish HTTP caching service
-#if TODO
-                if (Hive.Definition.Varnish.Enabled)
-                {
-                    var constraintArgs = new List<string>();
-
-                    if (Hive.Workers.Count() > 0)
-                    {
-                        constraintArgs.Add("--constraint");
-                        constraintArgs.Add("node.role!=manager");
-                    }
-
-                    StartService("neon-varnish", Hive.Definition.VarnishImage,
-                        new CommandBundle(
-                            "docker service create",
-                            "--name", "neon-varnish",
-                            "--detach=false",
-                            "--mount", "type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true",
-                            "--env", "LOG_LEVEL=INFO",
-                            constraintArgs,
-                            "--replicas", 1,
-                            "--restart-delay", Hive.Definition.Docker.RestartDelay,
-                            ImagePlaceholderArg
-                        ));
-                }
-#endif
             // Log the hive into any Docker registries with credentials.
 
             firstManager.InvokeIdempotentAction("setup/registry-login",

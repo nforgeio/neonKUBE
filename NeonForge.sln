@@ -263,7 +263,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt-jeff", "wrt-jeff", "{7B
 		Devops\test\hives\wrt-jeff\vars.yaml = Devops\test\hives\wrt-jeff\vars.yaml
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-varnish", "Services\neon-varnish\neon-varnish.csproj", "{7FDE666C-FACB-401F-9ADB-19E7998A4E95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-proxy-cache", "Services\neon-proxy-cache\neon-proxy-cache.csproj", "{7FDE666C-FACB-401F-9ADB-19E7998A4E95}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.RabbitMQ", "Lib\Neon.Xunit.RabbitMQ\Neon.Xunit.RabbitMQ.csproj", "{BA0CABF0-06A8-4640-9264-E1611D95FEB3}"
 EndProject

@@ -30,14 +30,14 @@ using Neon.Time;
 namespace NeonVarnish
 {
     /// <summary>
-    /// Implements the <b>neon-varnish</b> service which watches for changes to the Varnish configuration generated
-    /// by <b>neon-proxy-manager</b> and persisted to Consul.  This service uses a combination of polling Consul for
+    /// Implements the <b>neon-proxy-cache</b> service listens for HiveMQ notifications from
+    /// <b>neon-proxy-manager</b> that its configuration has changed.  This service uses a combination of polling Consul for
     /// changes and listening for HiveMQ notifications from <b>neon-proxy-manager</b>.  This is built into the
-    /// <a href="https://hub.docker.com/r/nhive/neon-varnish/">nhive/neon-varnish</a> image.
+    /// <a href="https://hub.docker.com/r/nhive/neon-proxy-cache/">nhive/neon-proxy-cache</a> image.
     /// </summary>
     public static class Program
     {
-        private static readonly string serviceName  = $"neon-varnish:{GitVersion}";
+        private static readonly string serviceName  = $"neon-proxy-cache:{GitVersion}";
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;

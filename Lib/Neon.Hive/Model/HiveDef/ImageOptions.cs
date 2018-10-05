@@ -40,7 +40,7 @@ namespace Neon.Hive
         private const string defaultHiveManager     = HiveConst.NeonPublicRegistry + "/neon-hive-manager:latest";
         private const string defaultDns             = HiveConst.NeonPublicRegistry + "/neon-dns:latest";
         private const string defaultDnsMon          = HiveConst.NeonPublicRegistry + "/neon-dns-mon:latest";
-        private const string defaultVarnish         = HiveConst.NeonPublicRegistry + "/neon-varnish:latest";
+        private const string defaultProxyCache      = HiveConst.NeonPublicRegistry + "/neon-proxy-cache:latest";
         private const string defaultSecretRetriever = HiveConst.NeonPublicRegistry + "/neon-secret-retriever:latest";
         private const string defaultHiveMQ          = HiveConst.NeonPublicRegistry + "/neon-hivemq:latest";
         private const string defaultLogHost         = HiveConst.NeonPublicRegistry + "/neon-log-host:latest";
@@ -112,12 +112,12 @@ namespace Neon.Hive
         public string DnsMon { get; set; } = defaultDnsMon;
 
         /// <summary>
-        /// The Docker image to be used to provision the <b>neon-varnish</b> service.
-        /// This defaults to <b>nhive/neon-varnish:latest</b>.
+        /// The Docker image to be used to provision the <b>neon-proxy-cache</b> service.
+        /// This defaults to <b>nhive/neon-proxy-cache:latest</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "Varnish", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultVarnish)]
-        public string Varnish { get; set; } = defaultVarnish;
+        [JsonProperty(PropertyName = "ProxyCache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultProxyCache)]
+        public string ProxyCache { get; set; } = defaultProxyCache;
 
         /// <summary>
         /// The Docker image to be used to retrieve Docker secrets.
@@ -191,7 +191,7 @@ namespace Neon.Hive
             HiveManager     = VerifyImage(nameof(HiveManager), HiveManager ?? defaultHiveManager);
             Dns             = VerifyImage(nameof(Dns), Dns ?? defaultDns);
             DnsMon          = VerifyImage(nameof(DnsMon), DnsMon ?? defaultDnsMon);
-            Varnish         = VerifyImage(nameof(Varnish), Varnish ?? defaultVarnish);
+            ProxyCache         = VerifyImage(nameof(ProxyCache), ProxyCache ?? defaultProxyCache);
             SecretRetriever = VerifyImage(nameof(SecretRetriever), SecretRetriever ?? defaultSecretRetriever);
             HiveMQ          = VerifyImage(nameof(HiveMQ), HiveMQ ?? defaultHiveMQ);
             Elasticsearch   = VerifyImage(nameof(Elasticsearch), Elasticsearch ?? defaultElasticsearch);

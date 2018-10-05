@@ -6,7 +6,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* iden
 
 # Description
 
-This base image includes the [Varnish Cache](http://varnish-cache.org) high performance caching HTTP proxy.  This can be placed in front of websites to improve webpage loading performance and reduce the load from the backends.  This image is also extended by [neon-varnish](https://hub.docker.com/r/nhive/neon-varnish/) that integrates the into neonHIVE.
+This base image includes the [Varnish Cache](http://varnish-cache.org) high performance caching HTTP proxy.  This can be placed in front of websites to improve webpage loading performance and reduce the load from the backends.  This image is also extended by [neon-proxy0-cache](https://hub.docker.com/r/nhive/neon-proxy-cache/) that provides HTTP caching for neonHIVE.
 
 # Environment Variables
 
@@ -24,7 +24,7 @@ This image is easy to deploy.  The typical use is to deploy as part of a Docker 
 
 Here are the main considerations:
 
-* `neon-varnish` must be connected to the same network as the target website.
+* `varnish` must be connected to the same network as the target website.
 * `BACKEND_SERVER` must be set to the name of the Docker service hosting the website.
 
 Here's a simple stack that deploys a Varnish cache listening on the port 8080 on the Docker ingress/mesh network (`mode: host`) and forwards traffic to a backend website while maintaining a 200M cache in RAM.
