@@ -42,6 +42,7 @@ namespace NeonCli
             base.Initialize(controller);
 
             controller.AddStep(GetStepLabel("elasticsearch"), (node, stepDelay) => UpdateElasticsearch(node));
+            controller.AddStep(GetStepLabel("ceph-fuse"), (node, stepDelay) => UpdateCephFuse(node));
         }
 
         /// <summary>
@@ -92,6 +93,54 @@ namespace NeonCli
 
                         node.Status = string.Empty;
                     }
+                });
+        }
+
+
+        /// <summary>
+        /// Updates the <b>/etc/systemd/system/ceph-fuse-hivefs.service</b> to adjust restart
+        /// behavior: https://github.com/jefflill/NeonForge/issues/364
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void UpdateCephFuse(SshProxy<NodeDefinition> node)
+        {
+            node.InvokeIdempotentAction(GetIdempotentTag("ceph-fuse"),
+                () =>
+                {
+                    node.UploadText("/etc/systemd/system/ceph-fuse-hivefs.service",
+@"[Unit]
+Description=Ceph FUSE client (for /mnt/hivefs)
+After=network-online.target local-fs.target time-sync.target
+Wants=network-online.target local-fs.target time-sync.target
+Conflicts=umount.target
+PartOf=ceph-fuse.target
+
+[Service]
+EnvironmentFile=-/etc/default/ceph
+Environment=CLUSTER=ceph
+ExecStart=/usr/bin/ceph-fuse -f -o nonempty --cluster ${CLUSTER} /mnt/hivefs
+TasksMax=infinity
+
+# These settings configure the service to restart always after
+# waiting 5 seconds between attempts for up to a 365 days (effectively 
+# forever).  [StartLimitIntervalSec] is set to the number of seconds 
+# in a year and [StartLimitBurst] is set to the number of 5 second 
+# intervals in [StartLimitIntervalSec].
+
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=31536000 
+StartLimitBurst=6307200
+
+[Install]
+WantedBy=ceph-fuse.target
+WantedBy=docker.service
+",
+                    permissions: "644");
+
+                    // Tell systemd to regenerate its configuration.
+
+                    node.SudoCommand("systemctl daemon-reload");
                 });
         }
     }

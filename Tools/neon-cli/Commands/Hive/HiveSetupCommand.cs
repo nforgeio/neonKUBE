@@ -1845,16 +1845,16 @@ fi
             get
             {
                 return
-@"# These settings configure the service to restart on failure after
-# waiting 30 seconds for up to a 365 days (effectively forever).
-# [StartLimitInterval] is set to the number of minutes in a year
-# and [StartLimitBurst] is set to the number of 30 second intervals
-# in [StartLimitInterval].
+@"# These settings configure the service to restart always after
+# waiting 5 seconds between attempts for up to a 365 days (effectively 
+# forever).  [StartLimitIntervalSec] is set to the number of seconds 
+# in a year and [StartLimitBurst] is set to the number of 5 second 
+# intervals in [StartLimitIntervalSec].
 
-Restart=on-failure
-RestartSec=30
-StartLimitInterval=525600min
-StartLimitBurst=1051200";
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=31536000 
+StartLimitBurst=6307200";
             }
         }
 
