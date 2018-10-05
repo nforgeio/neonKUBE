@@ -28,7 +28,7 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// <b>Internal Use Only:</b> This interface describes a low-level class implementations
+    /// <b>INTERNAL USE ONLY:</b> This interface describes a low-level class implementations
     /// that are registered by the <b>Neon.Hive.Hosting</b> class library with 
     /// <see cref="HostingManager"/> to provide a way to access the various hosting
     /// implementations without having to bake this into the <b>Neon.Hive</b> assembly.

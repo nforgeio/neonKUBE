@@ -43,7 +43,7 @@ namespace Couchbase.Lite
         Revision Revision { get; }
 
         /// <summary>
-        /// <b>Internal use only:</b> Used to initialize the set of attachment names derived
+        /// <b>INTERNAL USE ONLY:</b> Used to initialize the set of attachment names derived
         /// document classes will track via their <see cref="EntityDocument{TEntity}.AttachmentEvent"/>.
         /// </summary>
         /// <param name="attachmentNames">The case insenstive set of attachment names.</param>

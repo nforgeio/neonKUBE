@@ -36,7 +36,7 @@ namespace Neon.Hive
         //---------------------------------------------------------------------
 
         /// <summary>
-        /// <b>Internal Use Only:</b> The driver providing low-level access to hosting
+        /// <b>INTERNAL USE ONLY:</b> The driver providing low-level access to hosting
         /// manager implementations.  This is initialized by a call to <c>HostingLoader.Initialize()</c>
         /// defined withing the <b>Neon.Hive.Hosting</b> assembly.
         /// </summary>

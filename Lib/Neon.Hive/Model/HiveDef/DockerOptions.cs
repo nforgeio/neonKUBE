@@ -189,7 +189,7 @@ namespace Neon.Hive
         public bool? AvoidIngressNetwork { get; set; } = null;
 
         /// <summary>
-        /// <b>Internal Use Only:</b> Indicates whether the Docker ingress network should be used
+        /// <b>INTERNAL USE ONLY:</b> Indicates whether the Docker ingress network should be used
         /// for load balancer instances based on <see cref="AvoidIngressNetwork"/> and the the
         /// current hosting environment.
         /// </summary>

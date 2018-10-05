@@ -232,7 +232,7 @@ namespace Neon.IO
         public static Regex ParenVariableExpansionRegex { get; private set; } = new Regex(@"\$\((?<name>\({0,1}[a-z0-9_\.\-]+\){0,1})\)", regexIgnoreCaseOptions);
 
         /// <summary>
-        /// <b>Internal use only:</b> The <see cref="Regex"/> used to validate variable names.
+        /// <b>INTERNAL USE ONLY:</b> The <see cref="Regex"/> used to validate variable names.
         /// </summary>
         public static Regex VariableValidationRegex { get; private set; } = new Regex(@"^[a-z0-9_\.\-]+$", regexIgnoreCaseOptions);
 

@@ -15,7 +15,7 @@ namespace Neon.Xunit
 {
     /// <summary>
     /// <para>
-    /// <b>Internal Use Only:</b> Defines the behavior of a Neon Xunit test fixture.
+    /// <b>INTERNAL USE ONLY:</b> Defines the behavior of a Neon Xunit test fixture.
     /// </para>
     /// <note>
     /// All test fixture implementations must inherit from <see cref="TestFixture"/> to
