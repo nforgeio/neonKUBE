@@ -31,7 +31,87 @@ namespace Neon.Hive
     /// </summary>
     public sealed class HiveMQManager
     {
-        private HiveProxy hive;
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Provides messaging related services for internal neonHIVE components.
+        /// </summary>
+        public class InternalManager
+        {
+            private object          syncLock = new object();
+            private HiveMQManager   parent;
+            private HiveBus         neonHiveBus;
+
+            /// <summary>
+            /// Internal constructor.
+            /// </summary>
+            /// <param name="parent">The parent <see cref="HiveMQManager"/>.</param>
+            internal InternalManager(HiveMQManager parent)
+            {
+                this.parent = parent;
+            }
+
+            /// <summary>
+            /// <para>
+            /// <b>INTERNAL USE ONLY:</b> Returns a <see cref="HiveBus"/> connected to the hive
+            /// <b>neon</b> virtual host.  This property is intended for use only by neonHIVE
+            /// tools, services and containers.
+            /// </para>
+            /// <note>
+            /// <b>WARNING:</b> The <see cref="HiveBus"/> instance returned should <b>never be disposed</b>.
+            /// </note>
+            /// </summary>
+            public HiveBus NeonHiveBus
+            {
+                get
+                {
+                    var bus = neonHiveBus;
+
+                    if (bus != null)
+                    {
+                        return bus;
+                    }
+
+                    lock (syncLock)
+                    {
+                        if (neonHiveBus != null)
+                        {
+                            neonHiveBus = parent.NeonSettings.ConnectHiveBus();
+                        }
+
+                        return neonHiveBus;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// <b>INTERNAL USE ONLY:</b> Creates the <see cref="HiveMQChannels.ProxyNotify"/> 
+            /// channel if it doesn't already exist and returns the channel.
+            /// </summary>
+            /// <returns>The <see cref="BroadcastChannel"/>.</returns>
+            public BroadcastChannel CreateProxyNotifyChannel()
+            {
+                // WARNING:
+                //
+                // Changing any of the channel properties will require that underlying
+                // queue be removed and recreated and all services and containers that
+                // use the queue be restarted.
+
+                return NeonHiveBus.CreateBroadcastChannel(
+                    name: HiveMQChannels.ProxyNotify,
+                    durable: true,
+                    autoDelete: false,
+                    messageTTL: null,
+                    maxLength: null,
+                    maxLengthBytes: null);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        private HiveProxy   hive;
 
         /// <summary>
         /// Internal constructor.
@@ -41,7 +121,8 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 
-            this.hive = hive;
+            this.hive     = hive;
+            this.Internal = new InternalManager(this);
         }
 
         /// <summary>
@@ -208,5 +289,11 @@ namespace Neon.Hive
 
             hive.Globals.SetJson(HiveGlobals.HiveMQBootstrap, settings);
         }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Returns a manager used internally by hive components
+        /// and services.
+        /// </summary>
+        public InternalManager Internal { get; private set; }
     }
 }

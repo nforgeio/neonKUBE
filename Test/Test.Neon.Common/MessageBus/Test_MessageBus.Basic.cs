@@ -28,7 +28,7 @@ namespace TestCommon
             // Verify that the basic channel doesn't allow multiple
             // subscriptions to the same message type.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel  = bus.CreateBasicChannel("test");
 
@@ -48,7 +48,7 @@ namespace TestCommon
             // Verify that we can synchronously publish and consume from
             // a basic channel.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel  = bus.CreateBasicChannel("test");
                 var received = (TestMessage)null;
@@ -67,7 +67,7 @@ namespace TestCommon
             // Verify that we can synchronously publish and consume from
             // a basic channel while receiving additional context info.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel   = bus.CreateBasicChannel("test");
                 var received  = (TestMessage)null;
@@ -94,7 +94,7 @@ namespace TestCommon
             // Verify that we can asynchronously publish and consume from
             // a basic channel.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel  = bus.CreateBasicChannel("test");
                 var received = (TestMessage)null;
@@ -121,7 +121,7 @@ namespace TestCommon
             // Verify that we can asynchronously publish and consume from
             // a basic channel while receiving additional context info.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel   = bus.CreateBasicChannel("test");
                 var received  = (TestMessage)null;
@@ -150,7 +150,7 @@ namespace TestCommon
             // Verify that messages published from one channel can be
             // received on another.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var receiveChannel = bus.CreateBasicChannel("test");
                 var received       = (TestMessage)null;
@@ -191,7 +191,7 @@ namespace TestCommon
                 consumerMessages[i] = new List<TestMessage>();
             }
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 for (int channelID = 0; channelID < channelCount; channelID++)
                 {

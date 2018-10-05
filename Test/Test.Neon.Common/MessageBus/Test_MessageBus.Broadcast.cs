@@ -29,7 +29,7 @@ namespace TestCommon
             // Verify that the broadcast channel doesn't allow multiple
             // subscriptions to the same message type.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel = bus.CreateBroadcastChannel("test");
 
@@ -49,7 +49,7 @@ namespace TestCommon
             // Verify that we can synchronously publish and consume from
             // a broadcast channel.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel1  = bus.CreateBroadcastChannel("test");
                 var channel2  = bus.CreateBroadcastChannel("test");
@@ -85,7 +85,7 @@ namespace TestCommon
             // a broadcast channel and the we can filter self-originating
             // messages.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel1  = bus.CreateBroadcastChannel("test");
                 var channel2  = bus.CreateBroadcastChannel("test");
@@ -127,7 +127,7 @@ namespace TestCommon
             // Verify that we can synchronously publish and consume from
             // a broadcast channel while receiving additional context info.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel1   = bus.CreateBroadcastChannel("test");
                 var channel2   = bus.CreateBroadcastChannel("test");
@@ -169,7 +169,7 @@ namespace TestCommon
             // a broadcast channel and the we can filter self-originating
             // messages.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel1   = bus.CreateBroadcastChannel("test");
                 var channel2   = bus.CreateBroadcastChannel("test");
@@ -215,7 +215,7 @@ namespace TestCommon
             // Verify that we can asynchronously publish and consume from
             // a broadcast channel.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel1  = bus.CreateBroadcastChannel("test");
                 var channel2  = bus.CreateBroadcastChannel("test");
@@ -253,7 +253,7 @@ namespace TestCommon
             // a broadcast channel and the we can filter self-originating
             // messages.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel1  = bus.CreateBroadcastChannel("test");
                 var channel2  = bus.CreateBroadcastChannel("test");
@@ -299,7 +299,7 @@ namespace TestCommon
             // Verify that we can asynchronously publish and consume from
             // a broadcast channel.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel1   = bus.CreateBroadcastChannel("test");
                 var channel2   = bus.CreateBroadcastChannel("test");
@@ -342,7 +342,7 @@ namespace TestCommon
             // Verify that we can asynchronously publish and consume from
             // a broadcast channel while receiving additional context info.
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel = bus.CreateBroadcastChannel("test");
                 var received = (TestMessage)null;
@@ -379,7 +379,7 @@ namespace TestCommon
             const int receiverCount = 10;
             const int messageCount  = 1000;
 
-            using (var bus = fixture.Settings.ConnectBus())
+            using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var receiveChannels  = new List<BroadcastChannel>();
                 var recieverMessages = new List<List<TestMessage>>();

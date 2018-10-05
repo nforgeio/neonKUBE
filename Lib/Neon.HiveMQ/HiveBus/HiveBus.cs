@@ -72,7 +72,7 @@ namespace Neon.HiveMQ
     /// </para>
     /// <para>
     /// Message buses are typically constructed by instantiating a <see cref="HiveMQSettings"/> 
-    /// instance and then calling its <see cref="HiveMQSettings.ConnectBus(string, string, string, EasyBusSettings)"/>
+    /// instance and then calling its <see cref="HiveMQSettings.ConnectHiveBus(string, string, string, EasyBusSettings)"/>
     /// method.  The instance returned is thread-safe and generally most applications will instantiate
     /// a single <see cref="HiveBus"/> instance, use it throughout the lifespan of the application
     /// and then dispose the bus when it's done.

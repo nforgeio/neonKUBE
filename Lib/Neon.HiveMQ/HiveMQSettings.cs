@@ -377,7 +377,7 @@ namespace Neon.HiveMQ
         /// <param name="virtualHost">Optional target virtual host (defaults to <b>"/"</b>).</param>
         /// <param name="settings">Optional message bus client settings.</param>
         /// <returns></returns>
-        public HiveBus ConnectBus(
+        public HiveBus ConnectHiveBus(
             string          username    = null,
             string          password    = null,
             string          virtualHost = "/",
