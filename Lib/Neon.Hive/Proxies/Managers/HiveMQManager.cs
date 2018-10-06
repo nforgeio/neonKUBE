@@ -147,21 +147,7 @@ namespace Neon.Hive
         /// </note>
         /// </summary>
         /// <exception cref="HiveException">Thrown if the required Docker secret is not present.</exception>
-        public HiveMQSettings SystemSettings
-        {
-            get
-            {
-                var secretName = "neon-hivemq-sysadmin";
-                var settings   = HiveHelper.GetSecret<HiveMQSettings>(secretName);
-
-                if (settings == null)
-                {
-                    throw new HiveException($"Secret [{secretName}] is not present.");
-                }
-
-                return settings;
-            }
-        }
+        public HiveMQSettings SystemSettings => HiveHelper.Consul.KV.GetObject<HiveMQSettings>(HiveGlobals.HiveMQSettingSysadmin).Result;
 
         /// <summary>
         /// <para>
@@ -175,21 +161,7 @@ namespace Neon.Hive
         /// </note>
         /// </summary>
         /// <exception cref="HiveException">Thrown if the required Docker secret is not present.</exception>
-        public HiveMQSettings NeonSettings
-        {
-            get
-            {
-                var secretName = "neon-hivemq-neon";
-                var settings   = HiveHelper.GetSecret<HiveMQSettings>(secretName);
-
-                if (settings == null)
-                {
-                    throw new HiveException($"Secret [{secretName}] is not present.");
-                }
-
-                return settings;
-            }
-        }
+        public HiveMQSettings NeonSettings => HiveHelper.Consul.KV.GetObject<HiveMQSettings>(HiveGlobals.HiveMQSettingsNeon).Result;
 
         /// <summary>
         /// <para>
@@ -203,21 +175,7 @@ namespace Neon.Hive
         /// </note>
         /// </summary>
         /// <exception cref="HiveException">Thrown if the required Docker secret is not present.</exception>
-        public HiveMQSettings AppSettings
-        {
-            get
-            {
-                var secretName = "neon-hivemq-app";
-                var settings   = HiveHelper.GetSecret<HiveMQSettings>(secretName);
-
-                if (settings == null)
-                {
-                    throw new HiveException($"Secret [{secretName}] is not present.");
-                }
-
-                return settings;
-            }
-        }
+        public HiveMQSettings AppSettings => HiveHelper.Consul.KV.GetObject<HiveMQSettings>(HiveGlobals.HiveMQSettingsApp).Result;
 
         /// <summary>
         /// <para>

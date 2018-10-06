@@ -3432,8 +3432,8 @@ systemctl start neon-volume-plugin
                     hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
                 });
 
-            // Create the [neon-hivemq-neon] Docker secrets for the [sysadmin],
-            // [neon], and [user] accounts.
+            // Write the Consul globals that hold the HiveMQ settings for the
+            // [app], [neon], and [sysadmin] accounts. 
 
             firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings",
                 () =>
@@ -3492,21 +3492,21 @@ systemctl start neon-volume-plugin
                     };
 
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-sysadmin",
-                        () => hive.Docker.Secret.Set("neon-hivemq-sysadmin", NeonHelper.JsonSerialize(hiveMQSettings, Formatting.Indented)));
+                        async () => await HiveHelper.Consul.KV.PutObject(HiveGlobals.HiveMQSettingSysadmin, hiveMQSettings, Formatting.Indented));
 
                     hiveMQSettings.Username    = hive.Definition.HiveMQ.NeonUser;
                     hiveMQSettings.Password    = hive.Definition.HiveMQ.NeonPassword;
                     hiveMQSettings.VirtualHost = hive.Definition.HiveMQ.NeonVHost;
 
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-neon",
-                        () => hive.Docker.Secret.Set("neon-hivemq-neon", NeonHelper.JsonSerialize(hiveMQSettings, Formatting.Indented)));
+                        async () => await HiveHelper.Consul.KV.PutObject(HiveGlobals.HiveMQSettingsNeon, hiveMQSettings, Formatting.Indented));
 
                     hiveMQSettings.Username    = hive.Definition.HiveMQ.AppUser;
                     hiveMQSettings.Password    = hive.Definition.HiveMQ.AppPassword;
                     hiveMQSettings.VirtualHost = hive.Definition.HiveMQ.AppVHost;
 
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-app",
-                        () => hive.Docker.Secret.Set("neon-hivemq-app", NeonHelper.JsonSerialize(hiveMQSettings, Formatting.Indented)));
+                        async () => await HiveHelper.Consul.KV.PutObject(HiveGlobals.HiveMQSettingsApp, hiveMQSettings, Formatting.Indented));
 
                     // Persist the HiveMQ bootstrap settings to Consul.  These settings have no credentials
                     // and reference the HiveMQ nodes directly (not via a load balancer rule).

@@ -32,25 +32,28 @@ ARGUMENTS:
 
 HIVE IDENTIFIERS:
 
-    allow-unit-testing      - enables HiveFixture unit testing (bool)
-    create-date-utc         - hive creation date (UTC)
-    disable-auto-unseal     - disables automatic Vault unsealing (bool)
-    hivemq-bootstrap        - HiveMQ bootstrap settings
-    log-retention-days      - number of days of logs to retain
-    password                - root account password
-    registries              - lists the Docker registries and credentials
-    sshkey-client-pem       - client SSH private key (PEM format)
-    sshkey-client-ppk       - client SSH private key (PPK format)
-    sshkey-fingerprint      - SSH host key fingerprint
-    username                - root account username
-    uuid                    - Hive UUID
-    vault-token             - Vault root token
-    version                 - Hive software version
+    allow-unit-testing          - enables HiveFixture unit testing (bool)
+    create-date-utc             - hive creation date (UTC)
+    disable-auto-unseal         - disables automatic Vault unsealing (bool)
+    hivemq-bootstrap            - HiveMQ bootstrap settings
+    hivemq-settings-app         - HiveMQ [app] account settings
+    hivemq-settings-neon        - HiveMQ [neon] account settings
+    hivemq-settings-sysadmin    - HiveMQ [sysadmin] account settings
+    log-retention-days          - number of days of logs to retain
+    password                    - root account password
+    registries                  - lists the Docker registries and credentials
+    sshkey-client-pem           - client SSH private key (PEM format)
+    sshkey-client-ppk           - client SSH private key (PPK format)
+    sshkey-fingerprint          - SSH host key fingerprint
+    username                    - root account username
+    uuid                        - Hive UUID
+    vault-token                 - Vault root token
+    version                     - Hive software version
 
 NODE IDENTIFIERS:
 
-    ip                      - internal hive IP address
-    role                    - role: manager or worker
+    ip                          - internal hive IP address
+    role                        - role: manager or worker
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -249,6 +252,45 @@ NODE IDENTIFIERS:
                         if (hive.Globals.TryGetString(HiveGlobals.HiveMQBootstrap, out var bootstrapSettings))
                         {
                             Console.Write(bootstrapSettings);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Hive setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
+                        break;
+
+                    case HiveGlobals.HiveMQSettingsApp:
+
+                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQBootstrap, out var hiveMQAppSettings))
+                        {
+                            Console.Write(hiveMQAppSettings);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Hive setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
+                        break;
+
+                    case HiveGlobals.HiveMQSettingsNeon:
+
+                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQBootstrap, out var hiveMQNeonSettings))
+                        {
+                            Console.Write(hiveMQNeonSettings);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Hive setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
+                        break;
+
+                    case HiveGlobals.HiveMQSettingSysadmin:
+
+                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQBootstrap, out var hiveMQSysadminSettings))
+                        {
+                            Console.Write(hiveMQSysadminSettings);
                         }
                         else
                         {
