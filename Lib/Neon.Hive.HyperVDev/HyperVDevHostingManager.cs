@@ -763,7 +763,7 @@ broadcast {broadcast}
                         // DNS servers from the hive definition here???
                         //
                         // Using the Google DNS seems like it could break some hive
-                        // network configurations (i.e. for hives that don't have
+                        // network configurations (e.g. for hives that don't have
                         // access to the public Internet).  Totally private hives
                         // aren't really a supported scenario right now though because
                         // we assume we can use [apt-get]... to pull down packages.

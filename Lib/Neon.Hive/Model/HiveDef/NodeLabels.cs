@@ -574,7 +574,7 @@ namespace Neon.Hive
         /// </summary>
         /// <remarks>
         /// Metadata servers store metadata on behalf of the Ceph Filesystem 
-        /// (i.e. Ceph Block Devices and Ceph Object Storage do not use MDS). 
+        /// (e.g. Ceph Block Devices and Ceph Object Storage do not use MDS). 
         /// Ceph Metadata Servers allow POSIX file system users to execute basic 
         /// commands (like ls, find, etc.) without placing an enormous burden on
         /// the Ceph Storage Cluster.
