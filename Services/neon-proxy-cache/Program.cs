@@ -41,6 +41,7 @@ namespace NeonVarnish
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
+        private static HiveProxy                hive;
         private static ConsulClient             consul;
         private static Task                     monitorTask;
 
@@ -63,16 +64,18 @@ namespace NeonVarnish
 
             if (NeonHelper.IsDevWorkstation)
             {
-                HiveHelper.OpenHiveRemote();
+                hive = HiveHelper.OpenHiveRemote();
             }
             else
             {
-                HiveHelper.OpenHive();
+                hive = HiveHelper.OpenHive();
             }
 
             try
             {
                 // Open the hive data services and then start the main service task.
+
+                log.LogInfo(() => $"Connecting: Consul");
 
                 using (consul = HiveHelper.OpenConsul())
                 {

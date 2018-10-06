@@ -24,6 +24,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Hive;
+using Neon.HiveMQ;
 using Neon.Net;
 
 namespace NeonHiveManager
@@ -42,6 +43,7 @@ namespace NeonHiveManager
         private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
         private static readonly string secretPollSecondsKey  = $"{serviceRootKey}/secret_poll_seconds";
         private static readonly string logPollSecondsKey     = $"{serviceRootKey}/log_poll_seconds";
+        private static readonly string proxyUpdateSecondsKey = $"{serviceRootKey}/proxy_update_seconds";
         private static readonly string hiveDefinitionKey     = $"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}";
 
         private static ProcessTerminator        terminator;
@@ -50,11 +52,13 @@ namespace NeonHiveManager
         private static ConsulClient             consul;
         private static DockerClient             docker;
         private static VaultCredentials         vaultCredentials;
+        private static BroadcastChannel         proxyNotifyChannel;
         private static TimeSpan                 nodePollInterval;
         private static TimeSpan                 vaultPollInterval;
         private static TimeSpan                 managerPollInterval;
         private static TimeSpan                 logPollInterval;
         private static TimeSpan                 secretPollInterval;
+        private static TimeSpan                 proxyUpdateInterval;
         private static HiveDefinition           cachedHiveDefinition;
         private static List<string>             vaultUris;
 
@@ -101,14 +105,12 @@ namespace NeonHiveManager
                             }
                         });
 
-                    HiveHelper.OpenHiveRemote(secrets);
+                    hive = HiveHelper.OpenHiveRemote(secrets);
                 }
                 else
                 {
-                    HiveHelper.OpenHive(sshCredentialsSecret: "neon-ssh-credentials");
+                    hive = HiveHelper.OpenHive(sshCredentialsSecret: "neon-ssh-credentials");
                 }
-
-                hive = HiveHelper.Hive;
 
                 // Ensure that we're running on a manager node.  We won't be able
                 // to query swarm status otherwise.
@@ -129,15 +131,20 @@ namespace NeonHiveManager
 
                 // Open the hive data services and then start the main service task.
 
-                log.LogDebug(() => $"Connecting Consul");
+                log.LogDebug(() => $"Connecting: Consul");
 
                 using (consul = HiveHelper.OpenConsul())
                 {
-                    log.LogDebug(() => $"Connecting Docker");
+                    log.LogDebug(() => $"Connecting: Docker");
 
                     using (docker = HiveHelper.OpenDocker())
                     {
-                        await RunAsync();
+                        log.LogInfo(() => $"Connecting: {HiveMQChannels.ProxyNotify} channel");
+
+                        using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel())
+                        {
+                            await RunAsync();
+                        }
                     }
                 }
             }
@@ -230,17 +237,25 @@ namespace NeonHiveManager
                 await consul.KV.PutDouble(secretPollSecondsKey, 300);
             }
 
+            if (!await consul.KV.Exists(proxyUpdateSecondsKey))
+            {
+                log.LogInfo($"Persisting setting [{proxyUpdateSecondsKey}=60.0]");
+                await consul.KV.PutDouble(proxyUpdateSecondsKey, 60);
+            }
+
             nodePollInterval    = TimeSpan.FromSeconds(await consul.KV.GetDouble(nodePollSecondsKey));
             vaultPollInterval   = TimeSpan.FromSeconds(await consul.KV.GetDouble(vaultPollSecondsKey));
             managerPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(managerPollSecondsKey));
             logPollInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(logPollSecondsKey));
             secretPollInterval  = TimeSpan.FromSeconds(await consul.KV.GetDouble(secretPollSecondsKey));
+            proxyUpdateInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(proxyUpdateSecondsKey));
 
             log.LogInfo(() => $"Using setting [{nodePollSecondsKey}={nodePollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{vaultPollSecondsKey}={vaultPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{managerPollSecondsKey}={managerPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{logPollSecondsKey}={logPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{secretPollSecondsKey}={secretPollInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{proxyUpdateSecondsKey}={proxyUpdateInterval.TotalSeconds}]");
 
             // Parse the Vault credentials from the [neon-hive-manager-vaultkeys] 
             // secret, if it exists.
@@ -297,6 +312,11 @@ namespace NeonHiveManager
             // as well as old persisted secrets and removes them.
 
             tasks.Add(SecretPurgerAsync());
+
+            // Start a task that periodically notifies the [neon-proxy-manager] service
+            // that it should proactively rebuild the proxy configurations.
+
+            tasks.Add(ProxyUpdaterAsync());
 
             // Wait for all tasks to exit cleanly for a normal shutdown.
 
@@ -761,7 +781,7 @@ namespace NeonHiveManager
 
         /// <summary>
         /// Handles purging of old <b>neon-secret-retriever-*</b> service instances as well
-        /// as any persisted secrets..
+        /// as any persisted secrets.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task SecretPurgerAsync()
@@ -876,6 +896,44 @@ namespace NeonHiveManager
                 }
 
                 await Task.Delay(secretPollInterval);
+            }
+        }
+
+        /// <summary>
+        /// Periodically broadcasts a <see cref="ProxyRegenerateMessage"/> to the <b>neon-proxy-manager</b>
+        /// service which will then regenerate the public and private proxy related configurations.  This
+        /// is a fail-safe that ensures that the proxy configurations will eventually converge, even when
+        /// proxy change notifications may have been lost somehow.  This also provides an opportunity for
+        /// <b>neon-proxy-manager</b> to verify the load balancer rules for correctness and also to check
+        /// for expired or expiring TLS certificates so that warnings can be logged.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task ProxyUpdaterAsync()
+        {
+            while (true)
+            {
+                try
+                {
+                    if (terminator.CancellationToken.IsCancellationRequested)
+                    {
+                        log.LogDebug(() => "PROXY-UPDATER: Terminating.");
+                        return;
+                    }
+
+                    log.LogInfo(() => $"Publish: [{nameof(ProxyRegenerateMessage)}(\"Periodic fail-safe\") --> {proxyNotifyChannel.Name}]");
+                    proxyNotifyChannel.Publish(new ProxyRegenerateMessage() { Reason = "[neon-hive-manager]: Periodic fail-safe" });
+                }
+                catch (OperationCanceledException)
+                {
+                    log.LogDebug(() => "PROXY-UPDATER: Terminating.");
+                    return;
+                }
+                catch (Exception e)
+                {
+                    log.LogError($"PROXY-UPDATER", e);
+                }
+
+                await Task.Delay(proxyUpdateInterval);
             }
         }
     }

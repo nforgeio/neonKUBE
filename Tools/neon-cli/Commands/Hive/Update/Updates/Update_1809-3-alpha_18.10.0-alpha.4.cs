@@ -43,6 +43,21 @@ namespace NeonCli
 
             controller.AddStep(GetStepLabel("elasticsearch"), (node, stepDelay) => UpdateElasticsearch(node));
             controller.AddStep(GetStepLabel("ceph-fuse"), (node, stepDelay) => UpdateCephFuse(node));
+
+            // $todo(jeff.lill):
+            //
+            // Update these component scripts to remove this secret: neon-hivemq-neon
+            //
+            //      neon-hive-manager.sh
+            //      neon-proxy-manager.sh
+            //      neon-proxy-public.sh
+            //      neon-proxy-private.sh
+            //
+            // Remove these Docker secrets after updating services:
+            //
+            //      neon-hivemq-neon
+            //      neon-hivemq-sysadmin
+            //      neon-hivemq-app
         }
 
         /// <summary>

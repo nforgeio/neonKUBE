@@ -50,6 +50,7 @@ namespace NeonSecretRetriever
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
+        private static HiveProxy                hive;
 
         /// <summary>
         /// Main program entry point.
@@ -75,11 +76,12 @@ namespace NeonSecretRetriever
                 var vaultCredentialsSecret = "neon-proxy-manager-credentials";
 
                 Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
-                HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
+
+                hive = HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
             }
             else
             {
-                HiveHelper.OpenHive();
+                hive = HiveHelper.OpenHive();
             }
 
             // Parse the command line.

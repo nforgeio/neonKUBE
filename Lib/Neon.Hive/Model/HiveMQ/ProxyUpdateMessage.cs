@@ -26,9 +26,9 @@ namespace Neon.Hive
 {
     /// <summary>
     /// Published to the <see cref="HiveMQChannels.ProxyNotify"/> channel to notify
-    /// <b>neon-proxy-public</b>, <b>neon-proxy-private</b>, <b>neon-proxy-public-bridge</b>,
-    /// <b>neon-proxy-private-bridge</b>, <b>neon-proxy-public-cache</b>, and
-    /// <b>neon--proxy-private-cache</b> service instances that their configuration
+    /// <b>neon-proxy-public</b>, <b>neon-proxy-private</b>, <b>neon-proxy-public-bridge</b>, 
+    /// <b>neon-proxy-private-bridge</b>, <b>neon-proxy-public-cache</b>, and 
+    /// <b>neon--proxy-private-cache</b> service instances that their configuration 
     /// has changed and should be reloaded.
     /// </summary>
     public class ProxyUpdateMessage

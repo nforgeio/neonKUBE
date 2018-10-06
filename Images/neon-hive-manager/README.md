@@ -11,8 +11,8 @@ From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* iden
 The `neon-hive-manager` service performs a few hive maintenance functions:
 
 * Updating the hive definition persisted to Consul so it accurately describes the current hive nodes and their labels.
-
 * Monitoring the Vault seal status and optionally unsealing Vault automatically.
+* Perdically broadcasting `ProxyRegenerateMessage` messages to `neon-proxy-manager` as a fail-safe to ensure that proxy related definitions are still valid (e.g. TLS certificates haven't expired) and that proxy configurations will eventually converge in the face of notification failures.
 
 # Hive Definition
 
@@ -89,6 +89,7 @@ docker service create \
     --env LOG_LEVEL=INFO \
     --secret=neon-hive-manager-vaultkeys \
     --secret=neon-ssh-credentials \
+    --secret neon-hivemq-neon \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \

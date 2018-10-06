@@ -32,5 +32,12 @@ namespace Neon.Hive
     /// </summary>
     public class ProxyRegenerateMessage
     {
+        /// <summary>
+        /// Optionally describes why the message was sent as human readable text.  This
+        /// defaults to <b>"Unknown"</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Reason", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("Unknown")]
+        public string Reason { get; set; } = "Unknown";
     }
 }

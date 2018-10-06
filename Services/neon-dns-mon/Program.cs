@@ -42,6 +42,7 @@ namespace NeonDnsMon
 
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
+        private static HiveProxy            hive;
         private static ConsulClient         consul;
         private static string[]             nameservers;
         private static TimeSpan             pingTimeout;
@@ -91,16 +92,16 @@ namespace NeonDnsMon
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    HiveHelper.OpenHiveRemote();
+                    hive = HiveHelper.OpenHiveRemote();
                 }
                 else
                 {
-                    HiveHelper.OpenHive();
+                    hive = HiveHelper.OpenHive();
                 }
 
                 // Open Consul and then start the main service task.
 
-                log.LogDebug(() => $"Connecting Consul");
+                log.LogDebug(() => $"Connecting: Consul");
 
                 using (consul = HiveHelper.OpenConsul())
                 {

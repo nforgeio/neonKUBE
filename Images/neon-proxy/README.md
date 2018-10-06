@@ -130,6 +130,7 @@ docker service create \
     --publish 443:443 \
     --publish 5100-5299:5100-5299 \
     --secret neon-proxy-public-credentials \
+    --secret neon-hivemq-neon \
     --constraint node.role!=manager \
     --mode global \
     --restart-delay 10s \
@@ -149,6 +150,7 @@ docker service create \
     --env VAULT_SKIP_VERIFY=true \
     --publish 5300-5499:5300-5499 \
     --secret neon-proxy-public-credentials \
+    --secret neon-hivemq-neon \
     --constraint node.role!=manager \
     --mode global \
     --restart-delay 10s \

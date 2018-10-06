@@ -144,6 +144,7 @@ docker service create \
     --env VAULT_CREDENTIALS=neon-proxy-manager-credentials \
     --env LOG_LEVEL=INFO \
     --secret neon-proxy-manager-credentials \
+    --secret neon-hivemq-neon \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \

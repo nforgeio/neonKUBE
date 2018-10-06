@@ -35,7 +35,7 @@ namespace Neon.HiveMQ
     {
         private object              syncLock   = new object();
         private bool                isDisposed = false;
-        private List<Subscription>  subscriptions;
+        private List<ChannelSubscription>  subscriptions;
 
         /// <summary>
         /// Protected constructor.
@@ -50,7 +50,7 @@ namespace Neon.HiveMQ
             this.HiveBus       = hiveBus;
             this.EasyBus       = hiveBus.EasyBus.Advanced;
             this.Name          = name;
-            this.subscriptions = new List<Subscription>();
+            this.subscriptions = new List<ChannelSubscription>();
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace Neon.HiveMQ
         /// <param name="subscription">The subscription.</param>
         /// <returns>The scibscription.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a subscription for the related message type is already present for the channel.</exception>
-        protected Subscription AddSubscription(Subscription subscription)
+        protected ChannelSubscription AddSubscription(ChannelSubscription subscription)
         {
             Covenant.Requires<ArgumentNullException>(subscription != null);
 
@@ -148,7 +148,7 @@ namespace Neon.HiveMQ
         /// Removes a message consumption subscription from the channel.
         /// </summary>
         /// <param name="subscription">The subscription.</param>
-        internal void RemoveSubscription(Subscription subscription)
+        internal void RemoveSubscription(ChannelSubscription subscription)
         {
             Covenant.Requires<ArgumentNullException>(subscription != null);
 

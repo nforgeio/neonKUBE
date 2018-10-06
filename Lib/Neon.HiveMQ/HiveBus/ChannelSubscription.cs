@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Subscription.cs
+// FILE:	    ChannelSubscription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -36,7 +36,7 @@ namespace Neon.HiveMQ
     /// a message consumption callback.
     /// </note>
     /// </summary>
-    public class Subscription
+    public class ChannelSubscription : IDisposable
     {
         private bool            isDisposed = false;
         private Channel         channel;
@@ -48,7 +48,7 @@ namespace Neon.HiveMQ
         /// <param name="channel">The associated channel.</param>
         /// <param name="messageType">The type of the message being subscribed.</param>
         /// <param name="easyNetQSubscription">The lower-level consumption subscription.</param>
-        public Subscription(Channel channel, Type messageType, IDisposable easyNetQSubscription)
+        public ChannelSubscription(Channel channel, Type messageType, IDisposable easyNetQSubscription)
         {
             Covenant.Requires<ArgumentNullException>(channel != null);
             Covenant.Requires<ArgumentNullException>(messageType != null);

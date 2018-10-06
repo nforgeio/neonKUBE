@@ -25,6 +25,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Hive;
+using Neon.HiveMQ;
 using Neon.Time;
 
 // $todo(jeff.lill):
@@ -49,26 +50,24 @@ namespace NeonProxyManager
     /// </summary>
     public static class Program
     {
-        private static readonly string serviceName  = $"neon-proxy-manager:{GitVersion}";
-        private const string consulPrefix           = "neon/service/neon-proxy-manager";
-        private const string pollSecondsKey         = consulPrefix + "/poll-seconds";
-        private const string fallbackPollSecondsKey = consulPrefix + "/fallback-poll-seconds";
-        private const string certWarnDaysKey        = consulPrefix + "/cert-warn-days";
-        private const string cacheRemoveSecondsKey  = consulPrefix + "/cache-remove-seconds";
-        private const string proxyConfKey           = consulPrefix + "/conf";
-        private const string proxyStatusKey         = consulPrefix + "/status";
-        private const string proxyReloadKey         = proxyConfKey + "/reload";
-        private const string vaultCertPrefix        = "neon-secret/cert";
-        private const string allPrefix              = "~all~";   // Special path prefix indicating that all paths should be matched.
+        private static readonly string serviceName = $"neon-proxy-manager:{GitVersion}";
+        private const string consulPrefix          = "neon/service/neon-proxy-manager";
+        private const string certWarnDaysKey       = consulPrefix + "/cert-warn-days";
+        private const string cacheRemoveSecondsKey = consulPrefix + "/cache-remove-seconds";
+        private const string proxyConfKey          = consulPrefix + "/conf";
+        private const string proxyStatusKey        = consulPrefix + "/status";
+        private const string proxyReloadKey        = proxyConfKey + "/reload";
+        private const string vaultCertPrefix       = "neon-secret/cert";
+        private const string allPrefix             = "~all~";   // Special path prefix indicating that all paths should be matched.
 
-        private static TimeSpan                 delayTime = TimeSpan.FromSeconds(5);
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
+        private static HiveProxy                hive;
         private static VaultClient              vault;
         private static ConsulClient             consul;
         private static DockerClient             docker;
-        private static TimeSpan                 pollInterval;
-        private static TimeSpan                 fallbackPollInterval;
+        private static BroadcastChannel         proxyNotifyChannel;
+        private static ChannelSubscription      proxyNotifySubscription;
         private static TimeSpan                 certWarnTime;
         private static TimeSpan                 cacheRemoveDelay;
         private static HiveDefinition           hiveDefinition;
@@ -98,11 +97,12 @@ namespace NeonProxyManager
                 var vaultCredentialsSecret = "neon-proxy-manager-credentials";
 
                 Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
-                HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
+
+                hive = HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
             }
             else
             {
-                HiveHelper.OpenHive();
+                hive = HiveHelper.OpenHive();
             }
 
             // [neon-proxy-manager] requires access to the [IHostingManager] implementation for the
@@ -132,18 +132,25 @@ namespace NeonProxyManager
 
                 // Open the hive data services and then start the main service task.
 
-                log.LogInfo(() => $"Connecting Vault");
+                log.LogInfo(() => $"Connecting: Vault");
 
                 using (vault = HiveHelper.OpenVault(vaultCredentials))
                 {
-                    log.LogInfo(() => $"Connecting Consul");
+                    log.LogInfo(() => $"Connecting: Consul");
 
                     using (consul = HiveHelper.OpenConsul())
                     {
+                        log.LogInfo(() => $"Connecting: Docker");
+
                         using (docker = HiveHelper.OpenDocker())
                         {
-                            await RunAsync();
-                            terminator.ReadyToExit();
+                            log.LogInfo(() => $"Connecting: {HiveMQChannels.ProxyNotify} channel");
+
+                            using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel())
+                            {
+                                await RunAsync();
+                                terminator.ReadyToExit();
+                            }
                         }
                     }
                 }
@@ -207,18 +214,6 @@ namespace NeonProxyManager
             // Initialize the proxy manager settings to their default values
             // if they don't already exist.
 
-            if (!await consul.KV.Exists(pollSecondsKey))
-            {
-                log.LogInfo($"Persisting setting [{pollSecondsKey}=10.0]");
-                await consul.KV.PutDouble(pollSecondsKey, 10.0);
-            }
-
-            if (!await consul.KV.Exists(fallbackPollSecondsKey))
-            {
-                log.LogInfo($"Persisting setting [{fallbackPollSecondsKey}=300.0]");
-                await consul.KV.PutDouble(fallbackPollSecondsKey, 300.0);
-            }
-
             if (!await consul.KV.Exists(certWarnDaysKey))
             {
                 log.LogInfo($"Persisting setting [{certWarnDaysKey}=30.0]");
@@ -231,39 +226,26 @@ namespace NeonProxyManager
                 await consul.KV.PutDouble(cacheRemoveSecondsKey, 300.0);
             }
 
-            pollInterval         = TimeSpan.FromSeconds(await consul.KV.GetDouble(pollSecondsKey));
-            fallbackPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(fallbackPollSecondsKey));
-            certWarnTime         = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
-            cacheRemoveDelay     = TimeSpan.FromDays(await consul.KV.GetDouble(cacheRemoveSecondsKey));
+            certWarnTime     = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
+            cacheRemoveDelay = TimeSpan.FromDays(await consul.KV.GetDouble(cacheRemoveSecondsKey));
 
-            log.LogInfo(() => $"Using setting [{pollSecondsKey}={pollInterval.TotalSeconds}]");
-
-            if (fallbackPollInterval < pollInterval)
-            {
-                log.LogWarn(() => $"{fallbackPollSecondsKey}={fallbackPollInterval.TotalSeconds}] should not be less than [{pollSecondsKey}={pollInterval.TotalSeconds}]");
-            }
-
-            log.LogInfo(() => $"Using setting [{fallbackPollSecondsKey}={fallbackPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{certWarnDaysKey}={certWarnTime.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{cacheRemoveSecondsKey}={cacheRemoveDelay.TotalSeconds}]");
 
-            // The implementation is pretty straightforward: We're going to watch
-            // the [neon/service/neon-proxy-manager/conf/reload] hash for changes 
-            // with the timeout set to [pollTime].  This key will be updated to a 
-            // new UUID whenever [neon-cli] modifies a hive certificate or any 
-            // of the rules or settings for a load balancer.
+            // The implementation is pretty straightforward:
             //
-            // Whenever the reload key changes, the code will rebuild the load balancer
-            // configurations and also update the deployment's public load balancer
-            // and network security as required.  The code will also do a full update
-            // every [fallbackPollInterval] regardless of whether the hash has changed
-            // to ensure that the certificates are still valid and also as a failsafe
-            // that ensures that proxies will be eventually converged even when there's
-            // been some problem with uploading the reload UUID.
+            // We're simply going to listen for [ProxyRegenerateMessage] messages
+            // broadcast on the [proxy-notify] channel when changes are made to
+            // the proxy configuration or periodicaly broadcast by [neon-hive-manager] 
+            // signalling that the proxy configurations should be proactively
+            // regenerated to recover from a potential loss of update notification
+            // messages as well as to check for configuration problems like expired
+            // or expiring TLS certificates.
 
-            var cts  = new CancellationTokenSource();
-            var ct   = cts.Token;
-            var exit = false;
+            var cts        = new CancellationTokenSource();
+            var ct         = cts.Token;
+            var exit       = false;
+            var processing = false;
 
             // Gracefully exit when the application is being terminated (e.g. via a [SIGTERM]).
 
@@ -274,169 +256,145 @@ namespace NeonProxyManager
 
                     cts.Cancel();
 
-                    if (monitorTask != null)
+                    // This gracefully closes the [proxyNotifyChannel].
+
+                    if (proxyNotifySubscription != null)
                     {
-                        if (monitorTask.Wait(terminator.Timeout))
-                        {
-                            log.LogInfo(() => "Tasks stopped gracefully.");
-                        }
-                        else
-                        {
-                            log.LogWarn(() => $"Tasks did not stop within [{terminator.Timeout}].");
-                        }
+                        proxyNotifySubscription.Dispose();
+                        proxyNotifySubscription = null;
+                    }
+
+                    try
+                    {
+                        NeonHelper.WaitFor(() => !processing, terminator.Timeout);
+                        log.LogInfo(() => "Tasks stopped gracefully.");
+                    }
+                    catch (TimeoutException)
+                    {
+                        log.LogWarn(() => $"Tasks did not stop within [{terminator.Timeout}].");
                     }
                 });
 
-            // Monitor Consul for configuration changes and update the load balancer configs.
+            // Monitor [neon/proxy-notify] for [ProxyRegenerateMessage] messages 
+            // and update the load balancer configs when we see these.  Note
+            // that we're going to broadcast a single [ProxyRegenerateMessage] to 
+            // ourself so we'll perform an immediate regeneration when the 
+            // service starts.
+
+            proxyNotifyChannel.Publish(new ProxyRegenerateMessage() { Reason="[neon-proxy-manager]: Startup" });
 
             monitorTask = Task.Run(
-                async () =>
+                () =>
                 {
-                    log.LogInfo("Starting [Monitor] task.");
+                    processing = false;
 
-                    var initialPoll    = true;
-                    var lastReloadHash = "0d3001e6-3031-444f-8529-7f58a4faf179";    // Set this to something unique that won't match any computed hash.
-                    var fallbackTimer  = new PolledTimer(fallbackPollInterval, autoReset: true);
-
-                    while (true)
+                    try
                     {
-                        if (terminator.CancellationToken.IsCancellationRequested)
-                        {
-                            log.LogInfo(() => "Poll Terminating");
-                            return;
-                        }
+                        log.LogInfo(() => "MONITOR: Starting");
+                        log.LogInfo(() => $"MONITOR: Listening for [{nameof(ProxyRegenerateMessage)}] messages on [{proxyNotifyChannel.Name}].");
 
-                        try
-                        {
-                            log.LogInfo(() => "Polling for certificate and load balancer rule changes.");
-
-                            while (!terminator.CancellationToken.IsCancellationRequested)
+                        proxyNotifySubscription = proxyNotifyChannel.Consume<ProxyRegenerateMessage>(
+                            async notifyMessage =>
                             {
-                                if (fallbackTimer.HasFired)
+                                try
                                 {
-                                    // The fallback timer has fired so we're going to break this
-                                    // loop to process the load balancer configurations.
+                                    processing = true;
 
-                                    log.LogInfo(() => "Fallback timer has fired.");
-                                    break;
-                                }
+                                    log.LogInfo(() => $"MONITOR: Received [{nameof(ProxyRegenerateMessage)}({notifyMessage.Body.Reason})]");
 
-                                var newReloadHash = await consul.KV.GetStringOrDefault(proxyReloadKey) ?? string.Empty;
+                                    // Load and check the hive certificates.
 
-                                if (newReloadHash != lastReloadHash)
-                                {
-                                    // The reload UUID has changed so we're going to break to
-                                    // process the load balancer configurations.
+                                    var hiveCerts = new HiveCerts();
+                                    var utcNow    = DateTime.UtcNow;
 
-                                    lastReloadHash = newReloadHash;
-                                    log.LogInfo(() => "Detected reload UUID change on PollTmer.");
-                                    break;
-                                }
+                                    log.LogInfo(() => "Reading hive certificates.");
 
-                                await Task.Delay(pollInterval);
-                            }
-
-                            if (initialPoll)
-                            {
-                                log.LogInfo("Proxy startup poll.");
-                                initialPoll = false;
-                            }
-                            else
-                            {
-                                log.LogInfo("Potential load balancer rule or certificate change detected.");
-                            }
-
-                            // Load and check the hive certificates.
-
-                            var hiverCerts = new HiveCerts();
-                            var utcNow     = DateTime.UtcNow;
-
-                            log.LogInfo(() => "Reading hive certificates.");
-
-                            try
-                            {
-                                foreach (var certName in await vault.ListAsync(vaultCertPrefix))
-                                {
-                                    var certJson    = (await vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}")).ToString();
-                                    var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
-                                    var certInfo    = new CertInfo(certName, certificate);
-
-                                    if (!certInfo.Certificate.IsValidDate(utcNow))
+                                    try
                                     {
-                                        log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
+                                        foreach (var certName in await vault.ListAsync(vaultCertPrefix))
+                                        {
+                                            var certJson    = (await vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}")).ToString();
+                                            var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
+                                            var certInfo    = new CertInfo(certName, certificate);
+
+                                            if (!certInfo.Certificate.IsValidDate(utcNow))
+                                            {
+                                                log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
+                                            }
+                                            else if (!certInfo.Certificate.IsValidDate(utcNow + certWarnTime))
+                                            {
+                                                log.LogWarn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
+                                            }
+
+                                            hiveCerts.Add(certInfo);
+                                        }
                                     }
-                                    else if (!certInfo.Certificate.IsValidDate(utcNow + certWarnTime))
+                                    catch (Exception e)
                                     {
-                                        log.LogWarn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
+                                        log.LogError("Unable to load certificates from Vault.", e);
+                                        log.LogError(() => "Aborting load balancer configuration.");
                                     }
 
-                                    hiverCerts.Add(certInfo);
+                                    // Fetch the hive definition and detect whether it changed since the
+                                    // previous run.
+
+                                    var currentHiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, cts.Token);
+
+                                    hiveDefinitionChanged = hiveDefinition == null || !NeonHelper.JsonEquals(hiveDefinition, currentHiveDefinition);
+                                    hiveDefinition        = currentHiveDefinition;
+
+                                    // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
+                                    // proxy bridge configurations.
+
+                                    swarmNodes = await docker.NodeListAsync();
+
+                                    // Rebuild the proxy configurations and write the captured status to
+                                    // Consul to make it available for the [neon proxy public|private status]
+                                    // command.  Note that we're going to build the [neon-proxy-public-bridge]
+                                    // and [neon-proxy-private-bridge] configurations as well for use by any 
+                                    // hive pet nodes.
+
+                                    var publicBuildStatus = await BuildProxyConfigAsync("public", hiveCerts, ct);
+                                    var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
+
+                                    await consul.KV.PutString($"{proxyStatusKey}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
+
+                                    var privateBuildStatus = await BuildProxyConfigAsync("private", hiveCerts, ct);
+                                    var privateProxyStatus = new LoadBalancerStatus() { Status = privateBuildStatus.Status };
+
+                                    await consul.KV.PutString($"{proxyStatusKey}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
+
+                                    // We need to ensure that the deployment's load balancer and security
+                                    // rules are updated to match changes to the public load balancer rules.
+                                    // Note that we're going to call this even if the PUBLIC load balancer
+                                    // hasn't changed to ensure that the load balancer doesn't get
+                                    // out of sync.
+
+                                    await UpdateHiveNetwork(publicBuildStatus.Rules, cts.Token);
                                 }
-                            }
-                            catch (Exception e)
-                            {
-                                log.LogError("Unable to load certificates from Vault.", e);
-                                log.LogError("Aborting load balancer configuration.");
-                                continue;
-                            }
+                                finally
+                                {
+                                    processing = false;
+                                }
+                            });
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        log.LogInfo(() => "MONITOR: Cancelling task.");
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        log.LogError(e);
+                    }
 
-                            // Fetch the hive definition and detect whether it changed since the
-                            // previous run.
-
-                            var currentHiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, cts.Token);
-
-                            hiveDefinitionChanged = hiveDefinition == null || !NeonHelper.JsonEquals(hiveDefinition, currentHiveDefinition);
-                            hiveDefinition        = currentHiveDefinition;
-
-                            // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
-                            // proxy bridge configurations.
-
-                            swarmNodes = await docker.NodeListAsync();
-
-                            // Rebuild the proxy configurations and write the captured status to
-                            // Consul to make it available for the [neon proxy public|private status]
-                            // command.  Note that we're going to build the [neon-proxy-public-bridge]
-                            // and [neon-proxy-private-bridge] configurations as well for use by any 
-                            // hive pet nodes.
-
-                            var publicBuildStatus = await BuildProxyConfigAsync("public", hiverCerts, ct);
-                            var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
-
-                            await consul.KV.PutString($"{proxyStatusKey}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
-
-                            var privateBuildStatus = await BuildProxyConfigAsync("private", hiverCerts, ct);
-                            var privateProxyStatus = new LoadBalancerStatus() { Status = privateBuildStatus.Status };
-
-                            await consul.KV.PutString($"{proxyStatusKey}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
-
-                            // We need to ensure that the deployment's load balancer and security
-                            // rules are updated to match changes to the public load balancer rules.
-                            // Note that we're going to call this even if the PUBLIC load balancer
-                            // hasn't changed to ensure that the load balancer doesn't get
-                            // out of sync.
-
-                            await UpdateHiveNetwork(publicBuildStatus.Rules, cts.Token);
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            log.LogInfo(() => "Cancelling [Monitor] task.");
-                            return;
-                        }
-                        catch (Exception e)
-                        {
-                            log.LogError(e);
-                        }
-
-                        if (exit)
-                        {
-                            return;
-                        }
-
-                        await Task.Delay(delayTime);
+                    if (exit)
+                    {
+                        return;
                     }
                 });
 
-            // Just spin and let the monitor task run.
+            // Spin quietly and let the monitor task run.
 
             while (true)
             {

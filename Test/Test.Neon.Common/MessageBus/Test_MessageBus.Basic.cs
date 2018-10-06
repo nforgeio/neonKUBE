@@ -30,7 +30,7 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel  = bus.CreateBasicChannel("test");
+                var channel  = bus.GetBasicChannel("test");
 
                 channel.Consume<TestMessage>(message => { });
 
@@ -50,7 +50,7 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel  = bus.CreateBasicChannel("test");
+                var channel  = bus.GetBasicChannel("test");
                 var received = (TestMessage)null;
 
                 channel.Consume<TestMessage>(message => received = message.Body);
@@ -69,7 +69,7 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel   = bus.CreateBasicChannel("test");
+                var channel   = bus.GetBasicChannel("test");
                 var received  = (TestMessage)null;
                 var contextOK = false;
 
@@ -96,7 +96,7 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel  = bus.CreateBasicChannel("test");
+                var channel  = bus.GetBasicChannel("test");
                 var received = (TestMessage)null;
 
                 channel.Consume<TestMessage>(
@@ -123,7 +123,7 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel   = bus.CreateBasicChannel("test");
+                var channel   = bus.GetBasicChannel("test");
                 var received  = (TestMessage)null;
                 var contextOK = false;
 
@@ -152,7 +152,7 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var receiveChannel = bus.CreateBasicChannel("test");
+                var receiveChannel = bus.GetBasicChannel("test");
                 var received       = (TestMessage)null;
                 var contextOK      = false;
 
@@ -165,7 +165,7 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
-                var publishChannel = bus.CreateBasicChannel("test");
+                var publishChannel = bus.GetBasicChannel("test");
 
                 await publishChannel.PublishAsync(new TestMessage() { Text = "Hello World!" });
 
@@ -195,7 +195,7 @@ namespace TestCommon
             {
                 for (int channelID = 0; channelID < channelCount; channelID++)
                 {
-                    var consumeChannel = bus.CreateBasicChannel("test");
+                    var consumeChannel = bus.GetBasicChannel("test");
                     var id             = channelID;
 
                     consumeChannel.Consume<TestMessage>(
@@ -210,7 +210,7 @@ namespace TestCommon
                         });
                 }
 
-                var publishChannel = bus.CreateBasicChannel("test");
+                var publishChannel = bus.GetBasicChannel("test");
 
                 for (int i = 0; i < messageCount; i++)
                 {

@@ -90,14 +90,14 @@ namespace Neon.HiveMQ
     ///     <term><see cref="BasicChannel"/></term>
     ///     <description>
     ///     Basic channels deliver each message to a <b>single consumer</b>.  A typical use is
-    ///     to load balance work across multiple consumers.  Call <see cref="CreateBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>
+    ///     to load balance work across multiple consumers.  Call <see cref="GetBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>
     ///     to create a basic channel.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="BroadcastChannel"/></term>
     ///     <description>
-    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="CreateBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
+    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
     ///     to create a broadcast channel.
     ///     </description>
     /// </item>
@@ -105,7 +105,7 @@ namespace Neon.HiveMQ
     ///     <term><see cref="QueryChannel"/></term>
     ///     <description>
     ///     Query channels deliver a message to a <b>consumer</b> and then waits for a reply.  
-    ///     Call <see cref="CreateQueryChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/> 
+    ///     Call <see cref="GetQueryChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/> 
     ///     to create a query channel.
     ///     </description>
     /// </item>
@@ -208,10 +208,10 @@ namespace Neon.HiveMQ
         internal IBus EasyBus { get; private set; }
 
         /// <summary>
-        /// Creates a basic message channel if it doesn't already exist.  Basic message channels
-        /// are used to forward messages to one or more consumers such that each message
-        /// is delivered to a <b>single consumer</b>.  This is typically used for load balancing
-        /// work across multiple consumers.
+        /// Returns a names basic message channel, creating one if it doesn't already exist.  
+        /// Basic message channels are used to forward messages to one or more consumers 
+        /// such that each message is delivered to a <b>single consumer</b>.  This is typically
+        /// used for load balancing work across multiple consumers.
         /// </summary>
         /// <param name="name">The channel name.  This can be a maximum of 250 characters.</param>
         /// <param name="durable">
@@ -250,7 +250,7 @@ namespace Neon.HiveMQ
         /// under 24 days.  An <see cref="ArgumentException"/> will be thrown if this is exceeded.
         /// </note>
         /// </remarks>
-        public BasicChannel CreateBasicChannel(
+        public BasicChannel GetBasicChannel(
             string      name, 
             bool        durable = false, 
             bool        exclusive = false,
@@ -294,9 +294,9 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
-        /// Creates a broadcast message channel if it doesn't already exist.  Broadcast message channels
-        /// are used to forward messages to one or more consumers such that each message
-        /// is delivered to <b>all consumers</b>.
+        /// Returns a named broadcast message channel, creating one if it doesn't already 
+        /// exist.  Broadcast message channels are used to forward messages to one or more
+        /// consumers such that each message is delivered to <b>all consumers</b>.
         /// </summary>
         /// <param name="name">The channel name.  This can be a maximum of 250 characters.</param>
         /// <param name="durable">
@@ -331,7 +331,7 @@ namespace Neon.HiveMQ
         /// under 24 days.  An <see cref="ArgumentException"/> will be thrown if this is exceeded.
         /// </note>
         /// </remarks>
-        public BroadcastChannel CreateBroadcastChannel(
+        public BroadcastChannel GetBroadcastChannel(
             string      name,
             bool        durable = false,
             bool        autoDelete = false,
@@ -373,9 +373,9 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
-        /// Creates a query message channel if it doesn't already exist.  Query message channels
-        /// are used to implement a query/response pattern by sending a message to a consumer and
-        /// then waiting for it to send a reply message.
+        /// Returns a named query message channel, creating one if it doesn't already exist. 
+        /// Query message channels are used to implement a query/response pattern by sending 
+        /// a message to a consumer and then waiting for it to send a reply message.
         /// </summary>
         /// <param name="name">The channel name.  This can be a maximum of 250 characters.</param>
         /// <param name="durable">
@@ -414,7 +414,7 @@ namespace Neon.HiveMQ
         /// under 24 days.  An <see cref="ArgumentException"/> will be thrown if this is exceeded.
         /// </note>
         /// </remarks>
-        public QueryChannel CreateQueryChannel(
+        public QueryChannel GetQueryChannel(
             string      name,
             bool        durable = false,
             bool        autoDelete = false,
@@ -462,7 +462,8 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
-        /// Removes a disposed channel from the bus.
+        /// Called by channels as they're being disposed so that the
+        /// bus can remove any references to them.
         /// </summary>
         /// <param name="channel">The channel to be removed.</param>
         internal void RemoveChannel(Channel channel)

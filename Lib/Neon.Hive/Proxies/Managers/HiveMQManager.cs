@@ -75,7 +75,7 @@ namespace Neon.Hive
 
                     lock (syncLock)
                     {
-                        if (neonHiveBus != null)
+                        if (neonHiveBus == null)
                         {
                             neonHiveBus = parent.NeonSettings.ConnectHiveBus();
                         }
@@ -90,7 +90,7 @@ namespace Neon.Hive
             /// channel if it doesn't already exist and returns the channel.
             /// </summary>
             /// <returns>The <see cref="BroadcastChannel"/>.</returns>
-            public BroadcastChannel CreateProxyNotifyChannel()
+            public BroadcastChannel GetProxyNotifyChannel()
             {
                 // WARNING:
                 //
@@ -98,7 +98,7 @@ namespace Neon.Hive
                 // queue be removed and recreated and all services and containers that
                 // use the queue be restarted.
 
-                return NeonHiveBus.CreateBroadcastChannel(
+                return NeonHiveBus.GetBroadcastChannel(
                     name: HiveMQChannels.ProxyNotify,
                     durable: true,
                     autoDelete: false,

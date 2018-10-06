@@ -40,6 +40,7 @@ namespace NeonDns
         private static string               reloadSignalPath  = "/neon-dns/reload";
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
+        private static HiveProxy            hive;
         private static ConsulClient         consul;
         private static TimeSpan             pollInterval;
         private static TimeSpan             verifyInterval;
@@ -72,7 +73,7 @@ namespace NeonDns
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    HiveHelper.OpenHiveRemote();
+                    hive = HiveHelper.OpenHiveRemote();
 
                     // For testing and development, we're going to write a test
                     // hosts file to [%NF_TEMP\neon-dns-hosts.txt] so we can see
@@ -107,7 +108,7 @@ $@"# PowerDNS Recursor authoritatively answers for [*.HIVENAME.nhive.io] hostnam
                 }
                 else
                 {
-                    HiveHelper.OpenHive();
+                    hive = HiveHelper.OpenHive();
                 }
 
                 // Ensure that we're running on a manager node.  This is required because
@@ -138,7 +139,7 @@ $@"# PowerDNS Recursor authoritatively answers for [*.HIVENAME.nhive.io] hostnam
 
                 // Open Consul and then start the main service task.
 
-                log.LogDebug(() => $"Connecting Consul");
+                log.LogDebug(() => $"Connecting: Consul");
 
                 using (consul = HiveHelper.OpenConsul())
                 {

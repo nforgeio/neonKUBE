@@ -31,7 +31,7 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel = bus.CreateBroadcastChannel("test");
+                var channel = bus.GetBroadcastChannel("test");
 
                 channel.Consume<TestMessage>(message => { });
 
@@ -51,8 +51,8 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel1  = bus.CreateBroadcastChannel("test");
-                var channel2  = bus.CreateBroadcastChannel("test");
+                var channel1  = bus.GetBroadcastChannel("test");
+                var channel2  = bus.GetBroadcastChannel("test");
                 var received1 = (TestMessage)null;
                 var received2 = (TestMessage)null;
 
@@ -87,8 +87,8 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel1  = bus.CreateBroadcastChannel("test");
-                var channel2  = bus.CreateBroadcastChannel("test");
+                var channel1  = bus.GetBroadcastChannel("test");
+                var channel2  = bus.GetBroadcastChannel("test");
                 var received1 = (TestMessage)null;
                 var received2 = (TestMessage)null;
 
@@ -129,8 +129,8 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel1   = bus.CreateBroadcastChannel("test");
-                var channel2   = bus.CreateBroadcastChannel("test");
+                var channel1   = bus.GetBroadcastChannel("test");
+                var channel2   = bus.GetBroadcastChannel("test");
                 var received1  = (TestMessage)null;
                 var received2  = (TestMessage)null;
                 var contextOK1 = false;
@@ -171,8 +171,8 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel1   = bus.CreateBroadcastChannel("test");
-                var channel2   = bus.CreateBroadcastChannel("test");
+                var channel1   = bus.GetBroadcastChannel("test");
+                var channel2   = bus.GetBroadcastChannel("test");
                 var received1  = (TestMessage)null;
                 var received2  = (TestMessage)null;
                 var contextOK1 = false;
@@ -217,8 +217,8 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel1  = bus.CreateBroadcastChannel("test");
-                var channel2  = bus.CreateBroadcastChannel("test");
+                var channel1  = bus.GetBroadcastChannel("test");
+                var channel2  = bus.GetBroadcastChannel("test");
                 var received1 = (TestMessage)null;
                 var received2 = (TestMessage)null;
 
@@ -255,8 +255,8 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel1  = bus.CreateBroadcastChannel("test");
-                var channel2  = bus.CreateBroadcastChannel("test");
+                var channel1  = bus.GetBroadcastChannel("test");
+                var channel2  = bus.GetBroadcastChannel("test");
                 var received1 = (TestMessage)null;
                 var received2 = (TestMessage)null;
 
@@ -301,8 +301,8 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel1   = bus.CreateBroadcastChannel("test");
-                var channel2   = bus.CreateBroadcastChannel("test");
+                var channel1   = bus.GetBroadcastChannel("test");
+                var channel2   = bus.GetBroadcastChannel("test");
                 var received1  = (TestMessage)null;
                 var received2  = (TestMessage)null;
                 var contextOK1 = false;
@@ -344,7 +344,7 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel = bus.CreateBroadcastChannel("test");
+                var channel = bus.GetBroadcastChannel("test");
                 var received = (TestMessage)null;
                 var contextOK = false;
 
@@ -389,7 +389,7 @@ namespace TestCommon
                 {
                     var channelIndex = i;
 
-                    receiveChannels.Add(bus.CreateBroadcastChannel("test"));
+                    receiveChannels.Add(bus.GetBroadcastChannel("test"));
                     recieverMessages.Add(new List<TestMessage>());
 
                     receiveChannels[i].Consume<TestMessage>(
@@ -406,7 +406,7 @@ namespace TestCommon
                         });
                 }
 
-                var publishChannel = bus.CreateBroadcastChannel("test");
+                var publishChannel = bus.GetBroadcastChannel("test");
 
                 for (int i = 0; i < messageCount; i++)
                 {
