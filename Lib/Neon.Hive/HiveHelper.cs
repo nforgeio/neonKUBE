@@ -64,6 +64,7 @@ namespace Neon.Hive
         private static Dictionary<string, string>   configs;
         private static bool                         remoteConnection;
         private static bool                         enableSecretRetrival;
+        private static ConsulClient                 sharedConsul;
 
         /// <summary>
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
@@ -574,7 +575,10 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="secrets">Optional emulated Docker secrets.</param>
         /// <param name="configs">Optional emulated Docker configs.</param>
-        /// <param name="loginPath">Optional path to a specific hive login to override the current login.</param>
+        /// <param name="loginPath">
+        /// Optional path to a specific hive login to override the current login.  This can
+        /// specify the path to the login file or be just identify the login like <b>root@myhive</b>.
+        /// </param>
         /// <param name="noVpn">Optionally specifies that the hive VPN should be ignored.</param>
         /// <returns>The <see cref="HiveProxy"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a hive is already connected.</exception>
@@ -654,6 +658,28 @@ namespace Neon.Hive
 
             if (loginPath != null)
             {
+                if (!File.Exists(loginPath))
+                {
+                    // Look for a user login instead.
+
+                    var login = SplitLogin(loginPath);
+
+                    if (login.IsOK)
+                    {
+                        var path = GetLoginPath(login.Username, login.HiveName);
+
+                        if (File.Exists(path))
+                        {
+                            loginPath = path;
+                        }
+                    }
+                }
+
+                if (!File.Exists(loginPath))
+                {
+                    throw new HiveException($"Login [{loginPath}] not found.");
+                }
+
                 HiveLogin      = NeonHelper.JsonDeserialize<HiveLogin>(File.ReadAllText(loginPath));
                 HiveLogin.Path = loginPath;
             }
@@ -1473,7 +1499,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <note>
         /// The instance returned by the property is intended to be shared across
-        /// the application and should <b>not be disposed</b>.  Use <see cref="OpenConsul"/>
+        /// the application and <b>must not be disposed</b>.  Use <see cref="OpenConsul"/>
         /// if you wish a private instance.
         /// </note>
         /// </remarks>
@@ -1483,7 +1509,14 @@ namespace Neon.Hive
             {
                 VerifyConnected();
 
-                return OpenConsul();
+                var consul = sharedConsul;
+
+                if (consul != null)
+                {
+                    return consul;
+                }
+
+                return sharedConsul = OpenConsul();
             }
         }
 

@@ -56,6 +56,11 @@ namespace Neon.Hive
         public const string Version = "version";
 
         /// <summary>
+        /// Serialized <c>HiveMQSettings</c> for the the <see cref="HiveMQOptions.AppUser"/> HiveMQ account.
+        /// </summary>
+        public const string HiveMQSettingsApp = "hivemq-settings-app";
+
+        /// <summary>
         /// <para>
         /// Serialized <c>HiveMQSettings</c> that reference the RabbitMQ hosts directly rather 
         /// than via a <b>private</b> load balancer rule.  This is updated periodically by
@@ -66,16 +71,11 @@ namespace Neon.Hive
         /// <note>
         /// The <c>HiveMQSettings</c> persisted here will not include any credentials
         /// (the username and password) will be <c>null</c>.  You'll generally need to
-        /// combine these settings with the credentials obtained from the <b>neon-hivemq-neon</b>
-        /// Docker secret.
+        /// combine these settings with the credentials obtained from the <see cref="HiveMQSettingsNeon"/>
+        /// settings.
         /// </note>
         /// </summary>
-        public const string HiveMQBootstrap = "hivemq-bootstrap";
-
-        /// <summary>
-        /// Serialized <c>HiveMQSettings</c> for the the <see cref="HiveMQOptions.AppUser"/> HiveMQ account.
-        /// </summary>
-        public const string HiveMQSettingsApp = "hivemq-settings-app";
+        public const string HiveMQSettingsBootstrap = "hivemq-settings-bootstrap";
 
         /// <summary>
         /// Serialized <c>HiveMQSettings</c> for the the <see cref="HiveMQOptions.NeonUser"/> HiveMQ account.

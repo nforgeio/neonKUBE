@@ -65,6 +65,150 @@ namespace NeonCli
                     }
 
                     //---------------------------------------------------------
+                    // Persist the proxy settings.
+
+                    // Obtain the AppRole credentials from Vault for the proxy manager as well as the
+                    // public and private proxy services and persist these as Docker secrets.
+
+                    firstManager.Status = "secrets: proxy services";
+
+                    Hive.Docker.Secret.Set("neon-proxy-manager-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-manager").Result, Formatting.Indented));
+                    Hive.Docker.Secret.Set("neon-proxy-public-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-public").Result, Formatting.Indented));
+                    Hive.Docker.Secret.Set("neon-proxy-private-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-private").Result, Formatting.Indented));
+
+                    // Initialize the public and private proxies.
+
+                    Hive.PublicLoadBalancer.UpdateSettings(
+                        new LoadBalancerSettings()
+                        {
+                            ProxyPorts = HiveConst.PublicProxyPorts
+                        });
+
+                    Hive.PrivateLoadBalancer.UpdateSettings(
+                        new LoadBalancerSettings()
+                        {
+                            ProxyPorts = HiveConst.PrivateProxyPorts
+                        });
+
+                    //---------------------------------------------------------
+                    // Deploy the RabbitMQ cluster.
+
+                    Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster",
+                        () =>
+                        {
+                            // We're going to list the hive nodes that will host the
+                            // RabbitMQ cluster and sort them by node name.  Then we're
+                            // going to ensure that the first RabbitMQ node/container
+                            // is started and ready before configuring the rest of the
+                            // cluster so that it will bootstrap properly.
+
+                            var hiveMQNodes = Hive.Nodes
+                                .Where(n => n.Metadata.Labels.HiveMQ)
+                                .OrderBy(n => n.Name)
+                                .ToList();
+
+                            DeployHiveMQ(hiveMQNodes.First());
+
+                            // Start the remaining nodes in parallel.
+
+                            var actions = new List<Action>();
+
+                            foreach (var node in hiveMQNodes.Skip(1))
+                            {
+                                actions.Add(() => DeployHiveMQ(node));
+                            }
+
+                            NeonHelper.WaitForParallel(actions);
+
+                            // The RabbitMQ cluster is created with the [/] vhost and the
+                            // [sysadmin] user by default.  We need to create the [neon]
+                            // and [app] vhosts along with the [neon] and [app] users
+                            // and then set the appropriate permissions.
+                            //
+                            // We're going to run [rabbitmqctl] within the first RabbitMQ
+                            // to accomplish this.
+
+                            var hiveMQNode = hiveMQNodes.First();
+
+                            // Create the vhosts.
+
+                            Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {Hive.Definition.HiveMQ.AppVHost}"));
+                            Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {Hive.Definition.HiveMQ. NeonVHost}"));
+
+                            // Create the users.
+
+                            Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {Hive.Definition.HiveMQ.AppUser} {Hive.Definition.HiveMQ.AppUser}"));
+                            Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {Hive.Definition.HiveMQ.NeonUser} {Hive.Definition.HiveMQ.NeonPassword}"));
+
+                            // Grant the [app] account full access to the [app] vhost, the [neon] account full
+                            // access to the [neon] vhost.  Note that this doesn't need to be idempotent.
+
+                            hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {Hive.Definition.HiveMQ.AppVHost} {Hive.Definition.HiveMQ.AppUser} \".*\" \".*\" \".*\"");
+                            hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {Hive.Definition.HiveMQ. NeonVHost} {Hive.Definition.HiveMQ.NeonUser} \".*\" \".*\" \".*\"");
+
+                            // Clear the UX status for the HiveMQ nodes.
+
+                            foreach (var node in hiveMQNodes)
+                            {
+                                node.Status = string.Empty;
+                            }
+
+                            // Deploy private load balancer for the AMPQ endpoints.
+
+                            var rule = new LoadBalancerHttpRule()
+                            {
+                                Name     = "neon-hivemq-ampq",
+                                System   = true,
+                                Resolver = null
+                            };
+
+                            // Initialize the frontends and backends.
+
+                            rule.Frontends.Add(
+                                new LoadBalancerHttpFrontend()
+                                {
+                                    ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMPQ
+                                });
+
+                            rule.Backends.Add(
+                                new LoadBalancerHttpBackend()
+                                {
+                                    Group      = HiveHostGroups.HiveMQ,
+                                    GroupLimit = 5,
+                                    Port       = HiveHostPorts.HiveMQAMPQ
+                                });
+
+                            Hive.PrivateLoadBalancer.SetRule(rule);
+
+                            // Deploy private load balancer for the management endpoints.
+
+                            rule = new LoadBalancerHttpRule()
+                            {
+                                Name     = "neon-hivemq-management",
+                                System   = true,
+                                Resolver = null
+                            };
+
+                            // Initialize the frontends and backends.
+
+                        rule.Frontends.Add(
+                            new LoadBalancerHttpFrontend()
+                            {
+                                ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAdmin
+                            });
+
+                        rule.Backends.Add(
+                            new LoadBalancerHttpBackend()
+                            {
+                                Group      = HiveHostGroups.HiveMQManagers,
+                                GroupLimit = 5,
+                                Port       = HiveHostPorts.HiveMQManagement
+                            });
+
+                        Hive.PrivateLoadBalancer.SetRule(rule);
+                    });
+
+                    //---------------------------------------------------------
                     // Deploy DNS related services.
 
                     // Deploy: neon-dns-mon
@@ -141,30 +285,7 @@ namespace NeonCli
                         Hive.SecureRunOptions | RunOptions.FaultOnError);
 
                     //---------------------------------------------------------
-                    // Deploy proxy related services
-
-                    // Obtain the AppRole credentials from Vault for the proxy manager as well as the
-                    // public and private proxy services and persist these as Docker secrets.
-
-                    firstManager.Status = "secrets: proxy services";
-
-                    Hive.Docker.Secret.Set("neon-proxy-manager-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-manager").Result, Formatting.Indented));
-                    Hive.Docker.Secret.Set("neon-proxy-public-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-public").Result, Formatting.Indented));
-                    Hive.Docker.Secret.Set("neon-proxy-private-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-private").Result, Formatting.Indented));
-
-                    // Initialize the public and private proxies.
-
-                    Hive.PublicLoadBalancer.UpdateSettings(
-                        new LoadBalancerSettings()
-                        {
-                            ProxyPorts = HiveConst.PublicProxyPorts
-                        });
-
-                    Hive.PrivateLoadBalancer.UpdateSettings(
-                        new LoadBalancerSettings()
-                        {
-                            ProxyPorts = HiveConst.PrivateProxyPorts
-                        });
+                    // Deploy proxy related services.
 
                     // Deploy the proxy manager service.
 
@@ -348,124 +469,6 @@ namespace NeonCli
                             "--network", HiveConst.PrivateNetwork,
                             ImagePlaceholderArg));
                 });
-
-                //---------------------------------------------------------
-                // Deploy the RabbitMQ cluster.
-
-                Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster",
-                    () =>
-                    {
-                        // We're going to list the hive nodes that will host the
-                        // RabbitMQ cluster and sort them by node name.  Then we're
-                        // going to ensure that the first RabbitMQ node/container
-                        // is started and ready before configuring the rest of the
-                        // cluster so that it will bootstrap properly.
-
-                        var hiveMQNodes = Hive.Nodes
-                            .Where(n => n.Metadata.Labels.HiveMQ)
-                            .OrderBy(n => n.Name)
-                            .ToList();
-
-                        DeployHiveMQ(hiveMQNodes.First());
-
-                        // Start the remaining nodes in parallel.
-
-                        var actions = new List<Action>();
-
-                        foreach (var node in hiveMQNodes.Skip(1))
-                        {
-                            actions.Add(() => DeployHiveMQ(node));
-                        }
-
-                        NeonHelper.WaitForParallel(actions);
-
-                        // The RabbitMQ cluster is created with the [/] vhost and the
-                        // [sysadmin] user by default.  We need to create the [neon]
-                        // and [app] vhosts along with the [neon] and [app] users
-                        // and then set the appropriate permissions.
-                        //
-                        // We're going to run [rabbitmqctl] within the first RabbitMQ
-                        // to accomplish this.
-
-                        var hiveMQNode = hiveMQNodes.First();
-
-                        // Create the vhosts.
-
-                        Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {Hive.Definition.HiveMQ.AppVHost}"));
-                        Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {Hive.Definition.HiveMQ. NeonVHost}"));
-
-                        // Create the users.
-
-                        Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {Hive.Definition.HiveMQ.AppUser} {Hive.Definition.HiveMQ.AppUser}"));
-                        Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {Hive.Definition.HiveMQ.NeonUser} {Hive.Definition.HiveMQ.NeonPassword}"));
-
-                        // Grant the [app] account full access to the [app] vhost, the [neon] account full
-                        // access to the [neon] vhost.  Note that this doesn't need to be idempotent.
-
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {Hive.Definition.HiveMQ.AppVHost} {Hive.Definition.HiveMQ.AppUser} \".*\" \".*\" \".*\"");
-                        hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_permissions -p {Hive.Definition.HiveMQ. NeonVHost} {Hive.Definition.HiveMQ.NeonUser} \".*\" \".*\" \".*\"");
-
-                        // Clear the UX status for the HiveMQ nodes.
-
-                        foreach (var node in hiveMQNodes)
-                        {
-                            node.Status = string.Empty;
-                        }
-
-                        // Deploy private load balancer for the AMPQ endpoints.
-
-                        var rule = new LoadBalancerHttpRule()
-                        {
-                            Name     = "neon-hivemq-ampq",
-                            System   = true,
-                            Resolver = null
-                        };
-
-                        // Initialize the frontends and backends.
-
-                        rule.Frontends.Add(
-                            new LoadBalancerHttpFrontend()
-                            {
-                                ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMPQ
-                            });
-
-                        rule.Backends.Add(
-                            new LoadBalancerHttpBackend()
-                            {
-                                Group      = HiveHostGroups.HiveMQ,
-                                GroupLimit = 5,
-                                Port       = HiveHostPorts.HiveMQAMPQ
-                            });
-
-                        Hive.PrivateLoadBalancer.SetRule(rule);
-
-                        // Deploy private load balancer for the management endpoints.
-
-                        rule = new LoadBalancerHttpRule()
-                        {
-                            Name     = "neon-hivemq-management",
-                            System   = true,
-                            Resolver = null
-                        };
-
-                        // Initialize the frontends and backends.
-
-                        rule.Frontends.Add(
-                            new LoadBalancerHttpFrontend()
-                            {
-                                ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAdmin
-                            });
-
-                        rule.Backends.Add(
-                            new LoadBalancerHttpBackend()
-                            {
-                                Group      = HiveHostGroups.HiveMQManagers,
-                                GroupLimit = 5,
-                                Port       = HiveHostPorts.HiveMQManagement
-                            });
-
-                        Hive.PrivateLoadBalancer.SetRule(rule);
-                    });
 
             // Log the hive into any Docker registries with credentials.
 

@@ -209,6 +209,16 @@ namespace Neon.HiveMQ
             connectionFactory.Port                   = AmqpPort;
             connectionFactory.DispatchConsumersAsync = dispatchConsumersAsync;
 
+            if (string.IsNullOrEmpty(connectionFactory.UserName))
+            {
+                throw new ArgumentNullException($"[{nameof(username)}] is required.");
+            }
+
+            if (string.IsNullOrEmpty(connectionFactory.Password))
+            {
+                throw new ArgumentNullException($"[{nameof(password)}] is required.");
+            }
+
             if (TlsEnabled)
             {
                 connectionFactory.Ssl = new SslOption() { Enabled = true };
@@ -238,7 +248,7 @@ namespace Neon.HiveMQ
         /// <param name="username">Optional username (overrides <see cref="Username"/>).</param>
         /// <param name="password">Optional password (overrides <see cref="Password"/>).</param>
         /// <param name="virtualHost">Optional target virtual host (defaults to <b>"/"</b>).</param>
-        /// <param name="settings">Optional message bus client settings.</param>
+        /// <param name="busSettings">Optional message bus client settings.</param>
         /// <param name="customServiceAction">
         /// Optionally specifies an action that overrides the default the EasyNetQ
         /// client configuration via dependency injection.
@@ -248,7 +258,7 @@ namespace Neon.HiveMQ
             string                      username = null, 
             string                      password = null, 
             string                      virtualHost = "/", 
-            EasyBusSettings             settings = null, 
+            EasyBusSettings             busSettings = null, 
             Action<IServiceRegister>    customServiceAction = null)
         {
             Covenant.Requires<NotImplementedException>(!TlsEnabled, "$todo(jeff.lill): We don't support RabbitMQ TLS yet.");
@@ -261,9 +271,19 @@ namespace Neon.HiveMQ
                 VirtualHost = virtualHost
             };
 
-            if (settings != null)
+            if (busSettings != null)
             {
-                settings.ApplyTo(config);
+                busSettings.ApplyTo(config);
+            }
+
+            if (string.IsNullOrEmpty(config.UserName))
+            {
+                throw new ArgumentNullException($"[{nameof(username)}] is required.");
+            }
+
+            if (string.IsNullOrEmpty(config.Password))
+            {
+                throw new ArgumentNullException($"[{nameof(password)}] is required.");
             }
 
             var hostConfigs = new List<HostConfiguration>();
@@ -282,8 +302,8 @@ namespace Neon.HiveMQ
                 // Generate a reasonable [sourceModule] setting.
 
                 var sourceModule = "EasyNetQ";
-                var product      = settings?.Product ?? string.Empty;
-                var appName      = settings?.Name ?? string.Empty;
+                var product      = busSettings?.Product ?? string.Empty;
+                var appName      = busSettings?.Name ?? string.Empty;
 
                 if (!string.IsNullOrEmpty(product) || !string.IsNullOrEmpty(appName))
                 {
@@ -321,7 +341,7 @@ namespace Neon.HiveMQ
                 }
 
                 var neonLogger      = LogManager.Default.GetLogger(sourceModule);
-                var neonLogProvider = new NeonLoggingProvider(neonLogger);
+                var neonLogProvider = new HiveEasyMQLogProvider(neonLogger);
 
                 LogProvider.SetCurrentLogProvider(neonLogProvider);
             }
@@ -363,6 +383,16 @@ namespace Neon.HiveMQ
             username = username ?? Username;
             password = password ?? Password;
 
+            if (string.IsNullOrEmpty(username))
+            {
+                throw new ArgumentNullException($"[{nameof(username)}] is required.");
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentNullException($"[{nameof(password)}] is required.");
+            }
+
             return new ManagementClient($"{scheme}://{reachableHost.Host}", username, password, AdminPort, ssl: TlsEnabled);
         }
 
@@ -374,15 +404,29 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <param name="username">Optional username (overrides <see cref="Username"/>).</param>
         /// <param name="password">Optional password (overrides <see cref="Password"/>).</param>
-        /// <param name="virtualHost">Optional target virtual host (defaults to <b>"/"</b>).</param>
+        /// <param name="virtualHost">Optional target virtual host (overrides <see cref="VirtualHost"/>).</param>
         /// <param name="settings">Optional message bus client settings.</param>
         /// <returns></returns>
         public HiveBus ConnectHiveBus(
             string          username    = null,
             string          password    = null,
-            string          virtualHost = "/",
+            string          virtualHost = null,
             EasyBusSettings settings    = null)
         {
+            username    = username ?? Username;
+            password    = password ?? Password;
+            virtualHost = virtualHost ?? VirtualHost;
+
+            if (string.IsNullOrEmpty(username))
+            {
+                throw new ArgumentNullException($"[{nameof(username)}] is required.");
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentNullException($"[{nameof(password)}] is required.");
+            }
+
             return new HiveBus(this, username, password, virtualHost);
         }
     }

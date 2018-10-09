@@ -62,26 +62,30 @@ namespace Neon.Hive
             /// <b>WARNING:</b> The <see cref="HiveBus"/> instance returned should <b>never be disposed</b>.
             /// </note>
             /// </summary>
-            public HiveBus NeonHiveBus
+            /// <param name="useBootstrap">
+            /// Optionally specifies that the settings returned should directly
+            /// reference to the HiveMQ cluster nodes rather than routing traffic
+            /// through the <b>private</b> load balancer.  This is used internally
+            /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+            /// proxy implementations that rely on HiveMQ messaging.
+            /// </param>
+            public HiveBus NeonHiveBus(bool useBootstrap = false)
             {
-                get
+                var bus = neonHiveBus;
+
+                if (bus != null)
                 {
-                    var bus = neonHiveBus;
+                    return bus;
+                }
 
-                    if (bus != null)
+                lock (syncLock)
+                {
+                    if (neonHiveBus == null)
                     {
-                        return bus;
+                        neonHiveBus = parent.GetNeonSettings(useBootstrap).ConnectHiveBus();
                     }
 
-                    lock (syncLock)
-                    {
-                        if (neonHiveBus == null)
-                        {
-                            neonHiveBus = parent.NeonSettings.ConnectHiveBus();
-                        }
-
-                        return neonHiveBus;
-                    }
+                    return neonHiveBus;
                 }
             }
 
@@ -89,8 +93,15 @@ namespace Neon.Hive
             /// <b>INTERNAL USE ONLY:</b> Creates the <see cref="HiveMQChannels.ProxyNotify"/> 
             /// channel if it doesn't already exist and returns the channel.
             /// </summary>
+            /// <param name="useBootstrap">
+            /// Optionally specifies that the settings returned should directly
+            /// reference to the HiveMQ cluster nodes rather than routing traffic
+            /// through the <b>private</b> load balancer.  This is used internally
+            /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+            /// proxy implementations that rely on HiveMQ messaging.
+            /// </param>
             /// <returns>The <see cref="BroadcastChannel"/>.</returns>
-            public BroadcastChannel GetProxyNotifyChannel()
+            public BroadcastChannel GetProxyNotifyChannel(bool useBootstrap = false)
             {
                 // WARNING:
                 //
@@ -98,7 +109,7 @@ namespace Neon.Hive
                 // queue be removed and recreated and all services and containers that
                 // use the queue be restarted.
 
-                return NeonHiveBus.GetBroadcastChannel(
+                return NeonHiveBus(useBootstrap).GetBroadcastChannel(
                     name: HiveMQChannels.ProxyNotify,
                     durable: true,
                     autoDelete: false,
@@ -129,9 +140,32 @@ namespace Neon.Hive
         /// Returns a <see cref="ManagementClient"/> instance that can be used to perform
         /// management related operations on the HiveMQ.
         /// </summary>
-        public ManagementClient ConnectHiveMQManager()
+        /// <param name="useBootstrap">
+        /// Optionally specifies that the client returned should connect
+        /// directly to the HiveMQ cluster nodes rather than routing traffic
+        /// through the <b>private</b> load balancer.  This is used internally
+        /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+        /// proxy implementations that rely on HiveMQ messaging.
+        /// </param>
+        public ManagementClient ConnectHiveMQManager(bool useBootstrap = false)
         {
-            return SystemSettings.ConnectManager();
+            return GetSystemSettings(useBootstrap).ConnectManager();
+        }
+
+        /// <summary>
+        /// Parses and returns the specified hive global as a <see cref="HiveMQSettings"/>.
+        /// </summary>
+        /// <param name="globalName">Identifies the source hive global name.</param>
+        /// <returns>The parsed <see cref="HiveMQSettings"/>.</returns>
+        /// <exception cref="HiveException">Thrown if the required global setting is not present or could not be deserialized.</exception>
+        private HiveMQSettings GetHiveMQSettings(string globalName)
+        {
+            if (!hive.Globals.TryGetObject<HiveMQSettings>(globalName, out var settings))
+            {
+                throw new HiveException($"The [{globalName}] hive global does not exist in Consul or could not be parsed as a [{nameof(HiveMQSettings)}..");
+            }
+
+            return settings;
         }
 
         /// <summary>
@@ -141,13 +175,32 @@ namespace Neon.Hive
         /// root <b>/</b>, <see cref="HiveMQOptions.AppVHost"/>, or <see cref="HiveMQOptions.NeonVHost"/>
         /// virtual hosts.
         /// </para>
-        /// <note>
-        /// This requires that the <b>neon-hivemq-sysadmin</b> Docker secret be mapped into the
-        /// executing container or initialized with <see cref="HiveHelper"/>.
-        /// </note>
         /// </summary>
-        /// <exception cref="HiveException">Thrown if the required Docker secret is not present.</exception>
-        public HiveMQSettings SystemSettings => HiveHelper.Consul.KV.GetObject<HiveMQSettings>(HiveGlobals.HiveMQSettingSysadmin).Result;
+        /// <param name="useBootstrap">
+        /// Optionally specifies that the settings returned should directly
+        /// reference to the HiveMQ cluster nodes rather than routing traffic
+        /// through the <b>private</b> load balancer.  This is used internally
+        /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+        /// proxy implementations that rely on HiveMQ messaging.
+        /// </param>
+        /// <exception cref="HiveException">Thrown if the required global setting is not present.</exception>
+        public HiveMQSettings GetSystemSettings(bool useBootstrap = false)
+        {
+            var settings = GetHiveMQSettings(HiveGlobals.HiveMQSettingSysadmin);
+
+            if (!useBootstrap)
+            {
+                return settings;
+            }
+
+            var bootstrap = GetBootstrapSettings();
+
+            bootstrap.Username    = settings.Username;
+            bootstrap.Password    = settings.Password;
+            bootstrap.VirtualHost = settings.VirtualHost;
+
+            return bootstrap;
+        }
 
         /// <summary>
         /// <para>
@@ -155,13 +208,32 @@ namespace Neon.Hive
         /// You can use this to retrieve a client that can perform messaging operations within the
         /// <see cref="HiveMQOptions.NeonVHost"/> virtual host.
         /// </para>
-        /// <note>
-        /// This requires that the <b>neon-hivemq-neon</b> Docker secret be mapped into the
-        /// executing container or initialized with <see cref="HiveHelper"/>.
-        /// </note>
         /// </summary>
-        /// <exception cref="HiveException">Thrown if the required Docker secret is not present.</exception>
-        public HiveMQSettings NeonSettings => HiveHelper.Consul.KV.GetObject<HiveMQSettings>(HiveGlobals.HiveMQSettingsNeon).Result;
+        /// <param name="useBootstrap">
+        /// Optionally specifies that the settings returned should directly
+        /// reference to the HiveMQ cluster nodes rather than routing traffic
+        /// through the <b>private</b> load balancer.  This is used internally
+        /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+        /// proxy implementations that rely on HiveMQ messaging.
+        /// </param>
+        /// <exception cref="HiveException">Thrown if the required global setting is not present.</exception>
+        public HiveMQSettings GetNeonSettings(bool useBootstrap = false)
+        {
+            var settings = GetHiveMQSettings(HiveGlobals.HiveMQSettingsNeon);
+
+            if (!useBootstrap)
+            {
+                return settings;
+            }
+
+            var bootstrap = GetBootstrapSettings();
+
+            bootstrap.Username    = settings.Username;
+            bootstrap.Password    = settings.Password;
+            bootstrap.VirtualHost = settings.VirtualHost;
+
+            return bootstrap;
+        }
 
         /// <summary>
         /// <para>
@@ -169,66 +241,66 @@ namespace Neon.Hive
         /// You can use this to retrieve a client that can perform messaging operations within the
         /// <see cref="HiveMQOptions.AppVHost"/> virtual host.
         /// </para>
-        /// <note>
-        /// This requires that the <b>neon-hivemq-app</b> Docker secret be mapped into the
-        /// executing container or initialized with <see cref="HiveHelper"/>.
-        /// </note>
         /// </summary>
-        /// <exception cref="HiveException">Thrown if the required Docker secret is not present.</exception>
-        public HiveMQSettings AppSettings => HiveHelper.Consul.KV.GetObject<HiveMQSettings>(HiveGlobals.HiveMQSettingsApp).Result;
+        /// <param name="useBootstrap">
+        /// Optionally specifies that the settings returned should directly
+        /// reference to the HiveMQ cluster nodes rather than routing traffic
+        /// through the <b>private</b> load balancer.  This is used internally
+        /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+        /// proxy implementations that rely on HiveMQ messaging.
+        /// </param>
+        /// <exception cref="HiveException">Thrown if the required global setting is not present.</exception>
+        public HiveMQSettings GetAppSettings(bool useBootstrap = false)
+        {
+            var settings = GetHiveMQSettings(HiveGlobals.HiveMQSettingsApp);
+
+            if (!useBootstrap)
+            {
+                return settings;
+            }
+
+            var bootstrap = GetBootstrapSettings();
+
+            bootstrap.Username    = settings.Username;
+            bootstrap.Password    = settings.Password;
+            bootstrap.VirtualHost = settings.VirtualHost;
+
+            return bootstrap;
+        }
 
         /// <summary>
         /// <para>
-        /// <b>Internal neonHIVE use only:</b> Returns the bootstrap <see cref="HiveMQSettings"/> 
+        /// <b>INTERNAL USE ONLY:</b> Returns the bootstrap <see cref="HiveMQSettings"/> 
         /// for the <see cref="HiveMQOptions.NeonVHost"/> that directly reference the HiveMQ
         /// nodes rather than load balancer rules.
         /// </para>
         /// <para>
-        /// This works by obtaining the bootstrap settings from the Consul <see cref="HiveGlobals.HiveMQBootstrap"/>
-        /// setting combined with the credentials from <see cref="NeonSettings"/>.
+        /// This works by obtaining the bootstrap settings from the Consul <see cref="HiveGlobals.HiveMQSettingsBootstrap"/>
+        /// setting combined with the credentials from <see cref="GetNeonSettings(bool)"/>.
         /// </para>
-        /// <note>
-        /// This requires that the <b>neon-hivemq-neon</b> Docker secret be mapped into the
-        /// executing container or initialized with <see cref="HiveHelper"/>.
-        /// </note>
         /// </summary>
-        /// <exception cref="HiveException">Thrown if the required Docker secret is not present.</exception>
-        public HiveMQSettings BootstrapSettings
+        /// <exception cref="HiveException">Thrown if the required global setting is not present.</exception>
+        public HiveMQSettings GetBootstrapSettings()
         {
-            get
-            {
-                if (!hive.Globals.TryGetJson<HiveMQSettings>(HiveGlobals.HiveMQBootstrap, out var bootstrapSettings))
-                {
-                    throw new HiveException($"Global setting [{HiveGlobals.HiveMQBootstrap}] is not present or could not be parsed.");
-                }
-
-                var neonSettings = NeonSettings;
-
-                bootstrapSettings.Username = neonSettings.Username;
-                bootstrapSettings.Password = neonSettings.Password;
-
-                return bootstrapSettings;
-            }
+            return GetHiveMQSettings(HiveGlobals.HiveMQSettingsBootstrap);
         }
 
         /// <summary>
         /// <para>
         /// <b>Internal use by neonHIVE services only:</b> Generates a <see cref="HiveMQSettings"/> instance
         /// that directly references the HiveMQ nodes and then persists this to Consul as 
-        /// <see cref="HiveGlobals.HiveMQBootstrap"/>.
+        /// <see cref="HiveGlobals.HiveMQSettingsBootstrap"/>.
         /// </para>
         /// <note>
-        /// The persisted settings do not include any credentials.  Consumers will need to 
-        /// combine credentials obtained via the <b>neon-hivemq-neon</b> Docker secret or
-        /// via <see cref="NeonSettings"/>.
+        /// The persisted settings do not include any credentials.
         /// </note>
         /// </summary>
         public void SaveBootstrapSettings()
         {
             var settings = new HiveMQSettings()
             {
-                AmqpPort    = HiveHostPorts.ProxyPrivateHiveMQAMPQ,
-                AdminPort   = HiveHostPorts.ProxyPrivateHiveMQAdmin,
+                AmqpPort    = HiveHostPorts.HiveMQAMPQ,
+                AdminPort   = HiveHostPorts.HiveMQManagement,
                 TlsEnabled  = false,
                 Username    = null,
                 Password    = null,
@@ -245,7 +317,7 @@ namespace Neon.Hive
                 settings.AdminHosts.Add($"{node.Name}.{hive.Definition.Hostnames.HiveMQ}");
             }
 
-            hive.Globals.SetJson(HiveGlobals.HiveMQBootstrap, settings);
+            hive.Globals.Set(HiveGlobals.HiveMQSettingsBootstrap, settings);
         }
 
         /// <summary>

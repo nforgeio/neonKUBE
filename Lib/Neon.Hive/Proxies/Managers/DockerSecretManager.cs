@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Consul;
+using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.IO;
@@ -88,6 +89,23 @@ namespace Neon.Hive
             Covenant.Requires<ArgumentNullException>(value != null);
 
             Set(secretName, Encoding.UTF8.GetBytes(value), options);
+        }
+
+        /// <summary>
+        /// Creates or updates a hive Docker object secret serialized as JSON.
+        /// </summary>
+        /// <typeparam name="T">The secret type.</typeparam>
+        /// <param name="secretName">The secret name.</param>
+        /// <param name="value">The secret value.</param>
+        /// <param name="options">Optional command run options.</param>
+        /// <exception cref="HiveException">Thrown if the operation failed.</exception>
+        public void Set<T>(string secretName, T value, RunOptions options = RunOptions.None)
+            where T : class, new()
+        {
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(secretName));
+            Covenant.Requires<ArgumentNullException>(value != null);
+
+            Set(secretName, NeonHelper.JsonSerialize(value, Formatting.Indented), options);
         }
 
         /// <summary>
@@ -182,6 +200,11 @@ fi
         /// <returns>The secret as a byte array or <c>null</c> if the secret doesn't exist.</returns>
         /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
         /// <exception cref="HiveException">Thrown if the operation failed.</exception>
+        /// <remarks>
+        /// <note>
+        /// This method takes quite some time to execute (perhaps 30 seconds).
+        /// </note>
+        /// </remarks>
         public byte[] GetBytes(string secretName, RunOptions options = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName));
@@ -291,6 +314,11 @@ fi
         /// <returns>The secret as a byte array or <c>null</c> if the secret doesn't exist.</returns>
         /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
         /// <exception cref="HiveException">Thrown if the operation failed.</exception>
+        /// <remarks>
+        /// <note>
+        /// This method takes quite some time to execute (perhaps 30 seconds).
+        /// </note>
+        /// </remarks>
         public string GetString(string secretName, RunOptions options = RunOptions.None)
         {
             var bytes = GetBytes(secretName, options);
@@ -301,6 +329,35 @@ fi
             }
 
             return Encoding.UTF8.GetString(bytes);
+        }
+
+        /// <summary>
+        /// Retrieves a Docker secret as a <typeparamref name="T"/> by deserializing the secret
+        /// text as JSON.
+        /// </summary>
+        /// <typeparam name="T">The secret type.</typeparam>
+        /// <param name="secretName">The secret name.</param>
+        /// <param name="options">Optional command run options.</param>
+        /// <returns>The secret object or <c>null</c> if the secret doesn't exist.</returns>
+        /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
+        /// <exception cref="HiveException">Thrown if the operation failed.</exception>
+        /// <exception cref="JsonSerializationException">Thrown if the secret couldn't be parsed.</exception>
+        /// <remarks>
+        /// <note>
+        /// This method takes quite some time to execute (perhaps 30 seconds).
+        /// </note>
+        /// </remarks>
+        public T Get<T>(string secretName, RunOptions options = RunOptions.None)
+            where T : class, new()
+        {
+            var json = GetString(secretName, options);
+
+            if (json == null)
+            {
+                return null;
+            }
+
+            return NeonHelper.JsonDeserialize<T>(json, strict: false);
         }
     }
 }

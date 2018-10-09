@@ -3402,43 +3402,15 @@ systemctl start neon-volume-plugin
                     hive.Globals.Set(HiveGlobals.NeonCli, Program.MinimumVersion);
                     hive.Globals.Set(HiveGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
                 });
-        }
 
-        /// <summary>
-        /// Initialize any hive Docker secrets.
-        /// </summary>
-        public void InitializeSecrets()
-        {
-            var firstManager = hive.FirstManager;
-
-            // Create the [neon-ssh-credentials] Docker secret.
-
-            firstManager.InvokeIdempotentAction("setup/neon-ssh-credentials",
-                () =>
-                {
-                    firstManager.Status = "secret: SSH credentials";
-                    hive.Docker.Secret.Set("neon-ssh-credentials", $"{hiveLogin.SshUsername}/{hiveLogin.SshPassword}");
-                });
-
-            // Create the [neon-ceph-dashboard-credentials] Docker secret.
-
-            firstManager.InvokeIdempotentAction("setup/neon-ceph-dashboard-credentials",
-                () =>
-                {
-                    firstManager.Status = "secret: Ceph dashboard credentials";
-                    hiveLogin.CephDashboardUsername = HiveConst.DefaultUsername;
-                    // hiveLogin.CephDashboardPassword = NeonHelper.GetRandomPassword(20);  $todo(jeff.lill): uncomment this
-                    hiveLogin.CephDashboardPassword = HiveConst.DefaultPassword;
-                    hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
-                });
-
+            
             // Write the Consul globals that hold the HiveMQ settings for the
             // [app], [neon], and [sysadmin] accounts. 
 
-            firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings",
+            firstManager.InvokeIdempotentAction("setup/hivemq-settings",
                 () =>
                 {
-                    firstManager.Status = "secrets: HiveMQ";
+                    firstManager.Status = "consul: hivemq settings";
 
                     // $note(jeff.lill):
                     //
@@ -3492,26 +3464,55 @@ systemctl start neon-volume-plugin
                     };
 
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-sysadmin",
-                        async () => await HiveHelper.Consul.KV.PutObject(HiveGlobals.HiveMQSettingSysadmin, hiveMQSettings, Formatting.Indented));
+                        () => hive.Globals.Set(HiveGlobals.HiveMQSettingSysadmin, hiveMQSettings));
 
                     hiveMQSettings.Username    = hive.Definition.HiveMQ.NeonUser;
                     hiveMQSettings.Password    = hive.Definition.HiveMQ.NeonPassword;
                     hiveMQSettings.VirtualHost = hive.Definition.HiveMQ.NeonVHost;
 
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-neon",
-                        async () => await HiveHelper.Consul.KV.PutObject(HiveGlobals.HiveMQSettingsNeon, hiveMQSettings, Formatting.Indented));
+                        () => hive.Globals.Set(HiveGlobals.HiveMQSettingsNeon, hiveMQSettings));
 
                     hiveMQSettings.Username    = hive.Definition.HiveMQ.AppUser;
                     hiveMQSettings.Password    = hive.Definition.HiveMQ.AppPassword;
                     hiveMQSettings.VirtualHost = hive.Definition.HiveMQ.AppVHost;
 
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-app",
-                        async () => await HiveHelper.Consul.KV.PutObject(HiveGlobals.HiveMQSettingsApp, hiveMQSettings, Formatting.Indented));
+                        () => hive.Globals.Set(HiveGlobals.HiveMQSettingsApp, hiveMQSettings));
 
                     // Persist the HiveMQ bootstrap settings to Consul.  These settings have no credentials
                     // and reference the HiveMQ nodes directly (not via a load balancer rule).
 
                     hive.HiveMQ.SaveBootstrapSettings();
+                });
+        }
+
+        /// <summary>
+        /// Initialize any hive Docker secrets.
+        /// </summary>
+        public void InitializeSecrets()
+        {
+            var firstManager = hive.FirstManager;
+
+            // Create the [neon-ssh-credentials] Docker secret.
+
+            firstManager.InvokeIdempotentAction("setup/neon-ssh-credentials",
+                () =>
+                {
+                    firstManager.Status = "secret: SSH credentials";
+                    hive.Docker.Secret.Set("neon-ssh-credentials", $"{hiveLogin.SshUsername}/{hiveLogin.SshPassword}");
+                });
+
+            // Create the [neon-ceph-dashboard-credentials] Docker secret.
+
+            firstManager.InvokeIdempotentAction("setup/neon-ceph-dashboard-credentials",
+                () =>
+                {
+                    firstManager.Status = "secret: Ceph dashboard credentials";
+                    hiveLogin.CephDashboardUsername = HiveConst.DefaultUsername;
+                    // hiveLogin.CephDashboardPassword = NeonHelper.GetRandomPassword(20);  $todo(jeff.lill): uncomment this
+                    hiveLogin.CephDashboardPassword = HiveConst.DefaultPassword;
+                    hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
                 });
         }
 

@@ -61,9 +61,43 @@ namespace Neon.Hive
         /// <summary>
         /// Attempts to retrieve a named hive global setting as a <c>string</c>.
         /// </summary>
+        /// <typeparam name="T">The type of the object to be returned.</typeparam>
+        /// <param name="name">The setting name.</param>
+        /// <param name="output">Returns as the setting value.</param>
+        /// <returns><c>true</c> if the setting exists, could be parsed, and was returned.</returns>
+        /// <remarks>
+        /// <note>
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
+        /// </note>
+        /// </remarks>
+        public bool TryGetObject<T>(string name, out T output)
+            where T : class, new()
+        {
+            Covenant.Requires(!string.IsNullOrEmpty(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
+
+            output = null;
+
+            var key  = $"{HiveConst.GlobalKey}/{name}";
+            var json = hive.Consul.Client.KV.GetStringOrDefault(key).Result;
+
+            if (json == null)
+            {
+                return false;
+            }
+
+            output = NeonHelper.JsonDeserialize<T>(json, strict: false); ;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Attempts to retrieve a named hive global setting as a <c>string</c>.
+        /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
         /// <returns><c>true</c> if the setting exists and was returned.</returns>
+        /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
         /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
@@ -264,7 +298,7 @@ namespace Neon.Hive
         /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
-        public bool TryGetJson<T>(string name, out T output, bool strict = false)
+        public bool TryGet<T>(string name, out T output, bool strict = false)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(HiveDefinition.IsValidName(name));
@@ -290,7 +324,6 @@ namespace Neon.Hive
 
             return true;
         }
-
 
         /// <summary>
         /// Sets or removes a hive global setting, verifying that the setting 
@@ -538,7 +571,7 @@ namespace Neon.Hive
         /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
-        public void SetJson(string name, object value)
+        public void Set(string name, object value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(HiveDefinition.IsValidName(name));

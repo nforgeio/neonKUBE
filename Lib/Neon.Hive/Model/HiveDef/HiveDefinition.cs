@@ -307,7 +307,7 @@ namespace Neon.Hive
         /// </para>
         /// <note>
         /// <b>WARNING:</b> This should not be enabled for production hives because it may 
-        /// enable potential security threats.
+        /// enable potential security threats (like exposing the Docker API socket on the network).
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "DebugMode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

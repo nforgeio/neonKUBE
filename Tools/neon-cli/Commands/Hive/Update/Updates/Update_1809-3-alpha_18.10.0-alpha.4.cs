@@ -17,6 +17,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Neon.Common;
 using Neon.IO;
 using Neon.Hive;
+using Neon.HiveMQ;
 using Neon.Net;
 
 namespace NeonCli
@@ -58,6 +59,8 @@ namespace NeonCli
             //      neon-hivemq-neon
             //      neon-hivemq-sysadmin
             //      neon-hivemq-app
+
+            controller.AddGlobalStep(GetStepLabel("hivemq-settings"), () => UpdateHiveMQSettings());
         }
 
         /// <summary>
@@ -89,22 +92,22 @@ namespace NeonCli
                     {
                         node.Status = $"edit: {scriptPath}";
 
-                        var orgScript   = node.DownloadText(scriptPath);
-                        var sbNewScript = new StringBuilder();
+                        var orgScript = node.DownloadText(scriptPath);
+                        var newScript = new StringBuilder();
 
                         foreach (var line in new StringReader(orgScript).Lines())
                         {
                             if (line.Contains("ES_JAVA_OPTS="))
                             {
-                                sbNewScript.AppendLine("    --env \"ES_JAVA_OPTS=-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap\" \\");
+                                newScript.AppendLine("    --env \"ES_JAVA_OPTS=-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap\" \\");
                             }
                             else
                             {
-                                sbNewScript.AppendLine(line);
+                                newScript.AppendLine(line);
                             }
                         }
 
-                        node.UploadText(scriptPath, sbNewScript.ToString(), permissions: "");
+                        node.UploadText(scriptPath, newScript.ToString(), permissions: "");
 
                         node.Status = string.Empty;
                     }
@@ -157,6 +160,103 @@ WantedBy=docker.service
 
                     node.SudoCommand("systemctl daemon-reload");
                 });
+        }
+
+        /// <summary>
+        /// <para>
+        /// This release relocated the HiveMQ account settings from Docker secrets
+        /// to hive global Consul keys so that these can be available to containers
+        /// too (e.g. running on pets) and also to make deploying services that use
+        /// queuing more transparent.
+        /// </para>
+        /// <para>
+        /// This update copies these settings from the Docker secrets to Consul and
+        /// then removes these secret references from the built-in hive service
+        /// scripts and also updates the services by pulling the latest images and
+        /// removing the secrets there too.
+        /// </para>
+        /// <note>
+        /// We're going to leave the old Docker secrets in place on the off chance
+        /// that a user service is still referencing them.
+        /// </note>
+        /// </summary>
+        private void UpdateHiveMQSettings()
+        {
+            var firstManager = Hive.FirstManager;
+
+            // Fetch the current HiveMQ settings from the Docker secrets.
+            // This is slow, so we'll capture these in parallel.
+
+            firstManager.Status = "reading hivemq secrets";
+
+            var appSettings      = (HiveMQSettings)null;
+            var neonSettings     = (HiveMQSettings)null;
+            var sysadminSettings = (HiveMQSettings)null;
+
+            NeonHelper.WaitForParallel(
+                new Action[]
+                {
+                    new Action(() => appSettings      = Hive.Docker.Secret.Get<HiveMQSettings>("neon-hivemq-settings-app")),
+                    new Action(() => neonSettings     = Hive.Docker.Secret.Get<HiveMQSettings>("neon-hivemq-settings-neon")),
+                    new Action(() => sysadminSettings = Hive.Docker.Secret.Get<HiveMQSettings>("neon-hivemq-settings-sysadmin")),
+                },
+                TimeSpan.FromSeconds(120));
+
+            firstManager.Status = string.Empty;
+
+            // Edit the service start scripts by removing any lines that 
+            // attach a HiveMQ account secret.
+
+            var services = new string[]
+                {
+                    "neon-hive-manager",
+                    "neon-proxy-manager",
+                    "neon-proxy-public",
+                    "neon-proxy-private"
+                };
+
+            foreach (var manager in Hive.Managers)
+            {
+                foreach (var service in services)
+                {
+                    var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{service}.sh");
+
+                    manager.Status = $"edit: {scriptPath}";
+
+                    // Edit the service start scripts by removing any lines that 
+                    // attach a HiveMQ account secret.
+
+                    var curScript = manager.DownloadText(scriptPath);
+                    var newScript = new StringBuilder();
+
+                    using (var reader = new StringReader(curScript))
+                    {
+                        foreach (var line in reader.Lines())
+                        {
+                            if (!line.Trim().StartsWith("--secret neon-hivemq-settings-"))
+                            {
+                                newScript.AppendLine(line);
+                            }
+                        }
+                    }
+
+                    manager.UploadText(scriptPath, newScript.ToString(), permissions: "660");
+
+                    manager.Status = string.Empty;
+                }
+            }
+
+            // Update the impacted services by removing the secret and pulling the latest image.
+
+            firstManager.Status = "neon-hive-manager";
+            firstManager.DockerCommand(RunOptions.FaultOnError, $"docker service update --secret-rm=neon-hivemq-settings-neon --image {Program.ResolveDockerImage(Hive.Definition.Image.HiveManager)} neon-hive-manager");
+            firstManager.Status = "neon-proxy-manager";
+            firstManager.DockerCommand(RunOptions.FaultOnError, $"docker service update --secret-rm=neon-hivemq-settings-neon --image {Program.ResolveDockerImage(Hive.Definition.Image.ProxyManager)} neon-proxy-manager");
+            firstManager.Status = "neon-proxy-public";
+            firstManager.DockerCommand(RunOptions.FaultOnError, $"docker service update --secret-rm=neon-hivemq-settings-neon --image {Program.ResolveDockerImage(Hive.Definition.Image.Proxy)} neon-proxy-public");
+            firstManager.Status = "neon-proxy-private";
+            firstManager.DockerCommand(RunOptions.FaultOnError, $"docker service update --secret-rm=neon-hivemq-settings-neon --image {Program.ResolveDockerImage(Hive.Definition.Image.Proxy)} neon-proxy-private");
+            firstManager.Status = string.Empty;
         }
     }
 }

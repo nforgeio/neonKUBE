@@ -98,6 +98,10 @@ namespace NeonProxyManager
 
                 Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
 
+                // $todo(jeff.lill): DELETE THIS!
+
+                // hive = HiveHelper.OpenHiveRemote(loginPath: "root@home-small");
+
                 hive = HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
             }
             else
@@ -122,11 +126,19 @@ namespace NeonProxyManager
                     Program.Exit(1);
                 }
 
-                var vaultCredentials = HiveCredentials.ParseJson(HiveHelper.GetSecret(vaultCredentialsSecret));
+                var vaultSecret = HiveHelper.GetSecret(vaultCredentialsSecret);
+
+                if (string.IsNullOrEmpty(vaultSecret))
+                {
+                    log.LogCritical($"Cannot read Docker secret [{vaultCredentialsSecret}].");
+                    Program.Exit(1);
+                }
+
+                var vaultCredentials = HiveCredentials.ParseJson(vaultSecret);
 
                 if (vaultCredentials == null)
                 {
-                    log.LogCritical($"Cannot read Docker secret [{vaultCredentialsSecret}].");
+                    log.LogCritical($"Cannot parse Docker secret [{vaultCredentialsSecret}].");
                     Program.Exit(1);
                 }
 
@@ -146,7 +158,25 @@ namespace NeonProxyManager
                         {
                             log.LogInfo(() => $"Connecting: {HiveMQChannels.ProxyNotify} channel");
 
-                            using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel())
+                            // NOTE:
+                            //
+                            // We're passing [useBootstrap=true] here so that the HiveMQ client will
+                            // connect directly to the HiveMQ cluster nodes as opposed to routing
+                            // traffic through the private load balancer.  This is necessary because
+                            // the load balancers rely on HiveMQ to broadcast update notifications.
+                            //
+                            // One consequence of this is that this service will need to be restarted
+                            // whenever HiveMQ instances are relocated to different hive hosts.
+
+                            // $todo(jeff.lill):
+                            //
+                            // This service will need to be restarted whenever future code provides
+                            // for relocating HiveMQ instances or when hive nodes hosting HiveMQ
+                            // are added or removed.
+                            //
+                            //      https://github.com/jefflill/NeonForge/issues/337
+
+                            using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
                             {
                                 await RunAsync();
                                 terminator.ReadyToExit();

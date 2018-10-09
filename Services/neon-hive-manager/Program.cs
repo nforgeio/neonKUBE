@@ -141,7 +141,25 @@ namespace NeonHiveManager
                     {
                         log.LogInfo(() => $"Connecting: {HiveMQChannels.ProxyNotify} channel");
 
-                        using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel())
+                        // NOTE:
+                        //
+                        // We're passing [useBootstrap=true] here so that the HiveMQ client will
+                        // connect directly to the HiveMQ cluster nodes as opposed to routing
+                        // traffic through the private load balancer.  This is necessary because
+                        // the load balancers rely on HiveMQ to broadcast update notifications.
+                        //
+                        // One consequence of this is that this service will need to be restarted
+                        // whenever HiveMQ instances are relocated to different hive hosts.
+
+                        // $todo(jeff.lill):
+                        //
+                        // This service will need to be restarted whenever future code provides
+                        // for relocating HiveMQ instances or when hive nodes hosting HiveMQ
+                        // are added or removed.
+                        //
+                        //      https://github.com/jefflill/NeonForge/issues/337
+
+                        using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
                         {
                             await RunAsync();
                         }

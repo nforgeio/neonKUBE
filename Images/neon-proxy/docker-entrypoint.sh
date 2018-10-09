@@ -55,17 +55,26 @@ if [ "${CONFIG_HASH_KEY}" == "" ] ; then
     exit 1
 fi
 
-# Verify that the Consul keys actually exist.
+# Verify that the required Consul keys exist or loop to wait until they
+# are created.  This will allow the service wait for pending hive setup
+# operations to be completed.
 
-if ! consul kv get ${CONFIG_KEY} > /dev/nul ; then
-    . log-critical.sh "[${CONFIG_KEY}] key cannot be retrieved from Consul."
-    exit 1
-fi
+while :
+do
+    if ! consul kv get ${CONFIG_KEY} > /dev/nul ; then
+        . log-warn.sh "[${CONFIG_KEY}] key cannot be retrieved from Consul."
+        sleep 5
+        continue
+    fi
+    
+    if ! consul kv get ${CONFIG_HASH_KEY} > /dev/nul ; then
+        . log-warn.sh "[${CONFIG_HASH_KEY}] key cannot be retrieved from Consul."
+        sleep 5
+        continue
+    fi
 
-if ! consul kv get ${CONFIG_HASH_KEY} > /dev/nul ; then
-    . log-critical.sh "[${CONFIG_HASH_KEY}] key cannot be retrieved from Consul."
-    exit 1
-fi
+    break
+done
 
 # Set the other environment variable defaults if necessary.
 

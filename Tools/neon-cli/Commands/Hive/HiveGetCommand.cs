@@ -35,8 +35,8 @@ HIVE IDENTIFIERS:
     allow-unit-testing          - enables HiveFixture unit testing (bool)
     create-date-utc             - hive creation date (UTC)
     disable-auto-unseal         - disables automatic Vault unsealing (bool)
-    hivemq-bootstrap            - HiveMQ bootstrap settings
     hivemq-settings-app         - HiveMQ [app] account settings
+    hivemq-settings-bootstrap   - HiveMQ bootstrap settings
     hivemq-settings-neon        - HiveMQ [neon] account settings
     hivemq-settings-sysadmin    - HiveMQ [sysadmin] account settings
     log-retention-days          - number of days of logs to retain
@@ -247,22 +247,9 @@ NODE IDENTIFIERS:
                         Console.Write(hiveLogin.SshUsername);
                         break;
 
-                    case HiveGlobals.HiveMQBootstrap:
-
-                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQBootstrap, out var bootstrapSettings))
-                        {
-                            Console.Write(bootstrapSettings);
-                        }
-                        else
-                        {
-                            Console.Error.WriteLine($"*** ERROR: Hive setting [{valueExpr}] does not exist.");
-                            Program.Exit(1);
-                        }
-                        break;
-
                     case HiveGlobals.HiveMQSettingsApp:
 
-                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQBootstrap, out var hiveMQAppSettings))
+                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQSettingsBootstrap, out var hiveMQAppSettings))
                         {
                             Console.Write(hiveMQAppSettings);
                         }
@@ -273,9 +260,22 @@ NODE IDENTIFIERS:
                         }
                         break;
 
+                    case HiveGlobals.HiveMQSettingsBootstrap:
+
+                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQSettingsBootstrap, out var bootstrapSettings))
+                        {
+                            Console.Write(bootstrapSettings);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Hive setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
+                        break;
+
                     case HiveGlobals.HiveMQSettingsNeon:
 
-                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQBootstrap, out var hiveMQNeonSettings))
+                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQSettingsBootstrap, out var hiveMQNeonSettings))
                         {
                             Console.Write(hiveMQNeonSettings);
                         }
@@ -288,7 +288,7 @@ NODE IDENTIFIERS:
 
                     case HiveGlobals.HiveMQSettingSysadmin:
 
-                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQBootstrap, out var hiveMQSysadminSettings))
+                        if (hive.Globals.TryGetString(HiveGlobals.HiveMQSettingsBootstrap, out var hiveMQSysadminSettings))
                         {
                             Console.Write(hiveMQSysadminSettings);
                         }
