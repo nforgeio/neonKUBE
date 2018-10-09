@@ -119,8 +119,10 @@ namespace Neon.HiveMQ
             : base(hiveBus, name)
         {
             Covenant.Requires<ArgumentNullException>(hiveBus != null);
+            Covenant.Requires<ArgumentException>(maxLength == null || maxLength.Value > 0);
+            Covenant.Requires<ArgumentException>(maxLengthBytes == null || maxLengthBytes.Value > 0);
 
-            sourceID      = Guid.NewGuid().ToString("D").ToLowerInvariant();
+            sourceID = Guid.NewGuid().ToString("D").ToLowerInvariant();
             sourceIDBytes = Encoding.UTF8.GetBytes(sourceID);
 
             exchange = EasyBus.ExchangeDeclare(name, EasyNetQ.Topology.ExchangeType.Fanout, durable, autoDelete: false);
@@ -131,7 +133,7 @@ namespace Neon.HiveMQ
                 durable: durable,
                 exclusive: false,
                 autoDelete: true,
-                perQueueMessageTtl: HiveBus.MessageTTLToMilliseconds(messageTTL),
+                perQueueMessageTtl: HiveBus.TTLToMilliseconds(messageTTL),
                 maxLength: maxLength,
                 maxLengthBytes: maxLengthBytes);
 

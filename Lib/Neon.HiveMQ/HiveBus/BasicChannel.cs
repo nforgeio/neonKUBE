@@ -135,6 +135,8 @@ namespace Neon.HiveMQ
             : base(hiveBus, name)
         {
             Covenant.Requires<ArgumentNullException>(hiveBus != null);
+            Covenant.Requires<ArgumentException>(maxLength == null || maxLength.Value > 0);
+            Covenant.Requires<ArgumentException>(maxLengthBytes == null || maxLengthBytes.Value > 0);
 
             queue = EasyBus.QueueDeclare(
                 name: name,
@@ -142,7 +144,7 @@ namespace Neon.HiveMQ
                 durable: durable,
                 exclusive: exclusive,
                 autoDelete: autoDelete,
-                perQueueMessageTtl: HiveBus.MessageTTLToMilliseconds(messageTTL),
+                perQueueMessageTtl: HiveBus.TTLToMilliseconds(messageTTL),
                 maxLength: maxLength,
                 maxLengthBytes: maxLengthBytes);
 

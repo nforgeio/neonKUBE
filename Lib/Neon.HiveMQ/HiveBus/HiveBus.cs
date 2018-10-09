@@ -131,7 +131,7 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <param name="messageTTL">The TTL or <c>null</c>.</param>
         /// <returns>The normalized TTL as milliseconds or <c>null</c>.</returns>
-        internal static int? MessageTTLToMilliseconds(TimeSpan? messageTTL)
+        internal static int? TTLToMilliseconds(TimeSpan? messageTTL)
         {
             if (messageTTL == null)
             {

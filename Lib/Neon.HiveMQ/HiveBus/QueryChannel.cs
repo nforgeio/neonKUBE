@@ -89,6 +89,10 @@ namespace Neon.HiveMQ
             : base(hiveBus, name)
         {
             Covenant.Requires<ArgumentNullException>(hiveBus != null);
+            Covenant.Requires<ArgumentException>(maxLength == null || maxLength.Value > 0);
+            Covenant.Requires<ArgumentException>(maxLengthBytes == null || maxLengthBytes.Value > 0);
+
+            throw new NotImplementedException("$todo(jeff.lill): Implement this.");
         }
 
         /// <inheritdoc/>
