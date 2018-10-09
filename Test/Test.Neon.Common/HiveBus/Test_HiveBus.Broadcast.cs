@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_MessageBus.Broadcast.cs
+// FILE:	    Test_HiveBus.Broadcast.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -20,7 +20,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public partial class Test_MessageBus : IClassFixture<RabbitMQFixture>
+    public partial class Test_HiveBus : IClassFixture<RabbitMQFixture>
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]

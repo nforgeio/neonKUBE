@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_MessageBus.cs
+// FILE:	    Test_HiveBus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -19,7 +19,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public partial class Test_MessageBus
+    public partial class Test_HiveBus
     {
         //---------------------------------------------------------------------
         // Test message types:
@@ -36,7 +36,7 @@ namespace TestCommon
 
         private RabbitMQFixture fixture;
 
-        public Test_MessageBus(RabbitMQFixture fixture)
+        public Test_HiveBus(RabbitMQFixture fixture)
         {
             this.fixture = fixture;
 

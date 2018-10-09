@@ -97,7 +97,7 @@ namespace Neon.HiveMQ
     /// <item>
     ///     <term><see cref="BroadcastChannel"/></term>
     ///     <description>
-    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
+    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, TimeSpan?, int?, int?)"/> 
     ///     to create a broadcast channel.
     ///     </description>
     /// </item>
@@ -121,6 +121,34 @@ namespace Neon.HiveMQ
     /// </remarks>
     public class HiveBus : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Normalizes a message TTL by ensuring that it doesn't exceed the
+        /// maximum number of milliseconds that can fit into an <c>int</c>
+        /// (approximately 24.855 days).
+        /// </summary>
+        /// <param name="messageTTL">The TTL or <c>null</c>.</param>
+        /// <returns>The normalized TTL as milliseconds or <c>null</c>.</returns>
+        internal static int? MessageTTLToMilliseconds(TimeSpan? messageTTL)
+        {
+            if (messageTTL == null)
+            {
+                return null;
+            }
+
+            if (messageTTL.Value.TotalMilliseconds > int.MaxValue)
+            {
+                throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] exceeds the number of milliseconds that can fit into an [int] (about 24.885 days).");
+            }
+
+            return (int?)messageTTL.Value.TotalMilliseconds;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private object          syncLock     = new object();
         private bool            isDisposed   = false;
         private bool            disposingNow = false;
@@ -227,8 +255,13 @@ namespace Neon.HiveMQ
         /// messages from the queue.  This defaults to <c>false</c>.
         /// </param>
         /// <param name="messageTTL">
+        /// <para>
         /// Optionally specifies the maximum time a message can remain in the channel before 
         /// being deleted.  This defaults to <c>null</c> which disables this feature.
+        /// </para>
+        /// <note>
+        /// The maximum possible TTL is about <b>24.855 days</b>.
+        /// </note>
         /// </param>
         /// <param name="maxLength">
         /// Optionally specifies the maximum number of messages that can be waiting in the 
@@ -269,11 +302,6 @@ namespace Neon.HiveMQ
             {
                 CheckDisposed();
 
-                if (messageTTL.HasValue && messageTTL.Value.TotalMilliseconds > int.MaxValue)
-                {
-                    throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] cannot exceed about 24.85 days (2^31-1 milliseconds).");
-                }
-
                 var channel = new BasicChannel(
                     this, 
                     name,
@@ -303,13 +331,14 @@ namespace Neon.HiveMQ
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
         /// </param>
-        /// <param name="autoDelete">
-        /// Optionally specifies that the channel should be deleted once all consumers have 
-        /// disconnected.  This defaults to <c>false</c>.
-        /// </param>
         /// <param name="messageTTL">
+        /// <para>
         /// Optionally specifies the maximum time a message can remain in the channel before 
         /// being deleted.  This defaults to <c>null</c> which disables this feature.
+        /// </para>
+        /// <note>
+        /// The maximum possible TTL is about <b>24.855 days</b>.
+        /// </note>
         /// </param>
         /// <param name="maxLength">
         /// Optionally specifies the maximum number of messages that can be waiting in the channel
@@ -334,7 +363,6 @@ namespace Neon.HiveMQ
         public BroadcastChannel GetBroadcastChannel(
             string      name,
             bool        durable = false,
-            bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
             int?        maxLengthBytes = null)
@@ -349,16 +377,10 @@ namespace Neon.HiveMQ
             {
                 CheckDisposed();
 
-                if (messageTTL.HasValue && messageTTL.Value.TotalMilliseconds > int.MaxValue)
-                {
-                    throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] cannot exceed about 24.85 days (2^31-1 milliseconds).");
-                }
-
                 var channel = new BroadcastChannel(
                     this,
                     name,
                     durable: durable,
-                    autoDelete: autoDelete,
                     messageTTL: messageTTL,
                     maxLength: maxLength,
                     maxLengthBytes: maxLengthBytes);
@@ -391,8 +413,13 @@ namespace Neon.HiveMQ
         /// messages from the queue.  This defaults to <c>false</c>.
         /// </param>
         /// <param name="messageTTL">
+        /// <para>
         /// Optionally specifies the maximum time a message can remain in the channel before 
         /// being deleted.  This defaults to <c>null</c> which disables this feature.
+        /// </para>
+        /// <note>
+        /// The maximum possible TTL is about <b>24.855 days</b>.
+        /// </note>
         /// </param>
         /// <param name="maxLength">
         /// Optionally specifies the maximum number of messages that can be waiting in the channel
@@ -433,11 +460,6 @@ namespace Neon.HiveMQ
             lock (syncLock)
             {
                 CheckDisposed();
-
-                if (messageTTL.HasValue && messageTTL.Value.TotalMilliseconds > int.MaxValue)
-                {
-                    throw new ArgumentException($"[{nameof(messageTTL)}={messageTTL}] cannot exceed about 24.85 days (2^31-1 milliseconds).");
-                }
 
                 var channel = new QueryChannel(
                     this, 

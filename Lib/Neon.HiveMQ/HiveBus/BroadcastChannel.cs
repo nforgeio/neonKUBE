@@ -83,19 +83,20 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="messageBus">The <see cref="HiveBus"/>.</param>
+        /// <param name="hiveBus">The <see cref="HiveBus"/>.</param>
         /// <param name="name">The channel name.</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
         /// </param>
-        /// <param name="autoDelete">
-        /// Optionally specifies that the channel should be deleted once all consumers have 
-        /// disconnected.  This defaults to <c>false</c>.
-        /// </param>
         /// <param name="messageTTL">
+        /// <para>
         /// Optionally specifies the maximum time a message can remain in the channel before 
         /// being deleted.  This defaults to <c>null</c> which disables this feature.
+        /// </para>
+        /// <note>
+        /// The maximum possible TTL is about <b>24.855 days</b>.
+        /// </note>
         /// </param>
         /// <param name="maxLength">
         /// Optionally specifies the maximum number of messages that can be waiting in the channel
@@ -108,22 +109,21 @@ namespace Neon.HiveMQ
         /// defaults to unconstrained.
         /// </param>
         internal BroadcastChannel(
-            HiveBus     messageBus, 
+            HiveBus     hiveBus, 
             string      name,
             bool        durable = false,
-            bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
             int?        maxLengthBytes = null)
 
-            : base(messageBus, name)
+            : base(hiveBus, name)
         {
-            Covenant.Requires<ArgumentNullException>(messageBus != null);
+            Covenant.Requires<ArgumentNullException>(hiveBus != null);
 
             sourceID      = Guid.NewGuid().ToString("D").ToLowerInvariant();
             sourceIDBytes = Encoding.UTF8.GetBytes(sourceID);
 
-            exchange = EasyBus.ExchangeDeclare(name, EasyNetQ.Topology.ExchangeType.Fanout, durable, autoDelete);
+            exchange = EasyBus.ExchangeDeclare(name, EasyNetQ.Topology.ExchangeType.Fanout, durable, autoDelete: false);
 
             queue = EasyBus.QueueDeclare(
                 name: $"{name}-{sourceID}",
@@ -131,7 +131,7 @@ namespace Neon.HiveMQ
                 durable: durable,
                 exclusive: false,
                 autoDelete: true,
-                perQueueMessageTtl: messageTTL.HasValue ? (int?)messageTTL.Value.TotalMilliseconds : null,
+                perQueueMessageTtl: HiveBus.MessageTTLToMilliseconds(messageTTL),
                 maxLength: maxLength,
                 maxLengthBytes: maxLengthBytes);
 

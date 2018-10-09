@@ -89,7 +89,7 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="messageBus">The <see cref="HiveBus"/>.</param>
+        /// <param name="hiveBus">The <see cref="HiveBus"/>.</param>
         /// <param name="name">The channel name (maximum of 250 characters).</param>
         /// <param name="durable">
         /// Optionally specifies that the channel should survive message cluster restarts.  
@@ -104,8 +104,13 @@ namespace Neon.HiveMQ
         /// disconnected.  This defaults to <c>false</c>.
         /// </param>
         /// <param name="messageTTL">
+        /// <para>
         /// Optionally specifies the maximum time a message can remain in the channel before 
         /// being deleted.  This defaults to <c>null</c> which disables this feature.
+        /// </para>
+        /// <note>
+        /// The maximum possible TTL is about <b>24.855 days</b>.
+        /// </note>
         /// </param>
         /// <param name="maxLength">
         /// Optionally specifies the maximum number of messages that can be waiting in the channel
@@ -118,7 +123,7 @@ namespace Neon.HiveMQ
         /// defaults to unconstrained.
         /// </param>
         internal BasicChannel(
-            HiveBus     messageBus, 
+            HiveBus     hiveBus, 
             string      name,
             bool        durable = false,
             bool        exclusive = false,
@@ -127,9 +132,9 @@ namespace Neon.HiveMQ
             int?        maxLength = null,
             int?        maxLengthBytes = null)
 
-            : base(messageBus, name)
+            : base(hiveBus, name)
         {
-            Covenant.Requires<ArgumentNullException>(messageBus != null);
+            Covenant.Requires<ArgumentNullException>(hiveBus != null);
 
             queue = EasyBus.QueueDeclare(
                 name: name,
@@ -137,7 +142,7 @@ namespace Neon.HiveMQ
                 durable: durable,
                 exclusive: exclusive,
                 autoDelete: autoDelete,
-                perQueueMessageTtl: messageTTL.HasValue ? (int?)messageTTL.Value.TotalMilliseconds : null,
+                perQueueMessageTtl: HiveBus.MessageTTLToMilliseconds(messageTTL),
                 maxLength: maxLength,
                 maxLengthBytes: maxLengthBytes);
 
