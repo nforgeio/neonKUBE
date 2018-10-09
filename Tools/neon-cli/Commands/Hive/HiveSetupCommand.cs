@@ -3422,8 +3422,8 @@ systemctl start neon-volume-plugin
                     // it on to a healthy RabbitMQ node.
                     //
                     // This should work pretty well and this will tolerate some changes
-                    // to the hosts, as long as at least one of the listed hive hosts
-                    // is still active.
+                    // to the hive host nodes, as long as at least one of the listed hive
+                    // hosts is still active.
 
                     var hosts    = new List<string>();
                     var maxHosts = 10;

@@ -331,6 +331,10 @@ namespace Neon.HiveMQ
         /// Optionally specifies that the channel should survive message cluster restarts.  
         /// This defaults to <c>false</c>.
         /// </param>
+        /// <param name="autoDelete">
+        /// Optionally specifies that channel should be automatically deleted when the
+        /// last consumer is removed.
+        /// </param>
         /// <param name="messageTTL">
         /// <para>
         /// Optionally specifies the maximum time a message can remain in the channel before 
@@ -363,6 +367,7 @@ namespace Neon.HiveMQ
         public BroadcastChannel GetBroadcastChannel(
             string      name,
             bool        durable = false,
+            bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
             int?        maxLengthBytes = null)
@@ -381,6 +386,7 @@ namespace Neon.HiveMQ
                     this,
                     name,
                     durable: durable,
+                    autoDelete: autoDelete,
                     messageTTL: messageTTL,
                     maxLength: maxLength,
                     maxLengthBytes: maxLengthBytes);

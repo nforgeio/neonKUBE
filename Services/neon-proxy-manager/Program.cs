@@ -98,11 +98,7 @@ namespace NeonProxyManager
 
                 Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
 
-                // $todo(jeff.lill): DELETE THIS!
-
-                hive = HiveHelper.OpenHiveRemote(loginPath: "root@home-small");
-
-                // hive = HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
+                hive = HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
             }
             else
             {
@@ -118,36 +114,36 @@ namespace NeonProxyManager
             {
                 // Log into Vault using a Docker secret.
 
-                //var vaultCredentialsSecret = Environment.GetEnvironmentVariable("VAULT_CREDENTIALS");
+                var vaultCredentialsSecret = Environment.GetEnvironmentVariable("VAULT_CREDENTIALS");
 
-                //if (string.IsNullOrEmpty(vaultCredentialsSecret))
-                //{
-                //    log.LogCritical("[VAULT_CREDENTIALS] environment variable does not exist.");
-                //    Program.Exit(1);
-                //}
+                if (string.IsNullOrEmpty(vaultCredentialsSecret))
+                {
+                    log.LogCritical("[VAULT_CREDENTIALS] environment variable does not exist.");
+                    Program.Exit(1);
+                }
 
-                //var vaultSecret = HiveHelper.GetSecret(vaultCredentialsSecret);
+                var vaultSecret = HiveHelper.GetSecret(vaultCredentialsSecret);
 
-                //if (string.IsNullOrEmpty(vaultSecret))
-                //{
-                //    log.LogCritical($"Cannot read Docker secret [{vaultCredentialsSecret}].");
-                //    Program.Exit(1);
-                //}
+                if (string.IsNullOrEmpty(vaultSecret))
+                {
+                    log.LogCritical($"Cannot read Docker secret [{vaultCredentialsSecret}].");
+                    Program.Exit(1);
+                }
 
-                //var vaultCredentials = HiveCredentials.ParseJson(vaultSecret);
+                var vaultCredentials = HiveCredentials.ParseJson(vaultSecret);
 
-                //if (vaultCredentials == null)
-                //{
-                //    log.LogCritical($"Cannot parse Docker secret [{vaultCredentialsSecret}].");
-                //    Program.Exit(1);
-                //}
+                if (vaultCredentials == null)
+                {
+                    log.LogCritical($"Cannot parse Docker secret [{vaultCredentialsSecret}].");
+                    Program.Exit(1);
+                }
 
                 // Open the hive data services and then start the main service task.
 
                 log.LogInfo(() => $"Connecting: Vault");
 
-                //using (vault = HiveHelper.OpenVault(vaultCredentials))
-                //{
+                using (vault = HiveHelper.OpenVault(vaultCredentials))
+                {
                     log.LogInfo(() => $"Connecting: Consul");
 
                     using (consul = HiveHelper.OpenConsul())
@@ -183,7 +179,7 @@ namespace NeonProxyManager
                             }
                         }
                     }
-                //}
+                }
             }
             catch (Exception e)
             {

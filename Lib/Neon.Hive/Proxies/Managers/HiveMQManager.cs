@@ -112,6 +112,7 @@ namespace Neon.Hive
                 return NeonHiveBus(useBootstrap).GetBroadcastChannel(
                     name: HiveMQChannels.ProxyNotify,
                     durable: true,
+                    autoDelete: false,
                     messageTTL: null,
                     maxLength: null,
                     maxLengthBytes: null);

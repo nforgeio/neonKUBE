@@ -58,6 +58,10 @@ namespace Neon.HiveMQ
         /// Optionally specifies that this channel instance will exclusively receive
         /// messages from the queue.  This defaults to <c>false</c>.
         /// </param>
+        /// <param name="autoDelete">
+        /// Optionally specifies that channel should be automatically deleted when the
+        /// last consumer is removed.
+        /// </param>
         /// <param name="messageTTL">
         /// <para>
         /// Optionally specifies the maximum time a message can remain in the channel before 
@@ -82,6 +86,7 @@ namespace Neon.HiveMQ
             string      name,
             bool        durable = false,
             bool        exclusive = false,
+            bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
             int?        maxLengthBytes = null)
