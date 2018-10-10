@@ -64,12 +64,19 @@ namespace Neon.HiveMQ
         public string Product { get; set; }
 
         /// <summary>
-        /// The platform name.  This effectively defaults to the hostname of the machine
-        /// hosting the client application.
+        /// The platform name.  This effectively defaults to identifying the operating system
+        /// and .NET execution environment.
         /// </summary>
         [JsonProperty(PropertyName = "Platform", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Platform { get; set; }
+
+        /// <summary>
+        /// Identifies the RabbitMQ client.  This defaults to <b>EasyNetQ</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Client", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("EasyNetQ")]
+        public string Client { get; set; } = "EasyNetQ";
 
         /// <summary>
         /// Specifies that the RabbitMQ broker should persist messages sent to it.
@@ -122,7 +129,8 @@ namespace Neon.HiveMQ
         public ushort? RequestedHeartbeat { get; set; }
 
         /// <summary>
-        /// I'm not sure what this is for.  This defaults to <c>null</c>.
+        /// Optionally describes the client to RabbitMQ.  This information will be reported
+        /// on the RabbitMQ dashboard.  This defaults to <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "ClientProperties", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -148,7 +156,7 @@ namespace Neon.HiveMQ
             target.UseBackgroundThreads   = UseBackgroundThreads ?? target.UseBackgroundThreads;
             target.Name                   = Name ?? target.Name;
             target.Product                = Product ?? target.Product;
-            target.Platform               = Platform ?? target.Platform;
+            target.Platform               = Platform ?? NeonHelper.OsDescription;
             target.PersistentMessages     = PersistentMessages ?? target.PersistentMessages;
             target.PublisherConfirms      = PublisherConfirms ?? target.PublisherConfirms;
             target.Timeout                = Timeout ?? target.Timeout;
@@ -163,6 +171,8 @@ namespace Neon.HiveMQ
                     target.ClientProperties.Add(item);
                 }
             }
+
+            target.ClientProperties["version"] = Client;
         }
     }
 }

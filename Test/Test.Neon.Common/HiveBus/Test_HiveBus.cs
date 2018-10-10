@@ -32,9 +32,8 @@ namespace TestCommon
         //---------------------------------------------------------------------
         // Implementation
 
-        private readonly TimeSpan timeout = TimeSpan.FromSeconds(15);
-
-        private RabbitMQFixture fixture;
+        private readonly TimeSpan   timeout = TimeSpan.FromSeconds(15);
+        private RabbitMQFixture     fixture;
 
         public Test_HiveBus(RabbitMQFixture fixture)
         {

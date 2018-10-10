@@ -23,6 +23,19 @@ namespace TestHive
 {
     public class Test_HiveMQ : IClassFixture<HiveFixture>
     {
+        //---------------------------------------------------------------------
+        // Test message types:
+
+        public class TestMessage
+        {
+            public string Text { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        private readonly TimeSpan timeout = TimeSpan.FromSeconds(15);
+
         private HiveFixture     hiveFixture;
         private HiveProxy       hive;
 
@@ -87,6 +100,60 @@ namespace TestHive
                 // Ensure that the "app" virtual host has no queues.
 
                 Assert.Empty((await mqManager.GetQueuesAsync()).Where(q => q.Vhost == hive.Definition.HiveMQ.AppVHost));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public void Sysadmin()
+        {
+            // Verify that we can access the [/] vhost using the [sysadmin] account.
+
+            using (var bus = hiveFixture.Hive.HiveMQ.GetRootSettings().ConnectHiveBus())
+            {
+                var channel  = bus.GetBasicChannel("test");
+                var received = (TestMessage)null;
+
+                channel.Consume<TestMessage>(message => received = message.Body);
+                channel.Publish(new TestMessage() { Text = "Hello World!" });
+
+                NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public void Neon()
+        {
+            // Verify that we can access the [neon] vhost using the [neon] account.
+
+            using (var bus = hiveFixture.Hive.HiveMQ.GetNeonSettings().ConnectHiveBus())
+            {
+                var channel  = bus.GetBasicChannel("test");
+                var received = (TestMessage)null;
+
+                channel.Consume<TestMessage>(message => received = message.Body);
+                channel.Publish(new TestMessage() { Text = "Hello World!" });
+
+                NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public void App()
+        {
+            // Verify that we can access the [app] vhost using the [app] account.
+
+            using (var bus = hiveFixture.Hive.HiveMQ.GetAppSettings().ConnectHiveBus())
+            {
+                var channel  = bus.GetBasicChannel("test");
+                var received = (TestMessage)null;
+
+                channel.Consume<TestMessage>(message => received = message.Body);
+                channel.Publish(new TestMessage() { Text = "Hello World!" });
+
+                NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);
             }
         }
     }

@@ -149,7 +149,7 @@ namespace Neon.Hive
         /// </param>
         public ManagementClient ConnectHiveMQManager(bool useBootstrap = false)
         {
-            return GetSystemSettings(useBootstrap).ConnectManager();
+            return GetRootSettings(useBootstrap).ConnectManager();
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace Neon.Hive
         /// proxy implementations that rely on HiveMQ messaging.
         /// </param>
         /// <exception cref="HiveException">Thrown if the required global setting is not present.</exception>
-        public HiveMQSettings GetSystemSettings(bool useBootstrap = false)
+        public HiveMQSettings GetRootSettings(bool useBootstrap = false)
         {
             var settings = GetHiveMQSettings(HiveGlobals.HiveMQSettingSysadmin);
 

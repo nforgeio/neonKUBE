@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonHelper.OS.cs
+// FILE:	    NeonHelper.Platform.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -17,10 +17,12 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
-        private static bool osChecked;
-        private static bool isWindows;
-        private static bool isLinux;
-        private static bool isOSX;
+        private static bool     osChecked;
+        private static string   osDescription;
+        private static string   frameworkDescription;
+        private static bool     isWindows;
+        private static bool     isLinux;
+        private static bool     isOSX;
 
         /// <summary>
         /// Detects the current operating system.
@@ -34,15 +36,51 @@ namespace Neon.Common
 
             try
             {
-                isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                isLinux   = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-                isOSX     = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                osDescription        = RuntimeInformation.OSDescription;
+                frameworkDescription = RuntimeInformation.FrameworkDescription;
+                isWindows            = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                isLinux              = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+                isOSX                = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
             }
             finally
             {
                 // Set the global to true so we won't test again.
 
                 osChecked = true;
+            }
+        }
+
+        /// <summary>
+        /// Returns the operation system description.
+        /// </summary>
+        public static string OsDescription
+        {
+            get
+            {
+                if (osChecked)
+                {
+                    return osDescription;
+                }
+
+                DetectOS();
+                return osDescription;
+            }
+        }
+
+        /// <summary>
+        /// Returns the .NET runtime description.
+        /// </summary>
+        public static string FrameworkDescription
+        {
+            get
+            {
+                if (osChecked)
+                {
+                    return frameworkDescription;
+                }
+
+                DetectOS();
+                return frameworkDescription;
             }
         }
 

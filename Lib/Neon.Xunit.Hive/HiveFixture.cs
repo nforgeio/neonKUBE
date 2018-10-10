@@ -1534,7 +1534,14 @@ namespace Neon.Xunit.Hive
         /// </summary>
         public HiveMQSettings GetHiveMQSettings()
         {
-            return HiveHelper.GetSecret<HiveMQSettings>("neon-hivemq-sysadmin");
+            if (Hive.Globals.TryGetObject<HiveMQSettings>(HiveGlobals.HiveMQSettingSysadmin, out var settings))
+            {
+                return settings;
+            }
+            else
+            {
+                throw new KeyNotFoundException($"Unable to find or parse [{hive.Globals.GetKey(HiveGlobals.HiveMQSettingSysadmin)}] in Consul.");
+            }
         }
 
         /// <summary>

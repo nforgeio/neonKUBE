@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 
 using EasyNetQ;
 using EasyNetQ.DI;
@@ -124,6 +126,26 @@ namespace Neon.HiveMQ
         //---------------------------------------------------------------------
         // Static members
 
+        private static string clientVersion;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static HiveBus()
+        {
+            var assembly  = Assembly.GetExecutingAssembly();
+            var attribute = assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().FirstOrDefault();
+
+            if (attribute != null)
+            {
+                clientVersion = $"HiveBus/{attribute.InformationalVersion}";    // This is the NuGet package version.
+            }
+            else
+            {
+                clientVersion = "HiveBus";
+            }
+        }
+
         /// <summary>
         /// Normalizes a message TTL by ensuring that it doesn't exceed the
         /// maximum number of milliseconds that can fit into an <c>int</c>
@@ -165,7 +187,12 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
-            this.EasyBus = settings.ConnectEasyNetQ(username, password, virtualHost);
+            var busSettings = new EasyBusSettings()
+            {
+                Client = clientVersion
+            };
+
+            this.EasyBus = settings.ConnectEasyNetQ(username, password, virtualHost, busSettings);
         }
 
         /// <summary>

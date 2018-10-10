@@ -330,13 +330,13 @@ namespace Neon.HiveMQ
                     // for the source module.  Note that it's possible that we can't
                     // obtain this name in some situations, e.g. when running
                     // on Integration Services Package (SSIS).  In those cases,
-                    // we'll default to "EasyNetQ".
+                    // this will default to "EasyNetQ".
 
                     var appPath = Environment.GetCommandLineArgs()[0];
 
                     if (!string.IsNullOrWhiteSpace(appPath))
                     {
-                        sourceModule = Path.GetFileName(appPath);
+                        sourceModule = Path.GetFileNameWithoutExtension(appPath);
                     }
                 }
 
