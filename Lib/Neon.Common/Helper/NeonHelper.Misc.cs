@@ -1529,6 +1529,15 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Returns the fully qualified path the entry assembly for the current process.
+        /// </summary>
+        /// <returns>The entry assembly file path.</returns>
+        public static string GetEntryAssemblyPath()
+        {
+            return GetAssemblyPath(Assembly.GetEntryAssembly());
+        }
+
+        /// <summary>
         /// Computes the MD5 hash for a string and returns the result
         /// formatted as a hex string.
         /// </summary>
