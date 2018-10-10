@@ -2,9 +2,6 @@
 // FILE:	    YamlDotNetExtensions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
-//
-// Code based on a MSDN article by Stephen Toub (MSFT):
-// http://blogs.msdn.com/b/pfxteam/archive/2012/02/11/10266923.aspx
 
 using System;
 using System.Diagnostics.Contracts;
