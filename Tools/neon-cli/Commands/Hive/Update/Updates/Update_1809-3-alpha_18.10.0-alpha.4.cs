@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 
 using Neon.Common;
@@ -59,8 +60,12 @@ namespace NeonCli
             //      neon-hivemq-neon
             //      neon-hivemq-sysadmin
             //      neon-hivemq-app
+            //
+            // We also need to reconfigure the AMPQ private [neon-hivemq-ampq] load balancer rule 
+            // as TCP because older builds incorrectly configured this as an HTTP proxy.
 
             controller.AddGlobalStep(GetStepLabel("hivemq-settings"), () => UpdateHiveMQSettings());
+            controller.AddGlobalStep(GetStepLabel("rename log-retention-days"), () => UpdateLogRetentionDays());
         }
 
         /// <summary>
@@ -257,6 +262,62 @@ WantedBy=docker.service
             firstManager.Status = "neon-proxy-private";
             firstManager.DockerCommand(RunOptions.FaultOnError, $"docker service update --secret-rm=neon-hivemq-settings-neon --image {Program.ResolveDockerImage(Hive.Definition.Image.Proxy)} neon-proxy-private");
             firstManager.Status = string.Empty;
+
+            // Redeploy the [neon-hivemq-ampq] private load balancer to be a TCP rather than an HTTP proxy.
+
+            var ampqRule = new LoadBalancerTcpRule()
+            {
+                Name     = "neon-hivemq-ampq",
+                System   = true,
+                Resolver = null
+            };
+
+            ampqRule.Frontends.Add(
+                new LoadBalancerTcpFrontend()
+                {
+                    ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMPQ
+                });
+
+            ampqRule.Backends.Add(
+                new LoadBalancerTcpBackend()
+                {
+                    Group      = HiveHostGroups.HiveMQ,
+                    GroupLimit = 5,
+                    Port       = HiveHostPorts.HiveMQAMPQ
+                });
+
+            Hive.PrivateLoadBalancer.SetRule(ampqRule);
+        }
+
+        /// <summary>
+        /// Older builds misspelled the <b>neon/global/log-rentention-days</b> variable.
+        /// This method copies this to <b>log-retention-days</b> but leaves the old 
+        /// variable around for backwards compatability.
+        /// </summary>
+        private void UpdateLogRetentionDays()
+        {
+            var consul = Hive.Consul.Client;
+
+            // Create the correct variable if it doesn't already exist.
+
+            var oldPath = Hive.Globals.GetKey("log-rentention-days");
+            var newPath = Hive.Globals.GetKey(HiveGlobals.UserLogRetentionDays);
+
+            if (!consul.KV.Exists(newPath).Result)
+            {
+                // Retrieve the original value (or default to 14 days).
+
+                var value = consul.KV.GetString(oldPath).Result;
+
+                if (value == null)
+                {
+                    value = "14";
+                }
+
+                // Save the new variable.
+
+                consul.KV.PutString(newPath, value).Wait();
+            }
         }
     }
 }

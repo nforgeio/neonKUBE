@@ -43,6 +43,19 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Returns the Consul key for the named global.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>The Consul key path.</returns>
+        public string GetKey(string name)
+        {
+            Covenant.Requires(!string.IsNullOrEmpty(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
+
+            return $"{HiveConst.GlobalKey}/{name}";
+        }
+
+        /// <summary>
         /// Returns the current version of the neonHIVE deployment.
         /// </summary>
         public string Version
@@ -351,7 +364,7 @@ namespace Neon.Hive
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b>log-rentention-days</b></term>
+        ///     <term><b>log-retention-days</b></term>
         ///     <description>
         ///     Specifies the number of days the hive should retain <b>logstash</b>
         ///     and <b>metricbeat</b> logs.  This must be a positive integer.
@@ -380,7 +393,7 @@ namespace Neon.Hive
 
                     if (!int.TryParse(value, out var logRetentionDays) || logRetentionDays <= 0)
                     {
-                        throw new FormatException($"[log-rentention-days={value}] is invalid because it's not an integer or not >= 0.");
+                        throw new FormatException($"[log-retention-days={value}] is invalid because it's not an integer or not >= 0.");
                     }
 
                     Set(name, logRetentionDays);

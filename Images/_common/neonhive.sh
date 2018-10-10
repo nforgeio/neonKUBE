@@ -433,7 +433,7 @@ export HiveGlobals_DisableAutoUnseal=disable-auto-unseal
 
 # Specifies the number of days to retain [logstash] and
 # [metricbeat] logs.
-export HiveGlobals_LogRetentionDays=log-rentention-days
+export HiveGlobals_LogRetentionDays=log-retention-days
 
 # Minimum <b>neon-cli</b> version allowed to manage the hive.
 export HiveGlobals_NeonCli=neon-cli

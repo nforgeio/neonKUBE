@@ -104,6 +104,6 @@ namespace Neon.Hive
         /// Specifies the number of days to retain <b>logstash</b> and
         /// <b>metricbeat</b> logs.
         /// </summary>
-        public const string UserLogRetentionDays = "log-rentention-days";
+        public const string UserLogRetentionDays = "log-retention-days";
     }
 }

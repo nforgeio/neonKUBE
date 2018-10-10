@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LoadBalanceManager.cs
+// FILE:	    LoadBalancerManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -15,7 +15,7 @@ namespace Neon.Hive
     /// <summary>
     /// Handles hive load balancer related operations for a <see cref="HiveProxy"/>.
     /// </summary>
-    public sealed class LoadBalanceManager
+    public sealed class LoadBalancerManager
     {
         private const string proxyManagerPrefix = "neon/service/neon-proxy-manager";
         private const string vaultCertPrefix    = "neon-secret/cert";
@@ -27,7 +27,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
         /// <param name="name">The load balancer name (<b>public</b> or <b>private</b>).</param>
-        internal LoadBalanceManager(HiveProxy hive, string name)
+        internal LoadBalancerManager(HiveProxy hive, string name)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentException>(name == "public" || name == "private");
@@ -113,10 +113,16 @@ namespace Neon.Hive
         /// <summary>
         /// Signals the <b>neon-proxy-manager</b> to regenerate the load balancer and proxy configurations.
         /// </summary>
-        public void Deploy()
+        public void Update()
         {
             hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/proxy-hash", Convert.ToBase64String(new byte[16])).Wait();
             hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
+
+            hive.HiveMQ.Internal.GetProxyNotifyChannel().Publish(
+                new ProxyRegenerateMessage()
+                {
+                    Reason = $"Update: {Name}"
+                });
         }
 
         /// <summary>

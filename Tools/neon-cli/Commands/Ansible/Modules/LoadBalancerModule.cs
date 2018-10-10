@@ -176,7 +176,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            LoadBalanceManager  loadBalancer;
+            LoadBalancerManager  loadBalancer;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {

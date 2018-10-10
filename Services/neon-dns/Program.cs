@@ -216,172 +216,183 @@ $@"# PowerDNS Recursor authoritatively answers for [*.HIVENAME.nhive.io] hostnam
 
                 try
                 {
-                    log.LogDebug(() => "Fetching DNS answers MD5 from Consul.");
-
-                    remoteMD5 = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
-
-                    if (remoteMD5 == null)
+                    try
                     {
-                        remoteMD5 = "[unknown]";
-                    }
+                        log.LogDebug(() => "Fetching DNS answers MD5 from Consul.");
 
-                    var verify = verifyTimer.HasFired;
+                        remoteMD5 = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
 
-                    if (verify)
-                    {
-                        // Under normal circumstances, we should never see the reload signal file
-                        // here because the [neon-dns-loader] service should have deleted it after
-                        // handling the last change signal.
-                        //
-                        // This probably means that [neon-dns-loader] is not running or if this service
-                        // is configured with POLL_INTERVAL being so short that [neon-dns-loader]
-                        // hasn't had a chance to handle the previous signal.
-
-                        if (File.Exists(reloadSignalPath))
+                        if (remoteMD5 == null)
                         {
-                            log.LogWarn("[neon-dns-loader] service doesn't appear to be running because the reload signal file is present.");
+                            remoteMD5 = "[unknown]";
                         }
-                    }
 
-                    if (!verify && localMD5 == remoteMD5)
-                    {
-                        log.LogDebug(() => "DNS answers are unchanged.");
-                    }
-                    else
-                    {
-                        if (localMD5 == remoteMD5)
+                        var verify = verifyTimer.HasFired;
+
+                        if (verify)
                         {
-                            log.LogDebug(() => "DNS answers have not changed but we're going to verify that we have the correct hosts anyway.");
+                            // Under normal circumstances, we should never see the reload signal file
+                            // here because the [neon-dns-loader] service should have deleted it after
+                            // handling the last change signal.
+                            //
+                            // This probably means that [neon-dns-loader] is not running or if this service
+                            // is configured with POLL_INTERVAL being so short that [neon-dns-loader]
+                            // hasn't had a chance to handle the previous signal.
+
+                            if (File.Exists(reloadSignalPath))
+                            {
+                                log.LogWarn("[neon-dns-loader] service doesn't appear to be running because the reload signal file is present.");
+                            }
+                        }
+
+                        if (!verify && localMD5 == remoteMD5)
+                        {
+                            log.LogDebug(() => "DNS answers are unchanged.");
                         }
                         else
                         {
-                            log.LogDebug(() => "DNS answers have changed.");
-                        }
+                            if (localMD5 == remoteMD5)
+                            {
+                                log.LogDebug(() => "DNS answers have not changed but we're going to verify that we have the correct hosts anyway.");
+                            }
+                            else
+                            {
+                                log.LogDebug(() => "DNS answers have changed.");
+                            }
 
-                        log.LogDebug(() => "Fetching DNS answers.");
+                            log.LogDebug(() => "Fetching DNS answers.");
 
-                        var hostsTxt = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsKey, terminator.CancellationToken);
+                            var hostsTxt = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsKey, terminator.CancellationToken);
 
-                        if (hostsTxt == null)
-                        {
-                            log.LogWarn(() => "DNS answers do not exist on Consul.  Is [neon-dns-mon] functioning properly?");
-                        }
-                        else
-                        {
-                            var marker = "# -------- NEON-DNS --------";
+                            if (hostsTxt == null)
+                            {
+                                log.LogWarn(() => "DNS answers do not exist on Consul.  Is [neon-dns-mon] functioning properly?");
+                            }
+                            else
+                            {
+                                var marker = "# -------- NEON-DNS --------";
 
-                            // We have the host entries from Consul.  We need to add these onto the
-                            // end [/etc/powserdns/hosts], replacing any host entries written during
-                            // a previous run.
-                            //
-                            // We're going to use the special marker line:
-                            //
-                            //  # ---DYNAMIC-HOSTS---
-                            //
-                            // to separate the built-in hosts (above the line) from the dynamic hosts
-                            // we're generating here (which will be below the line).  Note that this
-                            // line won't exist the first time this service runs, so we'll just add it.
-                            //
-                            // Note that it's possible that the PowerDNS Recursor might be reading this
-                            // file while we're trying to write it.  We're going to treat these as a
-                            // transient errors and retry.
+                                // We have the host entries from Consul.  We need to add these onto the
+                                // end [/etc/powserdns/hosts], replacing any host entries written during
+                                // a previous run.
+                                //
+                                // We're going to use the special marker line:
+                                //
+                                //  # ---DYNAMIC-HOSTS---
+                                //
+                                // to separate the built-in hosts (above the line) from the dynamic hosts
+                                // we're generating here (which will be below the line).  Note that this
+                                // line won't exist the first time this service runs, so we'll just add it.
+                                //
+                                // Note that it's possible that the PowerDNS Recursor might be reading this
+                                // file while we're trying to write it.  We're going to treat these as a
+                                // transient errors and retry.
 
-                            var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
+                                var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
 
-                            await retry.InvokeAsync(
-                                async () =>
-                                {
-                                    using (var stream = new FileStream(powerDnsHostsPath, FileMode.Open, FileAccess.ReadWrite))
+                                await retry.InvokeAsync(
+                                    async () =>
                                     {
-                                        // Read a copy of the hosts file as bytes so we can compare
-                                        // the old version with the new one generated below for changes.
-
-                                        var orgHostBytes = stream.ReadToEnd();
-
-                                        stream.Position = 0;
-
-                                        // Generate the new hosts file.
-
-                                        var sbHosts = new StringBuilder();
-
-                                        // Read the hosts file up to but not including the special marker
-                                        // line (if it's present).
-
-                                        using (var reader = new StreamReader(stream, Encoding.UTF8, true, 32 * 1024, leaveOpen: true))
+                                        using (var stream = new FileStream(powerDnsHostsPath, FileMode.Open, FileAccess.ReadWrite))
                                         {
-                                            foreach (var line in reader.Lines())
-                                            {
-                                                if (line.StartsWith(marker))
-                                                {
-                                                    break;
-                                                }
+                                            // Read a copy of the hosts file as bytes so we can compare
+                                            // the old version with the new one generated below for changes.
 
-                                                sbHosts.AppendLine(line);
+                                            var orgHostBytes = stream.ReadToEnd();
+
+                                            stream.Position = 0;
+
+                                            // Generate the new hosts file.
+
+                                            var sbHosts = new StringBuilder();
+
+                                            // Read the hosts file up to but not including the special marker
+                                            // line (if it's present).
+
+                                            using (var reader = new StreamReader(stream, Encoding.UTF8, true, 32 * 1024, leaveOpen: true))
+                                            {
+                                                foreach (var line in reader.Lines())
+                                                {
+                                                    if (line.StartsWith(marker))
+                                                    {
+                                                        break;
+                                                    }
+
+                                                    sbHosts.AppendLine(line);
+                                                }
+                                            }
+
+                                            // Strip any trailing whitespace from the hosts file so we'll
+                                            // be able to leave a nice blank line between the end of the
+                                            // original file and the special marker line.
+
+                                            var text = sbHosts.ToString().TrimEnd();
+
+                                            sbHosts.Clear();
+                                            sbHosts.AppendLine(text);
+
+                                            // Append the marker line, followed by dynamic host
+                                            // entries we downloaded from Consul.
+
+                                            sbHosts.AppendLine();
+                                            sbHosts.AppendLine(marker);
+                                            sbHosts.AppendLine();
+                                            sbHosts.Append(hostsTxt);
+
+                                            // Generate the new host file bytes, taking care to ensure that
+                                            // we're using Linux style line endings and then update the
+                                            // hosts file if anything changed.
+
+                                            var hostsText    = NeonHelper.ToLinuxLineEndings(sbHosts.ToString());
+                                            var newHostBytes = Encoding.UTF8.GetBytes(hostsText);
+
+                                            if (NeonHelper.ArrayEquals(orgHostBytes, newHostBytes))
+                                            {
+                                                log.LogDebug(() => $"[{powerDnsHostsPath}] file is up-to-date.");
+                                            }
+                                            else
+                                            {
+                                                log.LogDebug(() => $"[{powerDnsHostsPath}] is being updated.");
+
+                                                stream.Position = 0;
+                                                stream.SetLength(0);
+                                                stream.Write(newHostBytes);
+
+                                                // Signal to the local [neon-dns-loader] systemd service that it needs
+                                                // to have PowerDNS Recursor reload the hosts file.
+
+                                                File.WriteAllText(reloadSignalPath, "reload now");
                                             }
                                         }
 
-                                        // Strip any trailing whitespace from the hosts file so we'll
-                                        // be able to leave a nice blank line between the end of the
-                                        // original file and the special marker line.
+                                        await Task.CompletedTask;
+                                    });
 
-                                        var text = sbHosts.ToString().TrimEnd();
+                                // We've successfully synchronized the local hosts file with
+                                // the Consul DNS settings.
 
-                                        sbHosts.Clear();
-                                        sbHosts.AppendLine(text);
-
-                                        // Append the marker line, followed by dynamic host
-                                        // entries we downloaded from Consul.
-
-                                        sbHosts.AppendLine();
-                                        sbHosts.AppendLine(marker);
-                                        sbHosts.AppendLine();
-                                        sbHosts.Append(hostsTxt);
-
-                                        // Generate the new host file bytes, taking care to ensure that
-                                        // we're using Linux style line endings and then update the
-                                        // hosts file if anything changed.
-
-                                        var hostsText    = NeonHelper.ToLinuxLineEndings(sbHosts.ToString());
-                                        var newHostBytes = Encoding.UTF8.GetBytes(hostsText);
-
-                                        if (NeonHelper.ArrayEquals(orgHostBytes, newHostBytes))
-                                        {
-                                            log.LogDebug(() => $"[{powerDnsHostsPath}] file is up-to-date.");
-                                        }
-                                        else
-                                        {
-                                            log.LogDebug(() => $"[{powerDnsHostsPath}] is being updated.");
-
-                                            stream.Position = 0;
-                                            stream.SetLength(0);
-                                            stream.Write(newHostBytes);
-
-                                            // Signal to the local [neon-dns-loader] systemd service that it needs
-                                            // to have PowerDNS Recursor reload the hosts file.
-
-                                            File.WriteAllText(reloadSignalPath, "reload now");
-                                        }
-                                    }
-
-                                    await Task.CompletedTask;
-                                });
-
-                            // We've successfully synchronized the local hosts file with
-                            // the Consul DNS settings.
-
-                            localMD5 = remoteMD5;
+                                localMD5 = remoteMD5;
+                            }
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    log.LogWarn(e);
-                }
+                    catch (Exception e)
+                    {
+                        if (!(e is OperationCanceledException))
+                        {
+                            log.LogError(e);
+                        }
+                    }
 
-                await Task.Delay(pollInterval);
+                    log.LogDebug(() => "Finished poll");
+                    await Task.Delay(pollInterval);
+                }
+                catch (OperationCanceledException)
+                {
+                    log.LogInfo(() => "Terminating");
+                    break;
+                }
             }
 
-            log.LogDebug(() => "Finished poll");
             terminator.ReadyToExit();
         }
     }

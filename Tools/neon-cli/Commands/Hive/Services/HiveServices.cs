@@ -155,34 +155,32 @@ namespace NeonCli
 
                             // Deploy private load balancer for the AMPQ endpoints.
 
-                            var rule = new LoadBalancerHttpRule()
+                            var ampqRule = new LoadBalancerTcpRule()
                             {
                                 Name     = "neon-hivemq-ampq",
                                 System   = true,
                                 Resolver = null
                             };
 
-                            // Initialize the frontends and backends.
-
-                            rule.Frontends.Add(
-                                new LoadBalancerHttpFrontend()
+                            ampqRule.Frontends.Add(
+                                new LoadBalancerTcpFrontend()
                                 {
                                     ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMPQ
                                 });
 
-                            rule.Backends.Add(
-                                new LoadBalancerHttpBackend()
+                            ampqRule.Backends.Add(
+                                new LoadBalancerTcpBackend()
                                 {
                                     Group      = HiveHostGroups.HiveMQ,
                                     GroupLimit = 5,
                                     Port       = HiveHostPorts.HiveMQAMPQ
                                 });
 
-                            Hive.PrivateLoadBalancer.SetRule(rule);
+                            Hive.PrivateLoadBalancer.SetRule(ampqRule);
 
                             // Deploy private load balancer for the management endpoints.
 
-                            rule = new LoadBalancerHttpRule()
+                            var adminRule = new LoadBalancerHttpRule()
                             {
                                 Name     = "neon-hivemq-management",
                                 System   = true,
@@ -191,22 +189,22 @@ namespace NeonCli
 
                             // Initialize the frontends and backends.
 
-                        rule.Frontends.Add(
-                            new LoadBalancerHttpFrontend()
-                            {
-                                ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAdmin
-                            });
+                            adminRule.Frontends.Add(
+                                new LoadBalancerHttpFrontend()
+                                {
+                                    ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAdmin
+                                });
 
-                        rule.Backends.Add(
-                            new LoadBalancerHttpBackend()
-                            {
-                                Group      = HiveHostGroups.HiveMQManagers,
-                                GroupLimit = 5,
-                                Port       = HiveHostPorts.HiveMQManagement
-                            });
+                            adminRule.Backends.Add(
+                                new LoadBalancerHttpBackend()
+                                {
+                                    Group      = HiveHostGroups.HiveMQManagers,
+                                    GroupLimit = 5,
+                                    Port       = HiveHostPorts.HiveMQManagement
+                                });
 
-                        Hive.PrivateLoadBalancer.SetRule(rule);
-                    });
+                            Hive.PrivateLoadBalancer.SetRule(adminRule);
+                        });
 
                     //---------------------------------------------------------
                     // Deploy DNS related services.

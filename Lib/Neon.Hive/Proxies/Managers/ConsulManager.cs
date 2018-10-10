@@ -74,7 +74,13 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// <para>
         /// Returns a Consul client.
+        /// </para>
+        /// <note>
+        /// <b>WARNING:</b> The client returned is a shared resource and should 
+        /// <b>NEVER BE DISPOSED</b>.
+        /// </note>
         /// </summary>
         /// <returns>The <see cref="ConsulClient"/>.</returns>
         public ConsulClient Client

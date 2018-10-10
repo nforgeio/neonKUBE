@@ -62,8 +62,6 @@ ARGUMENTS:
 COMMANDS:
 
     help            - Prints load balacer rule details.
-    deploy          - Signals [neon-proxy-manager] to quickly deploy
-                      any pending changes.
     get             - Output a specific rule as JSON by default.
                       Use [--yaml] to return as YAML.
     haproxy         - Outputs the load balancer's HAProxy configuration.
@@ -78,6 +76,8 @@ COMMANDS:
     settings        - Updates the global load balancer settings from
                       a JSON file or by reading standard input.
     status          - Displays the current status for a load balancer.
+    update          - Signals [neon-proxy-manager] to immediately deploy
+                      any pending changes.
 
 OPTIONS:
 
@@ -200,7 +200,7 @@ See the documentation for more load balancer rule and setting details.
 
             // Process the command arguments.
 
-            var loadBalancer     = (LoadBalanceManager)null;
+            var loadBalancer     = (LoadBalancerManager)null;
             var yaml             = commandLine.HasOption("--yaml");
             var loadBalancerName = commandLine.Arguments.FirstOrDefault();
             var isPublic         = false;
@@ -363,9 +363,9 @@ See the documentation for more load balancer rule and setting details.
                     Console.WriteLine();
                     break;
 
-                case "deploy":
+                case "update":
 
-                    loadBalancer.Deploy();
+                    loadBalancer.Update();
                     break;
 
                 case "remove":

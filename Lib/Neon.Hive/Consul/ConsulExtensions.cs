@@ -40,7 +40,21 @@ namespace Consul
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
 
-            return (await kv.Get(key, cancellationToken)).Response != null;
+            try
+            {
+                return (await kv.Get(key, cancellationToken)).Response != null;
+            }
+            catch (Exception e)
+            {
+                if (e.Contains<KeyNotFoundException>())
+                {
+                    return false;
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
         /// <summary>

@@ -151,8 +151,8 @@ namespace Neon.Hive
             this.Certificate         = new CertificateManager(this);
             this.Dashboard           = new DashboardManager(this);
             this.Dns                 = new DnsManager(this);
-            this.PublicLoadBalancer  = new LoadBalanceManager(this, "public");
-            this.PrivateLoadBalancer = new LoadBalanceManager(this, "private");
+            this.PublicLoadBalancer  = new LoadBalancerManager(this, "public");
+            this.PrivateLoadBalancer = new LoadBalancerManager(this, "private");
             this.Registry            = new RegistryManager(this);
             this.Globals             = new GlobalsManager(this);
             this.Consul              = new ConsulManager(this);
@@ -263,12 +263,12 @@ namespace Neon.Hive
         /// <summary>
         /// Manages the hive's public load balancer.
         /// </summary>
-        public LoadBalanceManager PublicLoadBalancer { get; private set; }
+        public LoadBalancerManager PublicLoadBalancer { get; private set; }
 
         /// <summary>
         /// Manages the hive's private load balancer.
         /// </summary>
-        public LoadBalanceManager PrivateLoadBalancer { get; private set; }
+        public LoadBalancerManager PrivateLoadBalancer { get; private set; }
 
         /// <summary>
         /// Manages the hive's Docker registry credentials and local registry.
@@ -304,7 +304,7 @@ namespace Neon.Hive
         /// Returns the named load balancer manager.
         /// </summary>
         /// <param name="name">The load balancer name (one of <b>public</b> or <b>private</b>).</param>
-        public LoadBalanceManager GetLoadBalancerManager(string name)
+        public LoadBalancerManager GetLoadBalancerManager(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 

@@ -1074,7 +1074,19 @@ namespace Neon.Hive
                 hosts.Add($"{node.Name}.{hiveDefinition.Hostnames.Base}", IPAddress.Parse(node.PrivateAddress));
             }
 
-            foreach (var node in hiveDefinition.Nodes.Where(n => n.Labels.HiveMQ))
+            // NOTE:
+            //
+            // Non-bootstrap HiveMQ settings select up to 10 hive host nodes to be
+            // the targets for HiveMQ related requests relying on a private load
+            // balancer rule to forward traffic from the Docker ingress network
+            // through to the actual HiveMQ cluster nodes.
+            //
+            // Note that these settings reference the fully qualidied HiveMQ host
+            // name so we'll be prepared for TLS support in the future.  This means
+            // that we need to generate a local HiveMQ DNS definition for every node
+            // in the cluster (rather than just for the nodes actually hosting HiveMQ).
+
+            foreach (var node in hiveDefinition.Nodes)
             {
                 hosts.Add($"{node.Name}.{hiveDefinition.Hostnames.HiveMQ}", IPAddress.Parse(node.PrivateAddress));
             }

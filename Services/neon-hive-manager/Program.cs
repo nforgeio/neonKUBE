@@ -257,8 +257,8 @@ namespace NeonHiveManager
 
             if (!await consul.KV.Exists(proxyUpdateSecondsKey))
             {
-                log.LogInfo($"Persisting setting [{proxyUpdateSecondsKey}=60.0]");
-                await consul.KV.PutDouble(proxyUpdateSecondsKey, 60);
+                log.LogInfo($"Persisting setting [{proxyUpdateSecondsKey}=300.0]");
+                await consul.KV.PutDouble(proxyUpdateSecondsKey, 300);
             }
 
             nodePollInterval    = TimeSpan.FromSeconds(await consul.KV.GetDouble(nodePollSecondsKey));
@@ -397,116 +397,122 @@ namespace NeonHiveManager
             {
                 try
                 {
-                    log.LogDebug(() => "STATE-POLLER: Polling");
-
-                    if (terminator.CancellationToken.IsCancellationRequested)
+                    try
                     {
-                        log.LogDebug(() => "STATE-POLLER: Terminating");
-                        return;
-                    }
+                        log.LogDebug(() => "STATE-POLLER: Polling");
 
-                    // Retrieve the current hive definition from Consul if we don't already
-                    // have it or if it's different from what we've cached.
-
-                    cachedHiveDefinition = await HiveHelper.GetDefinitionAsync(cachedHiveDefinition, terminator.CancellationToken);
-
-                    // Retrieve the swarm nodes from Docker.
-
-                    log.LogDebug(() => $"STATE-POLLER: Querying [{docker.Settings.Uri}]");
-
-                    var swarmNodes = await docker.NodeListAsync();
-
-                    // Parse the node definitions from the swarm nodes and build a new definition with
-                    // using the new nodes.  Then compare the hashes of the cached and new hive definitions
-                    // and then update Consul if they're different.
-
-                    var currentHiveDefinition = NeonHelper.JsonClone<HiveDefinition>(cachedHiveDefinition);
-
-                    currentHiveDefinition.NodeDefinitions.Clear();
-
-                    foreach (var swarmNode in swarmNodes)
-                    {
-                        var nodeDefinition = NodeDefinition.ParseFromLabels(swarmNode.Labels);
-
-                        nodeDefinition.Name = swarmNode.Hostname;
-
-                        currentHiveDefinition.NodeDefinitions.Add(nodeDefinition.Name, nodeDefinition);
-                    }
-
-                    log.LogDebug(() => $"STATE-POLLER: [{currentHiveDefinition.Managers.Count()}] managers and [{currentHiveDefinition.Workers.Count()}] workers in current hive definition.");
-
-                    // Hive pets are not part of the Swarm, so Docker won't return any information
-                    // about them.  We'll read the pet definitions from [neon/global/pets-definition] in 
-                    // Consul.  We'll assume that there are no pets if this key doesn't exist for
-                    // backwards compatibility and robustness.
-
-                    var petsJson = await HiveHelper.Consul.KV.GetStringOrDefault($"{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}", terminator.CancellationToken);
-
-                    if (petsJson == null)
-                    {
-                        log.LogDebug(() => $"STATE-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
-                    }
-                    else
-                    {
-                        if (!string.IsNullOrWhiteSpace(petsJson))
+                        if (terminator.CancellationToken.IsCancellationRequested)
                         {
-                            // Parse the pet node definitions and add them to the hive definition.
+                            log.LogDebug(() => "STATE-POLLER: Terminating");
+                            return;
+                        }
 
-                            var petDefinitions = NeonHelper.JsonDeserialize<Dictionary<string, NodeDefinition>>(petsJson);
+                        // Retrieve the current hive definition from Consul if we don't already
+                        // have it or if it's different from what we've cached.
 
-                            foreach (var item in petDefinitions)
-                            {
-                                currentHiveDefinition.NodeDefinitions.Add(item.Key, item.Value);
-                            }
+                        cachedHiveDefinition = await HiveHelper.GetDefinitionAsync(cachedHiveDefinition, terminator.CancellationToken);
 
-                            log.LogDebug(() => $"STATE-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
+                        // Retrieve the swarm nodes from Docker.
+
+                        log.LogDebug(() => $"STATE-POLLER: Querying [{docker.Settings.Uri}]");
+
+                        var swarmNodes = await docker.NodeListAsync();
+
+                        // Parse the node definitions from the swarm nodes and build a new definition with
+                        // using the new nodes.  Then compare the hashes of the cached and new hive definitions
+                        // and then update Consul if they're different.
+
+                        var currentHiveDefinition = NeonHelper.JsonClone<HiveDefinition>(cachedHiveDefinition);
+
+                        currentHiveDefinition.NodeDefinitions.Clear();
+
+                        foreach (var swarmNode in swarmNodes)
+                        {
+                            var nodeDefinition = NodeDefinition.ParseFromLabels(swarmNode.Labels);
+
+                            nodeDefinition.Name = swarmNode.Hostname;
+
+                            currentHiveDefinition.NodeDefinitions.Add(nodeDefinition.Name, nodeDefinition);
+                        }
+
+                        log.LogDebug(() => $"STATE-POLLER: [{currentHiveDefinition.Managers.Count()}] managers and [{currentHiveDefinition.Workers.Count()}] workers in current hive definition.");
+
+                        // Hive pets are not part of the Swarm, so Docker won't return any information
+                        // about them.  We'll read the pet definitions from [neon/global/pets-definition] in 
+                        // Consul.  We'll assume that there are no pets if this key doesn't exist for
+                        // backwards compatibility and robustness.
+
+                        var petsJson = await HiveHelper.Consul.KV.GetStringOrDefault($"{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}", terminator.CancellationToken);
+
+                        if (petsJson == null)
+                        {
+                            log.LogDebug(() => $"STATE-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
                         }
                         else
                         {
-                            log.LogDebug(() => $"STATE-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] is empty.");
+                            if (!string.IsNullOrWhiteSpace(petsJson))
+                            {
+                                // Parse the pet node definitions and add them to the hive definition.
+
+                                var petDefinitions = NeonHelper.JsonDeserialize<Dictionary<string, NodeDefinition>>(petsJson);
+
+                                foreach (var item in petDefinitions)
+                                {
+                                    currentHiveDefinition.NodeDefinitions.Add(item.Key, item.Value);
+                                }
+
+                                log.LogDebug(() => $"STATE-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
+                            }
+                            else
+                            {
+                                log.LogDebug(() => $"STATE-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] is empty.");
+                            }
+                        }
+
+                        // Fetch the hive summary and add it to the hive definition.
+
+                        currentHiveDefinition.Summary = HiveSummary.FromHive(hive, currentHiveDefinition);
+
+                        // Determine if the definition has changed.
+
+                        currentHiveDefinition.ComputeHash();
+
+                        if (currentHiveDefinition.Hash != cachedHiveDefinition.Hash)
+                        {
+                            log.LogInfo(() => "STATE-POLLER: Hive definition has CHANGED.  Updating Consul.");
+
+                            await HiveHelper.PutDefinitionAsync(currentHiveDefinition, cancellationToken: terminator.CancellationToken);
+
+                            cachedHiveDefinition = currentHiveDefinition;
+                        }
+                        else
+                        {
+                            log.LogDebug(() => "STATE-POLLER: Hive definition is UNCHANGED.");
+                        }
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        // We'll see this when no hive definition has been persisted to the
+                        // hive.  This is a serious problem.  This is configured during setup
+                        // and there should always be a definition in Consul.
+
+                        log.LogError(() => $"STATE-POLLER: No hive definition has been found at [{hiveDefinitionKey}] in Consul.  This is a serious error that will have to be corrected manually.");
+                    }
+                    catch (Exception e)
+                    {
+                        if (!(e is OperationCanceledException))
+                        {
+                            log.LogError("STATE-POLLER", e);
                         }
                     }
 
-                    // Fetch the hive summary and add it to the hive definition.
-
-                    currentHiveDefinition.Summary = HiveSummary.FromHive(hive, currentHiveDefinition);
-
-                    // Determine if the definition has changed.
-
-                    currentHiveDefinition.ComputeHash();
-
-                    if (currentHiveDefinition.Hash != cachedHiveDefinition.Hash)
-                    {
-                        log.LogInfo(() => "STATE-POLLER: Hive definition has CHANGED.  Updating Consul.");
-
-                        await HiveHelper.PutDefinitionAsync(currentHiveDefinition, cancellationToken: terminator.CancellationToken);
-
-                        cachedHiveDefinition = currentHiveDefinition;
-                    }
-                    else
-                    {
-                        log.LogDebug(() => "STATE-POLLER: Hive definition is UNCHANGED.");
-                    }
-                }
+                    await Task.Delay(nodePollInterval, terminator.CancellationToken);
+                 }
                 catch (OperationCanceledException)
                 {
                     log.LogDebug(() => "STATE-POLLER: Terminating");
                     return;
                 }
-                catch (KeyNotFoundException)
-                {
-                    // We'll see this when no hive definition has been persisted to the
-                    // hive.  This is a serious problem.  This is configured during setup
-                    // and there should always be a definition in Consul.
-
-                    log.LogError(() => $"STATE-POLLER: No hive definition has been found at [{hiveDefinitionKey}] in Consul.  This is a serious error that will have to be corrected manually.");
-                }
-                catch (Exception e)
-                {
-                    log.LogError("STATE-POLLER", e);
-                }
-
-                await Task.Delay(nodePollInterval, terminator.CancellationToken);
             }
         }
 
@@ -531,95 +537,108 @@ namespace NeonHiveManager
             {
                 while (true)
                 {
-                    await Task.Delay(vaultPollInterval, terminator.CancellationToken);
-
                     try
                     {
-                        log.LogDebug(() => $"VAULT-POLLER: Polling [{vaultUri}]");
+                        await Task.Delay(vaultPollInterval, terminator.CancellationToken);
 
-                        if (terminator.CancellationToken.IsCancellationRequested)
+                        try
                         {
-                            log.LogDebug(() => $"VAULT: Terminating [{vaultUri}]");
-                            return;
-                        }
+                            log.LogDebug(() => $"VAULT-POLLER: Polling [{vaultUri}]");
 
-                        // Monitor Vault for status changes and handle unsealing if enabled.
-
-                        log.LogDebug(() => $"VAULT-POLLER: Querying [{vaultUri}]");
-
-                        var newVaultStatus     = await vault.GetHealthAsync(terminator.CancellationToken);
-                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}").Result;
-                        var changed            = false;
-
-                        if (lastVaultStatus == null)
-                        {
-                            changed = true;
-                        }
-                        else
-                        {
-                            changed = !lastVaultStatus.Equals(newVaultStatus);
-                        }
-
-                        if (changed)
-                        {
-                            if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
+                            if (terminator.CancellationToken.IsCancellationRequested)
                             {
-                                log.LogError(() => $"VAULT-POLLER: status CHANGED [{vaultUri}]");
+                                log.LogDebug(() => $"VAULT: Terminating [{vaultUri}]");
+                                return;
+                            }
+
+                            // Monitor Vault for status changes and handle unsealing if enabled.
+
+                            log.LogDebug(() => $"VAULT-POLLER: Querying [{vaultUri}]");
+
+                            var newVaultStatus     = await vault.GetHealthAsync(terminator.CancellationToken);
+                            var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}").Result;
+                            var changed            = false;
+
+                            if (lastVaultStatus == null)
+                            {
+                                changed = true;
                             }
                             else
                             {
-                                log.LogInfo(() => $"VAULT-POLLER: status CHANGED [{vaultUri}]");
+                                changed = !lastVaultStatus.Equals(newVaultStatus);
                             }
 
-                            statusUpdateTimeUtc = DateTime.UtcNow; // Force logging status below
+                            if (changed)
+                            {
+                                if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
+                                {
+                                    log.LogError(() => $"VAULT-POLLER: status CHANGED [{vaultUri}]");
+                                }
+                                else
+                                {
+                                    log.LogInfo(() => $"VAULT-POLLER: status CHANGED [{vaultUri}]");
+                                }
+
+                                statusUpdateTimeUtc = DateTime.UtcNow; // Force logging status below
+                            }
+
+                            if (DateTime.UtcNow >= statusUpdateTimeUtc)
+                            {
+                                if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
+                                {
+                                    log.LogError(() => $"VAULT-POLLER: status={newVaultStatus} [{vaultUri}]");
+                                }
+                                else
+                                {
+                                    log.LogInfo(() => $"VAULT-POLLER: status={newVaultStatus} [{vaultUri}]");
+                                }
+
+                                if (newVaultStatus.IsSealed && autoUnsealDisabled)
+                                {
+                                    log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}=true].");
+                                }
+
+                                statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;
+                            }
+
+                            lastVaultStatus = newVaultStatus;
+
+                            // Attempt to unseal the Vault if it's sealed and we have the keys.
+
+                            if (newVaultStatus.IsSealed && vaultCredentials != null)
+                            {
+                                if (autoUnsealDisabled)
+                                {
+                                    continue;   // Don't unseal.
+                                }
+
+                                try
+                                {
+                                    log.LogInfo(() => $"VAULT-POLLER: UNSEALING [{vaultUri}]");
+                                    await vault.UnsealAsync(vaultCredentials, terminator.CancellationToken);
+                                    log.LogInfo(() => $"VAULT-POLLER: UNSEALED [{vaultUri}]");
+
+                                    // Schedule a status update on the next loop
+                                    // and then loop immediately so we'll log the
+                                    // updated status.
+
+                                    statusUpdateTimeUtc = DateTime.UtcNow;
+                                    continue;
+                                }
+                                catch (Exception e)
+                                {
+                                    if (!(e is OperationCanceledException))
+                                    {
+                                        log.LogError($"VAULT-POLLER: Unseal failed [{vaultUri}]", e);
+                                    }
+                                }
+                            }
                         }
-
-                        if (DateTime.UtcNow >= statusUpdateTimeUtc)
+                        catch (Exception e)
                         {
-                            if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
+                            if (!(e is OperationCanceledException))
                             {
-                                log.LogError(() => $"VAULT-POLLER: status={newVaultStatus} [{vaultUri}]");
-                            }
-                            else
-                            {
-                                log.LogInfo(() => $"VAULT-POLLER: status={newVaultStatus} [{vaultUri}]");
-                            }
-
-                            if (newVaultStatus.IsSealed && autoUnsealDisabled)
-                            {
-                                log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}=true].");
-                            }
-
-                            statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;
-                        }
-
-                        lastVaultStatus = newVaultStatus;
-
-                        // Attempt to unseal the Vault if it's sealed and we have the keys.
-
-                        if (newVaultStatus.IsSealed && vaultCredentials != null)
-                        {
-                            if (autoUnsealDisabled)
-                            {
-                                continue;   // Don't unseal.
-                            }
-
-                            try
-                            {
-                                log.LogInfo(() => $"VAULT-POLLER: UNSEALING [{vaultUri}]");
-                                await vault.UnsealAsync(vaultCredentials, terminator.CancellationToken);
-                                log.LogInfo(() => $"VAULT-POLLER: UNSEALED [{vaultUri}]");
-
-                                // Schedule a status update on the next loop
-                                // and then loop immediately so we'll log the
-                                // updated status.
-
-                                statusUpdateTimeUtc = DateTime.UtcNow;
-                                continue;
-                            }
-                            catch (Exception e)
-                            {
-                                log.LogError($"VAULT-POLLER: Unseal failed [{vaultUri}]", e);
+                                log.LogError($"VAULT-POLLER: [{vaultUri}]", e);
                             }
                         }
                     }
@@ -627,10 +646,6 @@ namespace NeonHiveManager
                     {
                         log.LogDebug(() => $"VAULT-POLLER: Terminating [{vaultUri}]");
                         return;
-                    }
-                    catch (Exception e)
-                    {
-                        log.LogError($"VAULT-POLLER: [{vaultUri}]", e);
                     }
                 }
             }
@@ -648,54 +663,60 @@ namespace NeonHiveManager
             {
                 try
                 {
-                    if (terminator.CancellationToken.IsCancellationRequested)
+                    try
                     {
-                        log.LogDebug(() => "MANAGER-POLLER: Terminating.");
-                        return;
-                    }
-
-                    log.LogDebug(() => "MANAGER-POLLER: Polling for hive manager changes.");
-
-                    var latestVaultUris = await GetVaultUrisAsync();
-                    var changed         = vaultUris.Count != latestVaultUris.Count;
-
-                    if (!changed)
-                    {
-                        for (int i = 0; i < vaultUris.Count; i++)
+                        if (terminator.CancellationToken.IsCancellationRequested)
                         {
-                            if (vaultUris[i] != latestVaultUris[i])
+                            log.LogDebug(() => "MANAGER-POLLER: Terminating.");
+                            return;
+                        }
+
+                        log.LogDebug(() => "MANAGER-POLLER: Polling for hive manager changes.");
+
+                        var latestVaultUris = await GetVaultUrisAsync();
+                        var changed         = vaultUris.Count != latestVaultUris.Count;
+
+                        if (!changed)
+                        {
+                            for (int i = 0; i < vaultUris.Count; i++)
                             {
-                                changed = true;
-                                break;
+                                if (vaultUris[i] != latestVaultUris[i])
+                                {
+                                    changed = true;
+                                    break;
+                                }
                             }
+                        }
+
+                        if (changed)
+                        {
+                            log.LogInfo("MANAGER-POLLER: Detected one or more hive manager node changes.");
+                            log.LogInfo("MANAGER-POLLER: Exiting the service so that Docker will restart it to pick up the manager node changes.");
+                            terminator.Exit();
+                        }
+                        else
+                        {
+                            log.LogDebug(() => "MANAGER-POLLER: No manager changes detected.");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (!(e is OperationCanceledException))
+                        {
+                            log.LogError($"MANAGER-POLLER", e);
                         }
                     }
 
-                    if (changed)
-                    {
-                        log.LogInfo("MANAGER-POLLER: Detected one or more hive manager node changes.");
-                        log.LogInfo("MANAGER-POLLER: Exiting the service so that Docker will restart it to pick up the manager node changes.");
-                        terminator.Exit();
-                    }
-                    else
-                    {
-                        log.LogDebug(() => "MANAGER-POLLER: No manager changes detected.");
-                    }
+                    // We don't need to poll that often because hive managers
+                    // will rarely change.
+
+                    await Task.Delay(managerPollInterval, terminator.CancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
                     log.LogDebug(() => "MANAGER-POLLER: Terminating.");
                     return;
                 }
-                catch (Exception e)
-                {
-                    log.LogError($"MANAGER-POLLER", e);
-                }
-
-                // We don't need to poll that often because hive managers
-                // will rarely change.
-
-                await Task.Delay(managerPollInterval, terminator.CancellationToken);
             }
         }
 
@@ -713,86 +734,92 @@ namespace NeonHiveManager
 
                     try
                     {
-                        if (terminator.CancellationToken.IsCancellationRequested)
+                        try
                         {
-                            log.LogDebug(() => "LOG-PURGER: Terminating.");
-                            return;
+                            if (terminator.CancellationToken.IsCancellationRequested)
+                            {
+                                log.LogDebug(() => "LOG-PURGER: Terminating.");
+                                return;
+                            }
+
+                            log.LogDebug(() => "LOG-PURGER: Scanning for old Elasticsearch indexes ready for removal.");
+
+                            // We're going to list the indexes and look for [logstash]
+                            // and [metricbeat] indexes that encode the index date like:
+                            //
+                            //      logstash-2018.06.06
+                            //      metricbeat-6.1.1-2018.06.06
+                            //
+                            // The date is simply encodes the day covered by the index.
+
+                            if (!hive.Globals.TryGetInt(HiveGlobals.UserLogRetentionDays, out var retentionDays))
+                            {
+                                retentionDays = 14;
+                            }
+
+                            var utcNow           = DateTime.UtcNow;
+                            var deleteBeforeDate = new DateTime(utcNow.Year, utcNow.Month, utcNow.Day) - TimeSpan.FromDays(retentionDays);
+
+                            var indexList = await jsonClient.GetAsync<JObject>($"http://{manager.PrivateAddress}:{HiveHostPorts.ProxyPrivateHttpLogEsData}/_aliases");
+
+                            foreach (var indexProperty in indexList.Properties())
+                            {
+                                var indexName = indexProperty.Name;
+
+                                // We're only purging [logstash] and [metricbeat] indexes.
+
+                                if (!indexName.StartsWith("logstash-") && !indexName.StartsWith("metricbeat-"))
+                                {
+                                    continue;
+                                }
+
+                                // Extract the date from the index name.
+
+                                var pos = indexName.LastIndexOf('-');
+
+                                if (pos == -1)
+                                {
+                                    log.LogWarn(() => $"LOG-PURGER: Cannot extract date from index named [{indexName}].");
+                                    continue;
+                                }
+
+                                var date      = indexName.Substring(pos + 1);
+                                var fields    = date.Split('.');
+                                var indexDate = default(DateTime);
+
+                                try
+                                {
+                                    indexDate = new DateTime(int.Parse(fields[0]), int.Parse(fields[1]), int.Parse(fields[2]));
+                                }
+                                catch
+                                {
+                                    log.LogWarn(() => $"LOG-PURGER: Cannot extract date from index named [{indexName}].");
+                                    continue;
+                                }
+
+                                if (indexDate < deleteBeforeDate)
+                                {
+                                    log.LogInfo(() => $"LOG-PURGER: Deleting index [{indexName}].");
+                                    await jsonClient.DeleteAsync<JObject>($"http://{manager.PrivateAddress}:{HiveHostPorts.ProxyPrivateHttpLogEsData}/{indexName}");
+                                    log.LogInfo(() => $"LOG-PURGER: [{indexName}] was deleted.");
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            if (!(e is OperationCanceledException))
+                            {
+                                log.LogError($"LOG-PURGER", e);
+                            }
                         }
 
-                        log.LogDebug(() => "LOG-PURGER: Scanning for old Elasticsearch indexes ready for removal.");
-
-                        // We're going to list the indexes and look for [logstash]
-                        // and [metricbeat] indexes that encode the index date like:
-                        //
-                        //      logstash-2018.06.06
-                        //      metricbeat-6.1.1-2018.06.06
-                        //
-                        // The date is simply encodes the day covered by the index.
-
-                        if (!hive.Globals.TryGetInt(HiveGlobals.UserLogRetentionDays, out var retentionDays))
-                        {
-                            retentionDays = 14;
-                        }
-
-                        var utcNow           = DateTime.UtcNow;
-                        var deleteBeforeDate = new DateTime(utcNow.Year, utcNow.Month, utcNow.Day) - TimeSpan.FromDays(retentionDays);
-
-                        var indexList = await jsonClient.GetAsync<JObject>($"http://{manager.PrivateAddress}:{HiveHostPorts.ProxyPrivateHttpLogEsData}/_aliases");
-
-                        foreach (var indexProperty in indexList.Properties())
-                        {
-                            var indexName = indexProperty.Name;
-
-                            // We're only purging [logstash] and [metricbeat] indexes.
-
-                            if (!indexName.StartsWith("logstash-") && !indexName.StartsWith("metricbeat-"))
-                            {
-                                continue;
-                            }
-
-                            // Extract the date from the index name.
-
-                            var pos = indexName.LastIndexOf('-');
-
-                            if (pos == -1)
-                            {
-                                log.LogWarn(() => $"LOG-PURGER: Cannot extract date from index named [{indexName}].");
-                                continue;
-                            }
-
-                            var date      = indexName.Substring(pos + 1);
-                            var fields    = date.Split('.');
-                            var indexDate = default(DateTime);
-
-                            try
-                            {
-                                indexDate = new DateTime(int.Parse(fields[0]), int.Parse(fields[1]), int.Parse(fields[2]));
-                            }
-                            catch
-                            {
-                                log.LogWarn(() => $"LOG-PURGER: Cannot extract date from index named [{indexName}].");
-                                continue;
-                            }
-
-                            if (indexDate < deleteBeforeDate)
-                            {
-                                log.LogInfo(() => $"LOG-PURGER: Deleting index [{indexName}].");
-                                await jsonClient.DeleteAsync<JObject>($"http://{manager.PrivateAddress}:{HiveHostPorts.ProxyPrivateHttpLogEsData}/{indexName}");
-                                log.LogInfo(() => $"LOG-PURGER: [{indexName}] was deleted.");
-                            }
-                        }
+                        await Task.Delay(logPollInterval);
                     }
                     catch (OperationCanceledException)
                     {
                         log.LogDebug(() => "LOG-PURGER: Terminating.");
                         return;
                     }
-                    catch (Exception e)
-                    {
-                        log.LogError($"LOG-PURGER", e);
-                    }
-
-                    await Task.Delay(logPollInterval);
                 }
             }
         }
@@ -808,112 +835,118 @@ namespace NeonHiveManager
             {
                 try
                 {
-                    if (terminator.CancellationToken.IsCancellationRequested)
+                    try
                     {
-                        log.LogDebug(() => "SECRET-PURGER: Terminating.");
-                        return;
-                    }
-
-                    // Commpute the minimum creation time for the retriever service and
-                    // the retrieved Consul key.  We're hardcoding the maximum age to
-                    // 30 minutes.
-
-                    var utcNow        = DateTime.UtcNow;
-                    var minCreateTime = utcNow - TimeSpan.FromMinutes(30);
-
-                    // Scan for and remove old [neon-service-retriever] services.
-
-                    log.LogDebug(() => "SECRET-PURGER: Scanning for old [neon-secret-retriver] services ready for removal.");
-
-                    var retrieverServices = hive.Docker.ListServices()
-                        .Where(l => l.StartsWith("neon-secret-retriever-"))
-                        .ToList();
-
-                    if (retrieverServices.Count > 0)
-                    {
-                        log.LogInfo($"SECRET-PURGER: Discovered [{retrieverServices.Count}] services named like [neon-secret-retriever-*].");
-
-                        foreach (var service in retrieverServices)
+                        if (terminator.CancellationToken.IsCancellationRequested)
                         {
-                            // Inspect the service to obtain its creation date.
+                            log.LogDebug(() => "SECRET-PURGER: Terminating.");
+                            return;
+                        }
 
-                            var serviceDetails = hive.Docker.InspectService(service);
+                        // Commpute the minimum creation time for the retriever service and
+                        // the retrieved Consul key.  We're hardcoding the maximum age to
+                        // 30 minutes.
 
-                            if (serviceDetails.CreatedAtUtc < minCreateTime)
+                        var utcNow        = DateTime.UtcNow;
+                        var minCreateTime = utcNow - TimeSpan.FromMinutes(30);
+
+                        // Scan for and remove old [neon-service-retriever] services.
+
+                        log.LogDebug(() => "SECRET-PURGER: Scanning for old [neon-secret-retriver] services ready for removal.");
+
+                        var retrieverServices = hive.Docker.ListServices()
+                            .Where(l => l.StartsWith("neon-secret-retriever-"))
+                            .ToList();
+
+                        if (retrieverServices.Count > 0)
+                        {
+                            log.LogInfo($"SECRET-PURGER: Discovered [{retrieverServices.Count}] services named like [neon-secret-retriever-*].");
+
+                            foreach (var service in retrieverServices)
                             {
-                                log.LogInfo($"Removing service [service].");
+                                // Inspect the service to obtain its creation date.
 
-                                var response = hive.GetReachableManager().SudoCommand($"docker service rm {service}");
+                                var serviceDetails = hive.Docker.InspectService(service);
 
-                                if (response.ExitCode != 0)
+                                if (serviceDetails.CreatedAtUtc < minCreateTime)
                                 {
-                                    throw new HiveException(response.ErrorSummary);
+                                    log.LogInfo($"Removing service [service].");
+
+                                    var response = hive.GetReachableManager().SudoCommand($"docker service rm {service}");
+
+                                    if (response.ExitCode != 0)
+                                    {
+                                        throw new HiveException(response.ErrorSummary);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Scan for and remove old retrieved secrets persisted as Consul
+                        // keys under [neon/service/neon-secret-retriever].
+
+                        log.LogDebug(() => "SECRET-PURGER: Scanning for old [neon-secret-retriver] secrets persisted to Consul.");
+
+                        var secretKeyPaths = consul.KV.ListKeys("neon/service/neon-secret-retriever").Result
+                            .Where(k => k.Contains('~'))    // Secret keys use "~" to separate the timestamp and GUID
+                            .ToList();
+
+                        if (secretKeyPaths.Count > 0)
+                        {
+                            log.LogInfo($"SECRET-PURGER: Discovered [{secretKeyPaths.Count}] keys under [neon/service/neon-secret-retriever].");
+
+                            foreach (var keyPath in secretKeyPaths)
+                            {
+                                // Strip off the leading path to leave only the key.
+
+                                var key          = keyPath;
+                                var lastSlashPos = key.LastIndexOf('/');
+
+                                if (lastSlashPos == -1)
+                                {
+                                    continue;
+                                }
+
+                                key = key.Substring(lastSlashPos + 1);
+
+                                // Split the key on the '~' character and parse the first
+                                // field as the timestamp.  We're going to ignore keys that
+                                // can't be parsed for resilience.
+                                //
+                                // NOTE: 
+                                //
+                                // The timestamp replaced colon (:) characters with underscore (_) to
+                                // prevent Consul from escaping these so they'll be easier to read.
+                                // We need to reverse this before parsing the timestamp.
+
+                                var timestampPart = key.Split('~')[0];
+
+                                timestampPart = timestampPart.Replace('_', ':');
+
+                                if (DateTime.TryParseExact(timestampPart, NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var timestamp) &&
+                                    timestamp < minCreateTime)
+                                {
+                                    log.LogInfo($"SECRET-PURGER: Removing Consul key [{keyPath}].");
+                                    consul.KV.Delete(keyPath).Wait();
                                 }
                             }
                         }
                     }
-
-                    // Scan for and remove old retrieved secrets persisted as Consul
-                    // keys under [neon/service/neon-secret-retriever].
-
-                    log.LogDebug(() => "SECRET-PURGER: Scanning for old [neon-secret-retriver] secrets persisted to Consul.");
-
-                    var secretKeyPaths = consul.KV.ListKeys("neon/service/neon-secret-retriever").Result
-                        .Where(k => k.Contains('~'))    // Secret keys use "~" to separate the timestamp and GUID
-                        .ToList();
-
-                    if (secretKeyPaths.Count > 0)
+                    catch (Exception e)
                     {
-                        log.LogInfo($"SECRET-PURGER: Discovered [{secretKeyPaths.Count}] keys under [neon/service/neon-secret-retriever].");
-
-                        foreach (var keyPath in secretKeyPaths)
+                        if (!(e is OperationCanceledException))
                         {
-                            // Strip off the leading path to leave only the key.
-
-                            var key          = keyPath;
-                            var lastSlashPos = key.LastIndexOf('/');
-
-                            if (lastSlashPos == -1)
-                            {
-                                continue;
-                            }
-
-                            key = key.Substring(lastSlashPos + 1);
-
-                            // Split the key on the '~' character and parse the first
-                            // field as the timestamp.  We're going to ignore keys that
-                            // can't be parsed for resilience.
-                            //
-                            // NOTE: 
-                            //
-                            // The timestamp replaced colon (:) characters with underscore (_) to
-                            // prevent Consul from escaping these so they'll be easier to read.
-                            // We need to reverse this before parsing the timestamp.
-
-                            var timestampPart = key.Split('~')[0];
-
-                            timestampPart = timestampPart.Replace('_', ':');
-
-                            if (DateTime.TryParseExact(timestampPart, NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var timestamp) &&
-                                timestamp < minCreateTime)
-                            {
-                                log.LogInfo($"SECRET-PURGER: Removing Consul key [{keyPath}].");
-                                consul.KV.Delete(keyPath).Wait();
-                            }
+                            log.LogError($"SECRET-PURGER", e);
                         }
                     }
+
+                    await Task.Delay(secretPollInterval);
                 }
                 catch (OperationCanceledException)
                 {
                     log.LogDebug(() => "SECRET-PURGER: Terminating.");
                     return;
                 }
-                catch (Exception e)
-                {
-                    log.LogError($"SECRET-PURGER", e);
-                }
-
-                await Task.Delay(secretPollInterval);
             }
         }
 
@@ -932,26 +965,32 @@ namespace NeonHiveManager
             {
                 try
                 {
-                    if (terminator.CancellationToken.IsCancellationRequested)
+                    try
                     {
-                        log.LogDebug(() => "PROXY-UPDATER: Terminating.");
-                        return;
+                        if (terminator.CancellationToken.IsCancellationRequested)
+                        {
+                            log.LogDebug(() => "PROXY-UPDATER: Terminating.");
+                            return;
+                        }
+
+                        log.LogInfo(() => $"Publish: [{nameof(ProxyRegenerateMessage)}(\"fail-safe\") --> {proxyNotifyChannel.Name}]");
+                        proxyNotifyChannel.Publish(new ProxyRegenerateMessage() { Reason = "[neon-hive-manager]: fail-safe" });
+                    }
+                    catch (Exception e)
+                    {
+                        if (!(e is OperationCanceledException))
+                        {
+                            log.LogError($"PROXY-UPDATER", e);
+                        }
                     }
 
-                    log.LogInfo(() => $"Publish: [{nameof(ProxyRegenerateMessage)}(\"Periodic fail-safe\") --> {proxyNotifyChannel.Name}]");
-                    proxyNotifyChannel.Publish(new ProxyRegenerateMessage() { Reason = "[neon-hive-manager]: Periodic fail-safe" });
+                    await Task.Delay(proxyUpdateInterval);
                 }
                 catch (OperationCanceledException)
                 {
                     log.LogDebug(() => "PROXY-UPDATER: Terminating.");
                     return;
                 }
-                catch (Exception e)
-                {
-                    log.LogError($"PROXY-UPDATER", e);
-                }
-
-                await Task.Delay(proxyUpdateInterval);
             }
         }
     }

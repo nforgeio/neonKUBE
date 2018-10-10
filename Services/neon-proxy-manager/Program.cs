@@ -404,9 +404,9 @@ namespace NeonProxyManager
                                 }
                             });
                     }
-                    catch (TaskCanceledException)
+                    catch (OperationCanceledException)
                     {
-                        log.LogInfo(() => "MONITOR: Cancelling task.");
+                        log.LogInfo(() => "MONITOR: Terminating.");
                         return;
                     }
                     catch (Exception e)

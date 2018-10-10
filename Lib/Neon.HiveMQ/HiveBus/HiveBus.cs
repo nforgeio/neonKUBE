@@ -97,7 +97,7 @@ namespace Neon.HiveMQ
     /// <item>
     ///     <term><see cref="BroadcastChannel"/></term>
     ///     <description>
-    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, TimeSpan?, int?, int?)"/> 
+    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
     ///     to create a broadcast channel.
     ///     </description>
     /// </item>

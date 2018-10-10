@@ -189,22 +189,29 @@ namespace NeonVarnish
 
                 try
                 {
-                    // $todo(jeff.lill): Implement this.
+                    try
+                    {
+                        // $todo(jeff.lill): Implement this.
+
+                    }
+                    catch (Exception e)
+                    {
+                        if (!(e is OperationCanceledException))
+                        {
+                            log.LogError(e);
+                        }
+                    }
+
+                    if (exit)
+                    {
+                        return;
+                    }
 
                     await Task.Delay(1);
                 }
-                catch (TaskCanceledException)
+                catch (OperationCanceledException)
                 {
-                    log.LogInfo(() => "Cancelling.");
-                    return;
-                }
-                catch (Exception e)
-                {
-                    log.LogError(e);
-                }
-
-                if (exit)
-                {
+                    log.LogInfo(() => "Terminating.");
                     return;
                 }
             }
