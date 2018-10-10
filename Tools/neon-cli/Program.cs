@@ -1047,6 +1047,12 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         }
 
         /// <summary>
+        /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
+        /// source code branch.
+        /// </summary>
+        public static bool IsProd => ThisAssembly.Git.Branch.Equals("prod", StringComparison.InvariantCultureIgnoreCase);
+
+        /// <summary>
         /// Returns the folder where <b>neon-cli</b> persists local state.  This
         /// folder and all subfolders are encrypted when supported by the current
         /// operating system.

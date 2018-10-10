@@ -86,21 +86,31 @@ namespace NeonCli
         }
 
         /// <summary>
+        /// <para>
         /// Updates the hive version.  This should be added as the last update step to
         /// a <see cref="SetupController{NodeMetadata}"/> as a <b>global step</b> by
-        /// cluster update implementations.
+        /// hive update implementations.
+        /// </para>
+        /// <note>
+        /// Only builds from the <b>PROD</b> branch actually update the hive version
+        /// as a convenience.  This makes it easy to progressively apply new updates
+        /// to intermediate builds as updates are being developed.
+        /// </note>
         /// </summary>
         protected void UpdateHiveVersion()
         {
-            var firstManager = Hive.FirstManager;
+            if (Program.IsProd)
+            {
+                var firstManager = Hive.FirstManager;
 
-            // Update the hive version.  Note that we're not making this operation
-            // idempotent so that it'll be easier to manually change the hive version
-            // in Consul when testing hive update code.
+                // Update the hive version.  Note that we're not making this operation
+                // idempotent so that it'll be easier to manually change the hive version
+                // in Consul when testing hive update code.
 
-            firstManager.Status = "update: hive version";
-            Hive.Globals.Set(HiveGlobals.Version, (string)ToVersion);
-            firstManager.Status = string.Empty;
+                firstManager.Status = "update: hive version";
+                Hive.Globals.Set(HiveGlobals.Version, (string)ToVersion);
+                firstManager.Status = string.Empty;
+            }
         }
     }
 }
