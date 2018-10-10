@@ -65,6 +65,7 @@ namespace NeonCli
             // as TCP because older builds incorrectly configured this as an HTTP proxy.
 
             controller.AddGlobalStep(GetStepLabel("hivemq-settings"), () => UpdateHiveMQSettings());
+            controller.AddGlobalStep(GetStepLabel("hivemq cluster name"), () => UpdateHiveMQClusterName());
             controller.AddGlobalStep(GetStepLabel("rename log-retention-days"), () => UpdateLogRetentionDays());
         }
 
@@ -287,6 +288,25 @@ WantedBy=docker.service
                 });
 
             Hive.PrivateLoadBalancer.SetRule(ampqRule);
+        }
+
+        /// <summary>
+        /// Older builds didn't configure the HiveMQ cluster name so it defaulted
+        /// to the name of the first RabbitMQ container name that formed the cluster.
+        /// This was not super useful so we're going to explicity use the hive name.
+        /// </summary>
+        private void UpdateHiveMQClusterName()
+        {
+            var hiveMQNode = Hive.Nodes
+                .Where(n => n.Metadata.Labels.HiveMQ)
+                .OrderBy(n => n.Name)
+                .First();
+
+            hiveMQNode.InvokeIdempotentAction(GetIdempotentTag("hivemq-cluster-name"),
+                () =>
+                {
+                    hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_cluster_name {Hive.Definition.Name}", RunOptions.FaultOnError);
+                });
         }
 
         /// <summary>

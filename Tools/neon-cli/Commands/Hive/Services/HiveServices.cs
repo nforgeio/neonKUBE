@@ -153,6 +153,10 @@ namespace NeonCli
                                 node.Status = string.Empty;
                             }
 
+                            // Set the RabbitMQ cluster name to the name of the hive.
+
+                            hiveMQNode.InvokeIdempotentAction("setup/hivemq-cluster-name", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_cluster_name {Hive.Definition.Name}"));
+
                             // Deploy private load balancer for the AMPQ endpoints.
 
                             var ampqRule = new LoadBalancerTcpRule()
