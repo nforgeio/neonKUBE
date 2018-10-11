@@ -1885,7 +1885,6 @@ StartLimitBurst=6307200";
             // operators tune what's installed.  Perhaps something for the future.
 
             // $todo(jeff.lill): Consider allowing customization of which Ceph components are installed.
-            // $todo(jeff.lill): We're currently ignoring the Ceph version number.
 
             node.InvokeIdempotentAction("setup/ceph-packages",
                 () =>
@@ -1917,7 +1916,7 @@ StartLimitBurst=6307200";
 
                     // We also need need support for extended file system attributes
                     // so we can set the maximum size in bytes and/or maximum number
-                    // files in a directory via [setfattr] and [getfattr].
+                    // files in a directory via [setfattr] and [getfat].
 
                     node.SudoCommand($"safe-apt-get install -yq attr");
 
@@ -3458,7 +3457,7 @@ systemctl start neon-volume-plugin
                         AdminHosts  = hosts,
                         AdminPort   = HiveHostPorts.ProxyPrivateHiveMQAdmin,
                         TlsEnabled  = false,
-                        Username    = hive.Definition.HiveMQ.SysadminUser,
+                        Username    = HiveConst.HiveMQSysadminUser,
                         Password    = hive.Definition.HiveMQ.SysadminPassword,
                         VirtualHost = "/"
                     };
@@ -3466,16 +3465,16 @@ systemctl start neon-volume-plugin
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-sysadmin",
                         () => hive.Globals.Set(HiveGlobals.HiveMQSettingSysadmin, hiveMQSettings));
 
-                    hiveMQSettings.Username    = hive.Definition.HiveMQ.NeonUser;
+                    hiveMQSettings.Username    = HiveConst.HiveMQNeonUser;
                     hiveMQSettings.Password    = hive.Definition.HiveMQ.NeonPassword;
-                    hiveMQSettings.VirtualHost = hive.Definition.HiveMQ.NeonVHost;
+                    hiveMQSettings.VirtualHost = HiveConst.HiveMQNeonVHost;
 
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-neon",
                         () => hive.Globals.Set(HiveGlobals.HiveMQSettingsNeon, hiveMQSettings));
 
-                    hiveMQSettings.Username    = hive.Definition.HiveMQ.AppUser;
+                    hiveMQSettings.Username    = HiveConst.HiveMQAppUser;
                     hiveMQSettings.Password    = hive.Definition.HiveMQ.AppPassword;
-                    hiveMQSettings.VirtualHost = hive.Definition.HiveMQ.AppVHost;
+                    hiveMQSettings.VirtualHost = HiveConst.HiveMQAppVHost;
 
                     firstManager.InvokeIdempotentAction("setup/neon-hivemq-settings-app",
                         () => hive.Globals.Set(HiveGlobals.HiveMQSettingsApp, hiveMQSettings));
@@ -3806,7 +3805,7 @@ systemctl restart sshd
         }
 
         /// <summary>
-        /// Condifures the built-in hive dashboards.
+        /// Configures the built-in hive dashboards.
         /// </summary>
         private void ConfigureDashboards()
         {

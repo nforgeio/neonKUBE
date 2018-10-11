@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 
 using Consul;
 using ICSharpCode.SharpZipLib.Zip;
+using EasyNetQ.Management.Client.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -44,6 +45,7 @@ namespace NeonHiveManager
         private static readonly string secretPollSecondsKey  = $"{serviceRootKey}/secret_poll_seconds";
         private static readonly string logPollSecondsKey     = $"{serviceRootKey}/log_poll_seconds";
         private static readonly string proxyUpdateSecondsKey = $"{serviceRootKey}/proxy_update_seconds";
+        private static readonly string hivemqPollSecondsKey  = $"{serviceRootKey}/hivemq_poll_seconds";
         private static readonly string hiveDefinitionKey     = $"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}";
 
         private static ProcessTerminator        terminator;
@@ -59,6 +61,7 @@ namespace NeonHiveManager
         private static TimeSpan                 logPollInterval;
         private static TimeSpan                 secretPollInterval;
         private static TimeSpan                 proxyUpdateInterval;
+        private static TimeSpan                 hivemqPollInterval;
         private static HiveDefinition           cachedHiveDefinition;
         private static List<string>             vaultUris;
 
@@ -261,12 +264,19 @@ namespace NeonHiveManager
                 await consul.KV.PutDouble(proxyUpdateSecondsKey, 300);
             }
 
+            if (!await consul.KV.Exists(hivemqPollSecondsKey))
+            {
+                log.LogInfo($"Persisting setting [{hivemqPollSecondsKey}=60.0]");
+                await consul.KV.PutDouble(hivemqPollSecondsKey, 60);
+            }
+
             nodePollInterval    = TimeSpan.FromSeconds(await consul.KV.GetDouble(nodePollSecondsKey));
             vaultPollInterval   = TimeSpan.FromSeconds(await consul.KV.GetDouble(vaultPollSecondsKey));
             managerPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(managerPollSecondsKey));
             logPollInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(logPollSecondsKey));
             secretPollInterval  = TimeSpan.FromSeconds(await consul.KV.GetDouble(secretPollSecondsKey));
             proxyUpdateInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(proxyUpdateSecondsKey));
+            hivemqPollInterval  = TimeSpan.FromSeconds(await consul.KV.GetDouble(hivemqPollSecondsKey));
 
             log.LogInfo(() => $"Using setting [{nodePollSecondsKey}={nodePollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{vaultPollSecondsKey}={vaultPollInterval.TotalSeconds}]");
@@ -274,6 +284,7 @@ namespace NeonHiveManager
             log.LogInfo(() => $"Using setting [{logPollSecondsKey}={logPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{secretPollSecondsKey}={secretPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{proxyUpdateSecondsKey}={proxyUpdateInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{hivemqPollSecondsKey}={hivemqPollInterval.TotalSeconds}]");
 
             // Parse the Vault credentials from the [neon-hive-manager-vaultkeys] 
             // secret, if it exists.
@@ -301,6 +312,8 @@ namespace NeonHiveManager
             // Launch the sub-tasks.  These will run until the service is terminated.
 
             var tasks = new List<Task>();
+
+            // Start a task that polls current hive state to update the hive definition in Consul, etc.
 
             tasks.Add(StatePollerAsync());
 
@@ -335,6 +348,11 @@ namespace NeonHiveManager
             // that it should proactively rebuild the proxy configurations.
 
             tasks.Add(ProxyUpdaterAsync());
+
+            // Start a task that handles HiveMQ related activities like ensuring that
+            // the [sysadmin] account has full permissions for all virtual hosts.
+
+            tasks.Add(HiveMQMaintenanceAsync());
 
             // Wait for all tasks to exit cleanly for a normal shutdown.
 
@@ -973,7 +991,7 @@ namespace NeonHiveManager
                             return;
                         }
 
-                        log.LogInfo(() => $"Publish: [{nameof(ProxyRegenerateMessage)}(\"fail-safe\") --> {proxyNotifyChannel.Name}]");
+                        log.LogInfo(() => $"PROXY-UPDATER: Publish: [{nameof(ProxyRegenerateMessage)}(\"fail-safe\") --> {proxyNotifyChannel.Name}]");
                         proxyNotifyChannel.Publish(new ProxyRegenerateMessage() { Reason = "[neon-hive-manager]: fail-safe" });
                     }
                     catch (Exception e)
@@ -990,6 +1008,91 @@ namespace NeonHiveManager
                 {
                     log.LogDebug(() => "PROXY-UPDATER: Terminating.");
                     return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Periodically performs HiveMQ related maintenance activities such as ensuring
+        /// that the [sysadmin] account has full permissions for all virtual hosts.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task HiveMQMaintenanceAsync()
+        {
+            using (var hivemqManager = hive.HiveMQ.ConnectHiveMQManager())
+            {
+                while (true)
+                {
+                    try
+                    {
+                        try
+                        {
+                            if (terminator.CancellationToken.IsCancellationRequested)
+                            {
+                                log.LogDebug(() => "HIVEMQ-MAINTENANCE: Terminating.");
+                                return;
+                            }
+
+                            log.LogDebug(() => $"HIVEMQ-MAINTENANCE: Checking [{HiveConst.RootUser}] permissions.");
+
+                            // Build the set of virtual hostt names where [sysadmin] already has
+                            // full permissions.
+
+                            var sysadminVHosts = new HashSet<string>();
+
+                            foreach (var permissions in await hivemqManager.GetPermissionsAsync())
+                            {
+                                if (permissions.User == HiveConst.RootUser &&
+                                    permissions.Configure == ".*" &&
+                                    permissions.Read == ".*" &&
+                                    permissions.Write == ".*")
+                                {
+                                    sysadminVHosts.Add(permissions.Vhost);
+                                }
+                            }
+
+                            // List the vhosts and set full permissions for [sysadmin] for any
+                            // virtual hosts where [sysadmin] doesn't already have full permissions.
+
+                            var sysadminUser          = await hivemqManager.GetUserAsync(HiveConst.RootUser);
+                            var addedVHostPermissions = new List<string>();
+
+                            foreach (var vhost in await hivemqManager.GetVHostsAsync())
+                            {
+                                if (!sysadminVHosts.Contains(vhost.Name))
+                                {
+                                    addedVHostPermissions.Add(vhost.Name);
+                                    await hivemqManager.CreatePermissionAsync(new PermissionInfo(sysadminUser, vhost));
+                                }
+                            }
+
+                            if (addedVHostPermissions.Count > 0)
+                            {
+                                var sbVHostList = new StringBuilder();
+
+                                foreach (var vhost in addedVHostPermissions)
+                                {
+                                    sbVHostList.AppendWithSeparator(vhost, ", ");
+                                }
+
+                                log.LogInfo(() => $"Granted [{HiveConst.RootUser}] full permissions for vhosts: {sbVHostList}");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            if (!(e is OperationCanceledException))
+                            {
+                                log.LogError($"HIVEMQ-MAINTENANCE", e);
+                            }
+                        }
+
+                        await Task.Delay(hivemqPollInterval);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        log.LogDebug(() => "HIVEMQ-MAINTENANCE: Terminating.");
+                        return;
+                    }
                 }
             }
         }

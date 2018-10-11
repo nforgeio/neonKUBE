@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 
 using EasyNetQ;
 
@@ -72,11 +73,11 @@ namespace Neon.HiveMQ
         public string Platform { get; set; }
 
         /// <summary>
-        /// Identifies the RabbitMQ client.  This defaults to <b>EasyNetQ</b>.
+        /// Identifies the RabbitMQ client.  This effectively defaults to <b>EasyNetQ</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Client", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("EasyNetQ")]
-        public string Client { get; set; } = "EasyNetQ";
+        [DefaultValue("null")]
+        public string Client { get; set; }
 
         /// <summary>
         /// Specifies that the RabbitMQ broker should persist messages sent to it.
@@ -172,7 +173,9 @@ namespace Neon.HiveMQ
                 }
             }
 
-            target.ClientProperties["version"] = Client;
+            target.ClientProperties["version"]  = Client ?? "EasyNetQ";
+            target.ClientProperties["platform"] = Platform ?? $"{NeonHelper.FrameworkDescription}/{NeonHelper.OsDescription}";
+            target.ClientProperties["product"]  = Product ?? Path.GetFileNameWithoutExtension(NeonHelper.GetEntryAssemblyPath());
         }
     }
 }

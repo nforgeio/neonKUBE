@@ -56,7 +56,7 @@ namespace Neon.Hive
         public const string Version = "version";
 
         /// <summary>
-        /// Serialized <c>HiveMQSettings</c> for the the <see cref="HiveMQOptions.AppUser"/> HiveMQ account.
+        /// Serialized <c>HiveMQSettings</c> for the the <see cref="HiveConst.HiveMQAppUser"/> HiveMQ account.
         /// </summary>
         public const string HiveMQSettingsApp = "hivemq-settings-app";
 
@@ -78,7 +78,7 @@ namespace Neon.Hive
         public const string HiveMQSettingsBootstrap = "hivemq-settings-bootstrap";
 
         /// <summary>
-        /// Serialized <c>HiveMQSettings</c> for the the <see cref="HiveMQOptions.NeonUser"/> HiveMQ account.
+        /// Serialized <c>HiveMQSettings</c> for the the <see cref="HiveConst.HiveMQNeonUser"/> HiveMQ account.
         /// </summary>
         public const string HiveMQSettingsNeon = "hivemq-settings-neon";
 

@@ -1443,7 +1443,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
             var argList = new List<object>(args);
 
-            argList.Insert(0, NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()));
+            argList.Insert(0, NeonHelper.GetEntryAssemblyPath());
 
             return NeonHelper.ExecuteCapture("dotnet", argList.ToArray());
         }

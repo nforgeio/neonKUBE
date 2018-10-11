@@ -127,39 +127,24 @@ namespace Neon.Hive
         public string AppVHost => "app";
 
         /// <summary>
-        /// Returns the <b>sysadmin</b> username.
-        /// </summary>
-        [JsonIgnore]
-        public string SysadminUser => "sysadmin";
-
-        /// <summary>
-        /// Returns the <b>neon</b> username.
-        /// </summary>
-        [JsonIgnore]
-        public string NeonUser => "neon";
-
-        /// <summary>
-        /// Returns the <b>app</b> username.
-        /// </summary>
-        [JsonIgnore]
-        public string AppUser => "app";
-
-        /// <summary>
-        /// Specifies the password used to secure the <b>sysadmin</b> account.  This defaults to <b>password</b>>.
+        /// Specifies the password used to secure the <see cref="HiveConst.HiveMQSysadminUser"/> account.
+        /// This defaults to <b>password</b>>.
         /// </summary>
         [JsonProperty(PropertyName = "SysadminPassword", Required = Required.Default)]
         [DefaultValue(defaultPassword)]
         public string SysadminPassword { get; set; } = defaultPassword;
 
         /// <summary>
-        /// Specifies the password used to secure the <b>neon</b> account.  This defaults to <b>password</b>>.
+        /// Specifies the password used to secure the <see cref="HiveConst.HiveMQNeonUser"/> account.
+        /// This defaults to <b>password</b>>.
         /// </summary>
         [JsonProperty(PropertyName = "NeonPassword", Required = Required.Default)]
         [DefaultValue(defaultPassword)]
         public string NeonPassword { get; set; } = defaultPassword;
 
         /// <summary>
-        /// Specifies the password used to secure the <b>app</b> account.  This defaults to <b>password</b>>.
+        /// Specifies the password used to secure the <see cref="HiveConst.HiveMQAppUser"/> account.
+        /// This defaults to <b>password</b>>.
         /// </summary>
         [JsonProperty(PropertyName = "AppPassword", Required = Required.Default)]
         [DefaultValue(defaultPassword)]

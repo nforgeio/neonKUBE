@@ -170,9 +170,9 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveMQOptions.SysadminUser"/>.
+        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveConst.HiveMQSysadminUser"/>.
         /// You can use this to retrieve a client that can perform messaging operations within the
-        /// root <b>/</b>, <see cref="HiveMQOptions.AppVHost"/>, or <see cref="HiveMQOptions.NeonVHost"/>
+        /// root <b>/</b>, <see cref="HiveConst.HiveMQAppVHost"/>, or <see cref="HiveConst.HiveMQNeonVHost"/>
         /// virtual hosts.
         /// </para>
         /// </summary>
@@ -204,9 +204,9 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveMQOptions.NeonUser"/>.
+        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveConst.HiveMQNeonUser"/>.
         /// You can use this to retrieve a client that can perform messaging operations within the
-        /// <see cref="HiveMQOptions.NeonVHost"/> virtual host.
+        /// <see cref="HiveConst.HiveMQNeonVHost"/> virtual host.
         /// </para>
         /// </summary>
         /// <param name="useBootstrap">
@@ -237,9 +237,9 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveMQOptions.AppUser"/>.
+        /// Returns the <see cref="HiveMQSettings"/> for the <see cref="HiveConst.HiveMQAppUser"/>.
         /// You can use this to retrieve a client that can perform messaging operations within the
-        /// <see cref="HiveMQOptions.AppVHost"/> virtual host.
+        /// <see cref="HiveConst.HiveMQAppVHost"/> virtual host.
         /// </para>
         /// </summary>
         /// <param name="useBootstrap">
@@ -271,7 +271,7 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// <b>INTERNAL USE ONLY:</b> Returns the bootstrap <see cref="HiveMQSettings"/> 
-        /// for the <see cref="HiveMQOptions.NeonVHost"/> that directly reference the HiveMQ
+        /// for the <see cref="HiveConst.HiveMQNeonVHost"/> that directly reference the HiveMQ
         /// nodes rather than load balancer rules.
         /// </para>
         /// <para>
@@ -304,7 +304,7 @@ namespace Neon.Hive
                 TlsEnabled  = false,
                 Username    = null,
                 Password    = null,
-                VirtualHost = hive.Definition.HiveMQ.NeonVHost
+                VirtualHost = HiveConst.HiveMQNeonVHost
             };
 
             foreach (var node in hive.Definition.SortedNodes.Where(n => n.Labels.HiveMQ))

@@ -243,5 +243,35 @@ namespace Neon.Hive
         /// The default password for component dashboards and management tools (like Ceph and RabbitMQ).
         /// </summary>
         public const string DefaultPassword = "password";
+
+        /// <summary>
+        /// The HiveMQ <b>sysadmin</b> username.
+        /// </summary>
+        public const string HiveMQSysadminUser = "sysadmin";
+
+        /// <summary>
+        /// The HiveMQ root virtual host.
+        /// </summary>
+        public const string HiveMQRootVHost = "/";
+
+        /// <summary>
+        /// The HiveMQ <b>neon</b> username.
+        /// </summary>
+        public const string HiveMQNeonUser = "neon";
+
+        /// <summary>
+        /// The HiveMQ <b>neon</b> virtual host.
+        /// </summary>
+        public const string HiveMQNeonVHost = "neon";
+
+        /// <summary>
+        /// The HiveMQ <b>app</b> username.
+        /// </summary>
+        public const string HiveMQAppUser = "app";
+
+        /// <summary>
+        /// The HiveMQ <b>app</b> virtual host.
+        /// </summary>
+        public const string HiveMQAppVHost = "app";
     }
 }

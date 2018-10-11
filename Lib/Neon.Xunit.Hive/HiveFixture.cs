@@ -1615,7 +1615,7 @@ namespace Neon.Xunit.Hive
 
                 foreach (var vhost in mqManager.GetVHostsAsync().Result)
                 {
-                    if (vhost.Name != "/" && vhost.Name != hive.Definition.HiveMQ.NeonVHost)
+                    if (vhost.Name != "/" && vhost.Name != HiveConst.HiveMQNeonVHost)
                     {
                         mqManager.DeleteVirtualHostAsync(vhost).Wait();
                     }
@@ -1625,7 +1625,7 @@ namespace Neon.Xunit.Hive
 
                 foreach (var user in mqManager.GetUsersAsync().Result)
                 {
-                    if (user.Name != hive.Definition.HiveMQ.SysadminUser && user.Name != hive.Definition.HiveMQ.NeonUser)
+                    if (user.Name != HiveConst.HiveMQSysadminUser && user.Name != HiveConst.HiveMQNeonUser)
                     {
                         mqManager.DeleteUserAsync(user).Wait();
                     }
@@ -1633,11 +1633,11 @@ namespace Neon.Xunit.Hive
 
                 // Recreate the [app] vhost.
 
-                var appVHost = mqManager.CreateVirtualHostAsync(hive.Definition.HiveMQ.AppVHost).Result;
+                var appVHost = mqManager.CreateVirtualHostAsync(HiveConst.HiveMQAppVHost).Result;
 
                 // Recreate the [app] user and set its permissions for the [app] vhost.
 
-                var appUser = mqManager.CreateUserAsync(new EasyNetQ.Management.Client.Model.UserInfo(hive.Definition.HiveMQ.AppUser, hive.Definition.HiveMQ.AppPassword)).Result;
+                var appUser = mqManager.CreateUserAsync(new EasyNetQ.Management.Client.Model.UserInfo(HiveConst.HiveMQAppUser, hive.Definition.HiveMQ.AppPassword)).Result;
 
                 mqManager.CreatePermissionAsync(new EasyNetQ.Management.Client.Model.PermissionInfo(appUser, appVHost)).Wait();
             }

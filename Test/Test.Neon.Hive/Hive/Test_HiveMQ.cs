@@ -68,7 +68,7 @@ namespace TestHive
                 await mqManager.CreatePermissionAsync(new PermissionInfo(testUser, testVHost));
                 await mqManager.CreateQueueAsync(new QueueInfo("test"), testVHost);
 
-                var appVHost = await mqManager.GetVhostAsync(hive.Definition.HiveMQ.AppVHost);
+                var appVHost = await mqManager.GetVhostAsync(HiveConst.HiveMQAppVHost);
 
                 await mqManager.CreatePermissionAsync(new PermissionInfo(testUser, appVHost));
                 await mqManager.CreateQueueAsync(new QueueInfo("app-queue"), testVHost);
@@ -80,26 +80,26 @@ namespace TestHive
             {
                 // Ensure that the "/" and "neon" virtual hosts are still there.
 
-                Assert.Single((await mqManager.GetVHostsAsync()).Where(vh => vh.Name == hive.Definition.HiveMQ.RootVHost));
-                Assert.Single((await mqManager.GetVHostsAsync()).Where(vh => vh.Name == hive.Definition.HiveMQ.NeonVHost));
+                Assert.Single((await mqManager.GetVHostsAsync()).Where(vh => vh.Name == HiveConst.HiveMQRootVHost));
+                Assert.Single((await mqManager.GetVHostsAsync()).Where(vh => vh.Name == HiveConst.HiveMQNeonVHost));
 
                 // Ensure that the "sysadmin", "neon", and "app" users are still around and have the
                 // correct permissions.
 
-                Assert.Single((await mqManager.GetUsersAsync()).Where(u => u.Name == hive.Definition.HiveMQ.SysadminUser));
-                Assert.Single((await mqManager.GetUsersAsync()).Where(u => u.Name == hive.Definition.HiveMQ.NeonUser));
-                Assert.Single((await mqManager.GetUsersAsync()).Where(u => u.Name == hive.Definition.HiveMQ.AppUser));
+                Assert.Single((await mqManager.GetUsersAsync()).Where(u => u.Name == HiveConst.HiveMQSysadminUser));
+                Assert.Single((await mqManager.GetUsersAsync()).Where(u => u.Name == HiveConst.HiveMQNeonUser));
+                Assert.Single((await mqManager.GetUsersAsync()).Where(u => u.Name == HiveConst.HiveMQAppUser));
 
                 var permissions = await mqManager.GetPermissionsAsync();
                 var allRights   = ".*";
 
-                Assert.Single(permissions.Where(p => p.User == hive.Definition.HiveMQ.SysadminUser && p.Vhost == hive.Definition.HiveMQ.RootVHost && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
-                Assert.Single(permissions.Where(p => p.User == hive.Definition.HiveMQ.NeonUser && p.Vhost == hive.Definition.HiveMQ.NeonVHost && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
-                Assert.Single(permissions.Where(p => p.User == hive.Definition.HiveMQ.AppUser && p.Vhost == hive.Definition.HiveMQ.AppVHost && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
+                Assert.Single(permissions.Where(p => p.User == HiveConst.HiveMQSysadminUser && p.Vhost == HiveConst.HiveMQRootVHost && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
+                Assert.Single(permissions.Where(p => p.User == HiveConst.HiveMQNeonUser && p.Vhost == HiveConst.HiveMQNeonVHost && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
+                Assert.Single(permissions.Where(p => p.User == HiveConst.HiveMQAppUser && p.Vhost == HiveConst.HiveMQAppVHost && p.Read == allRights && p.Write == allRights && p.Configure == allRights));
 
                 // Ensure that the "app" virtual host has no queues.
 
-                Assert.Empty((await mqManager.GetQueuesAsync()).Where(q => q.Vhost == hive.Definition.HiveMQ.AppVHost));
+                Assert.Empty((await mqManager.GetQueuesAsync()).Where(q => q.Vhost == HiveConst.HiveMQAppVHost));
             }
         }
 
