@@ -13,6 +13,7 @@ param
 (
 	[switch]$all         = $False,        # Rebuild all images
 	[switch]$base        = $False,        # Rebuild base images
+	[switch]$dotnetBase  = $False,        # Rebuild .NET base images
 	[switch]$dotnet      = $False,        # Rebuild .NET based images
 	[switch]$other       = $False,        # Rebuild all other images (usually script based)
     [switch]$nopush      = $False,        # Don't push to the registry
@@ -67,9 +68,10 @@ function Publish
 
 if ($all)
 {
-	$base   = $True
-	$dotnet = $True
-	$other  = $True
+	$base       = $True
+	$dotnetBase = $True
+	$dotnet     = $True
+	$other      = $True
 }
 elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 {
@@ -96,22 +98,16 @@ if (-not $noprune)
 
 if ($base)
 {
+	$dotnetBase = $True
+
 	# Base OS images:
 
 	Publish "$image_root\\alpine"
 	Publish "$image_root\\ubuntu-16.04"
 
-	# .NET Core Base images:
-
-	Publish "$image_root\\dotnet"
-	Publish "$image_root\\aspnet"
-	Publish "$image_root\\ubuntu-16.04-dotnet"
-	Publish "$image_root\\ubuntu-16.04-aspnet"
-
 	# Other base images:
 
 	Publish "$image_root\\golang"
-	Publish "$image_root\\aspnet"
 	Publish "$image_root\\elasticsearch"
 	Publish "$image_root\\kibana"
 	Publish "$image_root\\kong"
@@ -122,6 +118,14 @@ if ($base)
 	Publish "$image_root\\neon-registry"
 	Publish "$image_root\\neon-registry-cache"
 	Publish "$image_root\\varnish"
+}
+
+if ($dotnetBase)
+{
+	Publish "$image_root\\dotnet"
+	Publish "$image_root\\aspnet"
+	Publish "$image_root\\ubuntu-16.04-dotnet"
+	Publish "$image_root\\ubuntu-16.04-aspnet"
 }
 
 if ($dotnet)

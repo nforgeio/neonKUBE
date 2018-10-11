@@ -39,7 +39,7 @@ Follow steps below to configure a development or test workstation.
     * GitHub extensions for Visual Studio
     * Help Viewer
   * Click **Install** (and take a coffee break)
-  * Install **.NET Core SDK 2.1.401 (x64 installer)** from [here](https://www.microsoft.com/net/download/dotnet-core/2.1)
+  * Install **.NET Core SDK 2.1.403 from [here](https://www.microsoft.com/net/download/thank-you/dotnet-sdk-2.1.403-windows-x64-installer)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   

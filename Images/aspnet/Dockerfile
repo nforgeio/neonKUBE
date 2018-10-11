@@ -7,7 +7,14 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The ASP.NET Core image tag (e.g. "2.1.3")
+#   VERSION         - The ASP.NET Core image tag (e.g. "2.1")
+#
+# NOTE:
+#
+# It appears that that latest point release will be installed when you specify
+# only the major and minor version (e.g. spcifying "2.1" will actually install
+# "2.1.5" if that's the latest point release).  This means you only need to
+# rebuild the image to pick up the latest point release.
 
 ARG         VERSION
 FROM        microsoft/dotnet:${VERSION}-aspnetcore-runtime-alpine3.7
