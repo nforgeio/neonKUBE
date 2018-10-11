@@ -1033,7 +1033,7 @@ namespace NeonHiveManager
                                 return;
                             }
 
-                            log.LogDebug(() => $"HIVEMQ-MAINTENANCE: Checking [{HiveConst.RootUser}] permissions.");
+                            log.LogDebug(() => $"HIVEMQ-MAINTENANCE: Checking [{HiveConst.HiveMQSysadminUser}] permissions.");
 
                             // Build the set of virtual hostt names where [sysadmin] already has
                             // full permissions.
@@ -1042,7 +1042,7 @@ namespace NeonHiveManager
 
                             foreach (var permissions in await hivemqManager.GetPermissionsAsync())
                             {
-                                if (permissions.User == HiveConst.RootUser &&
+                                if (permissions.User == HiveConst.HiveMQSysadminUser &&
                                     permissions.Configure == ".*" &&
                                     permissions.Read == ".*" &&
                                     permissions.Write == ".*")
@@ -1054,7 +1054,7 @@ namespace NeonHiveManager
                             // List the vhosts and set full permissions for [sysadmin] for any
                             // virtual hosts where [sysadmin] doesn't already have full permissions.
 
-                            var sysadminUser          = await hivemqManager.GetUserAsync(HiveConst.RootUser);
+                            var sysadminUser          = await hivemqManager.GetUserAsync(HiveConst.HiveMQSysadminUser);
                             var addedVHostPermissions = new List<string>();
 
                             foreach (var vhost in await hivemqManager.GetVHostsAsync())
@@ -1075,7 +1075,7 @@ namespace NeonHiveManager
                                     sbVHostList.AppendWithSeparator(vhost, ", ");
                                 }
 
-                                log.LogInfo(() => $"Granted [{HiveConst.RootUser}] full permissions for vhosts: {sbVHostList}");
+                                log.LogInfo(() => $"Granted [{HiveConst.HiveMQSysadminUser}] full permissions for vhosts: {sbVHostList}");
                             }
                         }
                         catch (Exception e)
