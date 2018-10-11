@@ -59,10 +59,11 @@ do
         sleep $DELAY
     fi
 
-    if apt-get "$@" 1>$STDOUT_PATH 2>$STDERR_PATH
-    then
-        EXIT_CODE=$?
+    apt-get "$@" 1>$STDOUT_PATH 2>$STDERR_PATH
+    EXIT_CODE=$?
 
+    if $EXIT_CODE; then
+    
         # Combine STDOUT and STDERR into a single file so we can
         # check both streams for transient errors.
 
