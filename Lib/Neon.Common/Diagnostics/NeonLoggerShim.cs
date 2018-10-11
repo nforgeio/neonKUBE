@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -238,6 +239,88 @@ namespace Neon.Diagnostics
         public void LogCritical(object message, Exception e, string activityId = null)
         {
             logger.LogCritical(e, FormatMessage(message, activityId));
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, IEnumerable<string> txtFields, IEnumerable<double> numFields)
+        {
+            var txtCount = 0;
+            var numCount = 0;
+
+            if (txtFields != null)
+            {
+                txtCount = txtFields.Count();
+            }
+
+            if (numFields != null)
+            {
+                numCount = numFields.Count();
+            }
+
+            if (txtCount == 0 && numCount == 0)
+            {
+                return;     // Nothing to write.
+            }
+
+            var message = NeonLogger.FormatMetrics(txtFields, numFields);
+
+            switch (level)
+            {
+                case LogLevel.Critical:
+
+                    LogCritical(message);
+                    break;
+
+                case LogLevel.Debug:
+
+                    LogDebug(message);
+                    break;
+
+                case LogLevel.Error:
+
+                    LogError(message);
+                    break;
+
+                case LogLevel.Info:
+
+                    LogInfo(message);
+                    break;
+
+                case LogLevel.None:
+
+                    break;  // NOP
+
+                case LogLevel.SError:
+
+                    LogSError(message);
+                    break;
+
+                case LogLevel.SInfo:
+
+                    LogSInfo(message);
+                    break;
+
+                case LogLevel.Warn:
+
+                    LogWarn(message);
+                    break;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params string[] txtFields)
+        {
+            LogMetrics(level, txtFields, null);
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params double[] numFields)
+        {
+            LogMetrics(level, null, numFields);
         }
 
         //---------------------------------------------------------------------

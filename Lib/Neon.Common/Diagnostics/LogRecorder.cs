@@ -194,6 +194,25 @@ namespace Neon.Diagnostics
             capture.AppendLine($"[CRITICAL] {message} {NeonHelper.ExceptionError(e)}");
         }
 
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, IEnumerable<string> txtFields, IEnumerable<double> numFields)
+        {
+            log.LogMetrics(level, txtFields, numFields);
+            capture.AppendLine($"[{level.ToString().ToUpperInvariant()}] {NeonLogger.FormatMetrics(txtFields, numFields)}");
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params string[] txtFields)
+        {
+            log.LogMetrics(level, txtFields, null);
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params double[] numFields)
+        {
+            log.LogMetrics(level, null, numFields);
+        }
+
         /// <summary>
         /// Logs a line of text directly to the log recorder without also logging it to
         /// to the underlying <see cref="INeonLogger"/> implementation.

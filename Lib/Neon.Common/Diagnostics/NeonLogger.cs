@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -25,6 +26,56 @@ namespace Neon.Diagnostics
     /// </summary>
     internal class NeonLogger : INeonLogger, ILogger
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Formats metric fields into a message.
+        /// </summary>
+        /// <param name="txtFields">The text fields (or <c>null</c>).</param>
+        /// <param name="numFields">The numeric fields (or <c>null</c>).</param>
+        /// <exception cref="ArgumentException">
+        /// Thrown if either of <paramref name="txtFields"/> or <paramref name="numFields"/> 
+        /// includes more than 10 items.
+        /// </exception>
+        /// <returns>The formatted message.</returns>
+        internal static string FormatMetrics(IEnumerable<string> txtFields, IEnumerable<double> numFields)
+        {
+            var sb    = new StringBuilder();
+            var index = 0;
+
+            if (txtFields != null)
+            {
+                if (txtFields.Count() > 10)
+                {
+                    throw new ArgumentException($"[{nameof(txtFields)}] count exceeds 10.");
+                }
+
+                foreach (var field in txtFields)
+                {
+                    sb.AppendWithSeparator($"[txt.{index}={field}]");
+                }
+            }
+
+            if (numFields != null)
+            {
+                if (numFields.Count() > 10)
+                {
+                    throw new ArgumentException($"[{nameof(numFields)}] count exceeds 10.");
+                }
+
+                foreach (var field in numFields)
+                {
+                    sb.AppendWithSeparator($"[num.{index}={field}]");
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private ILogManager logManager;
         private string      sourceModule;
         private bool        infoAsDebug;
@@ -655,6 +706,24 @@ namespace Neon.Diagnostics
                     }
                     break;
             }
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, IEnumerable<string> txtFields, IEnumerable<double> numFields)
+        {
+            LogMetrics(level, txtFields, numFields);
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params string[] txtFields)
+        {
+            LogMetrics(level, txtFields);
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params double[] numFields)
+        {
+            LogMetrics(level, numFields);
         }
 
         /// <inheritdoc/>
