@@ -152,6 +152,11 @@ namespace Neon.HiveMQ
             // routes messages to the queue by name.
 
             exchange = Exchange.GetDefault();
+
+            // We need to configure a stub message consumer so that
+            // queue auto deletion will work.
+
+            Consume<StubMessage>(message => { });
         }
 
         /// <inheritdoc/>

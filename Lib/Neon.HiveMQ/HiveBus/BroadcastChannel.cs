@@ -150,6 +150,11 @@ namespace Neon.HiveMQ
                 maxLengthBytes: maxLengthBytes);
 
             EasyBus.Bind(exchange, queue, routingKey: "#");
+
+            // We need to configure a stub message consumer so that
+            // queue auto deletion will work.
+
+            Consume<StubMessage>(message => { });
         }
 
         /// <inheritdoc/>
