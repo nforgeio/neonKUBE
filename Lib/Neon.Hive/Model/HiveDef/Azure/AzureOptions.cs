@@ -193,7 +193,7 @@ namespace Neon.Hive
         public int FirstReservedPort { get; set; } = 37100;
 
         /// <summary>
-        /// Specifies the target Azure environment.  This defaults to to the 
+        /// Specifies the target Azure environment.  This defaults to the 
         /// normal public Azure cloud.  See <see cref="AzureCloudEnvironment"/>
         /// for other possibilities.
         /// </summary>

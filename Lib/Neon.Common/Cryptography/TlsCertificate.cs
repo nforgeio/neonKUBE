@@ -1115,7 +1115,7 @@ subjectAltName         = @alt_names
         /// <exception cref="FormatException">Thrown if the certificate cannot be parsed.</exception>
         public void Parse()
         {
-            // We need to to load the certificate's thumbprint.
+            // We need to load the certificate's thumbprint.
 
             var tempPath = Path.GetTempFileName();
 

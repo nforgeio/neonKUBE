@@ -207,7 +207,7 @@ namespace Neon.Hive
             public string PublicSshAddress { get; set; }
 
             /// <summary>
-            /// The SSH port to to be used to connect to the node via SSH while provisioning
+            /// The SSH port to be used to connect to the node via SSH while provisioning
             /// the hive.  This will be the standard <see cref="NetworkPorts.SSH"/> if the 
             /// hive nodes are being provisioned with addresses or else a temporary NAT port
             /// configured on the appropriate load balancer.

@@ -78,7 +78,7 @@ namespace NeonCli.Ansible
         //
         // This module is used to have a neonHIVE log into or out from a Docker registry.
         // All hive nodes including managers, workers, and pets, will be logged in or out
-        // and registry credentials will be persisted to to the hive Vault so they will
+        // and registry credentials will be persisted to the hive Vault so they will
         // be available if new nodes are added to the hive at a later time.
         //
         // Note that a hive may be logged into multiple registries at any given time.

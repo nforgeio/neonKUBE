@@ -173,7 +173,7 @@ namespace Neon.HyperV
         /// </param>
         /// <param name="drivePath">
         /// Optionally specifies the path where the virtual hard drive will be located.  Pass 
-        /// <c>null</c> or empty to to default to <b>MACHINE-NAME.vhdx</b> located in the default
+        /// <c>null</c> or empty to default to <b>MACHINE-NAME.vhdx</b> located in the default
         /// Hyper-V virtual machine drive folder.
         /// </param>
         /// <param name="checkpointDrives">Optionally enables drive checkpoints.  This defaults to <c>false</c>.</param>

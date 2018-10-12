@@ -114,7 +114,7 @@ namespace Neon.Hive
         {
             // $hack(jeff.lill): 
             //
-            // We're going to to wait 15 seconds to give the following services a
+            // We're going to wait 15 seconds to give the following services a
             // chance to process any pending DNS host changes written to Consul.  This 
             // is hardcoded, assuming 5 second polling intervals and also giving the
             // [neon-dns-mon] service a chance to perform health checks.

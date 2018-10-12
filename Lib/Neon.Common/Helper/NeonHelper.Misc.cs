@@ -1558,7 +1558,7 @@ namespace Neon.Common
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
         /// <param name="input">The input text (JSON or YAML).</param>
-        /// <param name="strict">Optionally require that all input properties map to to <typeparamref name="T"/> properties.</param>
+        /// <param name="strict">Optionally require that all input properties map to <typeparamref name="T"/> properties.</param>
         /// <returns>The parsed <typeparamref name="T"/>.</returns>
         /// <remarks>
         /// <note>

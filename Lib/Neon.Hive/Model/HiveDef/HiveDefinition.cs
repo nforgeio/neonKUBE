@@ -69,7 +69,7 @@ namespace Neon.Hive
         /// Parses a hive definition from JSON text.
         /// </summary>
         /// <param name="json">The JSON text.</param>
-        /// <param name="strict">Optionally require that all input properties map to to <see cref="HiveDefinition"/> properties.</param>
+        /// <param name="strict">Optionally require that all input properties map to <see cref="HiveDefinition"/> properties.</param>
         /// <returns>The parsed <see cref="HiveDefinition"/>.</returns>
         /// <remarks>
         /// <note>
@@ -94,7 +94,7 @@ namespace Neon.Hive
         /// Parses and validates a hive definition file.
         /// </summary>
         /// <param name="path">The file path.</param>
-        /// <param name="strict">Optionally require that all input properties map to to <see cref="HiveDefinition"/> properties.</param>
+        /// <param name="strict">Optionally require that all input properties map to <see cref="HiveDefinition"/> properties.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         public static void ValidateFile(string path, bool strict = false)
         {
@@ -105,7 +105,7 @@ namespace Neon.Hive
         /// Parses a hive definition from a file.
         /// </summary>
         /// <param name="path">The file path.</param>
-        /// <param name="strict">Optionally require that all input properties map to to <see cref="HiveDefinition"/> properties.</param>
+        /// <param name="strict">Optionally require that all input properties map to <see cref="HiveDefinition"/> properties.</param>
         /// <returns>The parsed <see cref="HiveDefinition"/>.</returns>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         /// <remarks>

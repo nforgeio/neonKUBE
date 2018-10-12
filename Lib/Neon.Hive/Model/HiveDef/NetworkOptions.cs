@@ -348,7 +348,7 @@ namespace Neon.Hive
         ///     <description>
         ///     <see cref="CloudVNetSubnet"/>: The cloud address space is split in half and the 
         ///     first half will be used as the overall address space for the virtual network to
-        ///     be created for the hive.  The VNET address space will be split into to equal
+        ///     be created for the hive.  The VNET address space will be split into equal
         ///     sized subnets to be assigned to manager node NICs as well as NICs for all nodes.
         ///     </description>
         /// </item>

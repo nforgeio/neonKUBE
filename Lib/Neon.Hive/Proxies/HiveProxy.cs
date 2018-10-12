@@ -534,7 +534,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Indicates that the hive certificates and or load balancer rules may have been changed.
-        /// This has the effect of signalling <b>neon-proxy-manager</b> to to regenerate the proxy 
+        /// This has the effect of signalling <b>neon-proxy-manager</b> to regenerate the proxy 
         /// definitions and update all of the load balancers when changes are detected.
         /// </summary>
         public void SignalLoadBalancerUpdate()

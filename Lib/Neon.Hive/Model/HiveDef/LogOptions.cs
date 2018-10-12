@@ -65,7 +65,7 @@ namespace Neon.Hive
         public int RetentionDays { get; set; } = defaultRetentionDays;
 
         /// <summary>
-        /// Returns the number of bytes of RAM to to dedicate to a log related Elasticsearch
+        /// Returns the number of bytes of RAM to dedicate to a log related Elasticsearch
         /// container by parsing <see cref="EsMemory"/>.
         /// </summary>
         [JsonIgnore]

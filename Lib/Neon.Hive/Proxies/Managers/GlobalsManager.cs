@@ -303,7 +303,7 @@ namespace Neon.Hive
         /// <typeparam name="T">The type being deserialized.</typeparam>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
-        /// <param name="strict">Optionally require that all input properties map to to <typeparamref name="T"/> properties.</param>
+        /// <param name="strict">Optionally require that all input properties map to <typeparamref name="T"/> properties.</param>
         /// <returns><c>true</c> if the setting exists and was returned.</returns>
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>

@@ -11,7 +11,7 @@
 #   report-error.sh [MESSAGE]
 #
 # This script looks examines ${RESTARTING} to determine if it's being reconfigured
-# or started for the first time.  If it's being started, an ALERT will be logged to to
+# or started for the first time.  If it's being started, an ALERT will be logged to
 # the standard output and the container will exit with a non-zero exit code.
 #
 # If HAProxy is being restarted, a WARNING will be logged immediately and the 
