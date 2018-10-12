@@ -23,7 +23,7 @@ namespace Neon.Xen
 {
     /// <summary>
     /// This class provides a simple light-weight XenServer or CXP-ng 
-    /// API that connects to the the XenServer host operating system via 
+    /// API that connects to the XenServer host operating system via 
     /// SSH and executes commands using the <b>xe</b> XenServer client
     /// tool.
     /// </summary>

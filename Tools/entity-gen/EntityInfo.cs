@@ -246,7 +246,7 @@ namespace EntityGen
             }
 
             // For derived entity interfaces, we need to set [EntityTypeProperty] to a clone
-            // of the the tagged property from the root interface, if it has one with its
+            // of the tagged property from the root interface, if it has one with its
             // [TypePropertyValue] set to the value from this definition.
 
             foreach (var derivedDefinition in definitions.Values.Where(d => d.IsDerived))

@@ -2032,7 +2032,7 @@ namespace Neon.Hive
         ///     <term><b>Request Headers (%hr)</b></term>
         ///     <description>
         ///     The captured HTTP request headers within <b>{...}</b> and separated by pipe 
-        ///     (|) characters.  Currently, only the the <b>Host</b> and <b>User-Agent</b> 
+        ///     (|) characters.  Currently, only the <b>Host</b> and <b>User-Agent</b> 
         ///     headers are captured, in that order.
         ///     </description>
         /// </item>

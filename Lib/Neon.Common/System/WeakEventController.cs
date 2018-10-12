@@ -185,7 +185,7 @@ namespace System
         /// <param name="source">The source object or <c>null</c>.</param>
         /// <param name="eventName">The event name.</param>
         /// <param name="handler">The event handler.</param>
-        /// <returns>The the event bucket index.</returns>
+        /// <returns>The event bucket index.</returns>
         private static int HashToBucket(object source, string eventName, object handler)
         {
             var hash = 0;

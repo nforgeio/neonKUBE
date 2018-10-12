@@ -135,7 +135,7 @@ export CONFIG_NEW_PATH=${CONFIG_NEW_FOLDER}/haproxy.cfg
 # the [/dev/shm/secrets/haproxy-new] directory and then copy it to
 # [/dev/shm/secrets/haproxy] before starting or restarting HAProxy.
 #
-# Note the the [consul watch] command returns only if [onconfigchange.sh]
+# Note the [consul watch] command returns only if [onconfigchange.sh]
 # returns a non-zero exit code.
 
 LAST_HASH=0d3001e6-3031-444f-8529-7f58a4faf179

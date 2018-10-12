@@ -20,7 +20,7 @@ using Neon.Net;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Describes a DNS domain to be served dynamically by the the neonHIVE 
+    /// Describes a DNS domain to be served dynamically by the neonHIVE 
     /// Local DNS implementation.  These records are used by the <b>neon-dns-mon</b> 
     /// service to persist the <see cref="DnsAnswer"/> records to Consul for the
     /// healthy endpoints.

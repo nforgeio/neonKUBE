@@ -372,7 +372,7 @@ namespace Neon.Hive
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The hive managers will be configured to synchronize their time with the these
+        /// The hive managers will be configured to synchronize their time with these
         /// time sources and the worker nodes will be configured to synchronize their time
         /// with the manager nodes.
         /// </para>

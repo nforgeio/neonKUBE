@@ -114,7 +114,7 @@ namespace System.Threading.Tasks
             public void Dispose()
             {
                 // Note that I'm not implementing any kind of [isDisposed] check here
-                // since I'm reusing the the instances below below as the [cachedReaderLock]
+                // since I'm reusing the instances below below as the [cachedReaderLock]
                 // and [cachedWriterLock] as a performance improvement.
 
                 if (isWriteLock)

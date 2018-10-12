@@ -502,7 +502,7 @@ namespace Neon.Hive
         public string Username => credentials.Username;
 
         /// <summary>
-        /// Updates the proxy credentials.  Call this whenever you change the the
+        /// Updates the proxy credentials.  Call this whenever you change the
         /// password or SSH certificate for the user account we're using for the
         /// current proxy connection.  This ensures that the proxy will be able
         /// to reconnect to the service when required.
@@ -2436,7 +2436,7 @@ echo $? > {cmdFolder}/exit
         /// </para>
         /// <para>
         /// A good example of this is performing a <b>docker stack</b> command on the hive.  In this case, we need to
-        /// upload the DAB file along with any files it references and then we we'll want to execute the the Docker client.
+        /// upload the DAB file along with any files it references and then we we'll want to execute the Docker client.
         /// </para>
         /// <para>
         /// To use this class, construct an instance passing the command and arguments to be executed.  The command be 
@@ -2685,7 +2685,7 @@ echo $? > {cmdFolder}/exit
         /// </para>
         /// <para>
         /// A good example of this is performing a <b>docker stack</b> command on the hive.  In this case, we need to
-        /// upload the DAB file along with any files it references and then we we'll want to execute the the Docker 
+        /// upload the DAB file along with any files it references and then we we'll want to execute the Docker 
         /// client.
         /// </para>
         /// <para>

@@ -228,7 +228,7 @@ if [ ! $DISK_COUNT -eq 0 ]; then
     #
     # We're going to do this by listing the device UUIDs and GREPing
     # out the line for the new device [/dev/sdc1] or [/dev/md127.  Then 
-    # we'll use Bash REGEX to extract the UUID.  Note the the device 
+    # we'll use Bash REGEX to extract the UUID.  Note the device 
     # listing lines look like:
     #
     #	/dev/sdc1: UUID="3d70d51a-fd8a-4761-b36d-dba5ca889b72" TYPE="ext4"

@@ -667,7 +667,7 @@ OPTIONS:
                         hiveLogin      = HiveHelper.LoadHiveLogin(HiveConst.RootUser, hiveLogin.Definition.Name);
                         hiveLogin.Path = hiveLoginPath;
 
-                        // Update the the PuTTY/WinSCP key.
+                        // Update the PuTTY/WinSCP key.
 
                         File.WriteAllText(pemKeyPath, hiveLogin.SshClientKey.PrivatePEM);
 
@@ -3327,9 +3327,9 @@ systemctl start neon-volume-plugin
                         hive.Vault.SetAppRole("neon-proxy-private", "neon-cert-reader");
                     });
 
-                // Store the the hive hosting options in the Vault so services that need to
-                // perform hosting level operations will have the credentials and other information
-                // to modify the environment.  For example in cloud environments, the [neon-proxy-manager]
+                // Store the hive hosting options in the Vault so services that need to perform
+                // hosting level operations will have the credentials and other information to 
+                // modify the environment.  For example in cloud environments, the [neon-proxy-manager]
                 // service needs to be able to update the worker load balancer rules so they match
                 // the current PUBLIC routes.
 
@@ -3340,12 +3340,6 @@ systemctl start neon-volume-plugin
 
                         using (var vault = HiveHelper.OpenVault(HiveCredentials.FromVaultToken(hiveLogin.VaultCredentials.RootToken)))
                         {
-                            // Store the the hive hosting options in the Vault so services that need to
-                            // perform hosting level operations will have the credentials and other information
-                            // to modify the environment.  For example in cloud environments, the [neon-proxy-manager]
-                            // service needs to be able to update the worker load balancer rules so they match
-                            // the current PUBLIC routes.
-
                             vault.WriteJsonAsync("neon-secret/hosting/options", hive.Definition.Hosting).Wait();
 
                             // Store the zipped OpenVPN certificate authority files in the hive Vault.

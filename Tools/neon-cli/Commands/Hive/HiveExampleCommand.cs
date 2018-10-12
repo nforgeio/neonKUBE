@@ -764,7 +764,7 @@ neon hive example
     //                          executing running Ansible playbooks.
     //
     //  The following properties are honored when provisioning nodes
-    //  as virtual machines to the the [local-hyper-v] and [xenserver]
+    //  as virtual machines to the [local-hyper-v] and [xenserver]
     //  hosting environmewnts.  Many of these will override the matching
     //  [Hosting] options, allowing you to override those defaults for
     //  specific nodes.

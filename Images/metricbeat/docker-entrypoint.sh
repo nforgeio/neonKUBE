@@ -47,7 +47,7 @@ fi
 
 /metricbeat.yml.sh
 
-# Start [metricbeat] using the [--setup] option so that the the sample
+# Start [metricbeat] using the [--setup] option so that the sample
 # dashboards will be configured.
 
 if [ "${1}" == "service" ] ; then

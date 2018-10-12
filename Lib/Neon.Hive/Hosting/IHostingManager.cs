@@ -90,7 +90,7 @@ namespace Neon.Hive
         List<HostedEndpoint> GetPublicEndpoints();
 
         /// <summary>
-        /// Returns <c>true</c> if the hive manager is able to update the the deployment's load balancer and security rules.
+        /// Returns <c>true</c> if the hive manager is able to update the deployment's load balancer and security rules.
         /// </summary>
         bool CanUpdatePublicEndpoints { get; }
 

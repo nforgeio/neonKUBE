@@ -354,7 +354,7 @@ namespace NeonCli
                 //
                 //      TARGET_IMAGE=OLD-IMAGE
                 //
-                // with the the new image and then upload the change.
+                // with the new image and then upload the change.
 
                 using (var reader = new StringReader(curScript))
                 {

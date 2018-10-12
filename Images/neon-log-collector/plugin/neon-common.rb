@@ -199,7 +199,7 @@ module NeonCommon
 
     # This method attempts to extract the best timestamp for a log event by looking
     # for a recognized time format within at the beginning of the log message.  The 
-    # Fluentd event time will be used if the the message didn't include a valid time.
+    # Fluentd event time will be used if the message didn't include a valid time.
     #
     # Recognized timestamps will be stripped from the message.
     #

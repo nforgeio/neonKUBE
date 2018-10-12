@@ -217,7 +217,7 @@ namespace Neon.Hive
             var ruleKey = GetProxyRuleKey(rule.Name);
             var update  = hive.Consul.Client.KV.Exists(ruleKey).Result;
 
-            // Load the the full proxy definition and hive certificates, add/replace
+            // Load the full proxy definition and hive certificates, add/replace
             // the rule being set and then verify that the rule is OK.
 
             var proxyDefinition = GetDefinition();
@@ -240,7 +240,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Lists the the load balancer rules.
+        /// Lists the load balancer rules.
         /// </summary>
         /// <param name="predicate">Optional predicate used to filter the output rules.</param>
         /// <returns>The <see cref="IEnumerable{T}"/> of load balancer rules.</returns>

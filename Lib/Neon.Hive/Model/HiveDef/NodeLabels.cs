@@ -255,7 +255,7 @@ namespace Neon.Hive
         public CpuArchitecture ComputeArchitecture { get; set; } = CpuArchitecture.x64;
 
         /// <summary>
-        /// <b>io.neonhive.compute.ram_mb</b> [<c>int</c>]: Specifies the the available RAM in
+        /// <b>io.neonhive.compute.ram_mb</b> [<c>int</c>]: Specifies the available RAM in
         /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>

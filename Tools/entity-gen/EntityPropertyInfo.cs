@@ -460,7 +460,7 @@ namespace EntityGen
         /// The expression to be used to compare this property with the same
         /// property in another instance.  This assumes that the source generated
         /// names the other instance <b>other</b> and the expression returns 
-        /// <c>true</c> if the the instances are not equal.
+        /// <c>true</c> if the instances are not equal.
         /// </summary>
         public string NotEqualExpression { get; private set; }
 

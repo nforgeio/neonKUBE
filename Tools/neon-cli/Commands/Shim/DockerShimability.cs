@@ -33,7 +33,7 @@ namespace NeonCli
         Optional,
 
         /// <summary>
-        /// Indicates the the command must be shimmed.
+        /// Indicates the command must be shimmed.
         /// </summary>
         Required
     }

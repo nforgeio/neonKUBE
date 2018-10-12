@@ -1135,7 +1135,7 @@ nsCertType              = server
                     "-gencrl",
                     "-out", crlPath);
 
-                // Save the CA files back the the hive Vault.
+                // Save the CA files back to the hive Vault.
 
                 vpnCaFiles = VpnCaFiles.LoadFolder(caFolder);
 

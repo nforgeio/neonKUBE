@@ -1022,7 +1022,7 @@ namespace Couchbase.Lite
 
         /// <summary>
         /// Performs document save related activities for attachments including deleting
-        /// any temporary files and raising the the required <see cref="INotifyPropertyChanged"/> 
+        /// any temporary files and raising the required <see cref="INotifyPropertyChanged"/> 
         /// notifications.
         /// </summary>
         private void HandleSavedAttachments()

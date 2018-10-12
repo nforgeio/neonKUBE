@@ -693,7 +693,7 @@ subjectAltName         = @alt_names
         /// The friendly name for the certificate.
         /// </para>
         /// <note>
-        /// This property was added for convienence and is not loaded from the the 
+        /// This property was added for convienence and is not loaded from the 
         /// certificate data.  You may set this to whatever you wish.
         /// </note>
         /// </summary>
@@ -716,7 +716,7 @@ subjectAltName         = @alt_names
 
         /// <summary>
         /// The DNS hostnames covered by the certificate.  This may be a single or wildcard hostname
-        /// extracted from the the certificate's <b>Common Name</b> or multiple hostname extracted
+        /// extracted from the certificate's <b>Common Name</b> or multiple hostname extracted
         /// from the <b>Subject Alternative Name</b> from a SAN certificate.  This list will be 
         /// <c>null</c> or empty if the hostname(s) are unknown.
         /// </summary>
@@ -876,7 +876,7 @@ subjectAltName         = @alt_names
 
             pos += prefix.Length;
 
-            // Extract up the the end of the line.
+            // Extract up the end of the line.
 
             var posEol = info.IndexOf('\n', pos);
 
@@ -1115,7 +1115,7 @@ subjectAltName         = @alt_names
         /// <exception cref="FormatException">Thrown if the certificate cannot be parsed.</exception>
         public void Parse()
         {
-            // We need to to load the the certificate's thumbprint.
+            // We need to to load the certificate's thumbprint.
 
             var tempPath = Path.GetTempFileName();
 

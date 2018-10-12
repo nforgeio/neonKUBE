@@ -34,7 +34,7 @@ namespace Neon.Hive
     /// <see cref="HostingEnvironments.Aws"/>, <see cref="HostingEnvironments.Azure"/>, and <see cref="HostingEnvironments.Google"/>
     /// and on-premise providers include <see cref="HostingEnvironments.HyperVDev"/>, <see cref="HostingEnvironments.Machine"/> and
     /// <see cref="HostingEnvironments.XenServer"/>.  Hive network options are interpreted somewhat differently
-    /// depending on whether the the hive is being provisioned to the cloud or to on-premise hardware.
+    /// depending on whether the hive is being provisioned to the cloud or to on-premise hardware.
     /// </para>
     /// <para>
     /// Both cloud and on-premise hives are provisioned with two standard overlay networks: <b>neon-public</b> and <b>neon-private</b>.
@@ -340,7 +340,7 @@ namespace Neon.Hive
         /// <para>
         /// The <b>neon-cli</b> divides this address space into four subnets when deploying 
         /// a hive to a cloud platform such as AWS or Azure.  The table below
-        /// describes this using the the default address space <b>10.168.0.0/21</b>:
+        /// describes this using the default address space <b>10.168.0.0/21</b>:
         /// </para>
         /// <list type="list">
         /// <item>
