@@ -43,10 +43,10 @@ namespace TestCommon
             using (var bus = fixture.Settings.ConnectHiveBus("user", "password", "vhost"))
             {
                 var channel  = bus.GetBasicChannel("test");
-                var received = (TestMessage)null;
+                var received = (TestMessage1)null;
 
-                channel.Consume<TestMessage>(message => received = message.Body);
-                channel.Publish(new TestMessage() { Text = "Hello World!" });
+                channel.Consume<TestMessage1>(message => received = message.Body);
+                channel.Publish(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);
             }
@@ -57,22 +57,22 @@ namespace TestCommon
             {
                 var channel1  = bus.GetBroadcastChannel("test");
                 var channel2  = bus.GetBroadcastChannel("test");
-                var received1 = (TestMessage)null;
-                var received2 = (TestMessage)null;
+                var received1 = (TestMessage1)null;
+                var received2 = (TestMessage1)null;
 
-                channel1.Consume<TestMessage>(
+                channel1.Consume<TestMessage1>(
                     message =>
                     {
                         received1 = message.Body;
                     });
 
-                channel2.Consume<TestMessage>(
+                channel2.Consume<TestMessage1>(
                     message =>
                     {
                         received2 = message.Body;
                     });
 
-                channel1.Publish(new TestMessage() { Text = "Hello World!" });
+                channel1.Publish(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received1 != null && received2 != null, timeout: timeout);
 

@@ -24,7 +24,12 @@ namespace TestCommon
         //---------------------------------------------------------------------
         // Test message types:
 
-        public class TestMessage
+        public class TestMessage1
+        {
+            public string Text { get; set; }
+        }
+
+        public class TestMessage2
         {
             public string Text { get; set; }
         }

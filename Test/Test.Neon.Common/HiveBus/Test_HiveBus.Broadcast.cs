@@ -33,12 +33,12 @@ namespace TestCommon
             {
                 var channel = bus.GetBroadcastChannel("test");
 
-                channel.Consume<TestMessage>(message => { });
+                channel.Consume<TestMessage1>(message => { });
 
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>(message => { }));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>((message, context) => { }));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>(message => Task.CompletedTask));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>((message, context) => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => { }));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, context) => { }));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, context) => Task.CompletedTask));
             }
         }
 
@@ -46,34 +46,51 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
         public void Broadcast()
         {
-            // Verify that we can synchronously publish and consume from
-            // a broadcast channel.
+            // Verify that we can synchronously publish and consume multiple
+            // message types via a broadcast channel.
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel1  = bus.GetBroadcastChannel("test");
-                var channel2  = bus.GetBroadcastChannel("test");
-                var received1 = (TestMessage)null;
-                var received2 = (TestMessage)null;
+                var channel1   = bus.GetBroadcastChannel("test");
+                var channel2   = bus.GetBroadcastChannel("test");
+                var receivedA1 = (TestMessage1)null;
+                var receivedA2 = (TestMessage1)null;
+                var receivedB1 = (TestMessage2)null;
+                var receivedB2 = (TestMessage2)null;
 
-                channel1.Consume<TestMessage>(
+                channel1.Consume<TestMessage1>(
                     message =>
                     {
-                        received1 = message.Body;
+                        receivedA1 = message.Body;
                     });
 
-                channel2.Consume<TestMessage>(
+                channel2.Consume<TestMessage1>(
                     message =>
                     {
-                        received2 = message.Body;
+                        receivedA2 = message.Body;
                     });
 
-                channel1.Publish(new TestMessage() { Text = "Hello World!" });
+                channel1.Consume<TestMessage2>(
+                    message =>
+                    {
+                        receivedB1 = message.Body;
+                    });
 
-                NeonHelper.WaitFor(() => received1 != null && received2 != null, timeout: timeout);
+                channel2.Consume<TestMessage2>(
+                    message =>
+                    {
+                        receivedB2 = message.Body;
+                    });
 
-                Assert.Equal("Hello World!", received1.Text);
-                Assert.Equal("Hello World!", received2.Text);
+                channel1.Publish(new TestMessage1() { Text = "Hello World!" });
+                NeonHelper.WaitFor(() => receivedA1 != null && receivedA2 != null, timeout: timeout);
+                Assert.Equal("Hello World!", receivedA1.Text);
+                Assert.Equal("Hello World!", receivedA2.Text);
+
+                channel1.Publish(new TestMessage2() { Text = "Hello World!" });
+                NeonHelper.WaitFor(() => receivedB1 != null && receivedB2 != null, timeout: timeout);
+                Assert.Equal("Hello World!", receivedB1.Text);
+                Assert.Equal("Hello World!", receivedB2.Text);
             }
         }
 
@@ -89,24 +106,24 @@ namespace TestCommon
             {
                 var channel1  = bus.GetBroadcastChannel("test");
                 var channel2  = bus.GetBroadcastChannel("test");
-                var received1 = (TestMessage)null;
-                var received2 = (TestMessage)null;
+                var received1 = (TestMessage1)null;
+                var received2 = (TestMessage1)null;
 
-                channel1.Consume<TestMessage>(
+                channel1.Consume<TestMessage1>(
                     message =>
                     {
                         received1 = message.Body;
                     },
                     filterSelf: true);
 
-                channel2.Consume<TestMessage>(
+                channel2.Consume<TestMessage1>(
                     message =>
                     {
                         received2 = message.Body;
                     },
                     filterSelf: true);
 
-                channel1.Publish(new TestMessage() { Text = "Hello World!" });
+                channel1.Publish(new TestMessage1() { Text = "Hello World!" });
 
                 // Wait a few seconds and verify that we didn't receive 
                 // the message sent by the same channel and the other 
@@ -131,26 +148,26 @@ namespace TestCommon
             {
                 var channel1   = bus.GetBroadcastChannel("test");
                 var channel2   = bus.GetBroadcastChannel("test");
-                var received1  = (TestMessage)null;
-                var received2  = (TestMessage)null;
+                var received1  = (TestMessage1)null;
+                var received2  = (TestMessage1)null;
                 var contextOK1 = false;
                 var contextOK2 = false;
 
-                channel1.Consume<TestMessage>(
+                channel1.Consume<TestMessage1>(
                     (message, context) =>
                     {
                         received1  = message.Body;
                         contextOK1 = context.Queue.StartsWith("test-");
                     });
 
-                channel2.Consume<TestMessage>(
+                channel2.Consume<TestMessage1>(
                     (message, context) =>
                     {
                         received2  = message.Body;
                         contextOK2 = context.Queue.StartsWith("test-");
                     });
 
-                channel1.Publish(new TestMessage() { Text = "Hello World!" });
+                channel1.Publish(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received1 != null && received2 != null, timeout: timeout);
 
@@ -173,12 +190,12 @@ namespace TestCommon
             {
                 var channel1   = bus.GetBroadcastChannel("test");
                 var channel2   = bus.GetBroadcastChannel("test");
-                var received1  = (TestMessage)null;
-                var received2  = (TestMessage)null;
+                var received1  = (TestMessage1)null;
+                var received2  = (TestMessage1)null;
                 var contextOK1 = false;
                 var contextOK2 = false;
 
-                channel1.Consume<TestMessage>(
+                channel1.Consume<TestMessage1>(
                     (message, context) =>
                     {
                         received1 = message.Body;
@@ -186,7 +203,7 @@ namespace TestCommon
                     },
                     filterSelf: true);
 
-                channel2.Consume<TestMessage>(
+                channel2.Consume<TestMessage1>(
                     (message, context) =>
                     {
                         received2 = message.Body;
@@ -194,7 +211,7 @@ namespace TestCommon
                     },
                     filterSelf: true);
 
-                channel1.Publish(new TestMessage() { Text = "Hello World!" });
+                channel1.Publish(new TestMessage1() { Text = "Hello World!" });
 
                 // Wait a few seconds and verify that we didn't receive 
                 // the message sent by the same channel and the other 
@@ -219,24 +236,24 @@ namespace TestCommon
             {
                 var channel1  = bus.GetBroadcastChannel("test");
                 var channel2  = bus.GetBroadcastChannel("test");
-                var received1 = (TestMessage)null;
-                var received2 = (TestMessage)null;
+                var received1 = (TestMessage1)null;
+                var received2 = (TestMessage1)null;
 
-                channel1.Consume<TestMessage>(
+                channel1.Consume<TestMessage1>(
                     async (message) =>
                     {
                         received1 = message.Body;
                         await Task.CompletedTask;
                     });
 
-                channel2.Consume<TestMessage>(
+                channel2.Consume<TestMessage1>(
                     async (message) =>
                     {
                         received2 = message.Body;
                         await Task.CompletedTask;
                     });
 
-                await channel1.PublishAsync(new TestMessage() { Text = "Hello World!" });
+                await channel1.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received1 != null && received2 != null, timeout: timeout);
 
@@ -257,10 +274,10 @@ namespace TestCommon
             {
                 var channel1  = bus.GetBroadcastChannel("test");
                 var channel2  = bus.GetBroadcastChannel("test");
-                var received1 = (TestMessage)null;
-                var received2 = (TestMessage)null;
+                var received1 = (TestMessage1)null;
+                var received2 = (TestMessage1)null;
 
-                channel1.Consume<TestMessage>(
+                channel1.Consume<TestMessage1>(
                     async message =>
                     {
                         received1 = message.Body;
@@ -269,7 +286,7 @@ namespace TestCommon
                     },
                     filterSelf: true);
 
-                channel2.Consume<TestMessage>(
+                channel2.Consume<TestMessage1>(
                     async message =>
                     {
                         received2 = message.Body;
@@ -278,7 +295,7 @@ namespace TestCommon
                     },
                     filterSelf: true);
 
-                await channel1.PublishAsync(new TestMessage() { Text = "Hello World!" });
+                await channel1.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
                 // Wait a few seconds and verify that we didn't receive 
                 // the message sent by the same channel and the other 
@@ -303,12 +320,12 @@ namespace TestCommon
             {
                 var channel1   = bus.GetBroadcastChannel("test");
                 var channel2   = bus.GetBroadcastChannel("test");
-                var received1  = (TestMessage)null;
-                var received2  = (TestMessage)null;
+                var received1  = (TestMessage1)null;
+                var received2  = (TestMessage1)null;
                 var contextOK1 = false;
                 var contextOK2 = false;
 
-                channel1.Consume<TestMessage>(
+                channel1.Consume<TestMessage1>(
                     async (message, context) =>
                     {
                         received1  = message.Body;
@@ -316,7 +333,7 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
-                channel2.Consume<TestMessage>(
+                channel2.Consume<TestMessage1>(
                     async (message, context) =>
                     {
                         received2  = message.Body;
@@ -324,7 +341,7 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
-                await channel1.PublishAsync(new TestMessage() { Text = "Hello World!" });
+                await channel1.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received1 != null && received2 != null, timeout: timeout);
 
@@ -345,10 +362,10 @@ namespace TestCommon
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel = bus.GetBroadcastChannel("test");
-                var received = (TestMessage)null;
+                var received = (TestMessage1)null;
                 var contextOK = false;
 
-                channel.Consume<TestMessage>(
+                channel.Consume<TestMessage1>(
                     async (message, context) =>
                     {
                         received = message.Body;
@@ -359,7 +376,7 @@ namespace TestCommon
                     filterSelf: true);
 
 
-                await channel.PublishAsync(new TestMessage() { Text = "Hello World!" });
+                await channel.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
                 // Wait a few seconds and verify that we didn't receive 
                 // the message sent by the same channel.
@@ -382,7 +399,7 @@ namespace TestCommon
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var receiveChannels  = new List<BroadcastChannel>();
-                var recieverMessages = new List<List<TestMessage>>();
+                var recieverMessages = new List<List<TestMessage1>>();
                 var contextOK        = true;
 
                 for (int i = 0; i < receiverCount; i++)
@@ -390,9 +407,9 @@ namespace TestCommon
                     var channelIndex = i;
 
                     receiveChannels.Add(bus.GetBroadcastChannel("test"));
-                    recieverMessages.Add(new List<TestMessage>());
+                    recieverMessages.Add(new List<TestMessage1>());
 
-                    receiveChannels[i].Consume<TestMessage>(
+                    receiveChannels[i].Consume<TestMessage1>(
                         async (message, context) =>
                         {
                             recieverMessages[channelIndex].Add(message.Body);
@@ -410,7 +427,7 @@ namespace TestCommon
 
                 for (int i = 0; i < messageCount; i++)
                 {
-                    await publishChannel.PublishAsync(new TestMessage() { Text = "{i}" });
+                    await publishChannel.PublishAsync(new TestMessage1() { Text = "{i}" });
                 }
 
                 NeonHelper.WaitFor(

@@ -32,12 +32,12 @@ namespace TestCommon
             {
                 var channel  = bus.GetBasicChannel("test");
 
-                channel.Consume<TestMessage>(message => { });
+                channel.Consume<TestMessage1>(message => { });
 
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>(message => { }));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>((message, context) => { }));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>(message => Task.CompletedTask));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage>((message, context) => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => { }));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, context) => { }));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, context) => Task.CompletedTask));
             }
         }
 
@@ -45,18 +45,23 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
         public void Basic()
         {
-            // Verify that we can synchronously publish and consume from
-            // a basic channel.
+            // Verify that we can synchronously publish and consume two 
+            // different message types via a basic channel.
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel  = bus.GetBasicChannel("test");
-                var received = (TestMessage)null;
+                var channel   = bus.GetBasicChannel("test");
+                var received1 = (TestMessage1)null;
+                var received2 = (TestMessage2)null;
 
-                channel.Consume<TestMessage>(message => received = message.Body);
-                channel.Publish(new TestMessage() { Text = "Hello World!" });
+                channel.Consume<TestMessage1>(message => received1 = message.Body);
+                channel.Consume<TestMessage2>(message => received2 = message.Body);
 
-                NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);
+                channel.Publish(new TestMessage1() { Text = "Hello World!" });
+                NeonHelper.WaitFor(() => received1 != null && received1.Text == "Hello World!", timeout: timeout);
+
+                channel.Publish(new TestMessage2() { Text = "Hello World!" });
+                NeonHelper.WaitFor(() => received2 != null && received2.Text == "Hello World!", timeout: timeout);
             }
         }
 
@@ -70,10 +75,10 @@ namespace TestCommon
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel   = bus.GetBasicChannel("test");
-                var received  = (TestMessage)null;
+                var received  = (TestMessage1)null;
                 var contextOK = false;
 
-                channel.Consume<TestMessage>(
+                channel.Consume<TestMessage1>(
                     (message, context) =>
                     {
                         received  = message.Body;
@@ -81,7 +86,7 @@ namespace TestCommon
                     });
 
 
-                channel.Publish(new TestMessage() { Text = "Hello World!" });
+                channel.Publish(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!" && contextOK, timeout: timeout);
             }
@@ -97,9 +102,9 @@ namespace TestCommon
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel  = bus.GetBasicChannel("test");
-                var received = (TestMessage)null;
+                var received = (TestMessage1)null;
 
-                channel.Consume<TestMessage>(
+                channel.Consume<TestMessage1>(
                     async message =>
                     {
                         received = message.Body;
@@ -108,7 +113,7 @@ namespace TestCommon
                     });
 
 
-                await channel.PublishAsync(new TestMessage() { Text = "Hello World!" });
+                await channel.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);
             }
@@ -124,10 +129,10 @@ namespace TestCommon
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var channel   = bus.GetBasicChannel("test");
-                var received  = (TestMessage)null;
+                var received  = (TestMessage1)null;
                 var contextOK = false;
 
-                channel.Consume<TestMessage>(
+                channel.Consume<TestMessage1>(
                     async (message, context) =>
                     {
                         received  = message.Body;
@@ -137,7 +142,7 @@ namespace TestCommon
                     });
 
 
-                await channel.PublishAsync(new TestMessage() { Text = "Hello World!" });
+                await channel.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!" && contextOK, timeout: timeout);
             }
@@ -153,10 +158,10 @@ namespace TestCommon
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
                 var receiveChannel = bus.GetBasicChannel("test");
-                var received       = (TestMessage)null;
+                var received       = (TestMessage1)null;
                 var contextOK      = false;
 
-                receiveChannel.Consume<TestMessage>(
+                receiveChannel.Consume<TestMessage1>(
                     async (message, context) =>
                     {
                         received = message.Body;
@@ -167,7 +172,7 @@ namespace TestCommon
 
                 var publishChannel = bus.GetBasicChannel("test");
 
-                await publishChannel.PublishAsync(new TestMessage() { Text = "Hello World!" });
+                await publishChannel.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!" && contextOK, timeout: timeout);
             }
@@ -184,11 +189,11 @@ namespace TestCommon
             const int channelCount = 10;
             const int messageCount = channelCount * 100;
 
-            var consumerMessages = new List<TestMessage>[channelCount];
+            var consumerMessages = new List<TestMessage1>[channelCount];
 
             for (int i = 0; i < consumerMessages.Length; i++)
             {
-                consumerMessages[i] = new List<TestMessage>();
+                consumerMessages[i] = new List<TestMessage1>();
             }
 
             using (var bus = fixture.Settings.ConnectHiveBus())
@@ -198,7 +203,7 @@ namespace TestCommon
                     var consumeChannel = bus.GetBasicChannel("test");
                     var id             = channelID;
 
-                    consumeChannel.Consume<TestMessage>(
+                    consumeChannel.Consume<TestMessage1>(
                         async message =>
                         {
                             lock (consumerMessages)
@@ -214,7 +219,7 @@ namespace TestCommon
 
                 for (int i = 0; i < messageCount; i++)
                 {
-                    await publishChannel.PublishAsync(new TestMessage() { Text = "{i}" });
+                    await publishChannel.PublishAsync(new TestMessage1() { Text = "{i}" });
                 }
 
                 NeonHelper.WaitFor(() => consumerMessages.Where(cm => cm.Count == 0).IsEmpty(), timeout: timeout);

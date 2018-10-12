@@ -4,6 +4,7 @@
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
@@ -31,11 +32,9 @@ namespace Neon.HiveMQ
     /// <summary>
     /// Channel base class.
     /// </summary>
-    public class Channel : IDisposable
+    public class Channel
     {
-        private object              syncLock   = new object();
-        private bool                isDisposed = false;
-        private List<ChannelSubscription>  subscriptions;
+        private ConcurrentDictionary<string, ConsumerBase>  typeToConsumer;
 
         /// <summary>
         /// Protected constructor.
@@ -47,64 +46,16 @@ namespace Neon.HiveMQ
             Covenant.Requires<ArgumentNullException>(hiveBus != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            this.HiveBus       = hiveBus;
-            this.EasyBus       = hiveBus.EasyBus.Advanced;
-            this.Name          = name;
-            this.subscriptions = new List<ChannelSubscription>();
-        }
-
-        /// <summary>
-        /// Releases all associated resources.
-        /// </summary>
-        /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            lock (syncLock)
-            {
-                if (!isDisposed)
-                {
-                    if (disposing)
-                    {
-                        foreach (var subscription in subscriptions)
-                        {
-                            subscription.Dispose();
-                        }
-
-                        subscriptions.Clear();
-                        HiveBus.RemoveChannel(this);
-                    }
-
-                    isDisposed = true;
-                }
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        /// <summary>
-        /// Ensures that the instance has not been disposed.
-        /// </summary>
-        protected void CheckDisposed()
-        {
-            if (isDisposed)
-            {
-                throw new ObjectDisposedException(nameof(HiveBus));
-            }
+            this.HiveBus        = hiveBus;
+            this.EasyBus        = hiveBus.EasyBus.Advanced;
+            this.Name           = name;
+            this.typeToConsumer = new ConcurrentDictionary<string, ConsumerBase>();
         }
 
         /// <summary>
         /// Returns the channel name.
         /// </summary>
         public string Name { get; private set; }
-
-        /// <summary>
-        /// Returns the object used for thread synchronization.
-        /// </summary>
-        protected object SyncLock => syncLock;
 
         /// <summary>
         /// Returns the hive message bus.
@@ -122,40 +73,24 @@ namespace Neon.HiveMQ
         public bool IsConnected => EasyBus.IsConnected;
 
         /// <summary>
-        /// Addes a message consumption subscription the the channel.
+        /// Adds a message consumer the channel.
         /// </summary>
-        /// <param name="subscription">The subscription.</param>
-        /// <returns>The scibscription.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if a subscription for the related message type is already present for the channel.</exception>
-        protected ChannelSubscription AddSubscription(ChannelSubscription subscription)
+        /// <typeparam name="TMessage">The subscribed message type.</typeparam>
+        /// <param name="consumer">The subscription.</param>
+        /// <exception cref="InvalidOperationException">Thrown if consumer for <typeparamref name="TMessage"/> is already present for the channel.</exception>
+        internal void AddConsumer<TMessage>(Consumer<TMessage> consumer)
+            where TMessage : class, new()
         {
-            Covenant.Requires<ArgumentNullException>(subscription != null);
+            Covenant.Requires<ArgumentNullException>(consumer != null);
 
-            lock (syncLock)
+            var messageTypeName = typeof(TMessage).FullName;
+
+            if (typeToConsumer.ContainsKey(messageTypeName))
             {
-                if (!subscriptions.Where(s => s.MessageType == subscription.MessageType).IsEmpty())
-                {
-                    throw new InvalidOperationException($"Channel [{Name}] already has a subscription for message type [{subscription.MessageType.FullName}].");
-                }
-
-                subscriptions.Add(subscription);
+                throw new InvalidOperationException($"Channel [{Name}] already a message consumer for message type [{messageTypeName}].");
             }
 
-            return subscription;
-        }
-
-        /// <summary>
-        /// Removes a message consumption subscription from the channel.
-        /// </summary>
-        /// <param name="subscription">The subscription.</param>
-        internal void RemoveSubscription(ChannelSubscription subscription)
-        {
-            Covenant.Requires<ArgumentNullException>(subscription != null);
-
-            lock (syncLock)
-            {
-                subscriptions.Remove(subscription);
-            }
+            typeToConsumer.Add(messageTypeName, consumer);
         }
     }
 }

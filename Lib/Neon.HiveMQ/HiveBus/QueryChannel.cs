@@ -100,12 +100,6 @@ namespace Neon.HiveMQ
             throw new NotImplementedException("$todo(jeff.lill): Implement this.");
         }
 
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-        }
-
         /// <summary>
         /// Synchronously sends a query message on the channel and waits for a response.  
         /// </summary>

@@ -157,12 +157,6 @@ namespace Neon.HiveMQ
             Consume<StubMessage>(message => { });
         }
 
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-        }
-
         /// <summary>
         /// Ensures that the channel isn't disposed and returns the queue instance.
         /// </summary>
@@ -240,25 +234,19 @@ namespace Neon.HiveMQ
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
         /// <param name="filterSelf">Optionally filter messages broadcast by this channel instance.</param>
-        /// <returns>A <see cref="ChannelSubscription"/> instance.</returns>
         /// <remarks>
         /// <note>
         /// This method is suitable for many graphical client applications but 
         /// should generally be avoided for high performance service applications
         /// which should register an asynchronous callback.
         /// </note>
-        /// <para>
-        /// To cancel the subscription, dispose the <see cref="ChannelSubscription"/>
-        /// returned by this method.
-        /// </para>
         /// </remarks>
-        public ChannelSubscription Consume<TMessage>(Action<IMessage<TMessage>> onMessage, bool filterSelf = false) 
+        public void Consume<TMessage>(Action<IMessage<TMessage>> onMessage, bool filterSelf = false) 
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-            var queue = GetQueue();
-            var subscription = EasyBus.Consume<TMessage>(queue,
+          
+            var consumer = EasyBus.Consume<TMessage>(GetQueue(),
                 (envelope, info) =>
                 {
                     if (filterSelf && envelope.Properties.HeadersPresent)
@@ -276,7 +264,7 @@ namespace Neon.HiveMQ
                     onMessage(envelope);
                 });
 
-            return base.AddSubscription(new ChannelSubscription(this, typeof(TMessage), subscription));
+            base.AddConsumer(new Consumer<TMessage>(this, consumer));
         }
 
         /// <summary>
@@ -288,25 +276,19 @@ namespace Neon.HiveMQ
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
         /// <param name="filterSelf">Optionally filter messages broadcast by this channel instance.</param>
-        /// <returns>n <see cref="ChannelSubscription"/> instance.</returns>
         /// <remarks>
         /// <note>
         /// This method is suitable for many graphical client applications but 
         /// should generally be avoided for high performance service applications
         /// which should register an asynchronous callback.
         /// </note>
-        /// <para>
-        /// To cancel the subscription, dispose the <see cref="ChannelSubscription"/>
-        /// returned by this method.
-        /// </para>
         /// </remarks>
-        public ChannelSubscription Consume<TMessage>(Action<IMessage<TMessage>, ConsumerContext> onMessage, bool filterSelf = false) 
+        public void Consume<TMessage>(Action<IMessage<TMessage>, ConsumerContext> onMessage, bool filterSelf = false) 
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            var queue = GetQueue();
-            var subscription = EasyBus.Consume<TMessage>(queue,
+            var consumer = EasyBus.Consume<TMessage>(GetQueue(),
                 (envelope, info) =>
                 {
                     if (filterSelf && envelope.Properties.HeadersPresent)
@@ -324,7 +306,7 @@ namespace Neon.HiveMQ
                     onMessage(envelope, ConsumerContext.Create(info));
                 });
 
-            return base.AddSubscription(new ChannelSubscription(this, typeof(TMessage), subscription));
+            base.AddConsumer(new Consumer<TMessage>(this, consumer));
         }
 
         /// <summary>
@@ -334,24 +316,18 @@ namespace Neon.HiveMQ
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
         /// <param name="filterSelf">Optionally filter messages broadcast by this channel instance.</param>
-        /// <returns>A <see cref="ChannelSubscription"/> instance.</returns>
         /// <remarks>
         /// <note>
         /// Most applications (especially services) should register asynchronous
         /// callbacks using this method for better performance under load.
         /// </note>
-        /// <para>
-        /// To cancel the subscription, dispose the <see cref="ChannelSubscription"/>
-        /// returned by this method.
-        /// </para>
         /// </remarks>
-        public ChannelSubscription Consume<TMessage>(Func<IMessage<TMessage>, Task> onMessage, bool filterSelf = false) 
+        public void Consume<TMessage>(Func<IMessage<TMessage>, Task> onMessage, bool filterSelf = false) 
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            var queue = GetQueue();
-            var subscription = EasyBus.Consume<TMessage>(queue,
+            var consumer = EasyBus.Consume<TMessage>(GetQueue(),
                 async (envelope, info) =>
                 {
                     if (filterSelf && envelope.Properties.HeadersPresent)
@@ -369,7 +345,7 @@ namespace Neon.HiveMQ
                     await onMessage(envelope);
                 });
 
-            return base.AddSubscription(new ChannelSubscription(this, typeof(TMessage), subscription));
+            base.AddConsumer(new Consumer<TMessage>(this, consumer));
         }
 
         /// <summary>
@@ -381,24 +357,18 @@ namespace Neon.HiveMQ
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
         /// <param name="filterSelf">Optionally filter messages broadcast by this channel instance.</param>
-        /// <returns>A <see cref="ChannelSubscription"/> instance.</returns>
         /// <remarks>
         /// <note>
         /// Most applications (especially services) should register asynchronous
         /// callbacks using this method for better performance under load.
         /// </note>
-        /// <para>
-        /// To cancel the subscription, dispose the <see cref="ChannelSubscription"/>
-        /// returned by this method.
-        /// </para>
         /// </remarks>
-        public ChannelSubscription Consume<TMessage>(Func<IMessage<TMessage>, ConsumerContext, Task> onMessage, bool filterSelf = false)
+        public void Consume<TMessage>(Func<IMessage<TMessage>, ConsumerContext, Task> onMessage, bool filterSelf = false)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
-            var queue = GetQueue();
-            var subscription = EasyBus.Consume<TMessage>(queue,
+            var consumer = EasyBus.Consume<TMessage>(GetQueue(),
                 async (envelope, info) =>
                 {
                     if (filterSelf && envelope.Properties.HeadersPresent)
@@ -416,7 +386,7 @@ namespace Neon.HiveMQ
                     await onMessage(envelope, ConsumerContext.Create(info));
                 });
 
-            return base.AddSubscription(new ChannelSubscription(this, typeof(TMessage), subscription));
+            base.AddConsumer(new Consumer<TMessage>(this, consumer));
         }
     }
 }

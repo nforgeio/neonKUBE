@@ -101,11 +101,11 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Deserializes JSON text using, optionally requiring strict mapping of input properties to the target type.
+        /// Deserializes JSON text optionally requiring strict mapping of input properties to the target type.
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
         /// <param name="json">The JSON text.</param>
-        /// <param name="strict">Optionally require that all input properties map to to <typeparamref name="T"/> properties.</param>
+        /// <param name="strict">Optionally require that all input properties map to <typeparamref name="T"/> properties.</param>
         /// <returns>The parsed <typeparamref name="T"/>.</returns>
         /// <remarks>
         /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
@@ -115,6 +115,25 @@ namespace Neon.Common
         public static T JsonDeserialize<T>(string json, bool strict = false)
         {
             return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
+        }
+
+        /// <summary>
+        /// Non-generic method that deserializes JSON text optionally requiring strict mapping of input properties to the target type.
+        /// </summary>
+        /// <param name="type">The target type.</param>
+        /// <param name="json">The JSON text.</param>
+        /// <param name="strict">Optionally require that all input properties map to <paramref name="type"/> properties.</param>
+        /// <returns>The parsed <typeparamref name="T"/>.</returns>
+        /// <remarks>
+        /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
+        /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
+        /// entirely custom settings.
+        /// </remarks>
+        public static object JsonDeserialize(Type type, string json, bool strict = false)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null);
+
+            return JsonConvert.DeserializeObject(json, type, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
 
         /// <summary>
