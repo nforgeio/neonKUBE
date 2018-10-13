@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 // and because that is well tested.  There could be minor efficency gains to
 // reimplement this from scratch.
 
-namespace System.Threading.Tasks
+namespace Neon.Tasks
 {
     /// <summary>
     /// Implements an <c>async</c>/<c>await</c> friendly equivalent of <see cref="Mutex"/>.

@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 // Look into implementing additional fairness policies so that writes can't
 // completely starve reads.
 
-namespace System.Threading.Tasks
+namespace Neon.Tasks
 {
     /// <summary>
     /// Implements an <c>async</c>/<c>await</c> friendly equivalent of <b>ReaderWriterLock</b>.

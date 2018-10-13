@@ -1,10 +1,10 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AsyncAutoResetEvent.cs
+// FILE:        AsyncManualResetEvent.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 //
 // Code based on a MSDN article by Stephen Toub (MSFT):
-// http://blogs.msdn.com/b/pfxteam/archive/2012/02/11/10266923.aspx
+// http://blogs.msdn.com/b/pfxteam/archive/2012/02/11/10266920.aspx
 
 using System;
 using System.Collections.Generic;
@@ -13,24 +13,23 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-// $todo(jeff.lill):
+// $todo(jeffli):
 //
 // Implement variations of WaitAsync() that include timeouts.  This will probably
 // require a global background thread (or something) to poll for timeouts.
 // Kind of icky, but this would be useful.
 
-namespace System.Threading.Tasks
+namespace Neon.Tasks
 {
     /// <summary>
-    /// Implements an <c>async</c>/<c>await</c> friendly equivalent of <see cref="AutoResetEvent"/>.
+    /// Implements an <c>async</c>/<c>await</c> friendly equivalent of <see cref="ManualResetEvent"/>.
     /// </summary>
     /// <threadsafety instance="true"/>
-    public class AsyncAutoResetEvent : IDisposable
+    public class AsyncManualResetEvent : IDisposable
     {
-        private object                              syncLock            = new object();
-        private Queue<TaskCompletionSource<bool>>   waitingTasks        = new Queue<TaskCompletionSource<bool>>();
-        private static Task                         cachedCompletedTask = Task.FromResult(true);
-        private bool                                isSignalled;
+        private object                      syncLock = new object();
+        private bool                        isDisposed;
+        private TaskCompletionSource<bool>  tcs;    // NULL if signalled, otherwise the TCS tasks will wait on.
 
         /// <summary>
         /// Constructor.
@@ -39,18 +38,24 @@ namespace System.Threading.Tasks
         /// Pass <c>true</c> to set the initial event state to signaled, <c>false</c>
         /// for unsignaled.
         /// </param>
-        public AsyncAutoResetEvent(bool initialState = false)
+        public AsyncManualResetEvent(bool initialState = false)
         {
+            this.isDisposed = false;
+
             if (initialState)
             {
-                Set();
+                this.tcs = null;
+            }
+            else
+            {
+                this.tcs = new TaskCompletionSource<bool>();
             }
         }
 
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~AsyncAutoResetEvent()
+        ~AsyncManualResetEvent()
         {
             Dispose(false);
         }
@@ -93,97 +98,107 @@ namespace System.Threading.Tasks
             {
                 lock (syncLock)
                 {
-                    if (waitingTasks == null)
+                    if (isDisposed)
                     {
-                        return; // Already disposed
+                        return;
                     }
 
-                    while (waitingTasks.Count > 0)
+                    if (tcs != null)
                     {
-                        waitingTasks.Dequeue().SetException(new ObjectDisposedException(this.GetType().FullName));
+                        tcs.SetException(new ObjectDisposedException(this.GetType().FullName));
                     }
+
+                    isDisposed = true;
+                    GC.SuppressFinalize(this);
                 }
-
-                waitingTasks = null;
-                GC.SuppressFinalize(this);
             }
 
-            waitingTasks = null;
+            tcs        = null;
+            isDisposed = true;
         }
 
         /// <summary>
-        /// Sets the state of the event to signalled allowing a single task that is currently
-        /// waiting or the next task that waits on the event to proceed.
+        /// Sets the state of the event to signalled allowing one or more waiting tasks
+        /// to proceed.
         /// </summary>
-        public void Set()
+        /// <exception cref="ObjectDisposedException">Thrown if the event has already been closed.</exception>
+        public void Set() 
         {
-            var releasedTask = (TaskCompletionSource<bool>)null;
-
             lock (syncLock)
             {
-                if (waitingTasks == null)
+                if (isDisposed)
                 {
                     throw new ObjectDisposedException(this.GetType().FullName);
                 }
 
-                if (waitingTasks.Count > 0)
+                if (tcs == null)
                 {
-                    releasedTask = waitingTasks.Dequeue();
+                    return; // Event is already set.
                 }
-                else if (!isSignalled)
-                {
-                    isSignalled = true;
-                }
-            }
 
-            if (releasedTask != null)
-            {
-                releasedTask.SetResult(true);
+                var tempTcs = tcs;
+
+                tcs = null; // Indicate that the event is now signalled.
+
+                // Signal any tasks waiting on the TCS by setting the result 
+                // within another task.  This ensures that a waiting task
+                // will not execute on the current thread which would not
+                // be what applications will expect.
+                
+                Task.Factory.StartNew(
+                    s => ((TaskCompletionSource<bool>)s).SetResult(true),
+                    tempTcs, 
+                    CancellationToken.None, 
+                    TaskCreationOptions.PreferFairness, 
+                    TaskScheduler.Default);
             }
         }
 
         /// <summary>
-        /// Sets the state of the event to unsignalled, so that tasks will have to wait.
+        /// Sets the state of the event to non-signalled, causing tasks to block.
         /// </summary>
         public void Reset()
         {
             lock (syncLock)
             {
-                if (waitingTasks == null)
+                if (isDisposed)
                 {
                     throw new ObjectDisposedException(this.GetType().FullName);
                 }
 
-                isSignalled = false;
+                if (tcs != null)
+                {
+                    return; // Event is already reset.
+                }
+
+                tcs = new TaskCompletionSource<bool>();
             }
         }
 
         /// <summary>
-        /// Waits until the event is signalled.
+        /// Wait asynchronously for the event to be signalled.
         /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown if the event has already been closed or is closed before it is signalled.</exception>
         public Task WaitAsync()
         {
             lock (syncLock)
             {
-                if (waitingTasks == null)
+                if (isDisposed)
                 {
                     throw new ObjectDisposedException(this.GetType().FullName);
                 }
 
-                if (isSignalled)
+                if (tcs == null)
                 {
-                    isSignalled = false;
-                    return cachedCompletedTask;
+                    // The event is signalled so there's no need to block the caller.
+
+                    return Task.FromResult(true);
                 }
                 else
                 {
-                    var tcs = new TaskCompletionSource<bool>();
-
-                    waitingTasks.Enqueue(tcs);
                     return tcs.Task;
                 }
             }
         }
     }
 }
-
