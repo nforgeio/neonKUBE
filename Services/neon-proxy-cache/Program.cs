@@ -30,10 +30,11 @@ using Neon.Time;
 namespace NeonVarnish
 {
     /// <summary>
-    /// Implements the <b>neon-proxy-cache</b> service listens for HiveMQ notifications from
-    /// <b>neon-proxy-manager</b> that its configuration has changed.  This service uses a combination of polling Consul for
-    /// changes and listening for HiveMQ notifications from <b>neon-proxy-manager</b>.  This is built into the
-    /// <a href="https://hub.docker.com/r/nhive/neon-proxy-cache/">nhive/neon-proxy-cache</a> image.
+    /// Implements the <b>neon-proxy-cache</b> service by launching and then managing a Varnish subprocess.  This
+    /// service listens for HiveMQ notifications from <b>neon-proxy-manager</b>, indicating that the HAProxy/Varnish
+    /// may have changed and that the Varnish process should be notified of the changes.  This is built into the
+    /// <a href="https://hub.docker.com/r/nhive/neon-proxy-cache/">nhive/neon-proxy-cache</a> image and will run
+    /// as the main container process.
     /// </summary>
     public static class Program
     {
@@ -56,7 +57,7 @@ namespace NeonVarnish
             log.LogInfo(() => $"Starting [{serviceName}]");
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
 
-            // Create process terminator that handles process termination signals.
+            // Create process terminator that to handle termination signals.
 
             terminator = new ProcessTerminator(log);
 

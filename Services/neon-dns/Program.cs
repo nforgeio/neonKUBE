@@ -63,7 +63,7 @@ namespace NeonDns
             pollInterval   = environment.Get("POLL_INTERVAL", TimeSpan.FromSeconds(5), validator: v => v > TimeSpan.Zero);
             verifyInterval = environment.Get("VERIFY_INTERVAL", TimeSpan.FromMinutes(5), validator: v => v > TimeSpan.Zero);
 
-            // Create process terminator that handles process termination signals.
+            // Create process terminator to handle process termination signals.
 
             terminator = new ProcessTerminator(log);
 

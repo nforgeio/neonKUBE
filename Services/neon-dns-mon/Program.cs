@@ -82,7 +82,7 @@ namespace NeonDnsMon
 
             healthResolver = new HealthResolver(nameservers);
 
-            // Create process terminator that handles process termination signals.
+            // Create process terminator that to handle termination signals.
 
             terminator = new ProcessTerminator(log);
 
