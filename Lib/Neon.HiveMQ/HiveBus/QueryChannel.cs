@@ -84,14 +84,14 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
-        /// <param name="consumerRegistration">
+        /// <param name="subscribeAction">
         /// Optionally specifies a callback that can be use to register message
         /// consumers such that there's no chance of losing messages.
         /// </param>
         /// <remarks>
         /// <note>
         /// <b>WARNING:</b> Channel instances that will consume messages should 
-        /// configure the consumers within a <paramref name="consumerRegistration"/>
+        /// configure the consumers within a <paramref name="subscribeAction"/>
         /// callback to ensure that no messages are indavertently lost.  It is
         /// possible consumers after the channel has been constructed but the
         /// channel will begin receiving and processing messages before the
@@ -102,15 +102,15 @@ namespace Neon.HiveMQ
         /// </note>
         /// </remarks>
         internal QueryChannel(
-            HiveBus     hiveBus, 
-            string      name,
-            bool        durable = false,
-            bool        exclusive = false,
-            bool        autoDelete = false,
-            TimeSpan?   messageTTL = null,
-            int?        maxLength = null,
-            int?        maxLengthBytes = null,
-            Action      consumerRegistration = null)
+            HiveBus                 hiveBus, 
+            string                  name,
+            bool                    durable = false,
+            bool                    exclusive = false,
+            bool                    autoDelete = false,
+            TimeSpan?               messageTTL = null,
+            int?                    maxLength = null,
+            int?                    maxLengthBytes = null,
+            Action<QueryChannel>    subscribeAction = null)
 
             : base(hiveBus, name)
         {
@@ -123,9 +123,9 @@ namespace Neon.HiveMQ
             // Call the consumer registration callback if there is one
             // and then start listening for messages.
 
-            if (consumerRegistration != null)
+            if (subscribeAction != null)
             {
-                consumerRegistration();
+                subscribeAction(this);
             }
 
             base.StartListening(queue);

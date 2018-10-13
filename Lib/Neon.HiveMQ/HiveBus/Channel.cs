@@ -53,10 +53,10 @@ namespace Neon.HiveMQ
             /// Asynchronously dispatches a received message to the registered callback.
             /// </summary>
             /// <param name="message">The received message.</param>
-            /// <param name="envelope">The received envelope.</param>
+            /// <param name="properties">The message properties.</param>
             /// <param name="info">Additional delivery information.</param>
             /// <returns>The tracking <see cref="Task"/>.</returns>
-            Task DispachAsync(object message, IMessage<byte[]> envelope, MessageReceivedInfo info);
+            Task DispatchAsync(object message, MessageProperties properties, MessageReceivedInfo info);
         }
 
         /// <summary>
@@ -67,9 +67,9 @@ namespace Neon.HiveMQ
             where TMessage : class, new()
         {
             private Action<TMessage>                                            syncSimpleCallback;
-            private Action<TMessage, IMessage<byte[]>, ConsumerContext>         syncAdvancedCallback;
+            private Action<TMessage, MessageProperties, ConsumerContext>        syncAdvancedCallback;
             private Func<TMessage, Task>                                        asyncSimpleCallback;
-            private Func<TMessage, IMessage<byte[]>, ConsumerContext, Task>     asyncAdvancedCallback;
+            private Func<TMessage, MessageProperties, ConsumerContext, Task>    asyncAdvancedCallback;
 
             /// <summary>
             /// Constructs an instance with a simple synchronous message callback.
@@ -86,7 +86,7 @@ namespace Neon.HiveMQ
             /// Constructs an instance with an advanced synchronous message callback.
             /// </summary>
             /// <param name="onMessage">The message callback.</param>
-            public Consumer(Action<TMessage, IMessage<byte[]>, ConsumerContext> onMessage)
+            public Consumer(Action<TMessage, MessageProperties, ConsumerContext> onMessage)
             {
                 Covenant.Requires<ArgumentNullException>(onMessage != null);
 
@@ -108,7 +108,7 @@ namespace Neon.HiveMQ
             /// Constructs an instance with an advanced asynchronous message callback.
             /// </summary>
             /// <param name="onMessage">The message callback.</param>
-            public Consumer(Func<TMessage, IMessage<byte[]>, ConsumerContext, Task> onMessage)
+            public Consumer(Func<TMessage, MessageProperties, ConsumerContext, Task> onMessage)
             {
                 Covenant.Requires<ArgumentNullException>(onMessage != null);
 
@@ -119,10 +119,10 @@ namespace Neon.HiveMQ
             public Type MessageType => typeof(TMessage);
 
             /// <inheritdoc/>
-            public async Task DispachAsync(object message, IMessage<byte[]> envelope, MessageReceivedInfo info)
+            public async Task DispatchAsync(object message, MessageProperties properties, MessageReceivedInfo info)
             {
                 Covenant.Requires<ArgumentNullException>(message != null);
-                Covenant.Requires<ArgumentNullException>(envelope != null);
+                Covenant.Requires<ArgumentNullException>(properties != null);
                 Covenant.Requires<ArgumentNullException>(info != null);
 
                 // One of the callback fields will be non-null.  We'll call
@@ -134,7 +134,7 @@ namespace Neon.HiveMQ
                 }
                 else if (syncAdvancedCallback != null)
                 {
-                    syncAdvancedCallback((TMessage)message, envelope, ConsumerContext.Create(info));
+                    syncAdvancedCallback((TMessage)message, properties, ConsumerContext.Create(info));
                 }
                 else if (asyncSimpleCallback != null)
                 {
@@ -142,7 +142,7 @@ namespace Neon.HiveMQ
                 }
                 else if (asyncAdvancedCallback != null)
                 {
-                    await asyncAdvancedCallback((TMessage)message, envelope, ConsumerContext.Create(info));
+                    await asyncAdvancedCallback((TMessage)message, properties, ConsumerContext.Create(info));
                 }
                 else
                 {
@@ -251,14 +251,13 @@ namespace Neon.HiveMQ
         /// to the registered consumer callback (if there is one).  Note that the message
         /// type will be encoded in the envelope's <see cref="IBasicProperties.Type"/>
         /// </summary>
-        /// <param name="envelope">The received message envelope.</param>
+        /// <param name="bytes">The received message serialized as bytes.</param>
+        /// <param name="properties">The message properties.</param>
         /// <param name="info">Additional delivery information.</param>
         /// <exception cref="FormatException">Thrown if the message could not be deserialized.</exception>
-        private async Task DispatchAsync(IMessage<byte[]> envelope, MessageReceivedInfo info)
+        private async Task DispatchAsync(byte[] bytes, MessageProperties properties, MessageReceivedInfo info)
         {
-            Covenant.Requires<ArgumentNullException>(envelope != null);
-
-            var properties = envelope.Properties;
+            Covenant.Requires<ArgumentNullException>(properties != null);
 
             // We're going to assume [application/json] when content type is not specified.
 
@@ -288,7 +287,7 @@ namespace Neon.HiveMQ
 
                     case "utf-8":
 
-                        encoding = Encoding.UTF7;
+                        encoding = Encoding.UTF8;
                         break;
 
                     case "utf-32":
@@ -311,10 +310,10 @@ namespace Neon.HiveMQ
                 return;
             }
 
-            var json    = encoding.GetString(envelope.Body);
+            var json    = encoding.GetString(bytes);
             var message = NeonHelper.JsonDeserialize(consumer.MessageType, json, strict: false);
 
-            await consumer.DispachAsync(message, envelope, info);
+            await consumer.DispatchAsync(message, properties, info);
         }
 
         /// <summary>
@@ -326,9 +325,9 @@ namespace Neon.HiveMQ
             Covenant.Requires<ArgumentNullException>(queue != null);
 
             subscription = EasyBus.Consume(queue,
-                async (IMessage<byte[]> envelope, MessageReceivedInfo info) =>
+                async (byte[] bytes, MessageProperties properties, MessageReceivedInfo info) =>
                 {
-                    await DispatchAsync(envelope, info);
+                    await DispatchAsync(bytes, properties, info);
                 });
         }
 
@@ -426,8 +425,8 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Registers a synchronous callback that will be called as messages of type
         /// <typeparamref name="TMessage"/> are received by the channel.  This override
-        /// also passes an additional <see cref="ConsumerContext"/> parameter to
-        /// the callback.
+        /// also passes the additional <see cref="MessageProperties"/> and
+        /// <see cref="ConsumerContext"/> parameters to the callback.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
@@ -444,7 +443,7 @@ namespace Neon.HiveMQ
         /// which should register an asynchronous callback.
         /// </note>
         /// </remarks>
-        public void Consume<TMessage>(Action<TMessage, IMessage<byte[]>, ConsumerContext> onMessage)
+        public void Consume<TMessage>(Action<TMessage, MessageProperties, ConsumerContext> onMessage)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
@@ -483,8 +482,8 @@ namespace Neon.HiveMQ
         /// <summary>
         /// Registers an asynchronous callback that will be called as messages of type
         /// <typeparamref name="TMessage"/> are received by the channel.  This override
-        /// also passes an additional <see cref="ConsumerContext"/> parameter to the
-        /// callback.
+        /// also passes the additional <see cref="MessageProperties"/> and
+        /// <see cref="ConsumerContext"/> parameters to the callback.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
@@ -504,7 +503,7 @@ namespace Neon.HiveMQ
         /// callbacks using this method for better performance under load.
         /// </note>
         /// </remarks>
-        public void Consume<TMessage>(Func<TMessage, IMessage<byte[]>, ConsumerContext, Task> onMessage, bool exclusive = false)
+        public void Consume<TMessage>(Func<TMessage, MessageProperties, ConsumerContext, Task> onMessage, bool exclusive = false)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);

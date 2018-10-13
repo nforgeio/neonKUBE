@@ -67,6 +67,33 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
+        public void BasicSubscribeAction()
+        {
+            // Verify that we can register consumers within a subscribe action.
+
+            using (var bus = fixture.Settings.ConnectHiveBus())
+            {
+                var received1 = (TestMessage1)null;
+                var received2 = (TestMessage2)null;
+
+                var channel = bus.GetBasicChannel("test",
+                    subscribeAction:
+                        c =>
+                        {
+                            c.Consume<TestMessage1>(message => received1 = message);
+                            c.Consume<TestMessage2>(message => received2 = message);
+                        });
+
+                channel.Publish(new TestMessage1() { Text = "Hello World!" });
+                NeonHelper.WaitFor(() => received1 != null && received1.Text == "Hello World!", timeout: timeout);
+
+                channel.Publish(new TestMessage2() { Text = "Hello World!" });
+                NeonHelper.WaitFor(() => received2 != null && received2.Text == "Hello World!", timeout: timeout);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
         public void BasicContext()
         {
             // Verify that we can synchronously publish and consume from

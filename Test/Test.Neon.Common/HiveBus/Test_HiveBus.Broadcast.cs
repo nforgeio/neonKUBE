@@ -94,6 +94,67 @@ namespace TestCommon
             }
         }
 
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
+        public void BroadcastSubscribeAction()
+        {
+            // Verify that we can register consumers within a subscribe action.
+
+            using (var bus = fixture.Settings.ConnectHiveBus())
+            {
+                var receivedA1 = (TestMessage1)null;
+                var receivedA2 = (TestMessage1)null;
+                var receivedB1 = (TestMessage2)null;
+                var receivedB2 = (TestMessage2)null;
+
+                var channel1 = bus.GetBroadcastChannel("test",
+                    subscribeAction:
+                        c =>
+                        {
+                            c.Consume<TestMessage1>(
+                                message =>
+                                {
+                                    receivedA1 = message;
+                                });
+
+                            c.Consume<TestMessage2>(
+                                message =>
+                                {
+                                    receivedB1 = message;
+                                });
+                        });
+
+                var channel2 = bus.GetBroadcastChannel("test",
+                    subscribeAction:
+                        c =>
+                        {
+                            c.Consume<TestMessage1>(
+                                message =>
+                                {
+                                    receivedA2 = message;
+                                });
+
+                            c.Consume<TestMessage2>(
+                                message =>
+                                {
+                                    receivedB2 = message;
+                                });
+
+                        });
+
+                channel1.Publish(new TestMessage1() { Text = "Hello World!" });
+                NeonHelper.WaitFor(() => receivedA1 != null && receivedA2 != null, timeout: timeout);
+                Assert.Equal("Hello World!", receivedA1.Text);
+                Assert.Equal("Hello World!", receivedA2.Text);
+
+                channel1.Publish(new TestMessage2() { Text = "Hello World!" });
+                NeonHelper.WaitFor(() => receivedB1 != null && receivedB2 != null, timeout: timeout);
+                Assert.Equal("Hello World!", receivedB1.Text);
+                Assert.Equal("Hello World!", receivedB2.Text);
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
         public void BroadcastContext()
