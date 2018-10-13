@@ -67,7 +67,6 @@ namespace NeonProxyManager
         private static ConsulClient             consul;
         private static DockerClient             docker;
         private static BroadcastChannel         proxyNotifyChannel;
-        private static ChannelSubscription      proxyNotifySubscription;
         private static TimeSpan                 certWarnTime;
         private static TimeSpan                 cacheRemoveDelay;
         private static HiveDefinition           hiveDefinition;
@@ -284,10 +283,10 @@ namespace NeonProxyManager
 
                     // This gracefully closes the [proxyNotifyChannel].
 
-                    if (proxyNotifySubscription != null)
+                    if (proxyNotifyChannel != null)
                     {
-                        proxyNotifySubscription.Dispose();
-                        proxyNotifySubscription = null;
+                        proxyNotifyChannel.Dispose();
+                        proxyNotifyChannel = null;
                     }
 
                     try
@@ -319,14 +318,14 @@ namespace NeonProxyManager
                         log.LogInfo(() => "MONITOR: Starting");
                         log.LogInfo(() => $"MONITOR: Listening for [{nameof(ProxyRegenerateMessage)}] messages on [{proxyNotifyChannel.Name}].");
 
-                        proxyNotifySubscription = proxyNotifyChannel.Consume<ProxyRegenerateMessage>(
+                        proxyNotifyChannel.Consume<ProxyRegenerateMessage>(
                             async notifyMessage =>
                             {
                                 try
                                 {
                                     processing = true;
 
-                                    log.LogInfo(() => $"MONITOR: Received [{nameof(ProxyRegenerateMessage)}({notifyMessage.Body.Reason})]");
+                                    log.LogInfo(() => $"MONITOR: Received [{nameof(ProxyRegenerateMessage)}({notifyMessage.Reason})]");
 
                                     // Load and check the hive certificates.
 

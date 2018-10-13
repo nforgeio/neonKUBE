@@ -36,9 +36,9 @@ namespace TestCommon
                 channel.Consume<TestMessage1>(message => { });
 
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => { }));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, context) => { }));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, envelope, context) => { }));
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => Task.CompletedTask));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, context) => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, envelope, context) => Task.CompletedTask));
             }
         }
 
@@ -61,25 +61,25 @@ namespace TestCommon
                 channel1.Consume<TestMessage1>(
                     message =>
                     {
-                        receivedA1 = message.Body;
+                        receivedA1 = message;
                     });
 
                 channel2.Consume<TestMessage1>(
                     message =>
                     {
-                        receivedA2 = message.Body;
+                        receivedA2 = message;
                     });
 
                 channel1.Consume<TestMessage2>(
                     message =>
                     {
-                        receivedB1 = message.Body;
+                        receivedB1 = message;
                     });
 
                 channel2.Consume<TestMessage2>(
                     message =>
                     {
-                        receivedB2 = message.Body;
+                        receivedB2 = message;
                     });
 
                 channel1.Publish(new TestMessage1() { Text = "Hello World!" });
@@ -91,49 +91,6 @@ namespace TestCommon
                 NeonHelper.WaitFor(() => receivedB1 != null && receivedB2 != null, timeout: timeout);
                 Assert.Equal("Hello World!", receivedB1.Text);
                 Assert.Equal("Hello World!", receivedB2.Text);
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
-        public void Broadcast_FilterSelf()
-        {
-            // Verify that we can synchronously publish and consume from
-            // a broadcast channel and the we can filter self-originating
-            // messages.
-
-            using (var bus = fixture.Settings.ConnectHiveBus())
-            {
-                var channel1  = bus.GetBroadcastChannel("test");
-                var channel2  = bus.GetBroadcastChannel("test");
-                var received1 = (TestMessage1)null;
-                var received2 = (TestMessage1)null;
-
-                channel1.Consume<TestMessage1>(
-                    message =>
-                    {
-                        received1 = message.Body;
-                    },
-                    filterSelf: true);
-
-                channel2.Consume<TestMessage1>(
-                    message =>
-                    {
-                        received2 = message.Body;
-                    },
-                    filterSelf: true);
-
-                channel1.Publish(new TestMessage1() { Text = "Hello World!" });
-
-                // Wait a few seconds and verify that we didn't receive 
-                // the message sent by the same channel and the other 
-                // channel did receive the message.
-
-                NeonHelper.WaitFor(() => received2 != null, timeout: timeout);
-                Thread.Sleep(TimeSpan.FromSeconds(5));
-                Assert.Null(received1);
-                Assert.NotNull(received2);
-                Assert.Equal("Hello World!", received2.Text);
             }
         }
 
@@ -154,16 +111,16 @@ namespace TestCommon
                 var contextOK2 = false;
 
                 channel1.Consume<TestMessage1>(
-                    (message, context) =>
+                    (message, envelope, context) =>
                     {
-                        received1  = message.Body;
+                        received1  = message;
                         contextOK1 = context.Queue.StartsWith("test-");
                     });
 
                 channel2.Consume<TestMessage1>(
-                    (message, context) =>
+                    (message, envelope, context) =>
                     {
-                        received2  = message.Body;
+                        received2  = message;
                         contextOK2 = context.Queue.StartsWith("test-");
                     });
 
@@ -175,53 +132,6 @@ namespace TestCommon
                 Assert.True(contextOK1);
                 Assert.Equal("Hello World!", received2.Text);
                 Assert.True(contextOK2);
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
-        public void BroadcastContext_FilterSelf()
-        {
-            // Verify that we can synchronously publish and consume from
-            // a broadcast channel and the we can filter self-originating
-            // messages.
-
-            using (var bus = fixture.Settings.ConnectHiveBus())
-            {
-                var channel1   = bus.GetBroadcastChannel("test");
-                var channel2   = bus.GetBroadcastChannel("test");
-                var received1  = (TestMessage1)null;
-                var received2  = (TestMessage1)null;
-                var contextOK1 = false;
-                var contextOK2 = false;
-
-                channel1.Consume<TestMessage1>(
-                    (message, context) =>
-                    {
-                        received1 = message.Body;
-                        contextOK1 = context.Queue.StartsWith("test-");
-                    },
-                    filterSelf: true);
-
-                channel2.Consume<TestMessage1>(
-                    (message, context) =>
-                    {
-                        received2 = message.Body;
-                        contextOK2 = context.Queue.StartsWith("test-");
-                    },
-                    filterSelf: true);
-
-                channel1.Publish(new TestMessage1() { Text = "Hello World!" });
-
-                // Wait a few seconds and verify that we didn't receive 
-                // the message sent by the same channel and the other 
-                // channel did receive the message.
-
-                NeonHelper.WaitFor(() => received2 != null, timeout: timeout);
-                Thread.Sleep(TimeSpan.FromSeconds(5));
-                Assert.Null(received1);
-                Assert.NotNull(received2);
-                Assert.Equal("Hello World!", received2.Text);
             }
         }
 
@@ -242,14 +152,14 @@ namespace TestCommon
                 channel1.Consume<TestMessage1>(
                     async (message) =>
                     {
-                        received1 = message.Body;
+                        received1 = message;
                         await Task.CompletedTask;
                     });
 
                 channel2.Consume<TestMessage1>(
                     async (message) =>
                     {
-                        received2 = message.Body;
+                        received2 = message;
                         await Task.CompletedTask;
                     });
 
@@ -258,53 +168,6 @@ namespace TestCommon
                 NeonHelper.WaitFor(() => received1 != null && received2 != null, timeout: timeout);
 
                 Assert.Equal("Hello World!", received1.Text);
-                Assert.Equal("Hello World!", received2.Text);
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
-        public async Task BroadcastAsync_FilterSelf()
-        {
-            // Verify that we can asynchronously publish and consume from
-            // a broadcast channel and the we can filter self-originating
-            // messages.
-
-            using (var bus = fixture.Settings.ConnectHiveBus())
-            {
-                var channel1  = bus.GetBroadcastChannel("test");
-                var channel2  = bus.GetBroadcastChannel("test");
-                var received1 = (TestMessage1)null;
-                var received2 = (TestMessage1)null;
-
-                channel1.Consume<TestMessage1>(
-                    async message =>
-                    {
-                        received1 = message.Body;
-
-                        await Task.CompletedTask;
-                    },
-                    filterSelf: true);
-
-                channel2.Consume<TestMessage1>(
-                    async message =>
-                    {
-                        received2 = message.Body;
-
-                        await Task.CompletedTask;
-                    },
-                    filterSelf: true);
-
-                await channel1.PublishAsync(new TestMessage1() { Text = "Hello World!" });
-
-                // Wait a few seconds and verify that we didn't receive 
-                // the message sent by the same channel and the other 
-                // channel did receive the message.
-
-                NeonHelper.WaitFor(() => received2 != null, timeout: timeout);
-                Thread.Sleep(TimeSpan.FromSeconds(5));
-                Assert.Null(received1);
-                Assert.NotNull(received2);
                 Assert.Equal("Hello World!", received2.Text);
             }
         }
@@ -326,17 +189,17 @@ namespace TestCommon
                 var contextOK2 = false;
 
                 channel1.Consume<TestMessage1>(
-                    async (message, context) =>
+                    async (message, envelope, context) =>
                     {
-                        received1  = message.Body;
+                        received1  = message;
                         contextOK1 = context.Queue.StartsWith("test-");
                         await Task.CompletedTask;
                     });
 
                 channel2.Consume<TestMessage1>(
-                    async (message, context) =>
+                    async (message, envelope, context) =>
                     {
-                        received2  = message.Body;
+                        received2  = message;
                         contextOK2 = context.Queue.StartsWith("test-");
                         await Task.CompletedTask;
                     });
@@ -349,40 +212,6 @@ namespace TestCommon
                 Assert.True(contextOK1);
                 Assert.Equal("Hello World!", received2.Text);
                 Assert.True(contextOK2);
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
-        public async Task BroadcastContextAsync_FilterSelf()
-        {
-            // Verify that we can asynchronously publish and consume from
-            // a broadcast channel while receiving additional context info.
-
-            using (var bus = fixture.Settings.ConnectHiveBus())
-            {
-                var channel = bus.GetBroadcastChannel("test");
-                var received = (TestMessage1)null;
-                var contextOK = false;
-
-                channel.Consume<TestMessage1>(
-                    async (message, context) =>
-                    {
-                        received = message.Body;
-                        contextOK = context.Queue.StartsWith("test-");
-
-                        await Task.CompletedTask;
-                    },
-                    filterSelf: true);
-
-
-                await channel.PublishAsync(new TestMessage1() { Text = "Hello World!" });
-
-                // Wait a few seconds and verify that we didn't receive 
-                // the message sent by the same channel.
-
-                Thread.Sleep(TimeSpan.FromSeconds(5));
-                Assert.Null(received);
             }
         }
 
@@ -410,9 +239,9 @@ namespace TestCommon
                     recieverMessages.Add(new List<TestMessage1>());
 
                     receiveChannels[i].Consume<TestMessage1>(
-                        async (message, context) =>
+                        async (message, envelope, context) =>
                         {
-                            recieverMessages[channelIndex].Add(message.Body);
+                            recieverMessages[channelIndex].Add(message);
 
                             if (!context.Queue.StartsWith("test-"))
                             {

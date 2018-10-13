@@ -35,9 +35,9 @@ namespace TestCommon
                 channel.Consume<TestMessage1>(message => { });
 
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => { }));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, context) => { }));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, envelope, context) => { }));
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => Task.CompletedTask));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, context) => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, envelope, context) => Task.CompletedTask));
             }
         }
 
@@ -54,8 +54,8 @@ namespace TestCommon
                 var received1 = (TestMessage1)null;
                 var received2 = (TestMessage2)null;
 
-                channel.Consume<TestMessage1>(message => received1 = message.Body);
-                channel.Consume<TestMessage2>(message => received2 = message.Body);
+                channel.Consume<TestMessage1>(message => received1 = message);
+                channel.Consume<TestMessage2>(message => received2 = message);
 
                 channel.Publish(new TestMessage1() { Text = "Hello World!" });
                 NeonHelper.WaitFor(() => received1 != null && received1.Text == "Hello World!", timeout: timeout);
@@ -79,9 +79,9 @@ namespace TestCommon
                 var contextOK = false;
 
                 channel.Consume<TestMessage1>(
-                    (message, context) =>
+                    (message, envelope, context) =>
                     {
-                        received  = message.Body;
+                        received  = message;
                         contextOK = context.Queue == channel.Name;
                     });
 
@@ -107,7 +107,7 @@ namespace TestCommon
                 channel.Consume<TestMessage1>(
                     async message =>
                     {
-                        received = message.Body;
+                        received = message;
 
                         await Task.CompletedTask;
                     });
@@ -133,9 +133,9 @@ namespace TestCommon
                 var contextOK = false;
 
                 channel.Consume<TestMessage1>(
-                    async (message, context) =>
+                    async (message, envelope, context) =>
                     {
-                        received  = message.Body;
+                        received  = message;
                         contextOK = context.Queue == channel.Name;
 
                         await Task.CompletedTask;
@@ -162,9 +162,9 @@ namespace TestCommon
                 var contextOK      = false;
 
                 receiveChannel.Consume<TestMessage1>(
-                    async (message, context) =>
+                    async (message, envelope, context) =>
                     {
-                        received = message.Body;
+                        received = message;
                         contextOK = context.Queue == receiveChannel.Name;
 
                         await Task.CompletedTask;
@@ -208,7 +208,7 @@ namespace TestCommon
                         {
                             lock (consumerMessages)
                             {
-                                consumerMessages[id].Add(message.Body);
+                                consumerMessages[id].Add(message);
                             }
 
                             await Task.CompletedTask;

@@ -45,6 +45,9 @@ namespace Neon.HiveMQ
     {
         private static readonly TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);
 
+        private IQueue      queue;
+        private IExchange   exchange;
+
         /// <summary>
         /// Internal constructor.
         /// </summary>
@@ -81,6 +84,23 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
+        /// <param name="consumerRegistration">
+        /// Optionally specifies a callback that can be use to register message
+        /// consumers such that there's no chance of losing messages.
+        /// </param>
+        /// <remarks>
+        /// <note>
+        /// <b>WARNING:</b> Channel instances that will consume messages should 
+        /// configure the consumers within a <paramref name="consumerRegistration"/>
+        /// callback to ensure that no messages are indavertently lost.  It is
+        /// possible consumers after the channel has been constructed but the
+        /// channel will begin receiving and processing messages before the
+        /// constructor returns and messages without a registered consumer will
+        /// be silently dropped.  This means that messages received between the
+        /// time the channel was constructed and the consumer was registered
+        /// will be lost.
+        /// </note>
+        /// </remarks>
         internal QueryChannel(
             HiveBus     hiveBus, 
             string      name,
@@ -89,7 +109,8 @@ namespace Neon.HiveMQ
             bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
-            int?        maxLengthBytes = null)
+            int?        maxLengthBytes = null,
+            Action      consumerRegistration = null)
 
             : base(hiveBus, name)
         {
@@ -98,6 +119,17 @@ namespace Neon.HiveMQ
             Covenant.Requires<ArgumentException>(maxLengthBytes == null || maxLengthBytes.Value > 0);
 
             throw new NotImplementedException("$todo(jeff.lill): Implement this.");
+
+            // Call the consumer registration callback if there is one
+            // and then start listening for messages.
+
+            if (consumerRegistration != null)
+            {
+                consumerRegistration();
+            }
+
+            base.StartListening(queue);
+
         }
 
         /// <summary>

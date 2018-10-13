@@ -123,7 +123,7 @@ namespace Neon.Common
         /// <param name="type">The target type.</param>
         /// <param name="json">The JSON text.</param>
         /// <param name="strict">Optionally require that all input properties map to <paramref name="type"/> properties.</param>
-        /// <returns>The parsed <typeparamref name="T"/>.</returns>
+        /// <returns>The parsed <c>object</c>.</returns>
         /// <remarks>
         /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
         /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or

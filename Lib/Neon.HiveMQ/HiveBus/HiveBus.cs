@@ -51,7 +51,9 @@ namespace Neon.HiveMQ
     /// The main issue I have with the simple EasyNetQ API is that hides the concept of queues from
     /// the application by implicitly creating a queue for every message type (based on its name).
     /// This doesn't cleanly support the ability to have generic messages that can targeted at
-    /// specific consumers.
+    /// specific consumers.  The EasyMQ advanced API does provide methods to explicitly manage
+    /// exchanges, queues, and bindings but unfortunately, it doesn't support consuming multiple
+    /// message types from a single queue out of the box.
     /// </para>
     /// <para>
     /// For example, say I have two separate services, <b>S1</b> and <b>S2</b> and I want to be
@@ -66,11 +68,18 @@ namespace Neon.HiveMQ
     /// identifing the target service and then broadcast these to both <b>S1</b> and <b>S2</b>
     /// and then have each service ignore messages that weren't targeted at it.  This is messy
     /// because it depends on custom service code to reject messages which will consume some 
-    /// netork and CPU for no real reason.
+    /// network and CPU resources for no reason.
     /// </para>
     /// <para>
-    /// It may be possible to implement another solution using topic routing, but that's
-    /// somewhat more complex than is really necessary for a typical user.
+    /// <see cref="HiveBus"/> addresses these issues by using the EasyNetQ advanced API to
+    /// construct <b>channels</b> which can then be used to publish and consume messages.
+    /// <see cref="HiveBus"/> maps underlying RabbitMQ exchanges, queues, and bindings
+    /// to channels to implement common messaging patterns.  <see cref="HiveBus"/> serializes
+    /// .NET objects to RabbitMQ messages as UTF-8 encoded JSON and sets the message properties
+    /// <see cref="IBasicProperties.Type"/> to <b>TYPENAME</b> where <b>TYPENAME</b> is the fully 
+    /// qualified message .NET type name.  <see cref="IBasicProperties.ContentType"/>
+    /// will be set to <b>application/json</b> and <see cref="IBasicProperties.ContentEncoding"/>
+    /// to <b>utf-8</b>.  This should make interop with other RabbitMQ clients possible.
     /// </para>
     /// <para>
     /// Message buses are typically constructed by instantiating a <see cref="HiveMQSettings"/> 
@@ -92,14 +101,14 @@ namespace Neon.HiveMQ
     ///     <term><see cref="BasicChannel"/></term>
     ///     <description>
     ///     Basic channels deliver each message to a <b>single consumer</b>.  A typical use is
-    ///     to load balance work across multiple consumers.  Call <see cref="GetBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>
+    ///     to load balance work across multiple consumers.  Call <see cref="GetBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?, Action)"/>
     ///     to create a basic channel.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="BroadcastChannel"/></term>
     ///     <description>
-    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
+    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?, Action)"/> 
     ///     to create a broadcast channel.
     ///     </description>
     /// </item>
@@ -107,7 +116,7 @@ namespace Neon.HiveMQ
     ///     <term><see cref="QueryChannel"/></term>
     ///     <description>
     ///     Query channels deliver a message to a <b>consumer</b> and then waits for a reply.  
-    ///     Call <see cref="GetQueryChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/> 
+    ///     Call <see cref="GetQueryChannel(string, bool, bool, bool, TimeSpan?, int?, int?, Action)"/> 
     ///     to create a query channel.
     ///     </description>
     /// </item>
@@ -300,8 +309,23 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
+        /// <param name="consumerRegistration">
+        /// Optionally specifies a callback that can be use to register message
+        /// consumers such that there's no chance of losing messages.
+        /// </param>
         /// <returns>The <see cref="BasicChannel"/> created.</returns>
         /// <remarks>
+        /// <note>
+        /// <b>WARNING:</b> Channel instances that will consume messages should 
+        /// configure the consumers within a <paramref name="consumerRegistration"/>
+        /// callback to ensure that no messages are indavertently lost.  It is
+        /// possible consumers after the channel has been constructed but the
+        /// channel will begin receiving and processing messages before the
+        /// constructor returns and messages without a registered consumer will
+        /// be silently dropped.  This means that messages received between the
+        /// time the channel was constructed and the consumer was registered
+        /// will be lost.
+        /// </note>
         /// <note>
         /// The instance returned should be disposed when you're done with it.
         /// </note>
@@ -317,7 +341,8 @@ namespace Neon.HiveMQ
             bool        autoDelete = false, 
             TimeSpan?   messageTTL = null, 
             int?        maxLength = null, 
-            int?        maxLengthBytes = null)
+            int?        maxLengthBytes = null,
+            Action      consumerRegistration = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentException>(name.Length <= 250);
@@ -337,7 +362,8 @@ namespace Neon.HiveMQ
                     autoDelete: autoDelete,
                     messageTTL: messageTTL,
                     maxLength: maxLength,
-                    maxLengthBytes: maxLengthBytes);
+                    maxLengthBytes: maxLengthBytes,
+                    consumerRegistration: consumerRegistration);
 
                 lock (syncLock)
                 {
@@ -381,8 +407,23 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
+        /// <param name="consumerRegistration">
+        /// Optionally specifies a callback that can be use to register message
+        /// consumers such that there's no chance of losing messages.
+        /// </param>
         /// <returns>The <see cref="BroadcastChannel"/> created.</returns>
         /// <remarks>
+        /// <note>
+        /// <b>WARNING:</b> Channel instances that will consume messages should 
+        /// configure the consumers within a <paramref name="consumerRegistration"/>
+        /// callback to ensure that no messages are indavertently lost.  It is
+        /// possible consumers after the channel has been constructed but the
+        /// channel will begin receiving and processing messages before the
+        /// constructor returns and messages without a registered consumer will
+        /// be silently dropped.  This means that messages received between the
+        /// time the channel was constructed and the consumer was registered
+        /// will be lost.
+        /// </note>
         /// <note>
         /// The instance returned should be disposed when you're done with it.
         /// </note>
@@ -397,7 +438,8 @@ namespace Neon.HiveMQ
             bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
-            int?        maxLengthBytes = null)
+            int?        maxLengthBytes = null,
+            Action      consumerRegistration = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentException>(name.Length <= 250);
@@ -416,7 +458,8 @@ namespace Neon.HiveMQ
                     autoDelete: autoDelete,
                     messageTTL: messageTTL,
                     maxLength: maxLength,
-                    maxLengthBytes: maxLengthBytes);
+                    maxLengthBytes: maxLengthBytes,
+                    consumerRegistration: consumerRegistration);
 
                 lock (syncLock)
                 {
@@ -464,8 +507,23 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
+        /// <param name="consumerRegistration">
+        /// Optionally specifies a callback that can be use to register message
+        /// consumers such that there's no chance of losing messages.
+        /// </param>
         /// <returns>The <see cref="QueryChannel"/> created.</returns>
         /// <remarks>
+        /// <note>
+        /// <b>WARNING:</b> Channel instances that will consume messages should 
+        /// configure the consumers within a <paramref name="consumerRegistration"/>
+        /// callback to ensure that no messages are indavertently lost.  It is
+        /// possible consumers after the channel has been constructed but the
+        /// channel will begin receiving and processing messages before the
+        /// constructor returns and messages without a registered consumer will
+        /// be silently dropped.  This means that messages received between the
+        /// time the channel was constructed and the consumer was registered
+        /// will be lost.
+        /// </note>
         /// <note>
         /// The instance returned should be disposed when you're done with it.
         /// </note>
@@ -481,7 +539,8 @@ namespace Neon.HiveMQ
             bool        exclusive = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
-            int?        maxLengthBytes = null)
+            int?        maxLengthBytes = null,
+            Action      consumerRegistration = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentException>(name.Length <= 250);
@@ -502,7 +561,8 @@ namespace Neon.HiveMQ
                     autoDelete: autoDelete,
                     messageTTL: messageTTL,
                     maxLength: maxLength,
-                    maxLengthBytes: maxLengthBytes);
+                    maxLengthBytes: maxLengthBytes,
+                    consumerRegistration: consumerRegistration);
 
                 lock (syncLock)
                 {

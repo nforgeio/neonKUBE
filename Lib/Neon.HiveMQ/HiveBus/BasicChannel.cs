@@ -48,26 +48,23 @@ namespace Neon.HiveMQ
     /// </para>
     /// <list type="number">
     /// <item>
-    /// Construct an instance call <see cref="HiveBus.GetBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>,
-    /// passing the channel name any required optional parameters to control
-    /// the channel durability, exclusivity, message TTL, and length constraints.
+    ///     Construct an instance call <see cref="HiveBus.GetBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?, Action)"/>,
+    ///     passing the channel name any required optional parameters to control
+    ///     the channel durability, exclusivity, message TTL, and length constraints.
     /// </item>
     /// <item>
-    /// Call <see cref="Consume{TMessage}(Action{IMessage{TMessage}})"/>,
-    /// <see cref="Consume{TMessage}(Action{IMessage{TMessage}, ConsumerContext})"/>,
-    /// <see cref="Consume{TMessage}(Func{IMessage{TMessage}, Task}, bool)"/>, or
-    /// <see cref="Consume{TMessage}(Func{IMessage{TMessage}, ConsumerContext, Task}, bool)"/>
-    /// to register message consumption callbacks for each of the message types you
-    /// need to handle.  Your callback will be passed an <see cref="IMessage{TMessage}"/>
-    /// parameter as the message envelope.  Your message can be accessed via  <see cref="IMessage.GetBody()"/>
-    /// There are method overrides that register both synchronous and asynchronous callbacks as well
-    /// as callbacks that accept the a <see cref="ConsumerContext"/> that provides additional 
-    /// information about the message as well as extended message related operations.
+    ///     Call <see cref="Channel.Consume{TMessage}(Action{TMessage})"/>,
+    ///     <see cref="Channel.Consume{TMessage}(Action{TMessage, IMessage{byte[]}, ConsumerContext})"/>,
+    ///     <see cref="Channel.Consume{TMessage}(Func{TMessage, Task}, bool)"/>, or
+    ///     <see cref="Channel.Consume{TMessage}(Func{TMessage, IMessage{byte[]}, ConsumerContext, Task}, bool)"/>
+    ///     to register synchronous or asunchronous message consumption callbacks for each of the message
+    ///     types you may receive.  Your callback will be passed the received message and optionally
+    ///     the message envelope with the raw message bytes and a <see cref="ConsumerContext"/>.
     /// </item>
     /// <item>
-    /// Call <see cref="Publish{TMessage}(TMessage)"/> or <see cref="PublishAsync{TMessage}(TMessage)"/>
-    /// to send a message.  This will result in one of the consumer callbacks registered
-    /// for the type to be called.
+    ///     Call <see cref="Publish{TMessage}(TMessage)"/> or <see cref="PublishAsync{TMessage}(TMessage)"/>
+    ///     to send a message.  This will result in one of the consumer callbacks registered
+    ///     for the type to be called.
     /// </item>
     /// </list>
     /// <note>
@@ -122,6 +119,23 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
+        /// <param name="consumerRegistration">
+        /// Optionally specifies a callback that can be use to register message
+        /// consumers such that there's no chance of losing messages.
+        /// </param>
+        /// <remarks>
+        /// <note>
+        /// <b>WARNING:</b> Channel instances that will consume messages should 
+        /// configure the consumers within a <paramref name="consumerRegistration"/>
+        /// callback to ensure that no messages are indavertently lost.  It is
+        /// possible consumers after the channel has been constructed but the
+        /// channel will begin receiving and processing messages before the
+        /// constructor returns and messages without a registered consumer will
+        /// be silently dropped.  This means that messages received between the
+        /// time the channel was constructed and the consumer was registered
+        /// will be lost.
+        /// </note>
+        /// </remarks>
         internal BasicChannel(
             HiveBus     hiveBus, 
             string      name,
@@ -130,7 +144,8 @@ namespace Neon.HiveMQ
             bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
-            int?        maxLengthBytes = null)
+            int?        maxLengthBytes = null,
+            Action      consumerRegistration = null)
 
             : base(hiveBus, name)
         {
@@ -153,10 +168,15 @@ namespace Neon.HiveMQ
 
             exchange = Exchange.GetDefault();
 
-            // We need to configure a stub message consumer so that
-            // queue auto deletion will work.
+            // Call the consumer registration callback if there is one
+            // and then start listening for messages.
 
-            Consume<StubMessage>(message => { });
+            if (consumerRegistration != null)
+            {
+                consumerRegistration();
+            }
+
+            base.StartListening(queue);
         }
 
         /// <summary>
@@ -203,10 +223,7 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
-            var exchange = GetExchange();
-            var envelope = new Message<TMessage>(message);
-
-            EasyBus.PublishAsync(exchange, Name, mandatory: false, message: envelope).Wait();
+            base.Publish(GetExchange(), message, routingKey: Name);
         }
 
         /// <summary>
@@ -219,128 +236,7 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
-            var exchange = GetExchange();
-            var envelope = new Message<TMessage>(message);
-
-            await EasyBus.PublishAsync(exchange, Name, mandatory: false, message: envelope);
-        }
-
-        /// <summary>
-        /// Registers a synchronous callback that will be called as messages of type
-        /// <typeparamref name="TMessage"/> are delivered to the consumer.  
-        /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <remarks>
-        /// <note>
-        /// This method is suitable for many graphical client applications but 
-        /// should generally be avoided for high performance service applications
-        /// which should register an asynchronous callback.
-        /// </note>
-        /// </remarks>
-        public void Consume<TMessage>(Action<IMessage<TMessage>> onMessage) 
-            where TMessage : class, new()
-        {
-            Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-            var consumer = EasyBus.Consume<TMessage>(GetQueue(),
-                (envelope, info) =>
-                {
-                    onMessage(envelope);
-                });
-
-            base.AddConsumer(new Consumer<TMessage>(this, onMessage));
-        }
-
-        /// <summary>
-        /// Registers a synchronous callback that will be called as messages of type
-        /// <typeparamref name="TMessage"/> are delivered to the consumer.  This override
-        /// also passes an additional <see cref="ConsumerContext"/> parameter to
-        /// the callback.
-        /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <remarks>
-        /// <note>
-        /// This method is suitable for many graphical client applications but 
-        /// should generally be avoided for high performance service applications
-        /// which should register an asynchronous callback.
-        /// </note>
-        /// </remarks>
-        public void Consume<TMessage>(Action<IMessage<TMessage>, ConsumerContext> onMessage) 
-            where TMessage : class, new()
-        {
-            Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-            var consumer = EasyBus.Consume<TMessage>(GetQueue(),
-                (envelope, info) =>
-                {
-                    onMessage(envelope, ConsumerContext.Create(info));
-                });
-
-            base.AddConsumer(new Consumer<TMessage>(this, consumer));
-        }
-
-        /// <summary>
-        /// Registers an asynchronous callback that will be called as messages of type
-        /// <typeparamref name="TMessage"/> are delivered to the consumer.  
-        /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="exclusive">
-        /// Optionally indicates that this is is to be the exclusive consumer 
-        /// of messages on the channel.  This defaults to <c>false</c>.
-        /// </param>
-        /// <remarks>
-        /// <note>
-        /// Most applications (especially services) should register asynchronous
-        /// callbacks using this method for better performance under load.
-        /// </note>
-        /// </remarks>
-        public void Consume<TMessage>(Func<IMessage<TMessage>, Task> onMessage, bool exclusive = false)
-            where TMessage : class, new()
-        {
-            Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-            var consumer = EasyBus.Consume<TMessage>(GetQueue(),
-                async (envelope, info) =>
-                {
-                    await onMessage(envelope);
-                });
-
-            return base.AddConsumer(new Consumer<TMessage>(this, consumer));
-        }
-
-        /// <summary>
-        /// Registers an asynchronous callback that will be called as messages of type
-        /// <typeparamref name="TMessage"/> are delivered to the consumer.  This override
-        /// also passes an additional <see cref="ConsumerContext"/> parameter to the
-        /// callback.
-        /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="exclusive">
-        /// Optionally indicates that this is is to be the exclusive consumer 
-        /// of messages on the channel.  This defaults to <c>false</c>.
-        /// </param>
-        /// <remarks>
-        /// <note>
-        /// Most applications (especially services) should register asynchronous
-        /// callbacks using this method for better performance under load.
-        /// </note>
-        /// </remarks>
-        public void Consume<TMessage>(Func<IMessage<TMessage>, ConsumerContext, Task> onMessage, bool exclusive = false) 
-            where TMessage : class, new()
-        {
-            Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-            var consumer = EasyBus.Consume<TMessage>(GetQueue(),
-                async (envelope, info) =>
-                {
-                    await onMessage(envelope, ConsumerContext.Create(info));
-                });
-
-            return base.AddConsumer(new Consumer<TMessage>(this, consumer));
+            await base.PublishAsync(GetExchange(), message, routingKey: Name);
         }
     }
 }
