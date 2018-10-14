@@ -37,8 +37,8 @@ namespace TestCommon
 
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => { }));
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, envelope, context) => { }));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => Task.CompletedTask));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, envelope, context) => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.ConsumeAsync<TestMessage1>(message => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.ConsumeAsync<TestMessage1>((message, envelope, context) => Task.CompletedTask));
             }
         }
 
@@ -210,14 +210,14 @@ namespace TestCommon
                 var received1 = (TestMessage1)null;
                 var received2 = (TestMessage1)null;
 
-                channel1.Consume<TestMessage1>(
+                channel1.ConsumeAsync<TestMessage1>(
                     async (message) =>
                     {
                         received1 = message;
                         await Task.CompletedTask;
                     });
 
-                channel2.Consume<TestMessage1>(
+                channel2.ConsumeAsync<TestMessage1>(
                     async (message) =>
                     {
                         received2 = message;
@@ -249,7 +249,7 @@ namespace TestCommon
                 var contextOK1 = false;
                 var contextOK2 = false;
 
-                channel1.Consume<TestMessage1>(
+                channel1.ConsumeAsync<TestMessage1>(
                     async (message, envelope, context) =>
                     {
                         received1  = message;
@@ -257,7 +257,7 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
-                channel2.Consume<TestMessage1>(
+                channel2.ConsumeAsync<TestMessage1>(
                     async (message, envelope, context) =>
                     {
                         received2  = message;
@@ -299,7 +299,7 @@ namespace TestCommon
                     receiveChannels.Add(bus.GetBroadcastChannel("test"));
                     recieverMessages.Add(new List<TestMessage1>());
 
-                    receiveChannels[i].Consume<TestMessage1>(
+                    receiveChannels[i].ConsumeAsync<TestMessage1>(
                         async (message, envelope, context) =>
                         {
                             recieverMessages[channelIndex].Add(message);

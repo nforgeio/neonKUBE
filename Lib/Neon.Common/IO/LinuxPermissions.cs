@@ -11,6 +11,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Common;
+
 namespace Neon.IO
 {
     /// <summary>
@@ -68,6 +70,49 @@ namespace Neon.IO
             permissions.AllExecute   = (all & 1) != 0;
 
             return true;
+        }
+
+        /// <summary>
+        /// Sets the Linux file permissions.
+        /// </summary>
+        /// <param name="path">Path to the target file or directory.</param>
+        /// <param name="mode">Linux file permissions.</param>
+        /// <param name="recursive">Optionally apply the permissions recursively.</param>
+        public static void Set(string path, string mode, bool recursive = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mode));
+
+            // $todo(jeff.lill):
+            //
+            // We're going to hack this by running [chmod MODE PATH].  Eventually,
+            // we could convert this to using a low-level package but I didn't
+            // want to spend time trying to figure that out right now.
+            //
+            //      https://www.nuget.org/packages/Mono.Posix.NETStandard/1.0.0
+
+            if (!NeonHelper.IsLinux)
+            {
+                throw new NotSupportedException("This method requires Linux.");
+            }
+
+            object[] args;
+
+            if (recursive)
+            {
+                args = new object[] { "-R", mode, path };
+            }
+            else
+            {
+                args = new object[] { mode, path };
+            }
+
+            var response = NeonHelper.ExecuteCaptureAsync("chmod", new object[] { mode, path }).Result;
+
+            if (response.ExitCode != 0)
+            {
+                throw new IOException(response.ErrorText);
+            }
         }
 
         //-----------------------------------------------------------

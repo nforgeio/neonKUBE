@@ -38,6 +38,54 @@ namespace Neon.Hive
         // Static members
 
         /// <summary>
+        /// Opens a Vault connection using <see cref="HiveCredentials"/>.
+        /// </summary>
+        /// <param name="uri">The Vault server URI.</param>
+        /// <param name="credentials">The Vault credentials.</param>
+        /// <returns>The <see cref="VaultClient"/>.</returns>
+        public static VaultClient OpenWithToken(Uri uri, HiveCredentials credentials)
+        {
+            Covenant.Requires<ArgumentNullException>(uri != null);
+            Covenant.Requires<ArgumentNullException>(credentials != null);
+
+            var vaultClient = new VaultClient(uri);
+
+            switch (credentials.Type)
+            {
+                case HiveCredentialsType.VaultToken:
+
+                    vaultClient.jsonClient.DefaultRequestHeaders.Add("X-Vault-Token", credentials.VaultToken);
+                    break;
+
+                case HiveCredentialsType.VaultAppRole:
+
+                    dynamic loginPayload = new ExpandoObject();
+
+                    loginPayload.role_id   = credentials.VaultRoleId;
+                    loginPayload.secret_id = credentials.VaultSecretId;
+
+                    var loginResponse = vaultClient.jsonClient.PostAsync($"/{vaultApiVersion}/auth/approle/login", loginPayload).Result.AsDynamic();
+
+                    vaultClient.jsonClient.DefaultRequestHeaders.Add("X-Vault-Token", (string)loginResponse.auth.client_token);
+                    break;
+
+                default:
+
+                    throw new NotImplementedException($"Credentials type: {credentials.Type}");
+            }
+
+            // $todo(jeff.lill):
+            //
+            // This should be set from config.  See issue:
+            //
+            //      https://github.com/jefflill/NeonForge/issues/253
+
+            vaultClient.AllowSelfSignedCertificates = true;
+
+            return vaultClient;
+        }
+
+        /// <summary>
         /// Opens a Vault connection with an optional Vault token.
         /// </summary>
         /// <param name="uri">The Vault server URI.</param>

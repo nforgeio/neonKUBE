@@ -27,7 +27,7 @@ else
 fi
 
 # Purge the contents of [/dev/shm/secrets/haproxy] and [/dev/shm/secrets/haproxy-new]
-# before we exit so we don't leave secrets such as TLS key lying around in a 
+# before we exit so we don't leave secrets such as TLS key laying around in a 
 # file system (even a tmpfs).
 
 if [ "${DEBUG}" != "true" ] ; then

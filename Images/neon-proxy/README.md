@@ -40,7 +40,7 @@ All you need to do is pass the **UPDATE_KEY** environment variable as the Consul
 
 * `CONFIG_HASH_KEY` (*required*) - Consul key holding MD5 hash of the configuration used when polling for changes.
 
-* `VAULT_CREDENTIALS` (*required*) - names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.
+* `VAULT_CREDENTIALS` (*optional*) - names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.  This is required for the **neon-proxy-public** and **neon-proxy-private** services so that HTTPS.  Not passing `VAULT_CREDENTIALS` or passing an empty string indicates that the proxy is running as a bridge that routes as pass-thru TCP traffic and does no HTTPS termination.
 
 * `WARN_SECONDS` (*optional*) - seconds between logging warning while HAProxy is running with an out-of-date configuration.  This defaults to 300 (5 minutes).
 

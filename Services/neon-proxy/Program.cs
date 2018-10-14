@@ -26,10 +26,9 @@ using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Hive;
 using Neon.HiveMQ;
+using Neon.Tasks;
 using Neon.Time;
 
-#if TODO
-
 namespace NeonProxy
 {
     /// <summary>
@@ -45,39 +44,8 @@ namespace NeonProxy
     /// and the service also handles HiveMQ notifications commanding that items be purged from the caches.
     /// </para>
     /// </summary>
-    public static class Program
+    public static partial class Program
     {
-        /// <summary>
-        /// TODO
-        /// </summary>
-        /// <param name="args"></param>
-        public static void Main(string[] args)
-        {
-        }
-    }
-}
-
-#else
-
-namespace NeonProxy
-{
-    /// <summary>
-    /// <para>
-    /// Implements the <b>neon-proxy-public</b> and <b>neon-proxy-private</b> services by launching and then managing 
-    /// an HAProxy subprocess.  This  service listens for HiveMQ notifications from <b>neon-proxy-manager</b>, indicating 
-    /// that the HAProxy/Varnish may have changed and that the Varnish process should be notified of the changes.  This 
-    /// is built into the <a href="https://hub.docker.com/r/nhive/neon-proxy/">nhive/neon-proxy</a> image and will run
-    /// as the main container process.
-    /// </para>
-    /// <para>
-    /// This service handles cache warming by perodically retrieving designated pages and files from the target services
-    /// and the service also handles HiveMQ notifications commanding that items be purged from the caches.
-    /// </para>
-    /// </summary>
-    public static class Program
-    {
-        private const string vaultCertPrefix = "neon-secret/cert";
-
         // Environment variables:
 
         private static string                   proxyName;
@@ -86,20 +54,31 @@ namespace NeonProxy
         private static string                   vaultCredentialsName;
         private static TimeSpan                 warnInterval;
         private static TimeSpan                 startDelay;
-        private static bool                     debug;
+        private static bool                     debugMode;
         private static bool                     vaultSkipVerify;
+
+        // File system paths:
+
+        private const string vaultCertPrefix    = "neon-secret/cert";
+        private const string secretsFolder      = "/dev/shm/secrets";
+        private const string configFolder       = secretsFolder + "/haproxy";
+        private const string configPath         = configFolder + "/haproxy.cfg";
+        private const string configUpdateFolder = secretsFolder + "/haproxy-update";
+        private const string configNewPath      = configUpdateFolder + "/haproxy.cfg";
 
         // Service state:
 
         private static string                   serviceName;
         private static ProcessTerminator        terminator;
+        private static bool                     isPublic = false;
+        private static bool                     isBridge = false;
         private static INeonLogger              log;
         private static HiveProxy                hive;
         private static VaultClient              vault;
         private static ConsulClient             consul;
         private static BroadcastChannel         proxyNotifyChannel;
-        private static DateTime                 warnTimeUtc = DateTime.MinValue;
-        private static CancellationTokenSource  cts         = new CancellationTokenSource();
+        private static DateTime                 errorTimeUtc = DateTime.MinValue;
+        private static CancellationTokenSource  cts          = new CancellationTokenSource();
 
         /// <summary>
         /// Application entry point.
@@ -113,6 +92,7 @@ namespace NeonProxy
             // Read the environment variables.
 
             proxyName = Environment.GetEnvironmentVariable("PROXY_NAME");
+            isPublic  = proxyName.Equals("public", StringComparison.InvariantCultureIgnoreCase);
 
             if (string.IsNullOrEmpty(proxyName))
             {
@@ -144,8 +124,7 @@ namespace NeonProxy
 
             if (string.IsNullOrEmpty(vaultCredentialsName))
             {
-                log.LogError("[VAULT_CREDENTIALS] environment variable is required.");
-                Program.Exit(1);
+                log.LogWarn("HTTPS routes are not supported because VAULT_CREDENTIALS is not specified or blank.");
             }
 
             var warnSeconds = Environment.GetEnvironmentVariable("WARN_SECONDS");
@@ -170,8 +149,7 @@ namespace NeonProxy
                 startDelay = TimeSpan.FromSeconds(startSecondsValue);
             }
 
-            debug = "true".Equals(Environment.GetEnvironmentVariable("DEBUG"), StringComparison.InvariantCultureIgnoreCase);
-
+            debugMode       = "true".Equals(Environment.GetEnvironmentVariable("DEBUG"), StringComparison.InvariantCultureIgnoreCase);
             vaultSkipVerify = Environment.GetEnvironmentVariable("VAULT_SKIP_VERIFY") != null;
 
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
@@ -181,13 +159,19 @@ namespace NeonProxy
             log.LogInfo(() => $"VAULT_CREDENTIALS={vaultCredentialsName}");
             log.LogInfo(() => $"WARN_SECONDS={warnInterval}");
             log.LogInfo(() => $"START_SECONDS={startDelay}");
-            log.LogInfo(() => $"DEBUG={debug}");
+            log.LogInfo(() => $"DEBUG={debugMode}");
             log.LogInfo(() => $"VAULT_SKIP_VERIFY={vaultSkipVerify}");
 
             // Create process terminator that to handle termination signals.
 
             terminator = new ProcessTerminator(log);
             terminator.AddHandler(() => cts.Cancel());
+
+            // Ensure that the required directories exist.
+
+            Directory.CreateDirectory(secretsFolder);
+            Directory.CreateDirectory(configFolder);
+            Directory.CreateDirectory(configUpdateFolder);
 
             // Establish the hive connections.
 
@@ -206,64 +190,77 @@ namespace NeonProxy
 
             try
             {
-                // Log into Vault using a Docker secret.
+                // Log into Vault using the Vault credentials persisted as a Docker
+                // secret, if one was specified.  We won't open Vault otherwise.
 
-                var vaultSecret = HiveHelper.GetSecret(vaultCredentialsName);
-
-                if (string.IsNullOrEmpty(vaultSecret))
+                if (!string.IsNullOrEmpty(vaultCredentialsName))
                 {
-                    log.LogCritical($"Cannot read Docker secret [{vaultCredentialsName}].");
-                    Program.Exit(1);
-                }
+                    var vaultSecret = HiveHelper.GetSecret(vaultCredentialsName);
 
-                var vaultCredentials = HiveCredentials.ParseJson(vaultSecret);
-
-                if (vaultCredentials == null)
-                {
-                    log.LogCritical($"Cannot parse Docker secret [{vaultCredentialsName}].");
-                    Program.Exit(1);
-                }
-
-                // Open the hive data services and then start the main service task.
-
-                log.LogInfo(() => $"Connecting: Vault");
-
-                using (vault = HiveHelper.OpenVault(vaultCredentials))
-                {
-                    log.LogInfo(() => $"Connecting: Consul");
-
-                    using (consul = HiveHelper.OpenConsul())
+                    if (string.IsNullOrEmpty(vaultSecret))
                     {
-                        log.LogInfo(() => $"Connecting: {HiveMQChannels.ProxyNotify} channel");
+                        log.LogCritical($"Cannot read Docker secret [{vaultCredentialsName}].");
+                        Program.Exit(1);
+                    }
 
-                        // NOTE:
-                        //
-                        // We're passing [useBootstrap=true] here so that the HiveMQ client will
-                        // connect directly to the HiveMQ cluster nodes as opposed to routing
-                        // traffic through the private load balancer.  This is necessary because
-                        // the load balancers rely on HiveMQ to broadcast update notifications.
-                        //
-                        // One consequence of this is that this service will need to be restarted
-                        // whenever HiveMQ instances are relocated to different hive hosts.
+                    var vaultCredentials = HiveCredentials.ParseJson(vaultSecret);
 
-                        // $todo(jeff.lill):
-                        //
-                        // This service will need to be restarted whenever future code provides
-                        // for relocating HiveMQ instances or when hive nodes hosting HiveMQ
-                        // are added or removed.
-                        //
-                        //      https://github.com/jefflill/NeonForge/issues/337
+                    if (vaultCredentials == null)
+                    {
+                        log.LogCritical($"Cannot parse Docker secret [{vaultCredentialsName}].");
+                        Program.Exit(1);
+                    }
 
-                        using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
-                        {
-                            // Crank up the service tasks.
+                    log.LogInfo(() => $"Connecting: Vault");
+                    vault = HiveHelper.OpenVault(vaultCredentials);
+                }
+                else
+                {
+                    vault = null;
 
-                            await NeonHelper.WaitAllAsync(
-                                RunAsync(),
-                                MonitorAsync());
+                    // $hack(jeff.lill):
+                    //
+                    // This is a bit of backwards compatible hack.  Instances started without
+                    // the VAULT_CREDENTIALS environment variable are proxy bridges.
 
-                            terminator.ReadyToExit();
-                        }
+                    isBridge = true;
+                }
+
+                // Open Consul and then start the service tasks.
+
+                log.LogInfo(() => $"Connecting: Consul");
+
+                using (consul = HiveHelper.OpenConsul())
+                {
+                    log.LogInfo(() => $"Connecting: {HiveMQChannels.ProxyNotify} channel");
+
+                    // NOTE:
+                    //
+                    // We're passing [useBootstrap=true] here so that the HiveMQ client will
+                    // connect directly to the HiveMQ cluster nodes as opposed to routing
+                    // traffic through the private load balancer.  This is necessary because
+                    // the load balancers rely on HiveMQ to broadcast update notifications.
+                    //
+                    // One consequence of this is that this service will need to be restarted
+                    // whenever HiveMQ instances are relocated to different hive hosts.
+
+                    // $todo(jeff.lill):
+                    //
+                    // This service will need to be restarted whenever future code provides
+                    // for relocating HiveMQ instances or when hive nodes hosting HiveMQ
+                    // are added or removed.
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/337
+
+                    using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
+                    {
+                        // Crank up the service tasks.
+
+                        await NeonHelper.WaitAllAsync(
+                            ErrorPollerAsync(),
+                            HAProxyManager());
+
+                        terminator.ReadyToExit();
                     }
                 }
             }
@@ -314,25 +311,5 @@ namespace NeonProxy
             terminator.ReadyToExit();
             Environment.Exit(exitCode);
         }
-
-        /// <summary>
-        /// Starts HAProxy and then monitors HiveMQ for update notifications and then
-        /// updates HAProxy as required.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task RunAsync()
-        {
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Perodically logs warnings when the HAProxy configuration could not be loaded.
-        /// </summary>
-        /// <returns>The tacking <see cref="Task"/>.</returns>
-        private static async Task MonitorAsync()
-        {
-            await Task.CompletedTask;
-        }
     }
 }
-#endif

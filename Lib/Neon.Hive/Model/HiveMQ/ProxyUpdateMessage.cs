@@ -25,7 +25,7 @@ using Neon.Common;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Published to the <see cref="HiveMQChannels.ProxyNotify"/> channel to notify
+    /// Broadcast to the <see cref="HiveMQChannels.ProxyNotify"/> channel to notify
     /// <b>neon-proxy-public</b>, <b>neon-proxy-private</b>, <b>neon-proxy-public-bridge</b>, 
     /// <b>neon-proxy-private-bridge</b>, <b>neon-proxy-public-cache</b>, and 
     /// <b>neon--proxy-private-cache</b> service instances that their configuration 
@@ -34,18 +34,44 @@ namespace Neon.Hive
     public class ProxyUpdateMessage
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ProxyUpdateMessage()
+        {
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="reason">The human readable reason for the message.</param>
+        public ProxyUpdateMessage(string reason)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(reason));
+
+            this.Reason = reason;
+        }
+
+        /// <summary>
+        /// Optionally describes why the message was sent as human readable text.  This
+        /// defaults to <b>"Unknown"</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Reason", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("Unknown")]
+        public string Reason { get; set; } = "Unknown";
+
+        /// <summary>
         /// Indicates that <b>neon-proxy-public</b> should reload its configuration.
         /// </summary>
-        [JsonProperty(PropertyName = "Public", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "PublicProxy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
-        public bool Public { get; set; } = false;
+        public bool PublicProxy { get; set; } = false;
 
         /// <summary>
         /// Indicates that <b>neon-proxy-private</b> should reload its configuration.
         /// </summary>
-        [JsonProperty(PropertyName = "Private", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "PrivateProxy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
-        public bool Private { get; set; } = false;
+        public bool PrivateProxy { get; set; } = false;
 
         /// <summary>
         /// Indicates that <b>neon-proxy-public-bridge</b> should reload its configuration.
@@ -74,5 +100,59 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "PrivateCache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
         public bool PrivateCache { get; set; } = false;
+
+        /// <summary>
+        /// Returns a human-readable summary of the message.
+        /// </summary>
+        /// <returns>The summary string.</returns>
+        public override string ToString()
+        {
+            var sbPublicTargets  = new StringBuilder();
+            var sbPrivateTargets = new StringBuilder();
+
+            if (PublicProxy)
+            {
+                sbPublicTargets.AppendWithSeparator("proxy");
+            }
+
+            if (PublicBridge)
+            {
+                sbPublicTargets.AppendWithSeparator("bridge");
+            }
+
+            if (PublicCache)
+            {
+                sbPublicTargets.AppendWithSeparator("cache");
+            }
+
+            if (PrivateProxy)
+            {
+                sbPrivateTargets.AppendWithSeparator("proxy");
+            }
+
+            if (PrivateBridge)
+            {
+                sbPrivateTargets.AppendWithSeparator("bridge");
+            }
+
+            if (PrivateCache)
+            {
+                sbPrivateTargets.AppendWithSeparator("cache");
+            }
+
+            var sbTargets = new StringBuilder();
+
+            if (sbPublicTargets.Length > 0)
+            {
+                sbTargets.Append($" [public: {sbPublicTargets}]");
+            }
+
+            if (sbPrivateTargets.Length > 0)
+            {
+                sbTargets.Append($" [private: {sbPrivateTargets}]");
+            }
+
+            return $"{nameof(ProxyUpdateMessage)}: [reason={Reason}]{sbTargets}";
+        }
     }
 }

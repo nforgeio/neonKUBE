@@ -471,7 +471,7 @@ namespace Neon.HiveMQ
         /// callbacks using this method for better performance under load.
         /// </note>
         /// </remarks>
-        public void Consume<TMessage>(Func<TMessage, Task> onMessage, bool exclusive = false)
+        public void ConsumeAsync<TMessage>(Func<TMessage, Task> onMessage, bool exclusive = false)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
@@ -503,7 +503,7 @@ namespace Neon.HiveMQ
         /// callbacks using this method for better performance under load.
         /// </note>
         /// </remarks>
-        public void Consume<TMessage>(Func<TMessage, MessageProperties, ConsumerContext, Task> onMessage, bool exclusive = false)
+        public void ConsumeAsync<TMessage>(Func<TMessage, MessageProperties, ConsumerContext, Task> onMessage, bool exclusive = false)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);

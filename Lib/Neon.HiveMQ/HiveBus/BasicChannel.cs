@@ -55,8 +55,8 @@ namespace Neon.HiveMQ
     /// <item>
     ///     Call <see cref="Channel.Consume{TMessage}(Action{TMessage})"/>,
     ///     <see cref="Channel.Consume{TMessage}(Action{TMessage, MessageProperties, ConsumerContext})"/>,
-    ///     <see cref="Channel.Consume{TMessage}(Func{TMessage, Task}, bool)"/>, or
-    ///     <see cref="Channel.Consume{TMessage}(Func{TMessage, MessageProperties, ConsumerContext, Task}, bool)"/>
+    ///     <see cref="Channel.ConsumeAsync{TMessage}(Func{TMessage, Task}, bool)"/>, or
+    ///     <see cref="Channel.ConsumeAsync{TMessage}(Func{TMessage, MessageProperties, ConsumerContext, Task}, bool)"/>
     ///     to register synchronous or asunchronous message consumption callbacks for each of the message
     ///     types you may receive.  Your callback will be passed the received message and optionally
     ///     the message envelope with the raw message bytes and a <see cref="ConsumerContext"/>.

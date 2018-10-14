@@ -36,8 +36,8 @@ namespace TestCommon
 
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => { }));
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, envelope, context) => { }));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => Task.CompletedTask));
-                Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, envelope, context) => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.ConsumeAsync<TestMessage1>(message => Task.CompletedTask));
+                Assert.Throws<InvalidOperationException>(() => channel.ConsumeAsync<TestMessage1>((message, envelope, context) => Task.CompletedTask));
             }
         }
 
@@ -131,14 +131,13 @@ namespace TestCommon
                 var channel  = bus.GetBasicChannel("test");
                 var received = (TestMessage1)null;
 
-                channel.Consume<TestMessage1>(
+                channel.ConsumeAsync<TestMessage1>(
                     async message =>
                     {
                         received = message;
 
                         await Task.CompletedTask;
                     });
-
 
                 await channel.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
@@ -159,7 +158,7 @@ namespace TestCommon
                 var received  = (TestMessage1)null;
                 var contextOK = false;
 
-                channel.Consume<TestMessage1>(
+                channel.ConsumeAsync<TestMessage1>(
                     async (message, envelope, context) =>
                     {
                         received  = message;
@@ -188,7 +187,7 @@ namespace TestCommon
                 var received       = (TestMessage1)null;
                 var contextOK      = false;
 
-                receiveChannel.Consume<TestMessage1>(
+                receiveChannel.ConsumeAsync<TestMessage1>(
                     async (message, envelope, context) =>
                     {
                         received = message;
@@ -230,7 +229,7 @@ namespace TestCommon
                     var consumeChannel = bus.GetBasicChannel("test");
                     var id             = channelID;
 
-                    consumeChannel.Consume<TestMessage1>(
+                    consumeChannel.ConsumeAsync<TestMessage1>(
                         async message =>
                         {
                             lock (consumerMessages)

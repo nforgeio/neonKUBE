@@ -28,7 +28,7 @@ namespace Neon.Tasks
     /// while handling some of the messy exception handling details.
     /// </para>
     /// <para>
-    /// You'll use the <see cref="AsyncPeriodicTask.AsyncPeriodicTask(TimeSpan, Func{Task{bool}}, Func{Exception, Task{bool}}, Func{Task}, CancellationToken)"/>
+    /// You'll use the <see cref="AsyncPeriodicTask.AsyncPeriodicTask(TimeSpan, Func{Task{bool}}, Func{Exception, Task{bool}}, Func{Task}, CancellationTokenSource)"/>
     /// constructor to create a task, passing the task interval, asynchronous task handler and optional exception handler and cancellation token
     /// and then call <see cref="AsyncPeriodicTask.RunAsync"/> to execute the task.
     /// </para>

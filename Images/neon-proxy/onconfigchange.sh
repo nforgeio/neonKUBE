@@ -75,7 +75,7 @@ if [ -f ${CONFIG_NEW_FOLDER}/.certs ] ; then
     # main entrypoint, so VAULT_TOKEN should already be set.
     #
     # Each line contains three fields separated by a space:
-    # the Vault object path, the relative destiniation folder 
+    # the Vault object path, the relative destination folder 
     # path and the file name.
     #
     # Note that certificates are stored in Vault as JSON using
@@ -100,7 +100,7 @@ if [ -f ${CONFIG_NEW_FOLDER}/.certs ] ; then
 
         mkdir -p ${CERT_DIR}
         
-        # Download the Vault secret to a temporary file.
+        # Download the Vault certificate to a temporary file.
 
         if ! vault read -format=json ${CERT_KEY} > ${CERT_TEMP} ; then
             . report-error.sh "Unable to read certificate [${CERT_KEY}] from Vault."

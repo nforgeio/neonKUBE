@@ -119,7 +119,7 @@ namespace Neon.Hive
             hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
 
             hive.HiveMQ.Internal.GetProxyNotifyChannel().Publish(
-                new ProxyRegenerateMessage()
+                new ProxyRegenerateMessage("Update")
                 {
                     Reason = $"Update: {Name}"
                 });

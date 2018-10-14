@@ -177,6 +177,31 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Forks a child process that will run in parallel with the current process.
+        /// </summary>
+        /// <param name="path">Path to the executable file.</param>
+        /// <param name="args">Command line arguments (or <c>null</c>).</param>
+        /// <returns>The <see cref="Process"/> information.</returns>
+        public static Process Fork(string path, object[] args)
+        {
+            var processInfo = new ProcessStartInfo(GetProgramPath(path), NormalizeExecArgs(args));
+
+            processInfo.UseShellExecute        = false;
+            processInfo.RedirectStandardError  = false;
+            processInfo.RedirectStandardOutput = false;
+            processInfo.CreateNoWindow         = true;
+
+            var process = new Process()
+            {
+                StartInfo = processInfo
+            };
+
+            process.Start();
+
+            return process;
+        }
+
+        /// <summary>
         /// Starts a process with an array of arguments to run an executable file and
         /// then waits for the process to terminate.
         /// </summary>
