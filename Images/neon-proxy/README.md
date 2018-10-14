@@ -34,17 +34,17 @@ All you need to do is pass the **UPDATE_KEY** environment variable as the Consul
 
 # Environment Variables
 
+* `PROXY_NAME` (*required*) - Identifies the proxy service.  This must be passed as either **public** or **private**.
+
 * `CONFIG_KEY` (*required*) - Consul key holding the HAProxy ZIP archive configuration.
 
 * `CONFIG_HASH_KEY` (*required*) - Consul key holding MD5 hash of the configuration used when polling for changes.
 
-* `VAULT_CREDENTIALS` (*required*) - optionally names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.  If this is not specified or is blank, then the proxy won't be able to handle HTTPS routes but HTTP and TCP routes will still work.
+* `VAULT_CREDENTIALS` (*required*) - names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.
 
 * `WARN_SECONDS` (*optional*) - seconds between logging warning while HAProxy is running with an out-of-date configuration.  This defaults to 300 (5 minutes).
 
 * `START_SECONDS` (*optional*) - seconds to give the chance HAProxy to start cleanly before processing configuration changes.  This defaults to 10 seconds.
-
-* `POLL_SECONDS` (*optional*) - seconds between polling `UPDATE_KEY` for changes.  This defaults to 15 seconds.
 
 * `LOG_LEVEL` (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 

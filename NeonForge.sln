@@ -265,6 +265,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-proxy-cache", "Service
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.RabbitMQ", "Lib\Neon.Xunit.RabbitMQ\Neon.Xunit.RabbitMQ.csproj", "{BA0CABF0-06A8-4640-9264-E1611D95FEB3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-proxy", "Services\neon-proxy\neon-proxy.csproj", "{19339D20-5D28-4B90-BE83-92FDECB361BF}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
@@ -811,6 +813,18 @@ Global
 		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Release|x64.Build.0 = Release|Any CPU
 		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Release|x86.ActiveCfg = Release|Any CPU
 		{BA0CABF0-06A8-4640-9264-E1611D95FEB3}.Release|x86.Build.0 = Release|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Debug|x64.Build.0 = Debug|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Debug|x86.Build.0 = Debug|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Release|x64.ActiveCfg = Release|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Release|x64.Build.0 = Release|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Release|x86.ActiveCfg = Release|Any CPU
+		{19339D20-5D28-4B90-BE83-92FDECB361BF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -876,6 +890,7 @@ Global
 		{7B918008-009F-49F4-BE01-9130E635634B} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
 		{7FDE666C-FACB-401F-9ADB-19E7998A4E95} = {319CF481-DCE8-4114-B13F-FC7CFC48496D}
 		{BA0CABF0-06A8-4640-9264-E1611D95FEB3} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
+		{19339D20-5D28-4B90-BE83-92FDECB361BF} = {319CF481-DCE8-4114-B13F-FC7CFC48496D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
