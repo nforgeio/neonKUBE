@@ -14,6 +14,7 @@ using DNS.Client;
 
 using Neon.Common;
 using Neon.Hive;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace Neon.DnsTools

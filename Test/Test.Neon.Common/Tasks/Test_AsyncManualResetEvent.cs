@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_ManualResetEvent.cs
+// FILE:	    Test_AsyncManualResetEvent.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -13,13 +13,14 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Retry;
+using Neon.Tasks;
 using Neon.Xunit;
 
 using Xunit;
 
 namespace TestCommon
 {
-    public class Test_ManualResetEvent
+    public class Test_AsyncManualResetEvent
     {
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);
 
