@@ -27,6 +27,7 @@ using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Hive;
 using Neon.Net;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace NeonDnsMon
@@ -162,153 +163,147 @@ namespace NeonDnsMon
         /// <returns>The <see cref="Task"/>.</returns>
         private static async Task RunAsync()
         {
-            while (true)
-            {
-                try
-                {
-                    try
-                    {
-                        log.LogDebug(() => "Starting poll");
-
-                        if (terminator.CancellationToken.IsCancellationRequested)
+            var periodicTask = 
+                new AsyncPeriodicTask(
+                    pollInterval,
+                    onTaskAsync:
+                        async () =>
                         {
-                            log.LogDebug(() => "Terminating");
-                            break;
-                        }
+                            log.LogDebug(() => "Starting poll");
 
-                        // We're going to collect the hostname --> address mappings into
-                        // a specialized (semi-threadsafe) dictionary.
+                            // We're going to collect the [hostname --> address] mappings into
+                            // a specialized (semi-threadsafe) dictionary.
 
-                        var hostAddresses = new HostAddresses();
+                            var hostAddresses = new HostAddresses();
 
-                        // Retrieve the current hive definition from Consul if we don't already
-                        // have it or it's different from what we've cached.
+                            // Retrieve the current hive definition from Consul if we don't already
+                            // have it or it's different from what we've cached.
 
-                        hiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, terminator.CancellationToken);
+                            hiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, terminator.CancellationToken);
 
-                        log.LogDebug(() => $"Hive has [{hiveDefinition.NodeDefinitions.Count}] nodes.");
+                            log.LogDebug(() => $"Hive has [{hiveDefinition.NodeDefinitions.Count}] nodes.");
 
-                        // Add the [NAME.HIVENAME.nhive.io] definitions for each cluster node.
+                            // Add the [NAME.HIVENAME.nhive.io] definitions for each cluster node.
 
-                        foreach (var node in hiveDefinition.Nodes)
-                        {
-                            hostAddresses.Add($"{node.Name}.{hiveDefinition.Name}.nhive.io", IPAddress.Parse(node.PrivateAddress));
-                        }
-
-                        // Read the DNS entry definitions from Consul and add the appropriate 
-                        // host/addresses based on health checks, etc.
-
-                        var targetsResult = (await consul.KV.ListOrDefault<DnsEntry>(HiveConst.ConsulDnsEntriesKey + "/", terminator.CancellationToken));
-
-                        List<DnsEntry> targets;
-
-                        if (targetsResult == null)
-                        {
-                            // The targets key wasn't found in Consul, so we're
-                            // going to assume that there are no targets.
-
-                            targets = new List<DnsEntry>();
-                        }
-                        else
-                        {
-                            targets = targetsResult.ToList();
-                        }
-
-                        log.LogDebug(() => $"Consul has [{targets.Count()}] DNS targets.");
-
-                        await ResolveTargetsAsync(hostAddresses, targets);
-
-                        // Generate a canonical [hosts.txt] file by sorting host entries by 
-                        // hostname and then by IP address.
-                        //
-                        // Unhealthy hosts will be assigned the unrouteable [0.0.0.0] address.
-                        // The reason for this is subtle but super important.
-                        //
-                        // If we didn't do this, the DNS host would likely be resolved by a 
-                        // public DNS service, perhaps returning the IP address of a production 
-                        // endpoint.
-                        //
-                        // This could cause a disaster if the whole purpose of having a local
-                        // DNS host defined to redirect test traffic to a test service.  If
-                        // the test service endpoints didn't report as healthy and [0.0.0.0] 
-                        // wasn't set, then test traffic could potentially hit the production
-                        // endpoint and do serious damage.
-
-                        var sbHosts      = new StringBuilder();
-                        var mappingCount = 0;
-
-                        foreach (var host in hostAddresses.OrderBy(h => h.Key))
-                        {
-                            foreach (var address in host.Value.OrderBy(a => a.ToString()))
+                            foreach (var node in hiveDefinition.Nodes)
                             {
-                                sbHosts.AppendLineLinux($"{address,-15} {host.Key}");
-                                mappingCount++;
+                                hostAddresses.Add($"{node.Name}.{hiveDefinition.Name}.nhive.io", IPAddress.Parse(node.PrivateAddress));
                             }
-                        }
 
-                        var unhealthyTargets = targets.Where(t => !hostAddresses.ContainsKey(t.Hostname) || hostAddresses[t.Hostname].Count == 0).ToList();
+                            // Read the DNS entry definitions from Consul and add the appropriate 
+                            // host/addresses based on health checks, etc.
 
-                        if (unhealthyTargets.Count > 0)
-                        {
-                            sbHosts.AppendLine();
-                            sbHosts.AppendLine($"# [{unhealthyTargets.Count}] unhealthy DNS hosts:");
-                            sbHosts.AppendLine();
+                            var targetsResult = (await consul.KV.ListOrDefault<DnsEntry>(HiveConst.ConsulDnsEntriesKey + "/", terminator.CancellationToken));
 
-                            var unhealthyAddress = "0.0.0.0";
+                            List<DnsEntry> targets;
 
-                            foreach (var target in unhealthyTargets.OrderBy(h => h))
+                            if (targetsResult == null)
                             {
-                                sbHosts.AppendLineLinux($"{unhealthyAddress,-15} {target.Hostname}");
+                                // The targets key wasn't found in Consul, so we're
+                                // going to assume that there are no targets.
+
+                                targets = new List<DnsEntry>();
                             }
-                        }
-
-                        // Compute the MD5 hash and compare it to the hash persisted to
-                        // Consul (if any) to determine whether we need to update the
-                        // answers in Consul.
-
-                        var hostsTxt   = sbHosts.ToString();
-                        var hostsMD5   = NeonHelper.ComputeMD5(hostsTxt);
-                        var currentMD5 = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
-
-                        if (currentMD5 == null)
-                        {
-                            currentMD5 = string.Empty;
-                        }
-
-                        if (hostsMD5 != currentMD5)
-                        {
-                            log.LogDebug(() => $"DNS answers have changed.");
-                            log.LogDebug(() => $"Writing [{mappingCount}] DNS answers to Consul.");
-
-                            // Update the Consul keys using a transaction.
-
-                            var operations = new List<KVTxnOp>()
+                            else
                             {
-                                new KVTxnOp(HiveConst.ConsulDnsHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
-                                new KVTxnOp(HiveConst.ConsulDnsHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
-                            };
+                                targets = targetsResult.ToList();
+                            }
 
-                            await consul.KV.Txn(operations, terminator.CancellationToken);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        if (!(e is OperationCanceledException))
+                            log.LogDebug(() => $"Consul has [{targets.Count()}] DNS targets.");
+
+                            await ResolveTargetsAsync(hostAddresses, targets);
+
+                            // Generate a canonical [hosts.txt] file by sorting host entries by 
+                            // hostname and then by IP address.
+                            //
+                            // Unhealthy hosts will be assigned the unrouteable [0.0.0.0] address.
+                            // The reason for this is subtle but super important.
+                            //
+                            // If we didn't do this, the DNS host would likely be resolved by a 
+                            // public DNS service, perhaps returning the IP address of a production 
+                            // endpoint.
+                            //
+                            // This could cause a disaster if the whole purpose of having a local
+                            // DNS host defined to redirect test traffic to a test service.  If
+                            // the test service endpoints didn't report as healthy and [0.0.0.0] 
+                            // wasn't set, then test traffic could potentially hit the production
+                            // endpoint and do serious damage.
+
+                            var sbHosts      = new StringBuilder();
+                            var mappingCount = 0;
+
+                            foreach (var host in hostAddresses.OrderBy(h => h.Key))
+                            {
+                                foreach (var address in host.Value.OrderBy(a => a.ToString()))
+                                {
+                                    sbHosts.AppendLineLinux($"{address,-15} {host.Key}");
+                                    mappingCount++;
+                                }
+                            }
+
+                            var unhealthyTargets = targets.Where(t => !hostAddresses.ContainsKey(t.Hostname) || hostAddresses[t.Hostname].Count == 0).ToList();
+
+                            if (unhealthyTargets.Count > 0)
+                            {
+                                sbHosts.AppendLine();
+                                sbHosts.AppendLine($"# [{unhealthyTargets.Count}] unhealthy DNS hosts:");
+                                sbHosts.AppendLine();
+
+                                var unhealthyAddress = "0.0.0.0";
+
+                                foreach (var target in unhealthyTargets.OrderBy(h => h))
+                                {
+                                    sbHosts.AppendLineLinux($"{unhealthyAddress,-15} {target.Hostname}");
+                                }
+                            }
+
+                            // Compute the MD5 hash and compare it to the hash persisted to
+                            // Consul (if any) to determine whether we need to update the
+                            // answers in Consul.
+
+                            var hostsTxt   = sbHosts.ToString();
+                            var hostsMD5   = NeonHelper.ComputeMD5(hostsTxt);
+                            var currentMD5 = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
+
+                            if (currentMD5 == null)
+                            {
+                                currentMD5 = string.Empty;
+                            }
+
+                            if (hostsMD5 != currentMD5)
+                            {
+                                log.LogDebug(() => $"DNS answers have changed.");
+                                log.LogDebug(() => $"Writing [{mappingCount}] DNS answers to Consul.");
+
+                                // Update the Consul keys using a transaction.
+
+                                var operations = new List<KVTxnOp>()
+                                {
+                                    new KVTxnOp(HiveConst.ConsulDnsHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
+                                    new KVTxnOp(HiveConst.ConsulDnsHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
+                                };
+
+                                await consul.KV.Txn(operations, terminator.CancellationToken);
+                            }
+
+                            log.LogDebug(() => "Finished poll");
+                            return await Task.FromResult(false);
+                        },
+                    onExceptionAsync:
+                        async e =>
                         {
                             log.LogError(e);
-                        }
-                    }
+                            return await Task.FromResult(false);
+                        },
+                    onTerminateAsync:
+                        async () =>
+                        {
+                            log.LogInfo(() => "Terminating");
+                            await Task.CompletedTask;
+                        });
 
-                    log.LogDebug(() => "Finished poll");
-                    await Task.Delay(pollInterval);
-                }
-                catch (OperationCanceledException)
-                {
-                    log.LogInfo(() => "Termninating.");
-                    break;
-                }
-            }
-
+            terminator.AddDisposable(periodicTask);
+            await periodicTask.RunAsync();
             terminator.ReadyToExit();
         }
 

@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Tasks;
 
 namespace Neon.Common
 {
@@ -29,7 +30,7 @@ namespace Neon.Common
     /// </para>
     /// <note>
     /// The parent process or operating system typically enforces its own maximum
-    /// timeout, so your process may still be killed before the timeout is reached.
+    /// timeout, so your process may still be killed before your timeout is reached.
     /// </note>
     /// <para>
     /// This class provides two ways for the application to reach to a termination
@@ -40,6 +41,12 @@ namespace Neon.Common
     /// Applications may also use <see cref="AddHandler(Action)"/> to add one more more
     /// methods that will be called when a termination signal is received.  Each handler
     /// will be called in parallel on its own thread.
+    /// </para>
+    /// <para>
+    /// Finally, you map pass one or more <see cref="IDisposable"/> instances to <see cref="AddDisposable(IDisposable)"/>.
+    /// <see cref="IDisposable.Dispose()"/> will be called for each of these in parallel
+    /// on its own thread.  This can be a handy way of hooking <see cref="AsyncPeriodicTask"/>
+    /// instances and other structures into a <see cref="ProcessTerminator"/>.
     /// </para>
     /// <para>
     /// Applications should call <see cref="ReadyToExit"/> when they have gracefully stopped
@@ -105,6 +112,22 @@ namespace Neon.Common
             {
                 handlers.Add(handler);
             }
+        }
+
+        /// <summary>
+        /// Adds a <see cref="IDisposable"/> instance that will be disposed when the
+        /// process is being terminated.  This can be a handy way to hook <see cref="AsyncPeriodicTask"/>
+        /// and other components into a <see cref="ProcessTerminator"/>.
+        /// </summary>
+        /// <param name="disposable"></param>
+        public void AddDisposable(IDisposable disposable)
+        {
+            Covenant.Requires<ArgumentNullException>(disposable != null);
+
+            // We're simply going to add a handler that disposes the instance
+            // to keep things super simple.
+
+            AddHandler(() => disposable.Dispose());
         }
 
         /// <summary>
