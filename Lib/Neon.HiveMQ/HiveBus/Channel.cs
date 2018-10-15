@@ -237,7 +237,7 @@ namespace Neon.HiveMQ
         {
             if (!IsOpen)
             {
-                throw new InvalidOperationException($"The [{Name} channel is not open.");
+                throw new InvalidOperationException($"The [{Name}] channel is not open.");
             }
         }
 
