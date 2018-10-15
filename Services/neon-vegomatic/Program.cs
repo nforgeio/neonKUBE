@@ -49,7 +49,7 @@ namespace NeonVegomatic
             log.LogInfo(() => $"Starting [{serviceName}]");
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
 
-            // Create process terminator that to handle termination signals.
+            // Create process terminator to handle termination signals.
 
             terminator = new ProcessTerminator(log);
 
