@@ -100,28 +100,17 @@ namespace Neon.Hive
             /// to resolve chicken-and-the-egg dilemmas for the load balancer and
             /// proxy implementations that rely on HiveMQ messaging.
             /// </param>
-            /// <param name="subscribeAction">
-            /// Optionally specifies a callback that can be use to register message
-            /// consumers such that there's no chance of losing messages.
-            /// </param>
-            /// <returns>The <see cref="BroadcastChannel"/>.</returns>
+            /// <returns>The requested <see cref="BroadcastChannel"/>.</returns>
             /// <remarks>
             /// <note>
-            /// <b>WARNING:</b> Channel instances that will consume messages should 
-            /// configure the consumers within a <paramref name="subscribeAction"/>
-            /// callback to ensure that no messages are indavertently lost.  It is
-            /// possible consumers after the channel has been constructed but the
-            /// channel will begin receiving and processing messages before the
-            /// constructor returns and messages without a registered consumer will
-            /// be silently dropped.  This means that messages received between the
-            /// time the channel was constructed and the consumer was registered
-            /// will be lost.
+            /// You'll need to register any consumers on the channel returned and
+            /// then call <see cref="BroadcastChannel.Open()"/> to open the channel.
             /// </note>
             /// <note>
             /// The instance returned should be disposed when you're done with it.
             /// </note>
             /// </remarks>
-            public BroadcastChannel GetProxyNotifyChannel(bool useBootstrap = false, Action<BroadcastChannel> subscribeAction = null)
+            public BroadcastChannel GetProxyNotifyChannel(bool useBootstrap = false)
             {
                 // WARNING:
                 //
@@ -135,8 +124,7 @@ namespace Neon.Hive
                     autoDelete: false,
                     messageTTL: null,
                     maxLength: null,
-                    maxLengthBytes: null,
-                    subscribeAction: subscribeAction);
+                    maxLengthBytes: null);
             }
         }
 

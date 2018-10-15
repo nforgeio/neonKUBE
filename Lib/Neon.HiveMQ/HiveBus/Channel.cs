@@ -198,6 +198,11 @@ namespace Neon.HiveMQ
         public string Name { get; private set; }
 
         /// <summary>
+        /// Returns <c>true</c> if the channel is currently connected to a RabbitMQ broker.
+        /// </summary>
+        public bool IsConnected => EasyBus.IsConnected;
+
+        /// <summary>
         /// Returns the hive message bus.
         /// </summary>
         protected HiveBus HiveBus { get; private set; }
@@ -208,9 +213,45 @@ namespace Neon.HiveMQ
         protected IAdvancedBus EasyBus { get; private set; }
 
         /// <summary>
-        /// Returns <c>true</c> if the channel is currently connected to a RabbitMQ broker.
+        /// Indicates whether <see cref="Open()"/> has been called.
         /// </summary>
-        public bool IsConnected => EasyBus.IsConnected;
+        protected bool IsOpen { get; private set; }
+
+        /// <summary>
+        /// Ensures that the channel hasn't been opened.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the channel is already opened.</exception>
+        protected void EnsureNotOpened()
+        {
+            if (IsOpen)
+            {
+                throw new InvalidOperationException($"The [{Name} channel has already been opened.");
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the channel has been opened.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the channel has not been opened.</exception>
+        protected void EnsureOpened()
+        {
+            if (!IsOpen)
+            {
+                throw new InvalidOperationException($"The [{Name} channel is not open.");
+            }
+        }
+
+        /// <summary>
+        /// Opens the channel so that messages can be published and consumed.  This must be
+        /// called before a channel is usable, generally after you've added any message
+        /// consumers.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the channel has already been opened.</exception>
+        public virtual void Open()
+        {
+            EnsureNotOpened();
+            IsOpen = true;
+        }
 
         /// <summary>
         /// Adds a message consumer to the channel.

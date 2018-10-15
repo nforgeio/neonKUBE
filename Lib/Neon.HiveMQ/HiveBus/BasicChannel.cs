@@ -48,7 +48,7 @@ namespace Neon.HiveMQ
     /// </para>
     /// <list type="number">
     /// <item>
-    ///     Construct an instance call <see cref="HiveBus.GetBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?, Action{BasicChannel})"/>,
+    ///     Construct an instance call <see cref="HiveBus.GetBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>,
     ///     passing the channel name any required optional parameters to control
     ///     the channel durability, exclusivity, message TTL, and length constraints.
     /// </item>
@@ -57,9 +57,25 @@ namespace Neon.HiveMQ
     ///     <see cref="Channel.Consume{TMessage}(Action{TMessage, MessageProperties, ConsumerContext})"/>,
     ///     <see cref="Channel.ConsumeAsync{TMessage}(Func{TMessage, Task}, bool)"/>, or
     ///     <see cref="Channel.ConsumeAsync{TMessage}(Func{TMessage, MessageProperties, ConsumerContext, Task}, bool)"/>
-    ///     to register synchronous or asunchronous message consumption callbacks for each of the message
+    ///     to register synchronous or asynchronous message consumption callbacks for each of the message
     ///     types you may receive.  Your callback will be passed the received message and optionally
     ///     the message envelope with the raw message bytes and a <see cref="ConsumerContext"/>.
+    /// </item>
+    /// <item>
+    ///     <para>
+    ///     Call <see cref="Open()"/> to connect the channel so it will begin receiving inbound
+    ///     messages and also enables the publication of outbound messages.
+    ///     </para>
+    ///     <note>
+    ///     <b>WARNING:</b> Channel instances that will consume messages should 
+    ///     generally configure all consumers before calling <see cref="Open()"/>
+    ///     to ensure that no messages are indavertently lost.  It is possible to
+    ///     add consumers after the channel has been started but the channel will 
+    ///     begin receiving and processing messages when <see cref="Open()"/> is 
+    ///     called and messages without a registered consumer will be silently 
+    ///     dropped.  This means that messages received between the time the 
+    ///     channel was opened and the consumer was registered will be lost.
+    ///     </note>
     /// </item>
     /// <item>
     ///     Call <see cref="Publish{TMessage}(TMessage)"/> or <see cref="PublishAsync{TMessage}(TMessage)"/>
@@ -119,33 +135,15 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
-        /// <param name="subscribeAction">
-        /// Optionally specifies a callback that can be use to register message
-        /// consumers such that there's no chance of losing messages.
-        /// </param>
-        /// <remarks>
-        /// <note>
-        /// <b>WARNING:</b> Channel instances that will consume messages should 
-        /// configure the consumers within a <paramref name="subscribeAction"/>
-        /// callback to ensure that no messages are indavertently lost.  It is
-        /// possible consumers after the channel has been constructed but the
-        /// channel will begin receiving and processing messages before the
-        /// constructor returns and messages without a registered consumer will
-        /// be silently dropped.  This means that messages received between the
-        /// time the channel was constructed and the consumer was registered
-        /// will be lost.
-        /// </note>
-        /// </remarks>
         internal BasicChannel(
-            HiveBus                 hiveBus, 
-            string                  name,
-            bool                    durable = false,
-            bool                    exclusive = false,
-            bool                    autoDelete = false,
-            TimeSpan?               messageTTL = null,
-            int?                    maxLength = null,
-            int?                    maxLengthBytes = null,
-            Action<BasicChannel>    subscribeAction = null)
+            HiveBus     hiveBus, 
+            string      name,
+            bool        durable = false,
+            bool        exclusive = false,
+            bool        autoDelete = false,
+            TimeSpan?   messageTTL = null,
+            int?        maxLength = null,
+            int?        maxLengthBytes = null)
 
             : base(hiveBus, name)
         {
@@ -167,16 +165,6 @@ namespace Neon.HiveMQ
             // routes messages to the queue by name.
 
             exchange = Exchange.GetDefault();
-
-            // Call the consumer registration callback if there is one
-            // and then start listening for messages.
-
-            if (subscribeAction != null)
-            {
-                subscribeAction(this);
-            }
-
-            base.StartListening(queue);
         }
 
         /// <summary>
@@ -214,6 +202,23 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
+        /// Opens the channel so that messages can be published and consumed.  This must be
+        /// called before a channel is usable, generally after you've added any message
+        /// consumers.
+        /// </summary>
+        /// <returns>The channel instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the channel has already been opened.</exception>
+        public new BasicChannel Open()
+        {
+            EnsureNotOpened();
+
+            StartListening(GetQueue());
+            base.Open();
+
+            return this;
+        }
+
+        /// <summary>
         /// Synchronously publishes a message to the channel.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
@@ -223,6 +228,7 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
+            EnsureOpened();
             base.Publish(GetExchange(), message, routingKey: Name);
         }
 
@@ -236,6 +242,7 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
+            EnsureOpened();
             await base.PublishAsync(GetExchange(), message, routingKey: Name);
         }
     }

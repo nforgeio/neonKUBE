@@ -101,14 +101,14 @@ namespace Neon.HiveMQ
     ///     <term><see cref="BasicChannel"/></term>
     ///     <description>
     ///     Basic channels deliver each message to a <b>single consumer</b>.  A typical use is
-    ///     to load balance work across multiple consumers.  Call <see cref="GetBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?, Action{BasicChannel})"/>
+    ///     to load balance work across multiple consumers.  Call <see cref="GetBasicChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/>
     ///     to create a basic channel.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><see cref="BroadcastChannel"/></term>
     ///     <description>
-    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?, Action{BroadcastChannel})"/> 
+    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
     ///     to create a broadcast channel.
     ///     </description>
     /// </item>
@@ -116,7 +116,7 @@ namespace Neon.HiveMQ
     ///     <term><see cref="QueryChannel"/></term>
     ///     <description>
     ///     Query channels deliver a message to a <b>consumer</b> and then waits for a reply.  
-    ///     Call <see cref="GetQueryChannel(string, bool, bool, bool, TimeSpan?, int?, int?, Action{QueryChannel})"/> 
+    ///     Call <see cref="GetQueryChannel(string, bool, bool, bool, TimeSpan?, int?, int?)"/> 
     ///     to create a query channel.
     ///     </description>
     /// </item>
@@ -309,23 +309,8 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
-        /// <param name="subscribeAction">
-        /// Optionally specifies a callback that can be use to register message
-        /// consumers such that there's no chance of losing messages.
-        /// </param>
-        /// <returns>The <see cref="BasicChannel"/> created.</returns>
+        /// <returns>The requested <see cref="BasicChannel"/>.</returns>
         /// <remarks>
-        /// <note>
-        /// <b>WARNING:</b> Channel instances that will consume messages should 
-        /// configure the consumers within a <paramref name="subscribeAction"/>
-        /// callback to ensure that no messages are indavertently lost.  It is
-        /// possible consumers after the channel has been constructed but the
-        /// channel will begin receiving and processing messages before the
-        /// constructor returns and messages without a registered consumer will
-        /// be silently dropped.  This means that messages received between the
-        /// time the channel was constructed and the consumer was registered
-        /// will be lost.
-        /// </note>
         /// <note>
         /// The instance returned should be disposed when you're done with it.
         /// </note>
@@ -335,14 +320,13 @@ namespace Neon.HiveMQ
         /// </note>
         /// </remarks>
         public BasicChannel GetBasicChannel(
-            string                  name, 
-            bool                    durable = false, 
-            bool                    exclusive = false,
-            bool                    autoDelete = false, 
-            TimeSpan?               messageTTL = null, 
-            int?                    maxLength = null, 
-            int?                    maxLengthBytes = null,
-            Action<BasicChannel>    subscribeAction = null)
+            string      name, 
+            bool        durable = false, 
+            bool        exclusive = false,
+            bool        autoDelete = false, 
+            TimeSpan?   messageTTL = null, 
+            int?        maxLength = null, 
+            int?        maxLengthBytes = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentException>(name.Length <= 250);
@@ -362,8 +346,7 @@ namespace Neon.HiveMQ
                     autoDelete: autoDelete,
                     messageTTL: messageTTL,
                     maxLength: maxLength,
-                    maxLengthBytes: maxLengthBytes,
-                    subscribeAction: subscribeAction);
+                    maxLengthBytes: maxLengthBytes);
 
                 lock (syncLock)
                 {
@@ -407,23 +390,8 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
-        /// <param name="subscribeAction">
-        /// Optionally specifies a callback that can be use to register message
-        /// consumers such that there's no chance of losing messages.
-        /// </param>
-        /// <returns>The <see cref="BroadcastChannel"/> created.</returns>
+        /// <returns>The requested <see cref="BroadcastChannel"/>.</returns>
         /// <remarks>
-        /// <note>
-        /// <b>WARNING:</b> Channel instances that will consume messages should 
-        /// configure the consumers within a <paramref name="subscribeAction"/>
-        /// callback to ensure that no messages are indavertently lost.  It is
-        /// possible consumers after the channel has been constructed but the
-        /// channel will begin receiving and processing messages before the
-        /// constructor returns and messages without a registered consumer will
-        /// be silently dropped.  This means that messages received between the
-        /// time the channel was constructed and the consumer was registered
-        /// will be lost.
-        /// </note>
         /// <note>
         /// The instance returned should be disposed when you're done with it.
         /// </note>
@@ -433,13 +401,12 @@ namespace Neon.HiveMQ
         /// </note>
         /// </remarks>
         public BroadcastChannel GetBroadcastChannel(
-            string                      name,
-            bool                        durable = false,
-            bool                        autoDelete = false,
-            TimeSpan?                   messageTTL = null,
-            int?                        maxLength = null,
-            int?                        maxLengthBytes = null,
-            Action<BroadcastChannel>    subscribeAction = null)
+            string      name,
+            bool        durable = false,
+            bool        autoDelete = false,
+            TimeSpan?   messageTTL = null,
+            int?        maxLength = null,
+            int?        maxLengthBytes = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentException>(name.Length <= 250);
@@ -458,8 +425,7 @@ namespace Neon.HiveMQ
                     autoDelete: autoDelete,
                     messageTTL: messageTTL,
                     maxLength: maxLength,
-                    maxLengthBytes: maxLengthBytes,
-                    subscribeAction: subscribeAction);
+                    maxLengthBytes: maxLengthBytes);
 
                 lock (syncLock)
                 {
@@ -507,23 +473,8 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
-        /// <param name="subscribeAction">
-        /// Optionally specifies a callback that can be use to register message
-        /// consumers such that there's no chance of losing messages.
-        /// </param>
-        /// <returns>The <see cref="QueryChannel"/> created.</returns>
+        /// <returns>The requested <see cref="QueryChannel"/>.</returns>
         /// <remarks>
-        /// <note>
-        /// <b>WARNING:</b> Channel instances that will consume messages should 
-        /// configure the consumers within a <paramref name="subscribeAction"/>
-        /// callback to ensure that no messages are indavertently lost.  It is
-        /// possible consumers after the channel has been constructed but the
-        /// channel will begin receiving and processing messages before the
-        /// constructor returns and messages without a registered consumer will
-        /// be silently dropped.  This means that messages received between the
-        /// time the channel was constructed and the consumer was registered
-        /// will be lost.
-        /// </note>
         /// <note>
         /// The instance returned should be disposed when you're done with it.
         /// </note>
@@ -533,14 +484,13 @@ namespace Neon.HiveMQ
         /// </note>
         /// </remarks>
         public QueryChannel GetQueryChannel(
-            string                  name,
-            bool                    durable = false,
-            bool                    autoDelete = false,
-            bool                    exclusive = false,
-            TimeSpan?               messageTTL = null,
-            int?                    maxLength = null,
-            int?                    maxLengthBytes = null,
-            Action<QueryChannel>    subscribeAction = null)
+            string      name,
+            bool        durable = false,
+            bool        autoDelete = false,
+            bool        exclusive = false,
+            TimeSpan?   messageTTL = null,
+            int?        maxLength = null,
+            int?        maxLengthBytes = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentException>(name.Length <= 250);
@@ -561,8 +511,7 @@ namespace Neon.HiveMQ
                     autoDelete: autoDelete,
                     messageTTL: messageTTL,
                     maxLength: maxLength,
-                    maxLengthBytes: maxLengthBytes,
-                    subscribeAction: subscribeAction);
+                    maxLengthBytes: maxLengthBytes);
 
                 lock (syncLock)
                 {

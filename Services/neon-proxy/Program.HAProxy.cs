@@ -73,41 +73,42 @@ namespace NeonProxy
             // We'll need to restart the [neon-proxy] instances whenever the
             // HiveMQ node topology changes.
 
-            Action<BroadcastChannel> subscribeAction =
-                channel =>
-                {
-                    channel.ConsumeAsync<ProxyUpdateMessage>(
-                        async message =>
-                        {
-                            // Determine whether the broadcast notification applies to
-                            // this instance.
-
-                            var targetsUs = false;
-
-                            if (isPublic)
-                            {
-                                targetsUs = message.PublicProxy && !isBridge ||
-                                            message.PublicBridge && isBridge;
-                            }
-                            else
-                            {
-                                targetsUs = message.PrivateProxy && !isBridge ||
-                                            message.PrivateBridge && isBridge;
-                            }
-
-                            if (!targetsUs)
-                            {
-                                log.LogInfo(() => $"Received but ignorning: {message}");
-                                return;
-                            }
-
-                            log.LogInfo(() => $"Received: {message}");
-                            await ConfigureHAProxy();
-                        });
-                };
-
-            using (var proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true, subscribeAction: subscribeAction))
+            using (var proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
             {
+                // Register a handler for [ProxyUpdateMessage] messages that determines
+                // whether the message is meant for this service instance and handle it.
+
+                proxyNotifyChannel.ConsumeAsync<ProxyUpdateMessage>(
+                    async message =>
+                    {
+                        // Determine whether the broadcast notification applies to
+                        // this instance.
+
+                        var forThisInstance = false;
+
+                        if (isPublic)
+                        {
+                            forThisInstance = message.PublicProxy && !isBridge ||
+                                              message.PublicBridge && isBridge;
+                        }
+                        else
+                        {
+                            forThisInstance = message.PrivateProxy && !isBridge ||
+                                              message.PrivateBridge && isBridge;
+                        }
+
+                        if (!forThisInstance)
+                        {
+                            log.LogInfo(() => $"Received but ignorning: {message}");
+                            return;
+                        }
+
+                        log.LogInfo(() => $"Received: {message}");
+                        await ConfigureHAProxy();
+                    });
+
+                proxyNotifyChannel.Open();
+
                 // This call ensures that HAProxy is started immediately.
 
                 await ConfigureHAProxy();
@@ -117,12 +118,11 @@ namespace NeonProxy
         /// <summary>
         /// Configures HAProxy based on the current load balancer configuration.
         /// </summary>
-        /// <returns><c>true</c> if the operation was successful.</returns>
         /// <remarks>
         /// This method will terminate the service if HAProxy could not be started
         /// for the first call.
         /// </remarks>
-        public async static Task<bool> ConfigureHAProxy()
+        public async static Task ConfigureHAProxy()
         {
             // We need to protect this with a lock because it might be possible for
             // the initial [ConfigureHAProxy()] call and a notification message to
@@ -143,7 +143,7 @@ namespace NeonProxy
                     if (configHash == deployedHash)
                     {
                         log.LogInfo(() => $"CONFIGURE: Configuration with [hash={configHash}] is already deployed.");
-                        return true;
+                        return;
                     }
 
                     // Download the configuration archive from Consul and extract it to
@@ -202,7 +202,7 @@ namespace NeonProxy
                                 if (isBridge)
                                 {
                                     log.LogWarn(() => $"CONFIGURE: Bridge cannot process unexpected TLS certificate reference: {line}");
-                                    return false;
+                                    return;
                                 }
 
                                 var fields   = line.Split(' ');
@@ -361,7 +361,7 @@ namespace NeonProxy
                 }
             }
 
-            return await Task.FromResult(false);
+            await Task.CompletedTask;
         }
     }
 }

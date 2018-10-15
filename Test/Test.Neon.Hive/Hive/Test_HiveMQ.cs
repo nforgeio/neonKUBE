@@ -115,6 +115,8 @@ namespace TestHive
                 var received = (TestMessage)null;
 
                 channel.Consume<TestMessage>(message => received = message);
+                channel.Open();
+
                 channel.Publish(new TestMessage() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);
@@ -133,6 +135,8 @@ namespace TestHive
                 var received = (TestMessage)null;
 
                 channel.Consume<TestMessage>(message => received = message);
+                channel.Open();
+
                 channel.Publish(new TestMessage() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);
@@ -151,6 +155,8 @@ namespace TestHive
                 var received = (TestMessage)null;
 
                 channel.Consume<TestMessage>(message => received = message);
+                channel.Open();
+
                 channel.Publish(new TestMessage() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);

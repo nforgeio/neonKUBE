@@ -56,6 +56,7 @@ namespace TestCommon
 
                 channel.Consume<TestMessage1>(message => received1 = message);
                 channel.Consume<TestMessage2>(message => received2 = message);
+                channel.Open();
 
                 channel.Publish(new TestMessage1() { Text = "Hello World!" });
                 NeonHelper.WaitFor(() => received1 != null && received1.Text == "Hello World!", timeout: timeout);
@@ -76,13 +77,11 @@ namespace TestCommon
                 var received1 = (TestMessage1)null;
                 var received2 = (TestMessage2)null;
 
-                var channel = bus.GetBasicChannel("test",
-                    subscribeAction:
-                        c =>
-                        {
-                            c.Consume<TestMessage1>(message => received1 = message);
-                            c.Consume<TestMessage2>(message => received2 = message);
-                        });
+                var channel = bus.GetBasicChannel("test");
+
+                channel.Consume<TestMessage1>(message => received1 = message);
+                channel.Consume<TestMessage2>(message => received2 = message);
+                channel.Open();
 
                 channel.Publish(new TestMessage1() { Text = "Hello World!" });
                 NeonHelper.WaitFor(() => received1 != null && received1.Text == "Hello World!", timeout: timeout);
@@ -112,6 +111,7 @@ namespace TestCommon
                         contextOK = context.Queue == channel.Name;
                     });
 
+                channel.Open();
 
                 channel.Publish(new TestMessage1() { Text = "Hello World!" });
 
@@ -138,6 +138,8 @@ namespace TestCommon
 
                         await Task.CompletedTask;
                     });
+
+                channel.Open();
 
                 await channel.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
@@ -167,6 +169,7 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
+                channel.Open();
 
                 await channel.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
@@ -196,7 +199,9 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
-                var publishChannel = bus.GetBasicChannel("test");
+                receiveChannel.Open();
+
+                var publishChannel = bus.GetBasicChannel("test").Open();
 
                 await publishChannel.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
@@ -239,9 +244,11 @@ namespace TestCommon
 
                             await Task.CompletedTask;
                         });
+
+                    consumeChannel.Open();
                 }
 
-                var publishChannel = bus.GetBasicChannel("test");
+                var publishChannel = bus.GetBasicChannel("test").Open();
 
                 for (int i = 0; i < messageCount; i++)
                 {

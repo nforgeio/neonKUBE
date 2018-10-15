@@ -84,33 +84,15 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
-        /// <param name="subscribeAction">
-        /// Optionally specifies a callback that can be use to register message
-        /// consumers such that there's no chance of losing messages.
-        /// </param>
-        /// <remarks>
-        /// <note>
-        /// <b>WARNING:</b> Channel instances that will consume messages should 
-        /// configure the consumers within a <paramref name="subscribeAction"/>
-        /// callback to ensure that no messages are indavertently lost.  It is
-        /// possible consumers after the channel has been constructed but the
-        /// channel will begin receiving and processing messages before the
-        /// constructor returns and messages without a registered consumer will
-        /// be silently dropped.  This means that messages received between the
-        /// time the channel was constructed and the consumer was registered
-        /// will be lost.
-        /// </note>
-        /// </remarks>
         internal QueryChannel(
-            HiveBus                 hiveBus, 
-            string                  name,
-            bool                    durable = false,
-            bool                    exclusive = false,
-            bool                    autoDelete = false,
-            TimeSpan?               messageTTL = null,
-            int?                    maxLength = null,
-            int?                    maxLengthBytes = null,
-            Action<QueryChannel>    subscribeAction = null)
+            HiveBus     hiveBus, 
+            string      name,
+            bool        durable = false,
+            bool        exclusive = false,
+            bool        autoDelete = false,
+            TimeSpan?   messageTTL = null,
+            int?        maxLength = null,
+            int?        maxLengthBytes = null)
 
             : base(hiveBus, name)
         {
@@ -119,17 +101,25 @@ namespace Neon.HiveMQ
             Covenant.Requires<ArgumentException>(maxLengthBytes == null || maxLengthBytes.Value > 0);
 
             throw new NotImplementedException("$todo(jeff.lill): Implement this.");
+        }
 
-            // Call the consumer registration callback if there is one
-            // and then start listening for messages.
+        /// <summary>
+        /// Opens the channel so that messages can be published and consumed.  This must be
+        /// called before a channel is usable, generally after you've added any message
+        /// consumers.
+        /// </summary>
+        /// <returns>The channel instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the channel has already been opened.</exception>
+        public new QueryChannel Open()
+        {
+            throw new NotImplementedException();
 
-            if (subscribeAction != null)
-            {
-                subscribeAction(this);
-            }
+            //EnsureNotOpened();
 
-            base.StartListening(queue);
+            //StartListening(GetQueue());
+            //base.Open();
 
+            //return this;
         }
 
         /// <summary>
@@ -162,6 +152,7 @@ namespace Neon.HiveMQ
                 timeout = defaultTimeout;
             }
 
+            EnsureOpened();
             throw new NotImplementedException();
         }
 
@@ -187,6 +178,7 @@ namespace Neon.HiveMQ
                 timeout = defaultTimeout;
             }
 
+            EnsureOpened();
             await Task.CompletedTask;
             throw new NotImplementedException();
         }

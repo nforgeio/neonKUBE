@@ -46,6 +46,8 @@ namespace TestCommon
                 var received = (TestMessage1)null;
 
                 channel.Consume<TestMessage1>(message => received = message);
+                channel.Open();
+
                 channel.Publish(new TestMessage1() { Text = "Hello World!" });
 
                 NeonHelper.WaitFor(() => received != null && received.Text == "Hello World!", timeout: timeout);
@@ -60,17 +62,11 @@ namespace TestCommon
                 var received1 = (TestMessage1)null;
                 var received2 = (TestMessage1)null;
 
-                channel1.Consume<TestMessage1>(
-                    message =>
-                    {
-                        received1 = message;
-                    });
+                channel1.Consume<TestMessage1>(message => received1 = message);
+                channel1.Open();
 
-                channel2.Consume<TestMessage1>(
-                    message =>
-                    {
-                        received2 = message;
-                    });
+                channel2.Consume<TestMessage1>(message => received2 = message);
+                channel2.Open();
 
                 channel1.Publish(new TestMessage1() { Text = "Hello World!" });
 

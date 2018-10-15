@@ -34,6 +34,7 @@ namespace TestCommon
                 var channel = bus.GetBroadcastChannel("test");
 
                 channel.Consume<TestMessage1>(message => { });
+                channel.Open();
 
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>(message => { }));
                 Assert.Throws<InvalidOperationException>(() => channel.Consume<TestMessage1>((message, envelope, context) => { }));
@@ -51,36 +52,22 @@ namespace TestCommon
 
             using (var bus = fixture.Settings.ConnectHiveBus())
             {
-                var channel1   = bus.GetBroadcastChannel("test");
-                var channel2   = bus.GetBroadcastChannel("test");
                 var receivedA1 = (TestMessage1)null;
                 var receivedA2 = (TestMessage1)null;
                 var receivedB1 = (TestMessage2)null;
                 var receivedB2 = (TestMessage2)null;
 
-                channel1.Consume<TestMessage1>(
-                    message =>
-                    {
-                        receivedA1 = message;
-                    });
+                var channel1 = bus.GetBroadcastChannel("test");
 
-                channel2.Consume<TestMessage1>(
-                    message =>
-                    {
-                        receivedA2 = message;
-                    });
+                channel1.Consume<TestMessage1>(message => receivedA1 = message);
+                channel1.Consume<TestMessage2>(message => receivedB1 = message);
+                channel1.Open();
 
-                channel1.Consume<TestMessage2>(
-                    message =>
-                    {
-                        receivedB1 = message;
-                    });
+                var channel2 = bus.GetBroadcastChannel("test");
 
-                channel2.Consume<TestMessage2>(
-                    message =>
-                    {
-                        receivedB2 = message;
-                    });
+                channel2.Consume<TestMessage1>(message => receivedA2 = message);
+                channel2.Consume<TestMessage2>(message => receivedB2 = message);
+                channel2.Open();
 
                 channel1.Publish(new TestMessage1() { Text = "Hello World!" });
                 NeonHelper.WaitFor(() => receivedA1 != null && receivedA2 != null, timeout: timeout);
@@ -93,7 +80,6 @@ namespace TestCommon
                 Assert.Equal("Hello World!", receivedB2.Text);
             }
         }
-
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHiveMQ)]
@@ -108,40 +94,17 @@ namespace TestCommon
                 var receivedB1 = (TestMessage2)null;
                 var receivedB2 = (TestMessage2)null;
 
-                var channel1 = bus.GetBroadcastChannel("test",
-                    subscribeAction:
-                        c =>
-                        {
-                            c.Consume<TestMessage1>(
-                                message =>
-                                {
-                                    receivedA1 = message;
-                                });
+                var channel1 = bus.GetBroadcastChannel("test");
 
-                            c.Consume<TestMessage2>(
-                                message =>
-                                {
-                                    receivedB1 = message;
-                                });
-                        });
+                channel1.Consume<TestMessage1>(message => receivedA1 = message);
+                channel1.Consume<TestMessage2>(message => receivedB1 = message);
+                channel1.Open();
 
-                var channel2 = bus.GetBroadcastChannel("test",
-                    subscribeAction:
-                        c =>
-                        {
-                            c.Consume<TestMessage1>(
-                                message =>
-                                {
-                                    receivedA2 = message;
-                                });
+                var channel2 = bus.GetBroadcastChannel("test");
 
-                            c.Consume<TestMessage2>(
-                                message =>
-                                {
-                                    receivedB2 = message;
-                                });
-
-                        });
+                channel2.Consume<TestMessage1>(message => receivedA2 = message);
+                channel2.Consume<TestMessage2>(message => receivedB2 = message);
+                channel2.Open();
 
                 channel1.Publish(new TestMessage1() { Text = "Hello World!" });
                 NeonHelper.WaitFor(() => receivedA1 != null && receivedA2 != null, timeout: timeout);
@@ -178,12 +141,16 @@ namespace TestCommon
                         contextOK1 = context.Queue.StartsWith("test-");
                     });
 
+                channel1.Open();
+
                 channel2.Consume<TestMessage1>(
                     (message, envelope, context) =>
                     {
                         received2  = message;
                         contextOK2 = context.Queue.StartsWith("test-");
                     });
+
+                channel2.Open();
 
                 channel1.Publish(new TestMessage1() { Text = "Hello World!" });
 
@@ -217,12 +184,16 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
+                channel1.Open();
+
                 channel2.ConsumeAsync<TestMessage1>(
                     async (message) =>
                     {
                         received2 = message;
                         await Task.CompletedTask;
                     });
+
+                channel2.Open();
 
                 await channel1.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
@@ -257,6 +228,8 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
+                channel1.Open();
+
                 channel2.ConsumeAsync<TestMessage1>(
                     async (message, envelope, context) =>
                     {
@@ -264,6 +237,8 @@ namespace TestCommon
                         contextOK2 = context.Queue.StartsWith("test-");
                         await Task.CompletedTask;
                     });
+
+                channel2.Open();
 
                 await channel1.PublishAsync(new TestMessage1() { Text = "Hello World!" });
 
@@ -313,7 +288,12 @@ namespace TestCommon
                         });
                 }
 
-                var publishChannel = bus.GetBroadcastChannel("test");
+                foreach (var channel in receiveChannels)
+                {
+                    channel.Open();
+                }
+
+                var publishChannel = bus.GetBroadcastChannel("test").Open();
 
                 for (int i = 0; i < messageCount; i++)
                 {
