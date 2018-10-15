@@ -169,7 +169,7 @@ namespace NeonProxy
                     }
                     else
                     {
-                        log.LogInfo(() => $"CONFIGURE: Configuration hash has changed from [{configHash}] to [{deployedHash}].");
+                        log.LogInfo(() => $"CONFIGURE: Configuration hash has changed from [{deployedHash}] to [{configHash}].");
                     }
 
                     // Download the configuration archive from Consul and extract it to

@@ -34,8 +34,6 @@ All you need to do is pass the **UPDATE_KEY** environment variable as the Consul
 
 # Environment Variables
 
-* `PROXY_NAME` (*required*) - Identifies the proxy service.  This must be passed as either **public** or **private**.
-
 * `CONFIG_KEY` (*required*) - Consul key holding the HAProxy ZIP archive configuration.
 
 * `CONFIG_HASH_KEY` (*required*) - Consul key holding MD5 hash of the configuration used when polling for changes.

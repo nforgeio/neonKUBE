@@ -48,7 +48,6 @@ namespace NeonProxy
     {
         // Environment variables:
 
-        private static string                   proxyName;
         private static string                   configKey;
         private static string                   configHashKey;
         private static string                   vaultCredentialsName;
@@ -88,25 +87,21 @@ namespace NeonProxy
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
 
-            // Create process terminator that to handle termination signals.
+            // Create process terminator to handle termination signals.
 
             terminator = new ProcessTerminator(log);
             terminator.AddHandler(() => cts.Cancel());
 
             // Read the environment variables.
 
-            proxyName = Environment.GetEnvironmentVariable("PROXY_NAME");
-
-            if (string.IsNullOrEmpty(proxyName))
-            {
-                log.LogError("[PROXY_NAME] environment variable is required.");
-                Program.Exit(1);
-            }
-
-            isPublic    = proxyName.Equals("public", StringComparison.InvariantCultureIgnoreCase);
-            serviceName = $"neon-proxy-{proxyName.ToLowerInvariant()}:{GitVersion}";
-
-            log.LogInfo(() => $"Starting [{serviceName}]");
+            // $hack(jeff.lill:
+            //
+            // We're going to scan the Consul configuration key to determine whether this
+            // instance is managing the public or private proxy (or bridges) so we'll
+            // be completely compatible with existing deployments.
+            //
+            // In theory, we could have passed a new environment variable but that's not
+            // worth the trouble.
 
             configKey = Environment.GetEnvironmentVariable("CONFIG_KEY");
 
@@ -115,6 +110,14 @@ namespace NeonProxy
                 log.LogError("[CONFIG_KEY] environment variable is required.");
                 Program.Exit(1);
             }
+
+            isPublic = configKey.Contains("/public/");
+
+            var proxyName = isPublic ? "public" : "private";
+
+            serviceName = $"neon-proxy-{proxyName}:{GitVersion}";
+
+            log.LogInfo(() => $"Starting [{serviceName}]");
 
             configHashKey = Environment.GetEnvironmentVariable("CONFIG_HASH_KEY");
 
@@ -156,7 +159,6 @@ namespace NeonProxy
             debugMode = "true".Equals(Environment.GetEnvironmentVariable("DEBUG"), StringComparison.InvariantCultureIgnoreCase);
 
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
-            log.LogInfo(() => $"PROXY_NAME={proxyName}");
             log.LogInfo(() => $"CONFIG_KEY={configKey}");
             log.LogInfo(() => $"CONFIG_HASH_KEY={configHashKey}");
             log.LogInfo(() => $"VAULT_CREDENTIALS={vaultCredentialsName}");
@@ -174,7 +176,7 @@ namespace NeonProxy
 
             if (NeonHelper.IsDevWorkstation)
             {
-                throw new NotImplementedException("This service works only within a container with HAProxy installed.");
+                throw new NotImplementedException("This service works only within a Linux container with HAProxy installed.");
 
                 //var vaultCredentialsSecret = "neon-proxy-manager-credentials";
 
