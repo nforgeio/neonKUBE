@@ -4,6 +4,7 @@
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using Consul;
+using Neon.HiveMQ;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -20,7 +21,8 @@ namespace Neon.Hive
         private const string proxyManagerPrefix = "neon/service/neon-proxy-manager";
         private const string vaultCertPrefix    = "neon-secret/cert";
 
-        private HiveProxy hive;
+        private HiveProxy           hive;
+        private BroadcastChannel    proxyNotifyChannel;
 
         /// <summary>
         /// Internal constructor.
@@ -111,6 +113,22 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Returns an opened <see cref="HiveMQChannels.ProxyNotify"/> channel.
+        /// </summary>
+        private BroadcastChannel ProxyNotifyChannel
+        {
+            get
+            {
+                if (proxyNotifyChannel == null)
+                {
+                    proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel().Open();
+                }
+
+                return proxyNotifyChannel;
+            }
+        }
+
+        /// <summary>
         /// Signals the <b>neon-proxy-manager</b> to regenerate the load balancer and proxy configurations.
         /// </summary>
         public void Update()
@@ -118,7 +136,7 @@ namespace Neon.Hive
             hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/proxy-hash", Convert.ToBase64String(new byte[16])).Wait();
             hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
 
-            hive.HiveMQ.Internal.GetProxyNotifyChannel().Publish(
+            ProxyNotifyChannel.Publish(
                 new ProxyRegenerateMessage("Update")
                 {
                     Reason = $"Update: {Name}"
