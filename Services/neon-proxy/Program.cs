@@ -55,7 +55,6 @@ namespace NeonProxy
         private static TimeSpan                 warnInterval;
         private static TimeSpan                 startDelay;
         private static bool                     debugMode;
-        private static bool                     vaultSkipVerify;
 
         // File system paths:
 
@@ -89,10 +88,14 @@ namespace NeonProxy
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
 
+            // Create process terminator that to handle termination signals.
+
+            terminator = new ProcessTerminator(log);
+            terminator.AddHandler(() => cts.Cancel());
+
             // Read the environment variables.
 
             proxyName = Environment.GetEnvironmentVariable("PROXY_NAME");
-            isPublic  = proxyName.Equals("public", StringComparison.InvariantCultureIgnoreCase);
 
             if (string.IsNullOrEmpty(proxyName))
             {
@@ -100,6 +103,7 @@ namespace NeonProxy
                 Program.Exit(1);
             }
 
+            isPublic    = proxyName.Equals("public", StringComparison.InvariantCultureIgnoreCase);
             serviceName = $"neon-proxy-{proxyName.ToLowerInvariant()}:{GitVersion}";
 
             log.LogInfo(() => $"Starting [{serviceName}]");
@@ -149,8 +153,7 @@ namespace NeonProxy
                 startDelay = TimeSpan.FromSeconds(startSecondsValue);
             }
 
-            debugMode       = "true".Equals(Environment.GetEnvironmentVariable("DEBUG"), StringComparison.InvariantCultureIgnoreCase);
-            vaultSkipVerify = Environment.GetEnvironmentVariable("VAULT_SKIP_VERIFY") != null;
+            debugMode = "true".Equals(Environment.GetEnvironmentVariable("DEBUG"), StringComparison.InvariantCultureIgnoreCase);
 
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
             log.LogInfo(() => $"PROXY_NAME={proxyName}");
@@ -160,12 +163,6 @@ namespace NeonProxy
             log.LogInfo(() => $"WARN_SECONDS={warnInterval}");
             log.LogInfo(() => $"START_SECONDS={startDelay}");
             log.LogInfo(() => $"DEBUG={debugMode}");
-            log.LogInfo(() => $"VAULT_SKIP_VERIFY={vaultSkipVerify}");
-
-            // Create process terminator that to handle termination signals.
-
-            terminator = new ProcessTerminator(log);
-            terminator.AddHandler(() => cts.Cancel());
 
             // Ensure that the required directories exist.
 
@@ -177,11 +174,13 @@ namespace NeonProxy
 
             if (NeonHelper.IsDevWorkstation)
             {
-                var vaultCredentialsSecret = "neon-proxy-manager-credentials";
+                throw new NotImplementedException("This service works only within a container with HAProxy installed.");
 
-                Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
+                //var vaultCredentialsSecret = "neon-proxy-manager-credentials";
 
-                hive = HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, $"neon-proxy-{proxyName}"));
+                //Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
+
+                //hive = HiveHelper.OpenHiveRemote(new DebugSecrets().VaultAppRole(vaultCredentialsSecret, $"neon-proxy-{proxyName}"));
             }
             else
             {
@@ -254,6 +253,22 @@ namespace NeonProxy
 
                     using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
                     {
+                        // Verify that the required Consul keys exist or loop to wait until they
+                        // are created.  This will allow the service wait for pending hive setup
+                        // operations to be completed.
+
+                        while (!await consul.KV.Exists(configKey))
+                        {
+                            log.LogWarn(() => $"Waiting for [{configKey}] key to be present in Consul.");
+                            await Task.Delay(TimeSpan.FromSeconds(5));
+                        }
+
+                        while (!await consul.KV.Exists(configHashKey))
+                        {
+                            log.LogWarn(() => $"Waiting for [{configHashKey}] key to be present in Consul.");
+                            await Task.Delay(TimeSpan.FromSeconds(5));
+                        }
+
                         // Crank up the service tasks.
 
                         await NeonHelper.WaitAllAsync(

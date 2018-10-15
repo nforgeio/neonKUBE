@@ -36,9 +36,16 @@ namespace NeonProxy
     public static partial class Program
     {
         private static object   haProxySyncLock = new object();
-        private static bool     haProxyRunning  = false;
-        private static Process  haProxyProcess  = null;
         private static string   deployedHash    = "NOT-DEPLOYED";
+
+        /// <summary>
+        /// Retrieves the HAProxy process.
+        /// </summary>
+        /// <returns>The <see cref="Process"/> or <c>null</c> if its not running.</returns>
+        private static Process GetHAProxyProcess()
+        {
+            return Process.GetProcessesByName("haproxy").SingleOrDefault();
+        }
 
         /// <summary>
         /// Manages the HAProxy initial configuration from Consul and Vault settings and
@@ -75,6 +82,10 @@ namespace NeonProxy
 
             using (var proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
             {
+                // This call ensures that HAProxy is started immediately.
+
+                await ConfigureHAProxy();
+
                 // Register a handler for [ProxyUpdateMessage] messages that determines
                 // whether the message is meant for this service instance and handle it.
 
@@ -108,10 +119,6 @@ namespace NeonProxy
                     });
 
                 proxyNotifyChannel.Open();
-
-                // This call ensures that HAProxy is started immediately.
-
-                await ConfigureHAProxy();
             }
         }
 
@@ -127,32 +134,78 @@ namespace NeonProxy
             // We need to protect this with a lock because it might be possible for
             // the initial [ConfigureHAProxy()] call and a notification message to
             // happen at the same time.  HAProxy will be launched by whichever call
-            // happens first and then the subsequent call will perform an update.
+            // happens first and then the subsequent calls will perform an update.
 
             lock (haProxySyncLock)
             {
                 try
                 {
                     // Retrieve the configuration HASH and compare that with what 
-                    // we already have deployed.
+                    // we have already deployed.
 
                     log.LogInfo(() => $"CONFIGURE: Retrieving configuration HASH from Consul path [{configHashKey}].");
 
-                    var configHash = consul.KV.GetString(configHashKey).Result;
+                    string configHash;
+
+                    try
+                    {
+                        configHash = consul.KV.GetString(configHashKey).Result;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        errorTimeUtc = DateTime.UtcNow;
+                        log.LogError($"CONFIGURE: Cannot retrieve [{configHashKey}] from Consul.", e);
+                        return;
+                    }
 
                     if (configHash == deployedHash)
                     {
                         log.LogInfo(() => $"CONFIGURE: Configuration with [hash={configHash}] is already deployed.");
                         return;
                     }
+                    else
+                    {
+                        log.LogInfo(() => $"CONFIGURE: Configuration hash has changed from [{configHash}] to [{deployedHash}].");
+                    }
 
                     // Download the configuration archive from Consul and extract it to
-                    // the new configuration directory.
+                    // the new configuration directory (after ensuring that the directory
+                    // has been cleared).
 
                     log.LogInfo(() => $"CONFIGURE: Retrieving configuration ZIP archive from Consul path [{configKey}].");
 
-                    var zipPath  = Path.Combine(configUpdateFolder, "haproxy.zip");
-                    var zipBytes = consul.KV.GetBytes(configKey).Result;
+                    byte[] zipBytes;
+
+                    try
+                    {
+                        zipBytes = consul.KV.GetBytes(configKey).Result;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        errorTimeUtc = DateTime.UtcNow;
+                        log.LogError($"CONFIGURE: Cannot retrieve [{configKey}] from Consul.", e);
+                        return;
+                    }
+
+                    if (configHash == deployedHash)
+                    {
+                        log.LogInfo(() => $"CONFIGURE: Configuration with [hash={configHash}] is already deployed.");
+                        return;
+                    }
+                    else
+                    {
+                        log.LogInfo(() => $"CONFIGURE: Configuration hash has changed from [{configHash}] to [{deployedHash}].");
+                    }
+
+                    var zipPath = Path.Combine(configUpdateFolder, "haproxy.zip");
 
                     log.LogInfo(() => $"CONFIGURE: Extracting ZIP archive to [{configUpdateFolder}].");
 
@@ -205,19 +258,23 @@ namespace NeonProxy
                                     return;
                                 }
 
-                                var fields   = line.Split(' ');
-                                var certKey  = fields[0];
-                                var certDir  = Path.Combine(configUpdateFolder, fields[1]);
+                                var fields = line.Split(' ');
+                                var certKey = fields[0];
+                                var certDir = Path.Combine(configUpdateFolder, fields[1]);
                                 var certFile = fields[2];
 
                                 Directory.CreateDirectory(certDir);
 
                                 var cert = vault.ReadJsonAsync<TlsCertificate>(certKey).Result;
 
-                                File.WriteAllText(certFile, cert.CombinedPemNormalized);
+                                File.WriteAllText(Path.Combine(certDir, certFile), cert.CombinedPemNormalized);
                             }
                         }
                     }
+
+                    // Get the running HAProxy process (if there is one).
+
+                    var haProxyProcess = GetHAProxyProcess();
 
                     // Verify the configuration.  Note that HAProxy will return a
                     // 0 error code if the configuration is OK and specifies at
@@ -240,18 +297,35 @@ namespace NeonProxy
                     {
                         case 0:
 
-                            log.LogInfo(() => "Configuration is OK.");
+                            log.LogInfo(() => "CONFIGURE: Configuration is OK.");
                             break;
 
                         case 2:
 
-                            log.LogInfo(() => "Configuration is valid but specifies no routes.");
-                            break;
+                            log.LogInfo(() => "CONFIGURE: Configuration is valid but specifies no routes.");
+
+                            // Ensure that any existing HAProxy instance is stopped and that
+                            // the configuration folders are cleared (for non-DebugMode) and
+                            // then return so we won't try to spin up another HAProxy.
+
+                            if (haProxyProcess != null)
+                            {
+                                haProxyProcess.Dispose();
+                                haProxyProcess = null;
+
+                                if (!debugMode)
+                                {
+                                    Directory.Delete(configFolder);
+                                    Directory.Delete(configUpdateFolder);
+                                }
+                            }
+                            return;
 
                         default:
 
-                            log.LogCritical(() => "Invalid HAProxy configuration.");
-                            throw new Exception("Invalid HAProxy configuration.");
+                            errorTimeUtc = DateTime.UtcNow;
+                            log.LogCritical(() => "CONFIGURE: Invalid HAProxy configuration.");
+                            throw new Exception("CONFIGURE: Invalid HAProxy configuration.");
                     }
 
                     // Purge the contents of the [configFolder] and copy the contents
@@ -261,22 +335,36 @@ namespace NeonProxy
                     Directory.CreateDirectory(configFolder);
                     NeonHelper.CopyFolder(configUpdateFolder, configFolder);
 
-                    // Start HAProxy if it's not already running or do a soft restart
-                    // when it's already running.
+                    // Start HAProxy if it's not already running.
+                    //
+                    // ...or we'll generally do a soft stop when HAProxy is already running,
+                    // which means that HAProxy will try hard to maintain existing connections
+                    // as it reloads its config.  The presence of a [.hardstop] file in the
+                    // configuration folder will enable a hard stop.
+
+                    // $todo(jeff.lill):
+                    //
+                    // I don't believe that [neon-proxy-manager] ever generates a
+                    // [.hardstop] file.  This was a future feature idea.  This would
+                    // probably be better replaced by a boolean [HardStop] oroperty
+                    // passed with the notification message.
 
                     var stopType   = string.Empty;
                     var stopOption = string.Empty;
+                    var restart    = false;
 
-                    if (haProxyRunning)
+                    if (haProxyProcess != null)
                     {
+                        restart = true;
+
                         if (File.Exists(Path.Combine(configFolder, ".hardstop")))
                         {
-                            stopType   = "(hard stop)";
+                            stopType = "(hard stop)";
                             stopOption = $"-st {haProxyProcess.Id}";
                         }
                         else
                         {
-                            stopType   = "(soft stop)";
+                            stopType = "(soft stop)";
                             stopOption = $"-sf {haProxyProcess.Id})";
                         }
 
@@ -284,7 +372,8 @@ namespace NeonProxy
                     }
                     else
                     {
-                        log.LogInfo(() => $"HAProxy is starting.");
+                        restart = false;
+                        log.LogInfo(() => $"CONFIGURE: HAProxy is starting.");
                     }
 
                     // Enable HAProxy debugging mode to get a better idea of why health
@@ -297,9 +386,20 @@ namespace NeonProxy
                         debugOption = "-d";
                     }
 
+                    // Execute HAProxy.  Note that since the HAProxy configuration specifies
+                    // daemon mode, the program we're running will actually fork a new instance
+                    // of HAProxy.
+                    //
+                    // NOTE:
+                    //
+                    // We're assuming that the command will not return until it has completed
+                    // starting or restarting the HAProxy instance that will actually be 
+                    // doing all of the work.  If this wasn't true, [GetHAProxyProcess()]
+                    // might return the wrong process if more than one are running.
+
                     Environment.SetEnvironmentVariable("HAPROXY_CONFIG_FOLDER", configFolder);
 
-                    haProxyProcess = NeonHelper.Fork("haproxy",
+                    response = NeonHelper.ExecuteCapture("haproxy",
                         new object[]
                         {
                             "-f", configPath,
@@ -308,39 +408,43 @@ namespace NeonProxy
                             "-V"
                         });
 
+                    if (response.ExitCode != 0)
+                    {
+                        errorTimeUtc = DateTime.UtcNow;
+                        log.LogError(() => $"CONFIGURE: HAProxy failure: {response.ErrorText}");
+                        return;
+                    }
+
                     // Give HAProxy a chance to start/restart cleanly.
 
                     Thread.Sleep(startDelay);
 
-                    if (!haProxyRunning)
+                    if (restart)
+                    {
+                        log.LogInfo(() => "CONFIGURE: HAProxy has been updated.");
+                    }
+                    else
                     {
                         if (haProxyProcess.HasExited)
                         {
-                            log.LogCritical("HAProxy terminated unexpectedly.");
+                            log.LogCritical("CONFIGURE: HAProxy terminated unexpectedly.");
                             Program.Exit(1);
                         }
                         else
                         {
-                            log.LogInfo(() => "HAProxy has started.");
+                            log.LogInfo(() => "CONFIGURE: HAProxy has started.");
                         }
                     }
-                    else
-                    {
-                        log.LogInfo(() => "HAProxy has been updated.");
-                    }
 
-                    // When DEBUG mode is not disabled, we're going to clear the
-                    // both the old and new configuration folders so we don't leave
-                    // secrets like TLSk private keys lying around in a file system.
-                    //
-                    // We'll leave these intact for DEBUG mode so we can manually
-                    // poke around the config.
+                    // Update the deployed hash so we won't try to update the same 
+                    // configuration again.
 
-                    if (!debugMode)
-                    {
-                        Directory.Delete(configFolder, recursive: true);
-                        Directory.Delete(configUpdateFolder, recursive: true);
-                    }
+                    deployedHash = configHash;
+
+                    // HAProxy was updated successfully so we can reset the error time
+                    // so to ensure that periodic error reporting will stop.
+
+                    errorTimeUtc = DateTime.MinValue;
                 }
                 catch (OperationCanceledException)
                 {
@@ -349,14 +453,37 @@ namespace NeonProxy
                 }
                 catch (Exception e)
                 {
-                    if (!haProxyRunning)
+                    if (GetHAProxyProcess() == null)
                     {
                         log.LogCritical("CONFIGURE: Terminating because we cannot launch HAProxy.", e);
                         Program.Exit(1);
                     }
                     else
                     {
-                        log.LogError("CONFIGURE: Unable to reconfigure HAProxy.  Continuing with the old configuration as a fail-safe.", e);
+                        log.LogError("CONFIGURE: Unable to reconfigure HAProxy.  Using the old configuration as a fail-safe.", e);
+                    }
+
+                    // Set the error time (if its not already set) so we'll
+                    // log errors periodically until the problem is corrected.
+
+                    if (errorTimeUtc == DateTime.MinValue)
+                    {
+                        errorTimeUtc = DateTime.UtcNow;
+                    }
+                }
+                finally
+                {
+                    // When DEBUG mode is not disabled, we're going to clear the
+                    // both the old and new configuration folders so we don't leave
+                    // secrets like TLS private keys lying around in a file system.
+                    //
+                    // We'll leave these intact for DEBUG mode so we can manually
+                    // poke around the config.
+
+                    if (!debugMode)
+                    {
+                        Directory.Delete(configFolder, recursive: true);
+                        Directory.Delete(configUpdateFolder, recursive: true);
                     }
                 }
             }
