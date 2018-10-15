@@ -37,4 +37,4 @@ COPY _common/*.sh           /
 # [libcurl] so .NET Core apps can use the legacy HttpClientHandler.
 
 RUN apk add --no-cache tini ca-certificates libcurl \
-    && chmod 770 /*.sh
+    && chmod 700 /*.sh
