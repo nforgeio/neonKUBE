@@ -24,7 +24,8 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,
+		[parameter(Mandatory=$True, Position=1)][string] $haproxyVersion,
+		[parameter(Mandatory=$True, Position=2)][string] $dotnetVersion,
 		[switch]$latest = $False
 	)
 
@@ -34,7 +35,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -haProxyVersion $haproxyVersion -dotnetVersion $dotnetVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest)
@@ -52,4 +53,7 @@ function Build
 
 $noImagePush = $nopush
 
-Build 1.8.13 -latest
+# Note that we need to pass the full .NET Core version
+# (e.g. "2.1.5" instead of just "2.1").
+
+Build -haProxyVersion 1.8.13 -dotnetVersion 2.1.5 -latest

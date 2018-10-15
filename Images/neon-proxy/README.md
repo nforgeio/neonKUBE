@@ -52,8 +52,6 @@ All you need to do is pass the **UPDATE_KEY** environment variable as the Consul
 
   **WARNING:** Never enable DEBUG for production hives other than temporarily for debugging.
 
-* `VAULT_SKIP_VERIFY` (*optional*) - defined if the service is not to validate the Vault TLS certificate authority.  This is used when Vault is secured by a self-signed certificate, the default condition.
-
 # HAProxy ZIP Archive
 
 This image expects the Consul **UPDATE_KEY** key value to be a ZIP archive holding the `haproxy.cfg` configuration file as well as another assets such as site certificate files.  `haproxy.cfg` file format is described at [haproxy.org](http://www.haproxy.org/#docs).

@@ -5,13 +5,16 @@
 #
 # Builds the neonHIVE [neon-proxy] image.
 #
-# Usage: powershell -file build.ps1REGISTRY VERSION TAG
+# Usage: powershell -file build.ps1 REGISTRY HAPROXY_VERSION DOTNET_VERSION TAG
+#
+# NOTE: The full .NET Core version must be specified (e.g. "2.1.5" instead of "2.1");
 
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True, Position=2)][string] $version,
-	[parameter(Mandatory=$True,Position=3)][string] $tag
+	[parameter(Mandatory=$True, Position=2)][string] $haProxyVersion,
+	[parameter(Mandatory=$True, Position=3)][string] $dotnetVersion,
+	[parameter(Mandatory=$True,Position=4)][string] $tag
 )
 
 "   "
@@ -19,7 +22,8 @@ param
 "* NEON-PROXY:" + $tag
 "======================================="
 
-$branch = GitBranch
+$appname = "neon-proxy"
+$branch  = GitBranch
 
 # Copy the common scripts.
 
@@ -28,31 +32,26 @@ DeleteFolder _common
 mkdir _common
 copy ..\_common\*.* .\_common
 
-# Unzip the latest Consul binaries to a temporary [consul-binaries] folder so 
-# they can be copied into the image.  The folder will be deleted further below.
+# Build and publish the app to a local [bin] folder.
 
-DeleteFolder consul-binaries
+if (Test-Path bin)
+{
+	rm -r bin
+}
 
-mkdir consul-binaries
-7z e -y "$image_root\\_artifacts\\consul_latest_linux_amd64.zip" -oconsul-binaries
+Exec { mkdir bin }
+Exec { dotnet publish "$src_services_path\\$appname\\$appname.csproj" -c Release -o "$pwd\bin" }
 
-# Unzip the latest Vault binaries to a temporary [vault-binaries] folder so 
-# they can be copied into the image.  The folder will be deleted further below.
+# Split the build binaries into [__app] application and [__dep] dependency subfolders
+# so we can tune the image layers.
 
-DeleteFolder vault-binaries
-
-mkdir vault-binaries
-7z e -y "$image_root\\_artifacts\\vault_current_linux_amd64.zip" -ovault-binaries
+Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" --build-arg "HAPROXY_VERSION=$haProxyVersion" --build-arg "DOTNET_VERSION=$dotnetVersion" --build-arg "APPNAME=$appname" . }
 
 # Clean up
 
-sleep 5 # Docker sometimes appears to hold references to files we need
-		# to delete so wait for a bit.
-
+Exec { rm -r bin }
 DeleteFolder _common
-DeleteFolder vault-binaries
-DeleteFolder consul-binaries
