@@ -329,10 +329,7 @@
     </None>
     <None Include="neon-proxy-manager\publish.ps1" />
     <None Include="neon-proxy-manager\README.md" />
-    <None Include="neon-proxy\onconfigchange.sh" />
     <None Include="neon-proxy\README.md" />
-    <None Include="neon-proxy\report-error.sh" />
-    <None Include="neon-proxy\logging-loop.sh" />
     <None Include="haproxy\build.ps1" />
     <None Include="haproxy\docker-entrypoint.sh" />
     <None Include="haproxy\Dockerfile">

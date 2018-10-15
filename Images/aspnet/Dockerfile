@@ -36,4 +36,5 @@ COPY _common/*.sh           /
 # Install the [tini] INIT manager, the CA certificates, and
 # [libcurl] so .NET Core apps can use the legacy HttpClientHandler.
 
-RUN apk add --no-cache tini ca-certificates libcurl
+RUN apk add --no-cache tini ca-certificates libcurl \
+    && chmod 770 /*.sh
