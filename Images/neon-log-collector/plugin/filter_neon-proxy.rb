@@ -76,13 +76,13 @@ module Fluent
                         when "tcp-v1"
 
                             record = filterTcpV1(tag, record, fields);
-                            record["message"] = "tcp-proxy";
+                            record["message"] = "tcp-proxy request";
                             return record;
 
                         when "http-v1"
 
                             record = filterHttpV1(tag, record, fields);
-                            record["message"] = "http-proxy";
+                            record["message"] = "http-proxy request";
                             return record;
 
                         else
