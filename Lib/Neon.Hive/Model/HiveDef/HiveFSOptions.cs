@@ -32,7 +32,7 @@ namespace Neon.Hive
     /// </summary>
     public class HiveFSOptions
     {
-        private const string defaultRelease             = "luminous";
+        private const string defaultRelease             = "mimic";
         private const string defaultOSDDriveSize        = "16GB";
         private const string defaultOSDCacheSize        = "256MB";
         private const string defaultOSDJournalSize      = "1GB";
