@@ -56,8 +56,8 @@ namespace Neon.HiveMQ
     ///     <para>
     ///     Call <see cref="Consume{TMessage}(Action{TMessage})"/>,
     ///     <see cref="Consume{TMessage}(Action{TMessage, MessageProperties, ConsumerContext})"/>,
-    ///     <see cref="ConsumeAsync{TMessage}(Func{TMessage, Task}, bool)"/>, or
-    ///     <see cref="ConsumeAsync{TMessage}(Func{TMessage, MessageProperties, ConsumerContext, Task}, bool)"/>
+    ///     <see cref="ConsumeAsync{TMessage}(Func{TMessage, Task})"/>, or
+    ///     <see cref="ConsumeAsync{TMessage}(Func{TMessage, MessageProperties, ConsumerContext, Task})"/>
     ///     to register synchronous or asunchronous message consumption callbacks for each of the message
     ///     types you may receive.  Your callback will be passed the received message and optionally
     ///     the message envelope with the raw message bytes and a <see cref="ConsumerContext"/>.
@@ -177,7 +177,7 @@ namespace Neon.HiveMQ
                 name: $"{name}-{sourceID}",
                 passive: false,
                 durable: durable,
-                exclusive: false,
+                exclusive: true,
                 autoDelete: true,
                 perQueueMessageTtl: HiveBus.TTLToMilliseconds(messageTTL),
                 maxLength: maxLength,
@@ -337,10 +337,6 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="exclusive">
-        /// Optionally indicates that this is is to be the exclusive consumer 
-        /// of messages on the channel.  This defaults to <c>false</c>.
-        /// </param>
         /// <returns>The channel instance.</returns>
         /// <remarks>
         /// <para>
@@ -356,7 +352,7 @@ namespace Neon.HiveMQ
         /// the fluent coding style.
         /// </note>
         /// </remarks>
-        public BroadcastChannel ConsumeAsync<TMessage>(Func<TMessage, Task> onMessage, bool exclusive = false)
+        public BroadcastChannel ConsumeAsync<TMessage>(Func<TMessage, Task> onMessage)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
@@ -373,10 +369,6 @@ namespace Neon.HiveMQ
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="exclusive">
-        /// Optionally indicates that this is is to be the exclusive consumer 
-        /// of messages on the channel.  This defaults to <c>false</c>.
-        /// </param>
         /// <returns>The channel instance.</returns>
         /// <remarks>
         /// <para>
@@ -394,7 +386,7 @@ namespace Neon.HiveMQ
         /// the fluent coding style.
         /// </note>
         /// </remarks>
-        public BroadcastChannel ConsumeAsync<TMessage>(Func<TMessage, MessageProperties, ConsumerContext, Task> onMessage, bool exclusive = false)
+        public BroadcastChannel ConsumeAsync<TMessage>(Func<TMessage, MessageProperties, ConsumerContext, Task> onMessage)
             where TMessage : class, new()
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
