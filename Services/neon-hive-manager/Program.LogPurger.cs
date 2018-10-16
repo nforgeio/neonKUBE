@@ -43,7 +43,7 @@ namespace NeonHiveManager
             {
                 var periodicTask =
                     new AsyncPeriodicTask(
-                        logPollInterval,
+                        logPurgerInterval,
                         onTaskAsync:
                             async () =>
                             {

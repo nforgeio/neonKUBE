@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Program.ManagerPoller.cs
+// FILE:	    Program.ManagerWatcher.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -39,11 +39,11 @@ namespace NeonHiveManager
         /// the service to begin handling the changes.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task ManagerPollerAsync()
+        private static async Task ManagerWatcherAsync()
         {
             var periodicTask =
                 new AsyncPeriodicTask(
-                    managerPollInterval,
+                    managerTopologyInterval,
                     onTaskAsync:
                         async () =>
                         {

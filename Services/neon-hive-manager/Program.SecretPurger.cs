@@ -42,7 +42,7 @@ namespace NeonHiveManager
         {
             var periodicTask =
                 new AsyncPeriodicTask(
-                    secretPollInterval,
+                    secretPurgeInterval,
                     onTaskAsync:
                         async () =>
                         {

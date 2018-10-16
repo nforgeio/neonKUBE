@@ -44,13 +44,13 @@ namespace NeonHiveManager
             {
                 var periodicTask = 
                     new AsyncPeriodicTask(
-                        hivemqPollInterval,
+                        hivemqMantainInterval,
                         onTaskAsync:
                             async () =>
                             {
                                 log.LogDebug(() => $"HIVEMQ-MAINTAINER: Checking [{HiveConst.HiveMQSysadminUser}] permissions.");
 
-                                // Build the set of virtual hostt names where [sysadmin] already has
+                                // Build the set of virtual host names where [sysadmin] already has
                                 // full permissions.
 
                                 var sysadminVHosts = new HashSet<string>();

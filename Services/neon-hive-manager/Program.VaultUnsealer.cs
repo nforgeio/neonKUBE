@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Program.VaultPoller.cs
+// FILE:	    Program.VaultUnsealer.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -81,7 +81,7 @@ namespace NeonHiveManager
         /// </summary>
         /// <param name="vaultUri">The URI for the Vault instance being managed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task VaultPollerAsync(string vaultUri)
+        private static async Task VaultUnsealerAsync(string vaultUri)
         {
             var lastVaultStatus = (VaultHealthStatus)null;
 
@@ -99,7 +99,7 @@ namespace NeonHiveManager
             {
                 var periodicTask =
                     new AsyncPeriodicTask(
-                        vaultPollInterval,
+                        vaultUnsealInterval,
                         onTaskAsync:
                             async () =>
                             {

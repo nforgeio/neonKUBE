@@ -38,16 +38,17 @@ namespace NeonHiveManager
     /// </summary>
     public static partial class Program
     {
-        private static readonly string serviceName           = $"neon-hive-manager:{GitVersion}";
-        private static readonly string serviceRootKey        = "neon/service/neon-hive-manager";
-        private static readonly string nodePollSecondsKey    = $"{serviceRootKey}/node_poll_seconds";
-        private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
-        private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
-        private static readonly string secretPollSecondsKey  = $"{serviceRootKey}/secret_poll_seconds";
-        private static readonly string logPollSecondsKey     = $"{serviceRootKey}/log_poll_seconds";
-        private static readonly string proxyUpdateSecondsKey = $"{serviceRootKey}/proxy_update_seconds";
-        private static readonly string hivemqPollSecondsKey  = $"{serviceRootKey}/hivemq_poll_seconds";
-        private static readonly string hiveDefinitionKey     = $"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}";
+        private static readonly string serviceName               = $"neon-hive-manager:{GitVersion}";
+        private static readonly string hiveDefinitionKey         = $"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}";
+
+        private static readonly string serviceRootKey            = "neon/service/neon-hive-manager";
+        private static readonly string hivemqMaintainSecondsKey  = $"{serviceRootKey}/hivemq_maintain_seconds";
+        private static readonly string logPurgeSecondsKey        = $"{serviceRootKey}/log_purge_seconds";
+        private static readonly string managerTopologySecondsKey = $"{serviceRootKey}/manager_topology_seconds";
+        private static readonly string proxyNotifySecondsKey     = $"{serviceRootKey}/proxy_notify_seconds";
+        private static readonly string secretPurgeSecondsKey     = $"{serviceRootKey}/secret_purge_seconds";
+        private static readonly string swarmPollSecondsKey       = $"{serviceRootKey}/swarm_poll_seconds";
+        private static readonly string vaultUnsealSecondsKey     = $"{serviceRootKey}/vault_unseal_seconds";
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
@@ -55,14 +56,16 @@ namespace NeonHiveManager
         private static ConsulClient             consul;
         private static DockerClient             docker;
         private static VaultCredentials         vaultCredentials;
+
         private static BroadcastChannel         proxyNotifyChannel;
-        private static TimeSpan                 nodePollInterval;
-        private static TimeSpan                 vaultPollInterval;
-        private static TimeSpan                 managerPollInterval;
-        private static TimeSpan                 logPollInterval;
-        private static TimeSpan                 secretPollInterval;
-        private static TimeSpan                 proxyUpdateInterval;
-        private static TimeSpan                 hivemqPollInterval;
+        private static TimeSpan                 hivemqMantainInterval;
+        private static TimeSpan                 logPurgerInterval;
+        private static TimeSpan                 managerTopologyInterval;
+        private static TimeSpan                 proxyNotifyInterval;
+        private static TimeSpan                 secretPurgeInterval;
+        private static TimeSpan                 swarmPollInterval;
+        private static TimeSpan                 vaultUnsealInterval;
+
         private static HiveDefinition           cachedHiveDefinition;
         private static List<string>             vaultUris;
 
@@ -229,63 +232,63 @@ namespace NeonHiveManager
             // Initialize the proxy manager settings to their default values
             // if they don't already exist.
 
-            if (!await consul.KV.Exists(nodePollSecondsKey))
+            if (!await consul.KV.Exists(hivemqMaintainSecondsKey))
             {
-                log.LogInfo($"Persisting setting [{nodePollSecondsKey}=30.0]");
-                await consul.KV.PutDouble(nodePollSecondsKey, 30.0);
+                log.LogInfo($"Persisting setting [{hivemqMaintainSecondsKey}=60.0]");
+                await consul.KV.PutDouble(hivemqMaintainSecondsKey, 60);
             }
 
-            if (!await consul.KV.Exists(vaultPollSecondsKey))
+            if (!await consul.KV.Exists(logPurgeSecondsKey))
             {
-                log.LogInfo($"Persisting setting [{vaultPollSecondsKey}=30.0]");
-                await consul.KV.PutDouble(vaultPollSecondsKey, 30.0);
+                log.LogInfo($"Persisting setting [{logPurgeSecondsKey}=300.0]");
+                await consul.KV.PutDouble(logPurgeSecondsKey, 300);
             }
 
-            if (!await consul.KV.Exists(managerPollSecondsKey))
+            if (!await consul.KV.Exists(managerTopologySecondsKey))
             {
-                log.LogInfo($"Persisting setting [{managerPollSecondsKey}=1800.0]");
-                await consul.KV.PutDouble(managerPollSecondsKey, 1800);
+                log.LogInfo($"Persisting setting [{managerTopologySecondsKey}=300.0]");
+                await consul.KV.PutDouble(managerTopologySecondsKey, 1800);
             }
 
-            if (!await consul.KV.Exists(logPollSecondsKey))
+            if (!await consul.KV.Exists(proxyNotifySecondsKey))
             {
-                log.LogInfo($"Persisting setting [{logPollSecondsKey}=300.0]");
-                await consul.KV.PutDouble(logPollSecondsKey, 300);
+                log.LogInfo($"Persisting setting [{proxyNotifySecondsKey}=300.0]");
+                await consul.KV.PutDouble(proxyNotifySecondsKey, 300);
             }
 
-            if (!await consul.KV.Exists(secretPollSecondsKey))
+            if (!await consul.KV.Exists(secretPurgeSecondsKey))
             {
-                log.LogInfo($"Persisting setting [{secretPollSecondsKey}=300.0]");
-                await consul.KV.PutDouble(secretPollSecondsKey, 300);
+                log.LogInfo($"Persisting setting [{secretPurgeSecondsKey}=300.0]");
+                await consul.KV.PutDouble(secretPurgeSecondsKey, 300);
             }
 
-            if (!await consul.KV.Exists(proxyUpdateSecondsKey))
+            if (!await consul.KV.Exists(swarmPollSecondsKey))
             {
-                log.LogInfo($"Persisting setting [{proxyUpdateSecondsKey}=300.0]");
-                await consul.KV.PutDouble(proxyUpdateSecondsKey, 300);
+                log.LogInfo($"Persisting setting [{swarmPollSecondsKey}=30.0]");
+                await consul.KV.PutDouble(swarmPollSecondsKey, 30.0);
             }
 
-            if (!await consul.KV.Exists(hivemqPollSecondsKey))
+            if (!await consul.KV.Exists(vaultUnsealSecondsKey))
             {
-                log.LogInfo($"Persisting setting [{hivemqPollSecondsKey}=60.0]");
-                await consul.KV.PutDouble(hivemqPollSecondsKey, 60);
+                log.LogInfo($"Persisting setting [{vaultUnsealSecondsKey}=30.0]");
+                await consul.KV.PutDouble(vaultUnsealSecondsKey, 30.0);
             }
 
-            nodePollInterval    = TimeSpan.FromSeconds(await consul.KV.GetDouble(nodePollSecondsKey));
-            vaultPollInterval   = TimeSpan.FromSeconds(await consul.KV.GetDouble(vaultPollSecondsKey));
-            managerPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(managerPollSecondsKey));
-            logPollInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(logPollSecondsKey));
-            secretPollInterval  = TimeSpan.FromSeconds(await consul.KV.GetDouble(secretPollSecondsKey));
-            proxyUpdateInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(proxyUpdateSecondsKey));
-            hivemqPollInterval  = TimeSpan.FromSeconds(await consul.KV.GetDouble(hivemqPollSecondsKey));
+            hivemqMantainInterval   = TimeSpan.FromSeconds(await consul.KV.GetDouble(hivemqMaintainSecondsKey));
+            logPurgerInterval       = TimeSpan.FromSeconds(await consul.KV.GetDouble(logPurgeSecondsKey));
+            managerTopologyInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(managerTopologySecondsKey));
+            proxyNotifyInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(proxyNotifySecondsKey));
+            secretPurgeInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(secretPurgeSecondsKey));
+            swarmPollInterval       = TimeSpan.FromSeconds(await consul.KV.GetDouble(swarmPollSecondsKey));
+            vaultUnsealInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(vaultUnsealSecondsKey));
 
-            log.LogInfo(() => $"Using setting [{nodePollSecondsKey}={nodePollInterval.TotalSeconds}]");
-            log.LogInfo(() => $"Using setting [{vaultPollSecondsKey}={vaultPollInterval.TotalSeconds}]");
-            log.LogInfo(() => $"Using setting [{managerPollSecondsKey}={managerPollInterval.TotalSeconds}]");
-            log.LogInfo(() => $"Using setting [{logPollSecondsKey}={logPollInterval.TotalSeconds}]");
-            log.LogInfo(() => $"Using setting [{secretPollSecondsKey}={secretPollInterval.TotalSeconds}]");
-            log.LogInfo(() => $"Using setting [{proxyUpdateSecondsKey}={proxyUpdateInterval.TotalSeconds}]");
-            log.LogInfo(() => $"Using setting [{hivemqPollSecondsKey}={hivemqPollInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{hivemqMaintainSecondsKey}={hivemqMantainInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{logPurgeSecondsKey}={logPurgerInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{managerTopologySecondsKey}={managerTopologyInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{proxyNotifySecondsKey}={proxyNotifyInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{secretPurgeSecondsKey}={secretPurgeInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{swarmPollSecondsKey}={swarmPollInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{vaultUnsealSecondsKey}={vaultUnsealInterval.TotalSeconds}]");
 
             // Parse the Vault credentials from the [neon-hive-manager-vaultkeys] 
             // secret, if it exists.
@@ -314,9 +317,35 @@ namespace NeonHiveManager
 
             var tasks = new List<Task>();
 
+            // Start a task that handles HiveMQ related activities like ensuring that
+            // the [sysadmin] account has full permissions for all virtual hosts.
+
+            tasks.Add(HiveMQMaintainerAsync());
+
+            // Start a task that checks for Elasticsearch [logstash] and [metricbeat] indexes
+            // that are older than the number of retention days.
+
+            tasks.Add(LogPurgerAsync());
+
+            // Start a task that periodically checks for changes to the set of hive managers 
+            // (e.g. if a manager is added or removed).  This task will cause the service to exit
+            // so it can be restarted automatically by Docker to respond to the change.
+
+            tasks.Add(ManagerWatcherAsync());
+
+            // Start a task that checks for old [neon-secret-retriever-*] service instances
+            // as well as old persisted secrets and removes them.
+
+            tasks.Add(SecretPurgerAsync());
+
             // Start a task that polls current hive state to update the hive definition in Consul, etc.
 
-            tasks.Add(StatePollerAsync());
+            tasks.Add(SwarmPollerAsync());
+
+            // Start a task that periodically notifies the [neon-proxy-manager] service
+            // that it should proactively rebuild the proxy configurations.
+
+            tasks.Add(ProxyUpdaterAsync());
 
             // We need to start a vault poller for the Vault instance running on each manager
             // node.  We're going to construct the direct Vault URIs by querying Docker for
@@ -326,34 +355,8 @@ namespace NeonHiveManager
 
             foreach (var uri in vaultUris)
             {
-                tasks.Add(VaultPollerAsync(uri));
+                tasks.Add(VaultUnsealerAsync(uri));
             }
-
-            // Start a task that periodically checks for changes to the set of hive managers 
-            // (e.g. if a manager is added or removed).  This task will cause the service to exit
-            // so it can be restarted automatically by Docker to respond to the change.
-
-            tasks.Add(ManagerPollerAsync());
-
-            // Start a task that checks for Elasticsearch [logstash] and [metricbeat] indexes
-            // that are older than the number of retention days.
-
-            tasks.Add(LogPurgerAsync());
-
-            // Start a task that checks for old [neon-secret-retriever-*] service instances
-            // as well as old persisted secrets and removes them.
-
-            tasks.Add(SecretPurgerAsync());
-
-            // Start a task that periodically notifies the [neon-proxy-manager] service
-            // that it should proactively rebuild the proxy configurations.
-
-            tasks.Add(ProxyUpdaterAsync());
-
-            // Start a task that handles HiveMQ related activities like ensuring that
-            // the [sysadmin] account has full permissions for all virtual hosts.
-
-            tasks.Add(HiveMQMaintainerAsync());
 
             // Wait for all tasks to exit cleanly for a normal shutdown.
 
