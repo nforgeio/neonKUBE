@@ -36,124 +36,6 @@ namespace Neon.HiveMQ
     /// </summary>
     public abstract class Channel : IDisposable
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Describes the behavior of a message consumer.
-        /// </summary>
-        private interface IConsumer
-        {
-            /// <summary>
-            /// Returns the message type being consumed.
-            /// </summary>
-            Type MessageType { get; }
-
-            /// <summary>
-            /// Asynchronously dispatches a received message to the registered callback.
-            /// </summary>
-            /// <param name="message">The received message.</param>
-            /// <param name="properties">The message properties.</param>
-            /// <param name="info">Additional delivery information.</param>
-            /// <returns>The tracking <see cref="Task"/>.</returns>
-            Task DispatchAsync(object message, MessageProperties properties, MessageReceivedInfo info);
-        }
-
-        /// <summary>
-        /// Describes a message consumer.
-        /// </summary>
-        /// <typeparam name="TMessage">The subscribed message type.</typeparam>
-        private class Consumer<TMessage> : IConsumer
-            where TMessage : class, new()
-        {
-            private Action<TMessage>                                            syncSimpleCallback;
-            private Action<TMessage, MessageProperties, ConsumerContext>        syncAdvancedCallback;
-            private Func<TMessage, Task>                                        asyncSimpleCallback;
-            private Func<TMessage, MessageProperties, ConsumerContext, Task>    asyncAdvancedCallback;
-
-            /// <summary>
-            /// Constructs an instance with a simple synchronous message callback.
-            /// </summary>
-            /// <param name="onMessage">The message callback.</param>
-            public Consumer(Action<TMessage> onMessage)
-            {
-                Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-                syncSimpleCallback = onMessage;
-            }
-
-            /// <summary>
-            /// Constructs an instance with an advanced synchronous message callback.
-            /// </summary>
-            /// <param name="onMessage">The message callback.</param>
-            public Consumer(Action<TMessage, MessageProperties, ConsumerContext> onMessage)
-            {
-                Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-                syncAdvancedCallback = onMessage;
-            }
-
-            /// <summary>
-            /// Constructs an instance with a simple asynchronous message callback.
-            /// </summary>
-            /// <param name="onMessage">The message callback.</param>
-            public Consumer(Func<TMessage, Task> onMessage)
-            {
-                Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-                asyncSimpleCallback = onMessage;
-            }
-
-            /// <summary>
-            /// Constructs an instance with an advanced asynchronous message callback.
-            /// </summary>
-            /// <param name="onMessage">The message callback.</param>
-            public Consumer(Func<TMessage, MessageProperties, ConsumerContext, Task> onMessage)
-            {
-                Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-                asyncAdvancedCallback = onMessage;
-            }
-
-            /// <inheritdoc/>
-            public Type MessageType => typeof(TMessage);
-
-            /// <inheritdoc/>
-            public async Task DispatchAsync(object message, MessageProperties properties, MessageReceivedInfo info)
-            {
-                Covenant.Requires<ArgumentNullException>(message != null);
-                Covenant.Requires<ArgumentNullException>(properties != null);
-                Covenant.Requires<ArgumentNullException>(info != null);
-
-                // One of the callback fields will be non-null.  We'll call
-                // that one.
-
-                if (syncSimpleCallback != null)
-                {
-                    syncSimpleCallback((TMessage)message);
-                }
-                else if (syncAdvancedCallback != null)
-                {
-                    syncAdvancedCallback((TMessage)message, properties, ConsumerContext.Create(info));
-                }
-                else if (asyncSimpleCallback != null)
-                {
-                    await asyncSimpleCallback((TMessage)message);
-                }
-                else if (asyncAdvancedCallback != null)
-                {
-                    await asyncAdvancedCallback((TMessage)message, properties, ConsumerContext.Create(info));
-                }
-                else
-                {
-                    Covenant.Assert(false);
-                }
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private ConcurrentDictionary<string, IConsumer> typeNameToConsumer;
         private IDisposable                             subscription;
 
@@ -257,7 +139,7 @@ namespace Neon.HiveMQ
         /// Adds a message consumer to the channel.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if consumer for the message type is already present for the channel.</exception>
-        private void AddConsumer(IConsumer consumer)
+        internal void AddConsumer(IConsumer consumer)
         {
             Covenant.Requires<ArgumentNullException>(consumer != null);
 
@@ -406,7 +288,7 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
-        /// aSynchronously publishes a message to an exchange.
+        /// Asynchronously publishes a message to an exchange.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="exchange">The target exchane.</param>
@@ -436,120 +318,6 @@ namespace Neon.HiveMQ
             }
 
             await EasyBus.PublishAsync(exchange, routingKey, mandatory: false, properties, body);
-        }
-
-        /// <summary>
-        /// Registers a synchronous callback that will be called as messages of type
-        /// <typeparamref name="TMessage"/> are received by the channel.  
-        /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <remarks>
-        /// <para>
-        /// The synchronous <paramref name="onMessage"/> callback is passed the 
-        /// received message as a single argument.
-        /// </para>
-        /// <note>
-        /// This method is suitable for many graphical client applications but 
-        /// should generally be avoided for high performance service applications
-        /// which should register an asynchronous callback.
-        /// </note>
-        /// </remarks>
-        public void Consume<TMessage>(Action<TMessage> onMessage)
-            where TMessage : class, new()
-        {
-            Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-            AddConsumer(new Consumer<TMessage>(onMessage));
-        }
-
-        /// <summary>
-        /// Registers a synchronous callback that will be called as messages of type
-        /// <typeparamref name="TMessage"/> are received by the channel.  This override
-        /// also passes the additional <see cref="MessageProperties"/> and
-        /// <see cref="ConsumerContext"/> parameters to the callback.
-        /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <remarks>
-        /// <para>
-        /// The synchronous <paramref name="onMessage"/> callback is passed the
-        /// received message, the message envelope including the raw message bytes,
-        /// and additional information about the message delivery as three
-        /// arguments.
-        /// </para>
-        /// <note>
-        /// This method is suitable for many graphical client applications but 
-        /// should generally be avoided for high performance service applications
-        /// which should register an asynchronous callback.
-        /// </note>
-        /// </remarks>
-        public void Consume<TMessage>(Action<TMessage, MessageProperties, ConsumerContext> onMessage)
-            where TMessage : class, new()
-        {
-            Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-            AddConsumer(new Consumer<TMessage>(onMessage));
-        }
-
-        /// <summary>
-        /// Registers an asynchronous callback that will be called as messages of type
-        /// <typeparamref name="TMessage"/> are received by the channel.  
-        /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="exclusive">
-        /// Optionally indicates that this is is to be the exclusive consumer 
-        /// of messages on the channel.  This defaults to <c>false</c>.
-        /// </param>
-        /// <remarks>
-        /// <para>
-        /// The asynchronous <paramref name="onMessage"/> callback is passed the 
-        /// received message as a single argument.
-        /// </para>
-        /// <note>
-        /// Most applications (especially services) should register asynchronous
-        /// callbacks using this method for better performance under load.
-        /// </note>
-        /// </remarks>
-        public void ConsumeAsync<TMessage>(Func<TMessage, Task> onMessage, bool exclusive = false)
-            where TMessage : class, new()
-        {
-            Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-            AddConsumer(new Consumer<TMessage>(onMessage));
-        }
-
-        /// <summary>
-        /// Registers an asynchronous callback that will be called as messages of type
-        /// <typeparamref name="TMessage"/> are received by the channel.  This override
-        /// also passes the additional <see cref="MessageProperties"/> and
-        /// <see cref="ConsumerContext"/> parameters to the callback.
-        /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="onMessage">Called when a message is delivered.</param>
-        /// <param name="exclusive">
-        /// Optionally indicates that this is is to be the exclusive consumer 
-        /// of messages on the channel.  This defaults to <c>false</c>.
-        /// </param>
-        /// <remarks>
-        /// <para>
-        /// The asynchronous <paramref name="onMessage"/> callback is passed the
-        /// received message, the message envelope including the raw message bytes,
-        /// and additional information about the message delivery as three
-        /// arguments.
-        /// </para>
-        /// <note>
-        /// Most applications (especially services) should register asynchronous
-        /// callbacks using this method for better performance under load.
-        /// </note>
-        /// </remarks>
-        public void ConsumeAsync<TMessage>(Func<TMessage, MessageProperties, ConsumerContext, Task> onMessage, bool exclusive = false)
-            where TMessage : class, new()
-        {
-            Covenant.Requires<ArgumentNullException>(onMessage != null);
-
-            AddConsumer(new Consumer<TMessage>(onMessage));
         }
     }
 }

@@ -53,13 +53,19 @@ namespace Neon.HiveMQ
     ///     passing the channel name any required optional parameters to control
     ///     the channel durability, exclusivity, message TTL, and length constraints.
     /// <item>
-    ///     Call <see cref="Channel.Consume{TMessage}(Action{TMessage})"/>,
-    ///     <see cref="Channel.Consume{TMessage}(Action{TMessage, MessageProperties, ConsumerContext})"/>,
-    ///     <see cref="Channel.ConsumeAsync{TMessage}(Func{TMessage, Task}, bool)"/>, or
-    ///     <see cref="Channel.ConsumeAsync{TMessage}(Func{TMessage, MessageProperties, ConsumerContext, Task}, bool)"/>
+    ///     <para>
+    ///     Call <see cref="Consume{TMessage}(Action{TMessage})"/>,
+    ///     <see cref="Consume{TMessage}(Action{TMessage, MessageProperties, ConsumerContext})"/>,
+    ///     <see cref="ConsumeAsync{TMessage}(Func{TMessage, Task}, bool)"/>, or
+    ///     <see cref="ConsumeAsync{TMessage}(Func{TMessage, MessageProperties, ConsumerContext, Task}, bool)"/>
     ///     to register synchronous or asunchronous message consumption callbacks for each of the message
     ///     types you may receive.  Your callback will be passed the received message and optionally
     ///     the message envelope with the raw message bytes and a <see cref="ConsumerContext"/>.
+    ///     </para>
+    ///     <note>
+    ///     The consume methods all return the channel instance to support
+    ///     the fluent coding style.
+    ///     </note>
     /// </item>
     /// <item>
     ///     <para>
@@ -257,6 +263,144 @@ namespace Neon.HiveMQ
 
             EnsureOpened();
             await base.PublishAsync(GetExchange(), message, routingKey: Name);
+        }
+
+        /// <summary>
+        /// Registers a synchronous callback that will be called as messages of type
+        /// <typeparamref name="TMessage"/> are received by the channel.  
+        /// </summary>
+        /// <typeparam name="TMessage">The message type.</typeparam>
+        /// <param name="onMessage">Called when a message is delivered.</param>
+        /// <returns>The channel instance.</returns>
+        /// <remarks>
+        /// <para>
+        /// The synchronous <paramref name="onMessage"/> callback is passed the 
+        /// received message as a single argument.
+        /// </para>
+        /// <note>
+        /// This method is suitable for many graphical client applications but 
+        /// should generally be avoided for high performance service applications
+        /// which should register an asynchronous callback.
+        /// </note>
+        /// <note>
+        /// The consume methods all return the channel instance to support
+        /// the fluent coding style.
+        /// </note>
+        /// </remarks>
+        public BroadcastChannel Consume<TMessage>(Action<TMessage> onMessage)
+            where TMessage : class, new()
+        {
+            Covenant.Requires<ArgumentNullException>(onMessage != null);
+
+            AddConsumer(new Consumer<TMessage>(onMessage));
+            return this;
+        }
+
+        /// <summary>
+        /// Registers a synchronous callback that will be called as messages of type
+        /// <typeparamref name="TMessage"/> are received by the channel.  This override
+        /// also passes the additional <see cref="MessageProperties"/> and
+        /// <see cref="ConsumerContext"/> parameters to the callback.
+        /// </summary>
+        /// <typeparam name="TMessage">The message type.</typeparam>
+        /// <param name="onMessage">Called when a message is delivered.</param>
+        /// <returns>The channel instance.</returns>
+        /// <remarks>
+        /// <para>
+        /// The synchronous <paramref name="onMessage"/> callback is passed the
+        /// received message, the message envelope including the raw message bytes,
+        /// and additional information about the message delivery as three
+        /// arguments.
+        /// </para>
+        /// <note>
+        /// This method is suitable for many graphical client applications but 
+        /// should generally be avoided for high performance service applications
+        /// which should register an asynchronous callback.
+        /// </note>
+        /// <note>
+        /// The consume methods all return the channel instance to support
+        /// the fluent coding style.
+        /// </note>
+        /// </remarks>
+        public BroadcastChannel Consume<TMessage>(Action<TMessage, MessageProperties, ConsumerContext> onMessage)
+            where TMessage : class, new()
+        {
+            Covenant.Requires<ArgumentNullException>(onMessage != null);
+
+            AddConsumer(new Consumer<TMessage>(onMessage));
+            return this;
+        }
+
+        /// <summary>
+        /// Registers an asynchronous callback that will be called as messages of type
+        /// <typeparamref name="TMessage"/> are received by the channel.  
+        /// </summary>
+        /// <typeparam name="TMessage">The message type.</typeparam>
+        /// <param name="onMessage">Called when a message is delivered.</param>
+        /// <param name="exclusive">
+        /// Optionally indicates that this is is to be the exclusive consumer 
+        /// of messages on the channel.  This defaults to <c>false</c>.
+        /// </param>
+        /// <returns>The channel instance.</returns>
+        /// <remarks>
+        /// <para>
+        /// The asynchronous <paramref name="onMessage"/> callback is passed the 
+        /// received message as a single argument.
+        /// </para>
+        /// <note>
+        /// Most applications (especially services) should register asynchronous
+        /// callbacks using this method for better performance under load.
+        /// </note>
+        /// <note>
+        /// The consume methods all return the channel instance to support
+        /// the fluent coding style.
+        /// </note>
+        /// </remarks>
+        public BroadcastChannel ConsumeAsync<TMessage>(Func<TMessage, Task> onMessage, bool exclusive = false)
+            where TMessage : class, new()
+        {
+            Covenant.Requires<ArgumentNullException>(onMessage != null);
+
+            AddConsumer(new Consumer<TMessage>(onMessage));
+            return this;
+        }
+
+        /// <summary>
+        /// Registers an asynchronous callback that will be called as messages of type
+        /// <typeparamref name="TMessage"/> are received by the channel.  This override
+        /// also passes the additional <see cref="MessageProperties"/> and
+        /// <see cref="ConsumerContext"/> parameters to the callback.
+        /// </summary>
+        /// <typeparam name="TMessage">The message type.</typeparam>
+        /// <param name="onMessage">Called when a message is delivered.</param>
+        /// <param name="exclusive">
+        /// Optionally indicates that this is is to be the exclusive consumer 
+        /// of messages on the channel.  This defaults to <c>false</c>.
+        /// </param>
+        /// <returns>The channel instance.</returns>
+        /// <remarks>
+        /// <para>
+        /// The asynchronous <paramref name="onMessage"/> callback is passed the
+        /// received message, the message envelope including the raw message bytes,
+        /// and additional information about the message delivery as three
+        /// arguments.
+        /// </para>
+        /// <note>
+        /// Most applications (especially services) should register asynchronous
+        /// callbacks using this method for better performance under load.
+        /// </note>
+        /// <note>
+        /// The consume methods all return the channel instance to support
+        /// the fluent coding style.
+        /// </note>
+        /// </remarks>
+        public BroadcastChannel ConsumeAsync<TMessage>(Func<TMessage, MessageProperties, ConsumerContext, Task> onMessage, bool exclusive = false)
+            where TMessage : class, new()
+        {
+            Covenant.Requires<ArgumentNullException>(onMessage != null);
+
+            AddConsumer(new Consumer<TMessage>(onMessage));
+            return this;
         }
     }
 }
