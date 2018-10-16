@@ -135,7 +135,7 @@ namespace Neon.HiveMQ
         //---------------------------------------------------------------------
         // Static members
 
-        private static string clientVersion;
+        private static string   clientVersion;
 
         /// <summary>
         /// Static constructor.
@@ -153,6 +153,8 @@ namespace Neon.HiveMQ
             {
                 clientVersion = "HiveBus";
             }
+
+            Log = LogManager.Default.GetLogger<HiveBus>();
         }
 
         /// <summary>
@@ -176,6 +178,12 @@ namespace Neon.HiveMQ
 
             return (int?)messageTTL.Value.TotalMilliseconds;
         }
+
+        /// <summary>
+        /// Returns a <see cref="INeonLogger"/> that can be used to log <see cref="HiveBus"/>
+        /// related events.
+        /// </summary>
+        internal static INeonLogger Log { get; private set; }
 
         //---------------------------------------------------------------------
         // Instance members

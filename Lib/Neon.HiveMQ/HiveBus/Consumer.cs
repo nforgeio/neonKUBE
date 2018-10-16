@@ -97,28 +97,36 @@ namespace Neon.HiveMQ
             Covenant.Requires<ArgumentNullException>(properties != null);
             Covenant.Requires<ArgumentNullException>(info != null);
 
-            // One of the callback fields will be non-null.  We'll call
-            // that one.
+            try
+            {
+                // One of the callback fields will be non-null.  We'll call
+                // that one.
 
-            if (syncSimpleCallback != null)
-            {
-                syncSimpleCallback((TMessage)message);
+                if (syncSimpleCallback != null)
+                {
+                    syncSimpleCallback((TMessage)message);
+                }
+                else if (syncAdvancedCallback != null)
+                {
+                    syncAdvancedCallback((TMessage)message, properties, ConsumerContext.Create(info));
+                }
+                else if (asyncSimpleCallback != null)
+                {
+                    await asyncSimpleCallback((TMessage)message);
+                }
+                else if (asyncAdvancedCallback != null)
+                {
+                    await asyncAdvancedCallback((TMessage)message, properties, ConsumerContext.Create(info));
+                }
+                else
+                {
+                    Covenant.Assert(false);
+                }
             }
-            else if (syncAdvancedCallback != null)
+            catch (Exception e)
             {
-                syncAdvancedCallback((TMessage)message, properties, ConsumerContext.Create(info));
-            }
-            else if (asyncSimpleCallback != null)
-            {
-                await asyncSimpleCallback((TMessage)message);
-            }
-            else if (asyncAdvancedCallback != null)
-            {
-                await asyncAdvancedCallback((TMessage)message, properties, ConsumerContext.Create(info));
-            }
-            else
-            {
-                Covenant.Assert(false);
+                HiveBus.Log.LogError("Consumer exception.", e);
+                throw;
             }
         }
     }
