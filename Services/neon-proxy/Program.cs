@@ -147,7 +147,7 @@ namespace NeonProxy
 
             var startSeconds = Environment.GetEnvironmentVariable("START_SECONDS");
 
-            if (string.IsNullOrEmpty(startSeconds) || !double.TryParse(warnSeconds, out var startSecondsValue))
+            if (string.IsNullOrEmpty(startSeconds) || !double.TryParse(startSeconds, out var startSecondsValue))
             {
                 startDelay = TimeSpan.FromSeconds(10);
             }
