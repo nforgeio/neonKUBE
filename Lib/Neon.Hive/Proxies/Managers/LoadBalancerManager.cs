@@ -113,7 +113,8 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns an opened <see cref="HiveMQChannels.ProxyNotify"/> channel.
+        /// Returns an opened <see cref="HiveMQChannels.ProxyNotify"/> channel configured 
+        /// to allow only message publication (no message consumption).
         /// </summary>
         private BroadcastChannel ProxyNotifyChannel
         {
@@ -121,7 +122,7 @@ namespace Neon.Hive
             {
                 if (proxyNotifyChannel == null)
                 {
-                    proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel().Open();
+                    proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(publishOnly: true).Open();
                 }
 
                 return proxyNotifyChannel;

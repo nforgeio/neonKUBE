@@ -108,7 +108,7 @@ namespace Neon.HiveMQ
     /// <item>
     ///     <term><see cref="BroadcastChannel"/></term>
     ///     <description>
-    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/> 
+    ///     Broadcast channels deliver each message to <b>all consumers</b>.  Call <see cref="GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?, bool)"/> 
     ///     to create a broadcast channel.
     ///     </description>
     /// </item>
@@ -398,6 +398,11 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
+        /// <param name="publishOnly">
+        /// Optionally specifies that the channel instance returned will only be able
+        /// to publish messages and not consume them.  Enabling this avoid the creation
+        /// of a queue that will unnecessary for this situation.
+        /// </param>
         /// <returns>The requested <see cref="BroadcastChannel"/>.</returns>
         /// <remarks>
         /// <note>
@@ -414,7 +419,8 @@ namespace Neon.HiveMQ
             bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
-            int?        maxLengthBytes = null)
+            int?        maxLengthBytes = null,
+            bool        publishOnly = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentException>(name.Length <= 250);
@@ -433,7 +439,8 @@ namespace Neon.HiveMQ
                     autoDelete: autoDelete,
                     messageTTL: messageTTL,
                     maxLength: maxLength,
-                    maxLengthBytes: maxLengthBytes);
+                    maxLengthBytes: maxLengthBytes,
+                    publishOnly: publishOnly);
 
                 lock (syncLock)
                 {

@@ -49,7 +49,7 @@ namespace Neon.HiveMQ
     /// <list type="number">
     /// <item>
     /// </item>
-    ///     Construct an instance call <see cref="HiveBus.GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?)"/>,
+    ///     Construct an instance call <see cref="HiveBus.GetBroadcastChannel(string, bool, bool, TimeSpan?, int?, int?, bool)"/>,
     ///     passing the channel name any required optional parameters to control
     ///     the channel durability, exclusivity, message TTL, and length constraints.
     /// <item>
@@ -114,6 +114,7 @@ namespace Neon.HiveMQ
         private string      sourceID;           // Unique channel ID
         private IQueue      queue;
         private IExchange   exchange;
+        private bool        publishOnly;
 
         /// <summary>
         /// Internal constructor.
@@ -147,6 +148,11 @@ namespace Neon.HiveMQ
         /// the channel before messages at the front of the channel will be deleted.  This 
         /// defaults to unconstrained.
         /// </param>
+        /// <param name="publishOnly">
+        /// Optionally specifies that the channel instance returned will only be able
+        /// to publish messages and not consume them.  Enabling this avoid the creation
+        /// of a queue that will unnecessary for this situation.
+        /// </param>
         internal BroadcastChannel(
             HiveBus     hiveBus, 
             string      name,
@@ -154,7 +160,8 @@ namespace Neon.HiveMQ
             bool        autoDelete = false,
             TimeSpan?   messageTTL = null,
             int?        maxLength = null,
-            int?        maxLengthBytes = null)
+            int?        maxLengthBytes = null,
+            bool        publishOnly = false)
 
             : base(hiveBus, name)
         {
@@ -162,7 +169,8 @@ namespace Neon.HiveMQ
             Covenant.Requires<ArgumentException>(maxLength == null || maxLength.Value > 0);
             Covenant.Requires<ArgumentException>(maxLengthBytes == null || maxLengthBytes.Value > 0);
 
-            sourceID = Guid.NewGuid().ToString("D").ToLowerInvariant();
+            this.sourceID    = Guid.NewGuid().ToString("D").ToLowerInvariant();
+            this.publishOnly = publishOnly;
 
             exchange = EasyBus.ExchangeDeclare(
                 name: name, 
@@ -266,12 +274,25 @@ namespace Neon.HiveMQ
         }
 
         /// <summary>
+        /// Ensures that <see cref="publishOnly"/> was not specified when creating the channel.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the channel was created with <c>publishOnly=true</c>.</exception>
+        private void EnsureNotPublishOnly()
+        {
+            if (publishOnly)
+            {
+                throw new InvalidOperationException($"Channel was created with [{nameof(publishOnly)}=true] so message consumption is disabled.");
+            }
+        }
+
+        /// <summary>
         /// Registers a synchronous callback that will be called as messages of type
         /// <typeparamref name="TMessage"/> are received by the channel.  
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
         /// <returns>The channel instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the channel was created with <c>publishOnly=true</c>.</exception>
         /// <remarks>
         /// <para>
         /// The synchronous <paramref name="onMessage"/> callback is passed the 
@@ -292,6 +313,7 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
+            EnsureNotPublishOnly();
             AddConsumer(new Consumer<TMessage>(onMessage));
             return this;
         }
@@ -305,6 +327,7 @@ namespace Neon.HiveMQ
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
         /// <returns>The channel instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the channel was created with <c>publishOnly=true</c>.</exception>
         /// <remarks>
         /// <para>
         /// The synchronous <paramref name="onMessage"/> callback is passed the
@@ -327,6 +350,7 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
+            EnsureNotPublishOnly();
             AddConsumer(new Consumer<TMessage>(onMessage));
             return this;
         }
@@ -338,6 +362,7 @@ namespace Neon.HiveMQ
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
         /// <returns>The channel instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the channel was created with <c>publishOnly=true</c>.</exception>
         /// <remarks>
         /// <para>
         /// The asynchronous <paramref name="onMessage"/> callback is passed the 
@@ -357,6 +382,7 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
+            EnsureNotPublishOnly();
             AddConsumer(new Consumer<TMessage>(onMessage));
             return this;
         }
@@ -370,6 +396,7 @@ namespace Neon.HiveMQ
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="onMessage">Called when a message is delivered.</param>
         /// <returns>The channel instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the channel was created with <c>publishOnly=true</c>.</exception>
         /// <remarks>
         /// <para>
         /// The asynchronous <paramref name="onMessage"/> callback is passed the
@@ -391,6 +418,7 @@ namespace Neon.HiveMQ
         {
             Covenant.Requires<ArgumentNullException>(onMessage != null);
 
+            EnsureNotPublishOnly();
             AddConsumer(new Consumer<TMessage>(onMessage));
             return this;
         }

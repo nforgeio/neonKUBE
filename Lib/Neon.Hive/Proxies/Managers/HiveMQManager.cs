@@ -39,9 +39,9 @@ namespace Neon.Hive
         /// </summary>
         public class InternalManager
         {
-            private object          syncLock = new object();
-            private HiveMQManager   parent;
-            private HiveBus         neonHiveBus;
+            private object              syncLock = new object();
+            private HiveMQManager       parent;
+            private HiveBus             neonHiveBus;
 
             /// <summary>
             /// Internal constructor.
@@ -59,7 +59,7 @@ namespace Neon.Hive
             /// tools, services and containers.
             /// </para>
             /// <note>
-            /// <b>WARNING:</b> The <see cref="HiveBus"/> instance returned should <b>never be disposed</b>.
+            /// <b>WARNING:</b> The <see cref="HiveBus"/> instance returned should <b>NEVER BE DISPOSED</b>.
             /// </note>
             /// </summary>
             /// <param name="useBootstrap">
@@ -91,7 +91,7 @@ namespace Neon.Hive
 
             /// <summary>
             /// <b>INTERNAL USE ONLY:</b> Creates the <see cref="HiveMQChannels.ProxyNotify"/> 
-            /// channel if it doesn't already exist and returns the channel.
+            /// channel if it doesn't already exist and returns it.
             /// </summary>
             /// <param name="useBootstrap">
             /// Optionally specifies that the settings returned should directly
@@ -99,6 +99,11 @@ namespace Neon.Hive
             /// through the <b>private</b> load balancer.  This is used internally
             /// to resolve chicken-and-the-egg dilemmas for the load balancer and
             /// proxy implementations that rely on HiveMQ messaging.
+            /// </param>
+            /// <param name="publishOnly">
+            /// Optionally specifies that the channel instance returned will only be able
+            /// to publish messages and not consume them.  Enabling this avoid the creation
+            /// of a queue that will unnecessary for this situation.
             /// </param>
             /// <returns>The requested <see cref="BroadcastChannel"/>.</returns>
             /// <remarks>
@@ -110,7 +115,7 @@ namespace Neon.Hive
             /// The instance returned should be disposed when you're done with it.
             /// </note>
             /// </remarks>
-            public BroadcastChannel GetProxyNotifyChannel(bool useBootstrap = false)
+            public BroadcastChannel GetProxyNotifyChannel(bool useBootstrap = false, bool publishOnly = false)
             {
                 // WARNING:
                 //
@@ -124,7 +129,8 @@ namespace Neon.Hive
                     autoDelete: false,
                     messageTTL: null,
                     maxLength: null,
-                    maxLengthBytes: null);
+                    maxLengthBytes: null,
+                    publishOnly: publishOnly);
             }
         }
 
