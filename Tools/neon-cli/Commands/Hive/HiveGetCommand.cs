@@ -42,6 +42,7 @@ HIVE IDENTIFIERS:
     log-retention-days          - number of days of logs to retain
     password                    - root account password
     registries                  - lists the Docker registries and credentials
+    setup-pending               - indicates whether hive setup is in progress
     sshkey-client-pem           - client SSH private key (PEM format)
     sshkey-client-ppk           - client SSH private key (PPK format)
     sshkey-fingerprint          - SSH host key fingerprint
@@ -225,6 +226,16 @@ NODE IDENTIFIERS:
 
                             Console.WriteLine($"{registry.Registry}{spacer} - {credentials}");
                         }
+                        break;
+
+                    case HiveGlobals.SetupPending:
+
+                        if (!hive.Globals.TryGetBool(HiveGlobals.UserDisableAutoUnseal, out var setupPending))
+                        {
+                            setupPending = true;
+                        }
+
+                        Console.Write(setupPending ? "true" : "false");
                         break;
 
                     case "sshkey-fingerprint":

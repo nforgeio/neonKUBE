@@ -68,6 +68,7 @@ namespace NeonHiveManager
 
         private static HiveDefinition           cachedHiveDefinition;
         private static List<string>             vaultUris;
+        private static bool?                    hiveSetupPending;
 
         /// <summary>
         /// Application entry point.
@@ -166,7 +167,7 @@ namespace NeonHiveManager
                         //
                         //      https://github.com/jefflill/NeonForge/issues/337
 
-                        using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
+                        using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true).Open())
                         {
                             await RunAsync();
                         }
@@ -219,6 +220,39 @@ namespace NeonHiveManager
             log.LogInfo(() => $"Exiting: [{serviceName}]");
             terminator.ReadyToExit();
             Environment.Exit(exitCode);
+        }
+
+        /// <summary>
+        /// Determines whether hive setup is still in progress.
+        /// </summary>
+        /// <returns></returns>
+        private static bool IsSetupPending
+        {
+            get
+            {
+                // This property checks the global until it reports that
+                // setup IS NOT PENDING and then assumes that setup remain
+                // complete thereafter.
+
+                if (hiveSetupPending.HasValue && !hiveSetupPending.Value)
+                {
+                    return false;
+                }
+
+                if (!hive.Globals.TryGetBool(HiveGlobals.SetupPending, out var pending))
+                {
+                    // We shouldn't ever see this because hive setup sets the global
+                    // to [true] early on.  We're going to assume that something bad
+                    // happened to this global after setup completed and assume that
+                    // setup has completed.
+
+                    pending = false;
+                }
+
+                hiveSetupPending = pending;
+
+                return pending;
+            }
         }
 
         /// <summary>
@@ -313,6 +347,10 @@ namespace NeonHiveManager
                 }
             }
 
+            // We're going to need this later.
+
+            vaultUris = await GetVaultUrisAsync();
+
             // Launch the sub-tasks.  These will run until the service is terminated.
 
             var tasks = new List<Task>();
@@ -350,8 +388,6 @@ namespace NeonHiveManager
             // We need to start a vault poller for the Vault instance running on each manager
             // node.  We're going to construct the direct Vault URIs by querying Docker for
             // the current hive nodes and looking for the managers.
-
-            vaultUris = await GetVaultUrisAsync();
 
             foreach (var uri in vaultUris)
             {

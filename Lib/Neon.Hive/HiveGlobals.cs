@@ -45,6 +45,11 @@ namespace Neon.Hive
         public const string PetsDefinition = "pets-definition";
 
         /// <summary>
+        /// Indicates whether hive setup is still in progress (bool).
+        /// </summary>
+        public const string SetupPending = "setup-pending";
+
+        /// <summary>
         /// Hive globally unique ID assigned during hive setup.
         /// </summary>
         public const string Uuid = "uuid";

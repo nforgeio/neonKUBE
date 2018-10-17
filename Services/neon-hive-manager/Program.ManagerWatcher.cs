@@ -47,7 +47,7 @@ namespace NeonHiveManager
                     onTaskAsync:
                         async () =>
                         {
-                            log.LogDebug(() => "MANAGER-POLLER: Polling for hive manager changes.");
+                            log.LogDebug(() => "MANAGER-WATCHER: Polling for hive manager changes.");
 
                             var latestVaultUris = await GetVaultUrisAsync();
                             var changed         = vaultUris.Count != latestVaultUris.Count;
@@ -66,28 +66,28 @@ namespace NeonHiveManager
 
                             if (changed)
                             {
-                                log.LogInfo("MANAGER-POLLER: Detected one or more hive manager node changes.");
-                                log.LogInfo("MANAGER-POLLER: Exiting the service so that Docker will restart it to pick up the manager node changes.");
+                                log.LogInfo("MANAGER-WATCHER: Detected one or more hive manager node changes.");
+                                log.LogInfo("MANAGER-WATCHER: Exiting the service so that Docker will restart it to pick up the manager node changes.");
                                 terminator.Exit();
                             }
                             else
                             {
-                                log.LogDebug(() => "MANAGER-POLLER: No manager changes detected.");
+                                log.LogDebug(() => "MANAGER-WATCHER: No manager changes detected.");
                             }
 
-                            log.LogDebug(() => "MANAGER-POLLER: Poll finished.");
+                            log.LogDebug(() => "MANAGER-WATCHER: Poll finished.");
                             return await Task.FromResult(false);
                         },
                     onExceptionAsync:
                         async e =>
                         {
-                            log.LogError("MANAGER-POLLER", e);
+                            log.LogError("MANAGER-WATCHER", e);
                             return await Task.FromResult(false);
                         },
                     onTerminateAsync:
                         async () =>
                         {
-                            log.LogInfo(() => "MANAGER-POLLER: Terminating");
+                            log.LogInfo(() => "MANAGER-WATCHER: Terminating");
                             await Task.CompletedTask;
                         });
 

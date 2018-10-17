@@ -47,6 +47,12 @@ namespace NeonHiveManager
                         onTaskAsync:
                             async () =>
                             {
+                                if (IsSetupPending)
+                                {
+                                    log.LogInfo(() => "LOG-PURGER: Delaying because hive setup is still in progress.");
+                                    return false;
+                                }
+
                                 var manager = hive.GetReachableManager();
 
                                 log.LogDebug(() => "LOG-PURGER: Scanning for old Elasticsearch indexes ready for removal.");

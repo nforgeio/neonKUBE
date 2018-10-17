@@ -524,6 +524,16 @@ OPTIONS:
                     ConfigureSsh(node, stepDelay);
                 });
 
+            controller.AddGlobalStep("finish up",
+                () =>
+                {
+                    // Some services (like [neon-hive-manager]) don't perform some
+                    // activities until hive setup has completed, so we'll indicate
+                    // that we're done.
+
+                    hive.Globals.Set(HiveGlobals.SetupPending, false);
+                });
+
             // Start setup.
 
             if (!controller.Run())
@@ -3393,6 +3403,7 @@ systemctl start neon-volume-plugin
                     hive.Globals.Set(HiveGlobals.UserLogRetentionDays, hive.Definition.Log.RetentionDays);
                     hive.Globals.Set(HiveGlobals.Version, Program.Version);
                     hive.Globals.Set(HiveGlobals.NeonCli, Program.MinimumVersion);
+                    hive.Globals.Set(HiveGlobals.SetupPending, true);
                     hive.Globals.Set(HiveGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
                 });
 

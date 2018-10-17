@@ -46,6 +46,12 @@ namespace NeonHiveManager
                     onTaskAsync:
                         async () =>
                         {
+                            if (IsSetupPending)
+                            {
+                                log.LogInfo(() => "SECRET-PURGER: Delaying because hive setup is still in progress.");
+                                return false;
+                            }
+
                             // Commpute the minimum creation time for the retriever service and
                             // the retrieved Consul key.  We're hardcoding the maximum age to
                             // 30 minutes.

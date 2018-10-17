@@ -91,9 +91,7 @@ namespace NeonHiveManager
             var statusUpdateTimeUtc  = DateTime.UtcNow;
             var statusUpdateInterval = TimeSpan.FromMinutes(30);
 
-            log.LogInfo(() => $"VAULT-POLLER: Opening [{vaultUri}]");
-
-            log.LogInfo(() => $"VAULT-POLLER: Opening [{vaultUri}]");
+            log.LogInfo(() => $"VAULT-UNSEALER: Opening [{vaultUri}]");
 
             using (var vault = VaultClient.OpenWithToken(new Uri(vaultUri)))
             {
@@ -103,11 +101,17 @@ namespace NeonHiveManager
                         onTaskAsync:
                             async () =>
                             {
-                                log.LogDebug(() => $"VAULT-POLLER: Polling [{vaultUri}]");
+                                if (IsSetupPending)
+                                {
+                                    log.LogInfo(() => "VAULT-UNSEALER: Delaying because hive setup is still in progress.");
+                                    return false;
+                                }
+
+                                log.LogDebug(() => $"VAULT-UNSEALER: Polling [{vaultUri}]");
 
                                 // Monitor Vault for status changes and handle unsealing if enabled.
 
-                                log.LogDebug(() => $"VAULT-POLLER: Querying [{vaultUri}]");
+                                log.LogDebug(() => $"VAULT-UNSEALER: Querying [{vaultUri}]");
 
                                 var newVaultStatus     = await vault.GetHealthAsync(terminator.CancellationToken);
                                 var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}").Result;
@@ -126,11 +130,11 @@ namespace NeonHiveManager
                                 {
                                     if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
                                     {
-                                        log.LogError(() => $"VAULT-POLLER: status CHANGED [{vaultUri}]");
+                                        log.LogError(() => $"VAULT-UNSEALER: status CHANGED [{vaultUri}]");
                                     }
                                     else
                                     {
-                                        log.LogInfo(() => $"VAULT-POLLER: status CHANGED [{vaultUri}]");
+                                        log.LogInfo(() => $"VAULT-UNSEALER: status CHANGED [{vaultUri}]");
                                     }
 
                                     statusUpdateTimeUtc = DateTime.UtcNow; // Force logging status below
@@ -140,16 +144,16 @@ namespace NeonHiveManager
                                 {
                                     if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
                                     {
-                                        log.LogError(() => $"VAULT-POLLER: status={newVaultStatus} [{vaultUri}]");
+                                        log.LogError(() => $"VAULT-UNSEALER: status={newVaultStatus} [{vaultUri}]");
                                     }
                                     else
                                     {
-                                        log.LogInfo(() => $"VAULT-POLLER: status={newVaultStatus} [{vaultUri}]");
+                                        log.LogInfo(() => $"VAULT-UNSEALER: status={newVaultStatus} [{vaultUri}]");
                                     }
 
                                     if (newVaultStatus.IsSealed && autoUnsealDisabled)
                                     {
-                                        log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}=true].");
+                                        log.LogInfo(() => $"VAULT-UNSEALER: AUTO-UNSEAL is temporarily DISABLED because Consul [{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}=true].");
                                     }
 
                                     statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;
@@ -166,9 +170,9 @@ namespace NeonHiveManager
                                         return await Task.FromResult(false);    // Don't unseal.
                                     }
 
-                                    log.LogInfo(() => $"VAULT-POLLER: UNSEALING [{vaultUri}]");
+                                    log.LogInfo(() => $"VAULT-UNSEALER: UNSEALING [{vaultUri}]");
                                     await vault.UnsealAsync(vaultCredentials, terminator.CancellationToken);
-                                    log.LogInfo(() => $"VAULT-POLLER: UNSEALED [{vaultUri}]");
+                                    log.LogInfo(() => $"VAULT-UNSEALER: UNSEALED [{vaultUri}]");
 
                                     // Schedule a status update on the next loop
                                     // and then loop immediately so we'll log the
@@ -183,13 +187,13 @@ namespace NeonHiveManager
                         onExceptionAsync:
                             async e =>
                             {
-                                log.LogError("VAULT-POLLER", e);
+                                log.LogError("VAULT-UNSEALER", e);
                                 return await Task.FromResult(false);
                             },
                         onTerminateAsync:
                             async () =>
                             {
-                                log.LogInfo(() => "VAULT-POLLER: Terminating");
+                                log.LogInfo(() => "VAULT-UNSEALER: Terminating");
                                 await Task.CompletedTask;
                             });
 

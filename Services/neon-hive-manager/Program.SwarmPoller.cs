@@ -48,7 +48,7 @@ namespace NeonHiveManager
                         {
                             try
                             {
-                                log.LogDebug(() => "DEFINITION-POLLER: Polling");
+                                log.LogDebug(() => "SWARM-POLLER: Polling");
 
                                 // Retrieve the current hive definition from Consul if we don't already
                                 // have it or if it's different from what we've cached.
@@ -57,7 +57,7 @@ namespace NeonHiveManager
 
                                 // Retrieve the swarm nodes from Docker.
 
-                                log.LogDebug(() => $"DEFINITION-POLLER: Querying [{docker.Settings.Uri}]");
+                                log.LogDebug(() => $"SWARM-POLLER: Querying [{docker.Settings.Uri}]");
 
                                 var swarmNodes = await docker.NodeListAsync();
 
@@ -78,7 +78,7 @@ namespace NeonHiveManager
                                     currentHiveDefinition.NodeDefinitions.Add(nodeDefinition.Name, nodeDefinition);
                                 }
 
-                                log.LogDebug(() => $"DEFINITION-POLLER: [{currentHiveDefinition.Managers.Count()}] managers and [{currentHiveDefinition.Workers.Count()}] workers in current hive definition.");
+                                log.LogDebug(() => $"SWARM-POLLER: [{currentHiveDefinition.Managers.Count()}] managers and [{currentHiveDefinition.Workers.Count()}] workers in current hive definition.");
 
                                 // Hive pets are not part of the Swarm, so Docker won't return any information
                                 // about them.  We'll read the pet definitions from [neon/global/pets-definition] in 
@@ -89,7 +89,7 @@ namespace NeonHiveManager
 
                                 if (petsJson == null)
                                 {
-                                    log.LogDebug(() => $"DEFINITION-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
+                                    log.LogDebug(() => $"SWARM-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
                                 }
                                 else
                                 {
@@ -104,11 +104,11 @@ namespace NeonHiveManager
                                             currentHiveDefinition.NodeDefinitions.Add(item.Key, item.Value);
                                         }
 
-                                        log.LogDebug(() => $"DEFINITION-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
+                                        log.LogDebug(() => $"SWARM-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
                                     }
                                     else
                                     {
-                                        log.LogDebug(() => $"DEFINITION-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] is empty.");
+                                        log.LogDebug(() => $"SWARM-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] is empty.");
                                     }
                                 }
 
@@ -122,7 +122,7 @@ namespace NeonHiveManager
 
                                 if (currentHiveDefinition.Hash != cachedHiveDefinition.Hash)
                                 {
-                                    log.LogInfo(() => "DEFINITION-POLLER: Hive definition has CHANGED.  Updating Consul.");
+                                    log.LogInfo(() => "SWARM-POLLER: Hive definition has CHANGED.  Updating Consul.");
 
                                     await HiveHelper.PutDefinitionAsync(currentHiveDefinition, cancellationToken: terminator.CancellationToken);
 
@@ -130,7 +130,7 @@ namespace NeonHiveManager
                                 }
                                 else
                                 {
-                                    log.LogDebug(() => "DEFINITION-POLLER: Hive definition is UNCHANGED.");
+                                    log.LogDebug(() => "SWARM-POLLER: Hive definition is UNCHANGED.");
                                 }
                             }
                             catch (KeyNotFoundException)
@@ -139,22 +139,22 @@ namespace NeonHiveManager
                                 // hive.  This is a serious problem.  This is configured during setup
                                 // and there should always be a definition in Consul.
 
-                                log.LogError(() => $"DEFINITION-POLLER: No hive definition has been found at [{hiveDefinitionKey}] in Consul.  This is a serious error that will have to be corrected manually.");
+                                log.LogError(() => $"SWARM-POLLER: No hive definition has been found at [{hiveDefinitionKey}] in Consul.  This is a serious error that will have to be corrected manually.");
                             }
 
-                            log.LogDebug(() => "DEFINITION-POLLER: Finished Poll");
+                            log.LogDebug(() => "SWARM-POLLER: Finished Poll");
                             return await Task.FromResult(false);
                         },
                     onExceptionAsync:
                         async e =>
                         {
-                            log.LogError("DEFINITION-POLLER", e);
+                            log.LogError("SWARM-POLLER", e);
                             return await Task.FromResult(false);
                         },
                     onTerminateAsync:
                         async () =>
                         {
-                            log.LogInfo(() => "DEFINITION-POLLER: Terminating");
+                            log.LogInfo(() => "SWARM-POLLER: Terminating");
                             await Task.CompletedTask;
                         });
 
