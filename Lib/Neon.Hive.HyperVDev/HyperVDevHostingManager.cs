@@ -604,7 +604,7 @@ namespace Neon.Hive
                         throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes a file that's not named like [*.vhdx].");
                     }
 
-                    node.Status = $"create drive";
+                    node.Status = $"create disk";
 
                     // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
 
@@ -635,7 +635,7 @@ namespace Neon.Hive
 
                                 if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
                                 {
-                                    node.Status = $"[{percentComplete}%] create drive";
+                                    node.Status = $"[{percentComplete}%] create disk";
                                     stopwatch.Restart();
                                 }
                             }
