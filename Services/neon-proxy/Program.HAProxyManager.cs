@@ -86,7 +86,7 @@ namespace NeonProxy
             // We'll need to restart the [neon-proxy] instances whenever the
             // HiveMQ node topology changes.
 
-            using (var proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
+            using (var proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true).Open())
             {
                 // This call ensures that HAProxy is started immediately.
 

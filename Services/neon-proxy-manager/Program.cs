@@ -171,7 +171,7 @@ namespace NeonProxyManager
                             //
                             //      https://github.com/jefflill/NeonForge/issues/337
 
-                            using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
+                            using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true).Open())
                             {
                                 await RunAsync();
                                 terminator.ReadyToExit();

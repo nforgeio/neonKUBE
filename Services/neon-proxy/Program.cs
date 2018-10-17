@@ -253,7 +253,7 @@ namespace NeonProxy
                     //
                     //      https://github.com/jefflill/NeonForge/issues/337
 
-                    using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true))
+                    using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true).Open())
                     {
                         // Verify that the required Consul keys exist or loop to wait until they
                         // are created.  This will allow the service wait for pending hive setup
