@@ -286,8 +286,8 @@ namespace NeonHiveManager
 
             if (!await consul.KV.Exists(proxyNotifySecondsKey))
             {
-                log.LogInfo($"Persisting setting [{proxyNotifySecondsKey}=300.0]");
-                await consul.KV.PutDouble(proxyNotifySecondsKey, 300);
+                log.LogInfo($"Persisting setting [{proxyNotifySecondsKey}=60.0]");
+                await consul.KV.PutDouble(proxyNotifySecondsKey, 60);
             }
 
             if (!await consul.KV.Exists(secretPurgeSecondsKey))
