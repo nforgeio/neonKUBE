@@ -1087,9 +1087,6 @@ fi
         {
             var settings = new JObject();
 
-            settings.Add("log-level", "info");
-            settings.Add("log-driver", "fluentd");
-
 #if USERNS_REMAP
             // $todo(jeff.lill): https://github.com/moby/moby/issues/37560
             if (node.Hive.Definition.Docker.UsernsRemap)
@@ -1097,30 +1094,35 @@ fi
                 settings.Add("userns-remap", "default");
             }
 #endif
+            // Logging configuration.
 
-            settings.Add("experimental", hive.Definition.Docker.Experimental);
+            settings.Add("log-level", "info");
+            settings.Add("log-driver", hive.Definition.Docker.LogDriver);
 
             var logOptions = new JObject();
 
-            logOptions.Add("tag", "");
-            logOptions.Add("fluentd-async-connect", "true");
+            foreach (var option in hive.Definition.Docker.LogOptions.Split(';'))
+            {
+                if (string.IsNullOrWhiteSpace(option))
+                {
+                    continue;   // Ignore blank options.
+                }
 
-            // The default Docker behavior is to attempt to connect to Fluentd
-            // when Docker starts a maximum of 10 times at 1 second intervals
-            // before permanantly giving up.  I've see this unfortunate behavior
-            // happen after a hive reboot.  The solution is to set the number
-            // retries to a very large number (1B * 1s > 11K years).
+                var fields = option.Split(new char[] { '=' }, 2);
 
-            logOptions.Add("fluentd-max-retries", "1000000000");
-
-            // Be default, the Fluentd log driver buffers container stdout to
-            // RAM up to the container's limit.  This could cause RAM to seriously
-            // bloat if the log pipeline stalls.  We're going to have Docker limit
-            // containers to 5MB RAM buffer before logging to disk.
-
-            logOptions.Add("fluentd-buffer-limit", $"{5 * NeonHelper.Mega}");
+                if (fields.Length == 1)
+                {
+                    logOptions.Add(fields[0], string.Empty);    // Not sure if this is reallt necessary (but it probably won't hurt).
+                }
+                else
+                {
+                    logOptions.Add(fields[0], fields[1]);
+                }
+            }
 
             settings.Add("log-opts", logOptions);
+
+            // Storage driver configuration.
 
             switch (Program.OSProperties.StorageDriver)
             {
@@ -1143,6 +1145,10 @@ fi
 
                     throw new NotImplementedException($"Unsupported storage driver: {Program.OSProperties.StorageDriver}.");
             }
+
+            // Configure experimental Docker behavior. 
+
+            settings.Add("experimental", hive.Definition.Docker.Experimental);
 
             // Specify any registry caches followed by the Docker public registry.
 

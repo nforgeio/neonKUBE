@@ -29,10 +29,11 @@ namespace Neon.Hive
     /// </summary>
     public class DockerOptions
     {
-        private const string    defaultLogOptions         = "--log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true";
-        private const bool      defaultRegistryCache      = true;
-        private const bool      defaultUsernsRemap        = true;
-        private const bool      defaultExperimental       = false;
+        private const string    defaultLogDriver     = "fluentd";
+        private const string    defaultLogOptions    = "tag=;fluentd-async-connect=true;fluentd-max-retries=1000000000;fluentd-buffer-limit=5242880";
+        private const bool      defaultRegistryCache = true;
+        private const bool      defaultUsernsRemap   = true;
+        private const bool      defaultExperimental  = false;
 
         /// <summary>
         /// Default constructor.
@@ -135,11 +136,19 @@ namespace Neon.Hive
         public bool RegistryCache { get; set; } = defaultRegistryCache;
 
         /// <summary>
+        /// Specifies the Docker daemon default log driver.  This defaults to <b>fluentd</b>
+        /// so that container logs will be forwarded to the hive logging pipeline.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogDriver", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultLogDriver)]
+        public string LogDriver { get; set; } = defaultLogDriver;
+
+        /// <summary>
         /// <para>
-        /// The Docker daemon container logging options.  This defaults to:
+        /// Specifies the Docker daemon container logging options separated by colons <b>(:)</b>.  This defaults to:
         /// </para>
         /// <code language="none">
-        /// --log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true
+        /// tag=;fluentd-async-connect=true;fluentd-max-retries=1000000000;fluentd-buffer-limit=5242880
         /// </code>
         /// <para>
         /// which by default, will forward container logs to the hive logging pipeline.
@@ -147,13 +156,13 @@ namespace Neon.Hive
         /// </summary>
         /// <remarks>
         /// <note>
-        /// <b>IMPORTANT:</b> Always use the <b>--log-opt fluentd-async-connect=true</b> option
+        /// <b>IMPORTANT:</b> Always use the <b>fluentd-async-connect=true</b> option
         /// when using the <b>fluentd</b> log driver.  Containers without this will stop if
         /// the logging pipeline is not ready when the container starts.
         /// </note>
         /// <para>
         /// You may have individual services and containers opt out of hive logging by setting
-        /// <b>--log-driver=json-text</b> or <b>--log-driver=none</b>.  This can be handy while
+        /// <b>--log-driver=json-file</b> or <b>--log-driver=none</b>.  This can be handy while
         /// debugging Docker images.
         /// </para>
         /// </remarks>
@@ -298,6 +307,9 @@ namespace Neon.Hive
                     throw new HiveDefinitionException($"[{nameof(DockerOptions)}.{Version}] does not specify a Docker community edition.  neonHIVE only supports Docker Community Edition at this time.");
                 }
             }
+
+            LogDriver  = LogDriver ?? defaultLogDriver;
+            LogOptions = LogOptions ?? defaultLogOptions;
 
             // $todo(jeff.lill): 
             //

@@ -315,25 +315,27 @@ neon hive example
 
         // Optionally enables experimental Docker features.  This defaults to [false].
 
-        ""Experimental"": false,        
+        ""Experimental"": false
 
-        // The Docker daemon container logging options.  This defaults to:
+        // The Docker daemon container logging options.  These default to:
         //
-        //      --log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true
+        //      LogDriver:  fluentd
+        //      LogOptions: tag=;fluentd-async-connect=true;fluentd-max-retries=1000000000;fluentd-buffer-limit=5242880
         // 
         // which by default, will forward container logs to the hive logging pipeline.
         // 
         // IMPORTANT:
         //
-        // Always use the [--log-opt fluentd-async-connect=true] option when using 
+        // Always use the [fluentd-async-connect=true] option when using 
         // the [fluentd] log driver.  Containers without this will stop if the 
         // logging pipeline is not ready when the container starts.
         //
         // You may have individual services and containers opt out of hive logging by 
-        // setting [--log-driver=json-text] or [-log-driver=none].  This can be handy 
+        // setting [--log-driver=json-file] or [-log-driver=none].  This can be handy 
         // while debugging Docker images.
-        
-        ""LogOptions"": ""--log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true""
+        //
+        // ""LogDriver:""  ""fluentd"",
+        // ""LogOptions:"" ""tag=;fluentd-async-connect=true;fluentd-max-retries=1000000000;fluentd-buffer-limit=5242880""
     },
 
     // Docker imager overrides.  You can use this property to override the Docker images
