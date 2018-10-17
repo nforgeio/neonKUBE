@@ -3397,14 +3397,14 @@ systemctl start neon-volume-plugin
 
                     firstManager.Status = "saving hive globals";
 
-                    hive.Globals.Set(HiveGlobals.UserAllowUnitTesting, hive.Definition.AllowUnitTesting);
                     hive.Globals.Set(HiveGlobals.CreateDateUtc, DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture));
-                    hive.Globals.Set(HiveGlobals.UserDisableAutoUnseal, false);
-                    hive.Globals.Set(HiveGlobals.UserLogRetentionDays, hive.Definition.Log.RetentionDays);
-                    hive.Globals.Set(HiveGlobals.Version, Program.Version);
                     hive.Globals.Set(HiveGlobals.NeonCli, Program.MinimumVersion);
                     hive.Globals.Set(HiveGlobals.SetupPending, true);
+                    hive.Globals.Set(HiveGlobals.UserAllowUnitTesting, hive.Definition.AllowUnitTesting);
+                    hive.Globals.Set(HiveGlobals.UserDisableAutoUnseal, false);
+                    hive.Globals.Set(HiveGlobals.UserLogRetentionDays, hive.Definition.Log.RetentionDays);
                     hive.Globals.Set(HiveGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
+                    hive.Globals.Set(HiveGlobals.Version, Program.Version);
                 });
 
             
