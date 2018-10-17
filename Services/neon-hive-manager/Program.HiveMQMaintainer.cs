@@ -40,7 +40,7 @@ namespace NeonHiveManager
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task HiveMQMaintainerAsync()
         {
-            using (var hivemqManager = hive.HiveMQ.ConnectHiveMQManager())
+            using (var hivemqManager = hive.HiveMQ.ConnectHiveMQManager(useBootstrap: true))
             {
                 var periodicTask = 
                     new AsyncPeriodicTask(
