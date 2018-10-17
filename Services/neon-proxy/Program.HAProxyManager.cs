@@ -86,46 +86,41 @@ namespace NeonProxy
             // We'll need to restart the [neon-proxy] instances whenever the
             // HiveMQ node topology changes.
 
-            using (var proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true).Open())
-            {
-                // This call ensures that HAProxy is started immediately.
+            // This call ensures that HAProxy is started immediately.
 
-                await ConfigureHAProxy(initialDeploy: true);
+            await ConfigureHAProxy(initialDeploy: true);
 
-                // Register a handler for [ProxyUpdateMessage] messages that determines
-                // whether the message is meant for this service instance and handle it.
+            // Register a handler for [ProxyUpdateMessage] messages that determines
+            // whether the message is meant for this service instance and handle it.
 
-                proxyNotifyChannel.ConsumeAsync<ProxyUpdateMessage>(
-                    async message =>
+            proxyNotifyChannel.ConsumeAsync<ProxyUpdateMessage>(
+                async message =>
+                {
+                    // Determine whether the broadcast notification applies to
+                    // this instance.
+
+                    var forThisInstance = false;
+
+                    if (isPublic)
                     {
-                        // Determine whether the broadcast notification applies to
-                        // this instance.
+                        forThisInstance = message.PublicProxy && !isBridge ||
+                                            message.PublicBridge && isBridge;
+                    }
+                    else
+                    {
+                        forThisInstance = message.PrivateProxy && !isBridge ||
+                                            message.PrivateBridge && isBridge;
+                    }
 
-                        var forThisInstance = false;
+                    if (!forThisInstance)
+                    {
+                        log.LogInfo(() => $"Received but ignorning: {message}");
+                        return;
+                    }
 
-                        if (isPublic)
-                        {
-                            forThisInstance = message.PublicProxy && !isBridge ||
-                                              message.PublicBridge && isBridge;
-                        }
-                        else
-                        {
-                            forThisInstance = message.PrivateProxy && !isBridge ||
-                                              message.PrivateBridge && isBridge;
-                        }
-
-                        if (!forThisInstance)
-                        {
-                            log.LogInfo(() => $"Received but ignorning: {message}");
-                            return;
-                        }
-
-                        log.LogInfo(() => $"Received: {message}");
-                        await ConfigureHAProxy();
-                    });
-
-                proxyNotifyChannel.Open();
-            }
+                    log.LogInfo(() => $"Received: {message}");
+                    await ConfigureHAProxy();
+                });
         }
 
         /// <summary>
