@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -16,7 +17,7 @@ using Neon.Net;
 namespace Neon.Docker
 {
     /// <summary>
-    /// The response from a <see cref="DockerClient.NetworkCreateAsync(DockerNetwork)"/> command.
+    /// The response from a <see cref="DockerClient.NetworkCreateAsync(DockerNetwork, CancellationToken)"/> command.
     /// </summary>
     public class NetworkCreateResponse : DockerResponse
     {

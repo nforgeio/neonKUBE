@@ -173,17 +173,18 @@ namespace Neon.Docker
         /// <summary>
         /// Ping the remote Docker engine to verify that it's ready.
         /// </summary>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns><c>true</c> if ready.</returns>
         /// <remarks>
         /// <note>
         /// This method does not use a <see cref="IRetryPolicy"/>.
         /// </note>
         /// </remarks>
-        public async Task<bool> PingAsync()
+        public async Task<bool> PingAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                var httpResponse = await JsonClient.HttpClient.GetAsync(GetUri("_ping"));
+                var httpResponse = await JsonClient.HttpClient.GetAsync(GetUri("_ping"), cancellationToken);
 
                 return httpResponse.IsSuccessStatusCode;
             }
@@ -198,6 +199,7 @@ namespace Neon.Docker
         /// requests.
         /// </summary>
         /// <param name="timeout">The maximum timne to wait (defaults to 120 seconds).</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <para>
@@ -211,7 +213,7 @@ namespace Neon.Docker
         /// This method attempts to ensure that the server is really ready.
         /// </para>
         /// </remarks>
-        public async Task WaitUntilReadyAsync(TimeSpan? timeout = null)
+        public async Task WaitUntilReadyAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentException>(timeout == null || timeout >= TimeSpan.Zero);
 
@@ -254,7 +256,7 @@ namespace Neon.Docker
                 retryPolicy = new LinearRetryPolicy(transientDetector, maxAttempts: (int)(timeout.Value.TotalSeconds / retryInterval.TotalSeconds), retryInterval: retryInterval);
             }
 
-            await JsonClient.GetAsync(retryPolicy, GetUri("info"));
+            await JsonClient.GetAsync(retryPolicy, GetUri("info"), cancellationToken: cancellationToken);
 
             // $hack(jeff.lill):
             //
@@ -265,7 +267,7 @@ namespace Neon.Docker
             await retryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var volumesResponse = new VolumeListResponse(await JsonClient.GetAsync(NoRetryPolicy.Instance, GetUri("volumes")));
+                    var volumesResponse = new VolumeListResponse(await JsonClient.GetAsync(NoRetryPolicy.Instance, GetUri("volumes"), cancellationToken: cancellationToken));
 
                     if (volumesResponse.Volumes.Count == 0)
                     {

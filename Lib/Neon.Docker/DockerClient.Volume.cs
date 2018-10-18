@@ -13,6 +13,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -27,10 +28,11 @@ namespace Neon.Docker
         /// <summary>
         /// Lists the volumes managed by the Docker engine.
         /// </summary>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>A <see cref="VolumeListResponse"/></returns>
-        public async Task<VolumeListResponse> VolumeListAsync()
+        public async Task<VolumeListResponse> VolumeListAsync(CancellationToken cancellationToken = default)
         {
-            return new VolumeListResponse(await JsonClient.GetAsync(GetUri("volumes")));
+            return new VolumeListResponse(await JsonClient.GetAsync(GetUri("volumes"), cancellationToken: cancellationToken));
         }
 
         /// <summary>
@@ -38,9 +40,10 @@ namespace Neon.Docker
         /// </summary>
         /// <param name="name">The optional volume name (Docker will generate a name if this is not specified).</param>
         /// <param name="driver">The optional volume driver name (defaults to <c>local).</c></param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <param name="driverOpts">The custom driver options.</param>
         /// <returns></returns>
-        public async Task<DockerVolume> VolumeCreate(string name = null, string driver = null, params KeyValuePair<string, string>[] driverOpts)
+        public async Task<DockerVolume> VolumeCreate(string name = null, string driver = null, CancellationToken cancellationToken = default, params KeyValuePair<string, string>[] driverOpts)
         {
             dynamic args = new ExpandoObject();
 
@@ -59,7 +62,7 @@ namespace Neon.Docker
                 args.DriverOpts = driverOpts;
             }
 
-            var response = await JsonClient.PostAsync(GetUri("volumes", "create"), args);
+            var response = await JsonClient.PostAsync(GetUri("volumes", "create"), args, cancellationToken: cancellationToken);
 
             return new DockerVolume(response.AsDynamic());
         }
@@ -68,12 +71,13 @@ namespace Neon.Docker
         /// Returns information about a Docker volume.
         /// </summary>
         /// <param name="nameOrId">The volume name or ID.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The <see cref="DockerVolume"/>.</returns>
-        public async Task<DockerVolume> VolumeInspect(string nameOrId)
+        public async Task<DockerVolume> VolumeInspect(string nameOrId, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrId));
 
-            var response = await JsonClient.GetAsync(GetUri("volumes", nameOrId));
+            var response = await JsonClient.GetAsync(GetUri("volumes", nameOrId), cancellationToken: cancellationToken);
 
             return new DockerVolume(response.AsDynamic());
         }
@@ -82,12 +86,13 @@ namespace Neon.Docker
         /// Removes a Docker volume.
         /// </summary>
         /// <param name="nameOrId">The volume name or ID.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task VolumeRemove(string nameOrId)
+        public async Task VolumeRemove(string nameOrId, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrId));
 
-            await JsonClient.DeleteAsync(GetUri("volumes", nameOrId));
+            await JsonClient.DeleteAsync(GetUri("volumes", nameOrId), cancellationToken: cancellationToken);
         }
     }
 }
