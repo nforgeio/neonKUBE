@@ -67,6 +67,7 @@ namespace NeonCli
             controller.AddGlobalStep(GetStepLabel("hivemq-settings"), () => UpdateHiveMQSettings());
             controller.AddGlobalStep(GetStepLabel("hivemq cluster name"), () => UpdateHiveMQClusterName());
             controller.AddGlobalStep(GetStepLabel("rename log-retention-days"), () => UpdateLogRetentionDays());
+            controller.AddStep(GetStepLabel("edit proxy bridge scripts"), (node, stepDelay) => UpdateProxyBridgeScripts(node));
         }
 
         /// <summary>
@@ -337,6 +338,42 @@ WantedBy=docker.service
                 // Save the new variable.
 
                 consul.KV.PutString(newPath, value).Wait();
+            }
+        }
+
+        /// <summary>
+        /// Edits the [neon-proxy-public-bridge.sh] and [neon-proxy-private-bridge.sh]
+        /// scripts to remove the [VAULT_CREDENTIALS] environment variable so the new
+        /// .NET based proxy bridge image will work properly.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void UpdateProxyBridgeScripts(SshProxy<NodeDefinition> node)
+        {
+            var scriptNames =
+                new string[]
+                {
+                    "neon-proxy-public-bridge.sh",
+                    "neon-proxy-private-bridge.sh"
+                };
+
+            foreach (var scriptName in scriptNames)
+            {
+                var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, scriptName);
+                var scriptText = node.DownloadText(scriptName);
+                var sbEdited   = new StringBuilder();
+
+                using (var reader = new StringReader(scriptText))
+                {
+                    foreach (var line in reader.Lines())
+                    {
+                        if (!line.Contains("--env VAULT_CREDENTIALS="))
+                        {
+                            sbEdited.AppendLineLinux(line);
+                        }
+                    }
+                }
+
+                node.UploadText(scriptPath, sbEdited.ToString(), permissions: "700");
             }
         }
     }
