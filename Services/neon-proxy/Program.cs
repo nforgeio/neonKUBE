@@ -221,8 +221,8 @@ namespace NeonProxy
 
                     // $hack(jeff.lill):
                     //
-                    // This is a bit of backwards compatible hack.  Instances started without
-                    // the VAULT_CREDENTIALS environment variable are proxy bridges.
+                    // This is a bit of backwards compatible hack.  Instances started without the
+                    // VAULT_CREDENTIALS environment variable are assumed to be proxy bridges.
 
                     isBridge = true;
                 }

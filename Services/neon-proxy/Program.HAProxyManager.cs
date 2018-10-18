@@ -216,11 +216,14 @@ log.LogInfo(() => $"*** CONFIGURE 3:");
 
                 log.LogInfo(() => $"CONFIGURE: Extracting ZIP archive to [{configUpdateFolder}].");
 
+                // Ensure that we have a fresh update folder.
+
                 if (Directory.Exists(configUpdateFolder))
                 {
                     Directory.Delete(configUpdateFolder, recursive: true);
-                    Directory.CreateDirectory(configUpdateFolder);
                 }
+
+                Directory.CreateDirectory(configUpdateFolder);
 log.LogInfo(() => $"*** CONFIGURE 4:");
 
                 File.WriteAllBytes(zipPath, zipBytes);
@@ -489,8 +492,15 @@ log.LogInfo(() => $"*** CONFIGURE 11:");
 
                 if (!debugMode)
                 {
-                    Directory.Delete(configFolder, recursive: true);
-                    Directory.Delete(configUpdateFolder, recursive: true);
+                    if (Directory.Exists(configFolder))
+                    {
+                        Directory.Delete(configFolder, recursive: true);
+                    }
+
+                    if (Directory.Exists(configUpdateFolder))
+                    {
+                        Directory.Delete(configUpdateFolder, recursive: true);
+                    }
                 }
             }
         }

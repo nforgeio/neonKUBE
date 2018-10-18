@@ -41,6 +41,23 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Constructor that optionally initializes all boolean properties.
+        /// </summary>
+        /// <param name="all">Optionally indicates that all of the boolean properties should be initialized to <c>true</c>.</param>
+        public ProxyUpdateMessage(bool all)
+        {
+            if (all)
+            {
+                PublicProxy   = true;
+                PrivateProxy  = true;
+                PublicBridge  = true;
+                PrivateBridge = true;
+                PublicCache   = true;
+                PrivateCache  = true;
+            }
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="reason">The human readable reason for the message.</param>
