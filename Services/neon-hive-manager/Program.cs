@@ -45,7 +45,7 @@ namespace NeonHiveManager
         private static readonly string hivemqMaintainSecondsKey  = $"{serviceRootKey}/hivemq_maintain_seconds";
         private static readonly string logPurgeSecondsKey        = $"{serviceRootKey}/log_purge_seconds";
         private static readonly string managerTopologySecondsKey = $"{serviceRootKey}/manager_topology_seconds";
-        private static readonly string proxyNotifySecondsKey     = $"{serviceRootKey}/proxy_notify_seconds";
+        private static readonly string proxyUpdateSecondsKey     = $"{serviceRootKey}/proxy_update_seconds";
         private static readonly string secretPurgeSecondsKey     = $"{serviceRootKey}/secret_purge_seconds";
         private static readonly string swarmPollSecondsKey       = $"{serviceRootKey}/swarm_poll_seconds";
         private static readonly string vaultUnsealSecondsKey     = $"{serviceRootKey}/vault_unseal_seconds";
@@ -61,7 +61,7 @@ namespace NeonHiveManager
         private static TimeSpan                 hivemqMantainInterval;
         private static TimeSpan                 logPurgerInterval;
         private static TimeSpan                 managerTopologyInterval;
-        private static TimeSpan                 proxyNotifyInterval;
+        private static TimeSpan                 proxyUpdateInterval;
         private static TimeSpan                 secretPurgeInterval;
         private static TimeSpan                 swarmPollInterval;
         private static TimeSpan                 vaultUnsealInterval;
@@ -284,10 +284,10 @@ namespace NeonHiveManager
                 await consul.KV.PutDouble(managerTopologySecondsKey, 1800);
             }
 
-            if (!await consul.KV.Exists(proxyNotifySecondsKey))
+            if (!await consul.KV.Exists(proxyUpdateSecondsKey))
             {
-                log.LogInfo($"Persisting setting [{proxyNotifySecondsKey}=60.0]");
-                await consul.KV.PutDouble(proxyNotifySecondsKey, 60);
+                log.LogInfo($"Persisting setting [{proxyUpdateSecondsKey}=60.0]");
+                await consul.KV.PutDouble(proxyUpdateSecondsKey, 60);
             }
 
             if (!await consul.KV.Exists(secretPurgeSecondsKey))
@@ -311,7 +311,7 @@ namespace NeonHiveManager
             hivemqMantainInterval   = TimeSpan.FromSeconds(await consul.KV.GetDouble(hivemqMaintainSecondsKey));
             logPurgerInterval       = TimeSpan.FromSeconds(await consul.KV.GetDouble(logPurgeSecondsKey));
             managerTopologyInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(managerTopologySecondsKey));
-            proxyNotifyInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(proxyNotifySecondsKey));
+            proxyUpdateInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(proxyUpdateSecondsKey));
             secretPurgeInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(secretPurgeSecondsKey));
             swarmPollInterval       = TimeSpan.FromSeconds(await consul.KV.GetDouble(swarmPollSecondsKey));
             vaultUnsealInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(vaultUnsealSecondsKey));
@@ -319,7 +319,7 @@ namespace NeonHiveManager
             log.LogInfo(() => $"Using setting [{hivemqMaintainSecondsKey}={hivemqMantainInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{logPurgeSecondsKey}={logPurgerInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{managerTopologySecondsKey}={managerTopologyInterval.TotalSeconds}]");
-            log.LogInfo(() => $"Using setting [{proxyNotifySecondsKey}={proxyNotifyInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{proxyUpdateSecondsKey}={proxyUpdateInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{secretPurgeSecondsKey}={secretPurgeInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{swarmPollSecondsKey}={swarmPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{vaultUnsealSecondsKey}={vaultUnsealInterval.TotalSeconds}]");

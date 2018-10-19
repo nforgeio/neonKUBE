@@ -80,7 +80,7 @@ namespace Neon.Hive
             Covenant.Requires<ArgumentNullException>(settings != null);
 
             hive.Consul.Client.KV.PutObject(GetProxySettingsKey(), settings, Formatting.Indented).Wait();
-            hive.SignalLoadBalancerUpdate();
+            Update();
         }
 
         /// <summary>
@@ -130,17 +130,15 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Signals the <b>neon-proxy-manager</b> to regenerate the load balancer and proxy configurations.
+        /// Signals the <b>neon-proxy-manager</b> to immediately regenerate the load balancer and proxy configurations,
+        /// without waiting for the periodic change detection (that happens at a 60 second interval by default).
         /// </summary>
         public void Update()
         {
-            hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/proxy-hash", Convert.ToBase64String(new byte[16])).Wait();
-            hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
-
             ProxyNotifyChannel.Publish(
                 new ProxyRegenerateMessage("Update")
                 {
-                    Reason = $"Update: {Name}"
+                    Reason = $"Proactive update: {Name}"
                 });
         }
 
@@ -148,8 +146,22 @@ namespace Neon.Hive
         /// Deletes a load balancer rule if it exists.
         /// </summary>
         /// <param name="ruleName">The rule name.</param>
+        /// <param name="deferUpdate">
+        /// <para>
+        /// Optionally defers expicitly notifying the <b>neon-proxy-manager</b> of the
+        /// change until <see cref="Update()"/> is called or the <b>neon-proxy-manager</b>
+        /// performs the periodic check for changes (which defaults to 60 seconds).  You
+        /// may consider passing <paramref name="deferUpdate"/><c>=true</c> when you are
+        /// modifying a multiple rules at the same time to avoid making the proxy manager
+        /// and proxy instances handle each rule change individually.
+        /// </para>
+        /// <para>
+        /// Instead, you could pass <paramref name="deferUpdate"/><c>=true</c> for all of
+        /// the rule changes and then call <see cref="Update()"/> afterwards.
+        /// </para>
+        /// </param>
         /// <returns><c>true</c> if the rule existed and was deleted, <c>false</c> if it didn't exist.</returns>
-        public bool RemoveRule(string ruleName)
+        public bool RemoveRule(string ruleName, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(ruleName));
 
@@ -158,7 +170,11 @@ namespace Neon.Hive
             if (hive.Consul.Client.KV.Exists(ruleKey).Result)
             {
                 hive.Consul.Client.KV.Delete(ruleKey);
-                hive.SignalLoadBalancerUpdate();
+
+                if (!deferUpdate)
+                {
+                    Update();
+                }
 
                 return true;
             }
@@ -193,12 +209,26 @@ namespace Neon.Hive
         /// Adds or updates a load balancer rule.
         /// </summary>
         /// <param name="rule">The rule definition.</param>
+        /// <param name="deferUpdate">
+        /// <para>
+        /// Optionally defers expicitly notifying the <b>neon-proxy-manager</b> of the
+        /// change until <see cref="Update()"/> is called or the <b>neon-proxy-manager</b>
+        /// performs the periodic check for changes (which defaults to 60 seconds).  You
+        /// may consider passing <paramref name="deferUpdate"/><c>=true</c> when you are
+        /// modifying a multiple rules at the same time to avoid making the proxy manager
+        /// and proxy instances handle each rule change individually.
+        /// </para>
+        /// <para>
+        /// Instead, you could pass <paramref name="deferUpdate"/><c>=true</c> for all of
+        /// the rule changes and then call <see cref="Update()"/> afterwards.
+        /// </para>
+        /// </param>
         /// <returns>
         /// <c>true</c> if it existed and was updated, <b>false</b>
         /// if the load balancer rule didn't already exist and was added.
         /// </returns>
         /// <exception cref="HiveDefinitionException">Thrown if the rule is not valid.</exception>
-        public bool SetRule(LoadBalancerRule rule)
+        public bool SetRule(LoadBalancerRule rule, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>(rule != null);
             Covenant.Requires<ArgumentNullException>(HiveDefinition.IsValidName(rule.Name));
@@ -253,7 +283,11 @@ namespace Neon.Hive
             // load balancers need to be updated.
 
             hive.Consul.Client.KV.PutObject(ruleKey, rule, Formatting.Indented).Wait();
-            hive.SignalLoadBalancerUpdate();
+
+            if (!deferUpdate)
+            {
+                Update();
+            }
 
             return update;
         }

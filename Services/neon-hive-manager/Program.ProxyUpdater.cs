@@ -46,7 +46,7 @@ namespace NeonHiveManager
         {
             var periodicTask =
                 new AsyncPeriodicTask(
-                    proxyNotifyInterval,
+                    proxyUpdateInterval,
                     onTaskAsync:
                         async () =>
                         {

@@ -539,7 +539,8 @@ namespace Neon.Hive
         /// </summary>
         public void SignalLoadBalancerUpdate()
         {
-            Consul.Client.KV.PutString("neon/service/neon-proxy-manager/conf/reload", Guid.NewGuid().ToString("D")).Wait();
+            PublicLoadBalancer.Update();
+            PrivateLoadBalancer.Update();
         }
 
         /// <summary>
