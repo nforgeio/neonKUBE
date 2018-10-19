@@ -3520,7 +3520,7 @@ systemctl start neon-volume-plugin
                 {
                     firstManager.Status = "secret: Ceph dashboard credentials";
                     hiveLogin.CephDashboardUsername = HiveConst.DefaultUsername;
-                    // hiveLogin.CephDashboardPassword = NeonHelper.GetRandomPassword(20);  $todo(jeff.lill): uncomment this
+                    // hiveLogin.CephDashboardPassword = NeonHelper.GetRandomPassword(20);  $todo(jeff.lill): UNCOMMENT THIS????
                     hiveLogin.CephDashboardPassword = HiveConst.DefaultPassword;
                     hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
                 });
