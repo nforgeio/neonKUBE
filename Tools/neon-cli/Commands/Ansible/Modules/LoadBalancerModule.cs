@@ -54,17 +54,32 @@ namespace NeonCli.Ansible
     // name          yes                    private     identifies the target load balancer
     //                                      public
     //
-    // rule_name    yes                                 neonHIVE rule name
+    // rule_name    see comment                         neonHIVE rule name, required when
+    //                                                  [state=present/absent]
     //
-    // rule         see comment                         load balancer rule description
+    // rule         see comment                         load balancer rule details
     //                                                  required when [state=present]
     //
     // state        no          present     absent      indicates whether the rule should
-    //                                      present     be created or removed
+    //                                      present     be created or removed or that any
+    //                                      update      deferred updates should be processed
+    //                                                  immediately
     //
-    // force        no          false                   forces load balancer rebuild when 
-    //                                                  [state=present] even if the rule 
-    //                                                  is unchanged
+    // deferupdate  no          false                   see note below
+    //
+    // Deferred Updates
+    // ----------------
+    //
+    // By default, each load balancer rule change will immediatelly signal the 
+    // [neon-proxy-manager] and all of the proxy and proxy-bridge instances to
+    // rebuild and reload their configurations.  This can cause some unnecessary
+    // thrashing when you need to make multiple rule changes.
+    //
+    // To avoid this, you can pass [deferUpdate=true] for each of rule changes
+    // and then when done with those, invoke this module one last time with
+    // [state=update].  Note that the proxy manager periodically checks for 
+    // changes (defaults to a 60 seconds interval), so a separate update is 
+    // not strictly required.
     //
     // Check Mode:
     // -----------
@@ -158,6 +173,53 @@ namespace NeonCli.Ansible
     //          name: public
     //          state: absent
     //          rule_name: test
+    //
+    // This example defers updates when two rules are added and then 
+    // signals an explicit update afterwards.
+    //
+    //  - name: rule-1
+    //    hosts: localhost
+    //    tasks:
+    //      - name: load balancer task
+    //        neon_load_balancer:
+    //          name: public
+    //          state: present
+    //          rule_name: test
+    //          deferupdate: true
+    //          rule:
+    //            mode: http
+    //            checkuri: /_health/check.php
+    //            checkmethod: GET
+    //            frontends:
+    //              - host: test.com
+    //              - host: www.test.com
+    //            backends:
+    //              - server: TEST
+    //                port: 80
+    //  - name: rule-1
+    //    hosts: localhost
+    //    tasks:
+    //      - name: load balancer task
+    //        neon_load_balancer:
+    //          name: public
+    //          state: present
+    //          rule_name: test
+    //          deferupdate: true
+    //          rule:
+    //            mode: tcp
+    //            frontends:
+    //              - port: 5120
+    //            backends:
+    //              - group: DATABASE
+    //                port: 8080
+    //  - name: update
+    //    hosts: localhost
+    //    tasks:
+    //      - name: load balancer task
+    //        neon_load_balancer:
+    //          name: public
+    //          state: update
+
 
     /// <summary>
     /// Implements the <b>neon_load_balancer</b> Ansible module.
@@ -170,7 +232,7 @@ namespace NeonCli.Ansible
             "rule_name",
             "rule",
             "state",
-            "force"
+            "deferupdate"
         };
 
         /// <inheritdoc/>
@@ -205,6 +267,13 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[rule_name={ruleName}] is not a valid load balancer rule name.");
             }
 
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [deferupdate]");
+
+            if (!context.Arguments.TryGetValue<bool>("rule_name", out var deferUpdate))
+            {
+                deferUpdate = false;
+            }
+
             var isPublic = false;
 
             switch (name)
@@ -235,13 +304,6 @@ namespace NeonCli.Ansible
 
             state = state.ToLowerInvariant();
 
-            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [force]");
-
-            if (!context.Arguments.TryGetValue<bool>("force", out var force))
-            {
-                force = false;
-            }
-
             if (context.HasErrors)
             {
                 return;
@@ -266,23 +328,14 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
-                            loadBalancer.RemoveRule(ruleName);
+                            loadBalancer.RemoveRule(ruleName, deferUpdate: deferUpdate);
                             context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] deleted.");
                             context.Changed = true;
                         }
                     }
                     else
                     {
-                        if (force)
-                        {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] does not exist but since [force=true] we're going to update anyway.");
-                            HiveHelper.Hive.SignalLoadBalancerUpdate();
-                            context.Changed = true;
-                        }
-                        else
-                        {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] does not exist.");
-                        }
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] does not exist.");
                     }
                     break;
 
@@ -424,16 +477,7 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
-                            if (force)
-                            {
-                                context.WriteLine(AnsibleVerbosity.Trace, $"Rules are the same but since [force=true] we're going to update anyway.");
-                                HiveHelper.Hive.SignalLoadBalancerUpdate();
-                                changed = true;
-                            }
-                            else
-                            {
-                                context.WriteLine(AnsibleVerbosity.Info, $"Rules are the same.  No need to update.");
-                            }
+                            context.WriteLine(AnsibleVerbosity.Info, $"Rules are the same.  No need to update.");
                         }
                     }
                     else
@@ -456,6 +500,12 @@ namespace NeonCli.Ansible
                             context.Changed = !context.CheckMode;
                        }
                     }
+                    break;
+
+                case "update":
+
+                    loadBalancer.Update();
+                    context.WriteLine(AnsibleVerbosity.Info, $"Update signalled.");
                     break;
 
                 default:
