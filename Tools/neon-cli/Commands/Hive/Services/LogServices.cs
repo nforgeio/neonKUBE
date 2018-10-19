@@ -77,7 +77,7 @@ namespace NeonCli
     /// </para>
     /// <para>
     /// <b>Kibana</b> is deployed as the <b>neon-log-kibana</b> docker service and acts
-    /// as the logging dashboard.
+    /// as the hive logging dashboard.
     /// </para>
     /// </remarks>
     public class LogServices : ServicesBase
