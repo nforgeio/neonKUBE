@@ -60,7 +60,7 @@ namespace Neon.Hive
         public string Group { get; set; } = null;
 
         /// <summary>
-        /// Works in conjunction with <see cref="Group"/> to limit the number of Ansible
+        /// Works in conjunction with <see cref="Group"/> to limit the number of hive
         /// group nodes to be targeted.  Setting this to zero (the default) indicates that
         /// all nodes in the group will be targeted.
         /// </summary>
