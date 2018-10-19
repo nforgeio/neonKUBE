@@ -2861,6 +2861,7 @@ echo $? > {cmdFolder}/exit
         /// <param name="command">The Linux command.</param>
         /// <param name="runOptions">The execution options.</param>
         /// <param name="args">The command arguments.</param>
+        /// <returns><c>true</c> if the action was invoked.</returns>
         /// <remarks>
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
@@ -2872,11 +2873,11 @@ echo $? > {cmdFolder}/exit
         /// <b>docker</b> client program name.
         /// </note>
         /// </remarks>
-        public void IdempotentDockerCommand(string actionId, Action<CommandResponse> postAction, RunOptions runOptions, string command, params object[] args)
+        public bool IdempotentDockerCommand(string actionId, Action<CommandResponse> postAction, RunOptions runOptions, string command, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
 
-            InvokeIdempotentAction(actionId,
+            return InvokeIdempotentAction(actionId,
                 () =>
                 {
                     var response = DockerCommand(runOptions, command, args);
@@ -2897,6 +2898,7 @@ echo $? > {cmdFolder}/exit
         /// </param>
         /// <param name="command">The Linux command.</param>
         /// <param name="args">The command arguments.</param>
+        /// <returns><c>true</c> if the action was invoked.</returns>
         /// <remarks>
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
@@ -2908,11 +2910,11 @@ echo $? > {cmdFolder}/exit
         /// <b>docker</b> client program name.
         /// </note>
         /// </remarks>
-        public void IdempotentDockerCommand(string actionId, Action<CommandResponse> postAction, string command, params object[] args)
+        public bool IdempotentDockerCommand(string actionId, Action<CommandResponse> postAction, string command, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
 
-            InvokeIdempotentAction(actionId,
+            return InvokeIdempotentAction(actionId,
                 () =>
                 {
                     var response = DockerCommand(command, args);
@@ -2927,6 +2929,7 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="actionId">The node-unique action ID.</param>
         /// <param name="action">Tbe action to be performed.</param>
+        /// <returns><c>true</c> if the action was invoked.</returns>
         /// <remarks>
         /// <para>
         /// <paramref name="actionId"/> must uniquely identify the action on the node.
@@ -2942,7 +2945,7 @@ echo $? > {cmdFolder}/exit
         /// present.
         /// </para>
         /// </remarks>
-        public void InvokeIdempotentAction(string actionId, Action action)
+        public bool InvokeIdempotentAction(string actionId, Action action)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId));
@@ -2968,7 +2971,7 @@ echo $? > {cmdFolder}/exit
 
             if (FileExists(statePath))
             {
-                return;
+                return false;
             }
 
             action();
@@ -2977,6 +2980,8 @@ echo $? > {cmdFolder}/exit
             {
                 SudoCommand($"touch {statePath}");
             }
+
+            return true;
         }
 
         /// <summary>
