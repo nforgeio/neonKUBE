@@ -139,7 +139,7 @@ OPTIONS:
 
             // Note that hive setup appends to existing log files.
 
-            hive = new HiveProxy(hiveLogin, Program.CreateNodeProxy<NodeDefinition>, appendLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+            hive = new HiveProxy(hiveLogin, Program.CreateNodeProxy<NodeDefinition>, appendLog: true, useBootstrap: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
             // We need to ensure that any necessary VPN connection is opened if we're
             // not provisioning on-premise or not running in the tool container.

@@ -76,22 +76,8 @@ namespace NeonCli
                     Hive.Docker.Secret.Set("neon-proxy-public-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-public").Result, Formatting.Indented));
                     Hive.Docker.Secret.Set("neon-proxy-private-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-private").Result, Formatting.Indented));
 
-                    // Initialize the public and private proxies.
-
-                    Hive.PublicLoadBalancer.UpdateSettings(
-                        new LoadBalancerSettings()
-                        {
-                            ProxyPorts = HiveConst.PublicProxyPorts
-                        });
-
-                    Hive.PrivateLoadBalancer.UpdateSettings(
-                        new LoadBalancerSettings()
-                        {
-                            ProxyPorts = HiveConst.PrivateProxyPorts
-                        });
-
                     //---------------------------------------------------------
-                    // Deploy the RabbitMQ cluster.
+                    // Deploy the HiveMQ cluster.
 
                     Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster",
                         () =>
@@ -156,7 +142,29 @@ namespace NeonCli
                             // Set the RabbitMQ cluster name to the name of the hive.
 
                             hiveMQNode.InvokeIdempotentAction("setup/hivemq-cluster-name", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_cluster_name {Hive.Definition.Name}"));
+                        });
 
+                    //---------------------------------------------------------
+                    // Initialize the public and private load balancer managers.
+
+                    Hive.PublicLoadBalancer.UpdateSettings(
+                        new LoadBalancerSettings()
+                        {
+                            ProxyPorts = HiveConst.PublicProxyPorts
+                        });
+
+                    Hive.PrivateLoadBalancer.UpdateSettings(
+                        new LoadBalancerSettings()
+                        {
+                            ProxyPorts = HiveConst.PrivateProxyPorts
+                        });
+
+                    //---------------------------------------------------------
+                    // Deploy the HiveMQ load balancer rules.
+
+                    Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-loadbalancer",
+                        () =>
+                        {
                             // Deploy private load balancer for the AMPQ endpoints.
 
                             var ampqRule = new LoadBalancerTcpRule()
@@ -460,7 +468,14 @@ namespace NeonCli
                             "--env", "POLL_SECONDS=15",
                             "--env", "START_SECONDS=10",
                             "--env", "LOG_LEVEL=INFO",
-                            "--env", "DEBUG=false",
+
+                            //----------------------------------------------------------
+                            // $todo(jeff.lill): Restore temporary default settings below.
+                            //"--env", "DEBUG=false",
+                            "--env", "DEBUG=true",
+                            "--log-driver", "json-file",
+                            //----------------------------------------------------------
+
                             "--env", "VAULT_SKIP_VERIFY=true",
                             "--secret", "neon-proxy-private-credentials",
                             privatePublishArgs,

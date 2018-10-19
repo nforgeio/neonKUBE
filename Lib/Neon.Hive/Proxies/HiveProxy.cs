@@ -36,6 +36,7 @@ namespace Neon.Hive
         private RunOptions                                                          defaultRunOptions;
         private Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>>     nodeProxyCreator;
         private bool                                                                appendLog;
+        private bool                                                                useBootstrap;
 
         /// <summary>
         /// Constructs a hive proxy from a hive login.
@@ -47,6 +48,14 @@ namespace Neon.Hive
         /// the node definition.
         /// </param>
         /// <param name="appendLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
+        /// <param name="useBootstrap">
+        /// Optionally specifies that the instance should use the HiveMQ client
+        /// should directly eference to the HiveMQ cluster nodes for broadcasting
+        /// proxy update messages rather than routing traffic through the <b>private</b>
+        /// load balancer.  This is used internally to resolve chicken-and-the-egg
+        /// dilemmas for the load balancer and proxy implementations that rely on
+        /// HiveMQ messaging.
+        /// </param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
@@ -63,8 +72,10 @@ namespace Neon.Hive
             HiveLogin hiveLogin,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
             bool                                                            appendLog         = false,
+            bool                                                            useBootstrap      = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
-            : this(hiveLogin.Definition, nodeProxyCreator, appendLog: appendLog, defaultRunOptions: defaultRunOptions)
+
+            : this(hiveLogin.Definition, nodeProxyCreator, appendLog: appendLog, useBootstrap: useBootstrap, defaultRunOptions: defaultRunOptions)
         {
             Covenant.Requires<ArgumentNullException>(hiveLogin != null);
 
@@ -85,6 +96,14 @@ namespace Neon.Hive
         /// the node definition.
         /// </param>
         /// <param name="appendLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
+        /// <param name="useBootstrap">
+        /// Optionally specifies that the instance should use the HiveMQ client
+        /// should directly eference to the HiveMQ cluster nodes for broadcasting
+        /// proxy update messages rather than routing traffic through the <b>private</b>
+        /// load balancer.  This is used internally to resolve chicken-and-the-egg
+        /// dilemmas for the load balancer and proxy implementations that rely on
+        /// HiveMQ messaging.
+        /// </param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
@@ -101,6 +120,7 @@ namespace Neon.Hive
             HiveDefinition hiveDefinition,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator = null,
             bool                                                            appendLog = false,
+            bool                                                            useBootstrap      = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
@@ -140,6 +160,7 @@ namespace Neon.Hive
 
             this.Definition          = hiveDefinition;
             this.HiveLogin           = new HiveLogin();
+            this.useBootstrap        = useBootstrap;
             this.defaultRunOptions   = defaultRunOptions;
             this.nodeProxyCreator    = nodeProxyCreator;
             this.appendLog           = appendLog;
@@ -151,8 +172,8 @@ namespace Neon.Hive
             this.Certificate         = new CertificateManager(this);
             this.Dashboard           = new DashboardManager(this);
             this.Dns                 = new DnsManager(this);
-            this.PublicLoadBalancer  = new LoadBalancerManager(this, "public");
-            this.PrivateLoadBalancer = new LoadBalancerManager(this, "private");
+            this.PublicLoadBalancer  = new LoadBalancerManager(this, "public", useBootstrap: useBootstrap);
+            this.PrivateLoadBalancer = new LoadBalancerManager(this, "private", useBootstrap: useBootstrap);
             this.Registry            = new RegistryManager(this);
             this.Globals             = new GlobalsManager(this);
             this.Consul              = new ConsulManager(this);

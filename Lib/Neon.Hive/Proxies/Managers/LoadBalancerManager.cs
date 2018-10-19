@@ -22,6 +22,7 @@ namespace Neon.Hive
         private const string vaultCertPrefix    = "neon-secret/cert";
 
         private HiveProxy           hive;
+        private bool                useBootstrap;
         private BroadcastChannel    proxyNotifyChannel;
 
         /// <summary>
@@ -29,13 +30,22 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
         /// <param name="name">The load balancer name (<b>public</b> or <b>private</b>).</param>
-        internal LoadBalancerManager(HiveProxy hive, string name)
+        /// <param name="useBootstrap">
+        /// Optionally specifies that the instance should use the HiveMQ client
+        /// should directly eference to the HiveMQ cluster nodes for broadcasting
+        /// proxy update messages rather than routing traffic through the <b>private</b>
+        /// load balancer.  This is used internally to resolve chicken-and-the-egg
+        /// dilemmas for the load balancer and proxy implementations that rely on
+        /// HiveMQ messaging.
+        /// </param>
+        internal LoadBalancerManager(HiveProxy hive, string name, bool useBootstrap = false)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentException>(name == "public" || name == "private");
 
-            this.hive = hive;
-            this.Name = name;
+            this.hive         = hive;
+            this.Name         = name;
+            this.useBootstrap = useBootstrap;
         }
 
         /// <summary>
@@ -122,7 +132,7 @@ namespace Neon.Hive
             {
                 if (proxyNotifyChannel == null)
                 {
-                    proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(publishOnly: true).Open();
+                    proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: useBootstrap, publishOnly: true).Open();
                 }
 
                 return proxyNotifyChannel;

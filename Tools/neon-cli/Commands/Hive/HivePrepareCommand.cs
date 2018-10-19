@@ -159,7 +159,7 @@ Server Requirements:
 
             // Note that hive prepare starts new log files.
 
-            hive = new HiveProxy(hiveDefinition, Program.CreateNodeProxy<NodeDefinition>, appendLog: false, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+            hive = new HiveProxy(hiveDefinition, Program.CreateNodeProxy<NodeDefinition>, appendLog: false, useBootstrap: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
             if (File.Exists(Program.GetHiveLoginPath(HiveConst.RootUser, hive.Definition.Name)))
             {
