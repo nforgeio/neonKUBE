@@ -371,13 +371,13 @@ log.LogInfo(() => $"*** CONFIGURE 8:");
 
                     if (File.Exists(Path.Combine(configFolder, ".hardstop")))
                     {
-                        stopType = "(hard stop)";
+                        stopType   = "(hard stop)";
                         stopOption = $"-st {haProxyProcess.Id}";
                     }
                     else
                     {
-                        stopType = "(soft stop)";
-                        stopOption = $"-sf {haProxyProcess.Id})";
+                        stopType   = "(soft stop)";
+                        stopOption = $"-sf {haProxyProcess.Id}";
                     }
 
                     log.LogInfo(() => $"HAProxy is restarting {stopType}.");
