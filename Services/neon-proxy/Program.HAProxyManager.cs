@@ -133,8 +133,6 @@ namespace NeonProxy
         /// </remarks>
         public async static Task ConfigureHAProxy(bool initialDeploy = false)
         {
-log.LogInfo(() => $"*** CONFIGURE 0:");
-
             if (!initialDeploy && !IsHAProxyDeployed)
             {
                 // If this isn't the initial HAProxy call and HAProxy isn't already
@@ -146,7 +144,6 @@ log.LogInfo(() => $"*** CONFIGURE 0:");
                 return;
             }
 
-log.LogInfo(() => $"*** CONFIGURE 1:");
             try
             {
                 // Retrieve the configuration HASH and compare that with what 
@@ -170,7 +167,6 @@ log.LogInfo(() => $"*** CONFIGURE 1:");
                     log.LogError($"CONFIGURE: Cannot retrieve [{configHashKey}] from Consul.", e);
                     return;
                 }
-log.LogInfo(() => $"*** CONFIGURE 2:");
 
                 if (configHash == deployedHash)
                 {
@@ -204,7 +200,6 @@ log.LogInfo(() => $"*** CONFIGURE 2:");
                     log.LogError($"CONFIGURE: Cannot retrieve [{configKey}] from Consul.", e);
                     return;
                 }
-log.LogInfo(() => $"*** CONFIGURE 3:");
 
                 if (configHash == deployedHash)
                 {
@@ -221,7 +216,6 @@ log.LogInfo(() => $"*** CONFIGURE 3:");
                 NeonHelper.DeleteFolder(configUpdateFolder);
 
                 Directory.CreateDirectory(configUpdateFolder);
-log.LogInfo(() => $"*** CONFIGURE 4:");
 
                 File.WriteAllBytes(zipPath, zipBytes);
 
@@ -235,7 +229,6 @@ log.LogInfo(() => $"*** CONFIGURE 4:");
                     });
 
                 response.EnsureSuccess();
-log.LogInfo(() => $"*** CONFIGURE 5:");
 
                 // The [.certs] file (if present) describes the certificates 
                 // to be downloaded from Vault.
@@ -280,7 +273,6 @@ log.LogInfo(() => $"*** CONFIGURE 5:");
                         }
                     }
                 }
-log.LogInfo(() => $"*** CONFIGURE 6:");
 
                 // Get the running HAProxy process (if there is one).
 
@@ -337,7 +329,6 @@ log.LogInfo(() => $"*** CONFIGURE 6:");
                         log.LogCritical(() => "CONFIGURE: Invalid HAProxy configuration.");
                         throw new Exception("CONFIGURE: Invalid HAProxy configuration.");
                 }
-log.LogInfo(() => $"*** CONFIGURE 7:");
 
                 // Purge the contents of the [configFolder] and copy the contents
                 // of [configNewFolder] into it.
@@ -345,7 +336,6 @@ log.LogInfo(() => $"*** CONFIGURE 7:");
                 NeonHelper.DeleteFolder(configFolder);
                 Directory.CreateDirectory(configFolder);
                 NeonHelper.CopyFolder(configUpdateFolder, configFolder);
-log.LogInfo(() => $"*** CONFIGURE 8:");
 
                 // Start HAProxy if it's not already running.
                 //
@@ -387,7 +377,6 @@ log.LogInfo(() => $"*** CONFIGURE 8:");
                     restart = false;
                     log.LogInfo(() => $"CONFIGURE: HAProxy is starting.");
                 }
-log.LogInfo(() => $"*** CONFIGURE 9:");
 
                 // Enable HAProxy debugging mode to get a better idea of why health
                 // checks are failing.
@@ -427,33 +416,24 @@ log.LogInfo(() => $"*** CONFIGURE 9:");
                     log.LogError(() => $"CONFIGURE: HAProxy failure: {response.ErrorText}");
                     return;
                 }
-log.LogInfo(() => $"*** CONFIGURE 10:");
 
                 // Give HAProxy a chance to start/restart cleanly.
 
-log.LogInfo(() => $"*** CONFIGURE 10-A:");
                 await Task.Delay(startDelay, cts.Token);
-log.LogInfo(() => $"*** CONFIGURE 10-B:");
 
                 if (restart)
                 {
-log.LogInfo(() => $"*** CONFIGURE 10-C:");
                     log.LogInfo(() => "CONFIGURE: HAProxy has been updated.");
-log.LogInfo(() => $"*** CONFIGURE 10-D:");
                 }
                 else
                 {
-log.LogInfo(() => $"*** CONFIGURE 10-E:");
                     log.LogInfo(() => "CONFIGURE: HAProxy has started.");
-log.LogInfo(() => $"*** CONFIGURE 10-F:");
                 }
-log.LogInfo(() => $"*** CONFIGURE 10-G:");
 
                 // Update the deployed hash so we won't try to update the same 
                 // configuration again.
 
                 deployedHash = configHash;
-log.LogInfo(() => $"*** CONFIGURE 11:");
 
                 // HAProxy was updated successfully so we can reset the error time
                 // so to ensure that periodic error reporting will stop.
