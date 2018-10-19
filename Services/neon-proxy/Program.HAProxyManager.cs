@@ -218,10 +218,7 @@ log.LogInfo(() => $"*** CONFIGURE 3:");
 
                 // Ensure that we have a fresh update folder.
 
-                if (Directory.Exists(configUpdateFolder))
-                {
-                    Directory.Delete(configUpdateFolder, recursive: true);
-                }
+                NeonHelper.DeleteFolder(configUpdateFolder);
 
                 Directory.CreateDirectory(configUpdateFolder);
 log.LogInfo(() => $"*** CONFIGURE 4:");
@@ -328,8 +325,8 @@ log.LogInfo(() => $"*** CONFIGURE 6:");
 
                             if (!debugMode)
                             {
-                                Directory.Delete(configFolder);
-                                Directory.Delete(configUpdateFolder);
+                                NeonHelper.DeleteFolder(configFolder);
+                                NeonHelper.DeleteFolder(configUpdateFolder);
                             }
                         }
                         return;
@@ -345,7 +342,7 @@ log.LogInfo(() => $"*** CONFIGURE 7:");
                 // Purge the contents of the [configFolder] and copy the contents
                 // of [configNewFolder] into it.
 
-                Directory.Delete(configFolder, recursive: true);
+                NeonHelper.DeleteFolder(configFolder);
                 Directory.CreateDirectory(configFolder);
                 NeonHelper.CopyFolder(configUpdateFolder, configFolder);
 log.LogInfo(() => $"*** CONFIGURE 8:");
@@ -492,15 +489,8 @@ log.LogInfo(() => $"*** CONFIGURE 11:");
 
                 if (!debugMode)
                 {
-                    if (Directory.Exists(configFolder))
-                    {
-                        Directory.Delete(configFolder, recursive: true);
-                    }
-
-                    if (Directory.Exists(configUpdateFolder))
-                    {
-                        Directory.Delete(configUpdateFolder, recursive: true);
-                    }
+                    NeonHelper.DeleteFolder(configFolder);
+                    NeonHelper.DeleteFolder(configUpdateFolder);
                 }
             }
         }

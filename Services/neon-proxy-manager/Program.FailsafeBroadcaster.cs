@@ -47,13 +47,14 @@ namespace NeonProxyManager
                     onTaskAsync:
                         async () =>
                         {
-                            log.LogInfo(() => $"FAILSAFE-BROADCASTER: Broadcasting [{nameof(ProxyUpdateMessage)}].");
+                            var message = new ProxyUpdateMessage(all: true)
+                            {
+                                Reason = "fail-safe"
+                            };
 
-                            await proxyNotifyChannel.PublishAsync(
-                                new ProxyUpdateMessage(all: true)
-                                {
-                                    Reason = "fail-safe"
-                                });
+                            log.LogInfo(() => $"FAILSAFE-BROADCASTER: Broadcasting [{message}].");
+
+                            await proxyNotifyChannel.PublishAsync(message);
 
                             return false;
                         },
