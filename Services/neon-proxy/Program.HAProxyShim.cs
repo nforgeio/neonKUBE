@@ -434,7 +434,16 @@ namespace NeonProxy
                 }
                 else
                 {
-                    // DEBUG mode.
+                    // DEBUG mode steps:
+                    //
+                    //      1: Kill any existing HAProxy process.
+                    //      2: Fork the new one to pick up the latest config.
+
+                    if (haProxyProcess != null)
+                    {
+                        haProxyProcess.Kill();
+                        haProxyProcess = null;
+                    }
 
                     NeonHelper.Fork("haproxy",
                         new object[]
