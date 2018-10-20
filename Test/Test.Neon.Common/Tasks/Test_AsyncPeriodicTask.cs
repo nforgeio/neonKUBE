@@ -42,7 +42,7 @@ namespace TestCommon
                         return ++taskCalls == 5;
                     });
 
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
 
             Assert.Equal(5, taskCalls);
         }
@@ -74,7 +74,7 @@ namespace TestCommon
                         return taskCalls == 5;
                     });
 
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
 
             Assert.Equal(5, taskCalls);
             Assert.IsType<TimeoutException>(exception);
@@ -112,7 +112,7 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
 
             Assert.True(terminated);
             Assert.Null(exception);
@@ -143,7 +143,7 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
 
             Assert.True(terminated);
             Assert.Null(exception);
@@ -181,7 +181,7 @@ namespace TestCommon
                         await Task.CompletedTask;
                     });
 
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
 
             Assert.True(terminated);
             Assert.IsType<TimeoutException>(exception);
@@ -222,7 +222,7 @@ namespace TestCommon
 
             var tasks = new Task[]
                 {
-                    periodicTask.RunAsync(),
+                    periodicTask.Run(),
                     Task.Run(
                         async () =>
                         {

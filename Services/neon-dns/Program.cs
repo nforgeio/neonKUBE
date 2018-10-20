@@ -386,7 +386,7 @@ $@"# PowerDNS Recursor authoritatively answers for [*.HIVENAME.nhive.io] hostnam
                         });
 
             terminator.AddDisposable(periodicTask);
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
             terminator.ReadyToExit();
         }
     }

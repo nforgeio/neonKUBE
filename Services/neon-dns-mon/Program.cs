@@ -303,7 +303,7 @@ namespace NeonDnsMon
                         });
 
             terminator.AddDisposable(periodicTask);
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
             terminator.ReadyToExit();
         }
 

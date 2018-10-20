@@ -30,7 +30,7 @@ namespace Neon.Tasks
     /// <para>
     /// You'll use the <see cref="AsyncPeriodicTask.AsyncPeriodicTask(TimeSpan, Func{Task{bool}}, Func{Exception, Task{bool}}, Func{Task}, CancellationTokenSource)"/>
     /// constructor to create a task, passing the task interval, asynchronous task handler and optional exception handler and cancellation token
-    /// and then call <see cref="AsyncPeriodicTask.RunAsync"/> to execute the task.
+    /// and then call <see cref="AsyncPeriodicTask.Run"/> to execute the task.
     /// </para>
     /// <para>
     /// <see cref="AsyncPeriodicTask"/> will call the task handler, wait for the interval and then repeat.  The task handler
@@ -99,7 +99,7 @@ namespace Neon.Tasks
         /// <summary>
         /// Asynchronously executes the task until it exits or is canceled.
         /// </summary>
-        public async Task RunAsync()
+        public async Task Run()
         {
             while (true)
             {

@@ -73,7 +73,7 @@ namespace NeonProxyManager
                     cancellationTokenSource: cts);
 
             terminator.AddDisposable(periodicTask);
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
         }
     }
 }

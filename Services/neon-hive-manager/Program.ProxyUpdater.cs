@@ -69,7 +69,7 @@ namespace NeonHiveManager
                         });
 
             terminator.AddDisposable(periodicTask);
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
         }
     }
 }
