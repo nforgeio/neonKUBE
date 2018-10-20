@@ -1245,7 +1245,7 @@ backend http:{httpRule.Name}
                 }
                 else
                 {
-                    log.LogInfo(() => $"No changes detected for load balancer [{proxyDisplayName}].");
+                    log.LogInfo(() => $"No changes detected for proxy [{proxyDisplayName}].");
                 }
             }
             catch (Exception e)
