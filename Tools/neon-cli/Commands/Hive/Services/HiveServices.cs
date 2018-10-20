@@ -468,14 +468,7 @@ namespace NeonCli
                             "--env", "POLL_SECONDS=15",
                             "--env", "START_SECONDS=10",
                             "--env", "LOG_LEVEL=INFO",
-
-                            //----------------------------------------------------------
-                            // $todo(jeff.lill): Restore temporary default settings below.
-                            //"--env", "DEBUG=false",
-                            "--env", "DEBUG=true",
-                            "--log-driver", "json-file",
-                            //----------------------------------------------------------
-
+                            "--env", "DEBUG=false",
                             "--env", "VAULT_SKIP_VERIFY=true",
                             "--secret", "neon-proxy-private-credentials",
                             privatePublishArgs,
