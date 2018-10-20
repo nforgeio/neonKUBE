@@ -148,7 +148,7 @@ namespace Neon.Hive
             ProxyNotifyChannel.Publish(
                 new ProxyRegenerateMessage("Update")
                 {
-                    Reason = $"Proactive update: {Name}"
+                    Reason = $"proactive update: {Name}"
                 });
         }
 
