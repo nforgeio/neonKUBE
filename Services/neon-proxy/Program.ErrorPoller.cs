@@ -69,7 +69,7 @@ namespace NeonProxy
                         });
 
             terminator.AddDisposable(periodicTask);
-            await periodicTask.RunAsync();
+            await periodicTask.Run();
         }
     }
 }

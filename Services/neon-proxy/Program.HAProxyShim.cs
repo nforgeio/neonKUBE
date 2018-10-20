@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Program.HAProxyManager.cs
+// FILE:	    Program.HAProxShim.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -76,7 +76,7 @@ namespace NeonProxy
         /// </para>
         /// </remarks>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async static Task HAProxyManager()
+        private async static Task HAProxShim()
         {
             // We need to use HiveMQ bootstrap settings to avoid chicken-and-the-egg
             // dependency issues.
@@ -104,23 +104,39 @@ namespace NeonProxy
                     if (isPublic)
                     {
                         forThisInstance = message.PublicProxy && !isBridge ||
-                                            message.PublicBridge && isBridge;
+                                          message.PublicBridge && isBridge;
                     }
                     else
                     {
                         forThisInstance = message.PrivateProxy && !isBridge ||
-                                            message.PrivateBridge && isBridge;
+                                          message.PrivateBridge && isBridge;
                     }
 
                     if (!forThisInstance)
                     {
-                        log.LogInfo(() => $"Received but ignorning: {message}");
+                        log.LogInfo(() => $"HAPROXY-SHIM: Received but ignorning: {message}");
                         return;
                     }
 
-                    log.LogInfo(() => $"Received: {message}");
+                    log.LogInfo(() => $"HAPROXY-SHIM: Received: {message}");
                     await ConfigureHAProxy();
                 });
+
+            // Spin quietly while waiting for a cancellation indicating that
+            // the service is stopping.
+
+            var task = new AsyncPeriodicTask(
+                TimeSpan.FromMinutes(5),
+                onTaskAsync: async () => await Task.FromResult(false),
+                onTerminateAsync:
+                    async () =>
+                    {
+                        log.LogInfo(() => "HAPROXY-SHIM: Terminating");
+                        await Task.CompletedTask;
+                    },
+                cancellationTokenSource: cts);
+
+            await task.Run();
         }
 
         /// <summary>
@@ -149,7 +165,7 @@ namespace NeonProxy
                 // Retrieve the configuration HASH and compare that with what 
                 // we have already deployed.
 
-                log.LogInfo(() => $"CONFIGURE: Retrieving configuration HASH from Consul path [{configHashKey}].");
+                log.LogInfo(() => $"HAPROXY-SHIM: Retrieving configuration HASH from Consul path [{configHashKey}].");
 
                 string configHash;
 
@@ -164,25 +180,25 @@ namespace NeonProxy
                 catch (Exception e)
                 {
                     SetErrorTime();
-                    log.LogError($"CONFIGURE: Cannot retrieve [{configHashKey}] from Consul.", e);
+                    log.LogError($"HAPROXY-SHIM: Cannot retrieve [{configHashKey}] from Consul.", e);
                     return;
                 }
 
                 if (configHash == deployedHash)
                 {
-                    log.LogInfo(() => $"CONFIGURE: Configuration with [hash={configHash}] is already deployed.");
+                    log.LogInfo(() => $"HAPROXY-SHIM: Configuration with [hash={configHash}] is already deployed.");
                     return;
                 }
                 else
                 {
-                    log.LogInfo(() => $"CONFIGURE: Configuration hash has changed from [{deployedHash}] to [{configHash}].");
+                    log.LogInfo(() => $"HAPROXY-SHIM: Configuration hash has changed from [{deployedHash}] to [{configHash}].");
                 }
 
                 // Download the configuration archive from Consul and extract it to
                 // the new configuration directory (after ensuring that the directory
                 // has been cleared).
 
-                log.LogInfo(() => $"CONFIGURE: Retrieving configuration ZIP archive from Consul path [{configKey}].");
+                log.LogInfo(() => $"HAPROXY-SHIM: Retrieving configuration ZIP archive from Consul path [{configKey}].");
 
                 byte[] zipBytes;
 
@@ -197,19 +213,19 @@ namespace NeonProxy
                 catch (Exception e)
                 {
                     SetErrorTime();
-                    log.LogError($"CONFIGURE: Cannot retrieve [{configKey}] from Consul.", e);
+                    log.LogError($"HAPROXY-SHIM: Cannot retrieve [{configKey}] from Consul.", e);
                     return;
                 }
 
                 if (configHash == deployedHash)
                 {
-                    log.LogInfo(() => $"CONFIGURE: Configuration with [hash={configHash}] is already deployed.");
+                    log.LogInfo(() => $"HAPROXY-SHIM: Configuration with [hash={configHash}] is already deployed.");
                     return;
                 }
 
                 var zipPath = Path.Combine(configUpdateFolder, "haproxy.zip");
 
-                log.LogInfo(() => $"CONFIGURE: Extracting ZIP archive to [{configUpdateFolder}].");
+                log.LogInfo(() => $"HAPROXY-SHIM: Extracting ZIP archive to [{configUpdateFolder}].");
 
                 // Ensure that we have a fresh update folder.
 
@@ -256,7 +272,7 @@ namespace NeonProxy
 
                             if (isBridge)
                             {
-                                log.LogWarn(() => $"CONFIGURE: Bridge cannot process unexpected TLS certificate reference: {line}");
+                                log.LogWarn(() => $"HAPROXY-SHIM: Bridge cannot process unexpected TLS certificate reference: {line}");
                                 return;
                             }
 
@@ -299,12 +315,12 @@ namespace NeonProxy
                 {
                     case 0:
 
-                        log.LogInfo(() => "CONFIGURE: Configuration is OK.");
+                        log.LogInfo(() => "HAPROXY-SHIM: Configuration is OK.");
                         break;
 
                     case 2:
 
-                        log.LogInfo(() => "CONFIGURE: Configuration is valid but specifies no routes.");
+                        log.LogInfo(() => "HAPROXY-SHIM: Configuration is valid but specifies no routes.");
 
                         // Ensure that any existing HAProxy instance is stopped and that
                         // the configuration folders are cleared (for non-DebugMode) and
@@ -326,8 +342,8 @@ namespace NeonProxy
                     default:
 
                         SetErrorTime();
-                        log.LogCritical(() => "CONFIGURE: Invalid HAProxy configuration.");
-                        throw new Exception("CONFIGURE: Invalid HAProxy configuration.");
+                        log.LogCritical(() => "HAPROXY-SHIM: Invalid HAProxy configuration.");
+                        throw new Exception("HAPROXY-SHIM: Invalid HAProxy configuration.");
                 }
 
                 // Purge the contents of the [configFolder] and copy the contents
@@ -370,12 +386,12 @@ namespace NeonProxy
                         stopOption = $"-sf {haProxyProcess.Id}";
                     }
 
-                    log.LogInfo(() => $"HAProxy is restarting {stopType}.");
+                    log.LogInfo(() => $"HAPROXY-SHIM: Restarting HAProxy {stopType}.");
                 }
                 else
                 {
                     restart = false;
-                    log.LogInfo(() => $"CONFIGURE: HAProxy is starting.");
+                    log.LogInfo(() => $"HAPROXY-SHIM: Starting HAProxy.");
                 }
 
                 // Enable HAProxy debugging mode to get a better idea of why health
@@ -388,33 +404,46 @@ namespace NeonProxy
                     debugOption = "-d";
                 }
 
-                // Execute HAProxy.  Note that since the HAProxy configuration specifies
-                // daemon mode, the program we're running will actually fork a new instance
-                // of HAProxy.
-                //
-                // NOTE:
-                //
-                // We're assuming that the command will not return until it has completed
-                // starting or restarting the HAProxy instance that will actually be 
-                // doing all of the work.  If this wasn't true, [GetHAProxyProcess()]
-                // might return the wrong process if more than one are running.
+                // Execute HAProxy.  If we're not running in DEBUG mode then HAProxy
+                // will fork another HAProxy process that will handle the traffic and
+                // return.  For DEBUG mode, this HAProxy call will ignore daemon mode
+                // and run in the forground.  In that case, we need to fork HAProxy
+                // so we won't block here forever.
 
                 Environment.SetEnvironmentVariable("HAPROXY_CONFIG_FOLDER", configFolder);
 
-                response = NeonHelper.ExecuteCapture("haproxy",
-                    new object[]
-                    {
-                        "-f", configPath,
-                        stopOption,
-                        debugOption,
-                        "-V"
-                    });
-
-                if (response.ExitCode != 0)
+                if (!debugMode)
                 {
-                    SetErrorTime();
-                    log.LogError(() => $"CONFIGURE: HAProxy failure: {response.ErrorText}");
-                    return;
+                    // Regular mode.
+
+                    response = NeonHelper.ExecuteCapture("haproxy",
+                        new object[]
+                        {
+                            "-f", configPath,
+                            stopOption,
+                            debugOption,
+                            "-V"
+                        });
+
+                    if (response.ExitCode != 0)
+                    {
+                        SetErrorTime();
+                        log.LogError(() => $"HAPROXY-SHIM: HAProxy failure: {response.ErrorText}");
+                        return;
+                    }
+                }
+                else
+                {
+                    // DEBUG mode.
+
+                    NeonHelper.Fork("haproxy",
+                        new object[]
+                        {
+                            "-f", configPath,
+                            stopOption,
+                            debugOption,
+                            "-V"
+                        });
                 }
 
                 // Give HAProxy a chance to start/restart cleanly.
@@ -423,11 +452,11 @@ namespace NeonProxy
 
                 if (restart)
                 {
-                    log.LogInfo(() => "CONFIGURE: HAProxy has been updated.");
+                    log.LogInfo(() => "HAPROXY-SHIM: HAProxy has been updated.");
                 }
                 else
                 {
-                    log.LogInfo(() => "CONFIGURE: HAProxy has started.");
+                    log.LogInfo(() => "HAPROXY-SHIM: HAProxy has started.");
                 }
 
                 // Update the deployed hash so we won't try to update the same 
@@ -441,19 +470,19 @@ namespace NeonProxy
             }
             catch (OperationCanceledException)
             {
-                log.LogInfo(() => "CONFIGURE: Terminating");
+                log.LogInfo(() => "HAPROXY-SHIM: Terminating");
                 throw;
             }
             catch (Exception e)
             {
                 if (GetHAProxyProcess() == null)
                 {
-                    log.LogCritical("CONFIGURE: Terminating because we cannot launch HAProxy.", e);
+                    log.LogCritical("HAPROXY-SHIM: Terminating because we cannot launch HAProxy.", e);
                     Program.Exit(1);
                 }
                 else
                 {
-                    log.LogError("CONFIGURE: Unable to reconfigure HAProxy.  Using the old configuration as a fail-safe.", e);
+                    log.LogError("HAPROXY-SHIM: Unable to reconfigure HAProxy.  Using the old configuration as a fail-safe.", e);
                 }
 
                 SetErrorTime();

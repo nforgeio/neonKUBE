@@ -58,10 +58,10 @@ namespace NeonProxy
         // File system paths:
 
         private const string vaultCertPrefix    = "neon-secret/cert";
-        private const string secretsFolder      = "/dev/shm/secrets";
-        private const string configFolder       = secretsFolder + "/haproxy";
+        private const string tmpfsFolder        = "/dev/shm";
+        private const string configFolder       = tmpfsFolder + "/haproxy";
         private const string configPath         = configFolder + "/haproxy.cfg";
-        private const string configUpdateFolder = secretsFolder + "/haproxy-update";
+        private const string configUpdateFolder = tmpfsFolder + "/haproxy-update";
         private const string configNewPath      = configUpdateFolder + "/haproxy.cfg";
 
         // Service state:
@@ -90,7 +90,23 @@ namespace NeonProxy
             // Create process terminator to handle termination signals.
 
             terminator = new ProcessTerminator(log);
-            terminator.AddHandler(() => cts.Cancel());
+
+            terminator.AddHandler(
+                () =>
+                {
+                    // Cancel any operations in progress.
+
+                    cts.Cancel();
+
+                    // This gracefully closes the [proxyNotifyChannel] so HiveMQ will
+                    // promptly remove the associated queue.
+
+                    if (proxyNotifyChannel != null)
+                    {
+                        proxyNotifyChannel.Dispose();
+                        proxyNotifyChannel = null;
+                    }
+                });
 
             // Read the environment variables.
 
@@ -168,7 +184,7 @@ namespace NeonProxy
 
             // Ensure that the required directories exist.
 
-            Directory.CreateDirectory(secretsFolder);
+            Directory.CreateDirectory(tmpfsFolder);
             Directory.CreateDirectory(configFolder);
             Directory.CreateDirectory(configUpdateFolder);
 
@@ -275,7 +291,7 @@ namespace NeonProxy
 
                         await NeonHelper.WaitAllAsync(
                             ErrorPollerAsync(),
-                            HAProxyManager());
+                            HAProxShim());
 
                         terminator.ReadyToExit();
                     }

@@ -22,11 +22,11 @@ This image dynamically configures HAProxy by retrieving configuration data persi
 
 All you need to do is pass the **UPDATE_KEY** environment variable as the Consul key where the configuration ZIP archive will be saved.  Here's a logical overview of how this works:
 
-1. The key value is retrieved from Consul and persists it to `/dev/shm/secrets/haproxy/haproxy.zip`.  The container exits if the value can't be retrieved.
+1. The key value is retrieved from Consul and persists it to `/dev/shm/haproxy/haproxy.zip`.  The container exits if the value can't be retrieved.
 
-2. `/dev/shm/secrets/haproxy/haproxy.zip` is unzipped to the same directory.
+2. `/dev/shm/haproxy/haproxy.zip` is unzipped to the same directory.
 
-3. `/dev/shm/secrets/haproxy/haproxy.cfg` is validated. The container exits if it is not.
+3. `/dev/shm/haproxy/haproxy.cfg` is validated. The container exits if it is not.
 
 4. HAProxy is started using the configuration.
 
@@ -80,7 +80,7 @@ When deployed as a Docker service, this image can also be used to load secrets s
 &nbsp;&nbsp;&nbsp;&nbsp;`secret/certs/mycert2 mydir2 mycert2.pem`
 &nbsp;&nbsp;&nbsp;&nbsp;`...`
 
-When the `.certs` file is present, the container will retrieve the Vault keys and write them to `/dev/shm/secrets/haproxy` using the specified file names before validating the configuration and starting HAProxy.
+When the `.certs` file is present, the container will retrieve the Vault keys and write them to `/dev/shm/haproxy` using the specified file names before validating the configuration and starting HAProxy.
 
 Credentials are required to obtain TLS certificates Vault if the HTTPS routes are required.  These credentials will be passed as JSON using the **Docker secrets** feature and will be persisted within the container at `/run/secrets/${VAULT_CREDENTIALS}`, where **VAULT_CREDENTIALS** is an environment variable that identifies the secret file.
 
