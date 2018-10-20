@@ -134,6 +134,7 @@ if ($dotnet)
 	Publish "$image_root\\neon-hive-manager"
 	Publish "$image_root\\neon-dns"
 	Publish "$image_root\\neon-dns-mon"
+	Publish "$image_root\\neon-proxy"
 	Publish "$image_root\\neon-proxy-manager"
     Publish "$image_root\\neon-proxy-cache"
 	Publish "$image_root\\neon-secret-retriever"
@@ -144,7 +145,6 @@ if ($other)
 {
 	Publish "$image_root\\neon-log-collector"
 	Publish "$image_root\\neon-log-host"
-	Publish "$image_root\\neon-proxy"
 	Publish "$image_root\\neon-proxy-vault"
 	Publish "$image_root\\neon-hivemq"
 	Publish "$image_root\\couchbase-test"
