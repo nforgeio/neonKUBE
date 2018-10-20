@@ -104,7 +104,8 @@ namespace NeonProxyManager
 
                     cts.Cancel();
 
-                    // This gracefully closes the [proxyNotifyChannel].
+                    // This gracefully closes the [proxyNotifyChannel] so HiveMQ will
+                    // promptly remove the associated queue.
 
                     if (proxyNotifyChannel != null)
                     {
