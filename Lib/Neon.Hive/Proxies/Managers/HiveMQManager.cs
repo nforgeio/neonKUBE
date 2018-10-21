@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Diagnostics;
 using Neon.HiveMQ;
 using Neon.IO;
 using Neon.Net;
@@ -32,6 +33,11 @@ namespace Neon.Hive
     public sealed class HiveMQManager
     {
         //---------------------------------------------------------------------
+        // Static members
+
+        private static INeonLogger      log = LogManager.Default.GetLogger<HiveMQManager>();
+
+        //---------------------------------------------------------------------
         // Local types
 
         /// <summary>
@@ -39,9 +45,12 @@ namespace Neon.Hive
         /// </summary>
         public class InternalManager
         {
-            private object              syncLock = new object();
-            private HiveMQManager       parent;
-            private HiveBus             neonHiveBus;
+            private object                          syncLock = new object();
+            private HiveMQManager                   parent;
+            private HiveBus                         neonHiveBus;
+            private HiveMQSettings                  bootstrapSettings;
+            private EventHandler<HiveMQSettings>    bootstrapChangedEvent;
+            private Task                            bootstrapChangeDetector;
 
             /// <summary>
             /// Internal constructor.
@@ -80,12 +89,115 @@ namespace Neon.Hive
 
                 lock (syncLock)
                 {
-                    if (neonHiveBus == null)
+                    if (neonHiveBus != null)
                     {
-                        neonHiveBus = parent.GetNeonSettings(useBootstrap).ConnectHiveBus();
+                        return neonHiveBus;
                     }
 
+                    if (!useBootstrap)
+                    {
+                        return neonHiveBus = parent.GetNeonSettings(useBootstrap: false).ConnectHiveBus();
+                    }
+
+                    // Remember the bootstrap settings and then start a task that
+                    // periodically polls Consul for settings changes to raise the
+                    // [HiveMQBootstrapChanged] event when changes happen.
+
+                    bootstrapSettings       = parent.GetNeonSettings(useBootstrap);
+                    neonHiveBus             = bootstrapSettings.ConnectHiveBus();
+                    bootstrapChangeDetector = Task.Run(() => BootstrapChangeDetector());
+
                     return neonHiveBus;
+                }
+            }
+
+            /// <summary>
+            /// Polls Consul for changes to the <b>neon</b> virtual host HiveMQ 
+            /// bootstrap settings and raises the <see cref="HiveMQBootstrapChanged"/>
+            /// when this happens.
+            /// </summary>
+            /// <returns>The tracking <see cref="Task"/>.</returns>
+            private async Task BootstrapChangeDetector()
+            {
+                var pollInterval = TimeSpan.FromSeconds(120);
+
+                // Delay for a random period of time between [0..pollInterval].  This
+                // will help prevent Consul traffic spikes when services are started 
+                // at the same time.
+
+                await Task.Delay(NeonHelper.RandTimespan(pollInterval));
+
+                // This will spin forever once started when a NeonHiveBus using bootstrap
+                // settings is created above.  This polls Consul for changes to the [neon]
+                // HiveMQ virtual host settings stored in Consul.  We'll be performing two
+                // Consul lookups for each poll (one to get the [neon] vhost settings and 
+                // the other to obtain the bootstrap settings.
+                //
+                // When a settings change is detected, we'll first ensure that we've 
+                // establisted a new [neonHiveBus] connection using the new settings and 
+                // then we'll raise the change event.
+
+                while (true)
+                {
+                    try
+                    {
+                        var latestBootstrapSettngs = parent.GetNeonSettings(useBootstrap: true);
+
+                        if (!NeonHelper.JsonEquals(bootstrapSettings, latestBootstrapSettngs))
+                        {
+                            // The latest bootstrap settings don't match what we used to
+                            // connect the current [bus].
+
+                            lock (syncLock)
+                            {
+                                bootstrapSettings = latestBootstrapSettngs;
+                                neonHiveBus       = bootstrapSettings.ConnectHiveBus();
+                            }
+
+                            var handler = bootstrapChangedEvent;
+
+                            handler?.Invoke(this, latestBootstrapSettngs);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        log.LogError(e);
+                    }
+
+                    await Task.Delay(pollInterval);
+                }
+            }
+
+            /// <summary>
+            /// <para>
+            /// Raised when a change to the HiveMQ bootstrap settings is detected after
+            /// <see cref="NeonHiveBus(bool)"/> has been called with <c>useBootstrap: true</c>.
+            /// This is used by internal neonHIVE services to handle changes to the HiveMQ
+            /// cluster topology cleanly.  The event arguments will be the new
+            /// <see cref="HiveMQSettings"/>.
+            /// </para>
+            /// <note>
+            /// It may take a minute or two for the event to fire after the bootstrap setting
+            /// change actually happened because change detection polling happens on a
+            /// 120 second interval.
+            /// </note>
+            /// </summary>
+            public event EventHandler<HiveMQSettings> HiveMQBootstrapChanged
+            {
+                add
+                {
+                    lock (syncLock)
+                    {
+                        bootstrapChangedEvent += value;
+                    }
+                }
+
+                remove
+                {
+                    lock (syncLock)
+                    {
+                        bootstrapChangedEvent -= value;
+                    }
                 }
             }
 

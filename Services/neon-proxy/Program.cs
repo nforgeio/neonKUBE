@@ -75,8 +75,8 @@ namespace NeonProxy
         private static HiveProxy                hive;
         private static VaultClient              vault;
         private static ConsulClient             consul;
-        private static BroadcastChannel         proxyNotifyChannel;
         private static DateTime                 errorTimeUtc = DateTime.MinValue;
+        private static object                   syncLock     = new object();
         private static CancellationTokenSource  cts          = new CancellationTokenSource();
 
         /// <summary>
@@ -98,15 +98,6 @@ namespace NeonProxy
                     // Cancel any operations in progress.
 
                     cts.Cancel();
-
-                    // This gracefully closes the [proxyNotifyChannel] so HiveMQ will
-                    // promptly remove the associated queue.
-
-                    if (proxyNotifyChannel != null)
-                    {
-                        proxyNotifyChannel.Dispose();
-                        proxyNotifyChannel = null;
-                    }
                 });
 
             // Read the environment variables.
@@ -265,50 +256,29 @@ namespace NeonProxy
                 {
                     log.LogInfo(() => $"Connecting: {HiveMQChannels.ProxyNotify} channel");
 
-                    // NOTE:
-                    //
-                    // We're passing [useBootstrap=true] here so that the HiveMQ client will
-                    // connect directly to the HiveMQ cluster nodes as opposed to routing
-                    // traffic through the private load balancer.  This is necessary because
-                    // the load balancers rely on HiveMQ to broadcast update notifications.
-                    //
-                    // One consequence of this is that this service will need to be restarted
-                    // whenever HiveMQ instances are relocated to different hive hosts.
+                    // Verify that the required Consul keys exist or loop to wait until they
+                    // are created.  This will allow the service wait for pending hive setup
+                    // operations to be completed.
 
-                    // $todo(jeff.lill):
-                    //
-                    // This service will need to be restarted whenever future code provides
-                    // for relocating HiveMQ instances or when hive nodes hosting HiveMQ
-                    // are added or removed.
-                    //
-                    //      https://github.com/jefflill/NeonForge/issues/337
-
-                    using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true).Open())
+                    while (!await consul.KV.Exists(configKey))
                     {
-                        // Verify that the required Consul keys exist or loop to wait until they
-                        // are created.  This will allow the service wait for pending hive setup
-                        // operations to be completed.
-
-                        while (!await consul.KV.Exists(configKey))
-                        {
-                            log.LogWarn(() => $"Waiting for [{configKey}] key to be present in Consul.");
-                            await Task.Delay(TimeSpan.FromSeconds(5));
-                        }
-
-                        while (!await consul.KV.Exists(configHashKey))
-                        {
-                            log.LogWarn(() => $"Waiting for [{configHashKey}] key to be present in Consul.");
-                            await Task.Delay(TimeSpan.FromSeconds(5));
-                        }
-
-                        // Crank up the service tasks.
-
-                        await NeonHelper.WaitAllAsync(
-                            ErrorPollerAsync(),
-                            HAProxShim());
-
-                        terminator.ReadyToExit();
+                        log.LogWarn(() => $"Waiting for [{configKey}] key to be present in Consul.");
+                        await Task.Delay(TimeSpan.FromSeconds(5));
                     }
+
+                    while (!await consul.KV.Exists(configHashKey))
+                    {
+                        log.LogWarn(() => $"Waiting for [{configHashKey}] key to be present in Consul.");
+                        await Task.Delay(TimeSpan.FromSeconds(5));
+                    }
+
+                    // Crank up the service tasks.
+
+                    await NeonHelper.WaitAllAsync(
+                        ErrorPollerAsync(),
+                        HAProxShim());
+
+                    terminator.ReadyToExit();
                 }
             }
             catch (Exception e)

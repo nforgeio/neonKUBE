@@ -197,14 +197,21 @@ namespace NeonProxyManager
                             //
                             // One consequence of this is that this service will need to be restarted
                             // whenever HiveMQ instances are relocated to different hive hosts.
+                            // We're going to monitor for changes to the HiveMQ bootstrap settings
+                            // and gracefully terminate the process when this happens.  We're then
+                            // depending on Docker to restart the process so we'll be able to pick
+                            // up the change.
 
-                            // $todo(jeff.lill):
-                            //
-                            // This service will need to be restarted whenever future code provides
-                            // for relocating HiveMQ instances or when hive nodes hosting HiveMQ
-                            // are added or removed.
-                            //
-                            //      https://github.com/jefflill/NeonForge/issues/337
+                            hive.HiveMQ.Internal.HiveMQBootstrapChanged +=
+                                (s, a) =>
+                                {
+                                    log.LogInfo("HiveMQ bootstrap settings change detected.  Terminating service with [exitcode=-1] expecting that Docker will restart it.");
+
+                                    // Use ExitCode=-1 so that we'll restart even if the service/container
+                                    // was not configured with [restart=always].
+
+                                    terminator.Exit(-1);
+                                };
 
                             using (proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true).Open())
                             {

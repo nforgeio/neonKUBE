@@ -37,8 +37,10 @@ namespace NeonProxy
     {
         private const string NotDeployedHash = "NOT-DEPLOYED";
 
-        private static AsyncMutex       asyncLock    = new AsyncMutex();
-        private static string           deployedHash = NotDeployedHash;
+        private static AsyncMutex               asyncLock    = new AsyncMutex();
+        private static string                   deployedHash = NotDeployedHash;
+        private static BroadcastChannel         proxyNotifyChannel;
+        private static Task                     notifyHandlerTask;
 
         /// <summary>
         /// Retrieves the IDs of the currently running HAProxy processs.
@@ -143,14 +145,6 @@ namespace NeonProxy
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async static Task HAProxShim()
         {
-            // We need to use HiveMQ bootstrap settings to avoid chicken-and-the-egg
-            // dependency issues.
-
-            // $todo(jeff.lill):
-            //
-            // We'll need to restart the [neon-proxy] instances whenever the
-            // HiveMQ node topology changes.
-
             // This call ensures that HAProxy is started immediately.
 
             await ConfigureHAProxy();
@@ -158,37 +152,17 @@ namespace NeonProxy
             // Register a handler for [ProxyUpdateMessage] messages that determines
             // whether the message is meant for this service instance and handle it.
 
-            proxyNotifyChannel.ConsumeAsync<ProxyUpdateMessage>(
-                async message =>
+            StartNotifyHandler();
+
+            // Register an event handler that will be fired when the HiveMQ bootstrap
+            // settings change.  This will restart the [ProxyUpdateMessage] listener
+            // using the new settings.
+
+            hive.HiveMQ.Internal.HiveMQBootstrapChanged +=
+                (s, a) =>
                 {
-                    // We cannot process updates in parallel so we'll use an 
-                    // AsyncMutex to prevent this.
-
-                    using (await asyncLock.AcquireAsync())
-                    {
-                        var forThisInstance = false;
-
-                        if (isPublic)
-                        {
-                            forThisInstance = message.PublicProxy && !isBridge ||
-                                              message.PublicBridge && isBridge;
-                        }
-                        else
-                        {
-                            forThisInstance = message.PrivateProxy && !isBridge ||
-                                              message.PrivateBridge && isBridge;
-                        }
-
-                        if (!forThisInstance)
-                        {
-                            log.LogInfo(() => $"HAPROXY-SHIM: Received but ignorning: {message}");
-                            return;
-                        }
-
-                        log.LogInfo(() => $"HAPROXY-SHIM: Received: {message}");
-                        await ConfigureHAProxy();
-                    }
-                });
+                    StartNotifyHandler();
+                };
 
             // Spin quietly while waiting for a cancellation indicating that
             // the service is stopping.
@@ -200,11 +174,71 @@ namespace NeonProxy
                     async () =>
                     {
                         log.LogInfo(() => "HAPROXY-SHIM: Terminating");
+
+                        if (proxyNotifyChannel != null)
+                        {
+                            proxyNotifyChannel.Dispose();
+                            proxyNotifyChannel = null;
+                        }
+
                         await Task.CompletedTask;
                     },
                 cancellationTokenSource: cts);
 
             await task.Run();
+        }
+
+        /// <summary>
+        /// Starts or restarts the handler listening for the [ProxyUpdateMessage] messages.
+        /// </summary>
+        private static void StartNotifyHandler()
+        {
+            lock (syncLock)
+            {
+                // Use the latest settings to reconnect to the [proxy-notify] channel.
+
+                if (proxyNotifyChannel != null)
+                {
+                    proxyNotifyChannel.Dispose();
+                }
+
+                proxyNotifyChannel = hive.HiveMQ.Internal.GetProxyNotifyChannel(useBootstrap: true).Open();
+
+                // Register a handler for [ProxyUpdateMessage] messages that determines
+                // whether the message is meant for this service instance and handle it.
+
+                proxyNotifyChannel.ConsumeAsync<ProxyUpdateMessage>(
+                    async message =>
+                    {
+                        // We cannot process updates in parallel so we'll use an 
+                        // AsyncMutex to prevent this.
+
+                        using (await asyncLock.AcquireAsync())
+                        {
+                            var forThisInstance = false;
+
+                            if (isPublic)
+                            {
+                                forThisInstance = message.PublicProxy && !isBridge ||
+                                                    message.PublicBridge && isBridge;
+                            }
+                            else
+                            {
+                                forThisInstance = message.PrivateProxy && !isBridge ||
+                                                    message.PrivateBridge && isBridge;
+                            }
+
+                            if (!forThisInstance)
+                            {
+                                log.LogInfo(() => $"HAPROXY-SHIM: Received but ignorning: {message}");
+                                return;
+                            }
+
+                            log.LogInfo(() => $"HAPROXY-SHIM: Received: {message}");
+                            await ConfigureHAProxy();
+                        }
+                    });
+            }
         }
 
         /// <summary>
