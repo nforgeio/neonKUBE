@@ -16,7 +16,7 @@ This image is configured by the following environment variables:
 
 * `BACKEND_PORT` (*optional*) - Specifies the backend port (defaults to `80`).
 
-* `MEMORY_LIMIT` (*optional*) - Specifies the maxmimum amount of memory to be allocated to the cache.  This can simply be the number of bytes or you can append `K`, `M`, or `G` to specify kilobytes, megabytes, or gigabytes (defaults to `100M`).
+* `MEMORY_LIMIT` (*optional*) - Specifies the maximum RAM to be allocated to the cache.  This can simply be the number of bytes or you can append `K`, `M`, or `G` to specify kilobytes, megabytes, or gigabytes (defaults to `100M`).
 
 # Deployment
 
