@@ -37,20 +37,85 @@ namespace NeonProxy
     {
         private const string NotDeployedHash = "NOT-DEPLOYED";
 
-        private static string deployedHash = NotDeployedHash;
+        private static AsyncMutex       asyncLock    = new AsyncMutex();
+        private static string           deployedHash = NotDeployedHash;
 
         /// <summary>
-        /// Indicates whether HAProxy has been deployed.
+        /// Retrieves the IDs of the currently running HAProxy processs.
         /// </summary>
-        private static bool IsHAProxyDeployed => deployedHash != NotDeployedHash;
-
-        /// <summary>
-        /// Retrieves the HAProxy process.
-        /// </summary>
-        /// <returns>The <see cref="Process"/> or <c>null</c> if its not running.</returns>
-        private static Process GetHAProxyProcess()
+        /// <returns>The list of HAProxy processes.</returns>
+        private static List<int> GetHAProxyProcessIds()
         {
-            return Process.GetProcessesByName("haproxy").SingleOrDefault();
+            var processes = Process.GetProcessesByName("haproxy").ToList();
+            var ids       = new List<int>();
+
+            foreach (var process in processes)
+            {
+                ids.Add(process.Id);
+                process.Dispose();
+            }
+
+            return ids;
+        }
+
+        /// <summary>
+        /// Kills the oldest process.
+        /// </summary>
+        /// <param name="processIDs">The list of processes IDs.</param>
+        private static void KillOldestProcess(List<int> processIDs)
+        {
+            if (processIDs.Count == 0)
+            {
+                return;
+            }
+
+            var processes = new List<Process>();
+
+            try
+            {
+                foreach (var processId in processIDs)
+                {
+                    try
+                    {
+                        processes.Add(Process.GetProcessById(processId));
+                    }
+                    catch
+                    {
+                        // Intentionally ignoring processes that no longer exist.
+                    }
+                }
+
+                processes.OrderBy(p => p.StartTime).First().Kill();
+            }
+            finally
+            {
+                foreach (var process in processes)
+                {
+                    process.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Kills a process.
+        /// </summary>
+        /// <param name="id">The process ID.</param>
+        private static void KillProcess(int id)
+        {
+            try
+            {
+                var process = Process.GetProcessById(id);
+
+                if (process != null)
+                {
+                    process.Kill();
+                    process.Dispose();
+                }
+            }
+            catch
+            {
+                // Intentionally ignored.
+            }
         }
 
         /// <summary>
@@ -88,7 +153,7 @@ namespace NeonProxy
 
             // This call ensures that HAProxy is started immediately.
 
-            await ConfigureHAProxy(initialDeploy: true);
+            await ConfigureHAProxy();
 
             // Register a handler for [ProxyUpdateMessage] messages that determines
             // whether the message is meant for this service instance and handle it.
@@ -96,30 +161,33 @@ namespace NeonProxy
             proxyNotifyChannel.ConsumeAsync<ProxyUpdateMessage>(
                 async message =>
                 {
-                    // Determine whether the broadcast notification applies to
-                    // this instance.
+                    // We cannot process updates in parallel so we'll use an 
+                    // AsyncMutex to prevent this.
 
-                    var forThisInstance = false;
-
-                    if (isPublic)
+                    using (await asyncLock.AcquireAsync())
                     {
-                        forThisInstance = message.PublicProxy && !isBridge ||
-                                          message.PublicBridge && isBridge;
-                    }
-                    else
-                    {
-                        forThisInstance = message.PrivateProxy && !isBridge ||
-                                          message.PrivateBridge && isBridge;
-                    }
+                        var forThisInstance = false;
 
-                    if (!forThisInstance)
-                    {
-                        log.LogInfo(() => $"HAPROXY-SHIM: Received but ignorning: {message}");
-                        return;
-                    }
+                        if (isPublic)
+                        {
+                            forThisInstance = message.PublicProxy && !isBridge ||
+                                              message.PublicBridge && isBridge;
+                        }
+                        else
+                        {
+                            forThisInstance = message.PrivateProxy && !isBridge ||
+                                              message.PrivateBridge && isBridge;
+                        }
 
-                    log.LogInfo(() => $"HAPROXY-SHIM: Received: {message}");
-                    await ConfigureHAProxy();
+                        if (!forThisInstance)
+                        {
+                            log.LogInfo(() => $"HAPROXY-SHIM: Received but ignorning: {message}");
+                            return;
+                        }
+
+                        log.LogInfo(() => $"HAPROXY-SHIM: Received: {message}");
+                        await ConfigureHAProxy();
+                    }
                 });
 
             // Spin quietly while waiting for a cancellation indicating that
@@ -142,24 +210,12 @@ namespace NeonProxy
         /// <summary>
         /// Configures HAProxy based on the current load balancer configuration.
         /// </summary>
-        /// <param name="initialDeploy">Pass <c>true</c> to indicate that this is the initial HAProxy deployment.</param>
         /// <remarks>
         /// This method will terminate the service if HAProxy could not be started
         /// for the first call.
         /// </remarks>
-        public async static Task ConfigureHAProxy(bool initialDeploy = false)
+        public async static Task ConfigureHAProxy()
         {
-            if (!initialDeploy && !IsHAProxyDeployed)
-            {
-                // If this isn't the initial HAProxy call and HAProxy isn't already
-                // deployed then we're going to ignore this method call because
-                // we're presumably already in the process of doing the initial
-                // deploy.  This will prevent a [proxy-notify] message from interferring
-                // with the initial deployment.
-
-                return;
-            }
-
             try
             {
                 // Retrieve the configuration HASH and compare that with what 
@@ -290,10 +346,6 @@ namespace NeonProxy
                     }
                 }
 
-                // Get the running HAProxy process (if there is one).
-
-                var haProxyProcess = GetHAProxyProcess();
-
                 // Verify the configuration.  Note that HAProxy will return a
                 // 0 error code if the configuration is OK and specifies at
                 // least one route.  It will return 2 if the configuration is
@@ -322,20 +374,19 @@ namespace NeonProxy
 
                         log.LogInfo(() => "HAPROXY-SHIM: Configuration is valid but specifies no routes.");
 
-                        // Ensure that any existing HAProxy instance is stopped and that
-                        // the configuration folders are cleared (for non-DebugMode) and
+                        // Ensure that any existing HAProxy instances are stopped and that
+                        // the configuration folders are cleared (for non-DEBUG mode) and
                         // then return so we won't try to spin up another HAProxy.
 
-                        if (haProxyProcess != null)
+                        foreach (var processId in GetHAProxyProcessIds())
                         {
-                            haProxyProcess.Dispose();
-                            haProxyProcess = null;
+                            KillProcess(processId);
+                        }
 
-                            if (!debugMode)
-                            {
-                                NeonHelper.DeleteFolder(configFolder);
-                                NeonHelper.DeleteFolder(configUpdateFolder);
-                            }
+                        if (!debugMode)
+                        {
+                            NeonHelper.DeleteFolder(configFolder);
+                            NeonHelper.DeleteFolder(configUpdateFolder);
                         }
                         return;
 
@@ -359,31 +410,47 @@ namespace NeonProxy
                 // which means that HAProxy will try hard to maintain existing connections
                 // as it reloads its config.  The presence of a [.hardstop] file in the
                 // configuration folder will enable a hard stop.
+                //
+                // Note that there may actually be more then one HAProxy process running.
+                // One will be actively handling new connections and the rest will be
+                // waiting gracefully for existing connections to be closed before they
+                // terminate themselves.
 
                 // $todo(jeff.lill):
                 //
                 // I don't believe that [neon-proxy-manager] ever generates a
-                // [.hardstop] file.  This was a future feature idea.  This would
+                // [.hardstop] file.  This was an idea for the future.  This would
                 // probably be better replaced by a boolean [HardStop] oroperty
                 // passed with the notification message.
 
-                var stopType   = string.Empty;
-                var stopOption = string.Empty;
-                var restart    = false;
+                var haProxyProcessIds = GetHAProxyProcessIds();
+                var stopType          = string.Empty;
+                var stopOptions       = new List<string>();
+                var restart           = false;
 
-                if (haProxyProcess != null)
+                if (haProxyProcessIds.Count > 0)
                 {
                     restart = true;
 
                     if (File.Exists(Path.Combine(configFolder, ".hardstop")))
                     {
                         stopType   = "(hard stop)";
-                        stopOption = $"-st {haProxyProcess.Id}";
+
+                        stopOptions.Add("-st");
+                        foreach (var processId in haProxyProcessIds)
+                        {
+                            stopOptions.Add(processId.ToString());
+                        }
                     }
                     else
                     {
                         stopType   = "(soft stop)";
-                        stopOption = $"-sf {haProxyProcess.Id}";
+
+                        stopOptions.Add("-sf");
+                        foreach (var processId in haProxyProcessIds)
+                        {
+                            stopOptions.Add(processId.ToString());
+                        }
                     }
 
                     log.LogInfo(() => $"HAPROXY-SHIM: Restarting HAProxy {stopType}.");
@@ -420,7 +487,7 @@ namespace NeonProxy
                         new object[]
                         {
                             "-f", configPath,
-                            stopOption,
+                            stopOptions,
                             debugOption,
                             "-V"
                         });
@@ -436,20 +503,19 @@ namespace NeonProxy
                 {
                     // DEBUG mode steps:
                     //
-                    //      1: Kill any existing HAProxy process.
+                    //      1: Kill any existing HAProxy processes.
                     //      2: Fork the new one to pick up the latest config.
 
-                    if (haProxyProcess != null)
+                    foreach (var processId in haProxyProcessIds)
                     {
-                        haProxyProcess.Kill();
-                        haProxyProcess = null;
+                        KillProcess(processId);
                     }
 
                     NeonHelper.Fork("haproxy",
                         new object[]
                         {
                             "-f", configPath,
-                            stopOption,
+                            stopOptions,
                             debugOption,
                             "-V"
                         });
@@ -473,8 +539,22 @@ namespace NeonProxy
 
                 deployedHash = configHash;
 
+                // Ensure that we're not exceeding the limit for HAProxy processes.
+
+                if (maxHAProxyCount > 0)
+                {
+                    var newHaProxyProcessIds = GetHAProxyProcessIds();
+
+                    if (newHaProxyProcessIds.Count > maxHAProxyCount)
+                    {
+                        log.LogWarn(() => $"HAProxy process count [{newHaProxyProcessIds}] exceeds [MAX_HAPROXY_COUNT={maxHAProxyCount}] so we're killing the oldest inactive instance.");
+                        KillOldestProcess(haProxyProcessIds);
+                    }
+                }
+
                 // HAProxy was updated successfully so we can reset the error time
                 // so to ensure that periodic error reporting will stop.
+
                 ResetErrorTime();
             }
             catch (OperationCanceledException)
@@ -484,7 +564,7 @@ namespace NeonProxy
             }
             catch (Exception e)
             {
-                if (GetHAProxyProcess() == null)
+                if (GetHAProxyProcessIds().Count == 0)
                 {
                     log.LogCritical("HAPROXY-SHIM: Terminating because we cannot launch HAProxy.", e);
                     Program.Exit(1);

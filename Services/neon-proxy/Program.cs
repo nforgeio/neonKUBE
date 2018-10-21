@@ -54,6 +54,7 @@ namespace NeonProxy
         private static TimeSpan                 warnInterval;
         private static TimeSpan                 startDelay;
         private static bool                     debugMode;
+        private static int                      maxHAProxyCount;
 
         // File system paths:
 
@@ -172,6 +173,18 @@ namespace NeonProxy
                 startDelay = TimeSpan.FromSeconds(startSecondsValue);
             }
 
+            var maxHAProxyCountString = Environment.GetEnvironmentVariable("MAX_HAPROXY_COUNT");
+
+            if (!int.TryParse(maxHAProxyCountString, out maxHAProxyCount))
+            {
+                maxHAProxyCount = 10;
+            }
+
+            if (maxHAProxyCount < 0)
+            {
+                maxHAProxyCount = 0;
+            }
+
             debugMode = "true".Equals(Environment.GetEnvironmentVariable("DEBUG"), StringComparison.InvariantCultureIgnoreCase);
 
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
@@ -180,6 +193,7 @@ namespace NeonProxy
             log.LogInfo(() => $"VAULT_CREDENTIALS={vaultCredentialsName}");
             log.LogInfo(() => $"WARN_SECONDS={warnInterval}");
             log.LogInfo(() => $"START_SECONDS={startDelay}");
+            log.LogInfo(() => $"MAX_HAPROXY_COUNT={maxHAProxyCount}");
             log.LogInfo(() => $"DEBUG={debugMode}");
 
             // Ensure that the required directories exist.
@@ -335,14 +349,24 @@ namespace NeonProxy
         }
 
         /// <summary>
-        /// Exits the service with an exit code.
+        /// Exits the service with an exit code.  This method defaults to using
+        /// the <see cref="ProcessTerminator"/> to gracefully exit the program.
+        /// This can be overridden by passing <paramref name="force"/><c>=true</c>.
         /// </summary>
         /// <param name="exitCode">The exit code.</param>
-        public static void Exit(int exitCode)
+        /// <param name="force">Forces an immediate ungraceful exit.</param>
+        public static void Exit(int exitCode, bool force = false)
         {
             log.LogInfo(() => $"Exiting: [{serviceName}]");
-            terminator.ReadyToExit();
-            Environment.Exit(exitCode);
+
+            if (terminator == null)
+            {
+                Environment.Exit(exitCode);
+            }
+            else
+            {
+                terminator.Exit(exitCode);
+            }
         }
     }
 }

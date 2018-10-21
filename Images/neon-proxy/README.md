@@ -46,6 +46,8 @@ All you need to do is pass the **UPDATE_KEY** environment variable as the Consul
 
 * `LOG_LEVEL` (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
+* `MAX_HAPROXY_COUNT` (*optional*) - the maximum number of HAProxy instances allowed to run in parallel.  When this number is exceeded, the oldest HAProxy instance will be terminated.  This defaults to **10**.  Specify **0** for unlimited.
+
 * `DEBUG` (*optional*) - set to `true` to enable debug mode.  In this mode, the service will not delete the proxy configuration and certificate after HAProxy loads them into memory so these can be examined for debugging purposes.  HAProxy will also be started in debug mode so that it will emit extensive activity information to standard output.
 
   **WARNING:** Never enable DEBUG for production hives other than temporarily for debugging.
@@ -120,8 +122,8 @@ docker service create \
     --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-conf \
     --env VAULT_CREDENTIALS=neon-proxy-public-credentials \
     --env LOG_LEVEL=INFO \
+    --env MAX_HAPROXY_INSTANCES=10 \
     --env DEBUG=false \
-    --env VAULT_SKIP_VERIFY=true \
     --publish 80:80 \
     --publish 443:443 \
     --publish 5100-5299:5100-5299 \
@@ -142,8 +144,8 @@ docker service create \
     --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-conf \
     --env VAULT_CREDENTIALS=neon-proxy-private-credentials \
     --env LOG_LEVEL=INFO \
+    --env MAX_HAPROXY_INSTANCES=10 \
     --env DEBUG=false \
-    --env VAULT_SKIP_VERIFY=true \
     --publish 5300-5499:5300-5499 \
     --secret neon-proxy-public-credentials \
     --secret neon-hivemq-neon \
