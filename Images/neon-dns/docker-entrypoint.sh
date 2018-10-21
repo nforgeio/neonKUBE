@@ -11,7 +11,7 @@ PATH=${PATH}:/
 # Load the Docker host node environment.
 
 if [ ! -f /etc/neon/host-env ] ; then
-    . log-critical.sh "The [/etc/neon/host-env] file does not exist.  This file must have been generated on the Docker host by [neon-cli] during hive setup and must be mounted to the container."
+    . log-critical.sh "The [/etc/neon/host-env] file does not exist.  This file must be present on the hive host be mounted to the container."
     exit 1
 fi
 
