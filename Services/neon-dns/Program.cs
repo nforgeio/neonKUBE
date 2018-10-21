@@ -185,14 +185,24 @@ $@"# PowerDNS Recursor authoritatively answers for [*.HIVENAME.nhive.io] hostnam
         }
 
         /// <summary>
-        /// Exits the service with an exit code.
+        /// Exits the service with an exit code.  This method defaults to using
+        /// the <see cref="ProcessTerminator"/> to gracefully exit the program.
+        /// This can be overridden by passing <paramref name="force"/><c>=true</c>.
         /// </summary>
         /// <param name="exitCode">The exit code.</param>
-        public static void Exit(int exitCode)
+        /// <param name="force">Forces an immediate ungraceful exit.</param>
+        public static void Exit(int exitCode, bool force = false)
         {
             log.LogInfo(() => $"Exiting: [{serviceName}]");
-            terminator.ReadyToExit();
-            Environment.Exit(exitCode);
+
+            if (terminator == null)
+            {
+                Environment.Exit(exitCode);
+            }
+            else
+            {
+                terminator.Exit(exitCode);
+            }
         }
 
         /// <summary>
