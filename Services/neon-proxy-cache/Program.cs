@@ -75,7 +75,6 @@ namespace NeonProxyCache
         private static bool                     isPublic = false;
         private static INeonLogger              log;
         private static HiveProxy                hive;
-        private static VaultClient              vault;
         private static ConsulClient             consul;
         private static DateTime                 errorTimeUtc = DateTime.MinValue;
         private static object                   syncLock     = new object();

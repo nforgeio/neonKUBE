@@ -135,8 +135,8 @@ if ($dotnet)
 	Publish "$image_root\\neon-dns"
 	Publish "$image_root\\neon-dns-mon"
 	Publish "$image_root\\neon-proxy"
-	Publish "$image_root\\neon-proxy-manager"
     Publish "$image_root\\neon-proxy-cache"
+	Publish "$image_root\\neon-proxy-manager"
 	Publish "$image_root\\neon-secret-retriever"
     Publish "$image_root\\neon-vegomatic"
 }
