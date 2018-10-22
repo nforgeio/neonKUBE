@@ -32,20 +32,16 @@ using Neon.Time;
 namespace NeonProxy
 {
     /// <summary>
-    /// <para>
     /// Implements the <b>neon-proxy-public</b> and <b>neon-proxy-private</b> services by launching and then managing 
     /// an HAProxy subprocess.  This  service listens for HiveMQ notifications from <b>neon-proxy-manager</b>, indicating 
     /// that the HAProxy/Varnish may have changed and that the Varnish process should be notified of the changes.  This 
     /// is built into the <a href="https://hub.docker.com/r/nhive/neon-proxy/">nhive/neon-proxy</a> image and will run
     /// as the main container process.
-    /// </para>
-    /// <para>
-    /// This service handles cache warming by perodically retrieving designated pages and files from the target services
-    /// and the service also handles HiveMQ notifications commanding that items be purged from the caches.
-    /// </para>
     /// </summary>
     public static partial class Program
     {
+        private const string vaultCertPrefix    = "neon-secret/cert";
+
         // Environment variables:
 
         private static string                   configKey;
@@ -58,12 +54,11 @@ namespace NeonProxy
 
         // File system paths:
 
-        private const string vaultCertPrefix    = "neon-secret/cert";
         private const string tmpfsFolder        = "/dev/shm";
         private const string configFolder       = tmpfsFolder + "/haproxy";
         private const string configPath         = configFolder + "/haproxy.cfg";
         private const string configUpdateFolder = tmpfsFolder + "/haproxy-update";
-        private const string configNewPath      = configUpdateFolder + "/haproxy.cfg";
+        private const string configUpdatePath   = configUpdateFolder + "/haproxy.cfg";
 
         // Service state:
 

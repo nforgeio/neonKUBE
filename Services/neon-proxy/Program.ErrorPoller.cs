@@ -36,8 +36,8 @@ namespace NeonProxy
         /// <summary>
         /// Handles the periodic logging of error messages when <see cref="errorTimeUtc"/> is set
         /// to something greater than <see cref="DateTime.MinValue"/>, indicating that the service
-        /// has been unable to update the HAProxy configuration and is currently running with out-of-date
-        /// settings.
+        /// has been unable to update the HAProxy configuration and is currently running with 
+        /// out-of-date settings.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task ErrorPollerAsync()

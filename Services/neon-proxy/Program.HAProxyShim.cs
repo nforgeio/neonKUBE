@@ -40,10 +40,9 @@ namespace NeonProxy
         private static AsyncMutex               asyncLock    = new AsyncMutex();
         private static string                   deployedHash = NotDeployedHash;
         private static BroadcastChannel         proxyNotifyChannel;
-        private static Task                     notifyHandlerTask;
 
         /// <summary>
-        /// Retrieves the IDs of the currently running HAProxy processs.
+        /// Retrieves the IDs of the currently running HAProxy process IDs.
         /// </summary>
         /// <returns>The list of HAProxy processes.</returns>
         private static List<int> GetHAProxyProcessIds()
@@ -61,7 +60,7 @@ namespace NeonProxy
         }
 
         /// <summary>
-        /// Kills the oldest process.
+        /// Kills the oldest process from a list of process IDs.
         /// </summary>
         /// <param name="processIDs">The list of processes IDs.</param>
         private static void KillOldestProcess(List<int> processIDs)
@@ -99,7 +98,7 @@ namespace NeonProxy
         }
 
         /// <summary>
-        /// Kills a process.
+        /// Kills a process based on its process ID.
         /// </summary>
         /// <param name="id">The process ID.</param>
         private static void KillProcess(int id)
@@ -323,15 +322,15 @@ namespace NeonProxy
 
                 Directory.CreateDirectory(configUpdateFolder);
 
+                // Unzip the configuration archive to the update folder.
+
                 File.WriteAllBytes(zipPath, zipBytes);
 
                 var response = NeonHelper.ExecuteCapture("unzip",
                     new object[]
                     {
-                        "-o",
-                        zipPath,
-                        "-d",
-                        configUpdateFolder
+                        "-o", zipPath,
+                        "-d", configUpdateFolder
                     });
 
                 response.EnsureSuccess();
@@ -394,7 +393,9 @@ namespace NeonProxy
                 response = NeonHelper.ExecuteCapture("haproxy",
                     new object[]
                     {
-                        "-c", "-q", "-f", configUpdateFolder
+                        "-c",
+                        "-q",
+                        "-f", configUpdateFolder
                     });
 
                 switch (response.ExitCode)
@@ -427,12 +428,25 @@ namespace NeonProxy
                     default:
 
                         SetErrorTime();
-                        log.LogCritical(() => "HAPROXY-SHIM: Invalid HAProxy configuration.");
-                        throw new Exception("HAPROXY-SHIM: Invalid HAProxy configuration.");
+
+                        // If HAProxy is running then we'll let it continue using
+                        // the out-of-date configuration as a fail-safe.  If it's not
+                        // running, we're going to terminate service.
+
+                        if (!GetHAProxyProcessIds().IsEmpty())
+                        {
+                            log.LogError(() => "HAPROXY-SHIM: Invalid HAProxy configuration.  Using out-of-date configuration as a fail-safe.");
+                        }
+                        else
+                        {
+                            log.LogCritical(() => "HAPROXY-SHIM: Invalid HAProxy configuration.  Terminating service.");
+                            Program.Exit(1);
+                        }
+                        break;
                 }
 
                 // Purge the contents of the [configFolder] and copy the contents
-                // of [configNewFolder] into it.
+                // of [configUpdateolder] into it.
 
                 NeonHelper.DeleteFolder(configFolder);
                 Directory.CreateDirectory(configFolder);
@@ -612,7 +626,7 @@ namespace NeonProxy
             }
             finally
             {
-                // When DEBUG mode is not disabled, we're going to clear the
+                // When DEBUG mode is not enabled, we're going to clear the
                 // both the old and new configuration folders so we don't leave
                 // secrets like TLS private keys lying around in a file system.
                 //
