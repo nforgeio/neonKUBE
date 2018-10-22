@@ -12,11 +12,17 @@ This image integrates the high performance caching HTTP proxy (Varnish Cache)[ht
 
 This image is configured by the following environment variables:
 
-* `BACKEND_SERVER` (*required*) - Specifies the FQDN or IP address of the website being proxied.  This will typically name a Docker service running on the same network as the proxy.
+* `CONFIG_KEY` (*required*) - Consul key holding the HAProxy ZIP archive configuration.
 
-* `BACKEND_PORT` (*optional*) - Specifies the backend port (defaults to `80`).
+* `CONFIG_HASH_KEY` (*required*) - Consul key holding MD5 hash of the configuration used when polling for changes.
 
-* `MEMORY_LIMIT` (*optional*) - Specifies the maximum RAM to be allocated to the cache.  This can simply be the number of bytes or you can append `K`, `M`, or `G` to specify kilobytes, megabytes, or gigabytes (defaults to `100M`).
+* `MEMORY_LIMIT` (*optional*) - Specifies the maximum RAM to be allocated to the cache.  This can simply be the number of bytes or you can append `K`, `M`, or `G` to specify kilobytes, megabytes, or gigabytes (defaults to `100M`).  Note that this service will allocate a minimum of 25MB RAM for the cache.
+
+* `WARN_SECONDS` (*optional*) - seconds between logging warning while HAProxy is running with an out-of-date configuration.  This defaults to 300 (5 minutes).
+
+* `LOG_LEVEL` (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
+
+* `DEBUG` (*optional*) - set to `true` to enable debug mode.  In this mode, the service will not delete the proxy configuration and certificate after HAProxy loads them into memory so these can be examined for debugging purposes.  HAProxy will also be started in debug mode so that it will emit extensive activity information to standard output.
 
 # Deployment
 

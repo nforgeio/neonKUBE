@@ -201,43 +201,20 @@ namespace Neon.Hive
         /// <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
         /// <param name="propertyName">The size property name (used for error reporting).</param>
         /// <returns>The size converted into a <c>long</c>.</returns>
+        /// <exception cref="HiveDefinitionException">Thrown if the size is not valid.</exception>
         public static long ValidateSize(string sizeValue, Type optionsType, string propertyName)
         {
-            long size;
-
             if (string.IsNullOrEmpty(sizeValue))
             {
                 throw new HiveDefinitionException($"[{optionsType.Name}.{propertyName}] cannot be NULL or empty.");
             }
 
-            if (sizeValue.EndsWith("MB", StringComparison.InvariantCultureIgnoreCase))
+            if (!NeonHelper.TryParseCount(sizeValue, out var size))
             {
-                var count = sizeValue.Substring(0, sizeValue.Length - 2);
-
-                if (!long.TryParse(count, out size) || size <= 0)
-                {
-                    throw new HiveDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] is not valid.");
-                }
-
-                size *= NeonHelper.Mega;
-            }
-            else if (sizeValue.EndsWith("GB", StringComparison.InvariantCultureIgnoreCase))
-            {
-                var count = sizeValue.Substring(0, sizeValue.Length - 2);
-
-                if (!long.TryParse(count, out size) || size <= 0)
-                {
-                    throw new HiveDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] is not valid.");
-                }
-
-                size *= NeonHelper.Giga;
-            }
-            else if (!long.TryParse(sizeValue, out size) || size <= 0)
-            {
-                throw new HiveDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] is not valid.");
+                throw new HiveDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] cannot be parsed.");
             }
 
-            return size;
+            return (long)size;
         }
 
         //---------------------------------------------------------------------
