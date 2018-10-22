@@ -67,6 +67,8 @@ namespace NeonCli
             controller.AddGlobalStep(GetStepLabel("hivemq-settings"), () => UpdateHiveMQSettings());
             controller.AddGlobalStep(GetStepLabel("hivemq cluster name"), () => UpdateHiveMQClusterName());
             controller.AddGlobalStep(GetStepLabel("rename log-retention-days"), () => UpdateLogRetentionDays());
+            controller.AddGlobalStep(GetStepLabel("proxy cache services"), () => UpdateProxyCacheServices());
+
             controller.AddStep(GetStepLabel("edit proxy bridge scripts"), (node, stepDelay) => UpdateProxyBridgeScripts(node));
         }
 
@@ -196,8 +198,8 @@ WantedBy=docker.service
 
             firstManager.Status = "reading hivemq secrets";
 
-            var appSettings      = (HiveMQSettings)null;
-            var neonSettings     = (HiveMQSettings)null;
+            var appSettings = (HiveMQSettings)null;
+            var neonSettings = (HiveMQSettings)null;
             var sysadminSettings = (HiveMQSettings)null;
 
             NeonHelper.WaitForParallel(
@@ -269,8 +271,8 @@ WantedBy=docker.service
 
             var ampqRule = new LoadBalancerTcpRule()
             {
-                Name     = "neon-hivemq-ampq",
-                System   = true,
+                Name = "neon-hivemq-ampq",
+                System = true,
                 Resolver = null
             };
 
@@ -283,9 +285,9 @@ WantedBy=docker.service
             ampqRule.Backends.Add(
                 new LoadBalancerTcpBackend()
                 {
-                    Group      = HiveHostGroups.HiveMQ,
+                    Group = HiveHostGroups.HiveMQ,
                     GroupLimit = 5,
-                    Port       = HiveHostPorts.HiveMQAMPQ
+                    Port = HiveHostPorts.HiveMQAMPQ
                 });
 
             Hive.PrivateLoadBalancer.SetRule(ampqRule);
@@ -338,6 +340,91 @@ WantedBy=docker.service
                 // Save the new variable.
 
                 consul.KV.PutString(newPath, value).Wait();
+            }
+        }
+
+        /// <summary>
+        /// Deploys the <b>neon-proxy-public-cache</b> and <b>neon-proxy-private-cache</b>
+        /// services if they're not already running.
+        /// </summary>
+        private void UpdateProxyCacheServices()
+        {
+            var firstManager = Hive.FirstManager;
+
+            var response = firstManager.SudoCommand("docker service inspect neon-proxy-public-cache", RunOptions.None);
+
+            if (response.ExitCode != 0)
+            {
+                // Deploy: neon-proxy-public-cache
+
+                var publicCacheConstraintArgs = new List<string>();
+                var publicCacheReplicaArgs    = new List<string>();
+
+                if (Hive.Definition.Proxy.PublicCacheReplicas >= Hive.Definition.Workers.Count())
+                {
+                    publicCacheConstraintArgs.Add("--constraint");
+                    publicCacheConstraintArgs.Add("node.role==worker");
+                }
+
+                publicCacheReplicaArgs.Add("--replicas");
+                publicCacheReplicaArgs.Add($"{Hive.Definition.Proxy.PublicCacheReplicas}");
+
+                ServiceHelper.StartService(Hive, "neon-proxy-public-cache", Hive.Definition.Image.ProxyCache,
+                    new CommandBundle(
+                        "docker service create",
+                        "--name", "neon-proxy-public-cache",
+                        "--detach=false",
+                        "--mount", "type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true",
+                        "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
+                        "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-conf",
+                        "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-hash",
+                        "--env", "WARN_SECONDS=300",
+                        "--env", $"MEMORY-LIMIT={Hive.Definition.Proxy.PublicCacheSize}",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--env", "DEBUG=false",
+                        "--secret", "neon-proxy-public-credentials",
+                        publicCacheConstraintArgs,
+                        publicCacheReplicaArgs,
+                        "--restart-delay", Hive.Definition.Docker.RestartDelay,
+                        "--network", HiveConst.PublicNetwork,
+                        ServiceHelper.ImagePlaceholderArg));
+            }
+
+            response = firstManager.SudoCommand("docker service inspect neon-proxy-private-cache", RunOptions.None);
+
+            if (response.ExitCode != 0)
+            {
+                var privateCacheConstraintArgs = new List<string>();
+                var privateCacheReplicaArgs    = new List<string>();
+
+                if (Hive.Definition.Proxy.PrivateCacheReplicas >= Hive.Definition.Workers.Count())
+                {
+                    privateCacheConstraintArgs.Add("--constraint");
+                    privateCacheConstraintArgs.Add("node.role==worker");
+                }
+
+                privateCacheReplicaArgs.Add("--replicas");
+                privateCacheReplicaArgs.Add($"{Hive.Definition.Proxy.PrivateCacheReplicas}");
+
+                ServiceHelper.StartService(Hive, "neon-proxy-private-cache", Hive.Definition.Image.ProxyCache,
+                    new CommandBundle(
+                        "docker service create",
+                        "--name", "neon-proxy-private-cache",
+                        "--detach=false",
+                        "--mount", "type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true",
+                        "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
+                        "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-conf",
+                        "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-hash",
+                        "--env", "WARN_SECONDS=300",
+                        "--env", $"MEMORY-LIMIT={Hive.Definition.Proxy.PrivateCacheSize}",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--env", "DEBUG=false",
+                        "--secret", "neon-proxy-private-credentials",
+                        privateCacheConstraintArgs,
+                        privateCacheReplicaArgs,
+                        "--restart-delay", Hive.Definition.Docker.RestartDelay,
+                        "--network", HiveConst.PrivateNetwork,
+                        ServiceHelper.ImagePlaceholderArg));
             }
         }
 

@@ -49,8 +49,8 @@ namespace NeonProxyCache
         private const string DefMemoryLimitString = "100MB";
         private const long DefMemoryLimit         = 100 * NeonHelper.Mega;
 
-        private const string MinMemoryLimitString = "25MMB";
-        private const long MinMemoryLimit         = 25 * NeonHelper.Mega;
+        private const string MinMemoryLimitString = "50MB";
+        private const long MinMemoryLimit         = 50 * NeonHelper.Mega;
 
         // Environment variables:
 

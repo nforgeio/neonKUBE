@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServicesBase.cs
+// FILE:	    ServiceHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -32,15 +32,14 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Base class for service/container deployment class implementations that
-    /// includes some helper methods.
+    /// Service/container deployment class utilities.
     /// </summary>
-    public class ServicesBase
+    public static class ServiceHelper
     {
         /// <summary>
         /// Use this argument to specify the target image in a <b>docker service create ...</b>
         /// or <b>docker run ...</b> command that will eventually be passed to one of 
-        /// <see cref="StartService(string, string, IBashCommandFormatter, RunOptions)"/> or 
+        /// <see cref="StartService(HiveProxy, string, string, IBashCommandFormatter, RunOptions)"/> or 
         /// <see cref="StartContainer(SshProxy{NodeDefinition}, string, string, RunOptions, IBashCommandFormatter[])"/> so
         /// those methods can generate a more useful script that includes a parameter
         /// so that images and services can be easily upgraded.
@@ -53,22 +52,6 @@ namespace NeonCli
         public const string ParamSectionMarker = "# === GENERATED SCRIPT SECTION: DO NOT MODIFY ===";
 
         /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="hive">The associated hive.</param>
-        public ServicesBase(HiveProxy hive)
-        {
-            Covenant.Requires<ArgumentNullException>(hive != null);
-
-            this.Hive = hive;
-        }
-
-        /// <summary>
-        /// Returns the hive proxy,
-        /// </summary>
-        public HiveProxy Hive { get; private set; }
-
-        /// <summary>
         /// Generates the script used to start a neonHIVE related service or container.
         /// </summary>
         /// <param name="serviceName">Identifies the service.</param>
@@ -76,7 +59,7 @@ namespace NeonCli
         /// <param name="image">The Docker image to be used by the service.</param>
         /// <param name="commands">The service creation commands.</param>
         /// <returns>The script text.</returns>
-        private string CreateStartScript(string serviceName, string image, bool pullImage, params IBashCommandFormatter[] commands)
+        private static string CreateStartScript(string serviceName, string image, bool pullImage, params IBashCommandFormatter[] commands)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(serviceName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(image));
@@ -141,6 +124,7 @@ namespace NeonCli
         /// hive managers to make it easy to restart the service manually or for hive
         /// updates.
         /// </summary>
+        /// <param name="hive">The target hive.</param>
         /// <param name="serviceName">Identifies the service.</param>
         /// <param name="image">The Docker image to be used by the service.</param>
         /// <param name="command">The <c>docker service create ...</c> command.</param>
@@ -172,13 +156,14 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public void StartService(string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void StartService(HiveProxy hive, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
+            Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(serviceName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(image));
             Covenant.Requires<ArgumentNullException>(command != null);
 
-            var firstManager = Hive.FirstManager;
+            var firstManager = hive.FirstManager;
 
             firstManager.Status = $"start: {serviceName}";
 
@@ -190,7 +175,7 @@ namespace NeonCli
 
             var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{serviceName}.sh");
 
-            foreach (var manager in Hive.Managers)
+            foreach (var manager in hive.Managers)
             {
                 manager.UploadText(scriptPath, script);
                 manager.SudoCommand($"chmod 740 {scriptPath}");
@@ -217,6 +202,7 @@ namespace NeonCli
         /// a script to the hive managers to make it easy to restart the service manually or 
         /// for hive updates.
         /// </summary>
+        /// <param name="hive">The target hive.</param>
         /// <param name="steps">The target step list.</param>
         /// <param name="serviceName">Identifies the service.</param>
         /// <param name="image">The Docker image to be used by the service.</param>
@@ -249,8 +235,9 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public void AddServiceStartSteps(ConfigStepList steps, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void AddServiceStartSteps(HiveProxy hive, ConfigStepList steps, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
+            Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(steps != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(serviceName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(image));
@@ -265,8 +252,8 @@ namespace NeonCli
 
             var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{serviceName}.sh");
 
-            steps.Add(Hive.GetFileUploadSteps(Hive.Managers, scriptPath, script, permissions: "740"));
-            steps.Add(CommandStep.CreateIdempotentDocker(Hive.FirstManager.Name, $"setup/{serviceName}", scriptPath));
+            steps.Add(hive.GetFileUploadSteps(hive.Managers, scriptPath, script, permissions: "740"));
+            steps.Add(CommandStep.CreateIdempotentDocker(hive.FirstManager.Name, $"setup/{serviceName}", scriptPath));
         }
 
         /// <summary>
@@ -305,7 +292,7 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public void StartContainer(SshProxy<NodeDefinition> node, string containerName, string image, RunOptions runOptions = RunOptions.FaultOnError, params IBashCommandFormatter[] commands)
+        public static void StartContainer(SshProxy<NodeDefinition> node, string containerName, string image, RunOptions runOptions = RunOptions.FaultOnError, params IBashCommandFormatter[] commands)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(containerName));
@@ -338,6 +325,7 @@ namespace NeonCli
         /// a script to the hive managers to make it easy to restart the service manually or 
         /// for hive updates.
         /// </summary>
+        /// <param name="hive">The target hive.</param>
         /// <param name="steps">The target step list.</param>
         /// <param name="node">The target hive node.</param>
         /// <param name="containerName">Identifies the service.</param>
@@ -372,8 +360,9 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public void AddContainerStartSteps(ConfigStepList steps, SshProxy<NodeDefinition> node, string containerName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void AddContainerStartSteps(HiveProxy hive, ConfigStepList steps, SshProxy<NodeDefinition> node, string containerName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
+            Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(steps != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(containerName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(image));
@@ -388,7 +377,7 @@ namespace NeonCli
 
             var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{containerName}.sh");
 
-            steps.Add(Hive.GetFileUploadSteps(node, scriptPath, script, permissions: "740"));
+            steps.Add(hive.GetFileUploadSteps(node, scriptPath, script, permissions: "740"));
             steps.Add(CommandStep.CreateIdempotentDocker(node.Name, $"setup/{containerName}", scriptPath));
         }
     }

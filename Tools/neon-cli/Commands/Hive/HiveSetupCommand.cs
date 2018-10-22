@@ -3016,9 +3016,7 @@ systemctl start neon-volume-plugin
 
                     // Deploy [neon-proxy-vault].
 
-                    var services = new ServicesBase(hive);
-
-                    services.StartService("neon-proxy-vault", hive.Definition.Image.ProxyVault,
+                    ServiceHelper.StartService(hive, "neon-proxy-vault", hive.Definition.Image.ProxyVault,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-proxy-vault",
@@ -3032,7 +3030,7 @@ systemctl start neon-volume-plugin
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                             "--env", $"LOG_LEVEL=INFO",
                             "--restart-delay", hive.Definition.Docker.RestartDelay,
-                            ServicesBase.ImagePlaceholderArg));
+                            ServiceHelper.ImagePlaceholderArg));
                 });
 
 
@@ -3040,8 +3038,7 @@ systemctl start neon-volume-plugin
             // to forward any Vault related traffic to the primary Vault instance running on onez
             // of the managers because pets aren't part of the Swarm.
 
-            var vaultTasks   = new List<Task>();
-            var servicesBase = new ServicesBase(hive);
+            var vaultTasks = new List<Task>();
 
             foreach (var pet in hive.Pets)
             {
@@ -3050,7 +3047,7 @@ systemctl start neon-volume-plugin
                     {
                         var steps = new ConfigStepList();
 
-                        servicesBase.AddContainerStartSteps(steps, pet, "neon-proxy-vault", hive.Definition.Image.ProxyVault,
+                        ServiceHelper.AddContainerStartSteps(hive, steps, pet, "neon-proxy-vault", hive.Definition.Image.ProxyVault,
                             new CommandBundle(
                                 "docker run",
                                 "--name", "neon-proxy-vault",
@@ -3061,7 +3058,7 @@ systemctl start neon-volume-plugin
                                 "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                                 "--env", $"LOG_LEVEL=INFO",
                                 "--restart", "always",
-                                ServicesBase.ImagePlaceholderArg));
+                                ServiceHelper.ImagePlaceholderArg));
 
                         hive.Configure(steps);
                     });

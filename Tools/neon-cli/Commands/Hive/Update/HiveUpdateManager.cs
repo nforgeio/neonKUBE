@@ -369,7 +369,7 @@ namespace NeonCli
                             continue;
                         }
 
-                        if (!inGenerated && line.StartsWith(ServicesBase.ParamSectionMarker))
+                        if (!inGenerated && line.StartsWith(ServiceHelper.ParamSectionMarker))
                         {
                             inGenerated = true;
                         }

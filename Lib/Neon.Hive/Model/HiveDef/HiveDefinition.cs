@@ -455,11 +455,11 @@ namespace Neon.Hive
         public HiveFSOptions HiveFS { get; set; } = new HiveFSOptions();
 
         /// <summary>
-        /// Integrated <a href="https://varnish-cache.org/">Kong API Gateway</a> options.
+        /// Integrated proxy and caching options.
         /// </summary>
-        [JsonProperty(PropertyName = "Varnish", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "Proxy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public VarnishOptions Varnish { get; set; } = new VarnishOptions();
+        public ProxyOptions Proxy { get; set; } = new ProxyOptions();
 
         /// <summary>
         /// Integrated <a href="https://rabbitmq.org/">RabbitMQ Message Queue</a> options.
@@ -692,7 +692,7 @@ namespace Neon.Hive
             Log         = Log ?? new LogOptions();
             Dashboard   = Dashboard ?? new DashboardOptions();
             HiveFS      = HiveFS ?? new HiveFSOptions();
-            Varnish     = Varnish ?? new VarnishOptions();
+            Proxy       = Proxy ?? new ProxyOptions();
             HiveMQ      = HiveMQ ?? new HiveMQOptions();
 
             Setup.Validate(this);
@@ -707,7 +707,7 @@ namespace Neon.Hive
             Log.Validate(this);
             Dashboard.Validate(this);
             HiveFS.Validate(this);
-            Varnish.Validate(this);
+            Proxy.Validate(this);
             HiveMQ.Validate(this);
 
             new HostingManagerFactory().Validate(this);

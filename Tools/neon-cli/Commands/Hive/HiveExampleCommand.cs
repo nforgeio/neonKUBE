@@ -640,14 +640,37 @@ neon hive example
         ""MDSCacheSize"": ""64MB""
     },
 
-    // Integrated Varnish HTTP Cache settings.
+    // Integrated Proxy and Caching options.
 
-    ""Varnish"": {
+    ""Proxy"": {
 
-        // Indicates whether Varnish cache is to be enabled for the hive.  
-        // This defaults to [true].
+        // Specifies the scheduling constraints for the <b>neon-proxy-public-cache</b> service
+        // instances.  This defaults to [null] which case neonHIVE setup will attempt to 
+        // do something reasonable.
+        ""PublicCacheConstraint"": null,
 
-        ""Enabled"": true
+        // Specifies the number of [neon-proxy-public-cache] instances to be deployed.
+        // You can set <b>0</b> disable public proxy caching.  This defaults to <b>1</b>.
+        ""PublicCacheCount"": 1,
+
+        // Specifies the size of the cache for each [neon-proxy-public-cache] instance.  This
+        // can be a byte count or a number with units like [512MB], [0.5GB]>, [2GB], 
+        // or [1TB].  This defaults to [100MB] and cannot be less than [50MB].
+        ""PublicCacheSize"": ""100MB"",
+
+        // Specifies the scheduling constraints for the <b>neon-proxy-private-cache</b> service
+        // instances.  This defaults to [null] which case neonHIVE setup will attempt to 
+        // do something reasonable.
+        ""PrivateCacheConstraint"": null,
+
+        // Specifies the number of [neon-proxy-private-cache] instances to be deployed.
+        // You can set <b>0</b> disable private proxy caching.  This defaults to <b>1</b>.
+        ""PrivateCacheCount"": 1,
+
+        // Specifies the size of the cache for each [neon-proxy-private-cache] instance.  This
+        // can be a byte count or a number with units like [512MB], [0.5GB]>, [2GB], 
+        // or [1TB].  This defaults to [100MB] and cannot be less than [50MB].
+        ""PrivateCacheSize"": ""100MB"",
     },
 
     // Integrated HiveMQ (aka RabbitMQ) settings.

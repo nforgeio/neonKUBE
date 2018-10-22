@@ -32,20 +32,25 @@ namespace NeonCli
 {
     /// <summary>
     /// Handles the provisioning of the global hive proxy services including: 
-    /// <b>neon-hive-manager</b>, <b>neon-proxy-manager</b>, <b>neon-proxy-public</b>
-    /// and <b>neon-proxy-private</b>, <b>neon-dns</b>, <b>neon-dns-mon</b> as\
+    /// <b>neon-hive-manager</b>, <b>neon-proxy-manager</b>, <b>neon-proxy-public</b>,
+    /// <b>neon-proxy-public-cache</b>, <b>neon-proxy-private-cache</b>,
+    /// and <b>neon-proxy-private</b>, <b>neon-dns</b>, <b>neon-dns-mon</b> as
     /// well as the <b>neon-proxy-public-bridge</b> and <b>neon-proxy-private-bridge</b> 
     /// containers on any pet nodes.
     /// </summary>
-    public class HiveServices : ServicesBase
+    public class HiveServices
     {
+        private HiveProxy hive;
+
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
         public HiveServices(HiveProxy hive)
-            : base(hive)
         {
+            Covenant.Requires<ArgumentNullException>(hive != null);
+
+            this.hive = hive;
         }
 
         /// <summary>
@@ -59,7 +64,7 @@ namespace NeonCli
                 {
                     // Ensure that Vault has been initialized.
 
-                    if (!Hive.HiveLogin.HasVaultRootCredentials)
+                    if (!hive.HiveLogin.HasVaultRootCredentials)
                     {
                         throw new InvalidOperationException("Vault has not been initialized yet.");
                     }
@@ -72,14 +77,14 @@ namespace NeonCli
 
                     firstManager.Status = "secrets: proxy services";
 
-                    Hive.Docker.Secret.Set("neon-proxy-manager-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-manager").Result, Formatting.Indented));
-                    Hive.Docker.Secret.Set("neon-proxy-public-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-public").Result, Formatting.Indented));
-                    Hive.Docker.Secret.Set("neon-proxy-private-credentials", NeonHelper.JsonSerialize(Hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-private").Result, Formatting.Indented));
+                    hive.Docker.Secret.Set("neon-proxy-manager-credentials", NeonHelper.JsonSerialize(hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-manager").Result, Formatting.Indented));
+                    hive.Docker.Secret.Set("neon-proxy-public-credentials", NeonHelper.JsonSerialize(hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-public").Result, Formatting.Indented));
+                    hive.Docker.Secret.Set("neon-proxy-private-credentials", NeonHelper.JsonSerialize(hive.Vault.Client.GetAppRoleCredentialsAsync("neon-proxy-private").Result, Formatting.Indented));
 
                     //---------------------------------------------------------
                     // Deploy the HiveMQ cluster.
 
-                    Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster",
+                    hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster",
                         () =>
                         {
                             // We're going to list the hive nodes that will host the
@@ -88,7 +93,7 @@ namespace NeonCli
                             // is started and ready before configuring the rest of the
                             // cluster so that it will bootstrap properly.
 
-                            var hiveMQNodes = Hive.Nodes
+                            var hiveMQNodes = hive.Nodes
                                 .Where(n => n.Metadata.Labels.HiveMQ)
                                 .OrderBy(n => n.Name)
                                 .ToList();
@@ -118,13 +123,13 @@ namespace NeonCli
 
                             // Create the vhosts.
 
-                            Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {HiveConst.HiveMQAppVHost}"));
-                            Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {HiveConst.HiveMQNeonVHost}"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {HiveConst.HiveMQAppVHost}"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-vhost-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_vhost {HiveConst.HiveMQNeonVHost}"));
 
                             // Create the users.
 
-                            Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {HiveConst.HiveMQAppUser} {Hive.Definition.HiveMQ.AppPassword}"));
-                            Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {HiveConst.HiveMQNeonUser} {Hive.Definition.HiveMQ.NeonPassword}"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-app", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {HiveConst.HiveMQAppUser} {hive.Definition.HiveMQ.AppPassword}"));
+                            hive.FirstManager.InvokeIdempotentAction("setup/hivemq-cluster-user-neon", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl add_user {HiveConst.HiveMQNeonUser} {hive.Definition.HiveMQ.NeonPassword}"));
 
                             // Grant the [app] account full access to the [app] vhost, the [neon] account full
                             // access to the [neon] vhost.  Note that this doesn't need to be idempotent.
@@ -141,19 +146,19 @@ namespace NeonCli
 
                             // Set the RabbitMQ cluster name to the name of the hive.
 
-                            hiveMQNode.InvokeIdempotentAction("setup/hivemq-cluster-name", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_cluster_name {Hive.Definition.Name}"));
+                            hiveMQNode.InvokeIdempotentAction("setup/hivemq-cluster-name", () => hiveMQNode.SudoCommand($"docker exec neon-hivemq rabbitmqctl set_cluster_name {hive.Definition.Name}"));
                         });
 
                     //---------------------------------------------------------
                     // Initialize the public and private load balancer managers.
 
-                    Hive.PublicLoadBalancer.UpdateSettings(
+                    hive.PublicLoadBalancer.UpdateSettings(
                         new LoadBalancerSettings()
                         {
                             ProxyPorts = HiveConst.PublicProxyPorts
                         });
 
-                    Hive.PrivateLoadBalancer.UpdateSettings(
+                    hive.PrivateLoadBalancer.UpdateSettings(
                         new LoadBalancerSettings()
                         {
                             ProxyPorts = HiveConst.PrivateProxyPorts
@@ -162,7 +167,7 @@ namespace NeonCli
                     //---------------------------------------------------------
                     // Deploy the HiveMQ load balancer rules.
 
-                    Hive.FirstManager.InvokeIdempotentAction("setup/hivemq-loadbalancer",
+                    hive.FirstManager.InvokeIdempotentAction("setup/hivemq-loadbalancer",
                         () =>
                         {
                             // Deploy private load balancer for the AMPQ endpoints.
@@ -188,7 +193,7 @@ namespace NeonCli
                                     Port       = HiveHostPorts.HiveMQAMPQ
                                 });
 
-                            Hive.PrivateLoadBalancer.SetRule(ampqRule);
+                            hive.PrivateLoadBalancer.SetRule(ampqRule);
 
                             // Deploy private load balancer for the management endpoints.
 
@@ -215,7 +220,7 @@ namespace NeonCli
                                     Port       = HiveHostPorts.HiveMQManagement
                                 });
 
-                            Hive.PrivateLoadBalancer.SetRule(adminRule);
+                            hive.PrivateLoadBalancer.SetRule(adminRule);
                         });
 
                     //---------------------------------------------------------
@@ -223,7 +228,7 @@ namespace NeonCli
 
                     // Deploy: neon-dns-mon
 
-                    StartService("neon-dns-mon", Hive.Definition.Image.DnsMon,
+                    ServiceHelper.StartService(hive, "neon-dns-mon", hive.Definition.Image.DnsMon,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-dns-mon",
@@ -234,12 +239,12 @@ namespace NeonCli
                             "--env", "LOG_LEVEL=INFO",
                             "--constraint", "node.role==manager",
                             "--replicas", "1",
-                            "--restart-delay", Hive.Definition.Docker.RestartDelay,
-                            ImagePlaceholderArg));
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
+                            ServiceHelper.ImagePlaceholderArg));
 
                     // Deploy: neon-dns
 
-                    StartService("neon-dns", Hive.Definition.Image.Dns,
+                    ServiceHelper.StartService(hive, "neon-dns", hive.Definition.Image.Dns,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-dns",
@@ -253,17 +258,17 @@ namespace NeonCli
                             "--env", "LOG_LEVEL=INFO",
                             "--constraint", "node.role==manager",
                             "--mode", "global",
-                            "--restart-delay", Hive.Definition.Docker.RestartDelay,
-                            ImagePlaceholderArg));
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
+                            ServiceHelper.ImagePlaceholderArg));
 
                     //---------------------------------------------------------
                     // Deploy [neon-hive-manager] as a service constrained to manager nodes.
 
                     string unsealSecretOption = null;
 
-                    if (Hive.Definition.Vault.AutoUnseal)
+                    if (hive.Definition.Vault.AutoUnseal)
                     {
-                        var vaultCredentials = NeonHelper.JsonClone<VaultCredentials>(Hive.HiveLogin.VaultCredentials);
+                        var vaultCredentials = NeonHelper.JsonClone<VaultCredentials>(hive.HiveLogin.VaultCredentials);
 
                         // We really don't want to include the root token in the credentials
                         // passed to [neon-hive-manager], which needs the unseal keys so 
@@ -271,12 +276,12 @@ namespace NeonCli
 
                         vaultCredentials.RootToken = null;
 
-                        Hive.Docker.Secret.Set("neon-hive-manager-vaultkeys", Encoding.UTF8.GetBytes(NeonHelper.JsonSerialize(vaultCredentials, Formatting.Indented)));
+                        hive.Docker.Secret.Set("neon-hive-manager-vaultkeys", Encoding.UTF8.GetBytes(NeonHelper.JsonSerialize(vaultCredentials, Formatting.Indented)));
 
                         unsealSecretOption = "--secret=neon-hive-manager-vaultkeys";
                     }
 
-                    StartService("neon-hive-manager", Hive.Definition.Image.HiveManager,
+                    ServiceHelper.StartService(hive, "neon-hive-manager", hive.Definition.Image.HiveManager,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-hive-manager",
@@ -289,17 +294,17 @@ namespace NeonCli
                             unsealSecretOption,
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
-                            "--restart-delay", Hive.Definition.Docker.RestartDelay,
-                            ImagePlaceholderArg
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
+                            ServiceHelper.ImagePlaceholderArg
                         ),
-                        Hive.SecureRunOptions | RunOptions.FaultOnError);
+                        hive.SecureRunOptions | RunOptions.FaultOnError);
 
                     //---------------------------------------------------------
                     // Deploy proxy related services.
 
                     // Deploy the proxy manager service.
 
-                    StartService("neon-proxy-manager", Hive.Definition.Image.ProxyManager,
+                    ServiceHelper.StartService(hive, "neon-proxy-manager", hive.Definition.Image.ProxyManager,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-proxy-manager",
@@ -312,8 +317,8 @@ namespace NeonCli
                             "--secret", "neon-proxy-manager-credentials",
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
-                            "--restart-delay", Hive.Definition.Docker.RestartDelay,
-                            ImagePlaceholderArg));
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
+                            ServiceHelper.ImagePlaceholderArg));
 
                     // Docker mesh routing seemed unstable on versions so we're going
                     // to provide an option to work around this by running the PUBLIC, 
@@ -332,7 +337,7 @@ namespace NeonCli
                     var proxyReplicasArgs   = new List<string>();
                     var proxyModeArgs       = new List<string>();
 
-                    if (Hive.Definition.Docker.GetAvoidIngressNetwork(Hive.Definition))
+                    if (hive.Definition.Docker.GetAvoidIngressNetwork(hive.Definition))
                     {
                         // The parameterized [docker service create --publish] option doesn't handle port ranges so we need to 
                         // specify multiple publish options.
@@ -390,13 +395,13 @@ namespace NeonCli
                         proxyConstraintArgs.Add($"--constraint");
                         proxyReplicasArgs.Add("--replicas");
 
-                        if (Hive.Definition.Workers.Count() > 0)
+                        if (hive.Definition.Workers.Count() > 0)
                         {
                             // Constrain proxies to worker nodes if there are any.
 
                             proxyConstraintArgs.Add($"node.role!=manager");
 
-                            if (Hive.Definition.Workers.Count() == 1)
+                            if (hive.Definition.Workers.Count() == 1)
                             {
                                 proxyReplicasArgs.Add("1");
                             }
@@ -411,7 +416,7 @@ namespace NeonCli
 
                             proxyConstraintArgs.Add($"node.role==manager");
 
-                            if (Hive.Definition.Managers.Count() == 1)
+                            if (hive.Definition.Managers.Count() == 1)
                             {
                                 proxyReplicasArgs.Add("1");
                             }
@@ -427,7 +432,7 @@ namespace NeonCli
 
                     // Deploy: neon-proxy-public
 
-                    StartService("neon-proxy-public", Hive.Definition.Image.Proxy,
+                    ServiceHelper.StartService(hive, "neon-proxy-public", hive.Definition.Image.Proxy,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-proxy-public",
@@ -438,23 +443,21 @@ namespace NeonCli
                             "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-hash",
                             "--env", "VAULT_CREDENTIALS=neon-proxy-public-credentials",
                             "--env", "WARN_SECONDS=300",
-                            "--env", "POLL_SECONDS=15",
                             "--env", "START_SECONDS=10",
                             "--env", "LOG_LEVEL=INFO",
                             "--env", "DEBUG=false",
-                            "--env", "VAULT_SKIP_VERIFY=true",
                             "--secret", "neon-proxy-public-credentials",
                             publicPublishArgs,
                             proxyConstraintArgs,
                             proxyReplicasArgs,
                             proxyModeArgs,
-                            "--restart-delay", Hive.Definition.Docker.RestartDelay,
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
                             "--network", HiveConst.PublicNetwork,
-                            ImagePlaceholderArg));
+                            ServiceHelper.ImagePlaceholderArg));
 
                     // Deploy: neon-proxy-private
 
-                    StartService("neon-proxy-private", Hive.Definition.Image.Proxy,
+                    ServiceHelper.StartService(hive, "neon-proxy-private", hive.Definition.Image.Proxy,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-proxy-private",
@@ -465,19 +468,85 @@ namespace NeonCli
                             "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-hash",
                             "--env", "VAULT_CREDENTIALS=neon-proxy-private-credentials",
                             "--env", "WARN_SECONDS=300",
-                            "--env", "POLL_SECONDS=15",
                             "--env", "START_SECONDS=10",
                             "--env", "LOG_LEVEL=INFO",
                             "--env", "DEBUG=false",
-                            "--env", "VAULT_SKIP_VERIFY=true",
                             "--secret", "neon-proxy-private-credentials",
                             privatePublishArgs,
                             proxyConstraintArgs,
                             proxyReplicasArgs,
                             proxyModeArgs,
-                            "--restart-delay", Hive.Definition.Docker.RestartDelay,
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
                             "--network", HiveConst.PrivateNetwork,
-                            ImagePlaceholderArg));
+                            ServiceHelper.ImagePlaceholderArg));
+
+                    // Deploy: neon-proxy-public-cache
+
+                    var publicCacheConstraintArgs = new List<string>();
+                    var publicCacheReplicaArgs    = new List<string>();
+
+                    if (hive.Definition.Proxy.PublicCacheReplicas >= hive.Definition.Workers.Count())
+                    {
+                        publicCacheConstraintArgs.Add("--constraint");
+                        publicCacheConstraintArgs.Add("node.role==worker");
+                    }
+
+                    publicCacheReplicaArgs.Add("--replicas");
+                    publicCacheReplicaArgs.Add($"{hive.Definition.Proxy.PublicCacheReplicas}");
+
+                    ServiceHelper.StartService(hive, "neon-proxy-public-cache", hive.Definition.Image.ProxyCache,
+                        new CommandBundle(
+                            "docker service create",
+                            "--name", "neon-proxy-public-cache",
+                            "--detach=false",
+                            "--mount", "type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true",
+                            "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
+                            "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-conf",
+                            "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-hash",
+                            "--env", "WARN_SECONDS=300",
+                            "--env", $"MEMORY-LIMIT={hive.Definition.Proxy.PublicCacheSize}",
+                            "--env", "LOG_LEVEL=INFO",
+                            "--env", "DEBUG=false",
+                            "--secret", "neon-proxy-public-credentials",
+                            publicCacheConstraintArgs,
+                            publicCacheReplicaArgs,
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
+                            "--network", HiveConst.PublicNetwork,
+                            ServiceHelper.ImagePlaceholderArg));
+
+                    // Deploy: neon-proxy-private-cache
+
+                    var privateCacheConstraintArgs = new List<string>();
+                    var privateCacheReplicaArgs    = new List<string>();
+
+                    if (hive.Definition.Proxy.PrivateCacheReplicas >= hive.Definition.Workers.Count())
+                    {
+                        privateCacheConstraintArgs.Add("--constraint");
+                        privateCacheConstraintArgs.Add("node.role==worker");
+                    }
+
+                    privateCacheReplicaArgs.Add("--replicas");
+                    privateCacheReplicaArgs.Add($"{hive.Definition.Proxy.PrivateCacheReplicas}");
+
+                    ServiceHelper.StartService(hive, "neon-proxy-private-cache", hive.Definition.Image.ProxyCache,
+                        new CommandBundle(
+                            "docker service create",
+                            "--name", "neon-proxy-private-cache",
+                            "--detach=false",
+                            "--mount", "type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true",
+                            "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
+                            "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-conf",
+                            "--env", "CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-hash",
+                            "--env", "WARN_SECONDS=300",
+                            "--env", $"MEMORY-LIMIT={hive.Definition.Proxy.PrivateCacheSize}",
+                            "--env", "LOG_LEVEL=INFO",
+                            "--env", "DEBUG=false",
+                            "--secret", "neon-proxy-private-credentials",
+                            privateCacheConstraintArgs,
+                            privateCacheReplicaArgs,
+                            "--restart-delay", hive.Definition.Docker.RestartDelay,
+                            "--network", HiveConst.PrivateNetwork,
+                            ServiceHelper.ImagePlaceholderArg));
                 });
 
             // Log the hive into any Docker registries with credentials.
@@ -485,10 +554,10 @@ namespace NeonCli
             firstManager.InvokeIdempotentAction("setup/registry-login",
                 () =>
                 {
-                    foreach (var credential in Hive.Definition.Docker.Registries
+                    foreach (var credential in hive.Definition.Docker.Registries
                         .Where(r => !string.IsNullOrEmpty(r.Username)))
                     {
-                        Hive.Registry.Login(credential.Registry, credential.Username, credential.Password);
+                        hive.Registry.Login(credential.Registry, credential.Username, credential.Password);
                     }
                 });
         }
@@ -506,17 +575,17 @@ namespace NeonCli
                 // Build a comma separated list of fully qualified RabbitMQ hostnames so we
                 // can pass them as the CLUSTER environment variable.
 
-                var rabbitNodes = Hive.Definition.SortedNodes.Where(n => n.Labels.HiveMQ).ToList();
+                var rabbitNodes = hive.Definition.SortedNodes.Where(n => n.Labels.HiveMQ).ToList();
                 var sbCluster   = new StringBuilder();
 
                 foreach (var rabbitNode in rabbitNodes)
                 {
-                    sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{Hive.Definition.Hostnames.HiveMQ}", ",");
+                    sbCluster.AppendWithSeparator($"{rabbitNode.Name}@{rabbitNode.Name}.{hive.Definition.Hostnames.HiveMQ}", ",");
                 }
 
                 var hipeCompileArgs = new List<string>();
 
-                if (Hive.Definition.HiveMQ.Precompile)
+                if (hive.Definition.HiveMQ.Precompile)
                 {
                     hipeCompileArgs.Add("--env");
                     hipeCompileArgs.Add("RABBITMQ_HIPE_COMPILE=1");
@@ -537,26 +606,26 @@ namespace NeonCli
                 //
                 //      https://github.com/jefflill/NeonForge/issues/319
 
-                StartContainer(node, "neon-hivemq", Hive.Definition.Image.HiveMQ, RunOptions.FaultOnError,
+                ServiceHelper.StartContainer(node, "neon-hivemq", hive.Definition.Image.HiveMQ, RunOptions.FaultOnError,
                     new CommandBundle(
                         "docker run",
                         "--detach",
                         "--name", "neon-hivemq",
-                        "--env", $"CLUSTER_NAME={Hive.Definition.Name}",
+                        "--env", $"CLUSTER_NAME={hive.Definition.Name}",
                         "--env", $"CLUSTER_NODES={sbCluster}",
                         "--env", $"CLUSTER_PARTITION_MODE=autoheal",
-                        "--env", $"NODENAME={node.Name}@{node.Name}.{Hive.Definition.Hostnames.HiveMQ}",
+                        "--env", $"NODENAME={node.Name}@{node.Name}.{hive.Definition.Hostnames.HiveMQ}",
                         "--env", $"RABBITMQ_USE_LONGNAME=true",
                         "--env", $"RABBITMQ_DEFAULT_USER=sysadmin",
                         "--env", $"RABBITMQ_DEFAULT_PASS=password",
                         "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.HiveMQAMPQ}",
                         "--env", $"RABBITMQ_DIST_PORT={HiveHostPorts.HiveMQDIST}",
                         "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.HiveMQManagement}",
-                        "--env", $"RABBITMQ_ERLANG_COOKIE={Hive.Definition.HiveMQ.ErlangCookie}",
-                        "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={Hive.Definition.HiveMQ.RamHighWatermark}",
+                        "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.HiveMQ.ErlangCookie}",
+                        "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.HiveMQ.RamHighWatermark}",
                         hipeCompileArgs,
                         managementPluginArgs,
-                        "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(Hive.Definition.HiveMQ.DiskFreeLimit, typeof(HiveMQOptions), nameof(Hive.Definition.HiveMQ.DiskFreeLimit))}",
+                        "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.HiveMQ.DiskFreeLimit, typeof(HiveMQOptions), nameof(hive.Definition.HiveMQ.DiskFreeLimit))}",
                         //"--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
                         //"--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",
                         "--env", $"ERL_EPMD_PORT={HiveHostPorts.HiveMQEPMD}",
@@ -566,9 +635,9 @@ namespace NeonCli
                         "--publish", $"{HiveHostPorts.HiveMQAMPQ}:{HiveHostPorts.HiveMQAMPQ}",
                         "--publish", $"{HiveHostPorts.HiveMQDIST}:{HiveHostPorts.HiveMQDIST}",
                         "--publish", $"{HiveHostPorts.HiveMQManagement}:{HiveHostPorts.HiveMQManagement}",
-                        "--memory", HiveDefinition.ValidateSize(Hive.Definition.HiveMQ.RamLimit, typeof(HiveMQOptions), nameof(Hive.Definition.HiveMQ.RamLimit)),
+                        "--memory", HiveDefinition.ValidateSize(hive.Definition.HiveMQ.RamLimit, typeof(HiveMQOptions), nameof(hive.Definition.HiveMQ.RamLimit)),
                         "--restart", "always",
-                        ImagePlaceholderArg));
+                        ServiceHelper.ImagePlaceholderArg));
 
                 // Wait for the RabbitMQ node to report that it's ready.
 
@@ -582,7 +651,7 @@ namespace NeonCli
                     NeonHelper.WaitFor(
                     () =>
                     {
-                        var readyReponse = node.SudoCommand($"docker exec neon-hivemq rabbitmqctl node_health_check -n {node.Name}@{node.Name}.{Hive.Definition.Hostnames.HiveMQ}", node.DefaultRunOptions & ~RunOptions.FaultOnError);
+                        var readyReponse = node.SudoCommand($"docker exec neon-hivemq rabbitmqctl node_health_check -n {node.Name}@{node.Name}.{hive.Definition.Hostnames.HiveMQ}", node.DefaultRunOptions & ~RunOptions.FaultOnError);
 
                         return readyReponse.ExitCode == 0;
                     },
@@ -614,7 +683,7 @@ namespace NeonCli
 
             if (node.Metadata.IsPet)
             {
-                StartContainer(node, "neon-proxy-public-bridge", Hive.Definition.Image.Proxy, RunOptions.FaultOnError,
+                ServiceHelper.StartContainer(node, "neon-proxy-public-bridge", hive.Definition.Image.Proxy, RunOptions.FaultOnError,
                     new CommandBundle(
                         "docker run",
                         "--detach",
@@ -631,9 +700,9 @@ namespace NeonCli
                         "--env", "VAULT_SKIP_VERIFY=true",
                         "--network", "host",
                         "--restart", "always",
-                        ImagePlaceholderArg));
+                        ServiceHelper.ImagePlaceholderArg));
 
-                StartContainer(node, "neon-proxy-private-bridge", Hive.Definition.Image.Proxy, RunOptions.FaultOnError,
+                ServiceHelper.StartContainer(node, "neon-proxy-private-bridge", hive.Definition.Image.Proxy, RunOptions.FaultOnError,
                     new CommandBundle(
                         "docker run",
                         "--detach",
@@ -650,7 +719,7 @@ namespace NeonCli
                         "--env", "VAULT_SKIP_VERIFY=true",
                         "--network", "host",
                         "--restart", "always",
-                        ImagePlaceholderArg));
+                        ServiceHelper.ImagePlaceholderArg));
             }
         }
     }

@@ -334,6 +334,15 @@ namespace NeonProxyCache
 
                 response.EnsureSuccess();
 
+                // It's possible that very old versions of [neon-proxy-manager] haven't
+                // included a generated [varnish.vcl] file within the ZIP archive.  We'll
+                // create a stub (do-nothing) file in this case to make Varnish happy.
+
+                if (!File.Exists(configUpdatePath))
+                {
+                    File.WriteAllText(configUpdatePath, "vcl 4.0;\n");
+                }
+
                 // Verify the configuration.
 
                 log.LogInfo(() => "Verifying Varnish configuration.");
@@ -355,7 +364,7 @@ namespace NeonProxyCache
 
                     // If Varnish is running then we'll let it continue using
                     // the out-of-date configuration as a fail-safe.  If it's not
-                    // running, we're going to terminate service.
+                    // running, we're going to terminate the service.
 
                     if (!GetVarnishProcessIds().IsEmpty())
                     {
@@ -376,7 +385,7 @@ namespace NeonProxyCache
                 NeonHelper.CopyFolder(configUpdateFolder, configFolder);
 
                 // Start Varnish if it's not already running, otherwise command Varnish
-                // to reload [config.vcl] as the main (and only) program.
+                // to reload [varnish.vcl] as the main (and only) program.
 
                 // $todo(jeff.lill): Should we do something different for DEBUG mode?
 
