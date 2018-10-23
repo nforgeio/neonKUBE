@@ -232,7 +232,7 @@ namespace Neon.Hive
 
                 if (!context.Certificates.TryGetValue(CertName, out certificate))
                 {
-                    context.Error($"Rule [{rule.Name}] references certificate [{CertName}] that does not exist.");
+                    context.Error($"Rule [{rule.Name}] references certificate [{CertName}] that does not exist or could not be loaded.");
                 }
                 else
                 {

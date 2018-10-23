@@ -331,7 +331,7 @@ namespace NeonProxy
 
                 response.EnsureSuccess();
 
-                // The [.certs] file (if present) describes the certificates 
+                // The [certs.list] file (if present) describes the certificates 
                 // to be downloaded from Vault.
                 //
                 // Each line contains three fields separated by a space:
@@ -342,7 +342,7 @@ namespace NeonProxy
                 // the [TlsCertificate] schema, so we'll need to extract and
                 // combine the [cert] and [key] properties.
 
-                var certsPath = Path.Combine(configUpdateFolder, ".certs");
+                var certsPath = Path.Combine(configUpdateFolder, "certs.list");
 
                 if (File.Exists(certsPath))
                 {

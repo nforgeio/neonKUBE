@@ -91,8 +91,7 @@ namespace NeonProxyManager
                                     {
                                         foreach (var certName in await vault.ListAsync(vaultCertPrefix, terminator.CancellationToken))
                                         {
-                                            var certJson    = (await vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}"), terminator.CancellationToken).ToString();
-                                            var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
+                                            var certificate = await vault.ReadJsonAsync<TlsCertificate>($"{vaultCertPrefix}/{certName}", terminator.CancellationToken);
                                             var certInfo    = new CertInfo(certName, certificate);
 
                                             if (!certInfo.Certificate.IsValidDate(utcNow))
@@ -907,7 +906,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         {
                             if (!hiveCerts.TryGetValue(frontend.CertName, out CertInfo certInfo))
                             {
-                                log.LogError(() => $"Rule [{httpRule.Name}] references certificate [{frontend.CertName}] which does not exist.");
+                                log.LogError(() => $"Rule [{httpRule.Name}] references certificate [{frontend.CertName}] which does not exist or could not be loaded.");
                                 configError = true;
                                 continue;
                             }
@@ -1131,7 +1130,7 @@ backend http:{httpRule.Name}
                 return (Rules: rules, log.ToString());
             }
 
-            // Generate the contents of the [.certs] file.
+            // Generate the contents of the [certs.list] file.
 
             var sbCerts = new StringBuilder();
 
@@ -1162,11 +1161,7 @@ backend http:{httpRule.Name}
 
                     zip.BeginUpdate();
                     zip.Add(new StaticBytesDataSource(NeonHelper.ToLinuxLineEndings(sbHaProxy.ToString())), "haproxy.cfg");
-
-                    if (sbCerts.Length > 0)
-                    {
-                        zip.Add(new StaticBytesDataSource(NeonHelper.ToLinuxLineEndings(sbCerts.ToString())), ".certs");
-                    }
+                    zip.Add(new StaticBytesDataSource(NeonHelper.ToLinuxLineEndings(sbCerts.ToString())), "certs.list");
 
                     zip.CommitUpdate();
                 }

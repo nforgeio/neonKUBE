@@ -18,7 +18,7 @@ This image includes the following packages:
 
 # Basic Configuration
 
-This image dynamically configures HAProxy by retrieving configuration data persisted to a Consul key.  The data is a binary ZIP archive including the `haproxy.cfg` text file.  This is formatted as standard HAProxy configuration file.  The ZIP archive may also include other files such as TLS public/private keys as well as the optional `.certs` file that specifies any certificates to be obtained from Vault.
+This image dynamically configures HAProxy by retrieving configuration data persisted to a Consul key.  The data is a binary ZIP archive including the `haproxy.cfg` text file.  This is formatted as standard HAProxy configuration file.  The ZIP archive may also include other files such as TLS public/private keys as well as the `certs.list` file that specifies any certificates to be obtained from Vault.
 
 All you need to do is pass the **UPDATE_KEY** environment variable as the Consul key where the configuration ZIP archive will be saved.  Here's a logical overview of how this works:
 
@@ -76,13 +76,13 @@ You should also specify a DNS resolvers section that points to the embedded Dock
 
 # Advanced Configuration
 
-When deployed as a Docker service, this image can also be used to load secrets such as TLS certificate keys from HashiCorp Vault for even better security.  This is accomplished by adding the `.certs` file to the ZIP archive.  This is a text file that lists the Vault certificates keys to be retrieved and as well as the directory and file name where each certificate will be persisted.  This file is formatted with each line specifying the Vault key, relative directory and file name, each separated with a space, like:
+When deployed as a Docker service, this image can also be used to load secrets such as TLS certificate keys from HashiCorp Vault for even better security.  This is accomplished by adding the `certs.list` file to the ZIP archive.  This is a text file that lists the Vault certificates keys to be retrieved and as well as the directory and file name where each certificate will be persisted.  This file is formatted with each line specifying the Vault key, relative directory and file name, each separated with a space, like:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`secret/certs/mycert1 mydir1 mycert1.pem`
 &nbsp;&nbsp;&nbsp;&nbsp;`secret/certs/mycert2 mydir2 mycert2.pem`
 &nbsp;&nbsp;&nbsp;&nbsp;`...`
 
-When the `.certs` file is present, the container will retrieve the Vault keys and write them to `/dev/shm/haproxy` using the specified file names before validating the configuration and starting HAProxy.
+When the `certs.list` file is present, the container will retrieve the Vault keys and write them to `/dev/shm/haproxy` using the specified file names before validating the configuration and starting HAProxy.
 
 Credentials are required to obtain TLS certificates Vault if the HTTPS routes are required.  These credentials will be passed as JSON using the **Docker secrets** feature and will be persisted within the container at `/run/secrets/${VAULT_CREDENTIALS}`, where **VAULT_CREDENTIALS** is an environment variable that identifies the secret file.
 
