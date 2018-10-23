@@ -342,20 +342,9 @@ namespace NeonProxyCache
 # The proxy configuration archive did not include a [varnish.vcl] file so
 # we're going to generate a stub VCL file that doesn't do anything.
 
-import directors;
-
-backend one {
+backend stub {
     .host = ""localhost"";
     .port = ""8080"";
-}
-
-sub vcl_init {
-    new round_robin_director = directors.round_robin();
-    round_robin_director.add_backend(one);
-}
-
-sub vcl_recv {
-    set req.backend_hint = round_robin_director.backend();
 }
 ";
                     File.WriteAllText(configUpdatePath, NeonHelper.ToLinuxLineEndings(stubVcl));
