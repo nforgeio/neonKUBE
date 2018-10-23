@@ -128,7 +128,7 @@ $@"
             Assert.Equal(80, rule.Backends.First().Port);
 
             //-----------------------------------------------------------------
-            // Add the same rule and use [force: yes] to force an update.
+            // Add the same rule and use [state: update] to force an update.
 
             playbook =
 $@"
@@ -147,13 +147,16 @@ $@"
           backends:
             - server: www.google.com
               port: 80
-        force: yes
+    - name: update
+      neon_load_balancer:
+        name: public
+        state: update
 ";
             results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("rule");
 
             Assert.True(taskResult.Success);
-            Assert.True(taskResult.Changed);
+            Assert.False(taskResult.Changed);
 
             rule = (LoadBalancerHttpRule)hive.PublicLoadBalancer.GetRule("test");
 
@@ -167,6 +170,10 @@ $@"
             Assert.Equal("www.google.com", rule.Backends.First().Server);
             Assert.Equal(80, rule.Backends.First().Port);
 
+            taskResult = results.GetTaskResult("update");
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            
             //-----------------------------------------------------------------
             // Modify the rule and verify that a change was detected.
 
@@ -255,7 +262,7 @@ $@"
             Assert.Null(rule);
 
             //-----------------------------------------------------------------
-            // Delete the rule again [force: yes] and verify the change.
+            // Delete the rule again and then use [state: update] and verify the change.
 
             playbook =
 $@"
@@ -267,10 +274,18 @@ $@"
         name: public
         state: absent
         rule_name: test
-        force: yes
+    - name: update
+      neon_load_balancer:
+        name: public
+        state: update
 ";
             results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("rule");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+
+            taskResult = results.GetTaskResult("update");
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
@@ -363,7 +378,7 @@ $@"
             Assert.Equal(80, rule.Backends.First().Port);
 
             //-----------------------------------------------------------------
-            // Add the same rule and use [force: yes] to force an update.
+            // Add the same rule and then use [state: update] to force an update.
 
             playbook =
 $@"
@@ -382,11 +397,18 @@ $@"
           backends:
             - server: www.google.com
               port: 80
-        force: yes
+    - name: update
+      neon_load_balancer:
+        name: private
+        state: update
 ";
             results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("rule");
 
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+
+            taskResult = results.GetTaskResult("update");
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
@@ -490,7 +512,7 @@ $@"
             Assert.Null(rule);
 
             //-----------------------------------------------------------------
-            // Delete the rule again [force: yes] and verify the change.
+            // Delete the rule again and then use [state: update] for force an update.
 
             playbook =
 $@"
@@ -502,10 +524,18 @@ $@"
         name: private
         state: absent
         rule_name: test
-        force: yes
+    - name: update
+      neon_load_balancer:
+        name: private
+        state: update
 ";
             results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("rule");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+
+            taskResult = results.GetTaskResult("update");
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);

@@ -65,7 +65,7 @@ namespace NeonCli.Ansible
     //                                      update      deferred updates should be processed
     //                                                  immediately
     //
-    // deferupdate  no          false                   see note below
+    // defer_update no          false                   see note below
     //
     // Deferred Updates
     // ----------------
@@ -75,7 +75,7 @@ namespace NeonCli.Ansible
     // rebuild and reload their configurations.  This can cause some unnecessary
     // thrashing when you need to make multiple rule changes.
     //
-    // To avoid this, you can pass [deferUpdate=true] for each of rule changes
+    // To avoid this, you can pass [defer_update=true] for each of rule changes
     // and then when done with those, invoke this module one last time with
     // [state=update].  Note that the proxy manager periodically checks for 
     // changes (defaults to a 60 seconds interval), so a separate update is 
@@ -185,7 +185,7 @@ namespace NeonCli.Ansible
     //          name: public
     //          state: present
     //          rule_name: test
-    //          deferupdate: true
+    //          defer_update: true
     //          rule:
     //            mode: http
     //            checkuri: /_health/check.php
@@ -204,7 +204,7 @@ namespace NeonCli.Ansible
     //          name: public
     //          state: present
     //          rule_name: test
-    //          deferupdate: true
+    //          defer_update: true
     //          rule:
     //            mode: tcp
     //            frontends:
@@ -232,13 +232,17 @@ namespace NeonCli.Ansible
             "rule_name",
             "rule",
             "state",
-            "deferupdate"
+            "defer_update"
         };
 
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            LoadBalancerManager  loadBalancer;
+            LoadBalancerManager     loadBalancer = null;
+            bool                    isPublic     = false;
+            string                  name         = null;
+            string                  ruleName     = null;
+            bool                    deferUpdate  = false;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -247,53 +251,6 @@ namespace NeonCli.Ansible
             }
 
             // Obtain common arguments.
-
-            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [name]");
-
-            if (!context.Arguments.TryGetValue<string>("name", out var name))
-            {
-                throw new ArgumentException($"[name] module argument is required.");
-            }
-
-            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [rule_name]");
-
-            if (!context.Arguments.TryGetValue<string>("rule_name", out var ruleName))
-            {
-                throw new ArgumentException($"[rule_name] module argument is required.");
-            }
-
-            if (!HiveDefinition.IsValidName(ruleName))
-            {
-                throw new ArgumentException($"[rule_name={ruleName}] is not a valid load balancer rule name.");
-            }
-
-            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [deferupdate]");
-
-            if (!context.Arguments.TryGetValue<bool>("rule_name", out var deferUpdate))
-            {
-                deferUpdate = false;
-            }
-
-            var isPublic = false;
-
-            switch (name)
-            {
-                case "private":
-
-                    loadBalancer = HiveHelper.Hive.PrivateLoadBalancer;
-                    isPublic     = false;
-                    break;
-
-                case "public":
-
-                    loadBalancer = HiveHelper.Hive.PublicLoadBalancer;
-                    isPublic     = true;
-                    break;
-
-                default:
-
-                    throw new ArgumentException($"[name={name}] is not a one of the valid load balancer names: [private] or [public].");
-            }
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [state]");
 
@@ -307,6 +264,54 @@ namespace NeonCli.Ansible
             if (context.HasErrors)
             {
                 return;
+            }
+
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [name]");
+
+            if (!context.Arguments.TryGetValue<string>("name", out name))
+            {
+                throw new ArgumentException($"[name] module argument is required.");
+            }
+
+            switch (name)
+            {
+                case "private":
+
+                    loadBalancer = HiveHelper.Hive.PrivateLoadBalancer;
+                    isPublic = false;
+                    break;
+
+                case "public":
+
+                    loadBalancer = HiveHelper.Hive.PublicLoadBalancer;
+                    isPublic = true;
+                    break;
+
+                default:
+
+                    throw new ArgumentException($"[name={name}] is not a one of the valid load balancer names: [private] or [public].");
+            }
+
+            if (state != "update")
+            {
+                context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [rule_name]");
+
+                if (!context.Arguments.TryGetValue<string>("rule_name", out ruleName))
+                {
+                    throw new ArgumentException($"[rule_name] module argument is required.");
+                }
+
+                if (!HiveDefinition.IsValidName(ruleName))
+                {
+                    throw new ArgumentException($"[rule_name={ruleName}] is not a valid load balancer rule name.");
+                }
+
+                context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [defer_update]");
+
+                if (!context.Arguments.TryGetValue<bool>("defer_update", out deferUpdate))
+                {
+                    deferUpdate = false;
+                }
             }
 
             // We have the required arguments, so perform the operation.
@@ -505,12 +510,13 @@ namespace NeonCli.Ansible
                 case "update":
 
                     loadBalancer.Update();
+                    context.Changed = true;
                     context.WriteLine(AnsibleVerbosity.Info, $"Update signalled.");
                     break;
 
                 default:
 
-                    throw new ArgumentException($"[state={state}] is not one of the valid choices: [present] or [absent].");
+                    throw new ArgumentException($"[state={state}] is not one of the valid choices: [present], [absent], or [update].");
             }
         }
     }
