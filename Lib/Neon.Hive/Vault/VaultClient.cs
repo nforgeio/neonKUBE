@@ -581,6 +581,11 @@ namespace Neon.Hive
         /// Thrown if no object is present at <paramref name="path"/>.
         /// </exception>
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
+        /// <remarks>
+        /// <note>
+        /// An empty array will be returned if <c>null</c> was persisted as the byte data.
+        /// </note>
+        /// </remarks>
         public async Task<byte[]> ReadBytesAsync(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
@@ -590,6 +595,11 @@ namespace Neon.Hive
                 var bytesObject = (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
                     .AsDynamic()
                     .data;
+
+                if (bytesObject.value == null)
+                {
+                    return new byte[0];
+                }
 
                 return Convert.FromBase64String((string)bytesObject.value);
             }
@@ -610,7 +620,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="path">The object path.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <returns>The byte array or <c>null</c> if the path doesn't exist.</returns>
+        /// <returns>The byte array or <c>null</c> the path doesn't exist.</returns>
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<byte[]> ReadBytesOrDefaultAsync(string path, CancellationToken cancellationToken = default)
         {
