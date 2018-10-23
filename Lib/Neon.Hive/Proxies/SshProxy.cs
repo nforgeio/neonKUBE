@@ -3359,7 +3359,7 @@ echo $? > {cmdFolder}/exit
             // can deploy a custom registry (whose crdentials will be 
             // persisted to Vault).
 
-            UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
+            UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash(), permissions: "700");
 
             return true;
         }
