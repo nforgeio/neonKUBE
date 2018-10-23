@@ -63,6 +63,7 @@ namespace Neon.Common
     {
         private INeonLogger                 log;
         private CancellationTokenSource     cts;
+        private bool                        terminating;
         private bool                        readyToExit;
         private List<Action>                handlers;
 
@@ -80,9 +81,8 @@ namespace Neon.Common
                 timeout = TimeSpan.FromSeconds(10);
             }
 
-            this.Timeout = timeout;
-            this.cts     = new CancellationTokenSource();
-
+            this.Timeout  = timeout;
+            this.cts      = new CancellationTokenSource();
             this.handlers = new List<Action>();
 
             AssemblyLoadContext.Default.Unloading +=
@@ -131,8 +131,17 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Returns the <see cref="CancellationToken"/> that will be raised when a
-        /// termination signal is received.
+        /// Returns the <see cref="CancellationTokenSource"/> that can be used to
+        /// cancel any outstanding operations before terminating a process.
+        /// </summary>
+        public CancellationTokenSource CancellationTokenSource
+        {
+            get { return cts; }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="CancellationToken"/> that will be cancelled when a
+        /// termination signal is received or <see cref="Exit(int)"/> is called explicitly.
         /// </summary>
         public CancellationToken CancellationToken
         {
@@ -152,7 +161,8 @@ namespace Neon.Common
         /// Cleanly terminates the current process (for internal use).
         /// </summary>
         /// <param name="exitCode">Optional process exit code (defaults to <b>0</b>).</param>
-        private void ExitInternal(int exitCode = 0)
+        /// <param name="explicitTermination">Optionally indicates that termination is not due to receiving an external signal.</param>
+        private void ExitInternal(int exitCode = 0, bool explicitTermination = false)
         {
             if (readyToExit)
             {
@@ -161,7 +171,23 @@ namespace Neon.Common
                 return;
             }
 
-            log?.LogInfo(() => $"SIGTERM received: Stopping process [timeout={Timeout}]");
+            var isTerminating = terminating;
+
+            terminating = true;
+
+            if (isTerminating)
+            {
+                return;     // Already terminating.
+            }
+
+            if (explicitTermination)
+            {
+                log?.LogInfo(() => $"INTERNAL stop request: [timeout={Timeout}]");
+            }
+            else
+            {
+                log?.LogInfo(() => $"SIGTERM received: Stopping process [timeout={Timeout}]");
+            }
 
             cts.Cancel();
 
@@ -201,7 +227,7 @@ namespace Neon.Common
                 return;
             }
 
-            ExitInternal(exitCode);
+            ExitInternal(exitCode, explicitTermination: true);
         }
     }
 }

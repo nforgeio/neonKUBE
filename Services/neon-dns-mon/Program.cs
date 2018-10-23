@@ -113,6 +113,7 @@ namespace NeonDnsMon
             {
                 log.LogCritical(e);
                 Program.Exit(1);
+                return;
             }
             finally
             {
@@ -121,6 +122,7 @@ namespace NeonDnsMon
             }
 
             Program.Exit(0);
+            return;
         }
 
         /// <summary>
@@ -147,23 +149,40 @@ namespace NeonDnsMon
         }
 
         /// <summary>
+        /// <para>
         /// Exits the service with an exit code.  This method defaults to using
-        /// the <see cref="ProcessTerminator"/> to gracefully exit the program.
-        /// This can be overridden by passing <paramref name="force"/><c>=true</c>.
+        /// the <see cref="ProcessTerminator"/> if there is one to gracefully exit 
+        /// the program.  The program will be exited immediately by passing 
+        /// <paramref name="immediate"/><c>=true</c> or when there is no process
+        /// terminator.
+        /// </para>
+        /// <note>
+        /// You should always ensure that you exit the current operation
+        /// context after calling this method.  This will ensure that the
+        /// <see cref="ProcessTerminator"/> will have a chance to determine
+        /// that the process was able to be stopped cleanly.
+        /// </note>
         /// </summary>
         /// <param name="exitCode">The exit code.</param>
-        /// <param name="force">Forces an immediate ungraceful exit.</param>
-        public static void Exit(int exitCode, bool force = false)
+        /// <param name="immediate">Forces an immediate ungraceful exit.</param>
+        public static void Exit(int exitCode, bool immediate = false)
         {
             log.LogInfo(() => $"Exiting: [{serviceName}]");
 
-            if (terminator == null)
+            if (terminator == null || immediate)
             {
                 Environment.Exit(exitCode);
             }
             else
             {
-                terminator.Exit(exitCode);
+                // Signal the terminator to stop on another thread
+                // so this method can return and the caller will be
+                // able to return from its operation code.
+
+                var threadStart = new ThreadStart(() => terminator.Exit(exitCode));
+                var thread      = new Thread(threadStart);
+
+                thread.Start();
             }
         }
 
@@ -314,7 +333,6 @@ namespace NeonDnsMon
 
             terminator.AddDisposable(periodicTask);
             await periodicTask.Run();
-            terminator.ReadyToExit();
         }
 
         /// <summary>

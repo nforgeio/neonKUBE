@@ -89,9 +89,9 @@ namespace NeonProxyManager
 
                                     try
                                     {
-                                        foreach (var certName in await vault.ListAsync(vaultCertPrefix, cts.Token))
+                                        foreach (var certName in await vault.ListAsync(vaultCertPrefix, terminator.CancellationToken))
                                         {
-                                            var certJson    = (await vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}"), cts.Token).ToString();
+                                            var certJson    = (await vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}"), terminator.CancellationToken).ToString();
                                             var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
                                             var certInfo    = new CertInfo(certName, certificate);
 
@@ -116,7 +116,7 @@ namespace NeonProxyManager
                                     // Fetch the hive definition and detect whether it changed since the
                                     // previous run.
 
-                                    var currentHiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, cts.Token);
+                                    var currentHiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, terminator.CancellationToken);
 
                                     hiveDefinitionChanged = hiveDefinition == null || !NeonHelper.JsonEquals(hiveDefinition, currentHiveDefinition);
                                     hiveDefinition        = currentHiveDefinition;
@@ -124,7 +124,7 @@ namespace NeonProxyManager
                                     // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
                                     // proxy bridge configurations.
 
-                                    swarmNodes = await docker.NodeListAsync(cts.Token);
+                                    swarmNodes = await docker.NodeListAsync(terminator.CancellationToken);
 
                                     // Rebuild the proxy configurations and write the captured status to
                                     // Consul to make it available for the [neon proxy public|private status]
@@ -135,12 +135,12 @@ namespace NeonProxyManager
                                     var publicBuildStatus = await BuildProxyConfigAsync("public", hiveCerts);
                                     var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
 
-                                    await consul.KV.PutString($"{proxyStatusKey}/public", NeonHelper.JsonSerialize(publicProxyStatus), cts.Token);
+                                    await consul.KV.PutString($"{proxyStatusKey}/public", NeonHelper.JsonSerialize(publicProxyStatus), terminator.CancellationToken);
 
                                     var privateBuildStatus = await BuildProxyConfigAsync("private", hiveCerts);
                                     var privateProxyStatus = new LoadBalancerStatus() { Status = privateBuildStatus.Status };
 
-                                    await consul.KV.PutString($"{proxyStatusKey}/private", NeonHelper.JsonSerialize(privateProxyStatus), cts.Token);
+                                    await consul.KV.PutString($"{proxyStatusKey}/private", NeonHelper.JsonSerialize(privateProxyStatus), terminator.CancellationToken);
 
                                     // We need to ensure that the deployment's load balancer and security
                                     // rules are updated to match changes to the public load balancer rules.
@@ -266,7 +266,7 @@ namespace NeonProxyManager
 
             try
             {
-                settings = await consul.KV.GetObjectOrDefault<LoadBalancerSettings>($"{proxyPrefix}/settings", cts.Token);
+                settings = await consul.KV.GetObjectOrDefault<LoadBalancerSettings>($"{proxyPrefix}/settings", terminator.CancellationToken);
 
                 if (settings == null)
                 {
@@ -297,12 +297,12 @@ namespace NeonProxyManager
                     };
 
                     log.LogInfo(() => $"Updating proxy [{proxyDisplayName}] settings.");
-                    await consul.KV.PutString($"{proxyPrefix}/settings", NeonHelper.JsonSerialize(settings, Formatting.None), cts.Token);
+                    await consul.KV.PutString($"{proxyPrefix}/settings", NeonHelper.JsonSerialize(settings, Formatting.None), terminator.CancellationToken);
                 }
 
                 log.LogInfo(() => $"Reading [{proxyDisplayName}] rules.");
 
-                var result = await consul.KV.List($"{proxyPrefix}/rules/", cts.Token);
+                var result = await consul.KV.List($"{proxyPrefix}/rules/", terminator.CancellationToken);
 
                 if (result.Response != null)
                 {
@@ -1202,14 +1202,14 @@ backend http:{httpRule.Name}
 
             try
             {
-                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", cts.Token) || 
-                    !await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/proxy-conf", cts.Token))
+                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", terminator.CancellationToken) || 
+                    !await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/proxy-conf", terminator.CancellationToken))
                 {
                     publish = true; // Nothing published yet.
                 }
                 else
                 {
-                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", cts.Token);
+                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", terminator.CancellationToken);
                 }
 
                 if (publish)
@@ -1231,7 +1231,7 @@ backend http:{httpRule.Name}
                         new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/proxy-conf", KVTxnVerb.Set) { Value = zipBytes }
                     };
 
-                    await consul.KV.Txn(operations, cts.Token);
+                    await consul.KV.Txn(operations, terminator.CancellationToken);
 
                     // Notify the proxy instances that they should reconfigure.
 
@@ -1564,14 +1564,14 @@ listen tcp:port-{port}
 
             try
             {
-                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", cts.Token) ||
-                    !await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-conf", cts.Token))
+                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", terminator.CancellationToken) ||
+                    !await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-conf", terminator.CancellationToken))
                 {
                     publish = true; // Nothing published yet.
                 }
                 else
                 {
-                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", cts.Token);
+                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", terminator.CancellationToken);
                 }
 
                 if (publish)
@@ -1593,7 +1593,7 @@ listen tcp:port-{port}
                         new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-conf", KVTxnVerb.Set) { Value = zipBytes }
                     };
 
-                    await consul.KV.Txn(operations, cts.Token);
+                    await consul.KV.Txn(operations, terminator.CancellationToken);
 
                     // Notify the proxy-bridge instances that they should reconfigure.
 
@@ -1639,7 +1639,7 @@ listen tcp:port-{port}
 
                 var clonedHiveDefinition = NeonHelper.JsonClone<HiveDefinition>(hiveDefinition);
 
-                clonedHiveDefinition.Hosting = await vault.ReadJsonAsync<HostingOptions>("neon-secret/hosting/options", cancellationToken: cts.Token);
+                clonedHiveDefinition.Hosting = await vault.ReadJsonAsync<HostingOptions>("neon-secret/hosting/options", cancellationToken: terminator.CancellationToken);
 
                 var hive = new HiveProxy(clonedHiveDefinition);
 
@@ -1665,7 +1665,7 @@ listen tcp:port-{port}
                 if (hostingManager == null)
                 {
                     Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{hive.Definition.Hosting.Environment}] hosting environment could be located.");
-                    Program.Exit(1);
+                    Program.Exit(1, immediate: true);
                 }
 
                 if (!hostingManager.CanUpdatePublicEndpoints)

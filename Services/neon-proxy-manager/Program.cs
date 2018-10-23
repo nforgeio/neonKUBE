@@ -76,7 +76,6 @@ namespace NeonProxyManager
         private static bool                     hiveDefinitionChanged;
         private static List<DockerNode>         swarmNodes;
 
-        private static CancellationTokenSource  cts               = new CancellationTokenSource();
         private static bool                     processingConfigs = false;
         private static bool                     exit              = false;
 
@@ -102,7 +101,7 @@ namespace NeonProxyManager
 
                     exit = true;
 
-                    cts.Cancel();
+                    terminator.CancellationTokenSource.Cancel();
 
                     // This gracefully closes the [proxyNotifyChannel] so HiveMQ will
                     // promptly remove the associated queue.
@@ -153,7 +152,7 @@ namespace NeonProxyManager
                 if (string.IsNullOrEmpty(vaultCredentialsSecret))
                 {
                     log.LogCritical("[VAULT_CREDENTIALS] environment variable does not exist.");
-                    Program.Exit(1);
+                    Program.Exit(1, immediate: true);
                 }
 
                 var vaultSecret = HiveHelper.GetSecret(vaultCredentialsSecret);
@@ -161,7 +160,7 @@ namespace NeonProxyManager
                 if (string.IsNullOrEmpty(vaultSecret))
                 {
                     log.LogCritical($"Cannot read Docker secret [{vaultCredentialsSecret}].");
-                    Program.Exit(1);
+                    Program.Exit(1, immediate: true);
                 }
 
                 var vaultCredentials = HiveCredentials.ParseJson(vaultSecret);
@@ -169,7 +168,7 @@ namespace NeonProxyManager
                 if (vaultCredentials == null)
                 {
                     log.LogCritical($"Cannot parse Docker secret [{vaultCredentialsSecret}].");
-                    Program.Exit(1);
+                    Program.Exit(1, immediate: true);
                 }
 
                 // Open the hive data services and then start the main service task.
@@ -251,8 +250,6 @@ namespace NeonProxyManager
                                 tasks.Add(ConfigGeneratorAsync());
                                 tasks.Add(FailsafeBroadcasterAsync());
                                 await NeonHelper.WaitAllAsync(tasks);
-
-                                terminator.ReadyToExit();
                             }
                         }
                     }
@@ -262,6 +259,7 @@ namespace NeonProxyManager
             {
                 log.LogCritical(e);
                 Program.Exit(1);
+                return;
             }
             finally
             {
@@ -270,6 +268,7 @@ namespace NeonProxyManager
             }
 
             Program.Exit(0);
+            return;
         }
 
         /// <summary>
@@ -296,23 +295,40 @@ namespace NeonProxyManager
         }
 
         /// <summary>
+        /// <para>
         /// Exits the service with an exit code.  This method defaults to using
-        /// the <see cref="ProcessTerminator"/> to gracefully exit the program.
-        /// This can be overridden by passing <paramref name="force"/><c>=true</c>.
+        /// the <see cref="ProcessTerminator"/> if there is one to gracefully exit 
+        /// the program.  The program will be exited immediately by passing 
+        /// <paramref name="immediate"/><c>=true</c> or when there is no process
+        /// terminator.
+        /// </para>
+        /// <note>
+        /// You should always ensure that you exit the current operation
+        /// context after calling this method.  This will ensure that the
+        /// <see cref="ProcessTerminator"/> will have a chance to determine
+        /// that the process was able to be stopped cleanly.
+        /// </note>
         /// </summary>
         /// <param name="exitCode">The exit code.</param>
-        /// <param name="force">Forces an immediate ungraceful exit.</param>
-        public static void Exit(int exitCode, bool force = false)
+        /// <param name="immediate">Forces an immediate ungraceful exit.</param>
+        public static void Exit(int exitCode, bool immediate = false)
         {
             log.LogInfo(() => $"Exiting: [{serviceName}]");
 
-            if (terminator == null)
+            if (terminator == null || immediate)
             {
                 Environment.Exit(exitCode);
             }
             else
             {
-                terminator.Exit(exitCode);
+                // Signal the terminator to stop on another thread
+                // so this method can return and the caller will be
+                // able to return from its operation code.
+
+                var threadStart = new ThreadStart(() => terminator.Exit(exitCode));
+                var thread      = new Thread(threadStart);
+
+                thread.Start();
             }
         }
     }

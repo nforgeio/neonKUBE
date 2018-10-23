@@ -136,10 +136,6 @@ namespace NeonProxy
         /// will be logged as warnings but the service will continue running with the out-of-date
         /// configuration to provide some resilience for running hive services.
         /// </para>
-        /// <para>
-        /// This class uses <see cref="cts"/> to detect a pending service termination and
-        /// then exit gracefully.
-        /// </para>
         /// </remarks>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async static Task HAProxShim()
@@ -182,7 +178,7 @@ namespace NeonProxy
 
                         await Task.CompletedTask;
                     },
-                cancellationTokenSource: cts);
+                cancellationTokenSource: terminator.CancellationTokenSource);
 
             await task.Run();
         }
@@ -260,7 +256,7 @@ namespace NeonProxy
 
                 try
                 {
-                    configHash = await consul.KV.GetString(configHashKey, cts.Token);
+                    configHash = await consul.KV.GetString(configHashKey, terminator.CancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -293,7 +289,7 @@ namespace NeonProxy
 
                 try
                 {
-                    zipBytes = await consul.KV.GetBytes(configKey, cts.Token);
+                    zipBytes = await consul.KV.GetBytes(configKey, terminator.CancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -372,7 +368,7 @@ namespace NeonProxy
 
                             Directory.CreateDirectory(certDir);
 
-                            var cert = await vault.ReadJsonAsync<TlsCertificate>(certKey, cts.Token);
+                            var cert = await vault.ReadJsonAsync<TlsCertificate>(certKey, terminator.CancellationToken);
 
                             File.WriteAllText(Path.Combine(certDir, certFile), cert.CombinedPemNormalized);
                         }
@@ -441,6 +437,7 @@ namespace NeonProxy
                         {
                             log.LogCritical(() => "HAPROXY-SHIM: Invalid HAProxy configuration.  Terminating service.");
                             Program.Exit(1);
+                            return;
                         }
                         break;
                 }
@@ -571,7 +568,7 @@ namespace NeonProxy
 
                 // Give HAProxy a chance to start/restart cleanly.
 
-                await Task.Delay(startDelay, cts.Token);
+                await Task.Delay(startDelay, terminator.CancellationToken);
 
                 if (restart)
                 {
@@ -616,6 +613,7 @@ namespace NeonProxy
                 {
                     log.LogCritical("HAPROXY-SHIM: Terminating because we cannot launch HAProxy.", e);
                     Program.Exit(1);
+                    return;
                 }
                 else
                 {

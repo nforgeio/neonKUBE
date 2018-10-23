@@ -70,7 +70,7 @@ namespace NeonProxyManager
                             log.LogInfo(() => "FAILSAFE-BROADCASTER: Terminating");
                             await Task.CompletedTask;
                         },
-                    cancellationTokenSource: cts);
+                    cancellationTokenSource: terminator.CancellationTokenSource);
 
             terminator.AddDisposable(periodicTask);
             await periodicTask.Run();

@@ -138,10 +138,6 @@ namespace NeonProxyCache
         /// will be logged as warnings but the service will continue running with the out-of-date
         /// configuration to provide some resilience for running hive services.
         /// </para>
-        /// <para>
-        /// This class uses <see cref="cts"/> to detect a pending service termination and
-        /// then exit gracefully.
-        /// </para>
         /// </remarks>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async static Task VarnishShim()
@@ -184,7 +180,7 @@ namespace NeonProxyCache
 
                         await Task.CompletedTask;
                     },
-                cancellationTokenSource: cts);
+                cancellationTokenSource: terminator.CancellationTokenSource);
 
             await task.Run();
         }
@@ -260,7 +256,7 @@ namespace NeonProxyCache
 
                 try
                 {
-                    configHash = await consul.KV.GetString(configHashKey, cts.Token);
+                    configHash = await consul.KV.GetString(configHashKey, terminator.CancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -293,7 +289,7 @@ namespace NeonProxyCache
 
                 try
                 {
-                    zipBytes = await consul.KV.GetBytes(configKey, cts.Token);
+                    zipBytes = await consul.KV.GetBytes(configKey, terminator.CancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -340,7 +336,29 @@ namespace NeonProxyCache
 
                 if (!File.Exists(configUpdatePath))
                 {
-                    File.WriteAllText(configUpdatePath, "vcl 4.0;\n");
+                    const string stubVcl =
+@"vcl 4.0;
+
+# The proxy configuration archive did not include a [varnish.vcl] file so
+# we're going to generate a stub VCL file that doesn't do anything.
+
+import directors;
+
+backend one {
+    .host = ""localhost"";
+    .port = ""8080"";
+}
+
+sub vcl_init {
+    new round_robin_director = directors.round_robin();
+    round_robin_director.add_backend(one);
+}
+
+sub vcl_recv {
+    set req.backend_hint = round_robin_director.backend();
+}
+";
+                    File.WriteAllText(configUpdatePath, NeonHelper.ToLinuxLineEndings(stubVcl));
                 }
 
                 // Verify the configuration.
@@ -368,12 +386,15 @@ namespace NeonProxyCache
 
                     if (!GetVarnishProcessIds().IsEmpty())
                     {
-                        log.LogError(() => "VARNISH-SHIM: Invalid Varnish configuration.  Using out-of-date configuration as a fail-safe.");
+                        log.LogError(() => $"VARNISH-SHIM: Invalid Varnish configuration: {response.AllText}.");
+                        log.LogError(() => $"VARNISH-SHIM: Using out-of-date configuration as a fail-safe.");
                     }
                     else
                     {
-                        log.LogCritical(() => "VARNISH-SHIM: Invalid Varnish configuration.  Terminating service.");
+                        log.LogCritical(() => $"VARNISH-SHIM: Invalid Varnish configuration: {response.AllText}.");
+                        log.LogCritical(() => "VARNISH-SHIM: Terminating service.");
                         Program.Exit(1);
+                        return;
                     }
                 }
 
@@ -431,6 +452,7 @@ namespace NeonProxyCache
                     {
                         log.LogCritical(() => $"VARNISH-SHIM: Cannot start Varnish: {response.ErrorText}");
                         Program.Exit(1);
+                        return;
                     }
                 }
 

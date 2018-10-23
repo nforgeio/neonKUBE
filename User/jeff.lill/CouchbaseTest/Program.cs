@@ -132,12 +132,15 @@ namespace CouchbaseTest
             }
             catch (OperationCanceledException)
             {
-                terminator.ReadyToExit();
                 return;
             }
             catch (Exception e)
             {
                 log.LogError(e);
+            }
+            finally
+            {
+                terminator.ReadyToExit();
             }
         }
     }
