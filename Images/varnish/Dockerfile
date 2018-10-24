@@ -20,7 +20,7 @@ ARG         VERSION
 
 RUN apt-get update \
     && apt-get install -yq apt-utils \
-    && apt-get install -yq curl \
+    && apt-get install -yq curl nano \
     && curl -s https://packagecloud.io/install/repositories/varnishcache/varnish${FAMILY}/script.deb.sh | bash \
     && apt-get install -yq varnish=${VERSION}\* \
     && apt-get clean -yq
@@ -30,8 +30,11 @@ RUN apt-get update \
 COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
 
+# Configure the scripts and service app.  Note that we're removing
+# the [/var/lib/varnish] directory so we can mount a TMPFS there
+# so that the shared memory log won't do a ton of wasteful I/O.
+
 RUN chmod 700 /*.sh \
-    && apt-get update \
-    && apt-get install -yq nano
+    && rm -r /var/lib/varnish
 
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]

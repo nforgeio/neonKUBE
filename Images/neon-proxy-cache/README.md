@@ -27,3 +27,49 @@ This image is configured by the following environment variables:
 # Deployment
 
 This image is deployed automatically by the **neon-proxy-manager** service when one or more load balancer rules enable caching for the **public** and/or **private** load balancers.  The **neon-proxy-public-cache** service will be deployed for the **public** load balancer and **neon-proxy-private-cache** for the **private** load balancer.
+
+**neon-proxy-manager** deploys the cache services with settings like:
+
+```
+docker service create \
+    --name neon-proxy-public-cache \
+    --detach=false \
+    --mount type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true \
+    --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
+    --mount type=tmpfs,dst=/var/lib/varnish/_.vsm_mgt,tmpfs-size=90M,tmpfs-mode=755 \
+    --env CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-conf \
+    --env CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/public/proxy-hash \
+    --env WARN_SECONDS=300 \
+    --env MEMORY-LIMIT=100M \
+    --env LOG_LEVEL=INFO \
+    --env DEBUG=false \
+    --secret neon-proxy-public-credentials \
+    --constraint node.role==worker \
+    --replicas 1 \
+    --restart-delay 10s \
+    --network neon-public \
+    nhive/neon-proxy-cache
+
+docker service create \
+    --name neon-proxy-private-cache \
+    --detach=false \
+    --mount type=bind,src=/etc/neon/host-env,dst=/etc/neon/host-env,readonly=true \
+    --mount type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true \
+    --mount type=tmpfs,dst=/var/lib/varnish/_.vsm_mgt,tmpfs-size=90M,tmpfs-mode=755 \
+    --env CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-conf \
+    --env CONFIG_HASH_KEY=neon/service/neon-proxy-manager/proxies/private/proxy-hash \
+    --env WARN_SECONDS=300 \
+    --env MEMORY-LIMIT=100M \
+    --env LOG_LEVEL=INFO \
+    --env DEBUG=false \
+    --secret neon-proxy-private-credentials \
+    --constraint node.role==worker \
+    --replicas 1 \
+    --restart-delay 10s \
+    --network neon-private \
+    nhive/neon-proxy-cache
+```
+
+## Important: Varnish Shared Memory Log
+
+Varnish highly recommends [here](https://book.varnish-software.com/4.0/chapters/Tuning.html#the-varnish-shared-memory-log-vsl) that production deployment map the `/var/lib/varnish/_.vsm_mgt` directory to a **tmpfs** to avoid excessive I/O when writing logs.  Varnish requires **80MB** ofspace by default.  The example above sets this to **90MB** to provide a bit of a buffer.

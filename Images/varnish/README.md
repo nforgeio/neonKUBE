@@ -41,8 +41,18 @@ services:
         mode: host
     environment:
       - "BACKEND_SERVER=web"
-      - "BACKEND_PORT: 80"
-      - "MEMORY_LIMIT: 200M"
+      - "BACKEND_PORT=80"
+      - "MEMORY_LIMIT=200M"
+    volumes:
+      - type tmpfs
+        target: /var/lib/varnish/_.vsm_mgt
+        tmpfs:
+          size: 90M
+          mode: 755
   web:
     image: nhive/node
 ```
+
+## Important: Varnish Shared Memory Log
+
+Varnish highly recommends [here](https://book.varnish-software.com/4.0/chapters/Tuning.html#the-varnish-shared-memory-log-vsl) that production deployment map the `/var/lib/varnish/_.vsm_mgt` directory to a **tmpfs** to avoid excessive I/O when writing logs.  Varnish requires **80MB** ofspace by default.  The example above sets this to **90MB** to provide a bit of a buffer.

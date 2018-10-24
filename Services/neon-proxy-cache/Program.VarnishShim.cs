@@ -35,6 +35,25 @@ namespace NeonProxyCache
 {
     public static partial class Program
     {
+        // We're going to pass this directory to [varnishd] as the working
+        // directory using the -n] option.  Normally, Varnish would put its
+        // files in an instance subdirectory named with an instance ID.  We need
+        // to have Docker map in a TMPFS for the [_.vsm_mgt] directory so the
+        // shared memory log files won't actually do any I/O (which would be 
+        // really bad).  Having a generated instance ID will prevent us from
+        // knowing where to mount the TMPFS in advance.
+        //
+        // Fortunately, the [-n] option allows us to specify exactly where
+        // the working directory will be located without an instance ID.
+        //
+        // I would have rather just mounted the TMPFS to [/var/lib/varnish]
+        // but that doesn't work because Docker doesn't currently (as of 10/23/2018)
+        // have a way to specify EXEC for a TMPFS mount for Swarm services:
+        //
+        //      https://github.com/moby/moby/pull/36720
+
+        private const string workDir = "/var/lib/varnish";
+
         private const string NotDeployedHash = "NOT-DEPLOYED";
         private const string VclProgram      = "main";
         private const string AdminInterface  = "127.0.0.1:2000";
@@ -342,9 +361,20 @@ namespace NeonProxyCache
 # The proxy configuration archive did not include a [varnish.vcl] file so
 # we're going to generate a stub VCL file that doesn't do anything.
 
+import directors;
+
 backend stub {
     .host = ""localhost"";
     .port = ""8080"";
+}
+
+sub vcl_init {
+    new round_robin_director = directors.round_robin();
+    round_robin_director.add_backend(stub);
+}
+
+sub vcl_recv {
+    set req.backend_hint = round_robin_director.backend();
 }
 ";
                     File.WriteAllText(configUpdatePath, NeonHelper.ToLinuxLineEndings(stubVcl));
@@ -358,7 +388,8 @@ backend stub {
                     new object[]
                     {
                         "-C",
-                        "-f", configUpdatePath
+                        "-f", configUpdatePath,
+                        "-n", workDir
                     });
 
                 if (response.ExitCode == 0)
@@ -430,7 +461,8 @@ backend stub {
                             "-f", configPath,
                             "-s", $"malloc,{memoryLimit}",
                             "-T", AdminInterface,
-                            "-a", "0.0.0.0:80"
+                            "-a", "0.0.0.0:80",
+                            "-n", workDir
                         });
 
                     if (response.ExitCode == 0)
