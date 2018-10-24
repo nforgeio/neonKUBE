@@ -161,6 +161,7 @@
     <Content Include="neon-secret-retriever\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="neon-proxy-cache\rm.sh" />
     <None Include="neon-secret-retriever\build.ps1" />
     <None Include="neon-secret-retriever\docker-entrypoint.sh" />
     <None Include="neon-secret-retriever\Dockerfile">

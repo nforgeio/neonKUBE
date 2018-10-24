@@ -31,8 +31,9 @@ COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
 
 # Configure the scripts and service app.  Note that we're removing
-# the [/var/lib/varnish] directory so we can mount a TMPFS there
-# so that the shared memory log won't do a ton of wasteful I/O.
+# the [/var/lib/varnish] directory so we can mount a TMPFS at
+# [/var/lib/varnish/_.vsm_mgt] so that the shared memory log won't 
+# do a ton of wasteful I/O.
 
 RUN chmod 700 /*.sh \
     && rm -r /var/lib/varnish

@@ -39,21 +39,6 @@ if [ ! -d /var/lib/varnish/_.vsm_mgt ] ; then
     chmod 755 /var/lib/varnish/_.vsm_mgt
 fi
 
-# We also need to create a custom working directory where Varnish can compile
-# and run its VCL files.  This needs to have execute permissions for all users.
-# This is going to override the default directory which would normally be under
-# [/var/lib/varnish] but we need to mount a TMPFS here so that the shared memory
-# log won't actually do any I/O as recommended by Varnish for production.
-#
-# The problem is that Docker doesn't currently (as of 10/23/2018) have a way to 
-# specify EXEC for a TMPFS mount for Swarm services:
-#
-#       https://github.com/moby/moby/pull/36720
-#
-# We're going to create the directory here and set the VARNISH_WORKDIR environment
-# variable so that the [neon-proxy-cache] service code can pick this up.
-
-
 # Launch the service.
 
 exec neon-proxy-cache

@@ -37,13 +37,35 @@ COPY bin/__app              /usr/bin/$APPNAME.dotnet/
 COPY docker-entrypoint.sh   /
 
 # Configure the scripts and service app.  Note that we're removing
-# the [/var/lib/varnish] directory so we can mount a TMPFS there
-# so that the shared memory log won't do a ton of wasteful I/O.
+# the [/var/lib/varnish] directory so we can mount a TMPFS at
+# [/var/lib/varnish/_.vsm_mgt] so that the shared memory log won't 
+# do a ton of wasteful I/O.
 
 RUN chmod 700 /*.sh \
     && echo "#!/bin/sh" > /usr/bin/$APPNAME \ 
     && echo "exec dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
     && chmod 770 /usr/bin/$APPNAME \
     && rm -r /var/lib/varnish
+
+# $hack(jeff.lill): This is a horrible HACK!
+#
+# Unfortunately, [varnishd] attempts to remove the [/var/lib/varnish/_.vsm_mgt]
+# directory when it starts but this will fail because it needs to be mounted
+# as a TMPFS.  We don't actually need the directory to be removed because 
+# we know that its already empty when the container starts.
+#
+# The hack is to replace the standard [rm] command with our own script that
+# ignores this command (and calls the original [rm] for all other arguments):
+#
+#       rm -rf _.vsm_mgt
+#
+# We know this is the command Varnish will issue because we instrumented
+# a temporary [rm] script to log all calls to a file.
+
+COPY rm.sh      /bin
+
+RUN mv /bin/rm /bin/rm-org \
+    && mv /bin/rm.sh /bin/rm \
+    && chmod 755 /bin/rm
 
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
