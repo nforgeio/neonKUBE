@@ -26,12 +26,14 @@ using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Hive;
 using Neon.HiveMQ;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace NeonProxyManager
 {
     public static partial class Program
     {
+        private static AsyncMutex asyncLock = new AsyncMutex();
 
         /// <summary>
         /// Generates the HAProxy and Vault configurations.
@@ -68,90 +70,96 @@ namespace NeonProxyManager
                         proxyNotifyChannel.Consume<ProxyRegenerateMessage>(
                             async notifyMessage =>
                             {
-                                try
+                                // We cannot process updates in parallel so we'll use an 
+                                // AsyncMutex to prevent this.
+
+                                using (await asyncLock.AcquireAsync())
                                 {
-                                    log.LogInfo(() => $"MONITOR: Received [{nameof(ProxyRegenerateMessage)}({notifyMessage.Reason})]");
-
-                                    if (processingConfigs)
-                                    {
-                                        log.LogInfo(() => $"MONITOR: Ignorning [{nameof(ProxyRegenerateMessage)}] because we're already generating proxy configurations.");
-                                        return;
-                                    }
-
-                                    processingConfigs = true;
-
-                                    // Load and check the hive certificates.
-
-                                    var hiveCerts = new HiveCerts();
-                                    var utcNow    = DateTime.UtcNow;
-
-                                    log.LogInfo(() => "Reading hive certificates.");
-
                                     try
                                     {
-                                        foreach (var certName in await vault.ListAsync(vaultCertPrefix, terminator.CancellationToken))
+                                        log.LogInfo(() => $"MONITOR: Received [{nameof(ProxyRegenerateMessage)}({notifyMessage.Reason})]");
+
+                                        if (processingConfigs)
                                         {
-                                            var certificate = await vault.ReadJsonAsync<TlsCertificate>($"{vaultCertPrefix}/{certName}", terminator.CancellationToken);
-                                            var certInfo    = new CertInfo(certName, certificate);
-
-                                            if (!certInfo.Certificate.IsValidDate(utcNow))
-                                            {
-                                                log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
-                                            }
-                                            else if (!certInfo.Certificate.IsValidDate(utcNow + certWarnTime))
-                                            {
-                                                log.LogWarn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
-                                            }
-
-                                            hiveCerts.Add(certInfo);
+                                            log.LogInfo(() => $"MONITOR: Ignorning [{nameof(ProxyRegenerateMessage)}] because we're already generating proxy configurations.");
+                                            return;
                                         }
+
+                                        processingConfigs = true;
+
+                                        // Load and check the hive certificates.
+
+                                        var hiveCerts = new HiveCerts();
+                                        var utcNow    = DateTime.UtcNow;
+
+                                        log.LogInfo(() => "Reading hive certificates.");
+
+                                        try
+                                        {
+                                            foreach (var certName in await vault.ListAsync(vaultCertPrefix, terminator.CancellationToken))
+                                            {
+                                                var certificate = await vault.ReadJsonAsync<TlsCertificate>($"{vaultCertPrefix}/{certName}", terminator.CancellationToken);
+                                                var certInfo    = new CertInfo(certName, certificate);
+
+                                                if (!certInfo.Certificate.IsValidDate(utcNow))
+                                                {
+                                                    log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
+                                                }
+                                                else if (!certInfo.Certificate.IsValidDate(utcNow + certWarnTime))
+                                                {
+                                                    log.LogWarn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
+                                                }
+
+                                                hiveCerts.Add(certInfo);
+                                            }
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            log.LogError("Unable to load certificates from Vault.", e);
+                                            log.LogError(() => "Aborting load balancer configuration.");
+                                        }
+
+                                        // Fetch the hive definition and detect whether it changed since the
+                                        // previous run.
+
+                                        var currentHiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, terminator.CancellationToken);
+
+                                        hiveDefinitionChanged = hiveDefinition == null || !NeonHelper.JsonEquals(hiveDefinition, currentHiveDefinition);
+                                        hiveDefinition        = currentHiveDefinition;
+
+                                        // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
+                                        // proxy bridge configurations.
+
+                                        swarmNodes = await docker.NodeListAsync(terminator.CancellationToken);
+
+                                        // Rebuild the proxy configurations and write the captured status to
+                                        // Consul to make it available for the [neon proxy public|private status]
+                                        // command.  Note that we're going to build the [neon-proxy-public-bridge]
+                                        // and [neon-proxy-private-bridge] configurations as well for use by any 
+                                        // hive pet nodes.
+
+                                        var publicBuildStatus = await BuildProxyConfigAsync("public", hiveCerts);
+                                        var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
+
+                                        await consul.KV.PutString($"{proxyStatusKey}/public", NeonHelper.JsonSerialize(publicProxyStatus), terminator.CancellationToken);
+
+                                        var privateBuildStatus = await BuildProxyConfigAsync("private", hiveCerts);
+                                        var privateProxyStatus = new LoadBalancerStatus() { Status = privateBuildStatus.Status };
+
+                                        await consul.KV.PutString($"{proxyStatusKey}/private", NeonHelper.JsonSerialize(privateProxyStatus), terminator.CancellationToken);
+
+                                        // We need to ensure that the deployment's load balancer and security
+                                        // rules are updated to match changes to the public load balancer rules.
+                                        // Note that we're going to call this even if the PUBLIC load balancer
+                                        // hasn't changed to ensure that the load balancer doesn't get
+                                        // out of sync.
+
+                                        await UpdateHiveNetwork(publicBuildStatus.Rules);
                                     }
-                                    catch (Exception e)
+                                    finally
                                     {
-                                        log.LogError("Unable to load certificates from Vault.", e);
-                                        log.LogError(() => "Aborting load balancer configuration.");
+                                        processingConfigs = false;
                                     }
-
-                                    // Fetch the hive definition and detect whether it changed since the
-                                    // previous run.
-
-                                    var currentHiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, terminator.CancellationToken);
-
-                                    hiveDefinitionChanged = hiveDefinition == null || !NeonHelper.JsonEquals(hiveDefinition, currentHiveDefinition);
-                                    hiveDefinition        = currentHiveDefinition;
-
-                                    // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
-                                    // proxy bridge configurations.
-
-                                    swarmNodes = await docker.NodeListAsync(terminator.CancellationToken);
-
-                                    // Rebuild the proxy configurations and write the captured status to
-                                    // Consul to make it available for the [neon proxy public|private status]
-                                    // command.  Note that we're going to build the [neon-proxy-public-bridge]
-                                    // and [neon-proxy-private-bridge] configurations as well for use by any 
-                                    // hive pet nodes.
-
-                                    var publicBuildStatus = await BuildProxyConfigAsync("public", hiveCerts);
-                                    var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
-
-                                    await consul.KV.PutString($"{proxyStatusKey}/public", NeonHelper.JsonSerialize(publicProxyStatus), terminator.CancellationToken);
-
-                                    var privateBuildStatus = await BuildProxyConfigAsync("private", hiveCerts);
-                                    var privateProxyStatus = new LoadBalancerStatus() { Status = privateBuildStatus.Status };
-
-                                    await consul.KV.PutString($"{proxyStatusKey}/private", NeonHelper.JsonSerialize(privateProxyStatus), terminator.CancellationToken);
-
-                                    // We need to ensure that the deployment's load balancer and security
-                                    // rules are updated to match changes to the public load balancer rules.
-                                    // Note that we're going to call this even if the PUBLIC load balancer
-                                    // hasn't changed to ensure that the load balancer doesn't get
-                                    // out of sync.
-
-                                    await UpdateHiveNetwork(publicBuildStatus.Rules);
-                                }
-                                finally
-                                {
-                                    processingConfigs = false;
                                 }
                             });
                     }
