@@ -66,7 +66,7 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-	Build "60" "6.0.0" -latest
+	Build "60" "6.0.0"
 }
 
 Build "61" "6.1.0" -latest
