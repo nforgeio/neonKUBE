@@ -6,8 +6,8 @@
 # ARGUMENTS:
 #
 #   BRANCH      - The current GitHub branch
-#   FAMILY      - Identifies the major/minor version (like: "60")
-#   VERSION     - The specific version (like: "6.0.0")
+#   FAMILY      - Identifies the major/minor version (like: "61")
+#   VERSION     - The specific version (like: "6.1.0")
 
 ARG         BRANCH
 FROM        nhive/ubuntu-16.04-dotnet:${BRANCH}-2.1
@@ -20,7 +20,7 @@ ARG         VERSION
 
 RUN apt-get update \
     && apt-get install -yq apt-utils \
-    && apt-get install -yq curl nano \
+    && apt-get install -yq curl nano zip \
     && curl -s https://packagecloud.io/install/repositories/varnishcache/varnish${FAMILY}/script.deb.sh | bash \
     && apt-get install -yq varnish=${VERSION}\* \
     && apt-get clean -yq
@@ -38,4 +38,31 @@ COPY _common/*.sh           /
 RUN chmod 700 /*.sh \
     && rm -r /var/lib/varnish
 
+# $hack(jeff.lill):
+#
+# Unfortunately, stock [varnishd] attempts to remove the [/var/lib/varnish/_.vsm_mgt]
+# directory when it starts but this will fail because it needs to be mounted
+# as a TMPFS.  We don't actually need the directory to be removed because 
+# we know that its already empty when the container starts.
+#
+# The hack is to replace stock [varnishd] with a custom version that ignores
+# the two lines of code that clear and then create the [/var/lib/varnish/_.vsm_mgt]
+# directory when the VARNISH_HACK environment variable is defined.  We'll also need 
+# to use the [varnishd -n /var/lib/varnish] option so that Varnish won't create a 
+# subfolder with an instance ID and so we'll have a stable target location where we
+# can mount the TMPFS.
+#
+# We'll download a ZIP file with the custom build and extract it to replace
+# version installed above.  Note that you must be sure to use [varnish-builder] 
+# to build and ZIP the custom [varnishd] first and upload the archive to S3.
+
+ENV VARNISH_HACK 1
+
+RUN wget -nv https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/varnish.${VERSION}.zip -O /tmp/varnish.zip \
+    && cd /tmp \
+    && unzip varnish.zip -d . \
+    && cp varnishd /usr/sbin \
+    && rm /tmp/varnish.zip
+
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
+

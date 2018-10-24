@@ -72,4 +72,6 @@ docker service create \
 
 ## Important: Varnish Shared Memory Log
 
-Varnish highly recommends [here](https://book.varnish-software.com/4.0/chapters/Tuning.html#the-varnish-shared-memory-log-vsl) that production deployment map the `/var/lib/varnish/_.vsm_mgt` directory to a **tmpfs** to avoid excessive I/O when writing logs.  Varnish requires **80MB** ofspace by default.  The example above sets this to **90MB** to provide a bit of a buffer.
+Varnish highly recommends [here](https://book.varnish-software.com/4.0/chapters/Tuning.html#the-varnish-shared-memory-log-vsl) that production deployment map the `/var/lib/varnish/_.vsm_mgt` directory to a **tmpfs** to avoid excessive I/O when writing logs.  Varnish requires **80MB** of space by default.  The example above sets this to **90MB** to provide a bit of a buffer.
+
+Due to unavailable Docker features, this requires a slightly customized version of `varnishd` built by [nhive/varnishbuilder](https://hub.docker.com/r/nhive/varnish-builder/).

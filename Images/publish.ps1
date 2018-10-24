@@ -150,4 +150,5 @@ if ($other)
 	Publish "$image_root\\couchbase-test"
 	Publish "$image_root\\rabbitmq-test"
 	Publish "$image_root\\test"
+	Publish "$image_root\\varnish-builder"
 }

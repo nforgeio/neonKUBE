@@ -149,6 +149,7 @@
     <Content Include="neon-proxy-cache\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="varnish\BUILD.md" />
     <None Include="neon-proxy-cache\build.ps1" />
     <None Include="neon-proxy-cache\docker-entrypoint.sh" />
     <None Include="neon-proxy-cache\Dockerfile">
@@ -161,7 +162,6 @@
     <Content Include="neon-secret-retriever\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="neon-proxy-cache\rm.sh" />
     <None Include="neon-secret-retriever\build.ps1" />
     <None Include="neon-secret-retriever\docker-entrypoint.sh" />
     <None Include="neon-secret-retriever\Dockerfile">
@@ -296,6 +296,16 @@
     <Content Include="varnish\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="varnish-builder\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="varnish-builder\build.ps1" />
+    <None Include="varnish-builder\docker-entrypoint.sh" />
+    <None Include="varnish-builder\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="varnish-builder\publish.ps1" />
+    <None Include="varnish-builder\README.md" />
     <None Include="varnish\build.ps1" />
     <None Include="varnish\docker-entrypoint.sh" />
     <None Include="varnish\Dockerfile">
