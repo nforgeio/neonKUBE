@@ -36,15 +36,11 @@ RUN echo ** NEW LAYER **
 COPY bin/__app              /usr/bin/$APPNAME.dotnet/
 COPY docker-entrypoint.sh   /
 
-# Configure the scripts and service app.  Note that we're removing
-# the [/var/lib/varnish] directory so we can mount a TMPFS at
-# [/var/lib/varnish/_.vsm_mgt] so that the shared memory log won't 
-# do a ton of wasteful I/O.
+# Configure the scripts and service app.
 
 RUN chmod 700 /*.sh \
     && echo "#!/bin/sh" > /usr/bin/$APPNAME \ 
     && echo "exec dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
-    && chmod 770 /usr/bin/$APPNAME \
-    && rm -r /var/lib/varnish
+    && chmod 770 /usr/bin/$APPNAME
 
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
