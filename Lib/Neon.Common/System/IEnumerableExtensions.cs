@@ -66,9 +66,15 @@ namespace System.Collections.Generic
         /// </summary>
         /// <typeparam name="T">The enumeration value type.</typeparam>
         /// <param name="items">The items to be tested.</param>
+        /// <param name="predicate">Optional item selector.</param>
         /// <returns><c>true</c> if <paramref name="items"/> is empty.</returns>
-        public static bool IsEmpty<T>(this IEnumerable<T> items)
+        public static bool IsEmpty<T>(this IEnumerable<T> items, Func<T, bool> predicate = null)
         {
+            if (predicate != null)
+            {
+                items = items.Where(predicate);
+            }
+
             // Optimize  a couple common cases.
 
             var list = items as List<T>;

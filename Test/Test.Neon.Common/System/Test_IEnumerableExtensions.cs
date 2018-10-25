@@ -90,5 +90,20 @@ namespace TestCommon
             Assert.False((new List<string>() { "one", "two" }).IsEmpty());
             Assert.False((new List<int>() { 1, 2 }).IsEmpty());
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Predicate()
+        {
+            // Verify that predicates work.
+
+            var items = new int[] { 0, 1, 2, 3, 4 };
+
+            Assert.False(items.IsEmpty(item => true));
+            Assert.True(items.IsEmpty(item => false));
+
+            Assert.False(items.IsEmpty(item => item < 2));
+            Assert.True(items.IsEmpty(item => item > 4));
+        }
     }
 }
