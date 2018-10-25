@@ -28,7 +28,7 @@ namespace Neon.Hive
         /// </summary>
         public LoadBalancerHttpRule()
         {
-            Mode = LoadBalancerMode.Http;
+            base.Mode = LoadBalancerMode.Http;
         }
 
         /// <summary>
@@ -68,6 +68,13 @@ namespace Neon.Hive
         /// </summary>
         [JsonProperty(PropertyName = "Backends", Required = Required.Always)]
         public List<LoadBalancerHttpBackend> Backends { get; set; } = new List<LoadBalancerHttpBackend>();
+
+        /// <summary>
+        /// HTTP caching related settings.  This defaults to <c>null</c> which disables any caching.
+        /// </summary>
+        [JsonProperty(PropertyName = "Cache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public LoadBalancerHttpCache Cache { get; set; }
 
         /// <summary>
         /// Returns the list of backends selected to be targeted by processing any
@@ -357,6 +364,8 @@ namespace Neon.Hive
                     frontendMap.Add(key);
                 }
             }
+
+            Cache?.Validate(context);
         }
 
         /// <inheritdoc/>

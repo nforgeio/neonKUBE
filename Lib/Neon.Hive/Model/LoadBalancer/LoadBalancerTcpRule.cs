@@ -35,7 +35,7 @@ namespace Neon.Hive
         /// </summary>
         public LoadBalancerTcpRule()
         {
-            Mode = LoadBalancerMode.Tcp;
+            base.Mode = LoadBalancerMode.Tcp;
         }
 
         /// <summary>
