@@ -29,30 +29,57 @@ namespace Neon.Hive
     public class LoadBalancerTimeouts
     {
         /// <summary>
+        /// The default maximum time to wait for a connection attempt to a server (<b>5 seconds</b>).
+        /// </summary>
+        public const double DefaultConnectSeconds = 5.0;
+
+        /// <summary>
+        /// The default maximum time to wait for a client to continue transmitting a
+        /// request (<b>50 seconds</b>).
+        /// </summary>
+        public const double DefaultClientSeconds = 50.0;
+
+        /// <summary>
+        /// The defaultmaximum time to wait for a server to acknowledge or transmit
+        /// data (<b>50 seconds</b>).
+        /// </summary>
+        public const double DefaultServerSeconds = 50.0;
+
+        /// <summary>
+        /// The maximum time to wait for a health check (<b>5 seconds</b>).
+        /// </summary>
+        public const double DefaultCheckSeconsds = 5.0;
+
+        /// <summary>
         /// The maximum time to wait for a connection attempt to a server.
+        /// This defaults to <b>5 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ConnectSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        public double ConnectSeconds { get; set; } = 5.0;
+        [DefaultValue(DefaultConnectSeconds)]
+        public double ConnectSeconds { get; set; } = DefaultConnectSeconds;
 
         /// <summary>
         /// The maximum time to wait for a client to continue transmitting a
         /// request.  This defaults to <b>50 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ClientSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        public double ClientSeconds { get; set; } = 50.0;
+        [DefaultValue(DefaultClientSeconds)]
+        public double ClientSeconds { get; set; } = DefaultClientSeconds;
 
         /// <summary>
         /// The maximum time to wait for a server to acknowledge or transmit
         /// data.  This defaults to <b>50 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ServerSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        public double ServerSeconds { get; set; } = 50.0;
+        [DefaultValue(DefaultServerSeconds)]
+        public double ServerSeconds { get; set; } = DefaultServerSeconds;
 
         /// <summary>
         /// The maximum time to wait for a health check.  This defaults to <b>5 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "CheckSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        public double CheckSeconds { get; set; } = 5.0;
+        [DefaultValue(DefaultCheckSeconsds)]
+        public double CheckSeconds { get; set; } = DefaultCheckSeconsds;
 
         /// <summary>
         /// Validates the instance.

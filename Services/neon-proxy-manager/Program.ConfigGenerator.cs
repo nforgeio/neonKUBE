@@ -472,10 +472,10 @@ global
 defaults
     balance             roundrobin
     retries             2
-    timeout connect     {settings.Timeouts.ConnectSeconds}s
-    timeout client      {settings.Timeouts.ClientSeconds}s
-    timeout server      {settings.Timeouts.ServerSeconds}s
-    timeout check       {settings.Timeouts.CheckSeconds}s
+    timeout connect     {ToHaProxyTime(settings.Timeouts.ConnectSeconds)}
+    timeout client      {ToHaProxyTime(settings.Timeouts.ClientSeconds)}
+    timeout server      {ToHaProxyTime(settings.Timeouts.ServerSeconds)}
+    timeout check       {ToHaProxyTime(settings.Timeouts.CheckSeconds)}
 ");
 
             if (settings.Resolvers.Count > 0)
@@ -486,7 +486,7 @@ defaults
 $@"
 resolvers {resolver.Name}
     resolve_retries     {resolver.ResolveRetries}
-    timeout retry       {resolver.RetrySeconds}s
+    timeout retry       {ToHaProxyTime(resolver.RetrySeconds)}s
     hold valid          {resolver.HoldSeconds}s
 ");
                     foreach (var nameserver in resolver.NameServers)
@@ -795,6 +795,30 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                             sbHaProxy.AppendLine($"    http-check          expect {tcpRule.CheckExpect.Trim()}");
                         }
                     }
+
+                    // Explicitly set any rule timeouts that don't match the default settings.
+
+                    if (tcpRule.Timeouts.ConnectSeconds != settings.Timeouts.ConnectSeconds)
+                    {
+                        sbHaProxy.AppendLine($"    timeout connect     {ToHaProxyTime(tcpRule.Timeouts.ConnectSeconds)}");
+                    }
+
+                    if (tcpRule.Timeouts.ClientSeconds != settings.Timeouts.ClientSeconds)
+                    {
+                        sbHaProxy.AppendLine($"    timeout client      {ToHaProxyTime(tcpRule.Timeouts.ClientSeconds)}");
+                    }
+
+                    if (tcpRule.Timeouts.ServerSeconds != settings.Timeouts.ServerSeconds)
+                    {
+                        sbHaProxy.AppendLine($"    timeout server      {ToHaProxyTime(tcpRule.Timeouts.ServerSeconds)}");
+                    }
+
+                    if (tcpRule.Timeouts.CheckSeconds != settings.Timeouts.CheckSeconds)
+                    {
+                        sbHaProxy.AppendLine($"    timeout check       {ToHaProxyTime(tcpRule.Timeouts.CheckSeconds)}");
+                    }
+
+                    sbHaProxy.AppendLine($"    default_server      inter {ToHaProxyTime(tcpRule.CheckSeconds)}");
                 }
 
                 var checkArg    = tcpRule.CheckMode != LoadBalancerCheckMode.Disabled ? " check" : " no-check";
@@ -1109,6 +1133,30 @@ backend http:{httpRule.Name}
                         sbHaProxy.AppendLine($"    log                 global");
                     }
 
+                    // Explicitly set any rule timeouts that don't match the default settings.
+
+                    if (httpRule.Timeouts.ConnectSeconds != settings.Timeouts.ConnectSeconds)
+                    {
+                        sbHaProxy.AppendLine($"    timeout connect     {ToHaProxyTime(httpRule.Timeouts.ConnectSeconds)}");
+                    }
+
+                    if (httpRule.Timeouts.ClientSeconds != settings.Timeouts.ClientSeconds)
+                    {
+                        sbHaProxy.AppendLine($"    timeout client      {ToHaProxyTime(httpRule.Timeouts.ClientSeconds)}");
+                    }
+
+                    if (httpRule.Timeouts.ServerSeconds != settings.Timeouts.ServerSeconds)
+                    {
+                        sbHaProxy.AppendLine($"    timeout server      {ToHaProxyTime(httpRule.Timeouts.ServerSeconds)}");
+                    }
+
+                    if (httpRule.Timeouts.CheckSeconds != settings.Timeouts.CheckSeconds)
+                    {
+                        sbHaProxy.AppendLine($"    timeout check       {ToHaProxyTime(httpRule.Timeouts.CheckSeconds)}");
+                    }
+
+                    sbHaProxy.AppendLine($"    default_server      inter {ToHaProxyTime(httpRule.CheckSeconds)}");
+
                     var serverIndex = 0;
 
                     foreach (var backend in httpRule.SelectBackends(hostGroups))
@@ -1222,10 +1270,11 @@ import directors;
                         var sbCheckHeaders = new StringBuilder();
                         var checkStatus    = "200";
 
-                        // We need to verify that [CheckExpect] is a valid integer status code.
-                        // Varnish health probes don't have a way to specify a regex like HAProxy
-                        // can do.  We're going to fall back to checking for 200 responses for
-                        // these cases.
+                        // We need to verify that [CheckExpect] is set to [string STATUS] where STATUS
+                        // is a valid integer status code.  Varnish health probes don't have a way to 
+                        // specify a regex like HAProxy can do.  We should never see anything other than
+                        // this because the rule should varify this but we're going to fall back to checking 
+                        // for 200 responses just in case as a fail-safe.
 
                         var statusFields = rule.CheckExpect.Split(' ');
 
@@ -1255,9 +1304,9 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             ""{rule.CheckMethod} / HTTP/{rule.CheckVersion ?? "1.1"}""
             ""Host: {rule.CheckHost ?? backend.Server}""
             ""Connection: close"";
-        .timeout           = {(int)settings.Timeouts.CheckSeconds}s
+        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s
         .initial           = 7;
-        .interval          = 5s;
+        .interval          = {RoundUp(rule.CheckSeconds)}s;
         .window            = 8;
         .threshold         = 3;
         .expected_response = {checkStatus}
@@ -1277,9 +1326,9 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             ""Host: {rule.CheckHost ?? backend.Server}""
             {sbCheckHeaders}
             ""Connection: close"";
-        .timeout           = {(int)settings.Timeouts.CheckSeconds}s
+        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s
         .initial           = 7;
-        .interval          = 5s;
+        .interval          = {RoundUp(rule.CheckSeconds)}s;
         .window            = 8;
         .threshold         = 3;
         .expected_response = {checkStatus}
@@ -1382,6 +1431,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 
             // $todo(jeff.lill): DELETE THIS!
             var vcl = sbVarnishVcl.ToString();
+            var cfg = sbHaProxy.ToString();
 
             // Generate the cache settings which will be deployed as the
             // [cache-settings.json] file within the ZIP archive.
@@ -1685,10 +1735,10 @@ global
 defaults
     balance             roundrobin
     retries             2
-    timeout connect     {settings.Timeouts.ConnectSeconds}s
-    timeout client      {settings.Timeouts.ClientSeconds}s
-    timeout server      {settings.Timeouts.ServerSeconds}s
-    timeout check       {settings.Timeouts.CheckSeconds}s
+    timeout connect     {ToHaProxyTime(settings.Timeouts.ConnectSeconds)}
+    timeout client      {ToHaProxyTime(settings.Timeouts.ClientSeconds)}
+    timeout server      {ToHaProxyTime(settings.Timeouts.ServerSeconds)}
+    timeout check       {ToHaProxyTime(settings.Timeouts.CheckSeconds)}
 ");
             // Enable the HAProxy statistics pages.  These will be available on the 
             // [HiverConst.HAProxyStatsPort] port on the [neon-public] or
@@ -1993,6 +2043,58 @@ listen tcp:port-{port}
             catch (Exception e)
             {
                 log.LogError($"Unable to update hive load balancer and/or network security configuration.", e);
+            }
+        }
+
+        /// <summary>
+        /// Converts a <c>double</c> number of seconds into the corresponding HAProxy time representation
+        /// consisting of an integer followed by a unit.  See <a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#2.4">HAProxy Time Format</a>
+        /// </summary>
+        /// <param name="seconds">The seconds.</param>
+        /// <returns>The formatted time value.</returns>
+        private static string ToHaProxyTime(double seconds)
+        {
+            if (seconds < 0.0)
+            {
+                seconds = 0.0;
+            }
+
+            if (seconds == Math.Truncate(seconds))
+            {
+                // There's no fractional part.
+
+                return $"{seconds}s";
+            }
+
+            // There's a fractional part so we're going to render this as
+            // milliseconds, rounding up to the nearest millisecond.
+
+            var milliseconds = seconds * 1000.0;
+
+            if (milliseconds != Math.Truncate(milliseconds))
+            {
+                milliseconds = Math.Truncate(milliseconds) + 1;
+            }
+
+            return $"{milliseconds}ms";
+        }
+
+        /// <summary>
+        /// Rounds a <c>double</c> up to the next highest integer value.
+        /// </summary>
+        /// <param name="value">The input.</param>
+        /// <returns>The rounded value.</returns>
+        private static double RoundUp(double value)
+        {
+            var truncated = Math.Truncate(value);
+
+            if (value == truncated)
+            {
+                return value;
+            }
+            else
+            {
+                return truncated + 1.0;
             }
         }
     }

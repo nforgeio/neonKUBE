@@ -189,6 +189,14 @@ namespace Neon.Hive
         public LoadBalancerCheckMode CheckMode { get; set; } = LoadBalancerCheckMode.Default;
 
         /// <summary>
+        /// Specifies the interval to wait between health checks.  This defaults to
+        /// <b>5 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CheckSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(5.0)]
+        public double CheckSeconds { get; set; } = 5.0;
+
+        /// <summary>
         /// Indicates that endpoint health check connections should be secured with TLS.
         /// This can be enabled  for both <see cref="LoadBalancerHttpRule"/> and 
         /// <see cref="LoadBalancerTcpRule"/> rules.  This defaults to <c>false</c>.
@@ -275,6 +283,13 @@ namespace Neon.Hive
         public string CheckExpect { get; set; } = null;
 
         /// <summary>
+        /// The endpoint timeouts.  These default to standard timeouts defined by <see cref="LoadBalancerTimeouts"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Timeouts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public LoadBalancerTimeouts Timeouts { get; set; } = null;
+
+        /// <summary>
         /// Optionally indicates that this is to be considered to be a <b>system</b> rule
         /// used to support the underlying neonHIVE as opposed to a regular user defined
         /// rule.  This has no impact other than the fact that system rules are hidden
@@ -310,6 +325,8 @@ namespace Neon.Hive
         /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
         public virtual void Validate(LoadBalancerValidationContext context, bool addImplicitFrontends = false)
         {
+            Timeouts = Timeouts ?? new LoadBalancerTimeouts();
+
             if (string.IsNullOrEmpty(Name))
             {
                 context.Error($"Load balancer rule name is required.");
@@ -342,6 +359,13 @@ namespace Neon.Hive
                     context.Error($"Rule [{nameof(Name)}] has invalid [{nameof(CheckUri)}={CheckUri}].");
                 }
             }
+
+            if (CheckSeconds < 0.0)
+            {
+                CheckSeconds = 5.0;
+            }
+
+            Timeouts.Validate(context);
         }
 
         /// <summary>

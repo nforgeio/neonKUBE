@@ -381,8 +381,10 @@ namespace Neon.Hive
 
             if (Cache != null)
             {
-                // Varnish community doesn't support TLS backends.  This requires Varnish Plus which
-                // is expensive (of course).
+                Cache.Validate(context);
+
+                // The Varnish opensource release doesn't support TLS backends.  This requires 
+                // Varnish Plus which is very expensive (of course).
 
                 foreach (LoadBalancerHttpBackend backend in Backends)
                 {
@@ -393,7 +395,18 @@ namespace Neon.Hive
                     }
                 }
 
-                Cache.Validate(context);
+                // Varnish doesn't support comparing health probe status codes with a regex
+                // like HAProxy does.  We're going to enforce having CheckExpect set to
+                // something like "string 200".
+
+                var statusFields = CheckExpect.Split(' ');
+
+                if (statusFields.Length != 2 || statusFields[0] != "string" ||
+                    !int.TryParse(statusFields[1], out var statusCode) ||
+                    statusCode < 100 || 600 <= statusCode)
+                {
+                    context.Error($"HTTP rule [{Name}] cannot support caching because [{nameof(CheckExpect)}={CheckExpect}] doesn't specify a single status code like [string 200].  Varnish-Cache does not support verifying health probe status codes as regular expressions like HAProxy can.");
+                }
             }
         }
 
