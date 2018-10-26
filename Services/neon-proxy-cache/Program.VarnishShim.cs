@@ -359,14 +359,11 @@ namespace NeonProxyCache
 @"vcl 4.0;
 
 # The proxy configuration archive did not include a [varnish.vcl] file so
-# we're going to generate a stub VCL file that doesn't do anything.
+# we'll use this stub VCL file that doesn't do anything.
 
 backend stub {
     .host = ""localhost"";
     .port = ""8080"";
-}
-
-sub vcl_recv {
 }
 ";
                     File.WriteAllText(configUpdatePath, NeonHelper.ToLinuxLineEndings(stubVcl));

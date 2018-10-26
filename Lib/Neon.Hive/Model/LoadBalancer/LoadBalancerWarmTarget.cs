@@ -31,8 +31,14 @@ namespace Neon.Hive
         private const string defaultMethod    = "GET";
 
         /// <summary>
-        /// The fully qualified URI of the resource to be proactivelly loaded
+        /// <para>
+        /// The fully qualified URI of the resource to be proactively loaded
         /// into the cache.  This is required.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> The URI <b>scheme</b>, <b>hostname</b>, and <b>port</b> must 
+        /// match one of the load balancer rule frontends.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Uri", Required = Required.Always)]
         public string Uri { get; set; }
@@ -84,9 +90,14 @@ namespace Neon.Hive
                 context.Error($"[{nameof(LoadBalancerWarmTarget)}.{nameof(Uri)}] cannot be NULL or empty.");
             }
 
-            if (!System.Uri.TryCreate(Uri, UriKind.Absolute, out var parsedUri))
+            if (!System.Uri.TryCreate(Uri, UriKind.Absolute, out var uri))
             {
-                context.Error($"[{nameof(LoadBalancerWarmTarget)}.{nameof(Uri)}={Uri}] Is not a valid fully qualified URI.");
+                context.Error($"[{nameof(LoadBalancerWarmTarget)}.{nameof(Uri)}={Uri}] is not a valid fully qualified URI.");
+            }
+
+            if (uri.Scheme.Equals("https", StringComparison.InvariantCultureIgnoreCase))
+            {
+                context.Error($"HTTPS backend caching is not supported: [{nameof(LoadBalancerWarmTarget)}.{nameof(Uri)}={Uri}]");
             }
         }
     }

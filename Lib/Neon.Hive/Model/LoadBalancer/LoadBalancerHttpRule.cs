@@ -234,6 +234,20 @@ namespace Neon.Hive
                         this.Frontends.Add(httpFrontend);
                     }
                 }
+
+                // Ensure that all cache warming targets have schemes, hostnames, and ports that
+                // match a rule frontend.
+
+                foreach (var warmTarget in Cache.WarmTargets)
+                {
+                    var uri = new Uri(warmTarget.Uri);
+                    var tls = uri.Scheme.Equals("https", StringComparison.InvariantCultureIgnoreCase);
+
+                    if (Frontends.IsEmpty(fe => fe.Tls == tls && fe.Host.Equals(uri.Host, StringComparison.InvariantCultureIgnoreCase) && fe.ProxyPort == uri.Port))
+                    {
+                        context.Error($"Cache warm target [{uri}] does not match one of the [{Name}] load balancer frontends.");
+                    }
+                }
             }
 
             if (!string.IsNullOrEmpty(CheckUri))
@@ -365,7 +379,22 @@ namespace Neon.Hive
                 }
             }
 
-            Cache?.Validate(context);
+            if (Cache != null)
+            {
+                // Varnish community doesn't support TLS backends.  This requires Varnish Plus which
+                // is expensive (of course).
+
+                foreach (LoadBalancerHttpBackend backend in Backends)
+                {
+                    if (backend.Tls)
+                    {
+                        context.Error($"HTTP rule [{Name}] cannot support caching because one or more backends required TLS.");
+                        break;
+                    }
+                }
+
+                Cache.Validate(context);
+            }
         }
 
         /// <inheritdoc/>

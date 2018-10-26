@@ -255,6 +255,20 @@ namespace Neon.Hive
         /// <a href="http://cbonte.github.io/haproxy-dconv/1.7/configuration.html#http-check%20expect">http-check expect</a> 
         /// keyword.
         /// </para>
+        /// <note>
+        /// <para>
+        /// <b>IMPORTANT:</b> When caching is enabled for a rule, the built-in Varnish cache will 
+        /// only honor <see cref="CheckExpect"/> expressions like <b>string 200</b> when probing 
+        /// backend servers because Varnish supports only a fixed status codes.  HAProxy check 
+        /// expressions described above will be ignored and the Varnish backend probe will silently
+        /// fall back to checking for <b>200</b>.
+        /// </para>
+        /// <para>
+        /// The workaround is to use specialized health check endpoint that is guaranteed to return
+        /// a specific status code when it's healthy.  This is generally a good best practice rather
+        /// than using something like a site home page as the health endpoint.
+        /// </para>
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "CheckExpect", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
