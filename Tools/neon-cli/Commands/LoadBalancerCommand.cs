@@ -51,6 +51,7 @@ USAGE:
     neon loadbalancer|lb NAME settings FILE
     neon loadbalancer|lb NAME settings -
     neon loadbalancer|lb NAME status
+    neon loadbalancer|lb NAME varnish
 
 ARGUMENTS:
 
@@ -281,19 +282,20 @@ See the documentation for more load balancer rule and setting details.
 
                 case "haproxy":
                 case "haproxy-bridge":
+                case "varnish":
 
-                    // We're going to download the load balancer's ZIP archive containing 
-                    // the [haproxy.cfg] file, extract and write it to the console.
+                    // We're going to download the load balancer's ZIP archive containing the
+                    // [haproxy.cfg] or [varnish.vcl] file, extract and write it to the console.
 
                     using (var consul = HiveHelper.OpenConsul())
                     {
-                        var proxy        = command.Equals("haproxy", StringComparison.InvariantCultureIgnoreCase) ? loadBalancerName : loadBalancerName + "-bridge";
+                        var proxy        = command.Equals("haproxy-bridge", StringComparison.InvariantCultureIgnoreCase) ? loadBalancerName + "-bridge" : loadBalancerName;
                         var confKey      = $"neon/service/neon-proxy-manager/proxies/{proxy}/proxy-conf";
                         var confZipBytes = consul.KV.GetBytesOrDefault(confKey).Result;
 
                         if (confZipBytes == null)
                         {
-                            Console.Error.WriteLine($"*** ERROR: HAProxy ZIP configuration was not found in Consul at [{confKey}].");
+                            Console.Error.WriteLine($"*** ERROR: Proxy ZIP configuration was not found in Consul at [{confKey}].");
                             Program.Exit(1);
                         }
 
@@ -301,11 +303,12 @@ See the documentation for more load balancer rule and setting details.
                         {
                             using (var zip = new ZipFile(msZipData))
                             {
-                                var entry = zip.GetEntry("haproxy.cfg");
+                                var file  = command.Equals("varnish", StringComparison.InvariantCultureIgnoreCase) ? "varnish.vcl" : "haproxy.cfg";
+                                var entry = zip.GetEntry(file);
 
                                 if (entry == null || !entry.IsFile)
                                 {
-                                    Console.Error.WriteLine($"*** ERROR: HAProxy ZIP configuration in Consul at [{confKey}] appears to be corrupt.  Cannot locate the [haproxy.cfg] entry.");
+                                    Console.Error.WriteLine($"*** ERROR: Proxy ZIP configuration in Consul at [{confKey}] appears to be corrupt.  Cannot locate the [{file}] entry.");
                                     Program.Exit(1);
                                 }
 
