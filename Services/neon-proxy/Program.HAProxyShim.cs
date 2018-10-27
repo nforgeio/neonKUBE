@@ -425,17 +425,19 @@ namespace NeonProxy
 
                         SetErrorTime();
 
+                        log.LogError(() => $"HAPROXY-SHIM: Invalid HAProxy configuration: {response.AllText}.");
+
                         // If HAProxy is running then we'll let it continue using
                         // the out-of-date configuration as a fail-safe.  If it's not
                         // running, we're going to terminate service.
 
                         if (!GetHAProxyProcessIds().IsEmpty())
                         {
-                            log.LogError(() => "HAPROXY-SHIM: Invalid HAProxy configuration.  Using out-of-date configuration as a fail-safe.");
+                            log.LogWarn(() => "HAPROXY-SHIM: Continuining to use the previous configuration as a fail-safe.");
                         }
                         else
                         {
-                            log.LogCritical(() => "HAPROXY-SHIM: Invalid HAProxy configuration.  Terminating service.");
+                            log.LogCritical(() => "HAPROXY-SHIM: Terminating service because there is no valid copnfiguration to fall back on.");
                             Program.Exit(1);
                             return;
                         }
