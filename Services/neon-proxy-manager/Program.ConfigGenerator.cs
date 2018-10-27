@@ -825,7 +825,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         sbHaProxy.AppendLine($"    timeout check       {ToHaProxyTime(tcpRule.Timeouts.CheckSeconds)}");
                     }
 
-                    sbHaProxy.AppendLine($"    default_server      inter {ToHaProxyTime(tcpRule.CheckSeconds)}");
+                    sbHaProxy.AppendLine($"    default-server      inter {ToHaProxyTime(tcpRule.CheckSeconds)}");
                 }
 
                 var checkArg    = tcpRule.CheckMode != LoadBalancerCheckMode.Disabled ? " check" : " no-check";
@@ -1166,7 +1166,7 @@ backend http:{httpRule.Name}
                         sbHaProxy.AppendLine($"    timeout check       {ToHaProxyTime(httpRule.Timeouts.CheckSeconds)}");
                     }
 
-                    sbHaProxy.AppendLine($"    default_server      inter {ToHaProxyTime(httpRule.CheckSeconds)}");
+                    sbHaProxy.AppendLine($"    default-server      inter {ToHaProxyTime(httpRule.CheckSeconds)}");
 
                     if (httpRule.Cache.Enabled)
                     {
