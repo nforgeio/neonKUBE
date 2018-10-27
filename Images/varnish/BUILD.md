@@ -12,11 +12,11 @@ You'll need to manually perform the following steps to build and publish the `va
 
 1. Build `varnishd` via the command below, specifying the Varnish branch/version:
 
-   `docker run --rm --env "GIT_REPO=https://github.com/jefflill/varnish-cache.git" --env "GIT_BRANCH=6.1" --mount type=bind,src=%NF_BUILD%,dst=/mnt/output nhive/varnish-builder`
+   `docker run -it --rm --env "GIT_REPO=https://github.com/jefflill/varnish-cache.git" --env "GIT_BRANCH=6.1" --mount type=bind,src=%NF_BUILD%,dst=/mnt/output nhive/varnish-builder`
 
-   It's a good idea to verify the build by adding the `--env CHECK=1` environment variable.  This will take 30+ minutes:
+   It's a good idea to verify the build for each Varnish version at least once by adding the `--env CHECK=1` environment variable.  This will take 30+ minutes:
 
-   `docker run --rm --env "GIT_REPO=https://github.com/jefflill/varnish-cache.git" --env "GIT_BRANCH=6.1" --env "CHECK=1" --mount type=bind,src=%NF_BUILD%,dst=/mnt/output nhive/varnish-builder`
+   `docker run -it --rm --env "GIT_REPO=https://github.com/jefflill/varnish-cache.git" --env "GIT_BRANCH=6.1" --env "CHECK=1" --mount type=bind,src=%NF_BUILD%,dst=/mnt/output nhive/varnish-builder`
 
 2. Upload the ZIP file to S3 at:  https://s3.console.aws.amazon.com/s3/buckets/neoncluster
 
