@@ -373,13 +373,18 @@ backend stub {
 
                 log.LogInfo(() => "Verifying Varnish configuration.");
 
+                var verifyWorkDir = "/tmp/verify";
+
                 response = NeonHelper.ExecuteCapture("varnishd",
                     new object[]
                     {
                         "-C",
                         "-f", configUpdatePath,
-                        "-n", workDir
+                        "-n", verifyWorkDir,
+                        "-a", "127.0.0.2:9090"      // Avoid conflicting with the production instance via an internal address/port
                     });
+
+                NeonHelper.DeleteFolder(verifyWorkDir);
 
                 if (response.ExitCode == 0)
                 {
@@ -456,7 +461,7 @@ backend stub {
 
                     if (response.ExitCode == 0)
                     {
-                        log.LogInfo(() => $"VARNISH-SHIM: Varnish was updated.");
+                        log.LogInfo(() => $"VARNISH-SHIM: Varnish has started.");
                     }
                     else
                     {

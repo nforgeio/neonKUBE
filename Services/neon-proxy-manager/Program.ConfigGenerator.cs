@@ -1335,12 +1335,12 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             ""{rule.CheckMethod} / HTTP/{rule.CheckVersion ?? "1.1"}""
             ""Host: {rule.CheckHost ?? backend.Server}""
             ""Connection: close"";
-        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s
+        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
         .window            = {window};
         .initial           = {initial};
         .interval          = {RoundUp(rule.CheckSeconds)}s;
         .threshold         = {threshold};
-        .expected_response = {checkStatus}
+        .expected_response = {checkStatus};
     }}
 }}
 ";
@@ -1357,12 +1357,12 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             ""Host: {rule.CheckHost ?? backend.Server}""
             {sbCheckHeaders}
             ""Connection: close"";
-        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s
+        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
         .window            = {window};
         .initial           = {initial};
         .interval          = {RoundUp(rule.CheckSeconds)}s;
         .threshold         = {threshold};
-        .expected_response = {checkStatus}
+        .expected_response = {checkStatus};
     }}
 }}
 ";
@@ -1380,7 +1380,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 
                     for (int i = 0; i < rule.Backends.Count(); i++)
                     {
-                        sbVarnishVcl.AppendLine($"    rule_{ruleIndex}_director.add_backend(rule_{ruleIndex}_backend_{i})");
+                        sbVarnishVcl.AppendLine($"    rule_{ruleIndex}_director.add_backend(rule_{ruleIndex}_backend_{i});");
                     }
 
                     sbVarnishVcl.AppendLine($"}}");
@@ -1397,9 +1397,11 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"sub vcl_init {{");
 
-                for (int i = 0; i < cachingRules.Count; i++)
+                for (int ruleNum = 0; ruleNum < cachingRules.Count; ruleNum++)
                 {
-                    sbVarnishVcl.AppendLine($"    call init_rule_{ruleIndex};");
+                    var separator = new string(' ', 6 - ruleNum.ToString().Length);
+
+                    sbVarnishVcl.AppendLine($"    call init_rule_{ruleNum};{separator}# Rule[{ruleNum}]: {cachingRules[ruleNum].Name}");
                 }
 
                 sbVarnishVcl.AppendLine($"}}");
@@ -1452,7 +1454,9 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                             sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Target == \"{targetHeader}\") {{");
                         }
 
-                        sbVarnishVcl.AppendLine($"        set req.backend_hint = rule_{ruleNum}_director");
+                        var separator = new string(' ', 6 - ruleNum.ToString().Length);
+
+                        sbVarnishVcl.AppendLine($"        set req.backend_hint = rule_{ruleNum}_director.backend();{separator}# Rule[{ruleNum}]: {rule.Name}");
                         firstIf = false;
                     }
                 }
@@ -1462,7 +1466,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             }
 
             //-----------------------------------------------------------------
-            // $todo(jeff.lill): DELETE THIS!
+            // $todo(jeff.lill): DELETE THIS! *********************************
             var vcl = sbVarnishVcl.ToString();
             var cfg = sbHaProxy.ToString();
             //-----------------------------------------------------------------
@@ -1480,7 +1484,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 }
             }
 
-            // Generate the [neon-proxy] service compatible configuration ZIP archive.
+            // Generate the [neon-proxy] and [neon-proxy-cache] service compatible configuration ZIP archive.
 
             byte[] zipBytes;
 
