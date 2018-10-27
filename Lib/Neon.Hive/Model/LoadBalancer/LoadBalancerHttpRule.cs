@@ -379,7 +379,7 @@ namespace Neon.Hive
                 }
             }
 
-            if (Cache != null)
+            if (Cache != null && Cache.Enabled)
             {
                 Cache.Validate(context);
 

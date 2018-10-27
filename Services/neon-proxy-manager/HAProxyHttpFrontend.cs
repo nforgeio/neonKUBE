@@ -63,7 +63,12 @@ namespace NeonProxyManager
         // Instance members.
 
         /// <summary>
-        /// Retrurns the HAProxy frontend name.
+        /// The associated HTTP rule.
+        /// </summary>
+        public LoadBalancerHttpRule Rule { get; set; }
+
+        /// <summary>
+        /// Returns the HAProxy frontend name.
         /// </summary>
         public string Name
         {

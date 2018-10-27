@@ -256,7 +256,7 @@ namespace Neon.Hive
         /// <para>
         /// Specifies a response check that overrides the default <b>2xx</b>/<b>3xx</b> status code
         /// check.  This can be used to implement custom status code or response body checks.  This
-        /// defaults to <c>null</c>.
+        /// defaults to <b>rstatus 2\d\d</b> to consider all 2xx status codes as healthy.
         /// </para>
         /// <para>
         /// The property may be set to an expression implemented by the HAProxy 
@@ -279,8 +279,8 @@ namespace Neon.Hive
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "CheckExpect", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string CheckExpect { get; set; } = null;
+        [DefaultValue("rstatus 2\\d\\d")]
+        public string CheckExpect { get; set; } = "rstatus 2\\d\\d";
 
         /// <summary>
         /// The endpoint timeouts.  These default to standard timeouts defined by <see cref="LoadBalancerTimeouts"/>.
