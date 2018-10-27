@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.ConfigGenerator.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserve
 
 using System;
 using System.Collections.Generic;
@@ -1032,7 +1032,6 @@ frontend {haProxyFrontend.Name}
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             SetProxyTargetHeader(sbHaProxy, haProxyFrontend, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName}");
-                            DelProxyTargetHeader(sbHaProxy, haProxyFrontend, hostAclName);
                         }
                         else
                         {
@@ -1040,7 +1039,6 @@ frontend {haProxyFrontend.Name}
 
                             SetProxyTargetHeader(sbHaProxy, haProxyFrontend);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value}");
-                            DelProxyTargetHeader(sbHaProxy, haProxyFrontend);
                         }
                     }
 
@@ -1074,7 +1072,6 @@ frontend {haProxyFrontend.Name}
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             SetProxyTargetHeader(sbHaProxy, haProxyFrontend, pathAclName, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName} {pathAclName}");
-                            DelProxyTargetHeader(sbHaProxy, haProxyFrontend, hostAclName, pathAclName);
                         }
                         else
                         {
@@ -1083,7 +1080,6 @@ frontend {haProxyFrontend.Name}
 
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {pathAclName}");
-                            DelProxyTargetHeader(sbHaProxy, haProxyFrontend, pathAclName);
                         }
                     }
                 }
@@ -2171,50 +2167,6 @@ listen tcp:port-{port}
                 }
 
                 sb.AppendLine($"    set-header          X-Neon-Proxy-Target {frontend.Port}- if {conditions}");
-            }
-        }
-
-        /// <summary>
-        /// Appends a <b>del-header X-Neon-Proxy-Target [if acl]</b> to the <see cref="StringBuilder"/>
-        /// for an HTTP frontend when the associated rule enables caching.
-        /// </summary>
-        /// <param name="sb">The target string builder.</param>
-        /// <param name="frontend">The HTTP frontend.</param>
-        /// <param name="aclNames">
-        /// The optional name of the ACLs that used to select the backend.
-        /// The header will be removed unconditionally when this is empty.
-        /// </param>
-        private static void DelProxyTargetHeader(StringBuilder sb, HAProxyHttpFrontend frontend, params string[] aclNames)
-        {
-            Covenant.Requires<ArgumentNullException>(sb != null);
-            Covenant.Requires<ArgumentNullException>(frontend != null);
-            Covenant.Requires<ArgumentException>(frontend.Rule.Mode == LoadBalancerMode.Http);
-            Covenant.Requires<ArgumentException>(!frontend.Tls);    // We don't support caching for TLS backends
-
-            if (!frontend.Rule.Cache.Enabled)
-            {
-                return;
-            }
-
-            if (aclNames.Length == 0)
-            {
-                sb.AppendLine($"    del-header          X-Neon-Proxy-Target {frontend.Port}-");
-            }
-            else
-            {
-                var conditions = string.Empty;
-
-                foreach (var aclName in aclNames)
-                {
-                    if (conditions.Length > 0)
-                    {
-                        conditions += " ";
-                    }
-
-                    conditions += aclName;
-                }
-
-                sb.AppendLine($"    del-header          X-Neon-Proxy-Target {frontend.Port}- if {conditions}");
             }
         }
     }
