@@ -1318,6 +1318,12 @@ import directors;
 
                         var backendVcl = string.Empty;
 
+                        // Health check parameters (hardcoded for now).
+
+                        const int window    = 3;
+                        const int initial   = 2;
+                        const int threshold = 2;
+
                         if (sbCheckHeaders.Length == 0)
                         {
                             backendVcl =
@@ -1330,10 +1336,10 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             ""Host: {rule.CheckHost ?? backend.Server}""
             ""Connection: close"";
         .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s
-        .initial           = 7;
+        .window            = {window};
+        .initial           = {initial};
         .interval          = {RoundUp(rule.CheckSeconds)}s;
-        .window            = 8;
-        .threshold         = 3;
+        .threshold         = {threshold};
         .expected_response = {checkStatus}
     }}
 }}
@@ -1352,10 +1358,10 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             {sbCheckHeaders}
             ""Connection: close"";
         .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s
-        .initial           = 7;
+        .window            = {window};
+        .initial           = {initial};
         .interval          = {RoundUp(rule.CheckSeconds)}s;
-        .window            = 8;
-        .threshold         = 3;
+        .threshold         = {threshold};
         .expected_response = {checkStatus}
     }}
 }}
