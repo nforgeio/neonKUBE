@@ -18,6 +18,8 @@ You'll need to manually perform the following steps to build and publish the `va
 
    `docker run -it --rm --env "GIT_REPO=https://github.com/jefflill/varnish-cache.git" --env "GIT_BRANCH=6.1" --env "CHECK=1" --mount type=bind,src=%NF_BUILD%,dst=/mnt/output nhive/varnish-builder`
 
+   **NOTE:** It appears that the **6.0.x* builds always perform the unit tests.
+
 2. Upload the ZIP file to S3 at:  https://s3.console.aws.amazon.com/s3/buckets/neoncluster
 
 3. Make the S3 file **public**.
