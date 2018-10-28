@@ -91,7 +91,7 @@ namespace NeonCli.Ansible
     // Examples:
     // ---------
     //
-    // This example creates a public HTTP rule listening that forwards
+    // This example creates a public HTTP rule that forwards
     // HTTP traffic for [http://test.com and http://www.test.com] 
     // to the TEST Docker service port 80.
     //
@@ -114,7 +114,32 @@ namespace NeonCli.Ansible
     //              - server: TEST
     //                port: 80
     //
-    // This example creates a public HTTP rule listening that terminates
+    // This example enables caching for creates a public HTTP rule that 
+    // forwards HTTP traffic for [http://test.com and http://www.test.com] 
+    // to the TEST Docker service port 80.
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: load balancer task
+    //        neon_load_balancer:
+    //          name: public
+    //          state: present
+    //          rule_name: test
+    //          rule:
+    //            mode: http
+    //            checkuri: /_health/check.php
+    //            checkmethod: GET
+    //            frontends:
+    //              - host: test.com
+    //              - host: www.test.com
+    //            backends:
+    //              - server: TEST
+    //                port: 80
+    //            cache:
+    //                enable: true
+    //
+    // This example creates a public HTTP rule that terminates
     // HTTPS traffic for [https://test.com and https://www.test.com] using
     // the certificate saved to the Ansible TEST_COM_CERT variable and then
     // forwards the unencrypted traffic onto the TEST service.  The rule
