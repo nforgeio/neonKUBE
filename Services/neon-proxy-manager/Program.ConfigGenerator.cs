@@ -1504,12 +1504,6 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             sbVarnishVcl.AppendLine($"    return(deliver);");
             sbVarnishVcl.AppendLine($"}}");
 
-            //-----------------------------------------------------------------
-            // $todo(jeff.lill): DELETE THIS! *********************************
-            var vcl = sbVarnishVcl.ToString();
-            var cfg = sbHaProxy.ToString();
-            //-----------------------------------------------------------------
-
             // Generate the cache settings which will be deployed as the
             // [cache-settings.json] file within the ZIP archive.
 
