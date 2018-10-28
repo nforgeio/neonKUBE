@@ -61,6 +61,15 @@ make install
 
 # Gather the relevant files to $OUTPUT_DIR.
 
+# $hack(jeff.lill):
+#
+# This is a bit of a hack.  It would probably be better to use a multi-stage
+# Dockerfile build that actually did a [make deploy] or generated Debian
+# packages that we'd install in the [varnish] image.
+#
+# I haven't done multi-stage builds yet and since the Varnish project is
+# so old and stable, this hack is likely to work for a long time.
+
 mkdir -p $OUTPUT_DIR/bin
 mkdir -p $OUTPUT_DIR/lib
 mkdir -p $OUTPUT_DIR/vmods
