@@ -55,19 +55,9 @@ namespace NeonVegomatic
 
             try
             {
-                // Establish the hive connections.
-
-                if (NeonHelper.IsDevWorkstation)
-                {
-                    HiveHelper.OpenHiveRemote();
-                }
-                else
-                {
-                    HiveHelper.OpenHive();
-                }
-
                 var commandLine = new CommandLine(args);
                 var command     = commandLine.Arguments.ElementAtOrDefault(0);
+
 
                 if (command == null)
                 {
@@ -80,6 +70,11 @@ namespace NeonVegomatic
                     case "cephfs":
 
                         await new CephFS().ExecAsync(commandLine.Shift(1));
+                        break;
+
+                    case "timestamp-server":
+
+                        await new TimestampServer().ExecAsync(commandLine.Shift(1));
                         break;
 
                     default:

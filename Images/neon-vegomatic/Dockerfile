@@ -12,7 +12,7 @@
 #                     This makes it easier to clone and reuse this Dockerfile.
 
 ARG         BRANCH
-FROM        nhive/dotnet:${BRANCH}-2.1
+FROM        nhive/aspnet:${BRANCH}-2.1
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
