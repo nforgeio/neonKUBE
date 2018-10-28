@@ -1285,7 +1285,7 @@ import directors;
                 foreach (var rule in cachingRules)
                 {
                     sbVarnishVcl.AppendLine();
-                    sbVarnishVcl.AppendLine("#------------------------------------------------------------------------------");
+                    sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
                     sbVarnishVcl.AppendLine($"# Rule[{ruleIndex}]: {rule.Name}");
 
                     var backendIndex = 0;
@@ -1392,8 +1392,8 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 // initialization subroutines.
 
                 sbVarnishVcl.AppendLine();
-                sbVarnishVcl.AppendLine("#------------------------------------------------------------------------------");
-                sbVarnishVcl.AppendLine("# Initialize the directors and backends for each rule.");
+                sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
+                sbVarnishVcl.AppendLine($"# Initialize the directors and backends for each rule.");
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"sub vcl_init {{");
 
@@ -1421,8 +1421,8 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 // define a target host.
 
                 sbVarnishVcl.AppendLine();
-                sbVarnishVcl.AppendLine("#------------------------------------------------------------------------------");
-                sbVarnishVcl.AppendLine("# Use the [X-Neon-Proxy-Target] header to identify the target director.");
+                sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
+                sbVarnishVcl.AppendLine($"# Use the [X-Neon-Proxy-Target] header to identify the target director.");
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"sub vcl_recv {{");
 
@@ -1457,6 +1457,16 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                         var separator = new string(' ', 6 - ruleNum.ToString().Length);
 
                         sbVarnishVcl.AppendLine($"        set req.backend_hint = rule_{ruleNum}_director.backend();{separator}# Rule[{ruleNum}]: {rule.Name}");
+
+                        if (rule.Cache.Debug)
+                        {
+                            // Add the [X-Neon-Cache-Debug: true] header here so that the generated
+                            // [vcl_deliver] subroutine will know to add the [X-Neon-Proxy-Cached]
+                            // DEBUG header.
+
+                            sbVarnishVcl.AppendLine($"    set req.http.X-Neon-Cache-Debug = \"true\";");
+                        }
+
                         firstIf = false;
                     }
                 }
@@ -1464,6 +1474,41 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine($"    }}");
                 sbVarnishVcl.AppendLine($"}}");
             }
+
+            // Generate the [vcl_backend_error] subroutine to return a synthetic
+            // response with a more responable error message than Varnish generates
+            // (which is "Guru Meditation").
+
+            sbVarnishVcl.AppendLine();
+            sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
+            sbVarnishVcl.AppendLine($"# Override the default Varnish response error message for 503 backend errors.");
+            sbVarnishVcl.AppendLine();
+            sbVarnishVcl.AppendLine($"sub vcl_backend_error {{");
+            sbVarnishVcl.AppendLine($"    if (beresp.status == 503) {{");
+            sbVarnishVcl.AppendLine($"        synthetic( {{\"<html><head>Proxy Cache Error</head><body>No origin servers are available.</body></html>\"}} );");
+            sbVarnishVcl.AppendLine($"        return (deliver);");
+            sbVarnishVcl.AppendLine($"    }}");
+            sbVarnishVcl.AppendLine($"}}");
+
+            // Generate the [vcl_deliver] subroutine that performs any last rites on the request
+            // (like adding the [X-Neon-Proxy-Cached] header for DEBUG mode.
+
+            sbVarnishVcl.AppendLine();
+            sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
+            sbVarnishVcl.AppendLine($"# Make any final modifications before delivering the response.");
+            sbVarnishVcl.AppendLine();
+            sbVarnishVcl.AppendLine($"sub vcl_deliver {{");
+            sbVarnishVcl.AppendLine($"    if (req.http.X-Neon-Cache-Debug) {{");
+            sbVarnishVcl.AppendLine($"        set resp.http.X-Neon-Proxy-Cache = \"hits=\" + obj.hits;");
+            sbVarnishVcl.AppendLine($"    }}");
+            sbVarnishVcl.AppendLine($"    return(deliver);");
+            sbVarnishVcl.AppendLine($"}}");
+
+            //-----------------------------------------------------------------
+            // $todo(jeff.lill): DELETE THIS! *********************************
+            var vcl = sbVarnishVcl.ToString();
+            var cfg = sbHaProxy.ToString();
+            //-----------------------------------------------------------------
 
             // Generate the cache settings which will be deployed as the
             // [cache-settings.json] file within the ZIP archive.
