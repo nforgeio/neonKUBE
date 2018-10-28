@@ -438,6 +438,11 @@ backend stub {
                     if (response.ExitCode == 0)
                     {
                         log.LogInfo(() => $"VARNISH-SHIM: Varnish has started.");
+
+                        // Update the deployed hash so we won't try to update the same 
+                        // configuration again.
+
+                        deployedHash = configHash;
                     }
                     else
                     {
@@ -462,6 +467,11 @@ backend stub {
                     if (response.ExitCode == 0)
                     {
                         log.LogInfo(() => $"VARNISH-SHIM: Varnish has started.");
+
+                        // Update the deployed hash so we won't try to update the same 
+                        // configuration again.
+
+                        deployedHash = configHash;
                     }
                     else
                     {
@@ -470,11 +480,6 @@ backend stub {
                         return;
                     }
                 }
-
-                // Update the deployed hash so we won't try to update the same 
-                // configuration again.
-
-                deployedHash = configHash;
 
                 // Varnish was updated successfully so we can reset the error time
                 // so to ensure that periodic error reporting will stop.
