@@ -74,8 +74,8 @@ cp /varnish-cache/bin/varnishstat/varnishstat   $OUTPUT_DIR/bin
 cp /varnish-cache/bin/varnishtest/varnishtest   $OUTPUT_DIR/bin
 cp /varnish-cache/bin/varnishtop/varnishtop     $OUTPUT_DIR/bin
 
-mkdir -p $OUTPUT_DIR/lib
-cp -r /varnish-cache/lib/libvarnishapi/.libs/*  $OUTPUT_DIR/lib
+mkdir -p $OUTPUT_DIR/lib/libvarnish
+cp -r /varnish-cache/lib/libvarnishapi/.libs/*  $OUTPUT_DIR/lib/libvarnish
 
 mkdir -p $OUTPUT_DIR/vmods
 cp -r /usr/local/lib/varnish/vmods/*            $OUTPUT_DIR/vmods
