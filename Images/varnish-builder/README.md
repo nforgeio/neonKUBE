@@ -22,7 +22,7 @@ docker run \
     --env "GIT_REPO=https://github.com/jefflill/varnish-cache.git" \
     --env "GIT_BRANCH=6.1" \
     --env "CHECK=1" \
-    --mount type=bind,src=C:/temp/vanish-bin,dst=/mnt/output \
+    --mount type=bind,src=%NF_BUILD%,dst=/mnt/output \
     nhive/varnish-builder
 ```
 &nbsp;
@@ -32,5 +32,5 @@ Here are the steps the container will perform to build Varnish:
 2. Switch to the specified branch.
 3. Build Varnish.
 4. Run unit tests if `CHECK` is defined.
-5. ZIP the `varnishd` binary into a file named like `varnish-6.1.zip`
+5. ZIP the Varnish Cache binaries and other files into `varnish-6.1.zip`
 6. Copy the ZIP file to `/mnt/output`.

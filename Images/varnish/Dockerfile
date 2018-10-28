@@ -61,9 +61,11 @@ ENV VARNISH_HACK 1
 RUN wget -nv https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/varnish.${VERSION}.zip -O /tmp/varnish.zip \
     && cd /tmp \
     && unzip varnish.zip -d . \
-    && cp ./varnish-install/bin/* /usr/sbin \
+    && cp -r ./varnish-install/bin/* /usr/sbin \
     && mkdir -p /usr/local/lib/varnish/vmods \
-    && cp ./varnish-install/vmods/* /usr/local/lib/varnish/vmods \
+    && cp -r ./varnish-install/vmods/* /usr/local/lib/varnish/vmods \
+    && mkdir -p /usr/local/lib \
+    && cp -r ./varnish-install/lib/* /usr/local/lib/ \
     && rm -r /tmp/*
 
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]

@@ -62,6 +62,9 @@ make install
 # Gather the relevant files to $OUTPUT_DIR.
 
 mkdir -p $OUTPUT_DIR/bin
+mkdir -p $OUTPUT_DIR/lib
+mkdir -p $OUTPUT_DIR/vmods
+
 cp /varnish-cache/bin/varnishadm/varnishadm     $OUTPUT_DIR/bin
 cp /varnish-cache/bin/varnishd/varnishd         $OUTPUT_DIR/bin
 cp /varnish-cache/bin/varnishhist/varnishhist   $OUTPUT_DIR/bin
@@ -70,6 +73,9 @@ cp /varnish-cache/bin/varnishncsa/varnishncsa   $OUTPUT_DIR/bin
 cp /varnish-cache/bin/varnishstat/varnishstat   $OUTPUT_DIR/bin
 cp /varnish-cache/bin/varnishtest/varnishtest   $OUTPUT_DIR/bin
 cp /varnish-cache/bin/varnishtop/varnishtop     $OUTPUT_DIR/bin
+
+mkdir -p $OUTPUT_DIR/lib
+cp -r /varnish-cache/lib/libvarnishapi/.libs/*  $OUTPUT_DIR/lib
 
 mkdir -p $OUTPUT_DIR/vmods
 cp -r /usr/local/lib/varnish/vmods/*            $OUTPUT_DIR/vmods
@@ -81,13 +87,15 @@ export OUTPUT_ZIP=/tmp/varnish.${GIT_BRANCH}.0.zip
 
 zip $OUTPUT_ZIP $OUTPUT_DIR/bin/*
 zip $OUTPUT_ZIP $OUTPUT_DIR/vmods/*
+zip $OUTPUT_ZIP $OUTPUT_DIR/lib/*
+
 cp $OUTPUT_ZIP /mnt/output
 
 #------------------------------------------------------------------------------
 # Validate the build if CHECK=1.  This takes 30+ minutes.
 #
-# Note that the 6.0 branch seems to perform the unit tests during the build
-# so we'll won't repeat the steps for this case.
+# Note that the 6.0 branch seems to perform the unit tests during the regular
+# build so we'll won't repeat the tests for this case.
 
 if [ "$CHECK" == "1" ] && [ "${GIT_BRANCH}" != "6.0" ] ; then
     make check
