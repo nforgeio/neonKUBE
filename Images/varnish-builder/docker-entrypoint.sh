@@ -92,11 +92,8 @@ zip $OUTPUT_ZIP $OUTPUT_DIR/lib/*
 cp $OUTPUT_ZIP /mnt/output
 
 #------------------------------------------------------------------------------
-# Validate the build if CHECK=1.  This takes 30+ minutes.
-#
-# Note that the 6.0 branch seems to perform the unit tests during the regular
-# build so we'll won't repeat the tests for this case.
+# Validate the build if TEST_BUILD=1.  This takes 30+ minutes.
 
-if [ "$CHECK" == "1" ] && [ "${GIT_BRANCH}" != "6.0" ] ; then
+if [ "$TEST_BUILD" == "1" ] ; then
     make check
 fi

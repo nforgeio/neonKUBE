@@ -10,7 +10,7 @@ This image is configured by the following environment variables:
 
 * `GIT_BRANCH` (*required*) - Specifies the Git branch to be compiled.
 
-* `CHECK` (*optional*) - Optionally runs the unit tests after the build when `CHECK=1`.  These may take 30+ minutes to run.
+* `TEST_BUILD` (*optional*) - Optionally runs the unit tests after the build when `TEST_BUILD=1`.  These may take 30+ minutes to run.
 
 # Building Varnish
 
@@ -21,7 +21,7 @@ docker run \
     --rm \
     --env "GIT_REPO=https://github.com/jefflill/varnish-cache.git" \
     --env "GIT_BRANCH=6.1" \
-    --env "CHECK=1" \
+    --env "TEST_BUILD=1" \
     --mount type=bind,src=%NF_BUILD%,dst=/mnt/output \
     nhive/varnish-builder
 ```
@@ -31,6 +31,6 @@ Here are the steps the container will perform to build Varnish:
 1. Make a local clone of the repository.
 2. Switch to the specified branch.
 3. Build Varnish.
-4. Run unit tests if `CHECK` is defined.
+4. Run unit tests if `TEST_BUILD` is defined.
 5. ZIP the Varnish Cache binaries and other files into `varnish-6.1.zip`
 6. Copy the ZIP file to `/mnt/output`.
