@@ -129,7 +129,7 @@ namespace Neon.Xunit.Hive
     /// <item>
     ///     <term><b>Configs</b></term>
     ///     <description>
-    ///     <see cref="DockerFixture.ClearSecrets(bool)"/><br/>
+    ///     <see cref="DockerFixture.ClearConfigs(bool)"/><br/>
     ///     <see cref="DockerFixture.CreateConfig(string, byte[], string[])"/><br/>
     ///     <see cref="DockerFixture.CreateConfig(string, string, string[])"/><br/>
     ///     <see cref="DockerFixture.ListConfigs(bool)"/><br/>
@@ -274,7 +274,7 @@ namespace Neon.Xunit.Hive
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                                      syncLock = new object();
+        private object                                      syncLock   = new object();
         private HiveProxy                                   hive;
         private bool                                        resetOnInitialize;
         private bool                                        disableChecks;
@@ -846,7 +846,11 @@ namespace Neon.Xunit.Hive
                 }
             }
 
-            NeonHelper.WaitForParallel(actions);
+            if (actions.Count > 0)
+            {
+                NeonHelper.WaitForParallel(actions);
+                Thread.Sleep(ClearDelay);
+            }
         }
 
         /// <summary>
@@ -934,7 +938,11 @@ namespace Neon.Xunit.Hive
                     });
             }
 
-            NeonHelper.WaitForParallel(actions);
+            if (actions.Count > 0)
+            {
+                NeonHelper.WaitForParallel(actions);
+                Thread.Sleep(ClearDelay);
+            }
         }
 
         /// <summary>
@@ -1042,7 +1050,11 @@ namespace Neon.Xunit.Hive
                     });
             }
 
-            NeonHelper.WaitForParallel(actions);
+            if (actions.Count > 0)
+            {
+                NeonHelper.WaitForParallel(actions);
+                Thread.Sleep(ClearDelay);
+            }
         }
 
         /// <summary>
@@ -1347,7 +1359,7 @@ namespace Neon.Xunit.Hive
         /// <summary>
         /// Removes all certificates.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system rules as well.</param>
+        /// <param name="removeSystem">Optionally remove system certificates as well.</param>
         /// <remarks>
         /// By default, this method will not remove neonHIVE system certificates
         /// whose names begin with <b>neon-</b>.  You can remove these too by
@@ -1355,9 +1367,17 @@ namespace Neon.Xunit.Hive
         /// </remarks>
         public void ClearCertificates(bool removeSystem = false)
         {
+            var actions = new List<Action>();
+
             foreach (var certificate in ListCertificates(removeSystem))
             {
-                RemoveCertificate(certificate);
+                actions.Add(() => RemoveCertificate(certificate));
+            }
+
+            if (actions.Count > 0)
+            {
+                NeonHelper.WaitForParallel(actions);
+                Thread.Sleep(ClearDelay);
             }
         }
 
@@ -1418,7 +1438,11 @@ namespace Neon.Xunit.Hive
                 }
             }
 
-            NeonHelper.WaitAllAsync(tasks).Wait();
+            if (tasks.Count > 0)
+            {
+                NeonHelper.WaitAllAsync(tasks).Wait();
+                Thread.Sleep(ClearDelay);
+            }
         }
 
         //---------------------------------------------------------------------
@@ -1523,7 +1547,11 @@ namespace Neon.Xunit.Hive
                     });
             }
 
-            NeonHelper.WaitForParallel(actions);
+            if (actions.Count > 0)
+            {
+                NeonHelper.WaitForParallel(actions);
+                Thread.Sleep(ClearDelay);
+            }
         }
 
         //---------------------------------------------------------------------
