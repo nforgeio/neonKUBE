@@ -1485,7 +1485,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             sbVarnishVcl.AppendLine();
             sbVarnishVcl.AppendLine($"sub vcl_backend_error {{");
             sbVarnishVcl.AppendLine($"    if (beresp.status == 503) {{");
-            sbVarnishVcl.AppendLine($"        synthetic( {{\"<html><head>Proxy Cache Error</head><body>No origin servers are available.</body></html>\"}} );");
+            sbVarnishVcl.AppendLine($"        synthetic( {{\"<html><head>Proxy Cache Error</head><body><h1>503 Service Unavailable</h1>No origin servers are available from cache.</body></html>\"}} );");
             sbVarnishVcl.AppendLine($"        return (deliver);");
             sbVarnishVcl.AppendLine($"    }}");
             sbVarnishVcl.AppendLine($"}}");
