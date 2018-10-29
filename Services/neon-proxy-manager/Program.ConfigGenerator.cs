@@ -2170,7 +2170,7 @@ listen tcp:port-{port}
         }
 
         /// <summary>
-        /// Appends a <b>set-header X-Neon-Proxy-Target VALUE [if acl]</b> to the <see cref="StringBuilder"/>
+        /// Appends an <b>http-request set-header X-Neon-Proxy-Target VALUE [if acl]</b> to the <see cref="StringBuilder"/>
         /// for an HTTP frontend when the associated rule enables caching.
         /// </summary>
         /// <param name="sb">The target string builder.</param>
@@ -2193,7 +2193,7 @@ listen tcp:port-{port}
 
             if (aclNames.Length == 0)
             {
-                sb.AppendLine($"    set-header          X-Neon-Proxy-Target {frontend.Port}-");
+                sb.AppendLine($"    http-request        set-header X-Neon-Proxy-Target {frontend.Port}-");
             }
             else
             {
@@ -2209,7 +2209,7 @@ listen tcp:port-{port}
                     conditions += aclName;
                 }
 
-                sb.AppendLine($"    set-header          X-Neon-Proxy-Target {frontend.Port}- if {conditions}");
+                sb.AppendLine($"    http-request        set-header X-Neon-Proxy-Target {frontend.Port}- if {conditions}");
             }
         }
     }
