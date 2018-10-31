@@ -4,7 +4,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Generates a Debian package with our slightly modified version of [varnishd].
+# Generates a ZIP archive with our slightly modified version of [varnishd].
 #
 # Before you start if you're using a forked Git repository, be sure to sync it
 # with the origin.
@@ -13,15 +13,15 @@
 #
 #       1. Clone the request Git source branch.
 #       2. Build Varnish from source.
-#       3. Download the official Varnish package
-#       4. Unpack the package to a directory
-#       5. Replace the original [varnishd] with our new one
-#       6. Modify the package service by appending "-neonFORGE"
-#       7. Rebuild the package and copy it to the output folder
+#       3. Create a ZIP file named like: varnish-6.0.0.zip
+#       4. Added the [varnishd] binary to the ZIP
+#       5. Copy the ZIP to the output folder
 #
-# These steps were inspired by:
+# To install this, you'll need to:
 #
-#       https://unix.stackexchange.com/questions/138188/easily-unpack-deb-edit-postinst-and-repack-deb
+#       1. Use [apt-get] to install the official version of [varnish] (built from the same branch)
+#       2. Download the ZIP
+#       3. Unzip the archive and then copy [varnish-install/varnishd] to [/usr/local/sbin]
 
 if [ "$1" == "bash "] ; then
     exec bash
@@ -40,11 +40,6 @@ fi
 
 if [ "${GIT_BRANCH}" == "" ] ; then
     . log-error.sh "The [GIT_BRANCH] environment variable is required."
-    exit 1
-fi
-
-if [ "${PACKAGE_VERSION}" == "" ] ; then
-    . log-error.sh "The [PACKAGE_VERSION] environment variable is required."
     exit 1
 fi
 
@@ -72,64 +67,30 @@ sh configure
 make
 
 #------------------------------------------------------------------------------
-# Here's where we do the [varnishd] organ replacement in the standard Debian
-# package.  We're going to assume that Varnish-Cache is still using the
-# http://packagecloud.io service to host their packages by assuming the URL
-# will look like:
-#
-#       https://packagecloud.io/varnishcache/varnish61/ubuntu/pool/xenial/main/v/varnish/varnish_6.1.1-1~xenial_amd64.deb
-#
-# To figure this out, I manually configured the Varnish repository using this
-# packagecloud.io script in another container:
-#
-#       curl -s https://packagecloud.io/install/repositories/varnishcache/varnish61/script.deb.sh | bash
-#
-# and then ran this command:
-#
-#       apt-get install varnish -V | grep "Get:1"
-#
-# This prints out something like:
-#
-#       Get:1 https://packagecloud.io/varnishcache/varnish61/ubuntu xenial/main amd64 varnish amd64 6.1.1-1~xenial [2632 kB]
-#
-# Which has everything you'll need to manually construct the URI (following the convention above).
-#
-# The trick is that the "61" must match the desired release version (without the revision part).
+# Build the ZIP file.
 
-# Create a temporary working directory.
+# Install varnish so we can gather the files.
 
-mkdir -p /tmp/varnish-package
-cd /tmp/varnish-package
+make install
 
-# Download the official package.  Note that [packagecloud.io] will perform a few redirects,
-# probably for billing/tracking purposes.  We're also going to strip the period out of the
-# GIT_BRANCH to obtain the VARNISH_FAMILY.
+# Generate and export the ZIP archive.
 
-VARNISH_FAMILY=$(echo ${GIT_BRANCH} | sed 's/\.//')
-curl -4fsSLv https://packagecloud.io/varnishcache/varnish${VARNISH_FAMILY}/ubuntu/pool/xenial/main/v/varnish/varnish_${PACKAGE_VERSION}-1~xenial_amd64.deb > official.deb
+export OUTPUT_DIR=/varnish-install
+mkdir -p $OUTPUT_DIR
 
-# Unpack the official varnish package.
+mkdir -p $OUTPUT_DIR/usr/local/sbin
+cp /usr/local/sbin/varnishd $OUTPUT_DIR/usr/local/sbin
 
-mkdir -p ./unpacked
-dpkg-deb -R official.deb ./unpacked
+mkdir -p $OUTPUT_DIR/usr/local/bin
+cp /usr/local/bin/varnish* $OUTPUT_DIR/usr/local/bin
 
-# Copy the custom [varnishd] binary into the unpacked package.
+mkdir -p $OUTPUT_DIR/usr/local/lib/varnish/vmods
+cp /usr/local/lib/varnish/vmods/* $OUTPUT_DIR/usr/local/lib/varnish/vmods
 
-cp /varnish-cache/bin/varnishd/varnishd ./unpacked/usr/sbin/varnishd
+export OUTPUT_ZIP=/tmp/varnish-${GIT_BRANCH}.0.zip
 
-# $hack(jeff.lill):
-#
-# We need to update the version in the package control file to avoid potential conflicts.
-# We're simply going to replace "xenial" with "xenial-neonFORGE" as a bit of a hack.
-#
-# NOTE: This will need to be changed if we ever upgrade the containers to another distribution.
-
-sed 's/xenial/xenial-neonFORGE/' ./unpacked/DEBIAN/control > new-control
-cp new-control ./unpacked/DEBIAN/control
-
-# Repackage the modified archive and put it in the output directory.
-
-dpkg-deb -b ./unpacked /mnt/output/varnish-${PACKAGE_VERSION}.deb
+zip -r $OUTPUT_ZIP $OUTPUT_DIR/*
+cp $OUTPUT_ZIP /mnt/output
 
 #------------------------------------------------------------------------------
 # Validate the build if TEST_BUILD=1.  This takes 30+ minutes.

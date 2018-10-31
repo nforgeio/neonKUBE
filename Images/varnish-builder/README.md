@@ -10,8 +10,6 @@ This image is configured by the following environment variables:
 
 * `GIT_BRANCH` (*required*) - Specifies the Git branch to be compiled.
 
-* `PACKAGE_VERSION` (*required*) - Specifies the full version for the package including the revision (e.g. **6.1.1*).
-
 * `TEST_BUILD` (*optional*) - Optionally runs the unit tests after the build when `TEST_BUILD=1`.  These may take 30+ minutes to run.
 
 # Building Varnish
@@ -23,7 +21,6 @@ docker run \
     --rm \
     --env "GIT_REPO=https://github.com/jefflill/varnish-cache.git" \
     --env "GIT_BRANCH=6.1" \
-    --env "PACKAGE_VERSION=6.1.1" \
     --env "TEST_BUILD=1" \
     --mount type=bind,src=%NF_BUILD%,dst=/mnt/output \
     nhive/varnish-builder

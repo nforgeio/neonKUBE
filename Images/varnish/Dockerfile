@@ -19,7 +19,8 @@ ARG         VERSION
 # Required packages layer.
 
 RUN apt-get update \
-    && apt-get install -yq wget nano \
+    && apt-get install -yq wget nano zip curl \
+    && apt-get install -yq gnupg apt-transport-https \
     && apt-get clean -yq
 
 # Entrypoint and other tools layer.
@@ -45,10 +46,8 @@ RUN chmod 700 /*.sh
 # subfolder with an instance ID and so we'll have a stable target location where we
 # can mount the TMPFS.
 #
-# We'll the munged Debian package with the custom build and install that.  Note 
-# that you must be sure to use [varnish-builder] to build the custom package first 
-# and upload the archive to S3.  Note that this package will complain about missing
-# dependencies when installed.  We'll fix this via: apt-get -f -yq install
+# We'll install the official Varnish version and then download a ZIP archive with
+# the munged build and extract it to overwrite the official version.
 #
 # Note that we're removing the [/var/log/varnish] directory so we can mount a TMPFS
 # at [/var/lib/varnish/_.vsm_mgt] so that the shared memory log won't do a ton of
@@ -56,11 +55,25 @@ RUN chmod 700 /*.sh
 
 ENV VARNISH_HACK 1
 
-RUN wget -nv https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/varnish-${VERSION}.deb -O /tmp/varnish.deb \
-    && { dpkg -i /tmp/varnish.deb || true; } \
-    && apt-get -f -yq install \
-    && rm -r /tmp/varnish.deb \
-    && rm -r /var/log/varnish
+RUN curl -L https://packagecloud.io/varnishcache/varnish${FAMILY}/gpgkey | apt-key add - \
+    && echo "deb https://packagecloud.io/varnishcache/varnish${FAMILY}/ubuntu/ xenial main" > /etc/apt/sources.list.d/varnishcache_varnish${FAMILY}.list \
+    && echo "deb-src https://packagecloud.io/varnishcache/varnish${FAMILY}/ubuntu/ xenial main" >> /etc/apt/sources.list.d/varnishcache_varnish${FAMILY}.list \
+    && apt-get update \
+    && apt-get install -yq varnish=${VERSION}-1~xenial \
+    && wget -nv https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/varnish-${VERSION}.zip -O /tmp/varnish.zip \
+    && unzip /tmp/varnish.zip -d /tmp \
+    && cd /tmp/varnish-install \
+    && mkdir -p /usr/local/bin \
+    && mkdir -p /usr/local/sbin \
+    && mkdir -p /usr/lib/varnish/vmods \
+    && mkdir -p /usr/local/lib/varnish/vmods \
+    && cp ./usr/local/bin/*               /usr/local/bin \
+    && cp ./usr/local/sbin/*              /usr/local/sbin \
+    && cp ./usr/local/lib/varnish/vmods/* /usr/lib/varnish/vmods \
+    && cp ./usr/local/lib/varnish/vmods/* /usr/local/lib/varnish/vmods \
+    && rm -r /tmp/varnish.zip \
+    && rm -r /tmp/varnish-install \
+    && rm -r /var/log/varnish \
+    && apt-get clean -yq
 
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
-
