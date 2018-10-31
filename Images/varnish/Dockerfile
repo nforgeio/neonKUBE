@@ -16,13 +16,10 @@ STOPSIGNAL  SIGTERM
 ARG         FAMILY
 ARG         VERSION
 
-# Varnish and dependencies layer.
+# Required packages layer.
 
 RUN apt-get update \
-    && apt-get install -yq apt-utils \
-    && apt-get install -yq curl nano zip \
-    && curl -s https://packagecloud.io/install/repositories/varnishcache/varnish${FAMILY}/script.deb.sh | bash \
-    && apt-get install -yq varnish=${VERSION}\* \
+    && apt-get install -yq wget nano \
     && apt-get clean -yq
 
 # Entrypoint and other tools layer.
@@ -30,17 +27,13 @@ RUN apt-get update \
 COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
 
-# Configure the scripts and service app.  Note that we're removing
-# the [/var/lib/varnish] directory so we can mount a TMPFS at
-# [/var/lib/varnish/_.vsm_mgt] so that the shared memory log won't 
-# do a ton of wasteful I/O.
+# Configure the scripts and service app.
 
-RUN chmod 700 /*.sh \
-    && rm -r /var/lib/varnish
+RUN chmod 700 /*.sh
 
 # $hack(jeff.lill):
 #
-# Unfortunately, stock [varnishd] attempts to remove the [/var/lib/varnish/_.vsm_mgt]
+# Unfortunately, the stock [varnishd] tries to remove the [/var/lib/varnish/_.vsm_mgt]
 # directory when it starts but this will fail because it needs to be mounted
 # as a TMPFS.  We don't actually need the directory to be removed because 
 # we know that its already empty when the container starts.
@@ -52,21 +45,22 @@ RUN chmod 700 /*.sh \
 # subfolder with an instance ID and so we'll have a stable target location where we
 # can mount the TMPFS.
 #
-# We'll download a ZIP file with the custom build and extract it to replace
-# version installed above.  Note that you must be sure to use [varnish-builder] 
-# to build and ZIP the custom [varnishd] first and upload the archive to S3.
+# We'll the munged Debian package with the custom build and install that.  Note 
+# that you must be sure to use [varnish-builder] to build the custom package first 
+# and upload the archive to S3.  Note that this package will complain about missing
+# dependencies when installed.  We'll fix this via: apt-get -f -yq install
+#
+# Note that we're removing the [/var/log/varnish] directory so we can mount a TMPFS
+# at [/var/lib/varnish/_.vsm_mgt] so that the shared memory log won't do a ton of
+# wasteful I/O.
 
 ENV VARNISH_HACK 1
 
-RUN wget -nv https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/varnish.${VERSION}.zip -O /tmp/varnish.zip \
-    && cd /tmp \
-    && unzip varnish.zip -d . \
-    && cp -r ./varnish-install/bin/* /usr/sbin \
-    && mkdir -p /usr/local/lib/varnish/vmods \
-    && cp -r ./varnish-install/vmods/* /usr/local/lib/varnish/vmods \
-    && mkdir -p /usr/local/lib \
-    && cp -r ./varnish-install/lib/* /usr/local/lib/ \
-    && rm -r /tmp/*
+RUN wget -nv https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/varnish-${VERSION}.deb -O /tmp/varnish.deb \
+    && { dpkg -i /tmp/varnish.deb || true; } \
+    && apt-get -f -yq install \
+    && rm -r /tmp/varnish.deb \
+    && rm -r /var/log/varnish
 
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
 

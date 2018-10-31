@@ -12,7 +12,7 @@ STOPSIGNAL  SIGTERM
 # Build dependencies and utilities layer.
 
 RUN apt-get update \
-    && apt-get install -yq nano git zip \
+    && apt-get install -yq nano git zip aptitude \
     && apt-get install -yq make automake autotools-dev libedit-dev libjemalloc-dev libncurses-dev libpcre3-dev libtool pkg-config python-docutils python-sphinx \
     && apt-get install -yq graphviz autoconf-archive \
     && apt-get clean -yq
