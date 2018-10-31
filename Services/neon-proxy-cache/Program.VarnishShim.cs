@@ -430,80 +430,9 @@ backend stub {
                 Directory.CreateDirectory(configFolder);
                 NeonHelper.CopyFolder(configUpdateFolder, configFolder);
 
-                // Start Varnish if it's not already running, otherwise command Varnish
-                // to reload [varnish.vcl] as the main (and only) program.
+                // Start Varnish if it's not already running.
 
-                // $todo(jeff.lill): Should we do something different for DEBUG mode?
-
-                if (!GetVarnishProcessIds().IsEmpty())
-                {
-                    log.LogInfo(() => $"VARNISH-SHIM: Updating Varnish.");
-
-                    var oldVclProgram = vclVersion == 0 ? "boot" : $"main_{vclVersion}";
-                    var newVclProgram = $"main_{++vclVersion}";
-
-                    try
-                    {
-                        log.LogInfo(() => $"VARNISH-SHIM: varnishadm -n {workDir} vcl.load {newVclProgram} {configPath}");
-
-                        response = NeonHelper.ExecuteCapture("varnishadm",
-                            new object[]
-                            {
-                                "-n", workDir,
-                                "vcl.load", newVclProgram, configPath
-                            });
-
-                        if (response.ExitCode != 0)
-                        {
-                            throw new Exception(response.ErrorText);
-                        }
-
-                        // Activate the new VCL.
-
-                        log.LogInfo(() => $"VARNISH-SHIM: varnishadm -n {workDir} vcl.use {newVclProgram}");
-
-                        response = NeonHelper.ExecuteCapture("varnishadm",
-                            new object[]
-                            {
-                                "-n", workDir,
-                                "vcl.use", newVclProgram
-                            });
-
-                        if (response.ExitCode != 0)
-                        {
-                            throw new Exception(response.ErrorText);
-                        }
-
-                        // Update the deployed hash so we won't try to update the same 
-                        // configuration again.
-
-                        deployedHash = configHash;
-
-                        // Remove the previous VCL program.
-
-                        log.LogInfo(() => $"VARNISH-SHIM: varnishadm -n {workDir} vcl.discard {newVclProgram}");
-
-                        response = NeonHelper.ExecuteCapture("varnishadm",
-                            new object[]
-                            {
-                                "-n", workDir,
-                                "vcl.discard", oldVclProgram
-                            });
-
-                        if (response.ExitCode != 0)
-                        {
-                            throw new Exception(response.ErrorText);
-                        }
-
-                        log.LogInfo(() => $"VARNISH-SHIM: Update complete.");
-                    }
-                    catch (Exception e)
-                    {
-                        SetErrorTime();
-                        log.LogError(() => $"VARNISH-SHIM: Cannot update Varnish: {e.Message}");
-                    }
-                }
-                else
+                if (GetVarnishProcessIds().IsEmpty())
                 {
                     log.LogInfo(() => $"VARNISH-SHIM: Starting Vanish.");
 
@@ -532,6 +461,66 @@ backend stub {
                         Program.Exit(1);
                         return;
                     }
+                }
+
+                // Update the Varnish config.
+
+                log.LogInfo(() => $"VARNISH-SHIM: Updating Varnish.");
+
+                var oldVclProgram = vclVersion == 0 ? "boot" : $"main-{vclVersion}";
+                var newVclProgram = $"main-{++vclVersion}";
+
+                try
+                {
+                    log.LogInfo(() => $"VARNISH-SHIM: varnishadm -n {workDir} vcl.load {newVclProgram} {configPath}");
+
+                    response = NeonHelper.ExecuteCapture("varnishadm",
+                        new object[]
+                        {
+                            "-n", workDir,
+                            "vcl.load", newVclProgram, configPath
+                        });
+
+                    response.EnsureSuccess();
+
+                    // Activate the new VCL.
+
+                    log.LogInfo(() => $"VARNISH-SHIM: varnishadm -n {workDir} vcl.use {newVclProgram}");
+
+                    response = NeonHelper.ExecuteCapture("varnishadm",
+                        new object[]
+                        {
+                            "-n", workDir,
+                            "vcl.use", newVclProgram
+                        });
+
+                    response.EnsureSuccess();
+
+                    // Update the deployed hash so we won't try to update the same 
+                    // configuration again.
+
+                    deployedHash = configHash;
+
+                    // Remove the previous VCL program.
+
+                    log.LogInfo(() => $"VARNISH-SHIM: varnishadm -n {workDir} vcl.discard {newVclProgram}");
+
+                    response = NeonHelper.ExecuteCapture("varnishadm",
+                        new object[]
+                        {
+                            "-n", workDir,
+                            "vcl.discard", oldVclProgram
+                        });
+
+                    response.EnsureSuccess();
+
+                    log.LogInfo(() => $"VARNISH-SHIM: Update complete.");
+                }
+                catch (ExecuteException e)
+                {
+                    SetErrorTime();
+                    log.LogError(() => $"VARNISH-SHIM: Cannot update Varnish: {e.Message}");
+                    return;
                 }
 
                 // Varnish was updated successfully so we can reset the error time
