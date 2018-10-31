@@ -1319,6 +1319,11 @@ import directors;
                         var backendVcl = string.Empty;
 
                         // Health check parameters (hardcoded for now).
+                        //
+                        // We're setting [initial==threshold] which means that backends will 
+                        // be considered healthy immediatly after the service starts.  This
+                        // will help avoid 503 errors when the proxy cache is started or
+                        // updated.
 
                         const int window    = 3;
                         const int initial   = 2;
@@ -1489,15 +1494,14 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             sbVarnishVcl.AppendLine($"        set beresp.http.reason = \"Service Unavailable\";");
             sbVarnishVcl.AppendLine($"        set beresp.http.Cache-Control = \"no-cache\";");
             sbVarnishVcl.AppendLine($"        set beresp.http.Content-Type = \"text/html; charset=utf-8\";");
-            sbVarnishVcl.AppendLine($"        synthetic( {{\"");
-            sbVarnishVcl.AppendLine($"            <html>");
-            sbVarnishVcl.AppendLine($"            <head><title>neonHIVE Proxy Cache Error</title></head>");
-            sbVarnishVcl.AppendLine($"            <body>");
-            sbVarnishVcl.AppendLine($"            <h1>503 Service Unavailable</h1>");
-            sbVarnishVcl.AppendLine($"            No origin servers are healthy.");
-            sbVarnishVcl.AppendLine($"            </body>");
-            sbVarnishVcl.AppendLine($"            </html>");
-            sbVarnishVcl.AppendLine($"        \"}} );");
+            sbVarnishVcl.AppendLine($"synthetic({{\"<html>");
+            sbVarnishVcl.AppendLine($"<head><title>neonHIVE Proxy Cache Error</title></head>");
+            sbVarnishVcl.AppendLine($"<body>");
+            sbVarnishVcl.AppendLine($"<h1>503 Service Unavailable</h1>");
+            sbVarnishVcl.AppendLine($"No origin servers are healthy.");
+            sbVarnishVcl.AppendLine($"</body>");
+            sbVarnishVcl.AppendLine($"</html>");
+            sbVarnishVcl.AppendLine($"\"}} );");
             sbVarnishVcl.AppendLine($"        return (deliver);");
             sbVarnishVcl.AppendLine($"    }}");
             sbVarnishVcl.AppendLine($"}}");
