@@ -419,10 +419,10 @@ OPTIONS:
                     {
                         HiveHelper.OpenHive(hive);
 
-                        VaultProxy();
-                        InitializeVault();
-                        InitializeConsul();
-                        InitializeSecrets();
+                        ConfigureVaultProxy();
+                        ConfigureVault();
+                        ConfigureConsul();
+                        ConfigureSecrets();
                     });
 
                 var hiveServices = new HiveServices(hive);
@@ -2971,7 +2971,7 @@ systemctl start neon-volume-plugin
         /// <summary> 
         /// Configures the Vault load balancer service: <b>neon-proxy-vault</b>.
         /// </summary>
-        private void VaultProxy()
+        private void ConfigureVaultProxy()
         {
             // Create the comma separated list of Vault manager endpoints formatted as:
             //
@@ -3218,9 +3218,9 @@ systemctl start neon-volume-plugin
         }
 
         /// <summary>
-        /// Initializes the hive's HashiCorp Vault.
+        /// Configures the hive's HashiCorp Vault.
         /// </summary>
-        private void InitializeVault()
+        private void ConfigureVault()
         {
             var firstManager = hive.FirstManager;
 
@@ -3376,9 +3376,9 @@ systemctl start neon-volume-plugin
         }
 
         /// <summary>
-        /// Initializes Consul values.
+        /// Configures Consul values.
         /// </summary>
-        private void InitializeConsul()
+        private void ConfigureConsul()
         {
             var firstManager = hive.FirstManager;
 
@@ -3495,9 +3495,9 @@ systemctl start neon-volume-plugin
         }
 
         /// <summary>
-        /// Initialize any hive Docker secrets.
+        /// Configures any hive Docker secrets.
         /// </summary>
-        public void InitializeSecrets()
+        public void ConfigureSecrets()
         {
             var firstManager = hive.FirstManager;
 
