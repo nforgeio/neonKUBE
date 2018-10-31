@@ -162,6 +162,16 @@ namespace NeonProxyCache
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async static Task VarnishShim()
         {
+            // Create a helper [/usr/local/bin/varnishadmin] script that opens
+            // [varnishadm] for the hosted varnish instance.
+
+            File.WriteAllText("/usr/local/bin/varnishadmin",
+                NeonHelper.ToLinuxLineEndings(
+$@"#!/bin/bash
+varnishadm -n {workDir}
+"));
+            NeonHelper.Execute("chmod", new object[] { "755", "/usr/local/bin/varnishadmin" });
+
             // This call ensures that Varnish is started immediately.
 
             await ConfigureVarnish();
@@ -484,6 +494,8 @@ backend stub {
                         {
                             throw new Exception(response.ErrorText);
                         }
+
+                        log.LogInfo(() => $"VARNISH-SHIM: Update complete.");
                     }
                     catch (Exception e)
                     {
