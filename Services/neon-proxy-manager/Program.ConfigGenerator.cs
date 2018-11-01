@@ -1380,6 +1380,7 @@ import directors;
 $@"
 backend rule_{ruleIndex}_backend_{backendIndex} {{
     .host  = ""{backend.Server}"";
+    .port  = ""{backend.Port}"";
     .probe = {{
         .request =
             ""{rule.CheckMethod} / HTTP/{rule.CheckVersion ?? "1.1"}""
@@ -1402,6 +1403,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 $@"
 backend rule_{ruleIndex}_backend_{backendIndex} {{
     .host  = ""{backend.Server}"";
+    .port  = ""{backend.Port}"";
     .probe = {{
         .request =
             ""{rule.CheckMethod} / HTTP/{rule.CheckVersion ?? "1.1"}""
