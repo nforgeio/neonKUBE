@@ -1270,7 +1270,52 @@ import directors;
 ";
                 sbVarnishVcl.Append(vclHeader);
 
-                // Generate the backends for each HTTP rule that enables caching.  
+                // Generate the [vcl_backend_error] subroutine to return a synthetic
+                // response with a more responable error message than Varnish generates
+                // (which is "Guru Meditation").
+
+                sbVarnishVcl.AppendLine();
+                sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
+                sbVarnishVcl.AppendLine($"# Override the default Varnish response error message for 503 backend errors.");
+                sbVarnishVcl.AppendLine();
+                sbVarnishVcl.AppendLine($"sub vcl_backend_error {{");
+                sbVarnishVcl.AppendLine($"    if (beresp.status == 503) {{");
+                sbVarnishVcl.AppendLine($"        set beresp.http.status = 503;");
+                sbVarnishVcl.AppendLine($"        set beresp.http.reason = \"Service Unavailable\";");
+                sbVarnishVcl.AppendLine($"        set beresp.http.Cache-Control = \"no-cache\";");
+                sbVarnishVcl.AppendLine($"        set beresp.http.Content-Type = \"text/html; charset=utf-8\";");
+                sbVarnishVcl.AppendLine($"synthetic({{\"<html>");
+                sbVarnishVcl.AppendLine($"<head><title>neonHIVE Proxy Cache Error</title></head>");
+                sbVarnishVcl.AppendLine($"<body>");
+                sbVarnishVcl.AppendLine($"<h1>503: Service Unavailable</h1>");
+                sbVarnishVcl.AppendLine($"No origin servers are healthy.");
+                sbVarnishVcl.AppendLine($"</body>");
+                sbVarnishVcl.AppendLine($"</html>");
+                sbVarnishVcl.AppendLine($"\"}} );");
+                sbVarnishVcl.AppendLine($"        return (deliver);");
+                sbVarnishVcl.AppendLine($"    }}");
+                sbVarnishVcl.AppendLine($"}}");
+
+                // Generate a custom [vcl_synth] subroutine too.
+
+                sbVarnishVcl.AppendLine();
+                sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
+                sbVarnishVcl.AppendLine($"# Override the default Varnish [vcl_synth] subroutine too.");
+                sbVarnishVcl.AppendLine();
+                sbVarnishVcl.AppendLine($"sub vcl_synth {{");
+                sbVarnishVcl.AppendLine($"    set resp.http.Content-Type = \"text/html; charset=utf-8\";");
+                sbVarnishVcl.AppendLine($"synthetic({{\"<html>");
+                sbVarnishVcl.AppendLine($"<head><title>neonHIVE Proxy Cache</title></head>");
+                sbVarnishVcl.AppendLine($"<body>");
+                sbVarnishVcl.AppendLine($"<h1>\"}} + resp.status + \": \" + resp.reason + {{\"</h1>");
+                sbVarnishVcl.AppendLine($"Unable to handle this request.");
+                sbVarnishVcl.AppendLine($"</body>");
+                sbVarnishVcl.AppendLine($"</html>");
+                sbVarnishVcl.AppendLine($"\"}} );");
+                sbVarnishVcl.AppendLine($"    return (deliver);");
+                sbVarnishVcl.AppendLine($"}}");
+
+                // Generate the backends for each HTTP rule that enables caching.
                 // We're going to name each of these backends like:
                 //
                 //      rule_RULE#_backend_BACKEND#
@@ -1339,6 +1384,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
         .request =
             ""{rule.CheckMethod} / HTTP/{rule.CheckVersion ?? "1.1"}""
             ""Host: {rule.CheckHost ?? backend.Server}""
+            ""Accept: */*""
             ""Connection: close"";
         .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
         .window            = {window};
@@ -1431,7 +1477,10 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"sub vcl_recv {{");
 
-                var firstIf = true;
+                sbVarnishVcl.AppendLine($"    if (!req.http.X-Neon-Proxy-Target) {{");
+                sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Target] header is required.\"));");
+                sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Target == \"\") {{");
+                sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Target] header cannot be empty.\"));");
 
                 for (int ruleNum = 0; ruleNum < cachingRules.Count; ruleNum++)
                 {
@@ -1450,14 +1499,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                             targetHeader = $"{frontend.ProxyPort}-{frontend.Host.ToLowerInvariant()}";
                         }
 
-                        if (firstIf)
-                        {
-                            sbVarnishVcl.AppendLine($"    if (req.http.X-Neon-Proxy-Target == \"{targetHeader}\") {{");
-                        }
-                        else
-                        {
-                            sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Target == \"{targetHeader}\") {{");
-                        }
+                        sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Target == \"{targetHeader}\") {{");
 
                         var separator = new string(' ', 6 - ruleNum.ToString().Length);
 
@@ -1471,40 +1513,16 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 
                             sbVarnishVcl.AppendLine($"    set req.http.X-Neon-Cache-Debug = \"true\";");
                         }
-
-                        firstIf = false;
                     }
                 }
 
                 sbVarnishVcl.AppendLine($"    }}");
+                sbVarnishVcl.AppendLine($"    else {{");
+                sbVarnishVcl.AppendLine($"        return (synth(503, \"[\" + req.http.X-Neon-Proxy-Target + \"] does not map to a load balancer rule.\"));");
+                sbVarnishVcl.AppendLine($"    }}");
+
                 sbVarnishVcl.AppendLine($"}}");
             }
-
-            // Generate the [vcl_backend_error] subroutine to return a synthetic
-            // response with a more responable error message than Varnish generates
-            // (which is "Guru Meditation").
-
-            sbVarnishVcl.AppendLine();
-            sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
-            sbVarnishVcl.AppendLine($"# Override the default Varnish response error message for 503 backend errors.");
-            sbVarnishVcl.AppendLine();
-            sbVarnishVcl.AppendLine($"sub vcl_backend_error {{");
-            sbVarnishVcl.AppendLine($"    if (beresp.status == 503) {{");
-            sbVarnishVcl.AppendLine($"        set beresp.http.status = 503;");
-            sbVarnishVcl.AppendLine($"        set beresp.http.reason = \"Service Unavailable\";");
-            sbVarnishVcl.AppendLine($"        set beresp.http.Cache-Control = \"no-cache\";");
-            sbVarnishVcl.AppendLine($"        set beresp.http.Content-Type = \"text/html; charset=utf-8\";");
-            sbVarnishVcl.AppendLine($"synthetic({{\"<html>");
-            sbVarnishVcl.AppendLine($"<head><title>neonHIVE Proxy Cache Error</title></head>");
-            sbVarnishVcl.AppendLine($"<body>");
-            sbVarnishVcl.AppendLine($"<h1>503 Service Unavailable</h1>");
-            sbVarnishVcl.AppendLine($"No origin servers are healthy.");
-            sbVarnishVcl.AppendLine($"</body>");
-            sbVarnishVcl.AppendLine($"</html>");
-            sbVarnishVcl.AppendLine($"\"}} );");
-            sbVarnishVcl.AppendLine($"        return (deliver);");
-            sbVarnishVcl.AppendLine($"    }}");
-            sbVarnishVcl.AppendLine($"}}");
 
             // Generate the [vcl_deliver] subroutine that performs any last rites on the request
             // (like adding the [X-Neon-Proxy-Cached] header for DEBUG mode.
