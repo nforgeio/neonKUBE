@@ -162,16 +162,6 @@ namespace NeonProxyCache
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async static Task VarnishShim()
         {
-            // Create a helper [/usr/local/bin/varnishadmin] script that opens
-            // [varnishadm] for the hosted varnish instance.
-
-            File.WriteAllText("/usr/local/bin/varnishadmin",
-                NeonHelper.ToLinuxLineEndings(
-$@"#!/bin/bash
-varnishadm -n {workDir}
-"));
-            NeonHelper.Execute("chmod", new object[] { "755", "/usr/local/bin/varnishadmin" });
-
             // This call ensures that Varnish is started immediately.
 
             await ConfigureVarnish();
@@ -496,11 +486,6 @@ backend stub {
 
                     response.EnsureSuccess();
 
-                    // Update the deployed hash so we won't try to update the same 
-                    // configuration again.
-
-                    deployedHash = configHash;
-
                     // Remove the previous VCL program.
 
                     log.LogInfo(() => $"VARNISH-SHIM: varnishadm -n {workDir} vcl.discard {newVclProgram}");
@@ -514,7 +499,12 @@ backend stub {
 
                     response.EnsureSuccess();
 
-                    log.LogInfo(() => $"VARNISH-SHIM: Update complete.");
+                    // Update the deployed hash so we won't try to update the same 
+                    // configuration again.
+
+                    deployedHash = configHash;
+
+                    log.LogInfo(() => $"VARNISH-SHIM: Varnish is up-to-date.");
                 }
                 catch (ExecuteException e)
                 {
