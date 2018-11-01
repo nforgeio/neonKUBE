@@ -36,11 +36,24 @@ RUN echo ** NEW LAYER **
 COPY bin/__app              /usr/bin/$APPNAME.dotnet/
 COPY docker-entrypoint.sh   /
 
-# Configure the scripts and service app.
+# Handy scripts:
+
+COPY scripts/*.sh           /tmp/scripts/
+
+# Configure the scripts and the service app.
 
 RUN chmod 700 /*.sh \
     && echo "#!/bin/sh" > /usr/bin/$APPNAME \ 
     && echo "exec dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
-    && chmod 770 /usr/bin/$APPNAME
+    && chmod 770 /usr/bin/$APPNAME \
+    && chmod 755 /tmp/scripts/*.sh \
+    && cp /tmp/scripts/vadm.sh  /usr/bin/vadm \
+    && cp /tmp/scripts/vhist.sh /usr/bin/vhist \
+    && cp /tmp/scripts/vlog.sh  /usr/bin/vlog \
+    && cp /tmp/scripts/vncsa.sh /usr/bin/vncsa \
+    && cp /tmp/scripts/vstat.sh /usr/bin/vstat \
+    && cp /tmp/scripts/vtest.sh /usr/bin/vtest \
+    && cp /tmp/scripts/vtop.sh  /usr/bin/vtop \
+    && rm -r /tmp/scripts
 
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/docker-entrypoint.sh"]
