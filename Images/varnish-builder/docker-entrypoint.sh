@@ -4,7 +4,24 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds Varnish and writes a ZIP file including the [varnish*] binaries and modules to [/mnt/output].
+# Generates a ZIP archive with our slightly modified version of [varnishd].
+#
+# Before you start if you're using a forked Git repository, be sure to sync it
+# with the origin.
+#
+# Here's how this works:
+#
+#       1. Clone the request Git source branch.
+#       2. Build Varnish from source.
+#       3. Create a ZIP file named like: varnish-6.0.0.zip
+#       4. Added the [varnishd] binary to the ZIP
+#       5. Copy the ZIP to the output folder
+#
+# To install this, you'll need to:
+#
+#       1. Use [apt-get] to install the official version of [varnish] (built from the same branch)
+#       2. Download the ZIP
+#       3. Unzip the archive and then copy [varnish-install/varnishd] to [/usr/local/sbin]
 
 if [ "$1" == "bash "] ; then
     exec bash
@@ -25,12 +42,6 @@ if [ "${GIT_BRANCH}" == "" ] ; then
     . log-error.sh "The [GIT_BRANCH] environment variable is required."
     exit 1
 fi
-
-# Create a local [/output] folder where we'll write output 
-# files before we ZIP them.
-
-export OUTPUT_DIR=/varnish-install
-mkdir -p $OUTPUT_DIR
 
 # Ensure that the [/mnt/output] folder exists as a fail-safe.  Normally, the
 # caller would mount a host directory here.
@@ -55,49 +66,30 @@ sh autogen.sh
 sh configure
 make
 
-# Install Varnish so we can gather the files.
+#------------------------------------------------------------------------------
+# Build the ZIP file.
+
+# Install varnish so we can gather the files.
 
 make install
 
-# Gather the relevant files to $OUTPUT_DIR.
+# Generate and export the ZIP archive.
 
-# $hack(jeff.lill):
-#
-# This is a bit of a hack.  It would probably be better to use a multi-stage
-# Dockerfile build that actually did a [make deploy] or generated Debian
-# packages that we'd install in the [varnish] image.
-#
-# I haven't done multi-stage builds yet and since the Varnish project is
-# so old and stable, this hack is likely to work for a long time.
+export OUTPUT_DIR=/varnish-install
+mkdir -p $OUTPUT_DIR
 
-mkdir -p $OUTPUT_DIR/bin
-mkdir -p $OUTPUT_DIR/lib
-mkdir -p $OUTPUT_DIR/vmods
+mkdir -p $OUTPUT_DIR/usr/local/sbin
+cp /usr/local/sbin/varnishd $OUTPUT_DIR/usr/local/sbin
 
-cp /varnish-cache/bin/varnishadm/varnishadm     $OUTPUT_DIR/bin
-cp /varnish-cache/bin/varnishd/varnishd         $OUTPUT_DIR/bin
-cp /varnish-cache/bin/varnishhist/varnishhist   $OUTPUT_DIR/bin
-cp /varnish-cache/bin/varnishlog/varnishlog     $OUTPUT_DIR/bin
-cp /varnish-cache/bin/varnishncsa/varnishncsa   $OUTPUT_DIR/bin
-cp /varnish-cache/bin/varnishstat/varnishstat   $OUTPUT_DIR/bin
-cp /varnish-cache/bin/varnishtest/varnishtest   $OUTPUT_DIR/bin
-cp /varnish-cache/bin/varnishtop/varnishtop     $OUTPUT_DIR/bin
+mkdir -p $OUTPUT_DIR/usr/local/bin
+cp /usr/local/bin/varnish* $OUTPUT_DIR/usr/local/bin
 
-mkdir -p $OUTPUT_DIR/lib/libvarnish
-cp -r /varnish-cache/lib/libvarnishapi/.libs/*  $OUTPUT_DIR/lib/libvarnish
+mkdir -p $OUTPUT_DIR/usr/local/lib/varnish/vmods
+cp /usr/local/lib/varnish/vmods/* $OUTPUT_DIR/usr/local/lib/varnish/vmods
 
-mkdir -p $OUTPUT_DIR/vmods
-cp -r /usr/local/lib/varnish/vmods/*            $OUTPUT_DIR/vmods
+export OUTPUT_ZIP=/tmp/varnish-${GIT_BRANCH}.0.zip
 
-#------------------------------------------------------------------------------
-# ZIP and publish the output files.
-
-export OUTPUT_ZIP=/tmp/varnish.${GIT_BRANCH}.0.zip
-
-zip $OUTPUT_ZIP $OUTPUT_DIR/bin/*
-zip $OUTPUT_ZIP $OUTPUT_DIR/vmods/*
-zip $OUTPUT_ZIP $OUTPUT_DIR/lib/*
-
+zip -r $OUTPUT_ZIP $OUTPUT_DIR/*
 cp $OUTPUT_ZIP /mnt/output
 
 #------------------------------------------------------------------------------

@@ -149,6 +149,13 @@
     <Content Include="neon-proxy-cache\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="neon-proxy-cache\scripts\vadm.sh" />
+    <None Include="neon-proxy-cache\scripts\vhist.sh" />
+    <None Include="neon-proxy-cache\scripts\vlog.sh" />
+    <None Include="neon-proxy-cache\scripts\vncsa.sh" />
+    <None Include="neon-proxy-cache\scripts\vstat.sh" />
+    <None Include="neon-proxy-cache\scripts\vtest.sh" />
+    <None Include="neon-proxy-cache\scripts\vtop.sh" />
     <None Include="varnish\BUILD.md" />
     <None Include="neon-proxy-cache\build.ps1" />
     <None Include="neon-proxy-cache\docker-entrypoint.sh" />

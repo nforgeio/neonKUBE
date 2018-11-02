@@ -39,6 +39,10 @@ if [ ! -d /var/lib/varnish/_.vsm_mgt ] ; then
     chmod 755 /var/lib/varnish/_.vsm_mgt
 fi
 
+# Log the Varnish version.
+
+varnishd -V
+
 # Launch the service.
 
 exec neon-proxy-cache

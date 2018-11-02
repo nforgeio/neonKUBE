@@ -530,6 +530,12 @@ namespace Neon.Xunit
         }
 
         /// <summary>
+        /// Some Docker clear operations appear to take a few moments to complete.
+        /// This delay will be added afterwards in an attempt to address this.
+        /// </summary>
+        public static TimeSpan ClearDelay { get; private set; } = TimeSpan.FromSeconds(2);
+
+        /// <summary>
         /// Executes an arbitrary <b>docker</b> CLI command passing unformatted
         /// arguments and returns the results.
         /// </summary>
@@ -557,7 +563,7 @@ namespace Neon.Xunit
 
         /// <summary>
         /// Executes an arbitrary <b>docker</b> CLI command passing a pre-formatted
-        /// argument  string and returns the results.
+        /// argument string and returns the results.
         /// </summary>
         /// <param name="argString">The <b>docker</b> command arguments.</param>
         /// <returns>The <see cref="ExecuteResult"/>.</returns>
@@ -985,22 +991,22 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all deployed services.
         /// </summary>
-        /// <param name="removeCore">Optionally remove core neonHIVE services as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonHIVE services as well.</param>
         /// <remarks>
         /// By default, this method will not remove core neonHIVE services
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeCore"/><c>=true</c>.
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public void ClearServices(bool removeCore = false)
+        public void ClearServices(bool removeSystem = false)
         {
             // Note that we're always going to remove any [neon-secret-retriever-*] 
-            // services regardless of [removeCore].
+            // services regardless of [removeSystem].
 
             var names = new List<string>();
 
             foreach (var service in ListServices(includeSystem: true))
             {
-                if (removeCore || !service.Name.StartsWith("neon-") || service.Name.StartsWith("neon-secret-retriever-"))
+                if (removeSystem || !service.Name.StartsWith("neon-") || service.Name.StartsWith("neon-secret-retriever-"))
                 {
                     names.Add(service.Name);
                 }
@@ -1132,17 +1138,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all running containers.
         /// </summary>
-        /// <param name="removeCore">Optionally remove core neonHIVE containers as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonHIVE containers as well.</param>
         /// <remarks>
         /// By default, this method will not remove core neonHIVE containers
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeCore"/><c>=true</c>.
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public void ClearContainers(bool removeCore = false)
+        public void ClearContainers(bool removeSystem = false)
         {
             var ids = new List<string>();
 
-            foreach (var container in ListContainers(removeCore))
+            foreach (var container in ListContainers(removeSystem))
             {
                 ids.Add(container.ID);
             }
@@ -1323,17 +1329,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all deployed stacks.
         /// </summary>
-        /// <param name="removeCore">Optionally remove core neonHIVE stacks as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonHIVE stacks as well.</param>
         /// <remarks>
         /// By default, this method will not remove core neonHIVE stacks
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeCore"/><c>=true</c>.
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public void ClearStacks(bool removeCore = false)
+        public void ClearStacks(bool removeSystem = false)
         {
             var names = new List<string>();
 
-            foreach (var stack in ListStacks(removeCore))
+            foreach (var stack in ListStacks(removeSystem))
             {
                 names.Add(stack.Name);
             }
@@ -1474,17 +1480,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all swarm secrets.
         /// </summary>
-        /// <param name="removeCore">Optionally remove core neonHIVE secrets as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonHIVE secrets as well.</param>
         /// <remarks>
         /// By default, this method will not remove neonHIVE neonHIVE secrets
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeCore"/><c>=true</c>.
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public void ClearSecrets(bool removeCore = false)
+        public void ClearSecrets(bool removeSystem = false)
         {
             var names = new List<string>();
 
-            foreach (var secret in ListSecrets(removeCore))
+            foreach (var secret in ListSecrets(removeSystem))
             {
                 names.Add(secret.Name);
             }
@@ -1625,17 +1631,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all swarm configs.
         /// </summary>
-        /// <param name="removeCore">Optionally remove core neonHIVE configs as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonHIVE configs as well.</param>
         /// <remarks>
         /// By default, this method will not remove core neonHIVE configs
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeCore"/><c>=true</c>.
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public void ClearConfigs(bool removeCore = false)
+        public void ClearConfigs(bool removeSystem = false)
         {
             var names = new List<string>();
 
-            foreach (var config in ListConfigs(removeCore))
+            foreach (var config in ListConfigs(removeSystem))
             {
                 names.Add(config.Name);
             }
@@ -1643,6 +1649,7 @@ namespace Neon.Xunit
             if (names.Count > 0)
             {
                 DockerExecute("config", "rm", names.ToArray());
+                Thread.Sleep(ClearDelay);
             }
         }
 
@@ -1762,17 +1769,17 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all swarm networks.
         /// </summary>
-        /// <param name="removeCore">Optionally remove core neonHIVE networks as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonHIVE networks as well.</param>
         /// <remarks>
         /// By default, this method will not remove core neonHIVE networks
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeCore"/><c>=true</c>.
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public void ClearNetworks(bool removeCore = false)
+        public void ClearNetworks(bool removeSystem = false)
         {
             var names = new List<string>();
 
-            foreach (var network in ListNetworks(removeCore))
+            foreach (var network in ListNetworks(removeSystem))
             {
                 names.Add(network.Name);
             }
@@ -1789,13 +1796,13 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all hive volumes.
         /// </summary>
-        /// <param name="removeCore">Optionally remove core neonHIVE volumes as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonHIVE volumes as well.</param>
         /// <remarks>
         /// By default, this method will not remove core neonHIVE volumes
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeCore"/><c>=true</c>.
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public void ClearVolumes(bool removeCore = false)
+        public void ClearVolumes(bool removeSystem = false)
         {
             base.CheckDisposed();
 
@@ -1812,7 +1819,7 @@ namespace Neon.Xunit
             {
                 foreach (var line in reader.Lines(ignoreBlank: true))
                 {
-                    if (!removeCore && line.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    if (!removeSystem && line.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }

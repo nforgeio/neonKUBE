@@ -66,7 +66,7 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-	Build "60" "6.0.0"
+	Build -varnishFamily "60" -varnishVersion "6.0.0"
 }
 
-Build "61" "6.1.0" -latest
+Build -varnishFamily "61" -varnishVersion "6.1.0" -latest

@@ -21,12 +21,25 @@ neon logout
 neon login rm root@home-bare --force
 powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-bare jeff-latest
 
+#------------------------------------------------------------------------------
+# JEFF
 neon logout
 neon login rm root@home-small --force
 neon hive prepare %NF_ROOT%\Devops\test\hives\home-small\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
 neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small --image-tag=jeff-latest
 neon hive set allow-unit-testing=true
 # neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# RELEASE
+neon logout
+neon login rm root@home-small --force
+neon hive prepare %NF_ROOT%\Devops\test\hives\home-small\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
+neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small
+neon hive set allow-unit-testing=true
+# neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small
+#------------------------------------------------------------------------------
 
 neon logout
 neon login rm root@home-small2 --force

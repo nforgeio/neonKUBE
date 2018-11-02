@@ -123,7 +123,7 @@ namespace NeonProxyCache
 
             var proxyName = isPublic ? "public" : "private";
 
-            serviceName = $"neon-proxy-{proxyName}:{GitVersion}";
+            serviceName = $"neon-proxy-{proxyName}-cache:{GitVersion}";
 
             log.LogInfo(() => $"Starting [{serviceName}]");
 
