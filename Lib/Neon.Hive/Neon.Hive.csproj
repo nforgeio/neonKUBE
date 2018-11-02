@@ -4,11 +4,20 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Hive</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>18.9.3-alpha</Version>
+    <Version>18.10.0-alpha.4</Version>
     <Company>neonFORGE, LLC</Company>
     <Product>neonHIVE</Product>
     <Description>neonHIVE utilities.</Description>
-    <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 18.09 release.</PackageReleaseNotes>
+    <PackageReleaseNotes>* BREAKING: DnsHostsManager class renamed to DnsManager and HiveProxy.DnsHosts property renamed to just `Dns` in keeping with the "hive DNS" terminology change.  This is unlikely to impact anyone.
+
+* BREAKING: GlobalsManager.TryGetJson() renamed to TryGetObject() and SetJson() renamed to Set().  This is unlikely to impact anyone.
+
+* BREAKING: [#80 Consul distributed locks don't work as expected](https://github.com/jefflill/NeonForge/issues/80).  This is unlikely to impact anyone.
+
+* Added the LoadBalancerRule.Normalize(bool) method to fix change detection in unit tests.
+* SshProxy.InvokeIdempotentAction() methods now return a boolean indicating whether the action was invoked.
+* Load balancer rules can now specify timeouts and health check intervals to override the defaults.
+* `LoadBalancerHttpRule` adds the `Cache` property to control site caching.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
