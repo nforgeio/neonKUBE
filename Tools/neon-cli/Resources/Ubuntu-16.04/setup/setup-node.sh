@@ -1269,7 +1269,6 @@ systemctl restart neon-dns-loader
 # will run out-of-the-box.
 
 safe-apt-get install -yq python-pip
-pip install docker
 pip install docker-py
 pip install docker-compose
 pip install pyyaml
