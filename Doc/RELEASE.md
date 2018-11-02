@@ -45,4 +45,16 @@
 
 3. Merge **MASTER** into the **JEFF** and/or any other development brances and rebuild all of those images, as required.
 
- 
+4. Start the next release notes document.
+
+ # Release Version Conventions
+
+* Stable, Edge and and LTS releases will continue to use the **YY.M.PATCH** convention where the month.
+* Patch releases are guaranteed to be backwards compatible.
+* Releases where one or both of YY or M were advanced may not be backwards compatible but we'll try very hard to avoid these issues or provide an upgrade path.
+* The month field **will not** include a leading **""0""** due to NuGet issues.
+* Intermediate development releases will use versions like: **YY.M.0-alpha.N** where **YY.M* specifies the actual date for the release and **N** starts at **0** and is incremented for every development release made since the Stable, Edge, or LTS release.  Intermediate releases are not generally intended for public consumption.
+* Intermediate public releases are called previews.  There are types of preview release:
+  * Preview of a patch release for an existing release.  This will look like **YY.M.PATCH-preview-N** where **PATCH** is the scheduled patch number and **N** starts at **0** and is incremented for every preview release for the patch.
+  * Preview of an upcoming Stable, Edge, or LTS release.  These release versions will look like **YY.M.0-preview-B** where **YY.M** is the expected release month.
+* If a Stable, Edge, or LTS release slips passed the scheduled release month, we'll retain the old month for up to 15 days into the next month.  Past that, we'll update **YY.M** to the actual published month.
