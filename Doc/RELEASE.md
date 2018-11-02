@@ -27,7 +27,7 @@
 
 4. Manually clean and rebuild the entire solution: RELEASE configuration.
 
-5. Make sure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
+5. Ensure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
 
 6. Execute `$/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **NuGet.org**.
 
