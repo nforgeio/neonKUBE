@@ -181,11 +181,8 @@ namespace Neon.Xunit.Hive
     ///     <description>
     ///     <see cref="ClearLoadBalancers(bool)"/><br/>
     ///     <see cref="ListLoadBalancerRules(string, bool)"/><br/>
-    ///     <see cref="PutLoadBalancerRule(string, LoadBalancerRule)"/><br/>
-    ///     <see cref="RemoveLoadBalancerRule(string, string)"/><br/>
-    ///     <see cref="RestartLoadBalancers()"/><br/>
-    ///     <see cref="RestartPrivateLoadbalancers()"/><br/>
-    ///     <see cref="RestartPublicLoadBalancers()"/>
+    ///     <see cref="PutLoadBalancerRule(string, LoadBalancerRule, bool)"/><br/>
+    ///     <see cref="RemoveLoadBalancerRule(string, string, bool)"/><br/>
     ///     </description>
     /// </item>
     /// <item>
@@ -1096,7 +1093,21 @@ namespace Neon.Xunit.Hive
         /// </summary>
         /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
         /// <param name="rule">The rule.</param>
-        public void PutLoadBalancerRule(string loadBalancerName, LoadBalancerRule rule)
+        /// <param name="deferUpdate">
+        /// <para>
+        /// Optionally defers expicitly notifying the <b>neon-proxy-manager</b> of the
+        /// change until <see cref="LoadBalancerManager.Update()"/> is called or the <b>neon-proxy-manager</b>
+        /// performs the periodic check for changes (which defaults to 60 seconds).  You
+        /// may consider passing <paramref name="deferUpdate"/><c>=true</c> when you are
+        /// modifying a multiple rules at the same time to avoid making the proxy manager
+        /// and proxy instances handle each rule change individually.
+        /// </para>
+        /// <para>
+        /// Instead, you could pass <paramref name="deferUpdate"/><c>=true</c> for all of
+        /// the rule changes and then call <see cref="LoadBalancerManager.Update()"/> afterwards.
+        /// </para>
+        /// </param>
+        public void PutLoadBalancerRule(string loadBalancerName, LoadBalancerRule rule, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancerName));
             Covenant.Requires<ArgumentNullException>(rule != null);
@@ -1106,7 +1117,7 @@ namespace Neon.Xunit.Hive
 
             var loadBalancer = hive.GetLoadBalancerManager(loadBalancerName);
 
-            loadBalancer.SetRule(rule);
+            loadBalancer.SetRule(rule, deferUpdate: deferUpdate);
         }
 
         /// <summary>
@@ -1114,7 +1125,21 @@ namespace Neon.Xunit.Hive
         /// </summary>
         /// <param name="loadBalancer">The load balancer name (<b>public</b> or <b>private</b>).</param>
         /// <param name="jsonOrYaml">The route JSON or YAML description.</param>
-        public void PutLoadBalancerRule(string loadBalancer, string jsonOrYaml)
+        /// <param name="deferUpdate">
+        /// <para>
+        /// Optionally defers expicitly notifying the <b>neon-proxy-manager</b> of the
+        /// change until <see cref="LoadBalancerManager.Update()"/> is called or the <b>neon-proxy-manager</b>
+        /// performs the periodic check for changes (which defaults to 60 seconds).  You
+        /// may consider passing <paramref name="deferUpdate"/><c>=true</c> when you are
+        /// modifying a multiple rules at the same time to avoid making the proxy manager
+        /// and proxy instances handle each rule change individually.
+        /// </para>
+        /// <para>
+        /// Instead, you could pass <paramref name="deferUpdate"/><c>=true</c> for all of
+        /// the rule changes and then call <see cref="LoadBalancerManager.Update()"/> afterwards.
+        /// </para>
+        /// </param>
+        public void PutLoadBalancerRule(string loadBalancer, string jsonOrYaml, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancer));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
