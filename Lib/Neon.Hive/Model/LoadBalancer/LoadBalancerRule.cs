@@ -266,10 +266,8 @@ namespace Neon.Hive
         /// <note>
         /// <para>
         /// <b>IMPORTANT:</b> When caching is enabled for a rule, the built-in Varnish cache will 
-        /// only honor <see cref="CheckExpect"/> expressions like <b>string 200</b> when probing 
-        /// backend servers because Varnish supports only a fixed status codes.  HAProxy check 
-        /// expressions described above will be ignored and the Varnish backend probe will silently
-        /// fall back to checking for <b>200</b>.
+        /// only honor <see cref="CheckExpect"/> expressions like <b>status 200</b> when probing 
+        /// backend servers because Varnish supports only a fixed status codes.
         /// </para>
         /// <para>
         /// The workaround is to use specialized health check endpoint that is guaranteed to return

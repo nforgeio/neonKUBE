@@ -397,15 +397,15 @@ namespace Neon.Hive
 
                 // Varnish doesn't support comparing health probe status codes with a regex
                 // like HAProxy does.  We're going to enforce having CheckExpect set to
-                // something like "string 200".
+                // something like "status 200".
 
                 var statusFields = CheckExpect.Split(' ');
 
-                if (statusFields.Length != 2 || statusFields[0] != "string" ||
+                if (statusFields.Length != 2 || statusFields[0] != "status" ||
                     !int.TryParse(statusFields[1], out var statusCode) ||
                     statusCode < 100 || 600 <= statusCode)
                 {
-                    context.Error($"HTTP rule [{Name}] cannot support caching because [{nameof(CheckExpect)}={CheckExpect}] doesn't specify a single status code like [string 200].  Varnish-Cache does not support verifying health probe status codes as regular expressions like HAProxy can.");
+                    context.Error($"HTTP rule [{Name}] cannot support caching because [{nameof(CheckExpect)}={CheckExpect}] doesn't specify a fixed status code like [status 200].  Varnish-Cache does not support verifying health probe status codes as regular expressions like HAProxy can.");
                 }
             }
         }
