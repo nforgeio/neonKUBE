@@ -33,19 +33,27 @@ namespace NeonVegomatic
     /// is actually working.
     /// </para>
     /// <para>
-    /// Call <see cref="ExecAsync(CommandLine)"/> to start, optionally passing 
-    /// any HTTP headers you wish to add to the response like:
+    /// Call <see cref="ExecAsync(CommandLine)"/> to start.  You may optionally
+    /// specify the following options by passing <b>OPTION=VALUE</b> as 
+    /// command line arguments.
     /// </para>
-    /// <example>
-    /// "Expires: Wed, 21 Oct 2015 07:28:00 GMT"
-    /// </example>
+    /// <list type="table">
+    /// <item>
+    ///     <term><b>expire-seconds=SECONDS</b></term>
+    ///     <description>
+    ///     This will include the <b>Expires</b> header in the response set to the
+    ///     specified number of seconds in the future (since the request was received).
+    ///     </description>
+    /// </item>
+    /// </list>
     /// </summary>
     public class InstanceIdServer
     {
         //---------------------------------------------------------------------
         // Statics and local types.
 
-        private static Guid instanceId = Guid.NewGuid();
+        private static Guid         instanceId = Guid.NewGuid();
+        private static TimeSpan     expires    = TimeSpan.Zero;
 
         /// <summary>
         /// Implements the service.
@@ -61,6 +69,14 @@ namespace NeonVegomatic
                 app.Run(
                     async context =>
                     {
+                        if (expires > TimeSpan.Zero)
+                        {
+                            var expiresDate = DateTime.UtcNow + expires;
+
+                            context.Response.Headers.Add("Cache-Control", "public");
+                            context.Response.Headers.Add("Expires", expiresDate.ToString("r"));
+                        }
+
                         await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(instanceId.ToString("D")));
                     });
             }
@@ -75,6 +91,32 @@ namespace NeonVegomatic
         /// <param name="commandLine">The command line arguments will be returned as response headers.</param>
         public async Task ExecAsync(CommandLine commandLine)
         {
+            // Process the command line.  We're going to ignore anything that
+            // doesn't make sense.
+
+            foreach (var arg in commandLine.Arguments)
+            {
+                var fields = arg.Split(new char[] { '=' }, 2);
+
+                if (fields.Length != 2)
+                {
+                    continue;
+                }
+
+                switch (fields[0].ToLowerInvariant())
+                {
+                    case "expire-seconds":
+
+                        if (double.TryParse(fields[1], out var expiresArg) && expiresArg > 0.0)
+                        {
+                            expires = TimeSpan.FromSeconds(expiresArg);
+                        }
+                        break;
+                }
+            }
+
+            // Start the web server.
+
             await WebHost.CreateDefaultBuilder()
                 .UseStartup<Startup>()
                 .UseKestrel()
