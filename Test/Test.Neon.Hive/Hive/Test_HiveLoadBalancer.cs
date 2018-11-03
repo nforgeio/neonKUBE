@@ -22,8 +22,8 @@ namespace TestHive
 {
     public class Test_HiveLoadBalancer : IClassFixture<HiveFixture>
     {
-        private HiveFixture     hiveFixture;
-        private HiveProxy       hive;
+        private HiveFixture hiveFixture;
+        private HiveProxy hive;
 
         public Test_HiveLoadBalancer(HiveFixture fixture)
         {
@@ -36,45 +36,123 @@ namespace TestHive
             this.hive = fixture.Hive;
         }
 
+        /// <summary>
+        /// Waits for the a remote proxy and server to report being ready.
+        /// </summary>
+        private async Task WaitForHealthyAsync()
+        {
+            // $hack(jeff.lill): 
+            //
+            // I'm just hardcoding this to 7 seconds assuming that health checks
+            // will be performed on 1 second intervals and that the origin server
+            // will be declared health after 5 or less successful probes.  I'm
+            // adding additional 2 seconds for safety.
+
+            await Task.Delay(TimeSpan.FromSeconds(7));
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public void Basic()
+        public async Task HttpRule_Public()
         {
-            // $todo(jeff.lill): We actually need add some load balancer rules and test those.
+            // Verify that we can create a public load balancer rule for a 
+            // site on the public port using a specific hostname and then
+            // verify that that the load balancer actual works by spinning
+            // up a [neon-vegomatic] based service to accept the traffic.
 
-            // Deploy a couple of simple NodeJS based services, one listening on 
-            // port 8080 and the other on 8081.  We're also going to use the
-            // [HostsFixture] to map a couple of DNS names to a hive manager
-            // address and then use these to verify that we can call the services.
+            var vegomaticImage = $"nhive/neon-vegomatic:{ThisAssembly.Git.Branch}-latest";
+            var hostname       = "vegomatic.test";
+            var proxyPort      = HiveHostPorts.ProxyPublicHttp;
+            var network        = "neon-public";
+            var queryCount     = 100;
+            var manager        = hive.GetReachableManager();
 
-            // Confirm that the hive starts out with no running stacks or services.
+            manager.Connect();
 
-            Assert.Empty(hiveFixture.ListStacks());
-            Assert.Empty(hiveFixture.ListServices());
-
-            // Spin up a couple of NodeJS as stacks configuring them to return
-            // different text using the OUTPUT environment variable.
-
-            hiveFixture.CreateService("foo", "nhive/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
-            hiveFixture.CreateService("bar", "nhive/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
-
-            // Add the temporary host records.
-
-            hiveFixture.Hosts.AddHostAddress("foo.com", hiveFixture.Hive.FirstManager.PrivateAddress.ToString(), deferCommit: true);
-            hiveFixture.Hosts.AddHostAddress("bar.com", hiveFixture.Hive.FirstManager.PrivateAddress.ToString(), deferCommit: false);
-
-            // Verify that each of the services are returning the expected output.
-
-            using (var client = new HttpClient())
+            using (var client = new TestHttpClient(disableConnectionReuse: true))
             {
-                Assert.Equal("FOO", client.GetStringAsync("http://foo.com:8080").Result.Trim());
-                Assert.Equal("BAR", client.GetStringAsync("http://bar.com:8081").Result.Trim());
+                // Setup the client to query the [vegomatic] service through the
+                // proxy without needing to configure a hive DNS entry.
+
+                client.BaseAddress = new Uri($"http://{manager.PrivateAddress}:{proxyPort}/");
+                client.DefaultRequestHeaders.Host = hostname;
+
+                // The test should start out with no non-system rules.
+
+                Assert.Empty(hive.PublicLoadBalancer.ListRules(r => !r.System));
+
+                // Configure the load balancer rule.
+
+                var rule = new LoadBalancerHttpRule()
+                {
+                    Name         = "vegomatic",
+                    CheckExpect  = "status 200",
+                    CheckSeconds = 1,
+                };
+
+                rule.Frontends.Add(
+                    new LoadBalancerHttpFrontend()
+                    {
+                        Host      = hostname,
+                        ProxyPort = proxyPort
+                    });
+
+                rule.Backends.Add(
+                    new LoadBalancerHttpBackend()
+                    {
+                        Server = "vegomatic",
+                        Port   = 80
+                    });
+
+                hive.PublicLoadBalancer.SetRule(rule);
+
+                // Spin up a single [neon-vegomatic] service with a single instance 
+                // that will return the instance UUID.
+
+                manager.SudoCommand($"docker service create --name vegomatic --network {network} --replicas 1 {vegomaticImage} instanceid-server").EnsureSuccess();
+                await WaitForHealthyAsync();
+
+                // Query the service several times to verify that we get a response and 
+                // also that all of the responses are the same (because we have only
+                // a single [neon-vegomatic] instance returning its UUID).
+
+                var uniqueResponses = new HashSet<string>();
+
+                for (int i = 0; i < queryCount; i++)
+                {
+                    var response = await client.GetStringAsync("/");
+
+                    if (!uniqueResponses.Contains(response))
+                    {
+                        uniqueResponses.Add(response);
+                    }
+                }
+
+                Assert.Single(uniqueResponses);
+
+                // Spinup a second replica and repeat the query test to verify that we
+                // see two unique responses.
+
+                manager.SudoCommand($"docker service update --replicas 2 vegomatic");
+
+                // $hack(jeff.lill): Give the second replica a chance to be reported as healthy.
+
+                await Task.Delay(TimeSpan.FromSeconds(10));
+
+                uniqueResponses.Clear();
+
+                for (int i = 0; i < queryCount; i++)
+                {
+                    var response = await client.GetStringAsync("/");
+
+                    if (!uniqueResponses.Contains(response))
+                    {
+                        uniqueResponses.Add(response);
+                    }
+                }
+
+                Assert.Equal(2, uniqueResponses.Count);
             }
-
-            // Remove one of the services and verify.
-
-            hiveFixture.RemoveStack("foo-service");
-            Assert.Empty(hiveFixture.ListServices().Where(s => s.Name == "foo-service"));
         }
     }
 }

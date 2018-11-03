@@ -250,6 +250,12 @@ namespace NeonProxyCache
                             }
 
                             log.LogInfo(() => $"VARNISH-SHIM: Received: {message}");
+
+                            var jitter = NeonHelper.RandTimespan(HiveConst.MaxJitter);
+
+                            log.LogDebug(() => $"VARNISH-SHIM: Jitter delay [{jitter}].");
+                            await Task.Delay(jitter);
+
                             await ConfigureVarnish();
                         }
                     });

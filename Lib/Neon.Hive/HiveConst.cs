@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Common;
 using Neon.Net;
 
 namespace Neon.Hive
@@ -273,5 +274,16 @@ namespace Neon.Hive
         /// The HiveMQ <b>app</b> virtual host.
         /// </summary>
         public const string HiveMQAppVHost = "app";
+
+        /// <summary>
+        /// Timespan used to introduce some random jitter before an operation
+        /// is performed.  This is typically used when it's possible that a 
+        /// large number of entities will tend to perform an operation at
+        /// nearly the same time (e.g. when a message signalling that an
+        /// operation should be performed is broadcast to a large number
+        /// of listeners.  Components can pass this to <see cref="NeonHelper.RandTimespan(TimeSpan)"/>
+        /// to obtain a random delay timespan.
+        /// </summary>
+        public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(500);
     }
 }

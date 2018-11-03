@@ -215,12 +215,12 @@ namespace NeonProxy
                             if (isPublic)
                             {
                                 forThisInstance = message.PublicProxy && !isBridge ||
-                                                    message.PublicBridge && isBridge;
+                                                  message.PublicBridge && isBridge;
                             }
                             else
                             {
                                 forThisInstance = message.PrivateProxy && !isBridge ||
-                                                    message.PrivateBridge && isBridge;
+                                                  message.PrivateBridge && isBridge;
                             }
 
                             if (!forThisInstance)
@@ -230,6 +230,12 @@ namespace NeonProxy
                             }
 
                             log.LogInfo(() => $"HAPROXY-SHIM: Received: {message}");
+
+                            var jitter = NeonHelper.RandTimespan(HiveConst.MaxJitter);
+
+                            log.LogDebug(() => $"HAPROXY-SHIM: Jitter delay [{jitter}].");
+                            await Task.Delay(jitter);
+
                             await ConfigureHAProxy();
                         }
                     });
