@@ -18,7 +18,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// Misc local unit test helpers.
