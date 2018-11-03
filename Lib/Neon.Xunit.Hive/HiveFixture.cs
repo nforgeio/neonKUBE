@@ -1159,7 +1159,21 @@ namespace Neon.Xunit.Hive
         /// </summary>
         /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
         /// <param name="name">The rule name.</param>
-        public void RemoveLoadBalancerRule(string loadBalancerName, string name)
+        /// <param name="deferUpdate">
+        /// <para>
+        /// Optionally defers expicitly notifying the <b>neon-proxy-manager</b> of the
+        /// change until <see cref="LoadBalancerManager.Update()"/> is called or the <b>neon-proxy-manager</b>
+        /// performs the periodic check for changes (which defaults to 60 seconds).  You
+        /// may consider passing <paramref name="deferUpdate"/><c>=true</c> when you are
+        /// modifying a multiple rules at the same time to avoid making the proxy manager
+        /// and proxy instances handle each rule change individually.
+        /// </para>
+        /// <para>
+        /// Instead, you could pass <paramref name="deferUpdate"/><c>=true</c> for all of
+        /// the rule changes and then call <see cref="LoadBalancerManager.Update()"/> afterwards.
+        /// </para>
+        /// </param>
+        public void RemoveLoadBalancerRule(string loadBalancerName, string name, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>((bool)!string.IsNullOrEmpty(loadBalancerName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1169,7 +1183,7 @@ namespace Neon.Xunit.Hive
 
             var loadBalancer = hive.GetLoadBalancerManager(loadBalancerName);
 
-            loadBalancer.RemoveRule(name);
+            loadBalancer.RemoveRule(name, deferUpdate);
         }
 
         /// <summary>
@@ -1189,82 +1203,22 @@ namespace Neon.Xunit.Hive
         /// </remarks>
         public void ClearLoadBalancers(bool removeSystem = false)
         {
-            var deleted = false;
+            var deletions = false;
 
             foreach (var loadBalancer in new string[] { "public", "private" })
             {
                 foreach (var route in ListLoadBalancerRules(loadBalancer, removeSystem))
                 {
-                    RemoveLoadBalancerRule(loadBalancer, route.Name);
-                    deleted = true;
+                    RemoveLoadBalancerRule(loadBalancer, route.Name, deferUpdate: true);
+                    deletions = true;
                 }
             }
 
-            if (deleted)
+            if (deletions)
             {
-                RestartLoadBalancers();
+                hive.PublicLoadBalancer.Update();
+                hive.PrivateLoadBalancer.Update();
             }
-        }
-
-        /// <summary>
-        /// Restarts hive load balancers to ensure that they pick up any
-        /// load balancer definition changes.
-        /// </summary>
-        /// <remarks>
-        /// <note>
-        /// This does not currently restart the proxy bridges running on 
-        /// hive pet nodes.  This may change in future releases.
-        /// </note>
-        /// </remarks>
-        public void RestartLoadBalancers()
-        {
-            // We'll restart these in parallel for better performance.
-
-            var tasks = NeonHelper.WaitAllAsync(
-                Task.Run(() => RestartPublicLoadBalancers()),
-                Task.Run(() => RestartPrivateLoadbalancers()));
-
-            tasks.Wait();
-        }
-
-        /// <summary>
-        /// Restarts the <b>public</b> p[roxies to ensure that they picked up any
-        /// load balancer definition changes.
-        /// </summary>
-        /// <remarks>
-        /// <note>
-        /// This does not currently restart the proxy bridges running on 
-        /// hive pet nodes.  This may change in future releases.
-        /// </note>
-        /// </remarks>
-        public void RestartPublicLoadBalancers()
-        {
-            // $todo(jeff.lill):
-            //
-            // We probably need to restart the proxy bridge containers on all
-            // of the pets as well.
-
-            DockerExecute("service", "update", "--force", "--update-parallelism", "0", "neon-proxy-public");
-        }
-
-        /// <summary>
-        /// Restarts the <b>private</b> load balancers to ensure that they picked up any
-        /// load balancer definition changes.
-        /// </summary>
-        /// <remarks>
-        /// <note>
-        /// This does not currently restart the proxy bridges running on 
-        /// hive pet nodes.  This may change in future releases.
-        /// </note>
-        /// </remarks>
-        public void RestartPrivateLoadbalancers()
-        {
-            // $todo(jeff.lill):
-            //
-            // We probably need to restart the proxy bridge containers on all
-            // of the pets as well.
-
-            DockerExecute("service", "update", "--force", "--update-parallelism", "0", "neon-proxy-private");
         }
 
         //---------------------------------------------------------------------
