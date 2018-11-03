@@ -218,6 +218,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Releases", "Releases", "{2B
 		Releases\18.08-preview.1.md = Releases\18.08-preview.1.md
 		Releases\18.08-preview.2.md = Releases\18.08-preview.2.md
 		Releases\18.10.0-alpha.4.md = Releases\18.10.0-alpha.4.md
+		Releases\18.10.1-alpha.4.md = Releases\18.10.1-alpha.4.md
+		Releases\18.11.0-alpha.5.md = Releases\18.11.0-alpha.5.md
 		Releases\18.9.0-preview.0.md = Releases\18.9.0-preview.0.md
 		Releases\18.9.1-preview.0.md = Releases\18.9.1-preview.0.md
 		Releases\18.9.2-alpha.md = Releases\18.9.2-alpha.md
@@ -265,7 +267,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-proxy-cache", "Service
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.RabbitMQ", "Lib\Neon.Xunit.RabbitMQ\Neon.Xunit.RabbitMQ.csproj", "{BA0CABF0-06A8-4640-9264-E1611D95FEB3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-proxy", "Services\neon-proxy\neon-proxy.csproj", "{19339D20-5D28-4B90-BE83-92FDECB361BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-proxy", "Services\neon-proxy\neon-proxy.csproj", "{19339D20-5D28-4B90-BE83-92FDECB361BF}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Update-1809-3-alpha_18.10.0-alpha.4.cs
+// FILE:	    Update-18.10.0-alpha.4_18.10.1-alpha.4.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,10 +24,10 @@ using Neon.Net;
 namespace NeonCli
 {
     /// <summary>
-    /// Updates a hive from version <b>18.10.0-alpha.4</b> to <b>18.11.0-alpha.5</b>.
+    /// Updates a hive from version <b>18.10.0-alpha.4</b> to <b>18.10.1-alpha.4</b>.
     /// </summary>
     [HiveUpdate]
-    public class Update_1810_0_alpha_4_1811_alpha_5 : HiveUpdate
+    public class Update_1810_0_alpha_4_1810_1_alpha_4 : HiveUpdate
     {
         /// <inheritdoc/>
         public override SemanticVersion FromVersion { get; protected set; } = SemanticVersion.Parse("18.10.0-alpha.4");
@@ -36,7 +36,7 @@ namespace NeonCli
         public override SemanticVersion ToVersion { get; protected set; } = SemanticVersion.Parse("18.11.0-alpha.5");
 
         /// <inheritdoc/>
-        public override bool RestartRequired => true;
+        public override bool RestartRequired => false;
 
         /// <inheritdoc/>
         public override void AddUpdateSteps(SetupController<NodeDefinition> controller)
