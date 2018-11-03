@@ -156,5 +156,17 @@ namespace Neon.Hive
                 return sb.ToString();
             }
         }
+
+        /// <summary>
+        /// Ensures that the response has a zero exit code.
+        /// </summary>
+        /// <exception cref="ExecuteException">Thrown if when <see cref="ExitCode"/> is non-zero.</exception>
+        public void EnsureSuccess()
+        {
+            if (!Success)
+            {
+                throw new ExecuteException(ExitCode, ErrorSummary);
+            }
+        }
     }
 }
