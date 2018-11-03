@@ -284,6 +284,6 @@ namespace Neon.Hive
         /// of listeners.  Components can pass this to <see cref="NeonHelper.RandTimespan(TimeSpan)"/>
         /// to obtain a random delay timespan.
         /// </summary>
-        public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(500);
+        public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(250);
     }
 }
