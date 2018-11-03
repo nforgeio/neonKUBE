@@ -77,6 +77,11 @@ namespace NeonVegomatic
                         await new TimestampServer().ExecAsync(commandLine.Shift(1));
                         break;
 
+                    case "instanceid-server":
+
+                        await new InstanceIdServer().ExecAsync(commandLine.Shift(1));
+                        break;
+
                     default:
 
                         log.LogError($"[{command}] is not a valid command.");
