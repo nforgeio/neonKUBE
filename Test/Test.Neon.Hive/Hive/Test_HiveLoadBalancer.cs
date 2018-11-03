@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,7 +56,7 @@ namespace TestHive
         /// Verify that we can create a public load balancer rule for a 
         /// site on the public port using a specific hostname and then
         /// verify that that the load balancer actual works by spinning
-        /// up a [neon-vegomatic] based service to accept the traffic.
+        /// up a [vegomatic] based service to accept the traffic.
         /// </summary>
         /// <param name="proxyPort">The inbound proxy port.</param>
         /// <param name="network">The proxy network.</param>
@@ -67,9 +68,9 @@ namespace TestHive
             // Verify that we can create a public load balancer rule for a 
             // site on the public port using a specific hostname and then
             // verify that that the load balancer actual works by spinning
-            // up a [neon-vegomatic] based service to accept the traffic.
+            // up a [vegomatic] based service to accept the traffic.
 
-            var vegomaticImage = $"nhive/neon-vegomatic:{ThisAssembly.Git.Branch}-latest";
+            var vegomaticImage = $"nhive/vegomatic:{ThisAssembly.Git.Branch}-latest";
             var hostname       = "vegomatic.test";
             var queryCount     = 100;
             var manager        = hive.GetReachableManager();
@@ -118,7 +119,7 @@ namespace TestHive
 
                 loadBalancerManager.SetRule(rule);
 
-                // Spin up a single [neon-vegomatic] service with a single instance that will
+                // Spin up a single [vegomatic] service with a single instance that will
                 // return the instance UUID.  We're also going to configure this to set the
                 // [Expires] header to a date 60 seconds in the future so we can verify that
                 // caching is working.
@@ -128,7 +129,7 @@ namespace TestHive
 
                 // Query the service several times to verify that we get a response and 
                 // also that all of the responses are the same (because we have only
-                // a single [neon-vegomatic] instance returning its UUID).
+                // a single [vegomatic] instance returning its UUID).
                 //
                 // We'll determine whether any responses were cached by looking for the
                 // [X-Varnish] header which will be added for cache hits.
@@ -139,7 +140,10 @@ namespace TestHive
                 for (int i = 0; i < queryCount; i++)
                 {
                     var response = await client.GetAsync("/");
-                    var body     = await response.Content.ReadAsStringAsync();
+
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+                    var body = await response.Content.ReadAsStringAsync();
 
                     if (response.Headers.Contains("X-Varnish"))
                     {

@@ -27,13 +27,13 @@ using Neon.Net;
 namespace NeonVegomatic
 {
     /// <summary>
-    /// Implements the <b>neon-vegomatic</b> service/container.  See 
-    /// <a href="https://hub.docker.com/r/nhive/neon-vegomaticr/">nhive/neon-vegomatic</a>
+    /// Implements the <b>vegomatic</b> service/container.  See 
+    /// <a href="https://hub.docker.com/r/nhive/vegomaticr/">nhive/vegomatic</a>
     /// for more information.
     /// </summary>
     public static class Program
     {
-        private static readonly string serviceName = $"neon-vegomatic:{GitVersion}";
+        private static readonly string serviceName = $"vegomatic:{GitVersion}";
 
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
@@ -58,10 +58,9 @@ namespace NeonVegomatic
                 var commandLine = new CommandLine(args);
                 var command     = commandLine.Arguments.ElementAtOrDefault(0);
 
-
                 if (command == null)
                 {
-                    log.LogError("usage: neon-vegomatic COMMAND ARGS...");
+                    log.LogError("usage: vegomatic COMMAND ARGS...");
                     Program.Exit(1, immediate: true);
                 }
 

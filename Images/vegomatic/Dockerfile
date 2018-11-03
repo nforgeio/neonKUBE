@@ -3,12 +3,12 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# .NET Core based image that implements the [neon-vegomatic] service.
+# .NET Core based image that implements the [vegomatic] service.
 #
 # ARGUMENTS:
 #
 #       BRANCH      - The current GitHub branch
-#       APPNAME     - Name of the application binary/script (e.g "neon-vegomatic")
+#       APPNAME     - Name of the application binary/script (e.g "vegomatic")
 #                     This makes it easier to clone and reuse this Dockerfile.
 
 ARG         BRANCH

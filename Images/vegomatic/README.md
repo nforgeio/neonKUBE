@@ -10,4 +10,4 @@ From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* iden
 
 This image is a catch-all for non-production tests and utilities.  Most hives will never deploy this.
 
-See the `neon-vegomatic` project in the source code for more information.
+See the `vegomatic` project in the source code for more information.

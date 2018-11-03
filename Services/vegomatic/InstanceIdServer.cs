@@ -77,6 +77,8 @@ namespace NeonVegomatic
                             context.Response.Headers.Add("Expires", expiresDate.ToString("r"));
                         }
 
+                        context.Response.Headers.Add("X-Vegomatic", "true");
+
                         await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(instanceId.ToString("D")));
                     });
             }

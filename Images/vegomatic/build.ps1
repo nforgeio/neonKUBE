@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the neonHIVE [neon-vegomatic] image.
+# Builds the neonHIVE [vegomatic] image.
 #
 # Usage: powershell -file build.ps1 REGISTRY TAG
 
@@ -15,10 +15,10 @@ param
 
 "   "
 "======================================="
-"* NEON-VEGOMATIC:" + $tag
+"* VEGOMATIC:" + $tag
 "======================================="
 
-$appname = "neon-vegomatic"
+$appname = "vegomatic"
 
 # Build and publish the app to a local [bin] folder.
 

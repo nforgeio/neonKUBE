@@ -5,7 +5,7 @@
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # Loads the Docker host node environment variables before launching the 
-# [neon-vegomatic] .NET service.
+# [vegomatic] .NET service.
 
 # Load the host node environment.
 
@@ -15,4 +15,4 @@ fi
 
 # Launch the service.
 
-exec neon-vegomatic "$@"
+exec vegomatic "$@"
