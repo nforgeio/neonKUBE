@@ -63,7 +63,7 @@ namespace TestHive
 
             // Wait a few more seconds to be safe.
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(10));
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace TestHive
                 client.BaseAddress                = new Uri($"http://{manager.PrivateAddress}:{proxyPort}/");
                 client.DefaultRequestHeaders.Host = hostname;
 
-                // The test should start out with no non-system rules.
+                // The test should start without any non-system rules.
 
                 Assert.Empty(loadBalancerManager.ListRules(r => !r.System));
 
@@ -181,7 +181,7 @@ namespace TestHive
                 // [Expires] header to a date 60 seconds in the future so we can verify that
                 // caching is working.
 
-                manager.SudoCommand($"docker service create --name vegomatic --network {network} --replicas 1 {vegomaticImage} instanceid-server expire-seconds=60").EnsureSuccess();
+                manager.SudoCommand($"docker service create --name vegomatic --network {network} --replicas 1 {vegomaticImage} test-server").EnsureSuccess();
                 await WaitUntilReadyAsync(client.BaseAddress, hostname);
 
                 // Query the service several times to verify that we get a response and 
@@ -197,7 +197,7 @@ namespace TestHive
 
                 for (int i = 0; i < queryCount; i++)
                 {
-                    var response = await client.GetAsync($"/{testName}/pass-1/{i}");
+                    var response = await client.GetAsync($"/{testName}/pass-1/{i}?body=server-id&expires=60");
 
                     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -245,11 +245,11 @@ namespace TestHive
                     // we see cache hits this time.
 
                     viaVarnish = false;
-                    cacheHit  = false;
+                    cacheHit   = false;
 
                     for (int i = 0; i < queryCount; i++)
                     {
-                        var response = await client.GetAsync($"/{testName}/pass-1/{i}");
+                        var response = await client.GetAsync($"/{testName}/pass-1/{i}?body=server-id&expires=60");
 
                         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -280,38 +280,62 @@ namespace TestHive
                 //
                 // Note that we're going to pass a new set of URLs to avoid having 
                 // any responses cached so we'll end up seeing all of the IDs.
+                //
+                // Note also that we need to perform these requests in parallel
+                // to try to force Varnish to establish more than one connection
+                // to the [vegomatic] service.  If we don't do this, Varnish will
+                // establish a single connection to one of the service instances 
+                // and keep sending traffic there resulting in us seeing only
+                // one response UUID.
 
-                manager.SudoCommand($"docker service update --replicas 2 vegomatic");
+                manager.SudoCommand($"docker service update --replicas 2 vegomatic").EnsureSuccess();
                 await WaitUntilReadyAsync(client.BaseAddress, hostname);
 
-                // Reset the response info.
+                // Reset the response info and do the requests.
 
                 uniqueResponses.Clear();
                 viaVarnish = false;
                 cacheHit   = false;
 
+                var tasks = new List<Task>();
+                var uris  = new List<string>();
+
                 for (int i = 0; i < queryCount; i++)
                 {
-                    var response = await client.GetAsync($"/{testName}/pass-2/{i}");
-                    var body     = await response.Content.ReadAsStringAsync();
-
-                    if (ViaVarnish(response))
-                    {
-                        viaVarnish = true;
-                    }
-
-                    if (CacheHit(response))
-                    {
-                        cacheHit = true;
-                    }
-
-                    if (!uniqueResponses.Contains(body))
-                    {
-                        uniqueResponses.Add(body);
-                    }
+                    uris.Add($"/{testName}/pass-2/{i}?body=server-id&expires=60&delay=0.250");
                 }
 
-                Assert.Equal(2, uniqueResponses.Count);
+                foreach (var uri in uris)
+                {
+                    tasks.Add(Task.Run(
+                        async () =>
+                        {
+                            var response = await client.GetAsync(uri);
+                            var body     = await response.Content.ReadAsStringAsync();
+
+                            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+                            if (ViaVarnish(response))
+                            {
+                                viaVarnish = true;
+                            }
+
+                            if (CacheHit(response))
+                            {
+                                cacheHit = true;
+                            }
+
+                            lock (uniqueResponses)
+                            {
+                                if (!uniqueResponses.Contains(body))
+                                {
+                                    uniqueResponses.Add(body);
+                                }
+                            }
+                        }));
+                }
+
+                await NeonHelper.WaitAllAsync(tasks);
 
                 if (useCache)
                 {
@@ -330,6 +354,8 @@ namespace TestHive
                     Assert.False(viaVarnish);
                     Assert.False(cacheHit);
                 }
+
+                Assert.Equal(2, uniqueResponses.Count);
             }
         }
 
