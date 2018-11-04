@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -33,19 +34,20 @@ namespace NeonVegomatic
     /// is actually working.
     /// </para>
     /// <para>
-    /// Call <see cref="ExecAsync(CommandLine)"/> to start.  You may specify
-    /// the following options by passing <b>OPTION=VALUE</b> as command line
-    /// arguments.
+    /// Call <see cref="ExecAsync(CommandLine)"/> to start.
+    /// </para>
+    /// <para>
+    /// The server supports the following URI query parameters:
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>mode=VALUE</b></term>
+    ///     <term><b>body=VALUE</b></term>
     ///     <description>
     ///     <para>
     ///     This controls what the server returns.  The current options are:
     ///     </para>
     ///     <list type="table">
-    ///         <term><b>uuid</b></term>
+    ///         <term><b>server-id</b></term>
     ///         <description>
     ///         Generate a UUID for each instance and then return that as
     ///         the response body.  This is the default mode.
@@ -73,10 +75,7 @@ namespace NeonVegomatic
         //---------------------------------------------------------------------
         // Statics and local types.
 
-        private static Guid         instanceId = Guid.NewGuid();
-        private static string       mode       = "uuid";
-        private static TimeSpan     delay      = TimeSpan.Zero;
-        private static TimeSpan     expires    = TimeSpan.Zero;
+        private static Guid     serverId = Guid.NewGuid();
 
         /// <summary>
         /// Implements the service.
@@ -92,6 +91,40 @@ namespace NeonVegomatic
                 app.Run(
                     async context =>
                     {
+                        var request = context.Request;
+                        var body    = "server-id";
+                        var delay   = TimeSpan.Zero;
+                        var expires = TimeSpan.Zero;
+
+                        // Parse any query parameters.
+
+                        if (request.Query.TryGetValue("mode", out var modeArgs))
+                        {
+                            body = modeArgs.Single().ToLowerInvariant();
+                        }
+
+                        if (request.Query.TryGetValue("delay", out var delayArgs))
+                        {
+                            var delayArg = delayArgs.Single();
+
+                            if (double.TryParse(delayArg, NumberStyles.Number, CultureInfo.InvariantCulture, out var delayValue) && delayValue > 0)
+                            {
+                                delay = TimeSpan.FromSeconds(delayValue);
+                            }
+                        }
+
+                        if (request.Query.TryGetValue("expires", out var expiresArgs))
+                        {
+                            var expiresArg = expiresArgs.Single();
+
+                            if (double.TryParse(expiresArg, NumberStyles.Number, CultureInfo.InvariantCulture, out var expiresValue) && expiresValue > 0)
+                            {
+                                expires = TimeSpan.FromSeconds(expiresValue);
+                            }
+                        }
+
+                        // Implement the operation.
+
                         if (expires > TimeSpan.Zero)
                         {
                             var expiresDate = DateTime.UtcNow + expires;
@@ -107,12 +140,12 @@ namespace NeonVegomatic
 
                         context.Response.Headers.Add("X-Vegomatic", "true");
 
-                        switch (mode)
+                        switch (body)
                         {
                             default:
-                            case "uuid":
+                            case "server-id":
 
-                                await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(instanceId.ToString("D")));
+                                await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(serverId.ToString("D")));
                                 break;
                         }
                     });
@@ -128,57 +161,6 @@ namespace NeonVegomatic
         /// <param name="commandLine">The command line arguments will be returned as response headers.</param>
         public async Task ExecAsync(CommandLine commandLine)
         {
-            // Process the command line.  We're going to ignore anything that
-            // doesn't make sense.
-
-            foreach (var arg in commandLine.Arguments)
-            {
-                var fields = arg.Split(new char[] { '=' }, 2);
-
-                if (fields.Length != 2)
-                {
-                    continue;
-                }
-
-                switch (fields[0].ToLowerInvariant())
-                {
-                    case "mode":
-
-                        mode = fields[1].Trim().ToLowerInvariant();
-
-                        switch (mode)
-                        {
-                            case "uuid":
-
-                                break;
-
-                            default:
-
-                                // Invalid mode.  Use the default.
-
-                                mode = "uuid";
-                                break;
-                        }
-                        break;
-
-                    case "delay":
-
-                        if (double.TryParse(fields[1], out var delayArg) && delayArg > 0.0)
-                        {
-                            delay = TimeSpan.FromSeconds(delayArg);
-                        }
-                        break;
-
-                    case "expire":
-
-                        if (double.TryParse(fields[1], out var expiresArg) && expiresArg > 0.0)
-                        {
-                            expires = TimeSpan.FromSeconds(expiresArg);
-                        }
-                        break;
-                }
-            }
-
             // Start the web server.
 
             await WebHost.CreateDefaultBuilder()
