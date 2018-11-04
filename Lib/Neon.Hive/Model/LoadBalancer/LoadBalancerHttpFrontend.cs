@@ -150,7 +150,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the frontends's host and path as a string.
+        /// Returns the frontend's host and path as a string.
         /// </summary>
         [JsonIgnore]
         internal string HostAndPath
@@ -169,6 +169,26 @@ namespace Neon.Hive
                 }
 
                 return hostAndPath;
+            }
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Returns the value to be used as the <b>X-Neon-Proxy-Frontend</b>
+        /// header for requests being passed through to a <b>neon-proxy-cache</b> based service.
+        /// This will look like <b>PORT-HOSTNAME</b> for frontends that define a hostname and just
+        /// <b>PORT</b> for those without a hostname, where PORT is the proxy ingress port and
+        /// HOSTNAME is the target hostname.
+        /// </summary>
+        /// <returns>The <b>X-Neon-Proxy-Frontend</b> header value for the frontend.</returns>
+        public string GetProxyFrontendHeader()
+        {
+            if (!string.IsNullOrEmpty(Host))
+            {
+                return $"{ProxyPort}-{Host.ToLowerInvariant()}";
+            }
+            else
+            {
+                return $"{ProxyPort}";
             }
         }
 

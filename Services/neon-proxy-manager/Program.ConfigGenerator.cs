@@ -197,11 +197,6 @@ namespace NeonProxyManager
             }
         }
 
-        /// <summary>
-        /// Returns the <c>option</c> argument for a <see cref="LoadBalancerRule"/> that has
-        /// enables HTTP health checks.
-        /// </summary>
-        /// <param name="rule">The load balancer rule.</param>
         /// <returns>The option argument string.</returns>
         private static string GetHttpCheckOptionArgs(LoadBalancerRule rule)
         {
@@ -890,7 +885,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                     {
                         if (!haProxyFrontends.TryGetValue(frontend.ProxyPort, out HAProxyHttpFrontend haProxyFrontend))
                         {
-                            haProxyFrontend = new HAProxyHttpFrontend()
+                            haProxyFrontend = new HAProxyHttpFrontend(frontend)
                             {
                                 Rule       = httpRule,
                                 Port       = frontend.ProxyPort,
@@ -906,7 +901,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         {
                             // It's possible to incorrectly define multiple HTTP rules with the same 
                             // host/path mapping to the same HAProxy frontend port.  This code will
-                            // simply choose a winner with a warning.
+                            // simply choose a winner and log a warning.
 
                             // $todo(jeff.lill): 
                             //
@@ -1030,14 +1025,14 @@ frontend {haProxyFrontend.Name}
                             var hostAclName = $"is-{host.Replace('.', '-')}";
 
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
-                            SetProxyTargetHeader(sbHaProxy, haProxyFrontend, hostAclName);
+                            SetProxyFrontendHeader(sbHaProxy, haProxyFrontend, host, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName}");
                         }
                         else
                         {
                             // The frontend does not specify a host so we'll always use the backend.
 
-                            SetProxyTargetHeader(sbHaProxy, haProxyFrontend);
+                            SetProxyFrontendHeader(sbHaProxy, haProxyFrontend, host);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value}");
                         }
                     }
@@ -1070,7 +1065,7 @@ frontend {haProxyFrontend.Name}
                         {
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
-                            SetProxyTargetHeader(sbHaProxy, haProxyFrontend, pathAclName, hostAclName);
+                            SetProxyFrontendHeader(sbHaProxy, haProxyFrontend, host, pathAclName, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName} {pathAclName}");
                         }
                         else
@@ -1093,7 +1088,7 @@ frontend {haProxyFrontend.Name}
                     // Generate the resolvers argument to be used to locate the
                     // backend servers.
 
-                    var resolversArg    = string.Empty;
+                    var resolversArg = string.Empty;
 
                     if (!string.IsNullOrEmpty(httpRule.Resolver))
                     {
@@ -1174,7 +1169,7 @@ backend http:{httpRule.Name}
                         // that forwards traffic to Varnish.
 
                         var varnishBackend = isPublic ? "neon-proxy-public-cache" : "neon-proxy-private-cache";
-                        
+
                         sbHaProxy.AppendLine($"    server              {varnishBackend} {varnishBackend}:80{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
                     }
                     else
@@ -1460,29 +1455,29 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine($"}}");
 
                 // Generate the [vcl_recv] subroutine that tries to map the request to 
-                // the correct rule director using the [X-Neon-Proxy-Target] header which
+                // the correct rule director using the [X-Neon-Proxy-Frontend] header which
                 // must be present to be able to identify the correct director.
                 //
-                // The [X-Neon-Proxy-Target] header is added by the HAProxy configuration
-                // for rules with caching enabled.  This will be:
+                // The [X-Neon-Proxy-Frontend] header is added by the HAProxy configuration
+                // for rules with caching enabled.  This will look like one of the following
+                // depending on whether the frontend defines a hostname:
                 //
-                //      X-Neon-Proxy-Target: PORT-HOSTNAME
+                //      X-Neon-Proxy-Frontend: PORT-HOSTNAME
+                //      X-Neon-Proxy-Frontend: PORT
                 //
                 // Where PORT is the proxy frontend port that received the request and
-                // HOSTNAME identifies the request hosts (without any ":PORT").  Note
-                // that HOSTNAME may be empty for load balancer rules that didn't
-                // define a target host.
+                // HOSTNAME identifies the request hosts (without any ":PORT").
 
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
-                sbVarnishVcl.AppendLine($"# Use the [X-Neon-Proxy-Target] header to identify the target director.");
+                sbVarnishVcl.AppendLine($"# Use the [X-Neon-Proxy-Frontend] header to identify the target director.");
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"sub vcl_recv {{");
 
-                sbVarnishVcl.AppendLine($"    if (!req.http.X-Neon-Proxy-Target) {{");
-                sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Target] header is required.\"));");
-                sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Target == \"\") {{");
-                sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Target] header cannot be empty.\"));");
+                sbVarnishVcl.AppendLine($"    if (!req.http.X-Neon-Proxy-Frontend) {{");
+                sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Frontend] header is required.\"));");
+                sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Frontend == \"\") {{");
+                sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Frontend] header cannot be empty.\"));");
 
                 for (int ruleNum = 0; ruleNum < cachingRules.Count; ruleNum++)
                 {
@@ -1490,18 +1485,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 
                     foreach (var frontend in rule.Frontends)
                     {
-                        var targetHeader = string.Empty;
-
-                        if (string.IsNullOrEmpty(frontend.Host))
-                        {
-                            targetHeader = $"{frontend.ProxyPort}-";
-                        }
-                        else
-                        {
-                            targetHeader = $"{frontend.ProxyPort}-{frontend.Host.ToLowerInvariant()}";
-                        }
-
-                        sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Target == \"{targetHeader}\") {{");
+                        sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Frontend == \"{frontend.GetProxyFrontendHeader()}\") {{");
 
                         var separator = new string(' ', 6 - ruleNum.ToString().Length);
 
@@ -1520,7 +1504,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 
                 sbVarnishVcl.AppendLine($"    }}");
                 sbVarnishVcl.AppendLine($"    else {{");
-                sbVarnishVcl.AppendLine($"        return (synth(503, \"[\" + req.http.X-Neon-Proxy-Target + \"] does not map to a load balancer rule.\"));");
+                sbVarnishVcl.AppendLine($"        return (synth(503, \"[\" + req.http.X-Neon-Proxy-Frontend + \"] does not map to a load balancer rule.\"));");
                 sbVarnishVcl.AppendLine($"    }}");
 
                 sbVarnishVcl.AppendLine($"}}");
@@ -2206,21 +2190,33 @@ listen tcp:port-{port}
         }
 
         /// <summary>
-        /// Appends an <b>http-request set-header X-Neon-Proxy-Target VALUE [if acl]</b> to the <see cref="StringBuilder"/>
+        /// Appends an <b>http-request set-header X-Neon-Proxy-Frontend VALUE [if acl]</b> to the <see cref="StringBuilder"/>
         /// for an HTTP frontend when the associated rule enables caching.
         /// </summary>
         /// <param name="sb">The target string builder.</param>
         /// <param name="frontend">The HTTP frontend.</param>
+        /// <param name="hostname">The target proxy frontend hostname or <c>null</c>.</param>
         /// <param name="aclNames">
         /// The optional name of the ACLs that used to select the backend.
         /// The header will be set unconditionally when this is empty.
         /// </param>
-        private static void SetProxyTargetHeader(StringBuilder sb, HAProxyHttpFrontend frontend, params string[] aclNames)
+        private static void SetProxyFrontendHeader(StringBuilder sb, HAProxyHttpFrontend frontend, string hostname, params string[] aclNames)
         {
             Covenant.Requires<ArgumentNullException>(sb != null);
             Covenant.Requires<ArgumentNullException>(frontend != null);
             Covenant.Requires<ArgumentException>(frontend.Rule.Mode == LoadBalancerMode.Http);
             Covenant.Requires<ArgumentException>(!frontend.Tls);    // We don't support caching for TLS backends
+
+            string proxyFrontendHeader;
+
+            if (!string.IsNullOrEmpty(hostname))
+            {
+                proxyFrontendHeader = $"{frontend.Port}-{hostname}";
+            }
+            else
+            {
+                proxyFrontendHeader = $"{frontend.Port}";
+            }
 
             if (!frontend.Rule.Cache.Enabled)
             {
@@ -2229,7 +2225,7 @@ listen tcp:port-{port}
 
             if (aclNames.Length == 0)
             {
-                sb.AppendLine($"    http-request        set-header X-Neon-Proxy-Target {frontend.Port}-");
+                sb.AppendLine($"    http-request        set-header X-Neon-Proxy-Frontend {proxyFrontendHeader}");
             }
             else
             {
@@ -2245,7 +2241,7 @@ listen tcp:port-{port}
                     conditions += aclName;
                 }
 
-                sb.AppendLine($"    http-request        set-header X-Neon-Proxy-Target {frontend.Port}- if {conditions}");
+                sb.AppendLine($"    http-request        set-header X-Neon-Proxy-Frontend {proxyFrontendHeader} if {conditions}");
             }
         }
     }

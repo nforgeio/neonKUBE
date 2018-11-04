@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -63,9 +64,25 @@ namespace NeonProxyManager
         // Instance members.
 
         /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="frontend">The associated frontend.</param>
+        public HAProxyHttpFrontend(LoadBalancerHttpFrontend frontend)
+        {
+            Covenant.Requires<ArgumentNullException>(frontend != null);
+
+            this.Frontend = frontend;
+        }
+
+        /// <summary>
         /// The associated HTTP rule.
         /// </summary>
         public LoadBalancerHttpRule Rule { get; set; }
+
+        /// <summary>
+        /// Returns the associated frontend.
+        /// </summary>
+        public LoadBalancerHttpFrontend Frontend { get; private set; }
 
         /// <summary>
         /// Returns the HAProxy frontend name.

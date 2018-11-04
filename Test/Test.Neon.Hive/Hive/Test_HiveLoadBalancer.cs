@@ -82,7 +82,7 @@ namespace TestHive
                 // Setup the client to query the [vegomatic] service through the
                 // proxy without needing to configure a hive DNS entry.
 
-                client.BaseAddress = new Uri($"http://{manager.PrivateAddress}:{proxyPort}/");
+                client.BaseAddress                = new Uri($"http://{manager.PrivateAddress}:{proxyPort}/");
                 client.DefaultRequestHeaders.Host = hostname;
 
                 // The test should start out with no non-system rules.
