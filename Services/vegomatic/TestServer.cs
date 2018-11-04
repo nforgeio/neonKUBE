@@ -33,13 +33,34 @@ namespace NeonVegomatic
     /// is actually working.
     /// </para>
     /// <para>
-    /// Call <see cref="ExecAsync(CommandLine)"/> to start.  You may optionally
-    /// specify the following options by passing <b>OPTION=VALUE</b> as 
-    /// command line arguments.
+    /// Call <see cref="ExecAsync(CommandLine)"/> to start.  You may specify
+    /// the following options by passing <b>OPTION=VALUE</b> as command line
+    /// arguments.
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>expire-seconds=SECONDS</b></term>
+    ///     <term><b>mode=VALUE</b></term>
+    ///     <description>
+    ///     <para>
+    ///     This controls what the server returns.  The current options are:
+    ///     </para>
+    ///     <list type="table">
+    ///         <term><b>uuid</b></term>
+    ///         <description>
+    ///         Generate a UUID for each instance and then return that as
+    ///         the response body.  This is the default mode.
+    ///         </description>
+    ///     </list>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>delay=SECONDS</b></term>
+    ///     <description>
+    ///     The time to delay before returning the response.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>expire=SECONDS</b></term>
     ///     <description>
     ///     This will include the <b>Expires</b> header in the response set to the
     ///     specified number of seconds in the future (since the request was received).
@@ -47,12 +68,14 @@ namespace NeonVegomatic
     /// </item>
     /// </list>
     /// </summary>
-    public class InstanceIdServer
+    public class TestServer
     {
         //---------------------------------------------------------------------
         // Statics and local types.
 
         private static Guid         instanceId = Guid.NewGuid();
+        private static string       mode       = "uuid";
+        private static TimeSpan     delay      = TimeSpan.Zero;
         private static TimeSpan     expires    = TimeSpan.Zero;
 
         /// <summary>
@@ -77,9 +100,21 @@ namespace NeonVegomatic
                             context.Response.Headers.Add("Expires", expiresDate.ToString("r"));
                         }
 
+                        if (delay > TimeSpan.Zero)
+                        {
+                            await Task.Delay(delay);
+                        }
+
                         context.Response.Headers.Add("X-Vegomatic", "true");
 
-                        await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(instanceId.ToString("D")));
+                        switch (mode)
+                        {
+                            default:
+                            case "uuid":
+
+                                await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(instanceId.ToString("D")));
+                                break;
+                        }
                     });
             }
         }
@@ -107,7 +142,34 @@ namespace NeonVegomatic
 
                 switch (fields[0].ToLowerInvariant())
                 {
-                    case "expire-seconds":
+                    case "mode":
+
+                        mode = fields[1].Trim().ToLowerInvariant();
+
+                        switch (mode)
+                        {
+                            case "uuid":
+
+                                break;
+
+                            default:
+
+                                // Invalid mode.  Use the default.
+
+                                mode = "uuid";
+                                break;
+                        }
+                        break;
+
+                    case "delay":
+
+                        if (double.TryParse(fields[1], out var delayArg) && delayArg > 0.0)
+                        {
+                            delay = TimeSpan.FromSeconds(delayArg);
+                        }
+                        break;
+
+                    case "expire":
 
                         if (double.TryParse(fields[1], out var expiresArg) && expiresArg > 0.0)
                         {

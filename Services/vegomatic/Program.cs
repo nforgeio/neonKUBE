@@ -28,7 +28,7 @@ namespace NeonVegomatic
 {
     /// <summary>
     /// Implements the <b>vegomatic</b> service/container.  See 
-    /// <a href="https://hub.docker.com/r/nhive/vegomaticr/">nhive/vegomatic</a>
+    /// <a href="https://hub.docker.com/r/nhive/vegomatic/">nhive/vegomatic</a>
     /// for more information.
     /// </summary>
     public static class Program
@@ -71,14 +71,9 @@ namespace NeonVegomatic
                         await new CephFS().ExecAsync(commandLine.Shift(1));
                         break;
 
-                    case "timestamp-server":
+                    case "test-server":
 
-                        await new TimestampServer().ExecAsync(commandLine.Shift(1));
-                        break;
-
-                    case "instanceid-server":
-
-                        await new InstanceIdServer().ExecAsync(commandLine.Shift(1));
+                        await new TestServer().ExecAsync(commandLine.Shift(1));
                         break;
 
                     default:
