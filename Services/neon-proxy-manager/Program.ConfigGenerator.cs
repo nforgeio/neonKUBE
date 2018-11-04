@@ -1098,6 +1098,26 @@ frontend {haProxyFrontend.Name}
                     var checkArg    = httpRule.CheckMode != LoadBalancerCheckMode.Disabled ? " check" : " no-check";
                     var checkSslArg = httpRule.CheckTls ? " check-ssl" : string.Empty;
                     var initAddrArg = " init-addr last,libc,none";
+                    var backends    = httpRule.SelectBackends(hostGroups);
+
+                    // NOTE:
+                    //
+                    // We're not going to bother with health checks if there's only a single backend
+                    // because there'd be no other place to direct the traffic anyway.  This will reduce
+                    // network traffic and more importantly, this will improve usability for the common
+                    // case where we're simply forwarding traffic to a Docker service with the
+                    // expectation that Docker will handle fail-over as instances come and go.
+                    //
+                    // This will also help to avoid the possibility of HAProxy returning 503 errors
+                    // immediately after startup or after a soft restart while waiting for the
+                    // initial threshold of healthy probes to be completed.
+
+                    var checkMode = httpRule.CheckMode;
+
+                    if (backends.Count <= 1)
+                    {
+                        checkMode = LoadBalancerCheckMode.Disabled;
+                    }
 
                     if (httpRule.CheckMode == LoadBalancerCheckMode.Disabled)
                     {
@@ -1115,28 +1135,38 @@ backend http:{httpRule.Name}
                         sbHaProxy.AppendLine($"    redirect            scheme https if !{{ ssl_fc }}");
                     }
 
-                    if (httpRule.UseHttpCheckMode)
-                    {
-                        sbHaProxy.AppendLine($"    option              httpchk {GetHttpCheckOptionArgs(httpRule)}");
-
-                        if (!string.IsNullOrEmpty(httpRule.CheckExpect))
-                        {
-                            sbHaProxy.AppendLine($"    http-check          expect {httpRule.CheckExpect.Trim()}");
-                        }
-                    }
-                    else if (httpRule.CheckMode == LoadBalancerCheckMode.Tcp)
-                    {
-                        sbHaProxy.AppendLine($"    option              tcp-check");
-                    }
-
-                    if (httpRule.CheckMode != LoadBalancerCheckMode.Disabled && httpRule.LogChecks)
-                    {
-                        sbHaProxy.AppendLine($"    option              log-health-checks");
-                    }
-
                     if (httpRule.Log)
                     {
                         sbHaProxy.AppendLine($"    log                 global");
+                    }
+
+                    if (checkMode != LoadBalancerCheckMode.Disabled)
+                    {
+                        if (httpRule.UseHttpCheckMode)
+                        {
+                            sbHaProxy.AppendLine($"    option              httpchk {GetHttpCheckOptionArgs(httpRule)}");
+
+                            if (!string.IsNullOrEmpty(httpRule.CheckExpect))
+                            {
+                                sbHaProxy.AppendLine($"    http-check          expect {httpRule.CheckExpect.Trim()}");
+                            }
+                        }
+                        else if (httpRule.CheckMode == LoadBalancerCheckMode.Tcp)
+                        {
+                            sbHaProxy.AppendLine($"    option              tcp-check");
+                        }
+
+                        if (httpRule.CheckMode != LoadBalancerCheckMode.Disabled && httpRule.LogChecks)
+                        {
+                            sbHaProxy.AppendLine($"    option              log-health-checks");
+                        }
+
+                        if (httpRule.Timeouts.CheckSeconds != settings.Timeouts.CheckSeconds)
+                        {
+                            sbHaProxy.AppendLine($"    timeout check       {ToHaProxyTime(httpRule.Timeouts.CheckSeconds)}");
+                        }
+
+                        sbHaProxy.AppendLine($"    default-server      inter {ToHaProxyTime(httpRule.CheckSeconds)}");
                     }
 
                     // Explicitly set any rule timeouts that don't match the default settings.
@@ -1156,21 +1186,21 @@ backend http:{httpRule.Name}
                         sbHaProxy.AppendLine($"    timeout server      {ToHaProxyTime(httpRule.Timeouts.ServerSeconds)}");
                     }
 
-                    if (httpRule.Timeouts.CheckSeconds != settings.Timeouts.CheckSeconds)
-                    {
-                        sbHaProxy.AppendLine($"    timeout check       {ToHaProxyTime(httpRule.Timeouts.CheckSeconds)}");
-                    }
-
-                    sbHaProxy.AppendLine($"    default-server      inter {ToHaProxyTime(httpRule.CheckSeconds)}");
-
                     if (httpRule.Cache.Enabled)
                     {
                         // Caching is enabled so we need to add add a single server backend
                         // that forwards traffic to Varnish.
 
+                        // NOTE:
+                        //
+                        // We're going to assume that the Varnish backend is always healthy because
+                        // there's only one server specifyed here and we're relying on Docker to
+                        // manage failover between multiple proxy instances.  So we're not going
+                        // enable health checks.
+
                         var varnishBackend = isPublic ? "neon-proxy-public-cache" : "neon-proxy-private-cache";
 
-                        sbHaProxy.AppendLine($"    server              {varnishBackend} {varnishBackend}:80{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
+                        sbHaProxy.AppendLine($"    server              {varnishBackend} {varnishBackend}:80{initAddrArg}{resolversArg}");
                     }
                     else
                     {
@@ -1178,7 +1208,7 @@ backend http:{httpRule.Name}
 
                         var serverIndex = 0;
 
-                        foreach (var backend in httpRule.SelectBackends(hostGroups))
+                        foreach (var backend in backends)
                         {
                             var serverName = $"server-{serverIndex++}";
 
@@ -1194,7 +1224,14 @@ backend http:{httpRule.Name}
                                 sslArg = $" ssl verify required";
                             }
 
-                            sbHaProxy.AppendLine($"    server              {serverName} {backend.Server}:{backend.Port}{sslArg}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
+                            if (checkMode == LoadBalancerCheckMode.Disabled)
+                            {
+                                sbHaProxy.AppendLine($"    server              {serverName} {backend.Server}:{backend.Port}{sslArg}{initAddrArg}{resolversArg}");
+                            }
+                            else
+                            {
+                                sbHaProxy.AppendLine($"    server              {serverName} {backend.Server}:{backend.Port}{sslArg}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
+                            }
                         }
                     }
                 }
@@ -1358,20 +1395,31 @@ import directors;
 
                         var backendVcl = string.Empty;
 
-                        // Health check parameters (hardcoded for now).
-                        //
-                        // We're setting [initial==threshold] which means that backends will 
-                        // be considered healthy immediatly after the service starts.  This
-                        // will help avoid 503 errors when the proxy cache is started or
-                        // updated.
+                        // Determine whether to enable health probes.  We're not going to do 
+                        // these if they were explicitly disabled for the rule or if there
+                        // is only one origin server (in which case we might was well forward
+                        // the request because there's no better place to send it).
 
-                        const int window    = 3;
-                        const int initial   = 2;
-                        const int threshold = 2;
+                        var probeEnabled = rule.CheckMode != LoadBalancerCheckMode.Disabled &&
+                                           rule.CheckMode != LoadBalancerCheckMode.Tcp &&
+                                           rule.Backends.Count > 1;
 
-                        if (sbCheckHeaders.Length == 0)
+                        if (probeEnabled)
                         {
-                            backendVcl =
+                            // Health check parameters (hardcoded for now).
+                            //
+                            // We're setting [initial=0] which means that backends will be 
+                            // considered healthy immediatly after the service starts.  This
+                            // will help avoid 503 errors when the proxy cache is started or
+                            // updated.
+
+                            const int window    = 3;
+                            const int initial   = 0;
+                            const int threshold = 2;
+
+                            if (sbCheckHeaders.Length == 0)
+                            {
+                                backendVcl =
 $@"
 backend rule_{ruleIndex}_backend_{backendIndex} {{
     .host  = ""{backend.Server}"";
@@ -1382,19 +1430,19 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             ""Host: {rule.CheckHost ?? backend.Server}""
             ""Accept: */*""
             ""Connection: close"";
-        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
         .window            = {window};
+        .threshold         = {threshold};
         .initial           = {initial};
         .interval          = {RoundUp(rule.CheckSeconds)}s;
-        .threshold         = {threshold};
+        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
         .expected_response = {checkStatus};
     }}
 }}
 ";
-                        }
-                        else
-                        {
-                            backendVcl =
+                            }
+                            else
+                            {
+                                backendVcl =
 $@"
 backend rule_{ruleIndex}_backend_{backendIndex} {{
     .host  = ""{backend.Server}"";
@@ -1405,13 +1453,24 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             ""Host: {rule.CheckHost ?? backend.Server}""
             {sbCheckHeaders}
             ""Connection: close"";
-        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
         .window            = {window};
+        .threshold         = {threshold};
         .initial           = {initial};
         .interval          = {RoundUp(rule.CheckSeconds)}s;
-        .threshold         = {threshold};
+        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
         .expected_response = {checkStatus};
     }}
+}}
+";
+                            }
+                        }
+                        else
+                        {
+                            backendVcl =
+$@"
+backend rule_{ruleIndex}_backend_{backendIndex} {{
+    .host  = ""{backend.Server}"";
+    .port  = ""{backend.Port}"";
 }}
 ";
                         }
