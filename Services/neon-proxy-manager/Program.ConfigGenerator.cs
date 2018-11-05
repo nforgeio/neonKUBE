@@ -1534,6 +1534,10 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine($"sub vcl_recv {{");
 
                 sbVarnishVcl.AppendLine($"    if (!req.http.X-Neon-Proxy-Frontend) {{");
+                sbVarnishVcl.AppendLine($"        if (req.method == \"OPTIONS\") {{");
+                sbVarnishVcl.AppendLine($"            # Treat this as a health probe from HAProxy.");
+                sbVarnishVcl.AppendLine($"            return (synth(200);");
+                sbVarnishVcl.AppendLine($"        }}");
                 sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Frontend] header is required.\"));");
                 sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Frontend == \"\") {{");
                 sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Frontend] header cannot be empty.\"));");
