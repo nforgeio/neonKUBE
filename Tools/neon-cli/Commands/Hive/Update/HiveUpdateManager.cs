@@ -189,8 +189,15 @@ namespace NeonCli
 
                         if (image != null)
                         {
+                            // $todo(jeff.lill):
+                            //
+                            // We should check the service image to see if we actually need to perform an
+                            // upgrade.  There's no point in restarting the service instances unnecessarily.
+                            //
+                            //      https://github.com/jefflill/NeonForge/issues/378
+
                             firstManager.Status = $"update: {image}";
-                            node.SudoCommand($"docker service update --image {image} --update-parallelism {serviceUpdateParallism} {service}");
+                            node.SudoCommand($"docker service update --force --image {image} --update-parallelism {serviceUpdateParallism} {service}");
                             firstManager.Status = string.Empty;
 
                             // Update the service creation scripts on all manager nodes for all built-in 
@@ -209,6 +216,13 @@ namespace NeonCli
             controller.AddGlobalStep("update containers",
                 () =>
                 {
+                    // $todo(jeff.lill):
+                    //
+                    // We should check the service image to see if we actually need to perform an
+                    // upgrade.  There's no point in restarting the service instances unnecessarily.
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/378
+
                     // We're going to update containers on each node, one node at a time
                     // and then stablize for a period of time before moving on to the 
                     // next node.  This will help keep clustered applications like HiveMQ
