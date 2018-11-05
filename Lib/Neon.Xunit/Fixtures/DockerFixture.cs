@@ -75,9 +75,14 @@ namespace Neon.Xunit
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>Misc</b></term>
+    ///     <term><b>Local Machine DNS</b></term>
     ///     <description>
-    ///     <see cref="Reset"/><br/>
+    ///     <see cref="LocalMachineHosts"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Docker</b></term>
+    ///     <description>
     ///     <see cref="DockerExecute(string)"/><br/>
     ///     <see cref="DockerExecute(object[])"/>
     ///     </description>
@@ -441,8 +446,8 @@ namespace Neon.Xunit
             };
 
         /// <summary>
-        /// Called by <see cref="TestFixture"/> to ensure that the hosts file
-        /// contains no DNS records remaining after an interrupted test run.
+        /// Called by <see cref="TestFixture"/> to ensure that Docker is
+        /// reset after an interrupted test run.
         /// </summary>
         public static void EnsureReset()
         {
@@ -472,6 +477,8 @@ namespace Neon.Xunit
         /// </summary>
         public DockerFixture()
         {
+            this.LocalMachineHosts = new HostsFixture();
+
             if (RefCount++ == 0)
             {
                 Reset();
@@ -485,6 +492,8 @@ namespace Neon.Xunit
         /// <param name="reset">Optionally calls <see cref="Reset()"/> when the reference count is zero.</param>
         protected DockerFixture(bool reset = false)
         {
+            this.LocalMachineHosts = new HostsFixture();
+            
             if (RefCount++ == 0)
             {
                 if (reset)
@@ -528,6 +537,18 @@ namespace Neon.Xunit
                 }
             }
         }
+
+        //---------------------------------------------------------------------
+        // Local Hosts
+
+        /// <summary>
+        /// Returns an integrated <see cref="HostsFixture"/> that can be used to manage
+        /// DNS entries in the local machine's DNS <b>hosts</b> file.
+        /// </summary>
+        public HostsFixture LocalMachineHosts { get; private set; }
+
+        //---------------------------------------------------------------------
+        // Docker commands
 
         /// <summary>
         /// Some Docker clear operations appear to take a few moments to complete.
@@ -606,6 +627,10 @@ namespace Neon.Xunit
         /// <exception cref="InvalidOperationException">Thrown if the local Docker instance is a member of a multi-node swarm.</exception>
         public override void Reset()
         {
+            // Reset any local host changes.
+
+            LocalMachineHosts?.Reset();
+
             // We're going to accomplish this by leaving the (one node) swarm 
             // if we're running in swarm mode and then initializing the swarm.
             // Leaving the swarm removes all swarm state including, services,

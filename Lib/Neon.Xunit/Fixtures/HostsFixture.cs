@@ -18,7 +18,7 @@ using Neon.Retry;
 namespace Neon.Xunit
 {
     /// <summary>
-    /// Used to manage the local DNS resolver<b>hosts</b>. file.
+    /// Used to manage the local DNS resolver<b>hosts</b> file on the current computer.
     /// </summary>
     /// <remarks>
     /// <note>
