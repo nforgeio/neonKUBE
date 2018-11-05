@@ -60,6 +60,7 @@ namespace NeonProxyCache
 
         private static AsyncMutex               asyncLock    = new AsyncMutex();
         private static string                   deployedHash = NotDeployedHash;
+        private static string                   lastVcl      = null;
         private static long                     vclVersion   = 0;
         private static BroadcastChannel         proxyNotifyChannel;
 
@@ -376,9 +377,32 @@ backend stub {
                     File.WriteAllText(configUpdatePath, NeonHelper.ToLinuxLineEndings(stubVcl));
                 }
 
+                // Compare the VCL just downloaded with that we saved from the last update
+                // (if this isn't the first).  If the two programs are the same then we
+                // don't need to do anything.  This can happen if the HAProxy config changed
+                // but the Varnish config didn't.
+
+                var newVCL = File.ReadAllText(configUpdatePath);
+
+                try
+                {
+                    if (lastVcl != null)
+                    {
+                        if (lastVcl == newVCL)
+                        {
+                            log.LogInfo(() => "VARNISH-SHIM: VCL is unchanged.  No need to update Varnish.");
+                            return;
+                        }
+                    }
+                }
+                finally
+                {
+                    lastVcl = newVCL;
+                }
+
                 // Verify the configuration.
 
-                log.LogInfo(() => "Verifying Varnish configuration.");
+                log.LogInfo(() => "VARNISH-SHIM: Verifying Varnish configuration.");
 
                 var verifyWorkDir = "/tmp/verify";
 
