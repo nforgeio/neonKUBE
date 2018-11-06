@@ -53,3 +53,37 @@ neon hive prepare %NF_ROOT%\Devops\test\hives\wrt-jeff\hive.json --log-folder=c:
 neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@wrt-jeff --image-tag=jeff-latest
 neon hive set allow-unit-testing=true
 # neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@wrt-jeff
+
+#------------------------------------------------------------------------------
+# Varnish build
+#
+# Notes:
+#
+# You need to be careful to ensure that the specified GIT_VMOD_DYNAMIC_BRANCH is
+# compatible with the associated version of Varnish.  You'll find this information
+# in the README file for the branch.  The libvmod-synamic MASTER branch currently
+# works for Varnish 6.1 but this may change when Varnish 6.2 or later is released.
+
+# Varnish 6.0
+
+docker run ^
+    -it --rm ^
+    --env "GIT_VARNISH_REPO=https://github.com/jefflill/varnish-cache.git" ^
+    --env "GIT_VARNISH_BRANCH=6.0" ^
+    --env "GIT_VMOD_DYNAMIC_REPO=https://github.com/jefflill/libvmod-dynamic" ^
+    --env "GIT_VMOD_DYNAMIC_BRANCH=6.0" ^
+    --env "TEST_BUILD=0" ^
+    --mount type=bind,src=%NF_BUILD%,dst=/mnt/output ^
+    nhive/varnish-builder
+
+# Varnish 6.1
+
+docker run ^
+    -it --rm ^
+    --env "GIT_VARNISH_REPO=https://github.com/jefflill/varnish-cache.git" ^
+    --env "GIT_VARNISH_BRANCH=6.1" ^
+    --env "GIT_VMOD_DYNAMIC_REPO=https://github.com/jefflill/libvmod-dynamic" ^
+    --env "GIT_VMOD_DYNAMIC_BRANCH=master" ^
+    --env "TEST_BUILD=0" ^
+    --mount type=bind,src=%NF_BUILD%,dst=/mnt/output ^
+    nhive/varnish-builder

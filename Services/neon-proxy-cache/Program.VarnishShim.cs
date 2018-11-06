@@ -384,20 +384,13 @@ backend stub {
 
                 var newVCL = File.ReadAllText(configUpdatePath);
 
-                try
+                if (lastVcl != null)
                 {
-                    if (lastVcl != null)
+                    if (lastVcl == newVCL)
                     {
-                        if (lastVcl == newVCL)
-                        {
-                            log.LogInfo(() => "VARNISH-SHIM: VCL is unchanged.  No need to update Varnish.");
-                            return;
-                        }
+                        log.LogInfo(() => "VARNISH-SHIM: VCL is unchanged.  No need to update Varnish.");
+                        return;
                     }
-                }
-                finally
-                {
-                    lastVcl = newVCL;
                 }
 
                 // Verify the configuration.
@@ -533,6 +526,7 @@ backend stub {
                     // configuration again.
 
                     deployedHash = configHash;
+                    lastVcl      = newVCL;
 
                     log.LogInfo(() => $"VARNISH-SHIM: Varnish is up-to-date.");
                 }

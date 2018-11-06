@@ -1299,6 +1299,15 @@ $@"vcl 4.0;
 # Documentation:    http://varnish-cache.org
 
 import directors;
+import dynamic;
+
+# Varnish requires at least one backend but we may be using only dynamic backends 
+# so we'll define a stub backend here.
+
+backend stub {{
+    .host = ""localhost"";
+    .port = ""8080"";
+}}
 ";
                 sbVarnishVcl.Append(vclHeader);
 
@@ -1347,7 +1356,8 @@ import directors;
                 sbVarnishVcl.AppendLine($"    return (deliver);");
                 sbVarnishVcl.AppendLine($"}}");
 
-                // Generate the backends for each HTTP rule that enables caching.
+                // Generate the backends for each HTTP rule that enables caching
+                // and whose origin servers are reached only via IP addresses.
                 // We're going to name each of these backends like:
                 //
                 //      rule_RULE#_backend_BACKEND#
@@ -1356,11 +1366,26 @@ import directors;
                 // the specific backend within the rule.  We're going to process the
                 // rules in sorted order by name so the order of the generated code
                 // elements will tend to be stable.
+                //
+                // We're going to use dynamic backends for rules whose single origin
+                // server is reached via a hostname lookup.  The load balancer model 
+                // code should insist that there be only a single backend in this 
+                // case, but for resilience, we'll use the first origin server 
+                // when there are more than one, ignorning the others.
 
                 var ruleIndex = 0;
 
                 foreach (var rule in cachingRules)
                 {
+                    // Determine whether to enable health probes.  We're not going to do 
+                    // these if they were explicitly disabled for the rule or if there
+                    // is only one origin server (in which case we might as well forward
+                    // the request because there's no better place to send it).
+
+                    var probeEnabled = rule.CheckMode != LoadBalancerCheckMode.Disabled &&
+                                       rule.CheckMode != LoadBalancerCheckMode.Tcp &&
+                                       rule.Backends.Count > 1;
+
                     sbVarnishVcl.AppendLine();
                     sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
                     sbVarnishVcl.AppendLine($"# Rule[{ruleIndex}]: {rule.Name}");
@@ -1370,7 +1395,7 @@ import directors;
                     foreach (var backend in rule.Backends)
                     {
                         var sbCheckHeaders = new StringBuilder();
-                        var checkStatus    = "200";
+                        var checkStatus = "200";
 
                         // We need to verify that [CheckExpect] is set to [string STATUS] where STATUS
                         // is a valid integer status code.  Varnish health probes don't have a way to 
@@ -1381,7 +1406,7 @@ import directors;
                         var statusFields = rule.CheckExpect.Split(' ');
 
                         if (statusFields.Length == 2 && statusFields[0] == "string" &&
-                            int.TryParse(statusFields[1], out var statusCode) && 0 < statusCode &&statusCode < 600)
+                            int.TryParse(statusFields[1], out var statusCode) && 0 < statusCode && statusCode < 600)
                         {
                             checkStatus = statusCode.ToString();
                         }
@@ -1393,50 +1418,78 @@ import directors;
                             sbCheckHeaders.Append($"            {header.Name}: {header.Value}");
                         }
 
-                        var backendVcl = string.Empty;
-
-                        // Determine whether to enable health probes.  We're not going to do 
-                        // these if they were explicitly disabled for the rule or if there
-                        // is only one origin server (in which case we might was well forward
-                        // the request because there's no better place to send it).
-
-                        var probeEnabled = rule.CheckMode != LoadBalancerCheckMode.Disabled &&
-                                           rule.CheckMode != LoadBalancerCheckMode.Tcp &&
-                                           rule.Backends.Count > 1;
+                        var probeVcl = string.Empty;
 
                         if (probeEnabled)
                         {
-                            // Health check parameters (hardcoded for now).
+                            // $todo(jeff.lill: Health check parameters (hardcoded for now).
                             //
                             // We're setting [initial=0] which means that backends will be 
-                            // considered healthy immediatly after the service starts.  This
+                            // considered healthy immediately after the service starts.  This
                             // will help avoid 503 errors when the proxy cache is started or
                             // updated.
 
-                            const int window    = 3;
-                            const int initial   = 0;
+                            const int window = 3;
+                            const int initial = 0;
                             const int threshold = 2;
 
                             if (sbCheckHeaders.Length == 0)
+                            {
+                                probeVcl =
+$@"
+probe rule_{ruleIndex}_probe_{backendIndex} {{
+    .request =
+        ""{rule.CheckMethod} / HTTP/{rule.CheckVersion ?? "1.1"}""
+        ""Host: {rule.CheckHost ?? backend.Server}""
+        ""Accept: */*""
+        ""Connection: close"";
+    .window            = {window};
+    .threshold         = {threshold};
+    .initial           = {initial};
+    .interval          = {RoundUp(rule.CheckSeconds)}s;
+    .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
+    .expected_response = {checkStatus};
+}}
+";
+                            }
+                            else
+                            {
+                                probeVcl =
+$@"
+probe rule_{ruleIndex}_probe_{backendIndex} {{
+    .request =
+        ""{rule.CheckMethod} / HTTP/{rule.CheckVersion ?? "1.1"}""
+        ""Host: {rule.CheckHost ?? backend.Server}""
+        {sbCheckHeaders}
+        ""Connection: close"";
+    .window            = {window};
+    .threshold         = {threshold};
+    .initial           = {initial};
+    .interval          = {RoundUp(rule.CheckSeconds)}s;
+    .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
+    .expected_response = {checkStatus};
+}}
+";
+                            }
+
+                            sbVarnishVcl.Append(probeVcl);
+                        }
+
+                        // Generate the backend for origin servers reachable via IP address.
+                        // We'll handle hostname resolved backends below.
+
+                        var backendVcl = string.Empty;
+
+                        if (!rule.HasSingleHostnameBackend)
+                        {
+                            if (probeEnabled)
                             {
                                 backendVcl =
 $@"
 backend rule_{ruleIndex}_backend_{backendIndex} {{
     .host  = ""{backend.Server}"";
     .port  = ""{backend.Port}"";
-    .probe = {{
-        .request =
-            ""{rule.CheckMethod} / HTTP/{rule.CheckVersion ?? "1.1"}""
-            ""Host: {rule.CheckHost ?? backend.Server}""
-            ""Accept: */*""
-            ""Connection: close"";
-        .window            = {window};
-        .threshold         = {threshold};
-        .initial           = {initial};
-        .interval          = {RoundUp(rule.CheckSeconds)}s;
-        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
-        .expected_response = {checkStatus};
-    }}
+    .probe = ""rule_{ruleIndex}_probe_{backendIndex}"";
 }}
 ";
                             }
@@ -1447,47 +1500,54 @@ $@"
 backend rule_{ruleIndex}_backend_{backendIndex} {{
     .host  = ""{backend.Server}"";
     .port  = ""{backend.Port}"";
-    .probe = {{
-        .request =
-            ""{rule.CheckMethod} / HTTP/{rule.CheckVersion ?? "1.1"}""
-            ""Host: {rule.CheckHost ?? backend.Server}""
-            {sbCheckHeaders}
-            ""Connection: close"";
-        .window            = {window};
-        .threshold         = {threshold};
-        .initial           = {initial};
-        .interval          = {RoundUp(rule.CheckSeconds)}s;
-        .timeout           = {RoundUp(rule.Timeouts.CheckSeconds)}s;
-        .expected_response = {checkStatus};
-    }}
 }}
 ";
                             }
-                        }
-                        else
-                        {
-                            backendVcl =
-$@"
-backend rule_{ruleIndex}_backend_{backendIndex} {{
-    .host  = ""{backend.Server}"";
-    .port  = ""{backend.Port}"";
-}}
-";
                         }
 
                         sbVarnishVcl.Append(backendVcl);
                         backendIndex++;
                     }
 
-                    // Generate the rule's initialization subroutine.
+                    // Generate the rule's initialization subroutine.  We're going to create
+                    // a single round-robin director and then add a dynamic director for each
+                    // rule backend.
+
+                    // $todo(jeff.lill): DNS resolution is currently hardcoded. Should probably be a setting.
+
+                    const int dnsTTL = 5;
 
                     sbVarnishVcl.AppendLine();
                     sbVarnishVcl.AppendLine($"sub init_rule_{ruleIndex} {{");
-                    sbVarnishVcl.AppendLine($"    new rule_{ruleIndex}_director = directors.round_robin();");
 
-                    for (int i = 0; i < rule.Backends.Count(); i++)
+                    if (rule.HasSingleHostnameBackend)
                     {
-                        sbVarnishVcl.AppendLine($"    rule_{ruleIndex}_director.add_backend(rule_{ruleIndex}_backend_{i});");
+                        var backend = rule.Backends.First();
+
+                        if (probeEnabled)
+                        {
+                            sbVarnishVcl.AppendLine($"    new rule_{ruleIndex}_director = dynamic.director(port = \"{backend.Port}\", probe = rule_{ruleIndex}_probe_{backendIndex}), ttl = {dnsTTL}s);");
+                        }
+                        else
+                        {
+                            sbVarnishVcl.AppendLine($"    new rule_{ruleIndex}_director = dynamic.director(port = \"{backend.Port}\", ttl = {dnsTTL}s);");
+                        }
+                    }
+                    else
+                    {
+                        backendIndex = 0;
+
+                        foreach (var backend in rule.Backends)
+                        {
+                            sbVarnishVcl.AppendLine($"    new rule_{ruleIndex}_director = directors.round_robin();");
+
+                            for (int i = 0; i < rule.Backends.Count(); i++)
+                            {
+                                sbVarnishVcl.AppendLine($"    rule_{ruleIndex}_director.add_backend(rule_{ruleIndex}_backend_{i});");
+                            }
+
+                            backendIndex++;
+                        }
                     }
 
                     sbVarnishVcl.AppendLine($"}}");
@@ -1514,8 +1574,8 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine($"}}");
 
                 // Generate the [vcl_recv] subroutine that tries to map the request to 
-                // the correct rule director using the [X-Neon-Proxy-Frontend] header which
-                // must be present to be able to identify the correct director.
+                // the correct rule director or dynamic backend using the [X-Neon-Proxy-Frontend]
+                // header which must be present to be able to identify the correct director.
                 //
                 // The [X-Neon-Proxy-Frontend] header is added by the HAProxy configuration
                 // for rules with caching enabled.  This will look like one of the following
@@ -1536,23 +1596,28 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine($"    if (!req.http.X-Neon-Proxy-Frontend) {{");
                 sbVarnishVcl.AppendLine($"        if (req.method == \"OPTIONS\") {{");
                 sbVarnishVcl.AppendLine($"            # Treat this as a health probe from HAProxy.");
-                sbVarnishVcl.AppendLine($"            return (synth(200);");
+                sbVarnishVcl.AppendLine($"            return (synth(200));");
                 sbVarnishVcl.AppendLine($"        }}");
                 sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Frontend] header is required.\"));");
                 sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Frontend == \"\") {{");
                 sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Proxy-Frontend] header cannot be empty.\"));");
 
-                for (int ruleNum = 0; ruleNum < cachingRules.Count; ruleNum++)
+                for (ruleIndex = 0; ruleIndex < cachingRules.Count; ruleIndex++)
                 {
-                    var rule = cachingRules[ruleNum];
+                    var rule = cachingRules[ruleIndex];
 
                     foreach (var frontend in rule.Frontends)
                     {
                         sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Proxy-Frontend == \"{frontend.GetProxyFrontendHeader()}\") {{");
 
-                        var separator = new string(' ', 6 - ruleNum.ToString().Length);
-
-                        sbVarnishVcl.AppendLine($"        set req.backend_hint = rule_{ruleNum}_director.backend();{separator}# Rule[{ruleNum}]: {rule.Name}");
+                        if (rule.HasSingleHostnameBackend)
+                        {
+                            sbVarnishVcl.AppendLine($"        set req.backend_hint = rule_{ruleIndex}_director.backend(\"{frontend.GetProxyFrontendHeader()}\"); # Rule[{ruleIndex}]: {rule.Name}");
+                        }
+                        else
+                        {
+                            sbVarnishVcl.AppendLine($"        set req.backend_hint = rule_{ruleIndex}_director.backend(); # Rule[{ruleIndex}]: {rule.Name}");
+                        }
 
                         if (rule.Cache.Debug)
                         {

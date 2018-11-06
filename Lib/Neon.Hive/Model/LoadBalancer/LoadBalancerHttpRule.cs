@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace Neon.Hive
@@ -156,6 +157,30 @@ namespace Neon.Hive
             }
 
             return selectedBackends;
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Determines whether the rule has a single 
+        /// backend that is reachable via a hostname lookup.
+        /// </summary>
+        /// <returns><c>true</c> for a single backend with a hostname.</returns>
+        [JsonIgnore]
+        public bool HasSingleHostnameBackend
+        {
+            get
+            {
+                var hasHostname = false;
+
+                foreach (var backend in Backends)
+                {
+                    if (!IPAddress.TryParse(backend.Server, out var address))
+                    {
+                        hasHostname = true;
+                    }
+                }
+
+                return Backends.Count == 1 && hasHostname;
+            }
         }
 
         /// <summary>
@@ -406,6 +431,47 @@ namespace Neon.Hive
                     statusCode < 100 || 600 <= statusCode)
                 {
                     context.Error($"HTTP rule [{Name}] cannot support caching because [{nameof(CheckExpect)}={CheckExpect}] doesn't specify a fixed status code like [status 200].  Varnish-Cache does not support verifying health probe status codes as regular expressions like HAProxy can.");
+                }
+
+                // $todo(jeff.lill):
+                //
+                // We need to enforce some restrictions due to Varnish limitations 
+                // described here:
+                //
+                //      https://github.com/jefflill/NeonForge/issues/379
+                //
+                // It would be nice to revisit this in the future.
+
+                // Ensure that:
+                //
+                //      * If one backend has a hostname then it must be the only backend.
+                //      * IP address and hostname backends cannot be mixed.
+
+                if (Backends.Count > 1)
+                {
+                    var hasHostname  = false;
+                    var hasIPAddress = false;
+
+                    foreach (var backend in Backends)
+                    {
+                        if (IPAddress.TryParse(backend.Server, out var address))
+                        {
+                            hasIPAddress = true;
+                        }
+                        else
+                        {
+                            hasHostname = true;
+                        }
+                    }
+
+                    if (hasIPAddress)
+                    {
+                        context.Error($"HTTP rule [{Name}] has multiple backends reachable via hostname which is not supported.  You may define only a single backend that requires a DNS lookup.");
+                    }
+                    else if (hasIPAddress && hasHostname)
+                    {
+                        context.Error($"HTTP rule [{Name}] has backends reachable via IP address and hostname which is not supported.  You cannot mix backends with IP address and hostnames in the same rule.");
+                    }
                 }
             }
         }
