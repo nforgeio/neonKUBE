@@ -1100,24 +1100,7 @@ frontend {haProxyFrontend.Name}
                     var initAddrArg = " init-addr last,libc,none";
                     var backends    = httpRule.SelectBackends(hostGroups);
 
-                    // NOTE:
-                    //
-                    // We're not going to bother with health checks if there's only a single backend
-                    // because there'd be no other place to direct the traffic anyway.  This will reduce
-                    // network traffic and more importantly, this will improve usability for the common
-                    // case where we're simply forwarding traffic to a Docker service with the
-                    // expectation that Docker will handle fail-over as instances come and go.
-                    //
-                    // This will also help to avoid the possibility of HAProxy returning 503 errors
-                    // immediately after startup or after a soft restart while waiting for the
-                    // initial threshold of healthy probes to be completed.
-
                     var checkMode = httpRule.CheckMode;
-
-                    if (backends.Count <= 1)
-                    {
-                        checkMode = LoadBalancerCheckMode.Disabled;
-                    }
 
                     if (httpRule.CheckMode == LoadBalancerCheckMode.Disabled)
                     {
@@ -1377,8 +1360,8 @@ backend stub {{
 
                 foreach (var rule in cachingRules)
                 {
-                    // Determine whether to enable health probes.  We're not going to do 
-                    // these if they were explicitly disabled for the rule or if there
+                    // Determine whether to enable HTTP health probes.  We're not going to
+                    // do these if they were explicitly disabled for the rule or if there
                     // is only one origin server (in which case we might as well forward
                     // the request because there's no better place to send it).
 
@@ -1395,7 +1378,7 @@ backend stub {{
                     foreach (var backend in rule.Backends)
                     {
                         var sbCheckHeaders = new StringBuilder();
-                        var checkStatus = "200";
+                        var checkStatus    = "200";
 
                         // We need to verify that [CheckExpect] is set to [string STATUS] where STATUS
                         // is a valid integer status code.  Varnish health probes don't have a way to 
@@ -1429,8 +1412,8 @@ backend stub {{
                             // will help avoid 503 errors when the proxy cache is started or
                             // updated.
 
-                            const int window = 3;
-                            const int initial = 0;
+                            const int window    = 3;
+                            const int initial   = 0;
                             const int threshold = 2;
 
                             if (sbCheckHeaders.Length == 0)
@@ -1590,7 +1573,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine($"sub vcl_recv {{");
 
                 sbVarnishVcl.AppendLine($"    if (!req.http.X-Neon-Proxy-Frontend) {{");
-                sbVarnishVcl.AppendLine($"        if (req.method == \"OPTIONS\") {{");
+                sbVarnishVcl.AppendLine($"        if (req.method == \"OPTIONS\" || req.method == \"HEAD\") {{");
                 sbVarnishVcl.AppendLine($"            # Treat this as a health probe from HAProxy.");
                 sbVarnishVcl.AppendLine($"            return (synth(200));");
                 sbVarnishVcl.AppendLine($"        }}");
