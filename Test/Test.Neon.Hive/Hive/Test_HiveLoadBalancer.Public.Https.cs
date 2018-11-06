@@ -25,11 +25,5 @@ namespace TestHive
 {
     public partial class Test_HiveLoadBalancer : IClassFixture<HiveFixture>
     {
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Https_Public_Uncached_DefaultPort()
-        {
-            await TestHttpsRule("https-public-defaultport", HiveHostPorts.ProxyPublicHttps, HiveConst.PublicNetwork, hive.PublicLoadBalancer);
-        }
     }
 }

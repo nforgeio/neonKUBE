@@ -71,28 +71,28 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Uncached_MultiHostnames_DefaultPort()
         {
-            await TestHttpMultipleFrontends("http-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttp, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
+            await TestHttpsMultipleFrontends("http-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttp, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Uncached_MultiHostnames_NonDefaultPort()
         {
-            await TestHttpMultipleFrontends("http-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
+            await TestHttpsMultipleFrontends("http-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Cached_MultiHostnames_DefaultPort()
         {
-            await TestHttpMultipleFrontends("http-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttp, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+            await TestHttpsMultipleFrontends("http-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttp, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Cached_MultiHostnames_NondefaultPortd()
         {
-            await TestHttpMultipleFrontends("http-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+            await TestHttpsMultipleFrontends("http-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
         }
     }
 }

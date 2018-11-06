@@ -31,5 +31,68 @@ namespace TestHive
         {
             await TestHttpsRule("https-private-defaultport", HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Uncached_NonDefaultPort()
+        {
+            await TestHttpsRule("https-private-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Uncached_NoHostname()
+        {
+            await TestHttpsRule("https-private-nohostname", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Cached_DefaultPort()
+        {
+            await TestHttpsRule("https-private-cached-defaultport", HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Cached_NonDefaultPort()
+        {
+            await TestHttpsRule("https-private-cached-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Cached_NoHostname()
+        {
+            await TestHttpsRule("https-private-cached-nohostname", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Uncached_MultiHostnames_DefaultPort()
+        {
+            await TestHttpsMultipleFrontends("https-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Uncached_MultiHostnames_NonDefaultPort()
+        {
+            await TestHttpsMultipleFrontends("https-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Cached_MultiHostnames_DefaultPort()
+        {
+            await TestHttpsMultipleFrontends("https-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Cached_MultiHostnames_NondefaultPortd()
+        {
+            await TestHttpsMultipleFrontends("https-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+        }
     }
 }
