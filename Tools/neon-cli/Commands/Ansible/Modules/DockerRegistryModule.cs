@@ -789,6 +789,7 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
             return new LoadBalancerHttpRule()
             {
                 Name      = "neon-registry",
+                System    = true,
                 Frontends = new List<LoadBalancerHttpFrontend>()
                 {
                     new LoadBalancerHttpFrontend()

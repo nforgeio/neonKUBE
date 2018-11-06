@@ -44,16 +44,31 @@ namespace NeonCli
             base.Initialize(controller);
 
             controller.AddStep(GetStepLabel("remove docker python module"), (node, stepDelay) => RemoveDockerPython(node));
+            controller.AddGlobalStep(GetStepLabel("make neon-registry load balancer rule private"), () => PrivateRegistryRule());
         }
 
         /// <summary>
-        /// Remove the Docker python module from all nodes because it conflicts with
+        /// Removes the Docker python module from all nodes because it conflicts with
         /// Docker related Ansible scripts.
         /// </summary>
         /// <param name="node">The target node.</param>
         private void RemoveDockerPython(SshProxy<NodeDefinition> node)
         {
-            node.SudoCommand("pip uninstall docker");
+            node.SudoCommand("pip uninstall docker", RunOptions.LogOnErrorOnly);
+        }
+
+        /// <summary>
+        /// Marks the <b>neon-registry</b> load balancer rule as a system rule if the rule exists.
+        /// </summary>
+        private void PrivateRegistryRule()
+        {
+            var rule = Hive.PrivateLoadBalancer.GetRule("neon-registry");
+
+            if (rule != null && !rule.System)
+            {
+                rule.System = true;
+                Hive.PrivateLoadBalancer.SetRule(rule);
+            }
         }
     }
 }
