@@ -89,13 +89,9 @@ namespace TestHive
 
                         return response.IsSuccessStatusCode;
                     },
-                    timeout: TimeSpan.FromMinutes(5),
+                    timeout: TimeSpan.FromMinutes(2),
                     pollTime: TimeSpan.FromMilliseconds(100));
             }
-
-            // Wait a few more seconds to be safe.
-
-            await Task.Delay(TimeSpan.FromSeconds(10));
         }
 
         //---------------------------------------------------------------------

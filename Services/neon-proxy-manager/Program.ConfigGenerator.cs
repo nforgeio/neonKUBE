@@ -1513,10 +1513,6 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                     // a single round-robin director and then add a dynamic director for each
                     // rule backend.
 
-                    // $todo(jeff.lill): DNS resolution is currently hardcoded. Should probably be a setting.
-
-                    const int dnsTTL = 5;
-
                     sbVarnishVcl.AppendLine();
                     sbVarnishVcl.AppendLine($"sub init_rule_{ruleIndex} {{");
 
@@ -1526,11 +1522,11 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 
                         if (probeEnabled)
                         {
-                            sbVarnishVcl.AppendLine($"    new rule_{ruleIndex}_director = dynamic.director(port = \"{backend.Port}\", probe = rule_{ruleIndex}_probe_{backendIndex}), ttl = {dnsTTL}s);");
+                            sbVarnishVcl.AppendLine($"    new rule_{ruleIndex}_director = dynamic.director(port = \"{backend.Port}\", probe = rule_{ruleIndex}_probe_{backendIndex}), ttl = {rule.Cache.DnsTTL}s);");
                         }
                         else
                         {
-                            sbVarnishVcl.AppendLine($"    new rule_{ruleIndex}_director = dynamic.director(port = \"{backend.Port}\", ttl = {dnsTTL}s);");
+                            sbVarnishVcl.AppendLine($"    new rule_{ruleIndex}_director = dynamic.director(port = \"{backend.Port}\", ttl = {rule.Cache.DnsTTL}s);");
                         }
                     }
                     else
@@ -1612,7 +1608,9 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 
                         if (rule.HasSingleHostnameBackend)
                         {
-                            sbVarnishVcl.AppendLine($"        set req.backend_hint = rule_{ruleIndex}_director.backend(\"{frontend.GetProxyFrontendHeader()}\"); # Rule[{ruleIndex}]: {rule.Name}");
+                            var hostname = rule.Backends.First().Server;
+
+                            sbVarnishVcl.AppendLine($"        set req.backend_hint = rule_{ruleIndex}_director.backend(\"{hostname}\"); # Rule[{ruleIndex}]: {rule.Name}");
                         }
                         else
                         {

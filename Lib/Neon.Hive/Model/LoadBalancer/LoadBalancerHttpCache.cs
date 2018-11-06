@@ -91,6 +91,15 @@ namespace Neon.Hive
         public bool Debug { get; set; } = false;
 
         /// <summary>
+        /// Optionally overrides the TTL for DNS lookups performed by the cache when the
+        /// backend specifies a hostname (as opposed to an IP address) for the origin server.
+        /// This defaults to <b>5 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "DnsTTL", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(30)]
+        public int DnsTTL { get; set; } = 5;
+
+        /// <summary>
         /// Optionally specifies the resources that should be proactively loaded into the cache.
         /// Each target specifies the URI of the resource to be cached and other settings such as 
         /// the update interval and the <b>User-Agent</b> to be mimicked when making the requests.
@@ -105,6 +114,11 @@ namespace Neon.Hive
         /// <param name="context">The validation context.</param>
         public void Validate(LoadBalancerValidationContext context)
         {
+            if (DnsTTL < 1)
+            {
+                context.Error($"[{nameof(LoadBalancerHttpCache)}.{nameof(DnsTTL)}={DnsTTL}] cannot be less than 1 second.");
+            }
+
             WarmTargets = WarmTargets ?? new List<LoadBalancerWarmTarget>();
 
             foreach (var target in WarmTargets)
