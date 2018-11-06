@@ -23,7 +23,7 @@ using Xunit;
 
 namespace TestHive
 {
-    public class Test_HiveLoadBalancer : IClassFixture<HiveFixture>
+    public partial class Test_HiveLoadBalancer : IClassFixture<HiveFixture>
     {
         private const string            testHostname = "vegomatic.test";
         private static TlsCertificate   certificate;
@@ -56,28 +56,16 @@ namespace TestHive
         /// </summary>
         /// <param name="baseUri">The base URI.</param>
         /// <param name="hostname">The target hostname.</param>
-        /// <param name="allowSelfSignedCerts">Optionally allow self-signed certificates.</param>
-        private async Task WaitUntilReadyAsync(Uri baseUri, string hostname, bool allowSelfSignedCerts = false)
+        private async Task WaitUntilReadyAsync(Uri baseUri, string hostname)
         {
-            TestHttpClient client;
+            // Allow self-signed certificates for HTTPS tests.
 
-            if (allowSelfSignedCerts)
+            var handler = new HttpClientHandler()
             {
-                // Allow self-signed certificates.
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
 
-                var handler = new HttpClientHandler()
-                {
-                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                };
-
-                client = new TestHttpClient(disableConnectionReuse: true, handler: handler, disposeHandler: true);
-            }
-            else
-            {
-                client = new TestHttpClient(disableConnectionReuse: false);
-            }
-
-            using (client)
+            using (var client = new TestHttpClient(disableConnectionReuse: true, handler: handler, disposeHandler: true))
             {
                 client.BaseAddress                = baseUri;
                 client.DefaultRequestHeaders.Host = hostname;
@@ -144,9 +132,10 @@ namespace TestHive
         /// <param name="network">The proxy network.</param>
         /// <param name="loadBalancerManager">The load balancer manager.</param>
         /// <param name="useCache">Optionally enable caching and verify.</param>
+        /// <param name="serviceName">Optionally specifies the backend service name (defaults to <b>vegomatic</b>).</param>
         /// <param name="useIPAddress">Optionally uses an IP addrress rather than a hostname for the rule frontend.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task TestHttpRule(string testName, int proxyPort, string network, LoadBalancerManager loadBalancerManager, bool useCache = false, bool useIPAddress = false)
+        private async Task TestHttpRule(string testName, int proxyPort, string network, LoadBalancerManager loadBalancerManager, bool useCache = false, string serviceName = "vegomatic", bool useIPAddress = false)
         {
             // Append a GUID to the test name to ensure that we won't
             // conflict with what any previous test runs may have loaded
@@ -171,7 +160,7 @@ namespace TestHive
                 // proxy without needing to configure a hive DNS entry.
 
                 client.BaseAddress                = new Uri($"http://{manager.PrivateAddress}:{proxyPort}/");
-                client.DefaultRequestHeaders.Host = hostname;
+                client.DefaultRequestHeaders.Host = testHostname;
 
                 // The test should start without any non-system rules.
 
@@ -201,7 +190,7 @@ namespace TestHive
                 rule.Backends.Add(
                     new LoadBalancerHttpBackend()
                     {
-                        Server = "vegomatic",
+                        Server = serviceName,
                         Port   = 80
                     });
 
@@ -399,9 +388,9 @@ namespace TestHive
         /// <param name="network">The proxy network.</param>
         /// <param name="loadBalancerManager">The load balancer manager.</param>
         /// <param name="useCache">Optionally enable caching and verify.</param>
-        /// <param name="useIPAddress">Optionally uses an IP addrress rather than a hostname for the rule frontend.</param>
+        /// <param name="serviceName">Optionally specifies the backend service name (defaults to <b>vegomatic</b>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task TestHttpMultipleHosts(string testName, string[] hostnames, int proxyPort, string network, LoadBalancerManager loadBalancerManager, bool useCache = false)
+        private async Task TestHttpMultipleFrontends(string testName, string[] hostnames, int proxyPort, string network, LoadBalancerManager loadBalancerManager, bool useCache = false, string serviceName = "vegomatic")
         {
             Covenant.Requires<ArgumentNullException>(hostnames != null && hostnames.Length > 0);
 
@@ -455,7 +444,7 @@ namespace TestHive
                 rule.Backends.Add(
                     new LoadBalancerHttpBackend()
                     {
-                        Server = "vegomatic",
+                        Server = serviceName,
                         Port   = 80
                     });
 
@@ -650,152 +639,6 @@ namespace TestHive
             }
         }
 
-        //---------------------------------------
-        // HTTP: PUBLIC load balancer tests:
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_DefaultPort()
-        {
-            await TestHttpRule("http-public-defaultport", HiveHostPorts.ProxyPublicHttp, HiveConst.PublicNetwork, hive.PublicLoadBalancer);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_NonDefaultPort()
-        {
-            await TestHttpRule("http-public-nondefaultport", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_NoHostname()
-        {
-            await TestHttpRule("http-public-nohostname", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useIPAddress: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_Cached_DefaultPort()
-        {
-            await TestHttpRule("http-public-cached-defaultport", HiveHostPorts.ProxyPublicHttp, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_Cached_NonDefaultPort()
-        {
-            await TestHttpRule("http-public-cached-nondefaultport", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_Cached_NoHostname()
-        {
-            await TestHttpRule("http-public-cached-nohostname", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: true, useIPAddress: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_MultiHostnames_DefaultPort()
-        {
-            await TestHttpMultipleHosts("http-public-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPublicHttp, HiveConst.PublicNetwork, hive.PublicLoadBalancer);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_MultiHostnames_NondefaultPort()
-        {
-            await TestHttpMultipleHosts("http-public-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_MultiHostnames_DefaultPort_Cached()
-        {
-            await TestHttpMultipleHosts("http-public-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPublicHttp, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_MultiHostnames_NondefaultPort_Cached()
-        {
-            await TestHttpMultipleHosts("http-public-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: true);
-        }
-
-        //---------------------------------------
-        // HTTP: PRIVATE load balancer tests:
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_DefaultPort()
-        {
-            await TestHttpRule("http-private-defaultport", HiveHostPorts.ProxyPrivateHttp, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_NonDefaultPort()
-        {
-            await TestHttpRule("http-private-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_NoHostname()
-        {
-            await TestHttpRule("http-private-nohostname", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useIPAddress: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_Cached_DefaultPort()
-        {
-            await TestHttpRule("http-private-cached-defaultport", HiveHostPorts.ProxyPrivateHttp, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_Cached_NonDefaultPort()
-        {
-            await TestHttpRule("http-private-cached-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_Cached_NoHostname()
-        {
-            await TestHttpRule("http-private-cached-nohostname", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true, useIPAddress: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_MultiHostnames_DefaultPort()
-        {
-            await TestHttpMultipleHosts("http-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttp, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_MultiHostnames_NondefaultPort()
-        {
-            await TestHttpMultipleHosts("http-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_MultiHostnames_DefaultPort_Cached()
-        {
-            await TestHttpMultipleHosts("http-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttp, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Private_MultiHostnames_NondefaultPort_Cached()
-        {
-            await TestHttpMultipleHosts("http-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
-        }
-
         //---------------------------------------------------------------------
         // HTTPS rule verification:
 
@@ -809,8 +652,9 @@ namespace TestHive
         /// <param name="proxyPort">The inbound proxy port.</param>
         /// <param name="network">The proxy network.</param>
         /// <param name="loadBalancerManager">The load balancer manager.</param>
+        /// <param name="serviceName">Optionally specifies the backend service name (defaults to <b>vegomatic</b>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task TestHttpsRule(string testName, int proxyPort, string network, LoadBalancerManager loadBalancerManager)
+        private async Task TestHttpsRule(string testName, int proxyPort, string network, LoadBalancerManager loadBalancerManager, string serviceName = "vegomatic")
         {
             // Verify that we can create an HTTPS load balancer rule for a 
             // site on the public port using a specific hostname and then
@@ -868,7 +712,7 @@ namespace TestHive
                 rule.Backends.Add(
                     new LoadBalancerHttpBackend()
                     {
-                        Server = "vegomatic",
+                        Server = serviceName,
                         Port   = 80
                     });
 
@@ -877,7 +721,7 @@ namespace TestHive
                 // Spin up a single [vegomatic] service instance.
 
                 manager.SudoCommand($"docker service create --name vegomatic --network {network} --replicas 1 {vegomaticImage} test-server").EnsureSuccess();
-                await WaitUntilReadyAsync(client.BaseAddress, testHostname, allowSelfSignedCerts: true);
+                await WaitUntilReadyAsync(client.BaseAddress, testHostname);
 
                 // Query the service several times to verify that we get a response and 
                 // also that all of the responses are the same (because we have only
@@ -929,7 +773,7 @@ namespace TestHive
                 // one response UUID.
 
                 manager.SudoCommand($"docker service update --replicas 2 vegomatic").EnsureSuccess();
-                await WaitUntilReadyAsync(client.BaseAddress, testHostname, allowSelfSignedCerts: true);
+                await WaitUntilReadyAsync(client.BaseAddress, testHostname);
 
                 // Reset the response info and do the requests.
 
@@ -984,26 +828,6 @@ namespace TestHive
 
                 Assert.Equal(2, uniqueResponses.Count);
             }
-        }
-
-        //---------------------------------------
-        // HTTPS: PUBLIC load balancer tests:
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Https_Public_DefaultPort()
-        {
-            await TestHttpsRule("https-public-defaultport", HiveHostPorts.ProxyPublicHttps, HiveConst.PublicNetwork, hive.PublicLoadBalancer);
-        }
-
-        //---------------------------------------
-        // HTTPS: PRIVATE load balancer tests:
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Https_Private_DefaultPort()
-        {
-            await TestHttpsRule("https-private-defaultport", HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
         }
     }
 }
