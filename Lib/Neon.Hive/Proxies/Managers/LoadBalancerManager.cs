@@ -3,13 +3,17 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
-using Consul;
-using Neon.HiveMQ;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+
+using Consul;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.HiveMQ;
 
 namespace Neon.Hive
 {
@@ -272,6 +276,22 @@ namespace Neon.Hive
                     }
                 }
             }
+
+            // $todo(jeff.lill):
+            //
+            // We're going to minimially ensure that the rule is valid.  It would
+            // be better to do full server side validation.
+
+            var context = new LoadBalancerValidationContext(Name, GetSettings())
+            {
+                ValidateCertificates = false,   // Disable this because we didn't download the certs.
+                ValidateResolvers    = false
+            };
+
+            rule.Validate(context);
+            context.ThrowIfErrors();
+
+            // Publish the rule.
 
             var ruleKey = GetProxyRuleKey(rule.Name);
             var update  = hive.Consul.Client.KV.Exists(ruleKey).Result;

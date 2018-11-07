@@ -43,12 +43,18 @@ namespace TestHive
             this.hiveFixture = fixture;
             this.hive        = fixture.Hive;
 
-            // Generate a self-signed certificate we can reuse across tests if
+            // Generate a self-signed wildcard certificate we can reuse across tests if
             // we haven't already created one.
 
             if (certificate == null)
             {
-                certificate = TlsCertificate.CreateSelfSigned(testHostname);
+                var hosts = new string[]
+                    {
+                        testHostname,
+                        $"*.{testHostname}"
+                    };
+
+                certificate = TlsCertificate.CreateSelfSigned(hosts);
             }
         }
 

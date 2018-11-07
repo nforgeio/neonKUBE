@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_HiveLoadBalancer.cs
+// FILE:	    Test_HiveLoadBalancer.Private.Https.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -69,30 +69,30 @@ namespace TestHive
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Https_Private_Uncached_MultiHostnames_DefaultPort()
+        public async Task Https_Private_Uncached_MultiFrontends_DefaultPort()
         {
-            await TestHttpsMultipleFrontends("https-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
+            await TestHttpsMultipleFrontends("https-private-multifrontends-defaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Https_Private_Uncached_MultiHostnames_NonDefaultPort()
+        public async Task Https_Private_Uncached_MultiFrontends_NonDefaultPort()
         {
-            await TestHttpsMultipleFrontends("https-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
+            await TestHttpsMultipleFrontends("https-private-multifrontend-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Https_Private_Cached_MultiHostnames_DefaultPort()
+        public async Task Https_Private_Cached_MultiFrontends_DefaultPort()
         {
-            await TestHttpsMultipleFrontends("https-private-multihostnames-defaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+            await TestHttpsMultipleFrontends("https-private-multifrontend-defaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Https_Private_Cached_MultiHostnames_NondefaultPortd()
+        public async Task Https_Private_Cached_MultiFrontends_NonDefaultPortd()
         {
-            await TestHttpsMultipleFrontends("https-private-multihostnames-nondefaultport", new string[] { "vegomatic1.test", "vegomatic2.test" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+            await TestHttpsMultipleFrontends("https-private-multifrontend-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
         }
     }
 }

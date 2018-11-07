@@ -173,13 +173,13 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Returns the value to be used as the <b>X-Neon-Proxy-Frontend</b>
+        /// <b>INTERNAL USE ONLY:</b> Returns the value to be used as the <b>X-Neon-Frontend</b>
         /// header for requests being passed through to a <b>neon-proxy-cache</b> based service.
         /// This will look like <b>PORT-HOSTNAME</b> for frontends that define a hostname and just
         /// <b>PORT</b> for those without a hostname, where PORT is the proxy ingress port and
         /// HOSTNAME is the target hostname.
         /// </summary>
-        /// <returns>The <b>X-Neon-Proxy-Frontend</b> header value for the frontend.</returns>
+        /// <returns>The <b>X-Neon-Frontend</b> header value for the frontend.</returns>
         public string GetProxyFrontendHeader()
         {
             if (!string.IsNullOrEmpty(Host))

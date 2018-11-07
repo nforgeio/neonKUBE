@@ -260,6 +260,28 @@ namespace Neon.Hive
                     }
                 }
 
+                // Ensure that all cache warming targets have schemes, hostnames, ports that
+                // match a rule frontend, and that HTTP rules don't map to reserved HTTPS ports 
+                // and HTTPS rules don't map to reserved HTTP ports.
+
+                foreach (var frontend in Frontends)
+                {
+                    if (frontend.Tls)
+                    {
+                        if (frontend.ProxyPort == HiveHostPorts.ProxyPublicHttp || frontend.ProxyPort == HiveHostPorts.ProxyPrivateHttp)
+                        {
+                            context.Error($"Rule [{Name}] has an HTTPS frontend with [{nameof(frontend.ProxyPort)}={frontend.ProxyPort}] that is incorrectly mapped to a reserved HTTP port.");
+                        }
+                    }
+                    else
+                    {
+                        if (frontend.ProxyPort == HiveHostPorts.ProxyPublicHttps || frontend.ProxyPort == HiveHostPorts.ProxyPrivateHttps)
+                        {
+                            context.Error($"Rule [{Name}] has an HTTP frontend with [{nameof(frontend.ProxyPort)}={frontend.ProxyPort}] that is incorrectly mapped to a reserved HTTPS port.");
+                        }
+                    }
+                }
+
                 // Ensure that all cache warming targets have schemes, hostnames, and ports that
                 // match a rule frontend.
 

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_HiveLoadBalancer.cs
+// FILE:	    Test_HiveLoadBalancer.Http.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -193,7 +193,7 @@ namespace TestHive
                     Assert.True(cacheHit);
                 }
 
-                // Spinup a second replica and repeat the query test to verify 
+                // Spin up a second replica and repeat the query test to verify 
                 // that we see two unique responses.
                 //
                 // Note that we're going to pass a new set of URLs to avoid having 
@@ -449,7 +449,7 @@ namespace TestHive
                     }
                 }
 
-                // Spinup a second replica and repeat the query test for each hostname
+                // Spin up a second replica and repeat the query test for each hostname
                 // to verify that we see two unique responses.
                 //
                 // Note that we're going to pass a new set of URLs to avoid having 

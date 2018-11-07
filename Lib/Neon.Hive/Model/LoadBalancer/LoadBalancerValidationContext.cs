@@ -73,6 +73,11 @@ namespace Neon.Hive
         public bool ValidateCertificates { get; set; } = true;
 
         /// <summary>
+        /// Indicates that DNS resolvers will be validated.  This defaults to <c>true</c>.
+        /// </summary>
+        public bool ValidateResolvers { get; set; } = true;
+
+        /// <summary>
         /// Returns <c>true</c> if any errors were reported.
         /// </summary>
         public bool HasErrors

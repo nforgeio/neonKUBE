@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_HiveLoadBalancer.cs
+// FILE:	    Test_HiveLoadBalancer.Https.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -199,7 +199,7 @@ namespace TestHive
                     Assert.True(cacheHit);
                 }
 
-                // Spinup a second replica and repeat the query test to verify 
+                // Spin up a second replica and repeat the query test to verify 
                 // that we see two unique responses.
                 //
                 // Note also that we need to perform these requests in parallel
@@ -311,7 +311,7 @@ namespace TestHive
 
             var queryCount = 100;
             var manager    = hive.GetReachableManager();
-            var proxyUri   = new Uri($"http://{manager.PrivateAddress}:{proxyPort}/");
+            var proxyUri   = new Uri($"https://{manager.PrivateAddress}:{proxyPort}/");
 
             manager.Connect();
 
@@ -464,7 +464,7 @@ namespace TestHive
                     }
                 }
 
-                // Spinup a second replica and repeat the query test for each hostname
+                // Spin up a second replica and repeat the query test for each hostname
                 // to verify that we see two unique responses.
                 //
                 // Note that we're going to pass a new set of URLs to avoid having 

@@ -79,7 +79,8 @@ namespace Neon.Hive
                 backend.Validate(context, this);
             }
 
-            // Verify that the ports are unique for each frontend.
+            // Verify that the ports are unique for each frontend and that none of these TCP
+            // target one of the reserved HTTP/HTTPS proxy ports.
 
             var frontendMap = new HashSet<int>();
 
@@ -92,8 +93,16 @@ namespace Neon.Hive
                     context.Error($"TCP rule [{Name}] includes two or more frontends that map to port [{key}].");
                 }
 
+                if (frontend.ProxyPort == HiveHostPorts.ProxyPublicHttp || frontend.ProxyPort == HiveHostPorts.ProxyPublicHttps ||
+                    frontend.ProxyPort == HiveHostPorts.ProxyPublicHttp || frontend.ProxyPort == HiveHostPorts.ProxyPublicHttps)
+                {
+                    context.Error($"Rule [{Name}] has a TCP frontend with [{nameof(frontend.ProxyPort)}={frontend.ProxyPort}] that is incorrectly mapped to a reserved HTTP/HTTPS port.");
+                }
+
                 frontendMap.Add(key);
             }
+
+            // Verify [MaxConnections]
 
             if (MaxConnections < 0 || MaxConnections > ushort.MaxValue)
             {
