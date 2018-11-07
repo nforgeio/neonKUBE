@@ -96,7 +96,7 @@ namespace Neon.Hive
         /// This defaults to <b>5 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "DnsTTL", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(30)]
+        [DefaultValue(5)]
         public int DnsTTL { get; set; } = 5;
 
         /// <summary>

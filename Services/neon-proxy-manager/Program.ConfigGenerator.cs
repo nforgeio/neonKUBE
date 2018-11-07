@@ -887,7 +887,6 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         {
                             haProxyFrontend = new HAProxyHttpFrontend(frontend)
                             {
-                                Rule       = httpRule,
                                 Port       = frontend.ProxyPort,
                                 PathPrefix = NormalizePathPrefix(frontend.PathPrefix)
                             };
@@ -925,7 +924,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         }
                         else
                         {
-                            haProxyFrontend.HostPathMappings[hostPath] = $"http:{httpRule.Name}";
+                            haProxyFrontend.HostPathMappings[hostPath] = new HostPathMapping(httpRule, $"http:{httpRule.Name}");
                         }
 
                         if (httpRule.Log)
@@ -1004,40 +1003,8 @@ frontend {haProxyFrontend.Name}
                         sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: false)}");
                     }
 
-                    // Generate the backend mappings for frontends without path prefixes first.
-                    // This code is a bit of a hack.  It depends on the host/path mapping key
-                    // being formatted as $"{host}:{path}" with [path] being normalized.
-
-                    foreach (var hostPathMapping in haProxyFrontend.HostPathMappings
-                        .Where(m => HAProxyHttpFrontend.GetPath(m.Key) == allPrefix)
-                        .OrderBy(m => HAProxyHttpFrontend.GetHost(m.Key)))
-                    {
-                        var host = HAProxyHttpFrontend.GetHost(hostPathMapping.Key);
-
-                        sbHaProxy.AppendLine();
-
-                        if (haProxyFrontend.Tls)
-                        {
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {{ ssl_fc_sni {host} }}");
-                        }
-                        else if (!string.IsNullOrEmpty(host))
-                        {
-                            var hostAclName = $"is-{host.Replace('.', '-')}";
-
-                            sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
-                            SetProxyFrontendHeaderForAcls(sbHaProxy, haProxyFrontend, host, hostAclName);
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName}");
-                        }
-                        else
-                        {
-                            // The frontend does not specify a host so we'll always use the backend.
-
-                            SetProxyFrontendHeaderForAcls(sbHaProxy, haProxyFrontend, host);
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value}");
-                        }
-                    }
-
-                    // Generate the backend mappings for frontends with path prefixes.
+                    // Generate the backend mappings for frontends with path prefixes
+                    // first, before we fall back to matching just this hostname.
                     // Note that we're going to generate mappings for the longest 
                     // paths first and we're also going to sort by path so the
                     // HAProxy config file will be a bit easier to read.
@@ -1059,14 +1026,16 @@ frontend {haProxyFrontend.Name}
                         if (haProxyFrontend.Tls)
                         {
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {{ ssl_fc_sni {host} }} {pathAclName}");
+                            sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host, pathAclName, hostAclName);
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
                         }
                         else if (!string.IsNullOrEmpty(host))
                         {
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
-                            SetProxyFrontendHeaderForAcls(sbHaProxy, haProxyFrontend, host, pathAclName, hostAclName);
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName} {pathAclName}");
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host, pathAclName, hostAclName);
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
                         }
                         else
                         {
@@ -1074,7 +1043,41 @@ frontend {haProxyFrontend.Name}
                             // if only the path matches.
 
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {pathAclName}");
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {pathAclName}");
+                        }
+                    }
+
+                    // Now generate the backend mappings for frontends without path prefixes.
+                    // This code is a bit of a hack.  It depends on the host/path mapping key
+                    // being formatted as $"{host}:{path}" with [path] being normalized.
+
+                    foreach (var hostPathMapping in haProxyFrontend.HostPathMappings
+                        .Where(m => HAProxyHttpFrontend.GetPath(m.Key) == allPrefix)
+                        .OrderBy(m => HAProxyHttpFrontend.GetHost(m.Key)))
+                    {
+                        var host        = HAProxyHttpFrontend.GetHost(hostPathMapping.Key);
+                        var hostAclName = $"is-{host.Replace('.', '-')}";
+
+                        sbHaProxy.AppendLine();
+
+                        if (haProxyFrontend.Tls)
+                        {
+                            sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host, hostAclName);
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName}");
+                        }
+                        else if (!string.IsNullOrEmpty(host))
+                        {
+                            sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host, hostAclName);
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName}");
+                        }
+                        else
+                        {
+                            // The frontend does not specify a host so we'll always use the backend.
+
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host);
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName}");
                         }
                     }
                 }
@@ -2304,16 +2307,18 @@ listen tcp:port-{port}
         /// </summary>
         /// <param name="sb">The target string builder.</param>
         /// <param name="frontend">The HTTP frontend.</param>
+        /// <param name="hostPathMapping">The specific host/path mapping.</param>
         /// <param name="hostname">The target proxy frontend hostname or <c>null</c>.</param>
         /// <param name="aclNames">
         /// The optional name of the ACLs that used to select the backend.
         /// The header will be set unconditionally when this is empty.
         /// </param>
-        private static void SetProxyFrontendHeaderForAcls(StringBuilder sb, HAProxyHttpFrontend frontend, string hostname, params string[] aclNames)
+        private static void SetCacheFrontendHeader(StringBuilder sb, HAProxyHttpFrontend frontend, HostPathMapping hostPathMapping, string hostname, params string[] aclNames)
         {
             Covenant.Requires<ArgumentNullException>(sb != null);
             Covenant.Requires<ArgumentNullException>(frontend != null);
-            Covenant.Requires<ArgumentException>(frontend.Rule.Mode == LoadBalancerMode.Http);
+            Covenant.Requires<ArgumentNullException>(hostPathMapping != null);
+            Covenant.Requires<ArgumentException>(hostPathMapping.Rule.Mode == LoadBalancerMode.Http);
 
             string proxyFrontendHeader;
 
@@ -2326,7 +2331,7 @@ listen tcp:port-{port}
                 proxyFrontendHeader = $"{frontend.Port}";
             }
 
-            if (!frontend.Rule.Cache.Enabled)
+            if (!hostPathMapping.Rule.Cache.Enabled)
             {
                 return;
             }

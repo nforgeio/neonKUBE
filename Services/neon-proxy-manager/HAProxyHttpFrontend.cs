@@ -39,8 +39,8 @@ namespace NeonProxyManager
         /// <summary>
         /// Returns the host part from a $"{host}:{path}".
         /// </summary>
-        /// <param name="hostPath"></param>
-        /// <returns></returns>
+        /// <param name="hostPath">The path.</param>
+        /// <returns>The host part.</returns>
         public static string GetHost(string hostPath)
         {
             var pos = hostPath.IndexOf(':');
@@ -51,8 +51,8 @@ namespace NeonProxyManager
         /// <summary>
         /// Returns the path part from a $"{host}:{path}".
         /// </summary>
-        /// <param name="hostPath"></param>
-        /// <returns></returns>
+        /// <param name="hostPath">The path.</param>
+        /// <returns>The path part.</returns>
         public static string GetPath(string hostPath)
         {
             var pos = hostPath.IndexOf(':');
@@ -73,11 +73,6 @@ namespace NeonProxyManager
 
             this.Frontend = frontend;
         }
-
-        /// <summary>
-        /// The associated HTTP rule.
-        /// </summary>
-        public LoadBalancerHttpRule Rule { get; set; }
 
         /// <summary>
         /// Returns the associated frontend.
@@ -115,7 +110,7 @@ namespace NeonProxyManager
         /// <summary>
         /// A dictionary that maps host:path prefix to HAProxy backend names.
         /// </summary>
-        public Dictionary<string, string> HostPathMappings { get; private set; } = new Dictionary<string, string>();
+        public Dictionary<string, HostPathMapping> HostPathMappings { get; private set; } = new Dictionary<string, HostPathMapping>();
 
         /// <summary>
         /// Returns <c>true</c> for TLS frontends.
