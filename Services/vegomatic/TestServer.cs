@@ -52,6 +52,10 @@ namespace NeonVegomatic
     ///         Generate a UUID for each instance and then return that as
     ///         the response body.  This is the default mode.
     ///         </description>
+    ///         <term><b>text:</b></term>
+    ///         <description>
+    ///         Returns the static text after the colon.
+    ///         </description>
     ///     </list>
     ///     </description>
     /// </item>
@@ -91,16 +95,23 @@ namespace NeonVegomatic
                 app.Run(
                     async context =>
                     {
-                        var request = context.Request;
-                        var body    = "server-id";
-                        var delay   = TimeSpan.Zero;
-                        var expires = TimeSpan.Zero;
+                        var request  = context.Request;
+                        var body     = "server-id";
+                        var bodyText = string.Empty;
+                        var delay    = TimeSpan.Zero;
+                        var expires  = TimeSpan.Zero;
 
                         // Parse any query parameters.
 
-                        if (request.Query.TryGetValue("mode", out var modeArgs))
+                        if (request.Query.TryGetValue("body", out var bodyArg))
                         {
-                            body = modeArgs.Single().ToLowerInvariant();
+                            body = bodyArg.Single().ToLowerInvariant();
+
+                            if (body.StartsWith("text:"))
+                            {
+                                bodyText = body.Substring("text:".Length);
+                                body     = "text";
+                            }
                         }
 
                         if (request.Query.TryGetValue("delay", out var delayArgs))
@@ -142,6 +153,11 @@ namespace NeonVegomatic
 
                         switch (body)
                         {
+                            case "text":
+
+                                await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(bodyText));
+                                break;
+
                             default:
                             case "server-id":
 
