@@ -209,7 +209,7 @@ namespace TestHive
                 // and keep sending traffic there resulting in us seeing only
                 // one response UUID.
 
-                manager.SudoCommand($"docker service update --replicas 2 vegomatic").EnsureSuccess();
+                manager.SudoCommand($"docker service update --replicas 2 {serviceName}").EnsureSuccess();
                 await WaitUntilReadyAsync(client.BaseAddress, testHostname);
 
                 // Reset the response info and do the requests.

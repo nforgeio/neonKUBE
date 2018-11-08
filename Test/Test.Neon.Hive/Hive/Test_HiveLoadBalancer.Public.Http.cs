@@ -94,5 +94,14 @@ namespace TestHive
         {
             await TestHttpMultipleFrontends("http-public-multifrontends-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: true);
         }
+
+        //===================================
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Http_Public_Uncached_Prefix_DefaultPort()
+        {
+            await TestHttpPrefix("http-public-uncached-prefix-defaultport", HiveHostPorts.ProxyPublicHttp, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: false);
+        }
     }
 }

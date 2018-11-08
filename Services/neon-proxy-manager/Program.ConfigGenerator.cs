@@ -578,7 +578,7 @@ backend haproxy_stats
 
                     if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
-                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP rule [{conflictRule.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] that conflicts with TCP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }
@@ -587,7 +587,7 @@ backend haproxy_stats
 
                     if (publicHttpHostPortPathToRules.TryGetValue(hostPort, out conflictRule))
                     {
-                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing hostname/port [{hostPort}] conflict with HTTP rule [{conflictRule.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing hostname/port [{hostPort}] that conflicts with HTTP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }
@@ -612,7 +612,7 @@ backend haproxy_stats
 
                     if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
-                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP rule [{conflictRule.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] that conflicts with TCP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }
@@ -623,7 +623,7 @@ backend haproxy_stats
                     if (publicHttpHostPortPathToRules.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRule) ||
                         publicHttpHostPortPathToRules.TryGetValue(hostPortPath, out conflictRule))
                     {
-                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing hostname/port/path [{hostPortPath}] conflict with HTTP rule [{conflictRule.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing hostname/port/path [{hostPortPath}] that conflicts with HTTP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }

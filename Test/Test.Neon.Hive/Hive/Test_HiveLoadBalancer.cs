@@ -26,6 +26,24 @@ namespace TestHive
 {
     public partial class Test_HiveLoadBalancer : IClassFixture<HiveFixture>
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        public class PrefixInfo
+        {
+            public PrefixInfo(string prefix, string serviceName)
+            {
+                this.Path = prefix;
+                this.ServiceName = serviceName;
+            }
+
+            public string Path { get; set; }
+            public string ServiceName { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private const string            testHostname = "vegomatic.test";
         private static TlsCertificate   certificate;
 
