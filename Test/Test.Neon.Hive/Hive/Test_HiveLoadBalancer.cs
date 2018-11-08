@@ -82,7 +82,7 @@ namespace TestHive
                     {
                         var response = await client.GetAsync("/");
 
-                        return response.IsSuccessStatusCode;
+                        return response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Redirect;
                     },
                     timeout: TimeSpan.FromMinutes(2),
                     pollTime: TimeSpan.FromMilliseconds(100));

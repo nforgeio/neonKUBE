@@ -141,6 +141,20 @@ namespace Neon.Hive
         public int PublicPort { get; set; } = -1;
 
         /// <summary>
+        /// <para>
+        /// Optionally specifies that all requests hitting this frontend should be
+        /// unconditionally redirected the scheme, host, and port specified by this URI.
+        /// </para>
+        /// <note>
+        /// The path/query part of this URI is ignored.  The actual redirection will go to
+        /// the specified scheme/host/port combined with the path from the original request.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "RedirectUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public Uri RedirectUri { get; set; }
+
+        /// <summary>
         /// Returns <c>true</c> if the frontend is to be secured via TLS.
         /// </summary>
         [JsonIgnore]
@@ -302,6 +316,16 @@ namespace Neon.Hive
             if (PublicPort > 0 && !NetHelper.IsValidPort(PublicPort))
             {
                 context.Error($"Load balancer [{nameof(PublicPort)}={PublicPort}] is not a valid network port.");
+            }
+
+            if (RedirectUri != null)
+            {
+                // Strip off the path/query part of the URI, if necessary.
+
+                if (RedirectUri.PathAndQuery != "/")
+                {
+                    RedirectUri = new Uri($"{RedirectUri.Scheme}://{RedirectUri.Host}:{RedirectUri.Port}/");
+                }
             }
         }
     }

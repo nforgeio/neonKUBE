@@ -64,10 +64,22 @@ namespace Neon.Hive
         /// Validates the rule.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
-        public override void Validate(LoadBalancerValidationContext context, bool addImplicitFrontends = false)
+        public override void Validate(LoadBalancerValidationContext context)
         {
-            base.Validate(context, addImplicitFrontends);
+            base.Validate(context);
+
+            Frontends = Frontends ?? new List<LoadBalancerTcpFrontend>();
+            Backends  = Backends ?? new List<LoadBalancerTcpBackend>();
+
+            if (Frontends.Count == 0)
+            {
+                context.Error($"Rule [{Name}] has does not define a frontend.");
+            }
+
+            if (Backends.Count == 0)
+            {
+                context.Error($"Rule [{Name}] has does not define a backend.");
+            }
 
             foreach (var frontend in Frontends)
             {

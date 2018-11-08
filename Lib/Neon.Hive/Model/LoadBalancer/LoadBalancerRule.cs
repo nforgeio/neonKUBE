@@ -320,8 +320,7 @@ namespace Neon.Hive
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
-        public virtual void Validate(LoadBalancerValidationContext context, bool addImplicitFrontends = false)
+        public virtual void Validate(LoadBalancerValidationContext context)
         {
             Timeouts = Timeouts ?? new LoadBalancerTimeouts();
 

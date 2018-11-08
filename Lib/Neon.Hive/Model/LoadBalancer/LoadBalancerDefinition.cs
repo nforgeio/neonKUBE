@@ -51,9 +51,8 @@ namespace Neon.Hive
         /// Validates the load balancer definition.
         /// </summary>
         /// <param name="certificates">The dictionary of hive certificates keyed by name.</param>
-        /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
         /// <returns>The <see cref="LoadBalancerValidationContext"/>.</returns>
-        public LoadBalancerValidationContext Validate(Dictionary<string, TlsCertificate> certificates, bool addImplicitFrontends = false)
+        public LoadBalancerValidationContext Validate(Dictionary<string, TlsCertificate> certificates)
         {
             Covenant.Requires<ArgumentNullException>(certificates != null);
 
@@ -65,7 +64,7 @@ namespace Neon.Hive
 
             foreach (var rule in Rules.Values)
             {
-                rule.Validate(context, addImplicitFrontends: addImplicitFrontends);
+                rule.Validate(context);
             }
 
             // Verify that there are no existing frontend port/host conflicts:

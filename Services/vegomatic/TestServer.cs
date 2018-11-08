@@ -34,7 +34,8 @@ namespace NeonVegomatic
     /// is actually working.
     /// </para>
     /// <para>
-    /// Call <see cref="ExecAsync(CommandLine)"/> to start.
+    /// Call <see cref="ExecAsync(CommandLine)"/> to start.  The argument specifies
+    /// the <b>server-id</b> for the instance.  A UUID will be generated otherwise.
     /// </para>
     /// <para>
     /// The server supports the following URI query parameters:
@@ -79,7 +80,7 @@ namespace NeonVegomatic
         //---------------------------------------------------------------------
         // Statics and local types.
 
-        private static Guid     serverId = Guid.NewGuid();
+        private static string serverId = Guid.NewGuid().ToString("D").ToLowerInvariant();
 
         /// <summary>
         /// Implements the service.
@@ -161,7 +162,7 @@ namespace NeonVegomatic
                             default:
                             case "server-id":
 
-                                await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(serverId.ToString("D")));
+                                await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(serverId));
                                 break;
                         }
                     });
@@ -177,6 +178,15 @@ namespace NeonVegomatic
         /// <param name="commandLine">The command line arguments will be returned as response headers.</param>
         public async Task ExecAsync(CommandLine commandLine)
         {
+            // The first argument is the [server-id], if present.
+
+            var arg = commandLine.Arguments.FirstOrDefault();
+
+            if (arg != null)
+            {
+                serverId = arg;
+            }
+
             // Start the web server.
 
             await WebHost.CreateDefaultBuilder()

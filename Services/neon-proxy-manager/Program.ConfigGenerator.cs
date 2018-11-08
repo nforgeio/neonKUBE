@@ -424,7 +424,7 @@ namespace NeonProxyManager
                 Rules    = rules
             };
 
-            var validationContext = loadBalancerDefinition.Validate(hiveCerts.ToTlsCertificateDictionary(), addImplicitFrontends: true);
+            var validationContext = loadBalancerDefinition.Validate(hiveCerts.ToTlsCertificateDictionary());
 
             if (validationContext.HasErrors)
             {
@@ -924,7 +924,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         }
                         else
                         {
-                            haProxyFrontend.HostPathMappings[hostPath] = new HostPathMapping(httpRule, $"http:{httpRule.Name}");
+                            haProxyFrontend.HostPathMappings[hostPath] = new HostPathMapping(httpRule, frontend, $"http:{httpRule.Name}");
                         }
 
                         if (httpRule.Log)
@@ -1004,7 +1004,7 @@ frontend {haProxyFrontend.Name}
                     }
 
                     // Generate the backend mappings for frontends with path prefixes
-                    // first, before we fall back to matching just this hostname.
+                    // first, before we fall back to matching just the hostname.
                     // Note that we're going to generate mappings for the longest 
                     // paths first and we're also going to sort by path so the
                     // HAProxy config file will be a bit easier to read.
@@ -1023,7 +1023,11 @@ frontend {haProxyFrontend.Name}
 
                         sbHaProxy.AppendLine();
 
-                        if (haProxyFrontend.Tls)
+                        if (hostPathMapping.Value.Frontend.RedirectUri != null)
+                        {
+                            continue;
+                        }
+                        else if (haProxyFrontend.Tls)
                         {
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
@@ -1060,7 +1064,20 @@ frontend {haProxyFrontend.Name}
 
                         sbHaProxy.AppendLine();
 
-                        if (haProxyFrontend.Tls)
+                        if (hostPathMapping.Value.Frontend.RedirectUri != null)
+                        {
+                            if (haProxyFrontend.Tls)
+                            {
+                                sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
+                            }
+                            else
+                            {
+                                sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                            }
+
+                            sbHaProxy.AppendLine($"    redirect            location {hostPathMapping.Value.Frontend.RedirectUri} if {hostAclName}");
+                        }
+                        else if (haProxyFrontend.Tls)
                         {
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
                             SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host, hostAclName);
@@ -1086,6 +1103,7 @@ frontend {haProxyFrontend.Name}
 
                 foreach (LoadBalancerHttpRule httpRule in rules.Values
                     .Where(r => r.Mode == LoadBalancerMode.Http)
+                    .Where(r => ((LoadBalancerHttpRule)r).Backends.Count > 0)
                     .OrderBy(r => r.Name))
                 {
                     // Generate the resolvers argument to be used to locate the
@@ -1115,11 +1133,6 @@ $@"
 backend http:{httpRule.Name}
     mode                http
 ");
-
-                    if (httpRule.HttpsRedirect)
-                    {
-                        sbHaProxy.AppendLine($"    redirect            scheme https if !{{ ssl_fc }}");
-                    }
 
                     if (httpRule.Log)
                     {

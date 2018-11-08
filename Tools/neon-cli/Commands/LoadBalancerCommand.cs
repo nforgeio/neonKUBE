@@ -461,7 +461,7 @@ See the documentation for more load balancer rule and setting details.
                         ValidateCertificates = false    // Disable this because we didn't download the certs (see note above)
                     };
 
-                    clonedRule.Validate(context, addImplicitFrontends: true);
+                    clonedRule.Validate(context);
                     clonedRule.Normalize(isPublic);
 
                     if (context.HasErrors)

@@ -33,32 +33,6 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// <para>
-        /// Indicates that HTTP requests should be redirected using HTTPS.
-        /// This defaults to <c>false</c>.
-        /// </para>
-        /// <note>
-        /// See the remarks for more details about how this works.
-        /// </note>
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This property works by implicitly adding an HTTP frontend for every defined
-        /// HTTPS frontend (ones that specify a <see cref="LoadBalancerHttpFrontend.CertName"/>).
-        /// and then having each of the HTTP frontends emit a <b>302 temporary redirect</b>,
-        /// redirecting to the same URL with the <b>https://</b> scheme.
-        /// </para>
-        /// <note>
-        /// This only works for rules added to the <b>public</b> load balancer on the <b>neon-public</b>
-        /// network and it also works only for HTTP frontends with the port set to <b>0/80</b>
-        /// and HTTPS frontends with the port set to <b>0/443</b>.
-        /// </note>
-        /// </remarks>
-        [JsonProperty(PropertyName = "HttpsRedirect", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool HttpsRedirect { get; set; } = false;
-
-        /// <summary>
         /// The load balancer frontend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Frontends", Required = Required.Always)]
@@ -187,114 +161,16 @@ namespace Neon.Hive
         /// Validates the rule.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
-        public override void Validate(LoadBalancerValidationContext context, bool addImplicitFrontends = false)
+        public override void Validate(LoadBalancerValidationContext context)
         {
-            base.Validate(context, addImplicitFrontends);
+            base.Validate(context);
 
             Frontends = Frontends ?? new List<LoadBalancerHttpFrontend>();
             Backends  = Backends ?? new List<LoadBalancerHttpBackend>();
 
-            if (HttpsRedirect)
+            if (Frontends.Count == 0)
             {
-                if (!context.LoadBalancerName.Equals("public", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    context.Error($"Rule [{Name}] has [{nameof(HttpsRedirect)}={HttpsRedirect}] defined for [{context.LoadBalancerName}] load balancer.  This is supported only for the [public] load balancer.");
-                }
-
-                if (addImplicitFrontends)
-                {
-                    //-------------------------------------------------------------
-                    // This is where we implicitly add an HTTP rule for each HTTPS rule
-                    // that redirects from the [http://] scheme to [https://].  We're 
-                    // going to clone each HTTPS frontend to target the default port
-                    // [0/80], and set [CertName=null] and then add this to the rule
-                    // as the HTTP frontend, if it doesn't already exist.
-
-                    // Create a set of the hosts for the HTTP frontends explicitly specified 
-                    // by the hive operator that already target the default HTTP port so
-                    // we can avoid overwriting any explicit frontends below.  These will
-                    // be keyed by: [host/path]
-
-                    var explicitHttpFrontends = new HashSet<string>();
-
-                    foreach (LoadBalancerHttpFrontend httpFrontend in Frontends.Where(fe => !fe.Tls))
-                    {
-                        var hostAndPath = httpFrontend.HostAndPath;
-
-                        if (httpFrontend.ProxyPort == 0 || httpFrontend.ProxyPort == HiveHostPorts.ProxyPublicHttp)
-                        {
-                            if (!explicitHttpFrontends.Contains(hostAndPath))
-                            {
-                                explicitHttpFrontends.Add(hostAndPath);
-                            }
-                        }
-                    }
-
-                    // Add an implicit HTTP frontend for each HTTPS frontend if an explicit
-                    // HTTP frontend matching the [host/path] doesn't already exist.
-
-                    var newHttpFrontends = new List<LoadBalancerHttpFrontend>();
-
-                    foreach (var httpsFrontend in Frontends.Where(fe => fe.Tls))
-                    {
-                        if (explicitHttpFrontends.Contains(httpsFrontend.HostAndPath))
-                        {
-                            continue;   // Never overwrite an explicitly specified HTTP frontend.
-                        }
-
-                        if (httpsFrontend.ProxyPort == 0 || httpsFrontend.ProxyPort == HiveHostPorts.ProxyPublicHttps)
-                        {
-                            var clone = NeonHelper.JsonClone(httpsFrontend);
-
-                            clone.CertName  = null;
-                            clone.ProxyPort = 0;
-
-                            newHttpFrontends.Add(clone);
-                        }
-                    }
-
-                    foreach (var httpFrontend in newHttpFrontends)
-                    {
-                        this.Frontends.Add(httpFrontend);
-                    }
-                }
-
-                // Ensure that all cache warming targets have schemes, hostnames, ports that
-                // match a rule frontend, and that HTTP rules don't map to reserved HTTPS ports 
-                // and HTTPS rules don't map to reserved HTTP ports.
-
-                foreach (var frontend in Frontends)
-                {
-                    if (frontend.Tls)
-                    {
-                        if (frontend.ProxyPort == HiveHostPorts.ProxyPublicHttp || frontend.ProxyPort == HiveHostPorts.ProxyPrivateHttp)
-                        {
-                            context.Error($"Rule [{Name}] has an HTTPS frontend with [{nameof(frontend.ProxyPort)}={frontend.ProxyPort}] that is incorrectly mapped to a reserved HTTP port.");
-                        }
-                    }
-                    else
-                    {
-                        if (frontend.ProxyPort == HiveHostPorts.ProxyPublicHttps || frontend.ProxyPort == HiveHostPorts.ProxyPrivateHttps)
-                        {
-                            context.Error($"Rule [{Name}] has an HTTP frontend with [{nameof(frontend.ProxyPort)}={frontend.ProxyPort}] that is incorrectly mapped to a reserved HTTPS port.");
-                        }
-                    }
-                }
-
-                // Ensure that all cache warming targets have schemes, hostnames, and ports that
-                // match a rule frontend.
-
-                foreach (var warmTarget in Cache.WarmTargets)
-                {
-                    var uri = new Uri(warmTarget.Uri);
-                    var tls = uri.Scheme.Equals("https", StringComparison.InvariantCultureIgnoreCase);
-
-                    if (Frontends.IsEmpty(fe => fe.Tls == tls && fe.Host.Equals(uri.Host, StringComparison.InvariantCultureIgnoreCase) && fe.ProxyPort == uri.Port))
-                    {
-                        context.Error($"Cache warm target [{uri}] does not match one of the [{Name}] load balancer frontends.");
-                    }
-                }
+                context.Error($"Rule [{Name}] has does not define a frontend.");
             }
 
             if (!string.IsNullOrEmpty(CheckUri))
@@ -430,7 +306,7 @@ namespace Neon.Hive
             {
                 Cache.Validate(context);
 
-                // The Varnish opensource release doesn't support TLS backends.  This requires 
+                // The Varnish open source release doesn't support TLS backends.  This requires 
                 // Varnish Plus which is very expensive (of course).
 
                 foreach (LoadBalancerHttpBackend backend in Backends)
@@ -493,6 +369,42 @@ namespace Neon.Hive
                     else if (hasIPAddress && hasHostname)
                     {
                         context.Error($"HTTP rule [{Name}] has backends reachable via IP address and hostname which is not supported.  You cannot mix backends with IP address and hostnames in the same rule.");
+                    }
+                }
+
+                // Ensure that all cache warming targets have schemes, hostnames, ports that
+                // match a rule frontend, and that HTTP rules don't map to reserved HTTPS ports 
+                // and HTTPS rules don't map to reserved HTTP ports.
+
+                foreach (var frontend in Frontends)
+                {
+                    if (frontend.Tls)
+                    {
+                        if (frontend.ProxyPort == HiveHostPorts.ProxyPublicHttp || frontend.ProxyPort == HiveHostPorts.ProxyPrivateHttp)
+                        {
+                            context.Error($"Rule [{Name}] has an HTTPS frontend with [{nameof(frontend.ProxyPort)}={frontend.ProxyPort}] that is incorrectly mapped to a reserved HTTP port.");
+                        }
+                    }
+                    else
+                    {
+                        if (frontend.ProxyPort == HiveHostPorts.ProxyPublicHttps || frontend.ProxyPort == HiveHostPorts.ProxyPrivateHttps)
+                        {
+                            context.Error($"Rule [{Name}] has an HTTP frontend with [{nameof(frontend.ProxyPort)}={frontend.ProxyPort}] that is incorrectly mapped to a reserved HTTPS port.");
+                        }
+                    }
+                }
+
+                // Ensure that all cache warming targets have schemes, hostnames, and ports that
+                // match a rule frontend.
+
+                foreach (var warmTarget in Cache.WarmTargets)
+                {
+                    var uri = new Uri(warmTarget.Uri);
+                    var tls = uri.Scheme.Equals("https", StringComparison.InvariantCultureIgnoreCase);
+
+                    if (Frontends.IsEmpty(fe => fe.Tls == tls && fe.Host.Equals(uri.Host, StringComparison.InvariantCultureIgnoreCase) && fe.ProxyPort == uri.Port))
+                    {
+                        context.Error($"Cache warm target [{uri}] does not match one of the [{Name}] load balancer frontends.");
                     }
                 }
             }

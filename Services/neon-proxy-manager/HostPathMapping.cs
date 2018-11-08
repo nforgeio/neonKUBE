@@ -29,7 +29,7 @@ using Neon.Hive;
 namespace NeonProxyManager
 {
     /// <summary>
-    /// Describes a specific host/path to backend name for a load balancer rule.
+    /// Describes a specific host/path to backend name mapping for a load balancer rule frontend.
     /// </summary>
     public class HostPathMapping
     {
@@ -37,13 +37,16 @@ namespace NeonProxyManager
         /// Constructor.
         /// </summary>
         /// <param name="rule">The associated load balancer rule.</param>
+        /// <param name="frontend">The frontend that generated this mapping.</param>
         /// <param name="backendName">The backend name.</param>
-        public HostPathMapping(LoadBalancerHttpRule rule, string backendName)
+        public HostPathMapping(LoadBalancerHttpRule rule, LoadBalancerHttpFrontend frontend, string backendName)
         {
             Covenant.Requires<ArgumentNullException>(rule != null);
+            Covenant.Requires<ArgumentNullException>(frontend != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(backendName));
 
             this.Rule        = rule;
+            this.Frontend    = frontend;
             this.BackendName = backendName;
         }
 
@@ -51,6 +54,11 @@ namespace NeonProxyManager
         /// Returns thge associated load balancer rule.
         /// </summary>
         public LoadBalancerHttpRule Rule { get; private set; }
+
+        /// <summary>
+        /// Returns the frontend that generated this mapping.
+        /// </summary>
+        public LoadBalancerHttpFrontend Frontend { get; private set; }
 
         /// <summary>
         /// Returns the backend name.

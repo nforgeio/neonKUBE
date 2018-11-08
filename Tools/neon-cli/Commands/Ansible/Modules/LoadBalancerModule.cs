@@ -153,13 +153,14 @@ namespace NeonCli.Ansible
     //        neon_lopad_balancer:
     //          name: public
     //          state: present
-    //          httpsredirect: yes
     //          rule_name: test
     //          rule:
     //            mode: http
     //            checkuri: /_health/check.php
     //            checkmethod: GET
     //            frontends:
+    //              - host: test.com
+    //                redirecturi: https://test.com
     //              - host: test.com
     //                certname: "{{ TEST_COM_CERT }}"
     //              - host: www.test.com
