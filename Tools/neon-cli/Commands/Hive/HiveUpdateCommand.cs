@@ -628,6 +628,18 @@ The current login must have ROOT PERMISSIONS to update the hive.
 
             Console.WriteLine();
             Console.WriteLine("*** Hive components, services, and containers were updated successfully.");
+
+            if (hive.Globals.TryGetBool(HiveGlobals.UserDisableAutoUnseal, out var disableAutoUnseal) || !disableAutoUnseal)
+            {
+                Console.WriteLine();
+                Console.WriteLine("*** WARNING: The hive Vault is probably sealed now because auto-unseal is disabled.");
+                Console.WriteLine();
+                Console.WriteLine("Use these command to check Vault status and manually unseal if necessary:");
+                Console.WriteLine();
+                Console.WriteLine("    neon vault -- status");
+                Console.WriteLine("    Neon vault -- unseal");
+                Console.WriteLine();
+            }
         }
 
         /// <summary>
