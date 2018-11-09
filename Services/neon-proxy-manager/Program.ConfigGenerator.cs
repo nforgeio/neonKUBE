@@ -488,8 +488,8 @@ defaults
 $@"
 resolvers {resolver.Name}
     resolve_retries     {resolver.ResolveRetries}
-    timeout retry       {ToHaProxyTime(resolver.RetrySeconds)}s
-    hold valid          {resolver.HoldSeconds}s
+    timeout retry       {ToHaProxyTime(resolver.RetrySeconds)}
+    hold valid          {ToHaProxyTime(resolver.HoldSeconds)}
 ");
                     foreach (var nameserver in resolver.NameServers)
                     {
