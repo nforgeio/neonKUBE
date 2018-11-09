@@ -98,11 +98,22 @@ namespace TestHive
                 await NeonHelper.WaitForAsync(
                     async () =>
                     {
-                        var response = await client.GetAsync("/");
+                        try
+                        {
+                            var response = await client.GetAsync("/");
 
-                        return response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Redirect;
+                            return response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Redirect;
+                        }
+                        catch (HttpRequestException)
+                        {
+                            // We're going to ignore these because this probably 
+                            // indicates that HAProxy hasn't started a listener
+                            // on the port yet.
+
+                            return false;
+                        }
                     },
-                    timeout: TimeSpan.FromMinutes(2),
+                    timeout: TimeSpan.FromSeconds(60),
                     pollTime: TimeSpan.FromMilliseconds(100));
             }
         }

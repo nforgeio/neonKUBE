@@ -115,9 +115,9 @@ namespace TestHive
                 {
                     var frontend = new LoadBalancerHttpFrontend()
                     {
-                        Host        = redirect.FromUri.Host,
-                        ProxyPort   = redirect.FromUri.Port,
-                        RedirectUri = redirect.ToUri
+                        Host       = redirect.FromUri.Host,
+                        ProxyPort  = redirect.FromUri.Port,
+                        RedirectTo = redirect.ToUri
                     };
 
                     if (redirect.FromUri.Scheme == "https")
@@ -143,9 +143,9 @@ namespace TestHive
 
                     var frontend = new LoadBalancerHttpFrontend()
                     {
-                        Host        = redirect.FromUri.Host,
-                        ProxyPort   = redirect.FromUri.Port,
-                        RedirectUri = redirect.ToUri
+                        Host       = redirect.FromUri.Host,
+                        ProxyPort  = redirect.FromUri.Port,
+                        RedirectTo = redirect.ToUri
                     };
 
                     if (redirect.FromUri.Scheme == "https")
@@ -155,6 +155,7 @@ namespace TestHive
 
                     rule.Frontends.Add(frontend);
                     loadBalancer.SetRule(rule);
+                    redirectIndex++;
                 }
             }
 
@@ -172,7 +173,7 @@ namespace TestHive
             var handler = new HttpClientHandler()
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
-                AllowAutoRedirect = false
+                AllowAutoRedirect = false   // We need to see the redirects
             };
 
             using (var client = new TestHttpClient(disableConnectionReuse: true, handler: handler, disposeHandler: true))
