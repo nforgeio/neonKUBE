@@ -4,22 +4,11 @@
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Consul;
-using ICSharpCode.SharpZipLib.Zip;
 
 using Neon.Common;
-using Neon.IO;
 using Neon.Hive;
-using Neon.HiveMQ;
-using Neon.Net;
 
 namespace NeonCli
 {
@@ -33,7 +22,7 @@ namespace NeonCli
         public override SemanticVersion FromVersion { get; protected set; } = SemanticVersion.Parse("18.10.0-alpha.4");
 
         /// <inheritdoc/>
-        public override SemanticVersion ToVersion { get; protected set; } = SemanticVersion.Parse("18.11.0-alpha.5");
+        public override SemanticVersion ToVersion { get; protected set; } = SemanticVersion.Parse("18.10.1-alpha.4");
 
         /// <inheritdoc/>
         public override bool RestartRequired => false;
@@ -43,18 +32,23 @@ namespace NeonCli
         {
             base.Initialize(controller);
 
+            controller.AddGlobalStep(GetStepLabel("make neon-registry LB rule private"), () => PrivateRegistryRule());
             controller.AddStep(GetStepLabel("remove docker python module"), (node, stepDelay) => RemoveDockerPython(node));
-            controller.AddGlobalStep(GetStepLabel("make neon-registry load balancer rule private"), () => PrivateRegistryRule());
+            controller.AddStep(GetStepLabel("edit /etc/hosts"), (node, stepDelay) => EditEtcHosts(node));
         }
 
         /// <summary>
         /// Removes the Docker python module from all nodes because it conflicts with
-        /// Docker related Ansible scripts.
+        /// Docker related Ansible playbooks.
         /// </summary>
         /// <param name="node">The target node.</param>
         private void RemoveDockerPython(SshProxy<NodeDefinition> node)
         {
-            node.SudoCommand("pip uninstall docker", RunOptions.LogOnErrorOnly);
+            node.InvokeIdempotentAction(GetIdempotentTag("remove-docker-py"),
+                () =>
+                {
+                    node.SudoCommand("su sysadmin -c 'pip uninstall -y docker'", RunOptions.LogOnErrorOnly);
+                });
         }
 
         /// <summary>
@@ -69,6 +63,56 @@ namespace NeonCli
                 rule.System = true;
                 Hive.PrivateLoadBalancer.SetRule(rule);
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Edits the [/etc/hosts] file on all hive nodes so that the line:
+        /// </para>
+        /// <code>
+        /// 127.0.1.1   {hostname}
+        /// </code>
+        /// <para>
+        /// is changed to:
+        /// </para>
+        /// <code>
+        /// {node.PrivateAddress} {hostname}
+        /// </code>
+        /// <para>
+        /// Hashicorp Vault cannot restart with the old setting, complaining about a
+        /// <b>""missing API address</b>.
+        /// </para>
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void EditEtcHosts(SshProxy<NodeDefinition> node)
+        {
+            node.InvokeIdempotentAction(GetIdempotentTag("edit-etc-hosts"),
+                () =>
+                {
+                    var etcHosts   = node.DownloadText("/etc/hosts");
+                    var sbEtcHosts = new StringBuilder();
+
+                    using (var reader = new StringReader(etcHosts))
+                    {
+                        foreach (var line in reader.Lines())
+                        {
+                            if (line.StartsWith("127.0.1.1"))
+                            {
+                                var nodeAddress = node.PrivateAddress.ToString();
+                                var separator   = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
+
+                                sbEtcHosts.AppendLine($"{nodeAddress}{separator}{node.Name}");
+                            }
+                            else
+                            {
+                                sbEtcHosts.AppendLine(line);
+                            }
+                        }
+                    }
+
+                    node.UploadText("/etc/hosts", sbEtcHosts.ToString(), permissions: "644");
+                    node.SudoCommand("systemctl restart vault");
+                });
         }
     }
 }

@@ -872,10 +872,13 @@ OPTIONS:
         {
             var sbHosts = new StringBuilder();
 
+            var nodeAddress = node.PrivateAddress.ToString();
+            var separator   = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
+
             sbHosts.Append(
 $@"
 127.0.0.1	    localhost
-127.0.1.1	    {node.Name}
+{nodeAddress}{separator}{node.Name}
 ::1             localhost ip6-localhost ip6-loopback
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
@@ -3839,7 +3842,7 @@ systemctl restart sshd
 
                     if (hive.Definition.HiveFS.Enabled && hive.Definition.Dashboard.HiveFS)
                     {
-		                firstManager.Status = "hivefs dashboard";
+                        firstManager.Status = "hivefs dashboard";
 
                         if (hive.Definition.HiveFS.Release == "luminous")
                         {
