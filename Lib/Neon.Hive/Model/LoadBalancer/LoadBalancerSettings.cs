@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -94,6 +95,7 @@ namespace Neon.Hive
         /// Returns the standard reserved HTTP port.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public int DefaultHttpPort
         {
             get
@@ -111,6 +113,7 @@ namespace Neon.Hive
         /// Returns the standard reserved HTTPS port.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public int DefaultHttpsPort
         {
             get
@@ -128,6 +131,7 @@ namespace Neon.Hive
         /// Returns the first possible TCP port.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public int FirstTcpPort
         {
             get

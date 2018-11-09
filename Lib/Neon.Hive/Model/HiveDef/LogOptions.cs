@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -69,6 +70,7 @@ namespace Neon.Hive
         /// container by parsing <see cref="EsMemory"/>.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public long EsMemoryBytes
         {
             get

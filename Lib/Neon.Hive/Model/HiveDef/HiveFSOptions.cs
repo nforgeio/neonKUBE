@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
@@ -69,6 +70,7 @@ namespace Neon.Hive
         /// Returns the Linux user for the Ceph components.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string Username
         {
             get { return "ceph"; }
@@ -237,6 +239,7 @@ namespace Neon.Hive
         /// </note>
         /// </remarks>
         [JsonIgnore]
+        [YamlIgnore]
         public bool DashboardTls => Release != "luminous";
 
         /// <summary>
@@ -249,6 +252,7 @@ namespace Neon.Hive
         /// </note>
         /// </remarks>
         [JsonIgnore]
+        [YamlIgnore]
         public int DashboardPort => Release == "luminous" ? 7000 : HiveHostPorts.CephDashboard;
 
         /// <summary>

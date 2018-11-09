@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -46,6 +47,7 @@ namespace Neon.Hive
         /// Returns the Swarm node advertise port.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public int SwarmPort
         {
             get { return NetworkPorts.DockerSwarm; }
@@ -89,6 +91,7 @@ namespace Neon.Hive
         /// or the specific Ubuntu APT package version to be installed.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string PackageVersion
         {
             get
@@ -183,6 +186,7 @@ namespace Neon.Hive
         /// a seconds unit appended, suitable for passing to a Docker command.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string RestartDelay
         {
             get { return $"{RestartDelaySeconds}s"; }

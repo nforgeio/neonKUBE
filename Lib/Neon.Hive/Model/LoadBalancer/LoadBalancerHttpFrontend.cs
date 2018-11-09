@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -158,6 +159,7 @@ namespace Neon.Hive
         /// Returns <c>true</c> if the frontend is to be secured via TLS.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool Tls
         {
             get { return !string.IsNullOrEmpty(CertName); }
@@ -167,6 +169,7 @@ namespace Neon.Hive
         /// Returns the frontend's host and path as a string.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         internal string HostAndPath
         {
             get

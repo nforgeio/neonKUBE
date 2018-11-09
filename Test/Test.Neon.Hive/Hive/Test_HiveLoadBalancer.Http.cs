@@ -586,11 +586,11 @@ namespace TestHive
 
                 var prefixes = new PrefixInfo[]
                 {
-                    new PrefixInfo("", $"{serviceName}"),
-                    new PrefixInfo("/foo", $"{serviceName}-foo"),
+                    new PrefixInfo("",         $"{serviceName}"),
+                    new PrefixInfo("/foo",     $"{serviceName}-foo"),
                     new PrefixInfo("/foo/bar", $"{serviceName}-foo-bar"),
-                    new PrefixInfo("/foobar", $"{serviceName}-foobar"),
-                    new PrefixInfo("/bar", $"{serviceName}-bar")
+                    new PrefixInfo("/foobar",  $"{serviceName}-foobar"),
+                    new PrefixInfo("/bar",     $"{serviceName}-bar")
                 };
 
                 // Spin the services up first in parallel (for speed).  Each of

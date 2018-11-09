@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -64,6 +65,7 @@ namespace Neon.Hive
         /// Returns the Consul port.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public int Port
         {
             get { return NetworkPorts.Consul; }
@@ -105,6 +107,7 @@ namespace Neon.Hive
         /// Returns the HTTP/HTTPS scheme to be used to access the Consul REST API.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string Scheme => Tls ? "https" : "http";
 
         /// <summary>

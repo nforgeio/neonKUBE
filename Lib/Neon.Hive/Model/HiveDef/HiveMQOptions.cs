@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
@@ -112,18 +113,21 @@ namespace Neon.Hive
         /// Returns the root <b>/</b> VHost.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string RootVHost => "/";
 
         /// <summary>
         /// Returns the <b>neon</b> VHost.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string NeonVHost => "neon";
 
         /// <summary>
         /// Returns the <b>app</b> VHost.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string AppVHost => "app";
 
         /// <summary>

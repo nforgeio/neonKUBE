@@ -19,6 +19,7 @@ using RabbitMQ.Client;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -136,6 +137,7 @@ namespace Neon.HiveMQ
         /// Returns <c>true</c> if the settings are valid.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool IsValid
         {
             get

@@ -21,6 +21,7 @@ using Consul;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -110,6 +111,7 @@ namespace Neon.Hive
         /// Returns the hive's creation date (UTC).
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public DateTime CreateDateUtc
         {
             get
@@ -133,6 +135,7 @@ namespace Neon.Hive
         /// created or last upgraded the hive.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string Version
         {
             get
@@ -150,6 +153,7 @@ namespace Neon.Hive
         /// Returns the minimum version of <b>neon-cli</b> allowed to manager the hive.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string NeonCliVersion
         {
             get
@@ -167,6 +171,7 @@ namespace Neon.Hive
         /// Returns the hive's unique ID.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string Uuid
         {
             get
@@ -183,8 +188,8 @@ namespace Neon.Hive
         /// <summary>
         /// Returns the number of days that hive logs will be retained.
         /// </summary>
-        [JsonProperty(PropertyName = "LogRetentionDays", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [JsonIgnore]
+        [YamlIgnore]
         public int LogRetentionDays
         {
             get

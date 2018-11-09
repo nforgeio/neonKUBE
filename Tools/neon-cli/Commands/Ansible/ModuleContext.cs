@@ -20,6 +20,7 @@ using Consul;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using ICSharpCode.SharpZipLib.Zip;
 
@@ -43,30 +44,35 @@ namespace NeonCli.Ansible
         /// The module name.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string Module { get; set; }
 
         /// <summary>
         /// The output verbosity.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public AnsibleVerbosity Verbosity { get; set; } = AnsibleVerbosity.Important;
 
         /// <summary>
         /// The Ansible module arguments.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public JObject Arguments { get; set; }
 
         /// <summary>
         /// Indicates whether the model is being executed in Ansible <b>check mode</b>.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool CheckMode { get; set; }
 
         /// <summary>
         /// The hive login.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public HiveLogin Login { get; set; }
 
         /// <summary>
@@ -189,6 +195,7 @@ namespace NeonCli.Ansible
         /// Indicates whether one or more errors have been reported.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool HasErrors
         {
             get { return errors.Count > 0; }

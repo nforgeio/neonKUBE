@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -59,6 +60,7 @@ namespace Neon.Common
         /// Returns <c>true</c> if the credentials hold a <see cref="Token"/>.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool HasToken
         {
             get { return !string.IsNullOrEmpty(Token); }
@@ -68,6 +70,7 @@ namespace Neon.Common
         /// Returns <c>true</c> if the credentials hold a <see cref="Username"/> and <see cref="Password"/>.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool HasUsernamePassword
         {
             get { return !string.IsNullOrEmpty(Username) && Password != null; }

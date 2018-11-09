@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -39,6 +40,7 @@ namespace Neon.Hive
         /// Returns the hive name.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string HiveName
         {
             get { return Definition?.Name; }
@@ -48,6 +50,7 @@ namespace Neon.Hive
         /// Returns the login name formatted as: USERNAME@HIVENAME
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string LoginName
         {
             get
@@ -68,6 +71,7 @@ namespace Neon.Hive
         /// used by the <see cref="Save"/> method.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string Path { get; set; }
 
         /// <summary>
@@ -81,6 +85,7 @@ namespace Neon.Hive
         /// the VPN or directly (the default).
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool ViaVpn { get; set; }
 
         /// <summary>
@@ -195,6 +200,7 @@ namespace Neon.Hive
         /// [neon-cli] will function properly.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<TlsCertificate> ClientCertificates
         {
             get
@@ -242,6 +248,7 @@ namespace Neon.Hive
         /// Returns <c>true</c> if the login includes root HashiCorp Vault credentials.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool HasVaultRootCredentials
         {
             get { return VaultCredentials != null && !string.IsNullOrEmpty(VaultCredentials.RootToken); }
@@ -252,6 +259,7 @@ namespace Neon.Hive
         /// happened for this login.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         internal bool InitMachine { get; set; }
 
         /// <summary>

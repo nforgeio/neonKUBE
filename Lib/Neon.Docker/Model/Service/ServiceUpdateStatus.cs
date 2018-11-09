@@ -12,6 +12,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -39,6 +40,7 @@ namespace Neon.Docker
         /// Returns the time (UTC) the service was started (as a <see cref="DateTime"/>).
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public DateTime StartedAtUtc
         {
             get { return DateTime.Parse(StartedAt, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal); }
@@ -55,6 +57,7 @@ namespace Neon.Docker
         /// Returns the time (UTC) the service update was completed (as a <see cref="DateTime"/>).
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public DateTime CompletedAtUtc
         {
             get { return DateTime.Parse(CompletedAt, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal); }

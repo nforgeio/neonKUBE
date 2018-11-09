@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -150,6 +151,7 @@ namespace Neon.Hive
         /// </para>
         /// </remarks>
         [JsonIgnore]
+        [YamlIgnore]
         public bool IsWorker
         {
             get { return Role.Equals(NodeRole.Worker, StringComparison.InvariantCultureIgnoreCase); }
@@ -160,6 +162,7 @@ namespace Neon.Hive
         /// within the Docker Swarm.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool IsPet
         {
             get
@@ -181,6 +184,7 @@ namespace Neon.Hive
         /// Returns <c>true</c> for nodes that are members of the Docker Swarm.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool InSwarm
         {
             get { return IsManager || IsWorker; }
@@ -503,6 +507,7 @@ namespace Neon.Hive
         /// node when executing the next setup step.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         internal TimeSpan StepDelay { get; set; }
 
         /// <summary>

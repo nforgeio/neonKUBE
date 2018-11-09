@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -235,6 +236,7 @@ namespace Neon.Hive
         /// inclusive are reserved for this.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public int FirstVpnFrontendPort
         {
             get { return FirstReservedPort; }
@@ -246,6 +248,7 @@ namespace Neon.Hive
         /// inclusive are reserved for this.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public int LastVpnFrontendPort
         {
             get { return FirstVpnFrontendPort + HiveConst.MaxManagers - 1; }
@@ -257,6 +260,7 @@ namespace Neon.Hive
         /// inclusive are reserved for this.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public int FirstSshFrontendPort
         {
             get { return LastVpnFrontendPort + 1; }
@@ -266,6 +270,7 @@ namespace Neon.Hive
         /// The last load balancer frontend port reserved for SSH connections to individual nodes in the hive.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public int LastSshFrontendPort
         {
             get { return FirstSshFrontendPort + AzureHelper.MaxHiveNodes - 1; }

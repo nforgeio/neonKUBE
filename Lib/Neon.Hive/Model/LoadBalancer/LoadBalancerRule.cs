@@ -3,14 +3,17 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
-using Neon.Common;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
+
+using Neon.Common;
 
 namespace Neon.Hive
 {
@@ -301,6 +304,7 @@ namespace Neon.Hive
         /// Returns <c>true</c> if the rule performs HTTP backend checks.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool UseHttpCheckMode
         {
             get

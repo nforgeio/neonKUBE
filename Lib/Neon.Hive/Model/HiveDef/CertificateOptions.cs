@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -53,6 +54,7 @@ namespace Neon.Hive
         /// Returns <c>true</c> if TLS is enabled.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool IsSecured
         {
             get { return !string.IsNullOrWhiteSpace(Path); }
@@ -63,6 +65,7 @@ namespace Neon.Hive
         /// present, <b>http</b> otherwise.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string Scheme
         {
             get { return IsSecured ? "https" : "http"; }

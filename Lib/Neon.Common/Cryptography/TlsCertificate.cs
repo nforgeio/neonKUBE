@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
@@ -618,6 +619,7 @@ subjectAltName         = @alt_names
         /// The public certificate as PEM encoded text normalized with Linux-style line endings.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string CertPemNormalized
         {
             get
@@ -643,6 +645,7 @@ subjectAltName         = @alt_names
         /// The private key as PEM encoded text normalized with Linux-style line endings.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string KeyPemNormalized
         {
             get
@@ -662,6 +665,7 @@ subjectAltName         = @alt_names
         /// Returns the combined certificate and private key as PEM encoded text.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string CombinedPem
         {
             get { return CertPem + KeyPem; }
@@ -673,6 +677,7 @@ subjectAltName         = @alt_names
         /// </summary>
         /// <returns>The combined PEM coded certificate.</returns>
         [JsonIgnore]
+        [YamlIgnore]
         public string CombinedPemNormalized
         {
             get
@@ -759,6 +764,7 @@ subjectAltName         = @alt_names
         /// Returns the DNS hostnames covered by the certificate as a comma separated string.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string HostNames
         {
             get

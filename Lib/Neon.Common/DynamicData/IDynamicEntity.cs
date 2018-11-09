@@ -12,6 +12,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.DynamicData;
@@ -95,6 +96,7 @@ namespace Neon.DynamicData
         /// Returns the dynamic <see cref="JObject"/> used to back the object properties.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         JObject JObject { get; }
 
         /// <summary>

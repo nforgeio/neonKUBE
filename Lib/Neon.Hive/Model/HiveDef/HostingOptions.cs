@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -235,6 +236,7 @@ namespace Neon.Hive
         /// Returns <c>true</c> if the hive will be hosted by a cloud provider like AWS, Azure or Google.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool IsCloudProvider
         {
             get
@@ -265,6 +267,7 @@ namespace Neon.Hive
         /// Returns <c>true</c> if the hive will be hosted by an on-premise (non-cloud) provider.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool IsOnPremiseProvider
         {
             get { return !IsCloudProvider; }
@@ -275,6 +278,7 @@ namespace Neon.Hive
         /// that supports remote hosts.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool IsRemoteHypervisorProvider
         {
             get

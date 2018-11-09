@@ -13,6 +13,7 @@ using Couchbase;
 using Couchbase.N1QL;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 namespace Neon.Data
 {
@@ -116,6 +117,7 @@ namespace Neon.Data
         /// Returns <c>true</c> if the settings are valid.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public bool IsValid
         {
             get

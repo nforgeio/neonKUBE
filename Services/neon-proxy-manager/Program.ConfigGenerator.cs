@@ -354,29 +354,8 @@ namespace NeonProxyManager
                     .Where(r => r.Mode == LoadBalancerMode.Http)
                     .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
                 {
-                    log.Record($"{rule.Name}:");
-
-                    foreach (var frontend in rule.Frontends)
-                    {
-                        log.Record($"    frontend:");
-
-                        log.Record($"        host:        {frontend.Host}");
-
-                        if (frontend.Tls)
-                        {
-                            log.Record($"        certificate: {frontend.CertName}");
-                        }
-
-                        log.Record($"        public-port: {frontend.PublicPort}");
-                        log.Record($"        proxy-port:  {frontend.ProxyPort}");
-                    }
-
-                    foreach (var backend in rule.SelectBackends(hostGroups))
-                    {
-                        log.Record($"    backend:         {backend.Server}:{backend.Port}");
-                    }
-
                     log.Record();
+                    RecordRule(log, rule);
                 }
             }
 
@@ -393,23 +372,8 @@ namespace NeonProxyManager
                     .Where(r => r.Mode == LoadBalancerMode.Tcp)
                     .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
                 {
-                    var maxconn = rule.MaxConnections == 0 ? "unlimited" : rule.MaxConnections.ToString();
-
-                    log.Record($"{rule.Name}:");
-
-                    foreach (var frontend in rule.Frontends)
-                    {
-                        log.Record($"    frontend:");
-                        log.Record($"        public-port: {frontend.PublicPort}");
-                        log.Record($"        proxy-port:  {frontend.ProxyPort}");
-                    }
-
-                    foreach (var backend in rule.SelectBackends(hostGroups))
-                    {
-                        log.Record($"    backend:         {backend.Server}:{backend.Port}");
-                    }
-
-                    log.Record();   
+                    log.Record();
+                    RecordRule(log, rule);
                 }
             }
 
@@ -2311,6 +2275,27 @@ listen tcp:port-{port}
             else
             {
                 return truncated + 1.0;
+            }
+        }
+
+        /// <summary>
+        /// Records a load balancer rule to a log rercorder to be part of the proxy status.
+        /// </summary>
+        /// <param name="log">The log recorder.</param>
+        /// <param name="rule">The rule.</param>
+        private static void RecordRule(LogRecorder log, LoadBalancerRule rule)
+        {
+            //  We're going to write a line with then rule name and then output
+            // the rule it self as YAML, indented by 2 characters for readability.
+
+            log.Record($"{rule.Name}:");
+
+            using (var reader = new StringReader(rule.ToYaml()))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    log.Record($"    {line}");
+                }
             }
         }
 

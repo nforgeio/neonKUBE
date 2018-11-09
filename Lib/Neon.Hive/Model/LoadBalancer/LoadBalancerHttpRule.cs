@@ -3,9 +3,6 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
-using Neon.Common;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,6 +10,13 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization;
+
+using Neon.Common;
+using Newtonsoft.Json;
 
 namespace Neon.Hive
 {
@@ -139,6 +143,7 @@ namespace Neon.Hive
         /// </summary>
         /// <returns><c>true</c> for a single backend with a hostname.</returns>
         [JsonIgnore]
+        [YamlIgnore]
         public bool HasSingleHostnameBackend
         {
             get

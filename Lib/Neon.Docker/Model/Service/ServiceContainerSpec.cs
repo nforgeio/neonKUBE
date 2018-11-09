@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -35,6 +36,7 @@ namespace Neon.Docker
         /// Returns the <see cref="Image"/> without any SHA hash appended to the tag.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string ImageWithoutSHA
         {
             get

@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -495,18 +496,21 @@ namespace Neon.Hive
         /// built-in hostnames for a hive.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public HiveHostnames Hostnames { get; private set; }
 
         /// <summary>
         /// Returns the URI for the Elasticsearch log data backend for the cluster.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string LogEsDataUri => $"http://{Hostnames.LogEsData}:{HiveHostPorts.ProxyPrivateHttpLogEsData}";
 
         /// <summary>
         /// Returns the URI to the hive's Vault proxy.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public string VaultProxyUri => $"https://{Hostnames.Vault}:{HiveHostPorts.ProxyVault}";
 
         /// <summary>
@@ -536,6 +540,7 @@ namespace Neon.Hive
         /// Enumerates all hive node definitions.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> Nodes
         {
             get { return NodeDefinitions.Values; }
@@ -545,6 +550,7 @@ namespace Neon.Hive
         /// Enumerates all hive node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> SortedNodes
         {
             get { return Nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
@@ -554,6 +560,7 @@ namespace Neon.Hive
         /// Enumerates the hive manager node definitions.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> Managers
         {
             get { return Nodes.Where(n => n.IsManager); }
@@ -563,6 +570,7 @@ namespace Neon.Hive
         /// Enumerates the hive manager node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> SortedManagers
         {
             get { return Managers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
@@ -572,6 +580,7 @@ namespace Neon.Hive
         /// Enumerates the hive pet node definitions.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> Pets
         {
             get { return Nodes.Where(n => n.IsPet); }
@@ -581,6 +590,7 @@ namespace Neon.Hive
         /// Enumerates the hive manager pet definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> SortedPets
         {
             get { return Pets.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
@@ -590,6 +600,7 @@ namespace Neon.Hive
         /// Enumerates the hive worker node definitions.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> Workers
         {
             get { return Nodes.Where(n => n.IsWorker); }
@@ -599,6 +610,7 @@ namespace Neon.Hive
         /// Enumerates the hive worker node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> SortedWorkers
         {
             get { return Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
@@ -608,6 +620,7 @@ namespace Neon.Hive
         /// Enumerates the hive swarm node definitions (the managers and workers).
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> Swarm
         {
             get { return Nodes.Where(n => n.InSwarm); }
@@ -618,6 +631,7 @@ namespace Neon.Hive
         /// sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
+        [YamlIgnore]
         public IEnumerable<NodeDefinition> SortedSwarm
         {
             get { return Swarm.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
