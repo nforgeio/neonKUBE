@@ -83,6 +83,12 @@ namespace TestHive
         /// <param name="hostname">The target hostname.</param>
         private async Task WaitUntilReadyAsync(Uri baseUri, string hostname)
         {
+            // Delay for 10 seconds so that any DNS entries cached by HAProxy will
+            // have a chance to expire.  By default, we configure the DNS hold time
+            // to be 5 seconds, so waiting for 10 seconds should be more than enough.
+
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
             // Allow self-signed certificates for HTTPS tests.
 
             var handler = new HttpClientHandler()

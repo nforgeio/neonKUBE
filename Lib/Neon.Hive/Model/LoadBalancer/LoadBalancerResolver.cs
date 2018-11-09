@@ -54,11 +54,11 @@ namespace Neon.Hive
         public double RetrySeconds { get; set; } = 1.0;
 
         /// <summary>
-        /// The number of seconds to hold a successful resolution (defaults to <b>10 seconds</b>).
+        /// The number of seconds to hold a successful resolution (defaults to <b>5 seconds</b>).
         /// </summary>
         [JsonProperty(PropertyName = "HoldSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(10.0)]
-        public double HoldSeconds { get; set; } = 10.0;
+        [DefaultValue(5.0)]
+        public double HoldSeconds { get; set; } = 5.0;
 
         /// <summary>
         /// Validates the instance.
