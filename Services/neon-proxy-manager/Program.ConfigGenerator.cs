@@ -528,18 +528,123 @@ backend haproxy_stats
             //-----------------------------------------------------------------
             // Verify that the rules don't conflict.
 
-            // Verify that TCP rules don't have conflicting HAProxy frontends.  For
-            // TCP, this means that a port can have only one assigned frontend.
+            // Verify that TCP rules don't have conflicting publically facing ports.
 
-            var haTcpProxyPortToRule = new Dictionary<int, LoadBalancerRule>();
-            var conflictRule         = (LoadBalancerRule)null;
+            var publicTcpPortToRule = new Dictionary<int, LoadBalancerRule>();
 
             foreach (LoadBalancerTcpRule rule in rules.Values
                 .Where(r => r.Mode == LoadBalancerMode.Tcp))
             {
                 foreach (var frontend in rule.Frontends)
                 {
-                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out conflictRule))
+                    if (frontend.PublicPort <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
+                    {
+                        log.LogError(() => $"TCP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP rule [{conflictRule.Name}].");
+                        configError = true;
+                    }
+                    else
+                    {
+                        publicTcpPortToRule.Add(frontend.PublicPort, rule);
+                    }
+                }
+            }
+
+            // Verify that HTTP rules don't have conflicting publically facing ports and path
+            // prefix combinations.  To pass, an HTTP frontend public port can't already be assigned
+            // to a TCP rule and the hostname/port/path combination can't already be assigned to
+            // another frontend.
+            //
+            // The wrinkle here is that we need ensure that rules with a path prefix don't conflict
+            // with rules that don't.
+
+            var publicHttpHostPortPathToRules = new Dictionary<string, LoadBalancerRule>();
+
+            // Check rules without path prefixes first.
+
+            foreach (LoadBalancerHttpRule rule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Http))
+            {
+                foreach (var frontend in rule.Frontends)
+                {
+                    if (frontend.PublicPort <= 0 || !string.IsNullOrEmpty(frontend.PathPrefix))
+                    {
+                        continue;
+                    }
+
+                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
+                    {
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] that conflicts with TCP rule [{conflictRule.Name}].");
+                        configError = true;
+                        continue;
+                    }
+
+                    var hostPort = $"{frontend.Host}:{frontend.ProxyPort}";
+
+                    if (publicHttpHostPortPathToRules.TryGetValue(hostPort, out conflictRule))
+                    {
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing hostname/port [{hostPort}] that conflicts with HTTP rule [{conflictRule.Name}].");
+                        configError = true;
+                        continue;
+                    }
+                    else
+                    {
+                        publicHttpHostPortPathToRules.Add($"{hostPort}:{allPrefix}", rule);
+                    }
+                }
+            }
+
+            // Now check the rules with path prefixes.
+
+            foreach (LoadBalancerHttpRule rule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Http))
+            {
+                foreach (var frontend in rule.Frontends)
+                {
+                    if (frontend.PublicPort <= 0 || string.IsNullOrEmpty(frontend.PathPrefix))
+                    {
+                        continue;
+                    }
+
+                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
+                    {
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] that conflicts with TCP rule [{conflictRule.Name}].");
+                        configError = true;
+                        continue;
+                    }
+
+                    var pathPrefix   = NormalizePathPrefix(frontend.PathPrefix);
+                    var hostPortPath = $"{frontend.Host}:{frontend.ProxyPort}:{pathPrefix}";
+
+                    if (publicHttpHostPortPathToRules.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRule) ||
+                        publicHttpHostPortPathToRules.TryGetValue(hostPortPath, out conflictRule))
+                    {
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing hostname/port/path [{hostPortPath}] that conflicts with HTTP rule [{conflictRule.Name}].");
+                        configError = true;
+                        continue;
+                    }
+                    else
+                    {
+                        publicHttpHostPortPathToRules.Add(hostPortPath, rule);
+                    }
+                }
+            }
+
+            // Verify that TCP rules don't have conflicting HAProxy frontends.  For
+            // TCP, this means that a port can have only one assigned frontend.
+
+            var haTcpProxyPortToRule = new Dictionary<int, LoadBalancerRule>();
+
+            foreach (LoadBalancerTcpRule rule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Tcp))
+            {
+                foreach (var frontend in rule.Frontends)
+                {
+                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
                         log.LogError(() => $"TCP rule [{rule.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
@@ -570,7 +675,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out conflictRule))
+                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
                         log.LogError(() => $"HTTP rule [{rule.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
@@ -604,7 +709,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out conflictRule))
+                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
                         log.LogError(() => $"HTTP rule [{rule.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
@@ -801,6 +906,8 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                             //
                             // I'm not entirely sure that this check is really necessary.
 
+                            LoadBalancerHttpRule conflictRule = null;
+
                             foreach (LoadBalancerHttpRule checkRule in rules.Values
                                 .Where(r => r.Mode == LoadBalancerMode.Http && r != httpRule))
                             {
@@ -916,7 +1023,7 @@ frontend {haProxyFrontend.Name}
 
                         sbHaProxy.AppendLine();
 
-                        if (hostPathMapping.Value.Frontend.RedirectUri != null)
+                        if (hostPathMapping.Value.Frontend.RedirectTo != null)
                         {
                             continue;
                         }
@@ -957,7 +1064,7 @@ frontend {haProxyFrontend.Name}
 
                         sbHaProxy.AppendLine();
 
-                        if (hostPathMapping.Value.Frontend.RedirectUri != null)
+                        if (hostPathMapping.Value.Frontend.RedirectTo != null)
                         {
                             if (haProxyFrontend.Tls)
                             {
@@ -968,7 +1075,7 @@ frontend {haProxyFrontend.Name}
                                 sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             }
 
-                            sbHaProxy.AppendLine($"    redirect            location {hostPathMapping.Value.Frontend.RedirectUri} if {hostAclName}");
+                            sbHaProxy.AppendLine($"    redirect            location {hostPathMapping.Value.Frontend.RedirectTo} if {hostAclName}");
                         }
                         else if (haProxyFrontend.Tls)
                         {
