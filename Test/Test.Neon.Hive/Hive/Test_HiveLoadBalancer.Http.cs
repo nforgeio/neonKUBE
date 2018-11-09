@@ -609,6 +609,10 @@ namespace TestHive
 
                 await NeonHelper.WaitAllAsync(tasks);
 
+                // Give everything a chance to stablize.
+
+                await Task.Delay(TimeSpan.FromSeconds(10));
+
                 // Create the load balancer rules.
 
                 foreach (var prefix in prefixes)
@@ -641,8 +645,8 @@ namespace TestHive
                     rule.Backends.Add(
                         new LoadBalancerHttpBackend()
                         {
-                            Server = serviceName,
-                            Port = 80
+                            Server = prefix.ServiceName,
+                            Port   = 80
                         });
 
                     loadBalancerManager.SetRule(rule);
@@ -677,7 +681,14 @@ namespace TestHive
 
                 foreach (var prefix in prefixes)
                 {
-                    var body = await client.GetStringAsync(prefix.Path);
+                    var prefxPath = prefix.Path;
+
+                    if (prefxPath == null || !prefxPath.EndsWith("/"))
+                    {
+                        prefxPath += "/";
+                    }
+
+                    var body = await client.GetStringAsync(prefxPath);
 
                     Assert.Equal(prefix.ServiceName, body.Trim());
                 }
