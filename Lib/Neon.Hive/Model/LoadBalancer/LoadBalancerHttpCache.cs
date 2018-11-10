@@ -40,7 +40,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Enables DEBUG mode which currently will add the <c>X-Neon-Cached: name=value[,name=value...]</c>
+        /// Enables DEBUG mode which currently will add the <c>X-Neon-Cache: name=value[,name=value...]</c>
         /// header to all responses that come from <b>neon-proxy-cache-public</b> and <b>neon-proxy-cache-private</b>
         /// for the associated load balancer rule when caching is enabled.  Details will be returned as one
         /// or more comma separated <c>name=value</c> items.  Currently, only <b>hits=HIT-COUNT</b> is

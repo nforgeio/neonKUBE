@@ -190,22 +190,37 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// <para>
         /// <b>INTERNAL USE ONLY:</b> Returns the value to be used as the <b>X-Neon-Frontend</b>
         /// header for requests being passed through to a <b>neon-proxy-cache</b> based service.
-        /// This will look like <b>PORT-HOSTNAME</b> for frontends that define a hostname and just
-        /// <b>PORT</b> for those without a hostname, where PORT is the proxy ingress port and
-        /// HOSTNAME is the target hostname.
+        /// This will look like one of:
+        /// </para>
+        /// <code>
+        /// PORT PREFIX HOSTNAME
+        /// PORT PREFIX
+        /// </code>
+        /// <para>
+        /// where PORT is the HAProxy frontend port, PREFIX is the HTTP rule prefix if defined
+        /// or "/" when not, and HOSTNAME optionally specifies the target hostname.
+        /// </para>
         /// </summary>
         /// <returns>The <b>X-Neon-Frontend</b> header value for the frontend.</returns>
         public string GetProxyFrontendHeader()
         {
+            var prefix = PathPrefix;
+
+            if (string.IsNullOrEmpty(prefix))
+            {
+                prefix = "/";
+            }
+
             if (!string.IsNullOrEmpty(Host))
             {
-                return $"{ProxyPort}-{Host.ToLowerInvariant()}";
+                return $"{ProxyPort} {prefix} {Host.ToLowerInvariant()}";
             }
             else
             {
-                return $"{ProxyPort}";
+                return $"{ProxyPort} {prefix}";
             }
         }
 
