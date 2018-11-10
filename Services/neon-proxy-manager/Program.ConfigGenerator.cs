@@ -867,6 +867,8 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
 
                 // We can generate the HAProxy HTTP frontends now.
 
+                var frontendIndex = 0;
+
                 foreach (var haProxyFrontend in haProxyFrontends.Values.OrderBy(f => f.Port))
                 {
                     var certArg = string.Empty;
@@ -937,7 +939,7 @@ frontend {haProxyFrontend.Name}
                             }
 
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg '{path}'");
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, path, hostPathMapping.Value, host, pathAclName, hostAclName);
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, path, hostPathMapping.Value, host, frontendIndex, pathAclName, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
                         }
                         else if (!string.IsNullOrEmpty(host))
@@ -949,7 +951,7 @@ frontend {haProxyFrontend.Name}
                             }
 
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg '{path}'");
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, path, hostPathMapping.Value, host, pathAclName, hostAclName);
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, path, hostPathMapping.Value, host, frontendIndex, pathAclName, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
                         }
                         else
@@ -960,6 +962,8 @@ frontend {haProxyFrontend.Name}
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg '{path}'");
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {pathAclName}");
                         }
+
+                        frontendIndex++;
                     }
 
                     // Now generate the backend mappings for frontends without path prefixes.
@@ -1004,7 +1008,7 @@ frontend {haProxyFrontend.Name}
                                 sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
                             }
 
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host, hostAclName);
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host, frontendIndex, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName}");
                         }
                         else if (!string.IsNullOrEmpty(host))
@@ -1015,17 +1019,19 @@ frontend {haProxyFrontend.Name}
                                 sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             }
 
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host, hostAclName);
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host, frontendIndex, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName}");
                         }
                         else
                         {
                             // The frontend does not specify a host so we'll always use the backend.
 
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host);
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host, frontendIndex);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName}");
                         }
                     }
+
+                    frontendIndex++;
                 }
 
                 // Generate the HTTP backends
@@ -2272,11 +2278,12 @@ listen tcp:port-{port}
         /// <param name="pathPrefix">The frontend path prefix.</param>
         /// <param name="hostPathMapping">The specific host/path mapping.</param>
         /// <param name="hostname">The target proxy frontend hostname or <c>null</c>.</param>
+        /// <param name="index">The zero-based index of the neonHIVE frontend being generated within the current HAProxy frontend.</param>
         /// <param name="aclNames">
         /// The optional names of the ACLs that used to select the backend.
         /// The header will be set unconditionally when this is empty.
         /// </param>
-        private static void SetCacheFrontendHeader(StringBuilder sb, HAProxyHttpFrontend haProxyFrontend, string pathPrefix, HostPathMapping hostPathMapping, string hostname, params string[] aclNames)
+        private static void SetCacheFrontendHeader(StringBuilder sb, HAProxyHttpFrontend haProxyFrontend, string pathPrefix, HostPathMapping hostPathMapping, string hostname, int index, params string[] aclNames)
         {
             Covenant.Requires<ArgumentNullException>(sb != null);
             Covenant.Requires<ArgumentNullException>(haProxyFrontend != null);
@@ -2355,7 +2362,7 @@ listen tcp:port-{port}
             // which also match, so the second [http-request set-header] will also be executed,
             // setting the wrong header.
             //
-            // I'm going to handle this by setting the [x-neon-frontend-set] ACL which will indicate
+            // I'm going to handle this by setting the [x-neon-frontend-found-#] ACL which will indicate
             // whether the the [X-Neon-Frontend] header has already been added to the request and
             // use this to ensure that only the first prefix match actually sets the header. 
             //
@@ -2367,27 +2374,27 @@ listen tcp:port-{port}
             //
             //      acl                 is-test-com hdr_reg(host) -i test.com(:\d+)?
             //      acl                 is-foo-bar path_beg '/foo/bar/'
-            //      acl                 x-neon-frontend-set req.hdr(X-Neon-Frontend) -m found
-            //      http-request        set-header X-Neon-Frontend '80 /foo/bar/ vegomatic.test' if is-test-com is-foo-bar !x-neon-frontend-set
+            //      acl                 x-neon-frontend-found-0 req.hdr(X-Neon-Frontend) -m found
+            //      http-request        set-header X-Neon-Frontend '80 /foo/bar/ vegomatic.test' if is-test-com is-foo-bar !x-neon-frontend-found-0
             //      use_backend         foo-bar if is-test-com is-foo-bar
             //
             //      acl                 is-test-comhdr_reg(host) -i test.com(:\d+)?
             //      acl                 is-foo path_beg '/foo/'
-            //      acl                 x-neon-frontend-set req.hdr(X-Neon-Frontend) -m found
-            //      http-request        set-header X-Neon-Frontend '80 /foo/ vegomatic.test' if is-test-com is-foo !x-neon-frontend-set
+            //      acl                 x-neon-frontend-found-1 req.hdr(X-Neon-Frontend) -m found
+            //      http-request        set-header X-Neon-Frontend '80 /foo/ vegomatic.test' if is-test-com is-foo !x-neon-frontend-found-1
             //      use_backend         foo-bar if is-test-com is-foo
 
-            sb.AppendLine($"    acl                 x-neon-frontend-set req.hdr(X-Neon-Frontend) -m found");
+            sb.AppendLine($"    acl                 x-neon-frontend-found-{index} req.hdr(X-Neon-Frontend) -m found");
 
             if (aclNames.Length == 0)
             {
-                sb.AppendLine($"    http-request        set-header X-Neon-Frontend '{proxyFrontendHeader}' if !x-neon-frontend-set");
+                sb.AppendLine($"    http-request        set-header X-Neon-Frontend '{proxyFrontendHeader}' if !x-neon-frontend-found-{index}");
             }
             else
             {
                 var conditions = string.Empty;
 
-                foreach (var aclName in aclNames.Union(new string[] { "!x-neon-frontend-set" }))
+                foreach (var aclName in aclNames.Union(new string[] { $"!x-neon-frontend-found-{index}" }))
                 {
                     if (conditions.Length > 0)
                     {
