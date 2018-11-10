@@ -2273,7 +2273,7 @@ listen tcp:port-{port}
         /// <param name="hostPathMapping">The specific host/path mapping.</param>
         /// <param name="hostname">The target proxy frontend hostname or <c>null</c>.</param>
         /// <param name="aclNames">
-        /// The optional name of the ACLs that used to select the backend.
+        /// The optional names of the ACLs that used to select the backend.
         /// The header will be set unconditionally when this is empty.
         /// </param>
         private static void SetCacheFrontendHeader(StringBuilder sb, HAProxyHttpFrontend haProxyFrontend, string pathPrefix, HostPathMapping hostPathMapping, string hostname, params string[] aclNames)
@@ -2308,15 +2308,86 @@ listen tcp:port-{port}
                 return;
             }
 
+            // IMPLEMENTATION NOTE:
+            // --------------------
+            //
+            // HAProxy doesn't work as I expected.  I thought that HAProxy would walk down a frontend's
+            // rules until it hit a [use-backend] and then stop processing frontend rules and start
+            // processing the backend rules.
+            //
+            // What really happens is that HAProxy will continue processing frontend rules after the
+            // first [use_backend] whose conditions are satisfied but it will ignore any subsequent
+            // [use-backend] rules.  Only after processing all of the frontend rules will it jump
+            // to process the backend rules.
+            //
+            // This makes this code generation a bit more challenging.  The issue centers around
+            // the generation of the [http-request set-header X-Neon-Frontend ...] rules.  We need
+            // to have only the first prefix match actually set this header and for subsequent
+            // prefix matches to be ignored.  If we can't express this then subsequent matching
+            // rules will set the wrong header.
+            //
+            // For example, say we have frontends on the same port for the "/foo/bar/" and "/foo/"
+            // prefixes.  We generate rules such that the longest prefix will match first, so
+            // we want a request for "/foo/bar/test.jpg" to match the "/foo/bar/" prefix, set the
+            // header and be directed to the corresponding backend:
+            //
+            // frontend: test
+            //      mode                http
+            //      bind                *:80
+            //
+            //      acl                 is-test-com hdr_reg(host) -i test.com(:\d+)?
+            //      acl                 is-foo-bar path_beg '/foo/bar/'
+            //      http-request        set-header X-Neon-Frontend '80 /foo/bar/ vegomatic.test' if is-test-com is-foo-bar
+            //      use_backend         foo-bar if is-test-com is-foo-bar
+            //
+            //      acl                 is-test-com hdr_reg(host) -i test.com(:\d+)?
+            //      acl                 is-foo path_beg '/foo/'
+            //      http-request        set-header X-Neon-Frontend '80 /foo/ vegomatic.test' if is-test-com is-foo
+            //      use_backend         foo-bar if is-test-com is-foo
+            //
+            // I originally thought that for a http://test.com/foo/bar/test.jpg request that HAProxy
+            // would match the first two ACLs, execute the first [http-request set-header], and the
+            // first [use_backend] and then stop processing frontend rules.  HAProxy does issue a
+            // warning about this behavior when it it's loading the configuration, but we won't
+            // see that in the logs unless there's an actual error in the configuration.
+            //
+            // Instead, it remembers the first backend but continues processing the next two ACLs
+            // which also match, so the second [http-request set-header] will also be executed,
+            // setting the wrong header.
+            //
+            // I'm going to handle this by setting the [x-neon-frontend-set] ACL which will indicate
+            // whether the the [X-Neon-Frontend] header has already been added to the request and
+            // use this to ensure that only the first prefix match actually sets the header. 
+            //
+            // This will look something like:
+            //
+            // frontend: test
+            //      mode                http
+            //      bind                *:80
+            //
+            //      acl                 is-test-com hdr_reg(host) -i test.com(:\d+)?
+            //      acl                 is-foo-bar path_beg '/foo/bar/'
+            //      acl                 x-neon-frontend-set req.hdr(X-Neon-Frontend) -m found
+            //      http-request        set-header X-Neon-Frontend '80 /foo/bar/ vegomatic.test' if is-test-com is-foo-bar !x-neon-frontend-set
+            //      use_backend         foo-bar if is-test-com is-foo-bar
+            //
+            //      acl                 is-test-comhdr_reg(host) -i test.com(:\d+)?
+            //      acl                 is-foo path_beg '/foo/'
+            //      acl                 x-neon-frontend-set req.hdr(X-Neon-Frontend) -m found
+            //      http-request        set-header X-Neon-Frontend '80 /foo/ vegomatic.test' if is-test-com is-foo !x-neon-frontend-set
+            //      use_backend         foo-bar if is-test-com is-foo
+
+            sb.AppendLine($"    acl                 x-neon-frontend-set req.hdr(X-Neon-Frontend) -m found");
+
             if (aclNames.Length == 0)
             {
-                sb.AppendLine($"    http-request        set-header X-Neon-Frontend '{proxyFrontendHeader}'");
+                sb.AppendLine($"    http-request        set-header X-Neon-Frontend '{proxyFrontendHeader}' if !x-neon-frontend-set");
             }
             else
             {
                 var conditions = string.Empty;
 
-                foreach (var aclName in aclNames)
+                foreach (var aclName in aclNames.Union(new string[] { "!x-neon-frontend-set" }))
                 {
                     if (conditions.Length > 0)
                     {
