@@ -898,6 +898,12 @@ frontend {haProxyFrontend.Name}
                         sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: false)}");
                     }
 
+                    // We need to keep track of the ACLs we've defined for each hostname
+                    // referenced by this frontend so we won't generate multiple ACLs
+                    // for the same host.
+
+                    var aclHosts = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
                     // Generate the backend mappings for frontends with path prefixes
                     // first, before we fall back to matching just the hostname.
                     // Note that we're going to generate mappings for the longest 
@@ -924,16 +930,26 @@ frontend {haProxyFrontend.Name}
                         }
                         else if (haProxyFrontend.Tls)
                         {
-                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
-                            sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host, pathAclName, hostAclName);
+                            if (!aclHosts.Contains(host))
+                            {
+                                aclHosts.Add(host);
+                                sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
+                            }
+
+                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg '{path}'");
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, path, hostPathMapping.Value, host, pathAclName, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
                         }
                         else if (!string.IsNullOrEmpty(host))
                         {
-                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
-                            sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host, pathAclName, hostAclName);
+                            if (!aclHosts.Contains(host))
+                            {
+                                aclHosts.Add(host);
+                                sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                            }
+
+                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg '{path}'");
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, path, hostPathMapping.Value, host, pathAclName, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
                         }
                         else
@@ -941,7 +957,7 @@ frontend {haProxyFrontend.Name}
                             // The frontend does not specify a host so we'll use the backend
                             // if only the path matches.
 
-                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
+                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg '{path}'");
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {pathAclName}");
                         }
                     }
@@ -963,32 +979,50 @@ frontend {haProxyFrontend.Name}
                         {
                             if (haProxyFrontend.Tls)
                             {
-                                sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
+                                if (!aclHosts.Contains(host))
+                                {
+                                    aclHosts.Add(host);
+                                    sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
+                                }
                             }
                             else
                             {
-                                sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                                if (!aclHosts.Contains(host))
+                                {
+                                    aclHosts.Add(host);
+                                    sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                                }
                             }
 
                             sbHaProxy.AppendLine($"    redirect            location {hostPathMapping.Value.Frontend.RedirectTo} if {hostAclName}");
                         }
                         else if (haProxyFrontend.Tls)
                         {
-                            sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host, hostAclName);
+                            if (!aclHosts.Contains(host))
+                            {
+                                aclHosts.Add(host);
+                                sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
+                            }
+
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName}");
                         }
                         else if (!string.IsNullOrEmpty(host))
                         {
-                            sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host, hostAclName);
+                            if (!aclHosts.Contains(host))
+                            {
+                                aclHosts.Add(host);
+                                sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                            }
+
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host, hostAclName);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName}");
                         }
                         else
                         {
                             // The frontend does not specify a host so we'll always use the backend.
 
-                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, hostPathMapping.Value, host);
+                            SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host);
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName}");
                         }
                     }
@@ -1471,11 +1505,12 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 // for rules with caching enabled.  This will look like one of the following
                 // depending on whether the frontend defines a hostname:
                 //
-                //      X-Neon-Frontend: PORT-HOSTNAME
-                //      X-Neon-Frontend: PORT
+                //      X-Neon-Frontend: PORT PREFIX HOSTNAME
+                //      X-Neon-Frontend: PORT PREFIX
                 //
-                // Where PORT is the proxy frontend port that received the request and
-                // HOSTNAME identifies the request hosts (without any ":PORT").
+                // Where PORT is the proxy frontend port that received the request, PREFIX
+                // is the path prefix (defaults to "/") and HOSTNAME identifies the request 
+                // hosts (without any ":PORT" part).
 
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
@@ -1485,8 +1520,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 
                 sbVarnishVcl.AppendLine($"    if (!req.http.X-Neon-Frontend) {{");
                 sbVarnishVcl.AppendLine($"        if (req.method == \"OPTIONS\" || req.method == \"HEAD\") {{");
-                sbVarnishVcl.AppendLine($"            # Treat this as a health probe from HAProxy.");
-                sbVarnishVcl.AppendLine($"            return (synth(200));");
+                sbVarnishVcl.AppendLine($"            return (synth(200)); # Treat this as an HAProxy health probe.");
                 sbVarnishVcl.AppendLine($"        }}");
                 sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Frontend] header is required.\"));");
                 sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Frontend == \"\") {{");
@@ -1514,8 +1548,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                         if (rule.Cache.Debug)
                         {
                             // Add the [X-Neon-Cache-Debug: true] header here so that the generated
-                            // [vcl_deliver] subroutine will know to add the [X-Neon-Cached]
-                            // DEBUG header.
+                            // [vcl_deliver] subroutine will know to add the [X-Neon-Cache] DEBUG header.
 
                             sbVarnishVcl.AppendLine($"    set req.http.X-Neon-Cache-Debug = \"true\";");
                         }
@@ -1530,8 +1563,8 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine($"}}");
             }
 
-            // Generate the [vcl_deliver] subroutine that performs any last rites on the request
-            // (like adding the [X-Neon-Cached] header for DEBUG mode.
+            // Generate the [vcl_deliver] subroutine that performs any last rites on the response
+            // (like adding the [X-Neon-Cache] header for DEBUG mode.
 
             sbVarnishVcl.AppendLine();
             sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
@@ -2235,29 +2268,39 @@ listen tcp:port-{port}
         /// for an HTTP frontend when the associated rule enables caching.
         /// </summary>
         /// <param name="sb">The target string builder.</param>
-        /// <param name="frontend">The HTTP frontend.</param>
+        /// <param name="haProxyFrontend">The HTTP frontend.</param>
+        /// <param name="pathPrefix">The frontend path prefix.</param>
         /// <param name="hostPathMapping">The specific host/path mapping.</param>
         /// <param name="hostname">The target proxy frontend hostname or <c>null</c>.</param>
         /// <param name="aclNames">
         /// The optional name of the ACLs that used to select the backend.
         /// The header will be set unconditionally when this is empty.
         /// </param>
-        private static void SetCacheFrontendHeader(StringBuilder sb, HAProxyHttpFrontend frontend, HostPathMapping hostPathMapping, string hostname, params string[] aclNames)
+        private static void SetCacheFrontendHeader(StringBuilder sb, HAProxyHttpFrontend haProxyFrontend, string pathPrefix, HostPathMapping hostPathMapping, string hostname, params string[] aclNames)
         {
             Covenant.Requires<ArgumentNullException>(sb != null);
-            Covenant.Requires<ArgumentNullException>(frontend != null);
+            Covenant.Requires<ArgumentNullException>(haProxyFrontend != null);
             Covenant.Requires<ArgumentNullException>(hostPathMapping != null);
             Covenant.Requires<ArgumentException>(hostPathMapping.Rule.Mode == LoadBalancerMode.Http);
 
             string proxyFrontendHeader;
 
+            if (string.IsNullOrEmpty(pathPrefix))
+            {
+                pathPrefix = "/";
+            }
+            else if (!haProxyFrontend.PathPrefix.EndsWith("/"))
+            {
+                pathPrefix += "/";
+            }
+
             if (!string.IsNullOrEmpty(hostname))
             {
-                proxyFrontendHeader = $"{frontend.Port}-{hostname}";
+                proxyFrontendHeader = $"{haProxyFrontend.Port} {pathPrefix} {hostname}";
             }
             else
             {
-                proxyFrontendHeader = $"{frontend.Port}";
+                proxyFrontendHeader = $"{haProxyFrontend.Port} {pathPrefix}";
             }
 
             if (!hostPathMapping.Rule.Cache.Enabled)
@@ -2267,7 +2310,7 @@ listen tcp:port-{port}
 
             if (aclNames.Length == 0)
             {
-                sb.AppendLine($"    http-request        set-header X-Neon-Frontend {proxyFrontendHeader}");
+                sb.AppendLine($"    http-request        set-header X-Neon-Frontend '{proxyFrontendHeader}'");
             }
             else
             {
@@ -2283,7 +2326,7 @@ listen tcp:port-{port}
                     conditions += aclName;
                 }
 
-                sb.AppendLine($"    http-request        set-header X-Neon-Frontend {proxyFrontendHeader} if {conditions}");
+                sb.AppendLine($"    http-request        set-header X-Neon-Frontend '{proxyFrontendHeader}' if {conditions}");
             }
         }
     }
