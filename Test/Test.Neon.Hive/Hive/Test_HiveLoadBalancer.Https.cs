@@ -550,5 +550,206 @@ namespace TestHive
                 }
             }
         }
+
+        /// <summary>
+        /// Verify that we can create HTTPS load balancer rules for a 
+        /// site on the public port using a specific hostname and various
+        /// path prefixes and then verify that that the load balancer actual works 
+        /// by spinning up a [vegomatic] based service to accept the traffic.
+        /// </summary>
+        /// <param name="testName">Simple name (without spaces) used to ensure that URIs cached for different tests won't conflict.</param>
+        /// <param name="proxyPort">The inbound proxy port.</param>
+        /// <param name="network">The proxy network.</param>
+        /// <param name="loadBalancerManager">The load balancer manager.</param>
+        /// <param name="useCache">Optionally enable caching and verify.</param>
+        /// <param name="serviceName">Optionally specifies the backend service name prefix (defaults to <b>vegomatic</b>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task TestHttpsPrefix(string testName, int proxyPort, string network, LoadBalancerManager loadBalancerManager, bool useCache = false, string serviceName = "vegomatic")
+        {
+            // Append a GUID to the test name to ensure that we won't
+            // conflict with what any previous test runs may have loaded
+            // into the cache.
+
+            testName += "-" + Guid.NewGuid().ToString("D");
+
+            // Verify that we can create an HTTP load balancer rule for a 
+            // site on the public port using a specific hostname and then
+            // verify that that the load balancer actual works by spinning
+            // up a [vegomatic] based service to accept the traffic.
+
+            var manager  = hive.GetReachableManager();
+            var hostname = testHostname;
+
+            manager.Connect();
+
+            // Allow self-signed certificates.
+
+            var handler = new HttpClientHandler()
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
+
+            using (var client = new TestHttpClient(disableConnectionReuse: true, handler: handler, disposeHandler: true))
+            {
+                // Add the test certificate.
+
+                hive.Certificate.Set("test-load-balancer", certificate);
+
+                // Setup the client to query the [vegomatic] service through the
+                // proxy without needing to configure a hive DNS entry.
+
+                client.BaseAddress                = new Uri($"https://{manager.PrivateAddress}:{proxyPort}/");
+                client.DefaultRequestHeaders.Host = hostname;
+
+                // Create the load balancer rules, one without a path prefix and
+                // some others, some with intersecting prefixes so we can verify
+                // that the longest prefixes are matched first.
+                //
+                // Each rule's backend will be routed to a service whose name
+                // will be constructed from [testName] plus the prefix with the
+                // slashes replaced with dashes.  Each service will be configured
+                // to return its name.
+
+                var prefixes = new PrefixInfo[]
+                {
+                    new PrefixInfo("/",         $"{serviceName}"),
+                    new PrefixInfo("/foo/",     $"{serviceName}-foo"),
+                    new PrefixInfo("/foo/bar/", $"{serviceName}-foo-bar"),
+                    new PrefixInfo("/foobar/",  $"{serviceName}-foobar"),
+                    new PrefixInfo("/bar/",     $"{serviceName}-bar")
+                };
+
+                // Spin the services up first in parallel (for speed).  Each of
+                // these service will respond to requests with its service name.
+
+                var tasks = new List<Task>();
+
+                foreach (var prefix in prefixes)
+                {
+                    tasks.Add(Task.Run(
+                        () =>
+                        {
+                            manager.SudoCommand($"docker service create --name {prefix.ServiceName} --network {network} --replicas 1 {vegomaticImage} test-server {prefix.ServiceName}").EnsureSuccess();
+                        }));
+                }
+
+                await NeonHelper.WaitAllAsync(tasks);
+
+                // Create the load balancer rules.
+
+                foreach (var prefix in prefixes)
+                {
+                    var rule = new LoadBalancerHttpRule()
+                    {
+                        Name         = prefix.ServiceName,
+                        CheckExpect  = "status 200",
+                        CheckSeconds = 1,
+                    };
+
+                    if (useCache)
+                    {
+                        rule.Cache = new LoadBalancerHttpCache() { Enabled = true };
+                    }
+
+                    var frontend = new LoadBalancerHttpFrontend()
+                        {
+                            Host      = hostname,
+                            ProxyPort = proxyPort,
+                            CertName  = "test-load-balancer"
+                    };
+
+                    if (!string.IsNullOrEmpty(prefix.Path))
+                    {
+                        frontend.PathPrefix = prefix.Path;
+                    }
+
+                    rule.Frontends.Add(frontend);
+
+                    rule.Backends.Add(
+                        new LoadBalancerHttpBackend()
+                        {
+                            Server = prefix.ServiceName,
+                            Port   = 80
+                        });
+
+                    loadBalancerManager.SetRule(rule, deferUpdate: true);
+                }
+
+                loadBalancerManager.Update();
+
+                // Wait for all of the services to report being ready.
+
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        foreach (var prefix in prefixes)
+                        {
+                            try
+                            {
+                                var response = await client.GetAsync(prefix.Path);
+
+                                response.EnsureSuccessStatusCode();
+                            }
+                            catch
+                            {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    },
+                    timeout: TimeSpan.FromSeconds(60),
+                    pollTime: TimeSpan.FromSeconds(1));
+
+                // Give everything a chance to stablize.
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                // Now verify that prefix rules route to the correct backend service.
+
+                foreach (var prefix in prefixes)
+                {
+                    var response = await client.GetAsync($"{prefix.Path}{testName}?expires=60");
+
+                    response.EnsureSuccessStatusCode();
+
+                    var body = await response.Content.ReadAsStringAsync();
+
+                    Assert.Equal(prefix.ServiceName, body.Trim());
+
+                    if (useCache)
+                    {
+                        // Verify that the request routed through Varnish.
+
+                        Assert.True(ViaVarnish(response));
+
+                        // This is the first request using the globally unique [testName]
+                        // so it should not be a cache hit.
+
+                        Assert.False(CacheHit(response));
+                    }
+                }
+
+                // If caching is enabled, perform the requests again to ensure that
+                // we see cache hits.
+
+                if (useCache)
+                {
+                    foreach (var prefix in prefixes)
+                    {
+                        // Request the item again and verify that it was a cache hit.
+
+                        var response = await client.GetAsync($"{prefix.Path}{testName}?expires=60");
+
+                        response.EnsureSuccessStatusCode();
+
+                        var body = await response.Content.ReadAsStringAsync();
+
+                        Assert.Equal(prefix.ServiceName, body.Trim());
+                        Assert.True(CacheHit(response));
+                    }
+                }
+            }
+        }
     }
 }

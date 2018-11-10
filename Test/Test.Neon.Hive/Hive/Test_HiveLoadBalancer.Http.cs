@@ -586,11 +586,11 @@ namespace TestHive
 
                 var prefixes = new PrefixInfo[]
                 {
-                    new PrefixInfo("",         $"{serviceName}"),
-                    new PrefixInfo("/foo",     $"{serviceName}-foo"),
-                    new PrefixInfo("/foo/bar", $"{serviceName}-foo-bar"),
-                    new PrefixInfo("/foobar",  $"{serviceName}-foobar"),
-                    new PrefixInfo("/bar",     $"{serviceName}-bar")
+                    new PrefixInfo("/",         $"{serviceName}"),
+                    new PrefixInfo("/foo/",     $"{serviceName}-foo"),
+                    new PrefixInfo("/foo/bar/", $"{serviceName}-foo-bar"),
+                    new PrefixInfo("/foobar/",  $"{serviceName}-foobar"),
+                    new PrefixInfo("/bar/",     $"{serviceName}-bar")
                 };
 
                 // Spin the services up first in parallel (for speed).  Each of
@@ -608,10 +608,6 @@ namespace TestHive
                 }
 
                 await NeonHelper.WaitAllAsync(tasks);
-
-                // Give everything a chance to stablize.
-
-                await Task.Delay(TimeSpan.FromSeconds(10));
 
                 // Create the load balancer rules.
 
@@ -649,11 +645,12 @@ namespace TestHive
                             Port   = 80
                         });
 
-                    loadBalancerManager.SetRule(rule);
+                    loadBalancerManager.SetRule(rule, deferUpdate: true);
                 }
 
-                // Wait up to two minutes for all of the services to report
-                // being ready and also that requests are correctly routed.
+                loadBalancerManager.Update();
+
+                // Wait for all of the services to report being ready.
 
                 await NeonHelper.WaitForAsync(
                     async () =>
@@ -668,29 +665,42 @@ namespace TestHive
                             }
                             catch
                             {
-                                // Ignorning these.  We'll rely on the timeout to report problems.
+                                return false;
                             }
                         }
 
                         return true;
                     },
-                    timeout: TimeSpan.FromSeconds(120),
+                    timeout: TimeSpan.FromSeconds(60),
                     pollTime: TimeSpan.FromSeconds(1));
 
-                // Now verify that each rule routes to the correct backend service.
+                // Give everything a chance to stablize.
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                // Now verify that prefix rules route to the correct backend service.
 
                 foreach (var prefix in prefixes)
                 {
-                    var prefxPath = prefix.Path;
+                    var response = await client.GetAsync($"{prefix.Path}{testName}?expires=60");
 
-                    if (prefxPath == null || !prefxPath.EndsWith("/"))
-                    {
-                        prefxPath += "/";
-                    }
+                    response.EnsureSuccessStatusCode();
 
-                    var body = await client.GetStringAsync(prefxPath);
+                    var body = await response.Content.ReadAsStringAsync();
 
                     Assert.Equal(prefix.ServiceName, body.Trim());
+
+                    if (useCache)
+                    {
+                        // Verify that the request routed through Varnish.
+
+                        Assert.True(ViaVarnish(response));
+
+                        // This is the first request using the globally unique [testName]
+                        // so it should not be a cache hit.
+
+                        Assert.False(CacheHit(response));
+                    }
                 }
 
                 // If caching is enabled, perform the requests again to ensure that
@@ -700,17 +710,15 @@ namespace TestHive
                 {
                     foreach (var prefix in prefixes)
                     {
-                        // This request should cache the item.
-
-                        var response = await client.GetAsync($"{prefix.Path}?expires=60");
-
-                        response.EnsureSuccessStatusCode();
-
                         // Request the item again and verify that it was a cache hit.
 
-                        response = await client.GetAsync($"{prefix.Path}?expires=60");
+                        var response = await client.GetAsync($"{prefix.Path}{testName}?expires=60");
 
                         response.EnsureSuccessStatusCode();
+
+                        var body = await response.Content.ReadAsStringAsync();
+
+                        Assert.Equal(prefix.ServiceName, body.Trim());
                         Assert.True(CacheHit(response));
                     }
                 }

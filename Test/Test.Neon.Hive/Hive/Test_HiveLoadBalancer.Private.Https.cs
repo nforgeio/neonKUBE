@@ -94,5 +94,33 @@ namespace TestHive
         {
             await TestHttpsMultipleFrontends("https-private-multifrontend-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Prefix_Uncached_DefaultPort()
+        {
+            await TestHttpsPrefix("https-private-prefix-uncached-defaultport", HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: false);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Prefix_Uncached_NonDefaultPort()
+        {
+            await TestHttpPrefix("https-private-prefix-uncached-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: false);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Prefix_Cached_DefaultPort()
+        {
+            await TestHttpsPrefix("https-private-prefix-cached-defaultport", HiveHostPorts.ProxyPrivateHttps, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Https_Private_Prefix_Cached_NonDefaultPort()
+        {
+            await TestHttpsPrefix("https-private-prefix-cached-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateLoadBalancer, useCache: true);
+        }
     }
 }

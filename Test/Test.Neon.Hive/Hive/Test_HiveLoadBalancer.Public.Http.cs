@@ -95,13 +95,32 @@ namespace TestHive
             await TestHttpMultipleFrontends("http-public-multifrontends-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: true);
         }
 
-        //===================================
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Http_Public_Prefix_Uncached_DefaultPort()
+        {
+            await TestHttpPrefix("http-public-prefix-uncached-defaultport", HiveHostPorts.ProxyPublicHttp, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: false);
+        }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Http_Public_Uncached_Prefix_DefaultPort()
+        public async Task Http_Public_Prefix_Uncached_NonDefaultPort()
         {
-            await TestHttpPrefix("http-public-uncached-prefix-defaultport", HiveHostPorts.ProxyPublicHttp, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: false);
+            await TestHttpPrefix("http-public-prefix-uncached-nondefaultport", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: false);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Http_Public_Prefix_Cached_DefaultPort()
+        {
+            await TestHttpPrefix("http-public-prefix-cached-defaultport", HiveHostPorts.ProxyPublicHttp, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: true);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Http_Public_Prefix_Cached_NonDefaultPort()
+        {
+            await TestHttpPrefix("http-public-prefix-cached-nondefaultport", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicLoadBalancer, useCache: true);
         }
     }
 }
