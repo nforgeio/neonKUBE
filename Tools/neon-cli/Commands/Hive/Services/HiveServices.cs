@@ -150,29 +150,29 @@ namespace NeonCli
                         });
 
                     //---------------------------------------------------------
-                    // Initialize the public and private load balancer managers.
+                    // Initialize the public and private traffic director managers.
 
-                    hive.PublicLoadBalancer.UpdateSettings(
-                        new LoadBalancerSettings()
+                    hive.PublicTraffic.UpdateSettings(
+                        new TrafficDirectorSettings()
                         {
                             ProxyPorts = HiveConst.PublicProxyPorts
                         });
 
-                    hive.PrivateLoadBalancer.UpdateSettings(
-                        new LoadBalancerSettings()
+                    hive.PrivateTraffic.UpdateSettings(
+                        new TrafficDirectorSettings()
                         {
                             ProxyPorts = HiveConst.PrivateProxyPorts
                         });
 
                     //---------------------------------------------------------
-                    // Deploy the HiveMQ load balancer rules.
+                    // Deploy the HiveMQ traffic director rules.
 
-                    hive.FirstManager.InvokeIdempotentAction("setup/hivemq-loadbalancer",
+                    hive.FirstManager.InvokeIdempotentAction("setup/hivemq-traffic-director-rules",
                         () =>
                         {
-                            // Deploy private load balancer for the AMPQ endpoints.
+                            // Deploy private traffic director for the AMPQ endpoints.
 
-                            var ampqRule = new LoadBalancerTcpRule()
+                            var ampqRule = new TrafficDirectorTcpRule()
                             {
                                 Name     = "neon-hivemq-ampq",
                                 System   = true,
@@ -180,24 +180,24 @@ namespace NeonCli
                             };
 
                             ampqRule.Frontends.Add(
-                                new LoadBalancerTcpFrontend()
+                                new TrafficDirectorTcpFrontend()
                                 {
                                     ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMPQ
                                 });
 
                             ampqRule.Backends.Add(
-                                new LoadBalancerTcpBackend()
+                                new TrafficDirectorTcpBackend()
                                 {
                                     Group      = HiveHostGroups.HiveMQ,
                                     GroupLimit = 5,
                                     Port       = HiveHostPorts.HiveMQAMPQ
                                 });
 
-                            hive.PrivateLoadBalancer.SetRule(ampqRule);
+                            hive.PrivateTraffic.SetRule(ampqRule);
 
-                            // Deploy private load balancer for the management endpoints.
+                            // Deploy private traffic director for the management endpoints.
 
-                            var adminRule = new LoadBalancerHttpRule()
+                            var adminRule = new TrafficDirectorHttpRule()
                             {
                                 Name     = "neon-hivemq-management",
                                 System   = true,
@@ -207,20 +207,20 @@ namespace NeonCli
                             // Initialize the frontends and backends.
 
                             adminRule.Frontends.Add(
-                                new LoadBalancerHttpFrontend()
+                                new TrafficDirectorHttpFrontend()
                                 {
                                     ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAdmin
                                 });
 
                             adminRule.Backends.Add(
-                                new LoadBalancerHttpBackend()
+                                new TrafficDirectorHttpBackend()
                                 {
                                     Group      = HiveHostGroups.HiveMQManagers,
                                     GroupLimit = 5,
                                     Port       = HiveHostPorts.HiveMQManagement
                                 });
 
-                            hive.PrivateLoadBalancer.SetRule(adminRule);
+                            hive.PrivateTraffic.SetRule(adminRule);
                         });
 
                     //---------------------------------------------------------

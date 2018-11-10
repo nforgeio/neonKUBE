@@ -74,8 +74,8 @@ namespace Neon.Hive
             /// <param name="useBootstrap">
             /// Optionally specifies that the settings returned should directly
             /// reference to the HiveMQ cluster nodes rather than routing traffic
-            /// through the <b>private</b> load balancer.  This is used internally
-            /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+            /// through the <b>private</b> traffic director.  This is used internally
+            /// to resolve chicken-and-the-egg dilemmas for the traffic director and
             /// proxy implementations that rely on HiveMQ messaging.
             /// </param>
             public HiveBus NeonHiveBus(bool useBootstrap = false)
@@ -208,8 +208,8 @@ namespace Neon.Hive
             /// <param name="useBootstrap">
             /// Optionally specifies that the settings returned should directly
             /// reference to the HiveMQ cluster nodes rather than routing traffic
-            /// through the <b>private</b> load balancer.  This is used internally
-            /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+            /// through the <b>private</b> traffic director.  This is used internally
+            /// to resolve chicken-and-the-egg dilemmas for the traffic director and
             /// proxy implementations that rely on HiveMQ messaging.
             /// </param>
             /// <param name="publishOnly">
@@ -270,8 +270,8 @@ namespace Neon.Hive
         /// <param name="useBootstrap">
         /// Optionally specifies that the client returned should connect
         /// directly to the HiveMQ cluster nodes rather than routing traffic
-        /// through the <b>private</b> load balancer.  This is used internally
-        /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+        /// through the <b>private</b> traffic director.  This is used internally
+        /// to resolve chicken-and-the-egg dilemmas for the traffic director and
         /// proxy implementations that rely on HiveMQ messaging.
         /// </param>
         public ManagementClient ConnectHiveMQManager(bool useBootstrap = false)
@@ -306,8 +306,8 @@ namespace Neon.Hive
         /// <param name="useBootstrap">
         /// Optionally specifies that the settings returned should directly
         /// reference to the HiveMQ cluster nodes rather than routing traffic
-        /// through the <b>private</b> load balancer.  This is used internally
-        /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+        /// through the <b>private</b> traffic director.  This is used internally
+        /// to resolve chicken-and-the-egg dilemmas for the traffic director and
         /// proxy implementations that rely on HiveMQ messaging.
         /// </param>
         /// <exception cref="HiveException">Thrown if the required global setting is not present.</exception>
@@ -339,8 +339,8 @@ namespace Neon.Hive
         /// <param name="useBootstrap">
         /// Optionally specifies that the settings returned should directly
         /// reference to the HiveMQ cluster nodes rather than routing traffic
-        /// through the <b>private</b> load balancer.  This is used internally
-        /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+        /// through the <b>private</b> traffic director.  This is used internally
+        /// to resolve chicken-and-the-egg dilemmas for the traffic director and
         /// proxy implementations that rely on HiveMQ messaging.
         /// </param>
         /// <exception cref="HiveException">Thrown if the required global setting is not present.</exception>
@@ -372,8 +372,8 @@ namespace Neon.Hive
         /// <param name="useBootstrap">
         /// Optionally specifies that the settings returned should directly
         /// reference to the HiveMQ cluster nodes rather than routing traffic
-        /// through the <b>private</b> load balancer.  This is used internally
-        /// to resolve chicken-and-the-egg dilemmas for the load balancer and
+        /// through the <b>private</b> traffic director.  This is used internally
+        /// to resolve chicken-and-the-egg dilemmas for the traffic director and
         /// proxy implementations that rely on HiveMQ messaging.
         /// </param>
         /// <exception cref="HiveException">Thrown if the required global setting is not present.</exception>
@@ -399,7 +399,7 @@ namespace Neon.Hive
         /// <para>
         /// <b>INTERNAL USE ONLY:</b> Returns the bootstrap <see cref="HiveMQSettings"/> 
         /// for the <see cref="HiveConst.HiveMQNeonVHost"/> that directly reference the HiveMQ
-        /// nodes rather than load balancer rules.
+        /// nodes rather than traffic director rules.
         /// </para>
         /// <para>
         /// This works by obtaining the bootstrap settings from the Consul <see cref="HiveGlobals.HiveMQSettingsBootstrap"/>

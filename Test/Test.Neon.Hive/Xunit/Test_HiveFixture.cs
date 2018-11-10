@@ -81,23 +81,23 @@ services:
                     },
                     () =>
                     {
-                        var publicRule = new LoadBalancerTcpRule();
+                        var publicRule = new TrafficDirectorTcpRule();
 
                         publicRule.Name = "test-rule";
-                        publicRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPublicFirstUserPort });
-                        publicRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
+                        publicRule.Frontends.Add(new TrafficDirectorTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPublicFirstUserPort });
+                        publicRule.Backends.Add(new TrafficDirectorTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-                        hive.PutLoadBalancerRule("public", publicRule);
+                        hive.PutTrafficDirectorRule("public", publicRule);
                     },
                     () =>
                     {
-                        var privateRule = new LoadBalancerTcpRule();
+                        var privateRule = new TrafficDirectorTcpRule();
 
                         privateRule.Name = "test-rule";
-                        privateRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPrivateFirstUserPort });
-                        privateRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
+                        privateRule.Frontends.Add(new TrafficDirectorTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPrivateFirstUserPort });
+                        privateRule.Backends.Add(new TrafficDirectorTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-                        hive.PutLoadBalancerRule("private", privateRule);
+                        hive.PutTrafficDirectorRule("private", privateRule);
                         hive.PutCertificate("test-certificate", TestCertificate.CombinedPem);
                         hive.SetSelfSignedCertificate("test-certificate2", "*.foo.com");
                     },
@@ -138,11 +138,11 @@ services:
             Assert.Equal(1, stack.ServiceCount);
             Assert.Single(hiveFixture.ListServices().Where(item => item.Name.Equals("test-stack_sleeper")));
 
-            Assert.Single(hiveFixture.ListLoadBalancerRules("public"));
-            Assert.Single(hiveFixture.ListLoadBalancerRules("public").Where(item => item.Name == "test-rule"));
+            Assert.Single(hiveFixture.ListTrafficDirectors("public"));
+            Assert.Single(hiveFixture.ListTrafficDirectors("public").Where(item => item.Name == "test-rule"));
 
-            Assert.Single(hiveFixture.ListLoadBalancerRules("private"));
-            Assert.Single(hiveFixture.ListLoadBalancerRules("private").Where(item => item.Name == "test-rule"));
+            Assert.Single(hiveFixture.ListTrafficDirectors("private"));
+            Assert.Single(hiveFixture.ListTrafficDirectors("private").Where(item => item.Name == "test-rule"));
 
             Assert.Equal(2, hiveFixture.ListCertificates().Count);
             Assert.Single(hiveFixture.ListCertificates().Where(item => item == "test-certificate"));
@@ -169,8 +169,8 @@ services:
             Assert.Empty(hiveFixture.ListSecrets());
             Assert.Empty(hiveFixture.ListConfigs());
             Assert.Empty(hiveFixture.ListNetworks());
-            Assert.Empty(hiveFixture.ListLoadBalancerRules("public"));
-            Assert.Empty(hiveFixture.ListLoadBalancerRules("private"));
+            Assert.Empty(hiveFixture.ListTrafficDirectors("public"));
+            Assert.Empty(hiveFixture.ListTrafficDirectors("private"));
             Assert.Empty(hiveFixture.ListCertificates());
 
             Assert.False(hiveFixture.Consul.KV.Exists("test/value1").Result);

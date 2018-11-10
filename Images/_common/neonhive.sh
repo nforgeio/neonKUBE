@@ -304,7 +304,7 @@ export HiveHostPorts_HiveMQDIST=5011
 export HiveHostPorts_HiveMQManagement=5012
 
 # This port is reserved and must not be assigned to any service.  This is
-# currently referenced by the manager load balancer rule for Azure deployments
+# currently referenced by the manager traffic director rule for Azure deployments
 # and it must not actually host a service.  See the [AzureHostingManager]
 # source code for more information.
 export HiveHostPorts_ReservedUnused=5099

@@ -45,7 +45,7 @@ namespace TestHive
             // Docker registries which don't exist at this point.  The simple
             // solution would be to deploy these locally as simple services
             // using the [neon-registry] image, install a certificate, setup
-            // a hive DNS host, and add a load balancer rule.
+            // a hive DNS host, and add a traffic director rule.
 
             // Verify that we can set, update, list, and remove Docker
             // registry credentials persisted to the hive Vault.

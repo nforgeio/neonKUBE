@@ -110,7 +110,7 @@
     <None Include="neon-cli\modules\neon_docker_config.sh" />
     <None Include="neon-cli\modules\neon_docker_service.sh" />
     <None Include="neon-cli\modules\neon_docker_login.sh" />
-    <None Include="neon-cli\modules\neon_load_balancer.sh" />
+    <None Include="neon-cli\modules\neon_traffic_director.sh" />
     <None Include="neon-hive-manager\build.ps1" />
     <None Include="neon-hive-manager\docker-entrypoint.sh" />
     <None Include="neon-hive-manager\Dockerfile">

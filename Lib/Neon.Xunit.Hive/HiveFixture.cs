@@ -3,29 +3,23 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
+using Consul;
+using EasyNetQ;
+using EasyNetQ.Management.Client;
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.Hive;
+using Neon.HiveMQ;
+using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Consul;
-using EasyNetQ;
-using EasyNetQ.Management.Client;
-using RabbitMQ;
-using RabbitMQ.Client;
-using YamlDotNet.RepresentationModel;
 using Xunit;
-
-using Neon.Common;
-using Neon.Cryptography;
-using Neon.Hive;
-using Neon.HiveMQ;
-using Neon.Xunit;
 
 // $todo(jeff.lill):
 //
@@ -177,12 +171,12 @@ namespace Neon.Xunit.Hive
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Load Balancer Rules</b></term>
+    ///     <term><b>Traffic Director Rules</b></term>
     ///     <description>
-    ///     <see cref="ClearLoadBalancers(bool)"/><br/>
-    ///     <see cref="ListLoadBalancerRules(string, bool)"/><br/>
-    ///     <see cref="PutLoadBalancerRule(string, LoadBalancerRule, bool)"/><br/>
-    ///     <see cref="RemoveLoadBalancerRule(string, string, bool)"/><br/>
+    ///     <see cref="ClearTrafficDirectors(bool)"/><br/>
+    ///     <see cref="ListTrafficDirectors(string, bool)"/><br/>
+    ///     <see cref="PutTrafficDirectorRule(string, TrafficDirectorRule, bool)"/><br/>
+    ///     <see cref="RemoveTrafficDirectorRule(string, string, bool)"/><br/>
     ///     </description>
     /// </item>
     /// <item>
@@ -715,7 +709,7 @@ namespace Neon.Xunit.Hive
                         ClearServices();
                      // () => ClearContainers()     // Not implemented yet
                     },
-                    () => ClearLoadBalancers(),
+                    () => ClearTrafficDirectors(),
                 });
 
             // We're clearing these after the services and stacks so
@@ -1089,14 +1083,14 @@ namespace Neon.Xunit.Hive
         // Load balancers/rules
 
         /// <summary>
-        /// Persists a load balancer rule object to the hive.
+        /// Persists a traffic director rule object to the hive.
         /// </summary>
-        /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="directorName">The traffic director name (<b>public</b> or <b>private</b>).</param>
         /// <param name="rule">The rule.</param>
         /// <param name="deferUpdate">
         /// <para>
         /// Optionally defers expicitly notifying the <b>neon-proxy-manager</b> of the
-        /// change until <see cref="LoadBalancerManager.Update()"/> is called or the <b>neon-proxy-manager</b>
+        /// change until <see cref="TrafficManager.Update()"/> is called or the <b>neon-proxy-manager</b>
         /// performs the periodic check for changes (which defaults to 60 seconds).  You
         /// may consider passing <paramref name="deferUpdate"/><c>=true</c> when you are
         /// modifying a multiple rules at the same time to avoid making the proxy manager
@@ -1104,31 +1098,31 @@ namespace Neon.Xunit.Hive
         /// </para>
         /// <para>
         /// Instead, you could pass <paramref name="deferUpdate"/><c>=true</c> for all of
-        /// the rule changes and then call <see cref="LoadBalancerManager.Update()"/> afterwards.
+        /// the rule changes and then call <see cref="TrafficManager.Update()"/> afterwards.
         /// </para>
         /// </param>
-        public void PutLoadBalancerRule(string loadBalancerName, LoadBalancerRule rule, bool deferUpdate = false)
+        public void PutTrafficDirectorRule(string directorName, TrafficDirectorRule rule, bool deferUpdate = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancerName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
             Covenant.Requires<ArgumentNullException>(rule != null);
 
             base.CheckDisposed();
             this.CheckCluster();
 
-            var loadBalancer = hive.GetLoadBalancerManager(loadBalancerName);
+            var trafficManager = hive.GetTrafficManager(directorName);
 
-            loadBalancer.SetRule(rule, deferUpdate: deferUpdate);
+            trafficManager.SetRule(rule, deferUpdate: deferUpdate);
         }
 
         /// <summary>
-        /// Persists a load balancer rule described as JSON or YAML text to the hive.
+        /// Persists a traffic director rule described as JSON or YAML text to the hive.
         /// </summary>
-        /// <param name="loadBalancer">The load balancer name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="directorName">The traffic director name (<b>public</b> or <b>private</b>).</param>
         /// <param name="jsonOrYaml">The route JSON or YAML description.</param>
         /// <param name="deferUpdate">
         /// <para>
         /// Optionally defers expicitly notifying the <b>neon-proxy-manager</b> of the
-        /// change until <see cref="LoadBalancerManager.Update()"/> is called or the <b>neon-proxy-manager</b>
+        /// change until <see cref="TrafficManager.Update()"/> is called or the <b>neon-proxy-manager</b>
         /// performs the periodic check for changes (which defaults to 60 seconds).  You
         /// may consider passing <paramref name="deferUpdate"/><c>=true</c> when you are
         /// modifying a multiple rules at the same time to avoid making the proxy manager
@@ -1136,38 +1130,38 @@ namespace Neon.Xunit.Hive
         /// </para>
         /// <para>
         /// Instead, you could pass <paramref name="deferUpdate"/><c>=true</c> for all of
-        /// the rule changes and then call <see cref="LoadBalancerManager.Update()"/> afterwards.
+        /// the rule changes and then call <see cref="TrafficManager.Update()"/> afterwards.
         /// </para>
         /// </param>
-        public void PutLoadBalancerRule(string loadBalancer, string jsonOrYaml, bool deferUpdate = false)
+        public void PutTrafficDirectorRule(string directorName, string jsonOrYaml, bool deferUpdate = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancer));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
 
             base.CheckDisposed();
             this.CheckCluster();
 
-            var loadbalancer = hive.GetLoadBalancerManager(loadBalancer);
-            var rule         = LoadBalancerRule.Parse(jsonOrYaml);
+            var directorManager = hive.GetTrafficManager(directorName);
+            var rule            = TrafficDirectorRule.Parse(jsonOrYaml);
 
-            loadbalancer.SetRule(rule);
+            directorManager.SetRule(rule);
         }
 
         /// <summary>
-        /// Lists load balancer rules.
+        /// Lists traffic director rules.
         /// </summary>
-        /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="directorName">The traffic director name (<b>public</b> or <b>private</b>).</param>
         /// <param name="includeSystem">Optionally include built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
-        /// <returns>The rules for the named load balancer.</returns>
-        public List<LoadBalancerRule> ListLoadBalancerRules(string loadBalancerName, bool includeSystem = false)
+        /// <returns>The rules for the named traffic director.</returns>
+        public List<TrafficDirectorRule> ListTrafficDirectors(string directorName, bool includeSystem = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancerName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
 
             base.CheckDisposed();
             this.CheckCluster();
 
-            var loadbalancer = hive.GetLoadBalancerManager(loadBalancerName);
-            var rules        = loadbalancer.ListRules();
+            var trafficManager = hive.GetTrafficManager(directorName);
+            var rules          = trafficManager.ListRules();
 
             if (includeSystem)
             {
@@ -1180,14 +1174,14 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Removes a load balancer rule.
+        /// Removes a traffic director rule.
         /// </summary>
-        /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="directorName">The traffic director name (<b>public</b> or <b>private</b>).</param>
         /// <param name="name">The rule name.</param>
         /// <param name="deferUpdate">
         /// <para>
         /// Optionally defers expicitly notifying the <b>neon-proxy-manager</b> of the
-        /// change until <see cref="LoadBalancerManager.Update()"/> is called or the <b>neon-proxy-manager</b>
+        /// change until <see cref="TrafficManager.Update()"/> is called or the <b>neon-proxy-manager</b>
         /// performs the periodic check for changes (which defaults to 60 seconds).  You
         /// may consider passing <paramref name="deferUpdate"/><c>=true</c> when you are
         /// modifying a multiple rules at the same time to avoid making the proxy manager
@@ -1195,24 +1189,24 @@ namespace Neon.Xunit.Hive
         /// </para>
         /// <para>
         /// Instead, you could pass <paramref name="deferUpdate"/><c>=true</c> for all of
-        /// the rule changes and then call <see cref="LoadBalancerManager.Update()"/> afterwards.
+        /// the rule changes and then call <see cref="TrafficManager.Update()"/> afterwards.
         /// </para>
         /// </param>
-        public void RemoveLoadBalancerRule(string loadBalancerName, string name, bool deferUpdate = false)
+        public void RemoveTrafficDirectorRule(string directorName, string name, bool deferUpdate = false)
         {
-            Covenant.Requires<ArgumentNullException>((bool)!string.IsNullOrEmpty(loadBalancerName));
+            Covenant.Requires<ArgumentNullException>((bool)!string.IsNullOrEmpty(directorName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
             base.CheckDisposed();
             this.CheckCluster();
 
-            var loadBalancer = hive.GetLoadBalancerManager(loadBalancerName);
+            var trafficManager = hive.GetTrafficManager(directorName);
 
-            loadBalancer.RemoveRule(name, deferUpdate);
+            trafficManager.RemoveRule(name, deferUpdate);
         }
 
         /// <summary>
-        /// Removes all load balancer rules.
+        /// Removes all traffic director rules.
         /// </summary>
         /// <param name="removeSystem">Optionally remove system rules as well.</param>
         /// <remarks>
@@ -1226,23 +1220,23 @@ namespace Neon.Xunit.Hive
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </para>
         /// </remarks>
-        public void ClearLoadBalancers(bool removeSystem = false)
+        public void ClearTrafficDirectors(bool removeSystem = false)
         {
             var deletions = false;
 
-            foreach (var loadBalancer in new string[] { "public", "private" })
+            foreach (var trafficManagerName in new string[] { "public", "private" })
             {
-                foreach (var route in ListLoadBalancerRules(loadBalancer, removeSystem))
+                foreach (var route in ListTrafficDirectors(trafficManagerName, removeSystem))
                 {
-                    RemoveLoadBalancerRule(loadBalancer, route.Name, deferUpdate: true);
+                    RemoveTrafficDirectorRule(trafficManagerName, route.Name, deferUpdate: true);
                     deletions = true;
                 }
             }
 
             if (deletions)
             {
-                hive.PublicLoadBalancer.Update();
-                hive.PrivateLoadBalancer.Update();
+                hive.PublicTraffic.Update();
+                hive.PrivateTraffic.Update();
             }
         }
 

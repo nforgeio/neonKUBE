@@ -38,7 +38,7 @@ namespace NeonHiveManager
         /// service which will then regenerate the public and private proxy related configurations.  This
         /// is a fail-safe that ensures that the proxy configurations will eventually converge, even when
         /// proxy change notifications may have been lost somehow.  This also provides an opportunity for
-        /// <b>neon-proxy-manager</b> to verify the load balancer rules for correctness and also to check
+        /// <b>neon-proxy-manager</b> to verify the traffic director rules for correctness and also to check
         /// for expired or expiring TLS certificates so that warnings can be logged.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>

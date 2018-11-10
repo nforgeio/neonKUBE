@@ -288,7 +288,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// For cloud deployments, the <b>neon-cli</b> will set this to IP address or
-        /// FQDN of the public hive load balancer responsible for forwarding traffic
+        /// FQDN of the public hive traffic director responsible for forwarding traffic
         /// to the manager nodes.
         /// </para>
         /// <para>
@@ -309,7 +309,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// For cloud deployments, the <b>neon-cli</b> will set this to IP address or
-        /// FQDN of the public hive load balancer responsible for forwarding traffic
+        /// FQDN of the public hive traffic director responsible for forwarding traffic
         /// to the worker nodes.
         /// </para>
         /// <para>

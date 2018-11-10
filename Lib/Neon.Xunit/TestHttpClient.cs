@@ -26,7 +26,7 @@ namespace Neon.Xunit
     /// <summary>
     /// Implements a <see cref="HttpClient"/> compatible client with additional capabilities,
     /// like disabling connection reuse.  This is intended for unit testing purposes like
-    /// verifying that load balancing actual works.
+    /// verifying that load balancing actually works.
     /// </summary>
     public class TestHttpClient : IDisposable
     {

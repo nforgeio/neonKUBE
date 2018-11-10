@@ -69,7 +69,7 @@ namespace Neon.HiveMQ
         /// The RabbitMQ client will use this to discover the remaining nodes.  It is a best 
         /// practice to specify multiple nodes in a clustered environment to avoid initial
         /// connection problems when any single node is down or to your RabbitMQ nodes
-        /// hosted behind a load balancer.
+        /// hosted behind a traffic director.
         /// </remarks>
         [JsonProperty(PropertyName = "AmqpHosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

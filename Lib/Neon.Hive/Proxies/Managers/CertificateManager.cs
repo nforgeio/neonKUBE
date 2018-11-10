@@ -50,7 +50,7 @@ namespace Neon.Hive
             Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(name));
 
             hive.Vault.Client.DeleteAsync(HiveHelper.GetVaultCertificateKey(name)).Wait();
-            hive.SignalLoadBalancerUpdate();
+            hive.SignalTrafficDirectorUpdate();
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Neon.Hive
             Covenant.Requires<ArgumentNullException>(certificate != null);
 
             hive.Vault.Client.WriteJsonAsync(HiveHelper.GetVaultCertificateKey(name), certificate).Wait();
-            hive.SignalLoadBalancerUpdate();
+            hive.SignalTrafficDirectorUpdate();
         }
 
         /// <summary>

@@ -207,11 +207,11 @@ namespace NeonCli
 
                             }).Wait();
 
-                        // Set the Kibana load balancer rule.
+                        // Set the Kibana traffic director rule.
 
-                        firstManager.Status = "kibana load balancer rule";
+                        firstManager.Status = "kibana traffic director rule";
 
-                        var rule = new LoadBalancerHttpRule()
+                        var rule = new TrafficDirectorHttpRule()
                         {
                             Name     = "neon-log-kibana",
                             System   = true,
@@ -220,19 +220,19 @@ namespace NeonCli
                         };
 
                         rule.Frontends.Add(
-                            new LoadBalancerHttpFrontend()
+                            new TrafficDirectorHttpFrontend()
                             {
                                 ProxyPort = HiveHostPorts.ProxyPrivateKibanaDashboard
                             });
 
                         rule.Backends.Add(
-                            new LoadBalancerHttpBackend()
+                            new TrafficDirectorHttpBackend()
                             {
                                 Server = "neon-log-kibana",
                                 Port   = NetworkPorts.Kibana
                             });
 
-                        hive.PrivateLoadBalancer.SetRule(rule);
+                        hive.PrivateTraffic.SetRule(rule);
 
                         firstManager.Status = string.Empty;
                     }
@@ -349,7 +349,7 @@ namespace NeonCli
             steps.Add(ActionStep.Create(hive.FirstManager.Name, "setup/elasticsearch-lbrule",
                 node =>
                 {
-                    var rule = new LoadBalancerHttpRule()
+                    var rule = new TrafficDirectorHttpRule()
                     {
                         Name     = "neon-log-esdata",
                         System   = true,
@@ -358,7 +358,7 @@ namespace NeonCli
                     };
 
                     rule.Frontends.Add(
-                        new LoadBalancerHttpFrontend()
+                        new TrafficDirectorHttpFrontend()
                         {
                             ProxyPort = HiveHostPorts.ProxyPrivateHttpLogEsData
                         });
@@ -366,14 +366,14 @@ namespace NeonCli
                     foreach (var esNode in esNodes)
                     {
                         rule.Backends.Add(
-                            new LoadBalancerHttpBackend()
+                            new TrafficDirectorHttpBackend()
                             {
                                 Server = esNode.Metadata.PrivateAddress.ToString(),
                                 Port = HiveHostPorts.LogEsDataHttp
                             });
                     }
 
-                    hive.PrivateLoadBalancer.SetRule(rule);
+                    hive.PrivateTraffic.SetRule(rule);
                 }));
 
             // Wait for the elasticsearch cluster to become ready and then save the
@@ -497,17 +497,17 @@ namespace NeonCli
                     "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
                     ServiceHelper.ImagePlaceholderArg));
 
-            // Deploy the [neon-log-collector] load balancer rule.
+            // Deploy the [neon-log-collector] traffic director rule.
 
             steps.Add(ActionStep.Create(hive.FirstManager.Name, "setup/neon-log-collection-lbrule",
                 node =>
                 {
-                    node.Status = "set neon-log-collector load balancer rule";
+                    node.Status = "set neon-log-collector traffic director rule";
 
                     // Configure a private hive proxy TCP route so the [neon-log-host] containers
                     // will be able to reach the collectors.
 
-                    var rule = new LoadBalancerTcpRule()
+                    var rule = new TrafficDirectorTcpRule()
                     {
                         Name   = "neon-log-collector",
                         System = true,
@@ -515,19 +515,19 @@ namespace NeonCli
                     };
 
                     rule.Frontends.Add(
-                        new LoadBalancerTcpFrontend()
+                        new TrafficDirectorTcpFrontend()
                         {
                             ProxyPort = HiveHostPorts.ProxyPrivateTcpLogCollector
                         });
 
                     rule.Backends.Add(
-                        new LoadBalancerTcpBackend()
+                        new TrafficDirectorTcpBackend()
                         {
                             Server = "neon-log-collector",
                             Port   = NetworkPorts.TDAgentForward
                         });
 
-                    hive.PrivateLoadBalancer.SetRule(rule);
+                    hive.PrivateTraffic.SetRule(rule);
                 }));
         }
 

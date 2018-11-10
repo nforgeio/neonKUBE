@@ -69,7 +69,7 @@ namespace Neon.Docker
         public List<ServiceNetwork> Networks { get; set; }
 
         /// <summary>
-        /// Service endpoint and load balancer settings.
+        /// Service endpoint and Docker load balancer settings.
         /// </summary>
         [JsonProperty(PropertyName = "EndpointSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]

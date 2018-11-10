@@ -151,7 +151,7 @@ namespace NeonHiveManager
 
                         // We're passing [useBootstrap=true] here so that the HiveMQ client will
                         // connect directly to the HiveMQ cluster nodes as opposed to routing
-                        // traffic through the private load balancer.  This is necessary because
+                        // traffic through the private traffic director.  This is necessary because
                         // the load balancers rely on HiveMQ to broadcast update notifications.
                         //
                         // One consequence of this is that this service will need to be restarted

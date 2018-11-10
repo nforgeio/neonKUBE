@@ -66,7 +66,7 @@ namespace Neon.Hive
         /// <returns>A <b>(string Address, int Port)</b> tuple.</returns>
         /// <remarks>
         /// Hosting platforms such as Azure that may not assign public IP addresses
-        /// to hive nodes will return the IP address of the load balancer and
+        /// to hive nodes will return the IP address of the traffic director and
         /// a temporary NAT port for the node.
         /// </remarks>
         (string Address, int Port) GetSshEndpoint(string nodeName);

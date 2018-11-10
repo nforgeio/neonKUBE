@@ -264,7 +264,7 @@ namespace NeonProxyCache
         }
 
         /// <summary>
-        /// Configures Varnish based on the current load balancer configuration.
+        /// Configures Varnish based on the current traffic director configuration.
         /// </summary>
         /// <remarks>
         /// This method will terminate the service if Varnish could not be started

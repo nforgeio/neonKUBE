@@ -52,8 +52,8 @@ namespace Neon.Hive
         /// Optionally specifies that the instance should use the HiveMQ client
         /// should directly eference to the HiveMQ cluster nodes for broadcasting
         /// proxy update messages rather than routing traffic through the <b>private</b>
-        /// load balancer.  This is used internally to resolve chicken-and-the-egg
-        /// dilemmas for the load balancer and proxy implementations that rely on
+        /// traffic director.  This is used internally to resolve chicken-and-the-egg
+        /// dilemmas for the traffic director and proxy implementations that rely on
         /// HiveMQ messaging.
         /// </param>
         /// <param name="defaultRunOptions">
@@ -100,8 +100,8 @@ namespace Neon.Hive
         /// Optionally specifies that the instance should use the HiveMQ client
         /// should directly eference to the HiveMQ cluster nodes for broadcasting
         /// proxy update messages rather than routing traffic through the <b>private</b>
-        /// load balancer.  This is used internally to resolve chicken-and-the-egg
-        /// dilemmas for the load balancer and proxy implementations that rely on
+        /// traffic director.  This is used internally to resolve chicken-and-the-egg
+        /// dilemmas for the traffic director and proxy implementations that rely on
         /// HiveMQ messaging.
         /// </param>
         /// <param name="defaultRunOptions">
@@ -158,27 +158,27 @@ namespace Neon.Hive
                     };
             }
 
-            this.Definition          = hiveDefinition;
-            this.HiveLogin           = new HiveLogin();
-            this.useBootstrap        = useBootstrap;
-            this.defaultRunOptions   = defaultRunOptions;
-            this.nodeProxyCreator    = nodeProxyCreator;
-            this.appendLog           = appendLog;
-            this.Headend             = new HeadendClient();
+            this.Definition        = hiveDefinition;
+            this.HiveLogin         = new HiveLogin();
+            this.useBootstrap      = useBootstrap;
+            this.defaultRunOptions = defaultRunOptions;
+            this.nodeProxyCreator  = nodeProxyCreator;
+            this.appendLog         = appendLog;
+            this.Headend           = new HeadendClient();
 
             // Initialize the managers.
 
-            this.Docker              = new DockerManager(this);
-            this.Certificate         = new CertificateManager(this);
-            this.Dashboard           = new DashboardManager(this);
-            this.Dns                 = new DnsManager(this);
-            this.PublicLoadBalancer  = new LoadBalancerManager(this, "public", useBootstrap: useBootstrap);
-            this.PrivateLoadBalancer = new LoadBalancerManager(this, "private", useBootstrap: useBootstrap);
-            this.Registry            = new RegistryManager(this);
-            this.Globals             = new GlobalsManager(this);
-            this.Consul              = new ConsulManager(this);
-            this.Vault               = new VaultManager(this);
-            this.HiveMQ              = new HiveMQManager(this);
+            this.Docker            = new DockerManager(this);
+            this.Certificate       = new CertificateManager(this);
+            this.Dashboard         = new DashboardManager(this);
+            this.Dns               = new DnsManager(this);
+            this.PublicTraffic     = new TrafficManager(this, "public", useBootstrap: useBootstrap);
+            this.PrivateTraffic    = new TrafficManager(this, "private", useBootstrap: useBootstrap);
+            this.Registry          = new RegistryManager(this);
+            this.Globals           = new GlobalsManager(this);
+            this.Consul            = new ConsulManager(this);
+            this.Vault             = new VaultManager(this);
+            this.HiveMQ            = new HiveMQManager(this);
 
             CreateNodes();
         }
@@ -282,14 +282,14 @@ namespace Neon.Hive
         public DnsManager Dns { get; private set; }
 
         /// <summary>
-        /// Manages the hive's public load balancer.
+        /// Manages the hive's public traffic director.
         /// </summary>
-        public LoadBalancerManager PublicLoadBalancer { get; private set; }
+        public TrafficManager PublicTraffic { get; private set; }
 
         /// <summary>
-        /// Manages the hive's private load balancer.
+        /// Manages the hive's private traffic director.
         /// </summary>
-        public LoadBalancerManager PrivateLoadBalancer { get; private set; }
+        public TrafficManager PrivateTraffic { get; private set; }
 
         /// <summary>
         /// Manages the hive's Docker registry credentials and local registry.
@@ -322,10 +322,10 @@ namespace Neon.Hive
         public HeadendClient Headend { get; private set; }
 
         /// <summary>
-        /// Returns the named load balancer manager.
+        /// Returns the named traffic director manager.
         /// </summary>
-        /// <param name="name">The load balancer name (one of <b>public</b> or <b>private</b>).</param>
-        public LoadBalancerManager GetLoadBalancerManager(string name)
+        /// <param name="name">The traffic director name (one of <b>public</b> or <b>private</b>).</param>
+        public TrafficManager GetTrafficManager(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
@@ -333,11 +333,11 @@ namespace Neon.Hive
             {
                 case "public":
 
-                    return PublicLoadBalancer;
+                    return PublicTraffic;
 
                 case "private":
 
-                    return PrivateLoadBalancer;
+                    return PrivateTraffic;
 
                 default:
 
@@ -554,14 +554,14 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Indicates that the hive certificates and or load balancer rules may have been changed.
+        /// Indicates that the hive certificates and or traffic director rules may have been changed.
         /// This has the effect of signalling <b>neon-proxy-manager</b> to regenerate the proxy 
         /// definitions and update all of the load balancers when changes are detected.
         /// </summary>
-        public void SignalLoadBalancerUpdate()
+        public void SignalTrafficDirectorUpdate()
         {
-            PublicLoadBalancer.Update();
-            PrivateLoadBalancer.Update();
+            PublicTraffic.Update();
+            PrivateTraffic.Update();
         }
 
         /// <summary>

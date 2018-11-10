@@ -45,10 +45,10 @@ namespace Neon.Hive
     /// </para>
     /// <para>
     /// This is typically used to route external TCP or UDP traffic to the
-    /// hive's <b>neon-proxy-public</b> via the Docker ingress network during
+    /// hive's public traffic director via the Docker ingress network during
     /// hive setup, by configuring a load balancer to balance traffic across
     /// all Docker nodes.  The ingress network will take care of forwarding traffic
-    /// to the <b>neon-proxy-public</b> instances which will handle SSL termination
+    /// to the public traffic director instances which will handle SSL termination
     /// (if required) and then forward traffic onto the target Docker service.
     /// </para>
     /// </remarks>

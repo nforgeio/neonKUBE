@@ -476,8 +476,8 @@ fi
             progress?.Invoke($"Adding hive DNS host entry for [{hostname}] (60 seconds).");
             hive.Dns.Set(GetRegistryDnsEntry(hostname), waitUntilPropagated: true);
 
-            progress?.Invoke($"Writing load balancer rule.");
-            hive.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
+            progress?.Invoke($"Writing traffic director rule.");
+            hive.PublicTraffic.SetRule(GetRegistryTrafficDirectorRule(hostname));
 
             progress?.Invoke($"Creating [neon-registry] service.");
 
@@ -587,11 +587,11 @@ fi
 
             NeonHelper.WaitForParallel(volumeRemoveActions);
 
-            // Remove the load balancer rule and certificate.
+            // Remove the traffic director rule and certificate.
 
-            progress?.Invoke($"Removing the [neon-registry] load balancer rule.");
-            hive.PublicLoadBalancer.RemoveRule("neon-registry");
-            progress?.Invoke($"Removing the [neon-registry] load balancer certificate.");
+            progress?.Invoke($"Removing the [neon-registry] traffic director rule.");
+            hive.PublicTraffic.RemoveRule("neon-registry");
+            progress?.Invoke($"Removing the [neon-registry] traffic director certificate.");
             hive.Certificate.Remove("neon-registry");
 
             // Remove any related Consul state.
@@ -684,29 +684,29 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
         }
 
         /// <summary>
-        /// Returns the load balancer rule for the [neon-registry] service.
+        /// Returns the traffic director rule for the [neon-registry] service.
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
-        /// <returns>The <see cref="LoadBalancerHttpRule"/>.</returns>
-        private LoadBalancerHttpRule GetRegistryLoadBalancerRule(string hostname)
+        /// <returns>The <see cref="TrafficDirectorHttpRule"/>.</returns>
+        private TrafficDirectorHttpRule GetRegistryTrafficDirectorRule(string hostname)
         {
-            return new LoadBalancerHttpRule()
+            return new TrafficDirectorHttpRule()
             {
                 Name   = "neon-registry",
                 System = true,
 
-                Frontends = new List<LoadBalancerHttpFrontend>()
+                Frontends = new List<TrafficDirectorHttpFrontend>()
                 {
-                    new LoadBalancerHttpFrontend()
+                    new TrafficDirectorHttpFrontend()
                     {
                         Host     = hostname,
                         CertName = "neon-registry",
                     }
                 },
 
-                Backends = new List<LoadBalancerHttpBackend>()
+                Backends = new List<TrafficDirectorHttpBackend>()
                 {
-                    new LoadBalancerHttpBackend()
+                    new TrafficDirectorHttpBackend()
                     {
                         Server = "neon-registry",
                         Port   = 5000

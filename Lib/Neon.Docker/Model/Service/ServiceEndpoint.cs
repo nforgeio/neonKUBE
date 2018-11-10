@@ -15,7 +15,7 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Docker
 {
     /// <summary>
-    /// Service endpoint and load balancer settings.
+    /// Service endpoint and network settings.
     /// </summary>
     public class ServiceEndpoint : INormalizable
     {

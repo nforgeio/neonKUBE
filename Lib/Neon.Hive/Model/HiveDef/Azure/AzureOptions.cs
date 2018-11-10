@@ -134,7 +134,7 @@ namespace Neon.Hive
         /// </note>
         /// <para>
         /// Specifies whether the hive nodes should be provisioned with public IP addresses
-        /// in addition to the hive wide public IP addresses assigned to the load balancer.
+        /// in addition to the hive wide public IP addresses assigned to the traffic director.
         /// This defaults to <c>false</c>.
         /// </para>
         /// <note>
@@ -149,7 +149,7 @@ namespace Neon.Hive
         /// <item>
         /// Outbound SNAT port exhaustion: This can occur when hive nodes behind a load
         /// balancer have a high rate of outbound requests to the Internet.  The essential
-        /// issue is that the load balancer can NAT a maximum of 64K outbound connections
+        /// issue is that the traffic director can NAT a maximum of 64K outbound connections
         /// for the entire hive.  This is described in detail 
         /// <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#load-balanced-vm-with-no-instance-level-public-ip-address">here</a>.
         /// Assigning a public IP address to each node removes this hive level restriction

@@ -108,7 +108,6 @@ COMMAND SUMMARY:
     neon hive setup         [HIVE-DEF]
     neon hive verify        [HIVE-DEF]
     neon hive update        ARGS
-    neon loadbalancer|lb    CMD...
     neon login              [--no-vpn] USER@HIVE
     neon login clean
     neon login export       USER@HIVE
@@ -124,6 +123,7 @@ COMMAND SUMMARY:
     neon run                -- CMD...
     neon scp                [NODE]
     neon ssh                [NODE]
+    neon traffic            CMD...
     neon validate           HIVE-DEF
     neon version            [-n] [-git]
     neon upload             SOURCE TARGET [NODE...]
@@ -294,7 +294,6 @@ OPTIONS:
                     new HiveSetupCommand(),
                     new HiveUpdateCommand(),
                     new HiveVerifyCommand(),
-                    new LoadBalancerCommand(),
                     new LoginCommand(),
                     new LoginCleanCommand(),
                     new LoginExportCommand(),
@@ -309,6 +308,7 @@ OPTIONS:
                     new RunCommand(),
                     new ScpCommand(),
                     new SshCommand(),
+                    new TrafficDirectorCommand(),
                     new UploadCommand(),
                     new VaultCommand(),
                     new VersionCommand(),

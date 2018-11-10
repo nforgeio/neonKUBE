@@ -52,16 +52,16 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Marks the <b>neon-registry</b> load balancer rule as a system rule if the rule exists.
+        /// Marks the <b>neon-registry</b> traffic director rule as a system rule if the rule exists.
         /// </summary>
         private void PrivateRegistryRule()
         {
-            var rule = Hive.PrivateLoadBalancer.GetRule("neon-registry");
+            var rule = Hive.PrivateTraffic.GetRule("neon-registry");
 
             if (rule != null && !rule.System)
             {
                 rule.System = true;
-                Hive.PrivateLoadBalancer.SetRule(rule);
+                Hive.PrivateTraffic.SetRule(rule);
             }
         }
 

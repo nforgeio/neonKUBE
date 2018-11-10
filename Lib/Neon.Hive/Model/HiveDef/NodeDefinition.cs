@@ -206,8 +206,8 @@ namespace Neon.Hive
         /// </para>
         /// <para>
         /// For cloud deployments, this will be initialized by the <b>neon-cli</b> during
-        /// hive setup such that each manager node will be assigned a unique port that
-        /// with a load balancer rule that forwards external traffic from <see cref="VpnFrontendPort"/>
+        /// hive setup such that each manager node will be assigned a unique port with
+        /// a traffic director rule that forwards external traffic from <see cref="VpnFrontendPort"/>
         /// to the <see cref="NetworkPorts.OpenVPN"/> port on the manager.
         /// </para>
         /// <para>

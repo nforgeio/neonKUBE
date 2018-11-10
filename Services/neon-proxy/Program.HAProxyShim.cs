@@ -243,7 +243,7 @@ namespace NeonProxy
         }
 
         /// <summary>
-        /// Configures HAProxy based on the current load balancer configuration.
+        /// Configures HAProxy based on the current traffic director configuration.
         /// </summary>
         /// <remarks>
         /// This method will terminate the service if HAProxy could not be started

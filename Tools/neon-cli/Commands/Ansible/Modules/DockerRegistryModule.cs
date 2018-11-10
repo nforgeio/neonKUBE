@@ -161,13 +161,6 @@ namespace NeonCli.Ansible
         //                        service will be enabled again once garbage 
         //                        collection has completed.
         //
-        // This module uses the following reserved names:
-        //
-        //      neon-registry   - registry service
-        //      neon-registry   - neon (CephFS) docker volume for registry data
-        //      neon-registry   - service load balancer rule
-        //      neon-registry   - registry certificate
-        //
         // Examples:
         // ---------
         //
@@ -434,11 +427,11 @@ namespace NeonCli.Ansible
 
                     NeonHelper.WaitForParallel(volumeRemoveActions);
 
-                    // Remove the load balancer rule and certificate.
+                    // Remove the traffic director rule and certificate.
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] load balancer rule.");
-                    hive.PublicLoadBalancer.RemoveRule("neon-registry");
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] load balancer certificate.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] traffic director rule.");
+                    hive.PublicTraffic.RemoveRule("neon-registry");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] traffic director certificate.");
                     hive.Certificate.Remove("neon-registry");
 
                     // Remove any related Consul state.
@@ -613,8 +606,8 @@ namespace NeonCli.Ansible
                         context.WriteLine(AnsibleVerbosity.Trace, $"Adding hive DNS host entry for [{hostname}].");
                         hive.Dns.Set(dnsRedirect, waitUntilPropagated: true);
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
-                        hive.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Writing traffic director rule.");
+                        hive.PublicTraffic.SetRule(GetRegistryTrafficDirectorRule(hostname));
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating the [neon-registry] service.");
 
@@ -660,8 +653,8 @@ namespace NeonCli.Ansible
 
                         if (hostnameChanged)
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating load balancer rule.");
-                            hive.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating traffic director rule.");
+                            hive.PublicTraffic.SetRule(GetRegistryTrafficDirectorRule(hostname));
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating hive DNS host entry for [{hostname}] (60 seconds).");
                             hive.Dns.Set(dnsRedirect, waitUntilPropagated: true);
@@ -780,28 +773,28 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
         }
 
         /// <summary>
-        /// Returns the load balancer rule for the [neon-registry] service.
+        /// Returns the traffic director rule for the [neon-registry] service.
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
-        /// <returns>The <see cref="LoadBalancerHttpRule"/>.</returns>
-        private LoadBalancerHttpRule GetRegistryLoadBalancerRule(string hostname)
+        /// <returns>The <see cref="TrafficDirectorHttpRule"/>.</returns>
+        private TrafficDirectorHttpRule GetRegistryTrafficDirectorRule(string hostname)
         {
-            return new LoadBalancerHttpRule()
+            return new TrafficDirectorHttpRule()
             {
                 Name      = "neon-registry",
                 System    = true,
-                Frontends = new List<LoadBalancerHttpFrontend>()
+                Frontends = new List<TrafficDirectorHttpFrontend>()
                 {
-                    new LoadBalancerHttpFrontend()
+                    new TrafficDirectorHttpFrontend()
                     {
                         Host     = hostname,
                         CertName = "neon-registry",
                     }
                 },
 
-                Backends = new List<LoadBalancerHttpBackend>()
+                Backends = new List<TrafficDirectorHttpBackend>()
                 {
-                    new LoadBalancerHttpBackend()
+                    new TrafficDirectorHttpBackend()
                     {
                         Server = "neon-registry",
                         Port   = 5000
