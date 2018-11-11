@@ -265,6 +265,9 @@ cat <<EOF > /etc/td-agent/template/logstash-template.json
             "bytes_sent": {
               "type": "long"
             },
+            "cdn": {
+              "type": "keyword"
+            },
             "client_ip": {
               "type": "ip"
             },

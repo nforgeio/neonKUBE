@@ -186,6 +186,9 @@
             "bytes_sent": {
               "type": "long"
             },
+            "cdn": {
+              "type": "keyword"
+            },
             "client_ip": {
               "type": "ip"
             },
