@@ -29,23 +29,29 @@
 
 5. Ensure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
 
-6. Execute as ADMIN: `$/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **NuGet.org**.
+6. Execute **as ADMIN**: `$/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **NuGet.org**.
 
-7. Commit all changes with a comment like: **RELEASE: 18.9.3-alpha** and push to GutHub.
+7. Commit all changes with a comment like: **RELEASE: 18.10.0-alpha.4** but **DO NOT** push to GitHub yet.
 
 8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-9. Create a new Git branch from PROD named for the release (like **release-18.9.3-alpha**) and push to GitHub.
+9. Run all of the unit tests and fix any important issues.
+
+10. Push the **PROD** branch to GitHub.
+
+11. Create a new Git branch from PROD named for the release (like **release-18.10.0-alpha.4**) and push to GitHub.
 
 ## Post Release
 
-1. Bump the `neon-cli` version in `Program.cs`.
+1. Check out the **MASTER** branch and merge changes from **PROD**.
 
-2. Merge the changes into the **MASTER** branch and rebuild all of those images as well.
+2. Bump the `neon-cli` version in `Program.cs`.
 
-3. Merge **MASTER** into the **JEFF** and/or any other development brances and rebuild all of those images, as required.
+3. Merge the changes into the **MASTER** branch and rebuild the solution.
 
-4. Start the next release notes document.
+4. Merge **MASTER** into the **JEFF** and/or any other development brances and rebuild all of those images, as required.
+
+5. Start the next release notes document.
 
  # Release Version Conventions
 
