@@ -115,7 +115,7 @@ defaults
 
 frontend tcp:vault-static
     bind                *:${NetworkPorts_Vault}
-    unique-id-header    X-Activity-ID
+    unique-id-header    X-Request-ID
     unique-id-format    ${HiveConst_HAProxyUidFormat}
     log                 global
     log-format          "traffic�tcp-v1�neon-proxy-vault�%t�%ci�%b�%s�%si�%sp�%sslv�%sslc�%U�%B�%Tw�%Tc�%Tt�%ts�%ac�%fc�%bc�%sc�%rc�%sq�%bq"

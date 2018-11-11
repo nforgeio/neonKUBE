@@ -199,7 +199,7 @@ export HiveConst_HaProxyStatsUri="/_stats?no-cache"
 #   %Ts:    timestamp
 #   %rt:    request counter
 #
-export HiveConst_HAProxyUidFormat="%{+X}o%ci:%cp_%fi:%fp_%Ts_%rt"
+export HiveConst_HAProxyUidFormat="%{+X}o%ci-%cp-%fi-%fp-%Ts-%rt"
 
 # The default username for component dashboards and management tools (like Ceph and RabbitMQ).
 export HiveConst_DefaultUsername=sysadmin

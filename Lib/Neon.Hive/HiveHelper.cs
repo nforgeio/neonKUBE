@@ -1969,7 +1969,7 @@ namespace Neon.Hive
         /// <item>
         ///     <term><b>Activity ID (%ID)</b></term>
         ///     <description>
-        ///     The globally unique request activity ID (from the <b>X-Activity-ID header</b>).
+        ///     The globally unique request activity ID (from the <b>X-Request-ID</b> header).
         ///     </description>
         /// </item>
         /// <item>

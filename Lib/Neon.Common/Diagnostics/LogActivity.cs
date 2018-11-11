@@ -35,7 +35,7 @@ namespace Neon.Diagnostics
     /// time and handled request count.
     /// </para>
     /// <para>
-    /// In general, activity IDs are passed from service to service via the HTTP <b>X-Activity-ID</b>
+    /// In general, activity IDs are passed from service to service via the HTTP <b>X-Request-ID</b>
     /// request header (defined by <see cref="HttpHeader"/>) and the neonHIVE HAProxy based
     /// services add unique activity IDs to requests if an ID is not already present.
     /// </para>
@@ -54,7 +54,7 @@ namespace Neon.Diagnostics
         /// Names the HTTP header used to hold the activity ID used to correlate 
         /// operation requests with a higher-level activity.
         /// </summary>
-        public const string HttpHeader = "X-Activity-ID";
+        public const string HttpHeader = "X-Request-ID";
 
         /// <summary>
         /// Creates a log activity with a new globally unique ID.

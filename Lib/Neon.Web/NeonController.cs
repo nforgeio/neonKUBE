@@ -56,7 +56,7 @@ namespace Neon.Web
     /// </para>
     /// <para>
     /// To enable cross system/service activity correlation, you'll need to include the 
-    /// <see cref="ActivityId"/> as the <b>X-Activity-ID</b> header in requests made to
+    /// <see cref="ActivityId"/> as the <b>X-Request-ID</b> header in requests made to
     /// those systems.  The <see cref="JsonClient"/> includes built-in methods that make 
     /// this easy.
     /// </para>
@@ -74,11 +74,11 @@ namespace Neon.Web
         }
 
         /// <summary>
-        /// <b>Internal use only:</b> Return's the request's <b>X-Activity-ID</b> header
+        /// <b>Internal use only:</b> Return's the request's <b>X-Request-ID</b> header
         /// value or <c>null</c>.  Application services should use <see cref="ActivityId"/>
         /// which guarantees that a valid activity ID will be returned.
         /// </summary>
-        [FromHeader(Name = "X-Activity-ID")]
+        [FromHeader(Name = "X-Request-ID")]
         protected string InternalActivityId { get; set; }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace Neon.Web
         /// or services
         /// </para>
         /// <para>
-        /// Neon uses the HTTP <b>X-Activity-ID</b> header to correlate requests.  This
+        /// Neon uses the HTTP <b>X-Request-ID</b> header to correlate requests.  This
         /// is an opaque globally unique string.  This is generated automatically by 
         /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b> for inbound HTTP
         /// requests that don't already have this header value.

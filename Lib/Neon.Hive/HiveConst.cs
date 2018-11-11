@@ -123,7 +123,7 @@ namespace Neon.Hive
         /// </item>
         /// </list>
         /// </remarks>
-        public const string HAProxyUidFormat = "%{+X}o%ci:%cp_%fi:%fp_%Ts_%rt";
+        public const string HAProxyUidFormat = "%{+X}o%ci-%cp-%fi-%fp-%Ts-%rt";
 
         /// <summary>
         /// The maximum number of manager nodes allowed in a neonHIVE.
