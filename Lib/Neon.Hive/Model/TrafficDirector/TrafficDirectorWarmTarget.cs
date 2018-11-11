@@ -22,8 +22,8 @@ namespace Neon.Hive
     /// </summary>
     public class TrafficDirectorWarmTarget
     {
-        private const string defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36";
-        private const string defaultMethod    = "GET";
+        private const string defaultUserAgent     = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36";
+        private const double defaultUpdateSeconds = 60;
 
         /// <summary>
         /// <para>
@@ -31,8 +31,8 @@ namespace Neon.Hive
         /// into the cache.  This is required.
         /// </para>
         /// <note>
-        /// <b>IMPORTANT:</b> The URI <b>scheme</b>, <b>hostname</b>, and <b>port</b> must 
-        /// match one of the traffic director rule frontends.
+        /// The URI <b>scheme</b> and <b>port</b> are ignored and the <b>hostname</b>
+        /// will be included as the request's <b>Host</b> header.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Uri", Required = Required.Always)]
@@ -48,29 +48,20 @@ namespace Neon.Hive
         public string UserAgent { get; set; } = defaultUserAgent;
 
         /// <summary>
-        /// The HTTP method to be used when retrieving the target.  This defaults
-        /// to <b>GET</b>.
+        /// The update interval in seconds.  This defaults to <b>60 seconds</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "Method", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultMethod)]
-        public string Method { get; set; } = defaultMethod;
+        [JsonProperty(PropertyName = "UpdateSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultUpdateSeconds)]
+        public double UpdateSeconds { get; set; } = defaultUpdateSeconds;
 
         /// <summary>
-        /// Optionally specifies the <b>Content-Type</b> header to be used
-        /// when retrieving the target when <see cref="Content"/> is also
-        /// specified.  This defaults to <c>null</c>.
+        /// <b>INTERNAL USE ONLY:</b> The value to be passed as the <b>X-Neon-Frontend</b> header when
+        /// fetching the target through the Varnish cache.  This is set and used internally by the
+        /// <b>neon-proxy-manager</b> and <b>neon-proxy-cache</b> based services.
         /// </summary>
-        [JsonProperty(PropertyName = "ContentType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "FrontendHeader", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string ContentType { get; set; } = null;
-
-        /// <summary>
-        /// Specifies the content text to be included in the request made 
-        /// when retrieving the target.  This defaults to <c>null</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Content", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string Content { get; set; } = null;
+        public string FrontendHeader { get; set; }
 
         /// <summary>
         /// Validates the item.
@@ -78,8 +69,6 @@ namespace Neon.Hive
         /// <param name="context">The validation context.</param>
         public void Validate(TrafficDirectorValidationContext context)
         {
-            Method = Method ?? defaultMethod;
-
             if (string.IsNullOrEmpty(Uri))
             {
                 context.Error($"[{nameof(TrafficDirectorWarmTarget)}.{nameof(Uri)}] cannot be NULL or empty.");
@@ -90,9 +79,9 @@ namespace Neon.Hive
                 context.Error($"[{nameof(TrafficDirectorWarmTarget)}.{nameof(Uri)}={Uri}] is not a valid fully qualified URI.");
             }
 
-            if (uri.Scheme.Equals("https", StringComparison.InvariantCultureIgnoreCase))
+            if (UpdateSeconds <= 0)
             {
-                context.Error($"HTTPS backend caching is not supported: [{nameof(TrafficDirectorWarmTarget)}.{nameof(Uri)}={Uri}]");
+                UpdateSeconds = defaultUpdateSeconds;
             }
         }
     }
