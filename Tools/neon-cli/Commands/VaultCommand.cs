@@ -35,11 +35,12 @@ includes the root Vault token from the current hive login.
 
 USAGE:
 
-    neon [OPTIONS] vault [ARGS...]  - Invokes a HashiCorp Vault command
+    neon [OPTIONS] vault -- CMD [ARGS...]  - Invokes a HashiCorp Vault command
 
 ARGUMENTS:
 
-    ARGS        -The standard HashCorp Vault command arguments and options
+    CMD             - Vault command
+    ARGS            - Vault options and arguments
 
 OPTIONS:
 
@@ -47,7 +48,7 @@ OPTIONS:
                       will be executed on the first manager node when  
                       this isn't specified.
 
-NOTE: Vault commands are automtaically provided with the root token from the 
+NOTE: Vault commands are automatically provided with the root token from the 
       current hive login.
 
 NOTE: The [seal], [unseal], and [status] commands have been modified
@@ -74,7 +75,7 @@ NOTE: The following Vault commands are not supported:
         /// <inheritdoc/>
         public override string SplitItem
         {
-            get { return "vault"; }
+            get { return "--"; }
         }
 
         /// <inheritdoc/>
@@ -92,9 +93,9 @@ NOTE: The following Vault commands are not supported:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            // Split the command line on "vault".
+            // Split the command line on "--".
 
-            var split = commandLine.Split("vault");
+            var split = commandLine.Split(SplitItem);
 
             var leftCommandLine  = split.Left;
             var rightCommandLine = split.Right;
@@ -113,6 +114,14 @@ NOTE: The following Vault commands are not supported:
 
             hive             = new HiveProxy(hiveLogin);
             vaultCredentials = hiveLogin.VaultCredentials;
+
+            if (rightCommandLine == null)
+            {
+                Console.WriteLine("*** ERROR: The [--] command separator is required.");
+                Console.WriteLine();
+                Console.WriteLine(usage);
+                Program.Exit(1);
+            }
 
             // Determine which node we're going to target.
 
