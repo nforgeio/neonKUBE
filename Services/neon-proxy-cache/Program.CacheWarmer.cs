@@ -102,25 +102,25 @@ namespace NeonProxyCache
                         var fetchTasks = new List<Task>();
                         var utcNow     = DateTime.UtcNow;
 
-                        foreach (var target in targets.Where(t => t.FetchTimeUtc <= utcNow))
+                        foreach (var item in targets.Where(t => t.FetchTimeUtc <= utcNow))
                         {
                             fetchTasks.Add(Task.Run(
                                 async () =>
                                 {
                                     try
                                     {
-                                        // Varnish is listening on [*:80] so we're going to send the request
-                                        // to the loopback address on this port, setting the [Host] header
-                                        // to the HOST from the target URI, the port to [80].
+                                        // Varnish is listening locally on [*:80] so we're going to send the 
+                                        // request to the loopback address on this port, setting the [Host] 
+                                        // header to the HOST from the target URI, the port to [80].
                                         //
                                         // We'll also set the [User-Agent] and [X-Neon-Frontend] headers.
 
-                                        var targetUri = new Uri(target.Target.Uri);
+                                        var targetUri = new Uri(item.Target.Uri);
                                         var request   = new HttpRequestMessage(HttpMethod.Get, $"http://127.0.0.1:80{targetUri.PathAndQuery}");
 
                                         request.Headers.Host = targetUri.Host;
-                                        request.Headers.Add("User-Agent", target.Target.UserAgent);
-                                        request.Headers.Add("X-Neon-Frontend", target.Target.FrontendHeader);
+                                        request.Headers.Add("User-Agent", item.Target.UserAgent);
+                                        request.Headers.Add("X-Neon-Frontend", item.Target.FrontendHeader);
 
                                         await client.SendAsync(request, fetchCts.Token);
                                     }
@@ -130,7 +130,7 @@ namespace NeonProxyCache
                                     }
                                     finally
                                     {
-                                        target.Reschedule();
+                                        item.Reschedule();
                                     }
                                 }));
                         }
