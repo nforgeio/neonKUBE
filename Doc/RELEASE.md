@@ -43,13 +43,15 @@
 
 ## Post Release
 
-1. Bump the `neon-cli` version in `Program.cs`.
+1. Check out the **MASTER** branch and merge changes from **PROD**.
 
-2. Merge the changes into the **MASTER** branch and rebuild all of those images as well.
+2. Bump the `neon-cli` version in `Program.cs`.
 
-3. Merge **MASTER** into the **JEFF** and/or any other development brances and rebuild all of those images, as required.
+3. Merge the changes into the **MASTER** branch and rebuild the solution.
 
-4. Start the next release notes document.
+4. Merge **MASTER** into the **JEFF** and/or any other development brances and rebuild all of those images, as required.
+
+5. Start the next release notes document.
 
  # Release Version Conventions
 
