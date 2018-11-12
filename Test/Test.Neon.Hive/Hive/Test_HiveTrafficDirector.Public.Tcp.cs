@@ -29,7 +29,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Tcp_Public()
         {
-            await TestHttpRule("tcp-public", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic);
+            await TestHttpRule("tcp-public", HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic);
         }
     }
 }

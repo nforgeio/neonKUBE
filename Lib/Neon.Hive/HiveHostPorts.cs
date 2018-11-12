@@ -195,13 +195,13 @@ namespace Neon.Hive
         /// The first <b>neon-proxy-public</b> port available for routing custom
         /// HTTP/S or TCP services.
         /// </summary>
-        public const int ProxyPublicFirstUserPort = 5120;
+        public const int ProxyPublicFirstUser = 5120;
 
         /// <summary>
         /// The first <b>neon-proxy-public</b> port available for routing custom
         /// HTTP/S or TCP services.
         /// </summary>
-        public const int ProxyPublicLastUserPort = 5299;
+        public const int ProxyPublicLastUser = 5299;
 
         //---------------------------------------------------------------------
         // Ports [5300-5499] are reserved for the private hive proxy.
@@ -277,12 +277,12 @@ namespace Neon.Hive
         /// The first <b>neon-proxy-private</b> port available for routing custom
         /// HTTP/S or TCP services.
         /// </summary>
-        public const int ProxyPrivateFirstUserPort = 5320;
+        public const int ProxyPrivateFirstUser = 5320;
 
         /// <summary>
         /// The first <b>neon-proxy-private</b> port available for routing custom
         /// HTTP/S or TCP services.
         /// </summary>
-        public const int ProxyPrivateLastUserPort = 5499;
+        public const int ProxyPrivateLastUser = 5499;
     }
 }

@@ -36,14 +36,14 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Https_Public_Uncached_NonDefaultPort()
         {
-            await TestHttpsRule("https-public-nondefaultport", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic);
+            await TestHttpsRule("https-public-nondefaultport", HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Https_Public_Uncached_NoHostname()
         {
-            await TestHttpsRule("https-public-nohostname", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic);
+            await TestHttpsRule("https-public-nohostname", HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic);
         }
 
         [Fact]
@@ -57,14 +57,14 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Https_Public_Cached_NonDefaultPort()
         {
-            await TestHttpsRule("https-public-cached-nondefaultport", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: true);
+            await TestHttpsRule("https-public-cached-nondefaultport", HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: true);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Https_Public_Cached_NoHostname()
         {
-            await TestHttpsRule("https-public-cached-nohostname", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: true);
+            await TestHttpsRule("https-public-cached-nohostname", HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: true);
         }
 
         [Fact]
@@ -78,7 +78,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Https_Public_Uncached_MultiFrontends_NonDefaultPort()
         {
-            await TestHttpsMultipleFrontends("https-public-multifrontend-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic);
+            await TestHttpsMultipleFrontends("https-public-multifrontend-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic);
         }
 
         [Fact]
@@ -92,7 +92,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Https_Public_Cached_MultiFrontends_NonDefaultPortd()
         {
-            await TestHttpsMultipleFrontends("https-public-multifrontend-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: true);
+            await TestHttpsMultipleFrontends("https-public-multifrontend-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: true);
         }
 
         [Fact]
@@ -106,7 +106,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Https_Public_Prefix_Uncached_NonDefaultPort()
         {
-            await TestHttpsPrefix("https-public-prefix-uncached-nondefaultport", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: false);
+            await TestHttpsPrefix("https-public-prefix-uncached-nondefaultport", HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: false);
         }
 
         [Fact]
@@ -120,7 +120,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Https_Public_Prefix_Cached_NonDefaultPort()
         {
-            await TestHttpsPrefix("https-public-prefix-cached-nondefaultport", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: true);
+            await TestHttpsPrefix("https-public-prefix-cached-nondefaultport", HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic, useCache: true);
         }
 
         [Fact]
@@ -134,7 +134,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Https_Public_Cached_Warm_NonDefaultPort()
         {
-            await TestHttpsCacheWarming("https-public-cache-warm-nondefaultport", HiveHostPorts.ProxyPublicLastUserPort, HiveConst.PublicNetwork, hive.PublicTraffic);
+            await TestHttpsCacheWarming("https-public-cache-warm-nondefaultport", HiveHostPorts.ProxyPublicLastUser, HiveConst.PublicNetwork, hive.PublicTraffic);
         }
     }
 }

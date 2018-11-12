@@ -198,8 +198,8 @@ namespace TestHive
                 {
                     new Redirection($"http://a.test", $"https://a.test"),
                     new Redirection($"https://b.test", $"http://b.test"),
-                    new Redirection($"http://c.test:{HiveHostPorts.ProxyPublicFirstUserPort}", $"http://c.test:{HiveHostPorts.ProxyPublicFirstUserPort + 1}"),
-                    new Redirection($"http://d.test:{HiveHostPorts.ProxyPublicFirstUserPort}", $"http://d.test:{HiveHostPorts.ProxyPublicFirstUserPort + 1}"),
+                    new Redirection($"http://c.test:{HiveHostPorts.ProxyPublicFirstUser}", $"http://c.test:{HiveHostPorts.ProxyPublicFirstUser + 1}"),
+                    new Redirection($"http://d.test:{HiveHostPorts.ProxyPublicFirstUser}", $"http://d.test:{HiveHostPorts.ProxyPublicFirstUser + 1}"),
                 });
         }
 
@@ -212,8 +212,8 @@ namespace TestHive
                 {
                     new Redirection($"http://a.test:{HiveHostPorts.ProxyPrivateHttp}", $"https://a.test:{HiveHostPorts.ProxyPrivateHttps}"),
                     new Redirection($"https://b.test:{HiveHostPorts.ProxyPrivateHttps}", $"http://b.test:{HiveHostPorts.ProxyPrivateHttp}"),
-                    new Redirection($"http://c.test:{HiveHostPorts.ProxyPrivateFirstUserPort}", $"http://c.test:{HiveHostPorts.ProxyPrivateFirstUserPort + 1}"),
-                    new Redirection($"http://d.test:{HiveHostPorts.ProxyPrivateFirstUserPort}", $"http://d.test:{HiveHostPorts.ProxyPrivateFirstUserPort + 1}"),
+                    new Redirection($"http://c.test:{HiveHostPorts.ProxyPrivateFirstUser}", $"http://c.test:{HiveHostPorts.ProxyPrivateFirstUser + 1}"),
+                    new Redirection($"http://d.test:{HiveHostPorts.ProxyPrivateFirstUser}", $"http://d.test:{HiveHostPorts.ProxyPrivateFirstUser + 1}"),
                 });
         }
     }

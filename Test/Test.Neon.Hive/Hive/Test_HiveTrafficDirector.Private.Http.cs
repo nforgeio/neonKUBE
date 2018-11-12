@@ -36,14 +36,14 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Uncached_NonDefaultPort()
         {
-            await TestHttpRule("http-private-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic);
+            await TestHttpRule("http-private-nondefaultport", HiveHostPorts.ProxyPrivateLastUser, HiveConst.PrivateNetwork, hive.PrivateTraffic);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Uncached_NoHostname()
         {
-            await TestHttpRule("http-private-nohostname", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic, useIPAddress: true);
+            await TestHttpRule("http-private-nohostname", HiveHostPorts.ProxyPrivateLastUser, HiveConst.PrivateNetwork, hive.PrivateTraffic, useIPAddress: true);
         }
 
         [Fact]
@@ -57,14 +57,14 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Cached_NonDefaultPort()
         {
-            await TestHttpRule("http-private-cached-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: true);
+            await TestHttpRule("http-private-cached-nondefaultport", HiveHostPorts.ProxyPrivateLastUser, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: true);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Cached_NoHostname()
         {
-            await TestHttpRule("http-private-cached-nohostname", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: true, useIPAddress: true);
+            await TestHttpRule("http-private-cached-nohostname", HiveHostPorts.ProxyPrivateLastUser, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: true, useIPAddress: true);
         }
 
         [Fact]
@@ -78,7 +78,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Uncached_MultiFrontends_NonDefaultPort()
         {
-            await TestHttpMultipleFrontends("http-private-multifrontends-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic);
+            await TestHttpMultipleFrontends("http-private-multifrontends-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPrivateLastUser, HiveConst.PrivateNetwork, hive.PrivateTraffic);
         }
 
         [Fact]
@@ -92,7 +92,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Cached_MultiFrontends_NonDefaultPort()
         {
-            await TestHttpMultipleFrontends("http-private-multihostnames-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: true);
+            await TestHttpMultipleFrontends("http-private-multihostnames-nondefaultport", new string[] { $"test-1.{testHostname}", $"test-2.{testHostname}" }, HiveHostPorts.ProxyPrivateLastUser, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: true);
         }
 
         [Fact]
@@ -106,7 +106,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Prefix_Uncached_NonDefaultPort()
         {
-            await TestHttpPrefix("http-private-prefix-uncached-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: false);
+            await TestHttpPrefix("http-private-prefix-uncached-nondefaultport", HiveHostPorts.ProxyPrivateLastUser, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: false);
         }
 
         [Fact]
@@ -120,7 +120,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Prefix_Cached_NonDefaultPort()
         {
-            await TestHttpPrefix("http-private-prefix-cached-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: true);
+            await TestHttpPrefix("http-private-prefix-cached-nondefaultport", HiveHostPorts.ProxyPrivateLastUser, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: true);
         }
 
         [Fact]
@@ -134,7 +134,7 @@ namespace TestHive
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Http_Private_Cached_Warm_NonDefaultPort()
         {
-            await TestHttpCacheWarming("http-private-cache-warm-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic);
+            await TestHttpCacheWarming("http-private-cache-warm-nondefaultport", HiveHostPorts.ProxyPrivateLastUser, HiveConst.PrivateNetwork, hive.PrivateTraffic);
         }
     }
 }

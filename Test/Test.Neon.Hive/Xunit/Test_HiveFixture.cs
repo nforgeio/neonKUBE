@@ -84,7 +84,7 @@ services:
                         var publicRule = new TrafficDirectorTcpRule();
 
                         publicRule.Name = "test-rule";
-                        publicRule.Frontends.Add(new TrafficDirectorTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPublicFirstUserPort });
+                        publicRule.Frontends.Add(new TrafficDirectorTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPublicFirstUser });
                         publicRule.Backends.Add(new TrafficDirectorTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
                         hive.PutTrafficDirectorRule("public", publicRule);
@@ -94,7 +94,7 @@ services:
                         var privateRule = new TrafficDirectorTcpRule();
 
                         privateRule.Name = "test-rule";
-                        privateRule.Frontends.Add(new TrafficDirectorTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPrivateFirstUserPort });
+                        privateRule.Frontends.Add(new TrafficDirectorTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPrivateFirstUser });
                         privateRule.Backends.Add(new TrafficDirectorTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
                         hive.PutTrafficDirectorRule("private", privateRule);
