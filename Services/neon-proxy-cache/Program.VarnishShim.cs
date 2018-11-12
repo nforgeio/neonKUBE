@@ -58,10 +58,11 @@ namespace NeonProxyCache
         private const string NotDeployedHash = "NOT-DEPLOYED";
         private const string AdminInterface  = "127.0.0.1:2000";
 
-        private static AsyncMutex               asyncLock    = new AsyncMutex();
-        private static string                   deployedHash = NotDeployedHash;
-        private static string                   lastVcl      = null;
-        private static long                     vclVersion   = 0;
+        private static object                   shimLock      = new object();
+        private static AsyncMutex               asyncShimLock = new AsyncMutex();
+        private static string                   deployedHash  = NotDeployedHash;
+        private static string                   lastVcl       = null;
+        private static long                     vclVersion    = 0;
         private static BroadcastChannel         proxyNotifyChannel;
 
         /// <summary>
@@ -211,7 +212,7 @@ namespace NeonProxyCache
         /// </summary>
         private static void StartNotifyHandler()
         {
-            lock (syncLock)
+            lock (shimLock)
             {
                 // Use the latest settings to reconnect to the [proxy-notify] channel.
 
@@ -231,7 +232,7 @@ namespace NeonProxyCache
                         // We cannot process updates in parallel so we'll use an 
                         // AsyncMutex to prevent this.
 
-                        using (await asyncLock.AcquireAsync())
+                        using (await asyncShimLock.AcquireAsync())
                         {
                             var forThisInstance = false;
 
@@ -529,6 +530,13 @@ backend stub {
                     lastVcl      = newVCL;
 
                     log.LogInfo(() => $"VARNISH-SHIM: Varnish is up-to-date.");
+
+                    // Read the cache settings and update the cache warmer.
+
+                    var cacheSettingsJson = File.ReadAllText(Path.Combine(configFolder, "cache-settings.json"));
+                    var cacheSettings     = NeonHelper.JsonDeserialize<TrafficDirectorCacheSettings>(cacheSettingsJson);
+
+                    UpdateCacheWarmer(cacheSettings);
                 }
                 catch (ExecuteException e)
                 {

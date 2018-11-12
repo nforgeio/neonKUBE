@@ -48,15 +48,19 @@ namespace NeonVegomatic
     ///     This controls what the server returns.  The current options are:
     ///     </para>
     ///     <list type="table">
+    ///     <item>
     ///         <term><b>server-id</b></term>
     ///         <description>
     ///         Generate a UUID for each instance and then return that as
     ///         the response body.  This is the default mode.
     ///         </description>
-    ///         <term><b>text:</b></term>
+    ///     </item>
+    ///     <item>
+    ///         <term><b>text:VALUE</b></term>
     ///         <description>
     ///         Returns the static text after the colon.
     ///         </description>
+    ///     </item>
     ///     </list>
     ///     </description>
     /// </item>
@@ -97,7 +101,7 @@ namespace NeonVegomatic
                     async context =>
                     {
                         var request  = context.Request;
-                        var body     = "server-id";
+                        var bodyMode = "server-id";
                         var bodyText = string.Empty;
                         var delay    = TimeSpan.Zero;
                         var expires  = TimeSpan.Zero;
@@ -106,12 +110,12 @@ namespace NeonVegomatic
 
                         if (request.Query.TryGetValue("body", out var bodyArg))
                         {
-                            body = bodyArg.Single().ToLowerInvariant();
+                            bodyMode = bodyArg.Single().ToLowerInvariant();
 
-                            if (body.StartsWith("text:"))
+                            if (bodyMode.StartsWith("text:"))
                             {
-                                bodyText = body.Substring("text:".Length);
-                                body     = "text";
+                                bodyText = bodyMode.Substring("text:".Length);
+                                bodyMode = "text";
                             }
                         }
 
@@ -152,7 +156,7 @@ namespace NeonVegomatic
 
                         context.Response.Headers.Add("X-Vegomatic", "true");
 
-                        switch (body)
+                        switch (bodyMode)
                         {
                             case "text":
 

@@ -308,10 +308,10 @@ namespace Neon.Hive
 
             if (Cache != null && Cache.Enabled)
             {
-                Cache.Validate(context);
+                Cache.Validate(context, this);
 
                 // The Varnish open source release doesn't support TLS backends.  This requires 
-                // Varnish Plus which is very expensive (of course).
+                // Varnish Plus (of course) which is very expensive.
 
                 foreach (TrafficDirectorHttpBackend backend in Backends)
                 {
@@ -426,6 +426,50 @@ namespace Neon.Hive
                     frontend.PublicPort = 0;
                 }
             }
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Returns the frontend corresponding to a cache warming target URI.
+        /// </summary>
+        /// <param name="target">The warming target.</param>
+        /// <returns>The corresponding <see cref="TrafficDirectorHttpFrontend"/>"/> or <c>null</c> if there's no match.</returns>
+        public TrafficDirectorHttpFrontend GetFrontendForWarmTarget(TrafficDirectorWarmTarget target)
+        {
+            // We'll match frontends on scheme, hostname, port, and longest path prefix.
+            //
+            // Select the candidate frontends that match on scheme, hostname, and port:
+
+            var uri        = new Uri(target.Uri);
+            var tls        = uri.Scheme.Equals("https", StringComparison.InvariantCultureIgnoreCase);
+            var candidates = Frontends.Where(fe => fe.Tls == tls && fe.Host.Equals(uri.Host, StringComparison.InvariantCultureIgnoreCase) && fe.ProxyPort == uri.Port).ToList();
+
+            // We're done if there's no or only one candidate.
+
+            if (candidates.Count == 0)
+            {
+                return null;
+            }
+            else if (candidates.Count == 1)
+            {
+                return candidates.Single();
+            }
+
+            // There's more than one candidate, so we'll try to match the frontend based on the
+            // the path prefix, longest prefixes first.
+
+            foreach (var frontend in candidates.OrderByDescending(fe => (fe.PathPrefix ?? string.Empty).Length))
+            {
+                var frontendPrefix = frontend.PathPrefix ?? string.Empty;
+
+                if (uri.AbsolutePath.StartsWith(frontendPrefix))
+                {
+                    return frontend;
+                }
+            }
+
+            // None of the prefixes matched.
+
+            return null;
         }
     }
 }

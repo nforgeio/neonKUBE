@@ -36,7 +36,7 @@ namespace Neon.Hive
         /// <param name="name">The traffic director name (<b>public</b> or <b>private</b>).</param>
         /// <param name="useBootstrap">
         /// Optionally specifies that the instance should use the HiveMQ client
-        /// should directly reference to the HiveMQ cluster nodes for broadcasting
+        /// to directly reference to the HiveMQ cluster nodes for broadcasting
         /// proxy update messages rather than routing traffic through the <b>private</b>
         /// traffic director.  This is used internally to resolve chicken-and-the-egg
         /// dilemmas for the traffic director and proxy implementations that rely on

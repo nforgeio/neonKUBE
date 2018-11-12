@@ -28,7 +28,7 @@ namespace TestHive
     {
         /// <summary>
         /// Verify that we can create an HTTP traffic director rule for a 
-        /// site on the public port using a specific hostname and then
+        /// site on the proxy port using a specific hostname and then
         /// verify that that the traffic director actually works by spinning
         /// up a [vegomatic] based service to accept the traffic.
         /// </summary>
@@ -49,7 +49,7 @@ namespace TestHive
             testName += "-" + Guid.NewGuid().ToString("D");
 
             // Verify that we can create an HTTP traffic director rule for a 
-            // site on the public port using a specific hostname and then
+            // site on the proxy port using a specific hostname and then
             // verify that that the traffic director actually works by spinning
             // up a [vegomatic] based service to accept the traffic.
 
@@ -279,7 +279,7 @@ namespace TestHive
 
         /// <summary>
         /// Verify that we can create an HTTP traffic director rule for a 
-        /// site on the public port using a specific hostname and then
+        /// site on the proxy port using a specific hostname and then
         /// verify that that the traffic director actually works by spinning
         /// up a [vegomatic] based service to accept the traffic.
         /// </summary>
@@ -302,7 +302,7 @@ namespace TestHive
             testName += "-" + Guid.NewGuid().ToString("D");
 
             // Verify that we can create an HTTP traffic director rule for a 
-            // site on the public port using a specific hostname and then
+            // site on the proxy port using a specific hostname and then
             // verify that that the traffic director actually works by spinning
             // up a [vegomatic] based service to accept the traffic.
 
@@ -538,7 +538,7 @@ namespace TestHive
 
         /// <summary>
         /// Verify that we can create HTTP traffic director rules for a 
-        /// site on the public port using a specific hostname and various
+        /// site on the proxy port using a specific hostname and various
         /// path prefixes and then verify that that the traffic director
         /// actually works  by spinning up a [vegomatic] based service to
         /// accept the traffic.
@@ -559,7 +559,7 @@ namespace TestHive
             testName += "-" + Guid.NewGuid().ToString("D");
 
             // Verify that we can create an HTTP traffic director rule for a 
-            // site on the public port using a specific hostname and then
+            // site on the proxy port using a specific hostname and then
             // verify that that the traffic director actually works by spinning
             // up a [vegomatic] based service to accept the traffic.
 
@@ -723,6 +723,115 @@ namespace TestHive
                         Assert.True(CacheHit(response));
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Verify that we can create an HTTP traffic director rule that pre-warms items.
+        /// </summary>
+        /// <param name="testName">Simple name (without spaces) used to ensure that URIs cached for different tests won't conflict.</param>
+        /// <param name="proxyPort">The inbound proxy port.</param>
+        /// <param name="network">The proxy network.</param>
+        /// <param name="trafficManager">The traffic director.</param>
+        /// <param name="serviceName">Optionally specifies the backend service name (defaults to <b>vegomatic</b>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task TestHttpCacheWarming(string testName, int proxyPort, string network, TrafficManager trafficManager, string serviceName = "vegomatic")
+        {
+            // Append a GUID to the test name to ensure that we won't
+            // conflict with what any previous test runs may have loaded
+            // into the cache.
+
+            testName += "-" + Guid.NewGuid().ToString("D");
+
+            // Verify that we can create an HTTP traffic director rule for a 
+            // site on the proxy port using a specific hostname and then
+            // verify that warming actually works by spinning up a [vegomatic] 
+            // based service to accept the traffic.
+            //
+            // We'll do this by specifying warm and cold URIs that both enable
+            // caching.  We'll specify the warm URI as a warm target but not
+            // the cold URI.  Then we'll publish the rule and wait for a bit
+            // to allow it to stablize and for the [neon-proxy-cache] to
+            // load the warm URI.
+            //
+            // Finally, we'll verify that this worked by fetching both URIs.
+            // The warm URI should indicate that it came from the cache and
+            // the cold URI should not be cached.
+
+            var manager       = hive.GetReachableManager();
+            var guid          = Guid.NewGuid().ToString("D");  // Avoid conflicts with previous test runs
+            var expireSeconds = 60;
+            var warmUri       = new Uri($"http://{testHostname}:{proxyPort}/{guid}/warm?body=text:warm&Expires={expireSeconds}");
+            var coldUri       = new Uri($"http://{testHostname}:{proxyPort}/{guid}/cold?body=text:cold&Expires={expireSeconds}");
+
+            manager.Connect();
+
+            using (var client = new TestHttpClient(disableConnectionReuse: true))
+            {
+                // Setup the client to query the [vegomatic] service through the
+                // proxy without needing to configure a hive DNS entry.
+
+                client.BaseAddress                = new Uri($"http://{manager.PrivateAddress}:{proxyPort}/");
+                client.DefaultRequestHeaders.Host = testHostname;
+
+                // Configure the traffic director rule.
+
+                var rule = new TrafficDirectorHttpRule()
+                {
+                    Name         = "vegomatic",
+                    CheckExpect  = "status 200",
+                    CheckSeconds = 1,
+                };
+
+                rule.Cache = new TrafficDirectorHttpCache() { Enabled = true };
+                rule.Cache.WarmTargets.Add(
+                    new TrafficDirectorWarmTarget()
+                    {
+                         UpdateSeconds = 1.0,
+                         Uri           = warmUri.ToString()
+                    });
+
+                rule.Frontends.Add(
+                    new TrafficDirectorHttpFrontend()
+                    {
+                        Host      = testHostname,
+                        ProxyPort = proxyPort
+                    });
+
+                rule.Backends.Add(
+                    new TrafficDirectorHttpBackend()
+                    {
+                        Server = serviceName,
+                        Port   = 80
+                    });
+
+                trafficManager.SetRule(rule);
+
+                // Spin up a [vegomatic] service instance.
+
+                manager.SudoCommand($"docker service create --name vegomatic --network {network} --replicas 1 {vegomaticImage} test-server").EnsureSuccess();
+                await WaitUntilReadyAsync(client.BaseAddress, testHostname);
+
+                // Wait a bit longer to ensure that the cache has had a chance to 
+                // warm the URI.
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                // Query for the warm and cold URIs and verify that the warm item was a
+                // cache hit and the cold item was not.
+
+                var warmResponse = await client.GetAsync(warmUri.PathAndQuery);
+                var warmBody     = (await warmResponse.Content.ReadAsStringAsync()).Trim();
+                var coldResponse = await client.GetAsync(coldUri.PathAndQuery);
+                var coldBody     = (await coldResponse.Content.ReadAsStringAsync()).Trim();
+
+                Assert.Equal(HttpStatusCode.OK, warmResponse.StatusCode);
+                Assert.Equal("warm", warmBody);
+                Assert.True(CacheHit(warmResponse));
+
+                Assert.Equal(HttpStatusCode.OK, coldResponse.StatusCode);
+                Assert.Equal("cold", coldBody);
+                Assert.False(CacheHit(coldResponse));
             }
         }
     }

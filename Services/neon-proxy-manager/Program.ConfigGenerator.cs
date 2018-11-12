@@ -1582,11 +1582,32 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
 
             var cacheSettings = new TrafficDirectorCacheSettings();
 
-            foreach (var rule in httpRules.Where(r => r.Mode == TrafficDirectorMode.Http && r.Cache.Enabled))
+            foreach (var rule in httpRules.Where(r => r.Cache.Enabled))
             {
                 foreach (var warmTarget in rule.Cache.WarmTargets)
                 {
-                    cacheSettings.WarmTargets.Add(warmTarget);
+                    var targetClone = NeonHelper.JsonClone(warmTarget);
+                    var targetUri   = new Uri(targetClone.Uri);
+
+                    // We need to set the target's [FrontendHeader] property so that the
+                    // [neon-proxy-cache] based services can include this with the warming
+                    // requests sent to Varnish.
+
+                    var frontend       = rule.GetFrontendForWarmTarget(warmTarget);
+                    var frontendPrefix = string.IsNullOrEmpty(frontend.PathPrefix) ? "/" : frontend.PathPrefix;
+
+                    Covenant.Assert(frontend != null);  // This should never happen because we already validated everything.
+
+                    if (!string.IsNullOrEmpty(frontend.Host))
+                    {
+                        targetClone.FrontendHeader = $"{targetUri.Port} {frontendPrefix} {frontend.Host}";
+                    }
+                    else
+                    {
+                        targetClone.FrontendHeader = $"{targetUri.Port} {frontendPrefix}";
+                    }
+
+                    cacheSettings.WarmTargets.Add(targetClone);
                 }
             }
 

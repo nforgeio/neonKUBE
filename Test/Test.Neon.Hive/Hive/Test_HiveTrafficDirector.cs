@@ -87,7 +87,7 @@ namespace TestHive
             // have a chance to expire.  By default, we configure the DNS hold time
             // to be 5 seconds, so waiting for 10 seconds should be more than enough.
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(10));
 
             // Allow self-signed certificates for HTTPS tests.
 

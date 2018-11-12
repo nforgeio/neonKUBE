@@ -112,7 +112,8 @@ namespace Neon.Hive
         /// Validates the settings.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(TrafficDirectorValidationContext context)
+        /// <param name="rule">The parent rule.</param>
+        public void Validate(TrafficDirectorValidationContext context, TrafficDirectorHttpRule rule)
         {
             if (DnsTTL < 1)
             {
@@ -121,9 +122,17 @@ namespace Neon.Hive
 
             WarmTargets = WarmTargets ?? new List<TrafficDirectorWarmTarget>();
 
+            // Verify that each warm target has valid properties and that they
+            // all match at one of the rule frontends.
+
             foreach (var target in WarmTargets)
             {
                 target.Validate(context);
+
+                if (rule.GetFrontendForWarmTarget(target) == null)
+                {
+                    context.Error($"Rule [{rule.Name}] includes the [{target.Uri}] cache warming target which cannot be mapped to a rule frontend.");
+                }
             }
         }
     }

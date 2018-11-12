@@ -77,7 +77,6 @@ namespace NeonProxyCache
         private static HiveProxy                hive;
         private static ConsulClient             consul;
         private static DateTime                 errorTimeUtc = DateTime.MinValue;
-        private static object                   syncLock     = new object();
 
         /// <summary>
         /// Application entry point.
@@ -226,7 +225,10 @@ namespace NeonProxyCache
 
                     // Crank up the service tasks.
 
+                    log.LogInfo(() => $"Starting service tasks.");
+
                     await NeonHelper.WaitAllAsync(
+                        CacheWarmer(),
                         ErrorPollerAsync(),
                         VarnishShim());
                 }

@@ -122,5 +122,19 @@ namespace TestHive
         {
             await TestHttpPrefix("http-private-prefix-cached-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic, useCache: true);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Http_Private_Cached_Warm_DefaultPort()
+        {
+            await TestHttpCacheWarming("http-private-cache-warm-defaultport", HiveHostPorts.ProxyPrivateHttp, HiveConst.PrivateNetwork, hive.PrivateTraffic);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Http_Private_Cached_Warm_NonDefaultPort()
+        {
+            await TestHttpCacheWarming("http-private-cache-warm-nondefaultport", HiveHostPorts.ProxyPrivateLastUserPort, HiveConst.PrivateNetwork, hive.PrivateTraffic);
+        }
     }
 }

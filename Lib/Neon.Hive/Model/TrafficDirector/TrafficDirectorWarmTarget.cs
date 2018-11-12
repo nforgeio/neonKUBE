@@ -31,8 +31,8 @@ namespace Neon.Hive
         /// into the cache.  This is required.
         /// </para>
         /// <note>
-        /// The URI <b>scheme</b> and <b>port</b> are ignored and the <b>hostname</b>
-        /// will be included as the request's <b>Host</b> header.
+        /// The URI <b>scheme</b>, <b>hostname</b>, and <b>port</b> must map to
+        /// one of the parent <see cref="TrafficDirectorHttpRule"/> frontends.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Uri", Required = Required.Always)]
@@ -62,7 +62,7 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "FrontendHeader", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string FrontendHeader { get; set; }
-
+            
         /// <summary>
         /// Validates the item.
         /// </summary>
