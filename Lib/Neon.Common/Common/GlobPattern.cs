@@ -67,6 +67,8 @@ namespace Neon.Common
         /// </summary>
         /// <param name="pattern">The pattern.</param>
         /// <returns>The created <see cref="GlobPattern"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the pattern is <c>null</c> or empty.</exception>
+        /// <exception cref="FormatException">Thrown if the pattern is invalid.</exception>
         public static GlobPattern Create(string pattern)
         {
             Covenant.Requires<ArgumentNullException>(pattern != null);
@@ -74,6 +76,33 @@ namespace Neon.Common
             Covenant.Requires<FormatException>(!pattern.Contains("//"));
 
             return new GlobPattern(pattern);
+        }
+
+        /// <summary>
+        /// Attempts to parse a <see cref="GlobPattern"/>.
+        /// </summary>
+        /// <param name="pattern">The pattern string.</param>
+        /// <param name="globPattern">Returns as the parsed <see cref="GlobPattern"/>.</param>
+        /// <returns><c>true</c> if the pattern was parsed successfully.</returns>
+        public static bool TryParse(string pattern, out GlobPattern globPattern)
+        {
+            // $todo(jeff.lill):
+            //
+            // Catching the exceptions here is a bit of a hack.  I should reverse
+            // the Create() and TryParse() implementations so that Create()
+            // depends on TryParse().
+
+            try
+            {
+                globPattern = Create(pattern);
+
+                return true;
+            }
+            catch
+            {
+                globPattern = null;
+                return false;
+            }
         }
 
         //---------------------------------------------------------------------

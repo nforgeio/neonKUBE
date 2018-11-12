@@ -179,5 +179,26 @@ namespace TestCommon
             Assert.Throws<FormatException>(() => GlobPattern.Create("//test.jpg"));
             Assert.Throws<FormatException>(() => GlobPattern.Create("/test/**xx/test.jpg"));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void TryCreate()
+        {
+            GlobPattern glob;
+
+            Assert.True(GlobPattern.TryParse("foo/**", out glob));
+
+            Assert.True(glob.IsMatch("foo"));
+            Assert.True(glob.IsMatch("foo/test.jpg"));
+            Assert.True(glob.IsMatch("foo/bar/test.jpg"));
+            Assert.False(glob.IsMatch("test.jpg"));
+            Assert.False(glob.IsMatch("bar/test.jpg"));
+            Assert.False(glob.IsMatch("bar/foo/test.jpg"));
+
+            Assert.False(GlobPattern.TryParse(null, out glob));
+            Assert.False(GlobPattern.TryParse(string.Empty, out glob));
+            Assert.False(GlobPattern.TryParse("//test.jpg", out glob));
+            Assert.False(GlobPattern.TryParse("/test/**xx/test.jpg", out glob));
+        }
     }
 }
