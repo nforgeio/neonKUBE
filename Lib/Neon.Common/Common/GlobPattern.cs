@@ -1,0 +1,272 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:        GlobPattern.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+
+using System;
+using System.Collections.Generic;
+using Neon.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+using Neon.Common;
+
+namespace Neon.Common
+{
+    /// <summary>
+    /// Implements a very simple glob matcher inspired by the GitHub <c>.gitignore</c> patterns
+    /// described <a href="https://git-scm.com/docs/gitignore">here</a>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The current implementation is somewhat limited compared to that for <c>.gitignore</c>:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>
+    /// Only <b>"*"</b>, <b>"**"</b>, and <b>"?"</b> wildcard chacacters are allowed.
+    /// <b>"!"</b> and <b>"[..]"</b> are not recognized.
+    /// </item>
+    /// <item>
+    /// <b>"*"</b> matches anything except for <b>"/"</b>.
+    /// </item>
+    /// <item>
+    /// <b>"**"</b> matches zero or more directories.
+    /// </item>
+    /// <item>
+    /// <b>"?"</b> matches any single character except for <b>"/"</b>.
+    /// </item>
+    /// </list>
+    /// </remarks>
+    public class GlobPattern
+    {
+        //---------------------------------------------------------------------
+        // Private types
+
+        private struct Segment
+        {
+            public string LeadingSlash;
+            public string Text;
+
+            public Segment(string leadingSlash, string text)
+            {
+                this.LeadingSlash = leadingSlash ?? string.Empty;
+                this.Text         = text;
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Constructs a <see cref="GlobPattern"/> from a pattern string.
+        /// </summary>
+        /// <param name="pattern">The pattern.</param>
+        /// <returns>The created <see cref="GlobPattern"/>.</returns>
+        public static GlobPattern Create(string pattern)
+        {
+            Covenant.Requires<ArgumentNullException>(pattern != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pattern.Trim()));
+            Covenant.Requires<FormatException>(!pattern.Contains("//"));
+
+            return new GlobPattern(pattern);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private string  pattern;
+        private string  regexPattern;
+        private Regex   regex;
+
+        /// <summary>
+        /// Private constructor.
+        /// </summary>
+        /// <param name="pattern">The glob pattern.</param>
+        private GlobPattern(string pattern)
+        {
+            this.pattern = pattern = pattern.Trim();
+
+            // Split the pattern into segments separated by forward slashes.
+
+            var segments = new List<Segment>();
+            var pos      = 0;
+
+            while (pos < pattern.Length)
+            {
+                int     posNext = pattern.IndexOf('/', pos + 1);
+                string  slash   = string.Empty;
+                string  text;
+
+                if (pattern[pos] == '/')
+                {
+                    slash = "/";
+
+                    if (posNext == -1)
+                    {
+                        text = pattern.Substring(pos + 1);
+                        pos  = pattern.Length;
+                    }
+                    else
+                    {
+                        text = pattern.Substring(pos + 1, posNext - (pos + 1));
+                        pos  = posNext;
+                    }
+                }
+                else
+                {
+                    if (posNext == -1)
+                    {
+                        text = pattern.Substring(pos);
+                        pos  = pattern.Length;
+                    }
+                    else
+                    {
+                        text = pattern.Substring(pos, posNext - pos);
+                        pos  = posNext;
+                    }
+                }
+
+                segments.Add(new Segment(slash, text));
+            }
+
+            // Convert the glob into a regular expression.
+
+            var sbRegex  = new StringBuilder();
+
+            // Ensure that segments don't include the "**" wildcard
+            // along with other content.
+
+            foreach (var segment in segments)
+            {
+                if (segment.Text.Contains("**") && segment.Text.Length > 2)
+                {
+                    throw new FormatException($"Glob [{pattern}] is invalid because it includes a segment with [**] along with other text.");
+                }
+            }
+
+            sbRegex.Append('^');
+
+            for (int i = 0; i < segments.Count;i++)
+            {
+                var segment = segments[i];
+                var isFirst = i == 0;
+                var isLast  = i == segments.Count - 1;
+
+                if (segment.Text == "**")
+                {
+                    if (isFirst)
+                    {
+                        sbRegex.Append(segment.LeadingSlash);
+                    }
+
+                    if (isLast)
+                    {
+                        sbRegex.Append("(([^/]*)/?)*");
+                    }
+                    else
+                    {
+                        sbRegex.Append("(([^/]*)/)*");
+                    }
+                }
+                else
+                {
+                    // Append the leading slash unless the previous
+                    // segment was a "**".
+
+                    if (isFirst || segments[i - 1].Text != "**")
+                    {
+                        sbRegex.Append(segment.LeadingSlash);
+                    }
+
+                    foreach (var ch in segment.Text)
+                    {
+                        switch (ch)
+                        {
+                            case '*':
+
+                                sbRegex.Append("[^/]*");
+                                break;
+
+                            case '?':
+
+                                sbRegex.Append("[^/]");
+                                break;
+
+                            case '[':
+                            case '\\':
+                            case '^':
+                            case '$':
+                            case '|':
+                            case '+':
+                            case '(':
+                            case ')':
+                            case '.':
+
+                                // These characters need to be escaped.
+
+                                sbRegex.Append('\\');
+                                sbRegex.Append(ch);
+                                break;
+
+                            default:
+
+                                sbRegex.Append(ch);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            sbRegex.Append('$');
+
+            regexPattern = sbRegex.ToString();
+        }
+
+        /// <summary>
+        /// Returns the glob as a regular expression string.
+        /// </summary>
+        public string RegexPattern
+        {
+            get { return regexPattern; }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="Regex"/> that can be used to match strings against the glob.
+        /// </summary>
+        public Regex Regex
+        {
+            get
+            {
+                if (regex != null)
+                {
+                    return regex;
+                }
+
+                return regex = new Regex(regexPattern);
+            }
+        }
+
+        /// <summary>
+        /// Matches a string against the glob.
+        /// </summary>
+        /// <param name="input">The value to be matched.</param>
+        /// <returns><c>true</c> if the parameter matches the glob.</returns>
+        public bool IsMatch(string input)
+        {
+            Covenant.Requires<ArgumentNullException>(input != null);
+
+            return Regex.IsMatch(input);
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return pattern;
+        }
+    }
+}
