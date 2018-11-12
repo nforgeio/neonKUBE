@@ -45,6 +45,7 @@ USAGE:
     neon traffic NAME haproxy-bridge
     neon traffic NAME inspect
     neon traffic NAME [--all] [--sys] list|ls
+    neon traffic NAME purge URI-PATTERN
     neon traffic NAME remove|rm RULE
     neon traffic NAME set FILE
     neon traffic NAME set -
@@ -55,10 +56,11 @@ USAGE:
 
 ARGUMENTS:
 
-    NAME    - Load balancer name: [public] or [private].
-    RULE    - Rule name.
-    FILE    - Path to a JSON or YAML file.
-    -       - Indicates that JSON/YAML is read from standard input.
+    NAME        - Load balancer name: [public] or [private].
+    RULE        - Rule name.
+    FILE        - Path to a JSON or YAML file.
+    URI-PATTERN - Uri with optional ""?"", ""*"", ""**"" wildcards.
+    -           - Indicates that JSON/YAML is read from standard input.
 
 COMMANDS:
 
@@ -357,6 +359,22 @@ See the documentation for more traffic director rule and setting details.
                         Console.WriteLine(item.Name);
                     }
 
+                    Console.WriteLine();
+                    break;
+
+                case "purge":
+
+                    var purgeUri = commandLine.Arguments.FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(purgeUri))
+                    {
+                        Console.Error.WriteLine("*** ERROR: [URI-PATTERN] argument expected.");
+                    }
+
+                    trafficManager.PurgeCache(purgeUri);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Purge request submitted.");
                     Console.WriteLine();
                     break;
 

@@ -58,6 +58,12 @@ namespace Neon.Hive
         public string Name { get; private set; }
 
         /// <summary>
+        /// Indicates whether the <b>neon-proxy-public</b> or <b>neon-proxy-private</b>
+        /// proxy is being managed.
+        /// </summary>
+        public bool IsPublic => Name.Equals("public", StringComparison.InvariantCultureIgnoreCase);
+
+        /// <summary>
         /// Returns the Consul key for the traffic director's global settings.
         /// </summary>
         /// <returns>The Consul key path.</returns>
@@ -247,7 +253,7 @@ namespace Neon.Hive
             Covenant.Requires<ArgumentNullException>(rule != null);
             Covenant.Requires<ArgumentNullException>(HiveDefinition.IsValidName(rule.Name));
 
-            if (!Name.Equals("public", StringComparison.InvariantCultureIgnoreCase))
+            if (!IsPublic)
             {
                 // Ensure that the [PublicPort] is disabled for non-public rules
                 // just to be absolutely sure that these endpoints are not exposed
@@ -350,6 +356,63 @@ namespace Neon.Hive
             else
             {
                 return new TrafficDirectorRule[0];
+            }
+        }
+
+        /// <summary>
+        /// Instructs the corresponding <b>neon-proxy-public-cache</b> or <b>neon-proxy-private-cache</b>
+        /// services to purge content based on the <see cref="GlobPattern"/>s passed.
+        /// </summary>
+        /// <param name="uriPatterns">The case insensitive <see cref="GlobPattern"/> compatible URI patterns describing the content items to be purged.</param>
+        /// <remarks>
+        /// <para>
+        /// You may pass one or more URI patterns via the <paramref name="uriPatterns"/> parameter.
+        /// These are standard URIs possible augmented by <b>"*"</b>, <b>"?"</b>, and <b>"**"</b>
+        /// wildcards as implemented by <see cref="GlobPattern"/>.  The URI scheme is ignored and
+        /// the <b>host</b> and <b>port</b> must match the requests being presented to the origin
+        /// backends.
+        /// </para>
+        /// <note>
+        /// Although we call this operation <b>purge</b>, this actually maps to the Varnish-Cache <b>ban</b>
+        /// concept which is almost the same thing.  The only real difference is that Varnish <b>ban</b>
+        /// doesn't immediately remove purged item from memory.  Instead it marks the cached items and removes
+        /// them during the next request for the item or via a background <b>ban luker</b> thread.
+        /// </note>
+        /// </remarks>
+        public void PurgeCache(params string[] uriPatterns)
+        {
+            var message = new ProxyPurgeMessage()
+            {
+                PublicCache  = IsPublic,
+                PrivateCache = !IsPublic
+            };
+
+            // We're going to parse each URI, strip off the scheme and then
+            // confirm that the result is a valid GLOB pattern.  Then we'll
+            // append these patterns to the message and then broadcast it.
+
+            foreach (var uriPattern in uriPatterns)
+            {
+                if (string.IsNullOrWhiteSpace(uriPattern))
+                {
+                    continue;   // Ignore any blank patterns
+                }
+
+                if (!Uri.TryCreate(uriPattern, UriKind.Absolute, out var uri))
+                {
+                    throw new ArgumentException($"[{uriPattern}] is not a valid URI.");
+                }
+
+                var globPattern = $"{uri.Host}:{uri.Port}{uri.PathAndQuery}";
+
+                if (!GlobPattern.TryParse(globPattern, out var glob))
+                {
+                }
+            }
+
+            if (message.PurgePatterns.Count > 0)
+            {
+                ProxyNotifyChannel.Publish(message);
             }
         }
     }

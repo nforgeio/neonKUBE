@@ -261,6 +261,39 @@ namespace NeonProxyCache
                             await ConfigureVarnish();
                         }
                     });
+
+                // Register a handler for [ProxyPurgeMessage] messages.
+
+                proxyNotifyChannel.ConsumeAsync<ProxyPurgeMessage>(
+                    async message =>
+                    {
+                        // We cannot process updates in parallel so we'll use an 
+                        // AsyncMutex to prevent this.
+
+                        using (await asyncShimLock.AcquireAsync())
+                        {
+                            var forThisInstance = false;
+
+                            if (isPublic)
+                            {
+                                forThisInstance = message.PublicCache;
+                            }
+                            else
+                            {
+                                forThisInstance = message.PrivateCache;
+                            }
+
+                            if (!forThisInstance)
+                            {
+                                log.LogInfo(() => $"VARNISH-SHIM: Received but ignorning: {message}");
+                                return;
+                            }
+
+                            log.LogInfo(() => $"VARNISH-SHIM: Received: {message}");
+
+                            await Purge(message);
+                        }
+                    });
             }
         }
 
@@ -569,6 +602,47 @@ backend stub {
                     NeonHelper.DeleteFolder(configFolder);
                     NeonHelper.DeleteFolder(configUpdateFolder);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles a received <see cref="ProxyPurgeMessage"/> message by submitting ban
+        /// requests to Varnish via the Varnish CLI.
+        /// </summary>
+        /// <param name="message">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async static Task Purge(ProxyPurgeMessage message)
+        {
+            try
+            {
+                foreach (var pattern in message.PurgePatterns)
+                {
+                    log.LogInfo(() => $"VARNISH-SHIM: Purging [{pattern}].");
+
+                    if (!GlobPattern.TryParse(pattern, out var glob))
+                    {
+                        log.LogWarn(() => $"VARNISH-SHIM: Purge: [{pattern}] is not a valid GLOB pattern.");
+                    }
+
+                    // This link explains what we're doing here:
+                    //
+                    //      http://book.varnish-software.com/4.0/chapters/Cache_Invalidation.html
+
+                    var banArgs = $"ban 'obj.http.x-url ~ {glob.RegexPattern}'";
+
+                    log.LogInfo(() => $"VARNISH-SHIM: varnishadm {banArgs}");
+
+                    var response = await NeonHelper.ExecuteCaptureAsync("varnishadm", banArgs);
+
+                    if (response.ExitCode != 0)
+                    {
+                        log.LogWarn(() => $"VARNISH-SHIM: Ban failed [exitcode={response.ExitCode}]: {response.ErrorText}");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
             }
         }
 

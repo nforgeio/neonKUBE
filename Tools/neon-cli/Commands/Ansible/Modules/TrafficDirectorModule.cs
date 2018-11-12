@@ -51,8 +51,8 @@ namespace NeonCli.Ansible
     // parameter    required    default     choices     comments
     // --------------------------------------------------------------------
     //
-    // name          yes                    private     identifies the target traffic director
-    //                                      public
+    // name         yes                     private     identifies the target traffic director
+    //                                      public      
     //
     // rule_name    see comment                         neonHIVE rule name, required when
     //                                                  [state=present/absent]
@@ -62,8 +62,14 @@ namespace NeonCli.Ansible
     //
     // state        no          present     absent      indicates whether the rule should
     //                                      present     be created or removed or that any
+    //                                      purge       purges cached items (see purge_list)
     //                                      update      deferred updates should be processed
     //                                                  immediately
+    //
+    // purge_list   see comment                         specifies the items to be purged
+    //                                                  when [state=purge].  These are URIs
+    //                                                  including optional "?", "*" or "**"
+    //                                                  wildcards
     //
     // defer_update no          false                   see note below
     //
@@ -222,7 +228,7 @@ namespace NeonCli.Ansible
     //            backends:
     //              - server: TEST
     //                port: 80
-    //  - name: rule-1
+    //  - name: rule-2
     //    hosts: localhost
     //    tasks:
     //      - name: traffic director task
@@ -245,7 +251,27 @@ namespace NeonCli.Ansible
     //        neon_traffic_director:
     //          name: public
     //          state: update
-
+    //
+    // This example submits a request to purge cached items using glob patterns.
+    // This will purge [test.aspx] from [foo.com], all cached content for [bar.com]
+    // and all JPG files from [foobar.com].
+    //
+    // Note that the URI scheme is ignored and that the host and port must match
+    // what was submitted to the origin servers via Varnish.  These will often
+    // match the public URI values but it's possible that proxy rules have
+    // customized these mappings. 
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: purge
+    //        neon_traffic_director:
+    //          name: public
+    //          state: purge
+    //          purge_list:
+    //            - http://foo.com/test.aspx
+    //            - http://bar.com/**
+    //            - http://foobar.com/**/*.jpg
 
     /// <summary>
     /// Implements the <b>neon_traffic_director</b> Ansible module.
@@ -258,6 +284,7 @@ namespace NeonCli.Ansible
             "rule_name",
             "rule",
             "state",
+            "purge_list",
             "defer_update"
         };
 
@@ -538,6 +565,21 @@ namespace NeonCli.Ansible
                     trafficManager.Update();
                     context.Changed = true;
                     context.WriteLine(AnsibleVerbosity.Info, $"Update signalled.");
+                    break;
+
+                case "purge":
+
+                    var purgeItems = context.ParseStringArray("purge_list");
+
+                    if (purgeItems.Count == 0)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Important, $"[purge_list] is missing or empty.");
+                        break;
+                    }
+
+                    trafficManager.PurgeCache(purgeItems.ToArray());
+                    context.Changed = true;
+                    context.WriteLine(AnsibleVerbosity.Info, $"Purge request submitted.");
                     break;
 
                 default:
