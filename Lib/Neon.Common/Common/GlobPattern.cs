@@ -63,13 +63,13 @@ namespace Neon.Common
         // Static members
 
         /// <summary>
-        /// Constructs a <see cref="GlobPattern"/> from a pattern string.
+        /// Parses a <see cref="GlobPattern"/> from a pattern string.
         /// </summary>
         /// <param name="pattern">The pattern.</param>
         /// <returns>The created <see cref="GlobPattern"/>.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the pattern is <c>null</c> or empty.</exception>
         /// <exception cref="FormatException">Thrown if the pattern is invalid.</exception>
-        public static GlobPattern Create(string pattern)
+        public static GlobPattern Parse(string pattern)
         {
             Covenant.Requires<ArgumentNullException>(pattern != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pattern.Trim()));
@@ -94,7 +94,7 @@ namespace Neon.Common
 
             try
             {
-                globPattern = Create(pattern);
+                globPattern = Parse(pattern);
 
                 return true;
             }

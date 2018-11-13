@@ -21,6 +21,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
+using Neon.Net;
 
 namespace Neon.Hive
 {
@@ -32,19 +33,104 @@ namespace Neon.Hive
     /// </summary>
     public class ProxyPurgeMessage
     {
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Describes a cache purge operation.  This can be either
+        /// an origin specific operation where the cached responses for a specific origin 
+        /// server are purged based on glob patterns.  Or you can create a specification
+        /// that purges all cached responses.
+        /// </summary>
+        public class PurgeOperation
+        {
+            //-----------------------------------------------------------------
+            // Static members
+
+            /// <summary>
+            /// Creates a purge operation for a specific origin server and one or
+            /// more purge <see cref="GlobPattern"/> patterns.
+            /// </summary>
+            /// <param name="originHost">The origin hostname.</param>
+            /// <param name="originPort">The origin port.</param>
+            /// <param name="globPattern">The glob pattern to be used for purging content.</param>
+            /// <returns>The <see cref="PurgeOperation"/>.</returns>
+            public static PurgeOperation CreateOriginPurge(string originHost, int originPort, string globPattern)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(originHost));
+                Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(originPort));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(globPattern));
+
+                return new PurgeOperation()
+                {
+                    PurgeAll     = false,
+                    OriginHost   = originHost,
+                    OriginPort   = originPort,
+                    PurgePattern = globPattern
+                };
+            }
+
+            /// <summary>
+            /// Creates a purge operation that purges all cached content.
+            /// </summary>
+            /// <returns>The <see cref="PurgeOperation"/>.</returns>
+            public static PurgeOperation CreatePurgeAll()
+            {
+                return new PurgeOperation()
+                {
+                    PurgeAll = true
+                };
+            }
+
+            //-----------------------------------------------------------------
+            // Instance members
+
+            /// <summary>
+            /// Default constructor.
+            /// </summary>
+            public PurgeOperation()
+            {
+            }
+
+            /// <summary>
+            /// Identifies the origin hostname or <c>null</c> if <see cref="PurgeAll"/> is <c>true</c>.
+            /// </summary>
+            [JsonProperty(PropertyName = "OriginHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [DefaultValue(null)]
+            public string OriginHost { get; set; }
+
+            /// <summary>
+            /// Identifies the origin port or <c>null</c> if <see cref="PurgeAll"/> is <c>true</c>.
+            /// </summary>
+            [JsonProperty(PropertyName = "OriginPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [DefaultValue(0)]
+            public int OriginPort { get; set; }
+
+            /// <summary>
+            /// The glob pattern to be used for purging content from the target cache (when <see cref="PurgeAll"/> is <c>false</c>).
+            /// </summary>
+            [JsonProperty(PropertyName = "PurgePattern", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [DefaultValue(null)]
+            public string PurgePattern { get; set; } = null;
+
+            /// <summary>
+            /// Indicates that the origin server hostname and port should be ignored and that all
+            /// cached contents are to be purged.
+            /// </summary>
+            [JsonProperty(PropertyName = "PurgeAll", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [DefaultValue(false)]
+            public bool PurgeAll { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         /// <summary>
         /// Default constructor.
         /// </summary>
         public ProxyPurgeMessage()
         {
         }
-
-        /// <summary>
-        /// The patterns to be used for purging content from the target cache.
-        /// </summary>
-        [JsonProperty(PropertyName = "PurgePatterns", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public List<string> PurgePatterns { get; set; } = new List<string>();
 
         /// <summary>
         /// Indicates that the content should be purged by <b>neon-proxy-public-cache</b>.
@@ -61,6 +147,44 @@ namespace Neon.Hive
         public bool PrivateCache { get; set; } = false;
 
         /// <summary>
+        /// Lists the purge operations to be performed.
+        /// </summary>
+        [JsonProperty(PropertyName = "PurgeOperations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<PurgeOperation> PurgeOperations { get; set;} = new List<PurgeOperation>();
+
+        /// <summary>
+        /// Adds an operation that purges content for a specific origin server from the cache.
+        /// </summary>
+        /// <param name="originUri">
+        /// The origin server URI to be removed with optional
+        /// <b>"?"</b>, <b>"*"</b>, or <b>"**"</b> wildcards.
+        /// </param>
+        public void AddPurgeOrigin(string originUri)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(originUri));
+
+            if (!Uri.TryCreate(originUri, UriKind.Absolute, out var uri))
+            {
+                throw new ArgumentException($"[{originUri}] is not a valid URI.");
+            }
+
+            var globPattern = uri.PathAndQuery;
+
+            GlobPattern.Parse(globPattern);    // This validates the pattern.
+
+            PurgeOperations.Add(PurgeOperation.CreateOriginPurge(uri.Host, uri.Port, uri.PathAndQuery));
+        }
+
+        /// <summary>
+        /// Adds an operation that purges all cached content.
+        /// </summary>
+        public void AddPurgeAll()
+        {
+            PurgeOperations.Add(PurgeOperation.CreatePurgeAll());
+        }
+
+        /// <summary>
         /// Returns a human-readable summary of the message.
         /// </summary>
         /// <returns>The summary string.</returns>
@@ -68,9 +192,9 @@ namespace Neon.Hive
         {
             var count = 0;
 
-            if (PurgePatterns != null)
+            if (PurgeOperations != null)
             {
-                count = PurgePatterns.Count;
+                count = PurgeOperations.Count;
             }
 
             var target = (string)null;
@@ -97,7 +221,14 @@ namespace Neon.Hive
                 target = "none";
             }
 
-            return $"{nameof(ProxyPurgeMessage)}: [target={target}] [pattern-count={count}]";
+            var purgeAll = string.Empty;
+
+            if (PurgeOperations != null && !PurgeOperations.IsEmpty(o => o.PurgeAll))
+            {
+                purgeAll = "[PURGE-ALL] ";
+            }
+
+            return $"{nameof(ProxyPurgeMessage)}: [target={target}] {purgeAll}[pattern-count={count}]";
         }
     }
 }

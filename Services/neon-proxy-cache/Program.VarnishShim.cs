@@ -613,30 +613,46 @@ backend stub {
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async static Task Purge(ProxyPurgeMessage message)
         {
+            // This link explains what we're doing here:
+            //
+            //      http://book.varnish-software.com/4.0/chapters/Cache_Invalidation.html
+
             try
             {
-                foreach (var pattern in message.PurgePatterns)
+                foreach (var operation in message.PurgeOperations)
                 {
-                    log.LogInfo(() => $"VARNISH-SHIM: Purging [{pattern}].");
+                    log.LogInfo(() => $"VARNISH-SHIM: Purging [{operation}].");
 
-                    if (!GlobPattern.TryParse(pattern, out var glob))
+                    if (operation.PurgeAll)
                     {
-                        log.LogWarn(() => $"VARNISH-SHIM: Purge: [{pattern}] is not a valid GLOB pattern.");
+                        var banArgs = $"ban 'obj.http.x-url ~ ^.*$'";
+
+                        log.LogInfo(() => $"VARNISH-SHIM: varnishadm {banArgs}");
+
+                        var response = await NeonHelper.ExecuteCaptureAsync("varnishadm", banArgs);
+
+                        if (response.ExitCode != 0)
+                        {
+                            log.LogWarn(() => $"VARNISH-SHIM: Ban failed [exitcode={response.ExitCode}]: {response.ErrorText}");
+                        }
                     }
-
-                    // This link explains what we're doing here:
-                    //
-                    //      http://book.varnish-software.com/4.0/chapters/Cache_Invalidation.html
-
-                    var banArgs = $"ban 'obj.http.x-url ~ {glob.RegexPattern}'";
-
-                    log.LogInfo(() => $"VARNISH-SHIM: varnishadm {banArgs}");
-
-                    var response = await NeonHelper.ExecuteCaptureAsync("varnishadm", banArgs);
-
-                    if (response.ExitCode != 0)
+                    else
                     {
-                        log.LogWarn(() => $"VARNISH-SHIM: Ban failed [exitcode={response.ExitCode}]: {response.ErrorText}");
+                        if (!GlobPattern.TryParse(operation.PurgePattern, out var glob))
+                        {
+                            log.LogWarn(() => $"VARNISH-SHIM: Purge: [{operation.PurgePattern}] is not a valid GLOB pattern.");
+                        }
+
+                        var banArgs = $"ban 'obj.http.host == {operation.OriginHost} && obj.http.port == {operation.OriginPort} && obj.http.x-url ~ {glob.RegexPattern}'";
+
+                        log.LogInfo(() => $"VARNISH-SHIM: varnishadm {banArgs}");
+
+                        var response = await NeonHelper.ExecuteCaptureAsync("varnishadm", banArgs);
+
+                        if (response.ExitCode != 0)
+                        {
+                            log.LogWarn(() => $"VARNISH-SHIM: Ban failed [exitcode={response.ExitCode}]: {response.ErrorText}");
+                        }
                     }
                 }
             }

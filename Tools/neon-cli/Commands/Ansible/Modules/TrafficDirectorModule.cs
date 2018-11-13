@@ -66,10 +66,12 @@ namespace NeonCli.Ansible
     //                                      update      deferred updates should be processed
     //                                                  immediately
     //
-    // purge_list   see comment                         specifies the items to be purged
-    //                                                  when [state=purge].  These are URIs
-    //                                                  including optional "?", "*" or "**"
-    //                                                  wildcards
+    // purge_list   see comment                         specifies the origin server URIs to 
+    //                                                  be purged when [state=purge].  These 
+    //                                                  are URIs including optional "?", "*" 
+    //                                                  or "**" wildcards.
+    //
+    //                                                  Use "ALL" to purge all cached content.
     //
     // defer_update no          false                   see note below
     //
@@ -252,9 +254,9 @@ namespace NeonCli.Ansible
     //          name: public
     //          state: update
     //
-    // This example submits a request to purge cached items using glob patterns.
-    // This will purge [test.aspx] from [foo.com], all cached content for [bar.com]
-    // and all JPG files from [foobar.com].
+    // This example submits a request to purge cached content for specific origin
+    // servers using glob patterns. This will purge [test.aspx] from [foo.com], all
+    // cached content for [bar.com] and all JPG files from [foobar.com].
     //
     // Note that the URI scheme is ignored and that the host and port must match
     // what was submitted to the origin servers via Varnish.  These will often
@@ -272,6 +274,18 @@ namespace NeonCli.Ansible
     //            - http://foo.com/test.aspx
     //            - http://bar.com/**
     //            - http://foobar.com/**/*.jpg
+    //
+    // This example purges all cached content.
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: purge
+    //        neon_traffic_director:
+    //          name: public
+    //          state: purge
+    //          purge_list:
+    //            - ALL
 
     /// <summary>
     /// Implements the <b>neon_traffic_director</b> Ansible module.
@@ -578,6 +592,7 @@ namespace NeonCli.Ansible
                     }
 
                     trafficManager.PurgeCache(purgeItems.ToArray());
+
                     context.Changed = true;
                     context.WriteLine(AnsibleVerbosity.Info, $"Purge request submitted.");
                     break;

@@ -44,12 +44,12 @@ namespace TestHive
         //---------------------------------------------------------------------
         // Implementation
 
-        private const string            testHostname = "vegomatic.test";
-        private static TlsCertificate   certificate;
+        private const string testHostname = "vegomatic.test";
+        private static TlsCertificate certificate;
 
-        private HiveFixture     hiveFixture;
-        private HiveProxy       hive;
-        private string          vegomaticImage = $"nhive/vegomatic:{ThisAssembly.Git.Branch}-latest";
+        private HiveFixture hiveFixture;
+        private HiveProxy hive;
+        private string vegomaticImage = $"nhive/vegomatic:{ThisAssembly.Git.Branch}-latest";
 
         public Test_HiveTrafficDirector(HiveFixture fixture)
         {
@@ -59,7 +59,7 @@ namespace TestHive
             }
 
             this.hiveFixture = fixture;
-            this.hive        = fixture.Hive;
+            this.hive = fixture.Hive;
 
             // Generate a self-signed wildcard certificate we can reuse across tests if
             // we haven't already created one.
@@ -98,7 +98,7 @@ namespace TestHive
 
             using (var client = new TestHttpClient(disableConnectionReuse: true, handler: handler, disposeHandler: true))
             {
-                client.BaseAddress                = baseUri;
+                client.BaseAddress = baseUri;
                 client.DefaultRequestHeaders.Host = hostname;
 
                 await NeonHelper.WaitForAsync(
@@ -149,7 +149,7 @@ namespace TestHive
 
             if (response.Headers.TryGetValues("X-Varnish", out var values))
             {
-                var value  = values.Single().Trim();
+                var value = values.Single().Trim();
                 var fields = value.Split(' ');
 
                 return fields.Length == 2 && int.TryParse(fields[0], out var v1) && int.TryParse(fields[1], out var v2);

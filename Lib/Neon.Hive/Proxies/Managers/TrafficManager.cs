@@ -14,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.HiveMQ;
+using Neon.Net;
 
 namespace Neon.Hive
 {
@@ -360,57 +361,45 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Instructs the corresponding <b>neon-proxy-public-cache</b> or <b>neon-proxy-private-cache</b>
-        /// services to purge content based on the <see cref="GlobPattern"/>s passed.
+        /// Instructs the associated <b>neon-proxy-public-cache</b> or <b>neon-proxy-private-cache</b>
+        /// services to purge the content specified.
         /// </summary>
-        /// <param name="uriPatterns">The case insensitive <see cref="GlobPattern"/> compatible URI patterns describing the content items to be purged.</param>
-        /// <remarks>
-        /// <para>
-        /// You may pass one or more URI patterns via the <paramref name="uriPatterns"/> parameter.
-        /// These are standard URIs possible augmented by <b>"*"</b>, <b>"?"</b>, and <b>"**"</b>
-        /// wildcards as implemented by <see cref="GlobPattern"/>.  The URI scheme is ignored and
-        /// the <b>host</b> and <b>port</b> must match the requests being presented to the origin
-        /// backends.
-        /// </para>
-        /// <note>
-        /// Although we call this operation <b>purge</b>, this actually maps to the Varnish-Cache <b>ban</b>
-        /// concept which is almost the same thing.  The only real difference is that Varnish <b>ban</b>
-        /// doesn't immediately remove purged item from memory.  Instead it marks the cached items and removes
-        /// them during the next request for the item or via a background <b>ban luker</b> thread.
-        /// </note>
-        /// </remarks>
-        public void PurgeCache(params string[] uriPatterns)
+        /// <param name="patterns">
+        /// One or more patterns specifying which content is to be purged.  Each of these is either an
+        /// origin server URI Optionally including a <b>"?"</b>, <b>"*"</b>, or <b>"**"</b> wildcards
+        /// or this may be set to <b>"ALL"</b> which specifies that all cached content is to be purged.
+        /// </param>
+        public void PurgeCache(params string[] patterns)
         {
+            if (patterns == null || patterns.Length == 0)
+            {
+                return; // NOP
+            }
+
             var message = new ProxyPurgeMessage()
             {
                 PublicCache  = IsPublic,
                 PrivateCache = !IsPublic
             };
 
-            // We're going to parse each URI, strip off the scheme and then
-            // confirm that the result is a valid GLOB pattern.  Then we'll
-            // append these patterns to the message and then broadcast it.
-
-            foreach (var uriPattern in uriPatterns)
+            foreach (var pattern in patterns)
             {
-                if (string.IsNullOrWhiteSpace(uriPattern))
+                if (string.IsNullOrWhiteSpace(pattern))
                 {
                     continue;   // Ignore any blank patterns
                 }
 
-                if (!Uri.TryCreate(uriPattern, UriKind.Absolute, out var uri))
+                if (pattern.Equals("all", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    throw new ArgumentException($"[{uriPattern}] is not a valid URI.");
+                    message.AddPurgeAll();
                 }
-
-                var globPattern = $"{uri.Host}:{uri.Port}{uri.PathAndQuery}";
-
-                if (!GlobPattern.TryParse(globPattern, out var glob))
+                else
                 {
+                    message.AddPurgeOrigin(pattern);
                 }
             }
 
-            if (message.PurgePatterns.Count > 0)
+            if (message.PurgeOperations.Count > 0)
             {
                 ProxyNotifyChannel.Publish(message);
             }
