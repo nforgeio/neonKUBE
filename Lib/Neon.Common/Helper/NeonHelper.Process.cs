@@ -463,7 +463,7 @@ namespace Neon.Common
         /// </remarks>
         public static ExecuteResult ExecuteCapture(string path, string args, TimeSpan? timeout = null, Process process = null)
         {
-            var processInfo     = new ProcessStartInfo(GetProgramPath(path), args != null ? args : string.Empty);
+            var processInfo     = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var redirector      = new ProcessStreamRedirector();
             var externalProcess = process != null;
 

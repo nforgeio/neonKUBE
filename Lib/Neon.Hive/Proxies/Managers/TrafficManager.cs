@@ -364,14 +364,15 @@ namespace Neon.Hive
         /// Instructs the associated <b>neon-proxy-public-cache</b> or <b>neon-proxy-private-cache</b>
         /// services to purge the content specified.
         /// </summary>
-        /// <param name="patterns">
-        /// One or more patterns specifying which content is to be purged.  Each of these is either an
-        /// origin server URI Optionally including a <b>"?"</b>, <b>"*"</b>, or <b>"**"</b> wildcards
-        /// or this may be set to <b>"ALL"</b> which specifies that all cached content is to be purged.
+        /// <param name="uriPatterns">
+        /// One or more <b>case insensitive</b> patterns specifying which content is to be purged.  Each 
+        /// of these is either an origin server URI Optionally including a <b>"?"</b>, <b>"*"</b>, or 
+        /// <b>"**"</b> wildcards or this may be set to <b>"ALL"</b> which specifies that all cached 
+        /// content is to be purged.
         /// </param>
-        public void PurgeCache(params string[] patterns)
+        public void Purge(params string[] uriPatterns)
         {
-            if (patterns == null || patterns.Length == 0)
+            if (uriPatterns == null || uriPatterns.Length == 0)
             {
                 return; // NOP
             }
@@ -382,7 +383,7 @@ namespace Neon.Hive
                 PrivateCache = !IsPublic
             };
 
-            foreach (var pattern in patterns)
+            foreach (var pattern in uriPatterns)
             {
                 if (string.IsNullOrWhiteSpace(pattern))
                 {

@@ -643,7 +643,11 @@ backend stub {
                             log.LogWarn(() => $"VARNISH-SHIM: Purge: [{operation.PurgePattern}] is not a valid GLOB pattern.");
                         }
 
-                        var banArgs = $"ban 'obj.http.host == {operation.OriginHost} && obj.http.port == {operation.OriginPort} && obj.http.x-url ~ {glob.RegexPattern}'";
+                        var banArgs = $"-n {workDir} ban obj.http.x-host == \"{operation.OriginHost}\" && obj.http.x-port == \"{operation.OriginPort}\" && obj.http.x-url ~ {glob.RegexPattern}";
+
+                        // Backslashes in the regex need to be escaped.
+
+                        banArgs = banArgs.Replace("\\", "\\\\");
 
                         log.LogInfo(() => $"VARNISH-SHIM: varnishadm {banArgs}");
 
@@ -651,7 +655,7 @@ backend stub {
 
                         if (response.ExitCode != 0)
                         {
-                            log.LogWarn(() => $"VARNISH-SHIM: Ban failed [exitcode={response.ExitCode}]: {response.ErrorText}");
+                            log.LogWarn(() => $"VARNISH-SHIM: Ban failed [exitcode={response.ExitCode}]: {response.AllText}");
                         }
                     }
                 }

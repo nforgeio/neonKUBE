@@ -371,7 +371,7 @@ See the documentation for more traffic director rule and setting details.
                         Console.Error.WriteLine("*** ERROR: [URI-PATTERN] argument expected.");
                     }
 
-                    trafficManager.PurgeCache(purgeUri);
+                    trafficManager.Purge(purgeUri);
 
                     Console.WriteLine();
                     Console.WriteLine("Purge request submitted.");

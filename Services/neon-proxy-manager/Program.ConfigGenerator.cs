@@ -1269,7 +1269,7 @@ backend stub {{
 
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
-                sbVarnishVcl.AppendLine($"# Override the default Varnish [vcl_synth] subroutine too.");
+                sbVarnishVcl.AppendLine($"# Override the default Varnish [vcl_synth] subroutine to be a bit cleaner.");
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"sub vcl_synth {{");
                 sbVarnishVcl.AppendLine($"    set resp.http.Content-Type = \"text/html; charset=utf-8\";");
@@ -1282,6 +1282,19 @@ backend stub {{
                 sbVarnishVcl.AppendLine($"</html>");
                 sbVarnishVcl.AppendLine($"\"}} );");
                 sbVarnishVcl.AppendLine($"    return (deliver);");
+                sbVarnishVcl.AppendLine($"}}");
+
+                // Generate a custom [vcl_synth] subroutine too.
+
+                sbVarnishVcl.AppendLine();
+                sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
+                sbVarnishVcl.AppendLine($"# Override the default Varnish [vcl_backend_response] subroutine so we can capture");
+                sbVarnishVcl.AppendLine($"# some request properties we'll need for lurker friendly ban expressions.");
+                sbVarnishVcl.AppendLine();
+                sbVarnishVcl.AppendLine($"sub vcl_backend_response {{");
+                sbVarnishVcl.AppendLine($"    set beresp.http.x-host = bereq.http.host;");
+                sbVarnishVcl.AppendLine($"    set beresp.http.x-port = bereq.http.port;");
+                sbVarnishVcl.AppendLine($"    set beresp.http.x-url  = bereq.http.url;");
                 sbVarnishVcl.AppendLine($"}}");
 
                 // Generate the backends for each HTTP rule that enables caching
@@ -1574,6 +1587,10 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             sbVarnishVcl.AppendLine($"    if (req.http.X-Neon-Cache-Debug) {{");
             sbVarnishVcl.AppendLine($"        set resp.http.X-Neon-Proxy-Cache = \"hits=\" + obj.hits;");
             sbVarnishVcl.AppendLine($"    }}");
+            sbVarnishVcl.AppendLine($"    # Remove the internal lurker friendly ban headers.");
+            sbVarnishVcl.AppendLine($"    unset resp.http.x-host;");
+            sbVarnishVcl.AppendLine($"    unset resp.http.x-port;");
+            sbVarnishVcl.AppendLine($"    unset resp.http.x-url;");
             sbVarnishVcl.AppendLine($"    return(deliver);");
             sbVarnishVcl.AppendLine($"}}");
 

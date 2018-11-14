@@ -591,7 +591,7 @@ namespace NeonCli.Ansible
                         break;
                     }
 
-                    trafficManager.PurgeCache(purgeItems.ToArray());
+                    trafficManager.Purge(purgeItems.ToArray());
 
                     context.Changed = true;
                     context.WriteLine(AnsibleVerbosity.Info, $"Purge request submitted.");

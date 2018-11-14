@@ -98,7 +98,7 @@ namespace TestHive
 
             using (var client = new TestHttpClient(disableConnectionReuse: true, handler: handler, disposeHandler: true))
             {
-                client.BaseAddress = baseUri;
+                client.BaseAddress                = baseUri;
                 client.DefaultRequestHeaders.Host = hostname;
 
                 await NeonHelper.WaitForAsync(
