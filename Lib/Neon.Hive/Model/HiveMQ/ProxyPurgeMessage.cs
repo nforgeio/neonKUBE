@@ -66,7 +66,7 @@ namespace Neon.Hive
                     PurgeAll     = false,
                     OriginHost   = originHost,
                     OriginPort   = originPort,
-                    PurgePattern = globPattern
+                    UrlPattern = globPattern
                 };
             }
 
@@ -109,9 +109,9 @@ namespace Neon.Hive
             /// <summary>
             /// The glob pattern to be used for purging content from the target cache (when <see cref="PurgeAll"/> is <c>false</c>).
             /// </summary>
-            [JsonProperty(PropertyName = "PurgePattern", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [JsonProperty(PropertyName = "UrlPattern", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             [DefaultValue(null)]
-            public string PurgePattern { get; set; } = null;
+            public string UrlPattern { get; set; } = null;
 
             /// <summary>
             /// Indicates that the origin server hostname and port should be ignored and that all
@@ -120,6 +120,19 @@ namespace Neon.Hive
             [JsonProperty(PropertyName = "PurgeAll", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             [DefaultValue(false)]
             public bool PurgeAll { get; set; }
+
+            /// <inheritdoc/>
+            public override string ToString()
+            {
+                if (PurgeAll)
+                {
+                    return $"PURGE-ALL";
+                }
+                else
+                {
+                    return $"PURGE: origin-host={OriginHost}, origin-port={OriginPort}, uri-pattern={UrlPattern}";
+                }
+            }
         }
 
         //---------------------------------------------------------------------

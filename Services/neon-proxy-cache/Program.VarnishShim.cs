@@ -10,6 +10,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Security.Cryptography;
@@ -613,56 +614,80 @@ backend stub {
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async static Task Purge(ProxyPurgeMessage message)
         {
-            // This link explains what we're doing here:
+            // [neon-proxy-manager] generates VCL that implements the HTTP BAN method
+            // by submitting a ban expression to the local Varnish instance.  Two types
+            // of bans are supported by passing one of two sets of headers:
+            //
+            // This also implements the BAN method.  This requires these headers to ban
+            // content from a specific origin server:
+            //
+            //      X-Ban-Host      - the origin hostname
+            //      X-Ban-Port      - the origin port
+            //      X-Ban-Url-Regex - the regular expression used to match the URLs to be banned
+            //
+            // or just this header to purge all cached content:
+            //
+            //      X-Ban-All: yes
+            //
+            // Note that BAN requests must be submitted to [localhost] for security (e.g.
+            // to prevent external DOS attacks).
+            //
+            // Here's some more information about how this works.
             //
             //      http://book.varnish-software.com/4.0/chapters/Cache_Invalidation.html
 
-            try
+            using (var client = new HttpClient())
             {
-                foreach (var operation in message.PurgeOperations)
+                var banMethod = new HttpMethod("BAN");
+
+                client.BaseAddress = new Uri("http://localhost:80");
+
+                try
                 {
-                    log.LogInfo(() => $"VARNISH-SHIM: Purging [{operation}].");
-
-                    if (operation.PurgeAll)
+                    foreach (var operation in message.PurgeOperations)
                     {
-                        var banArgs = $"ban 'obj.http.x-url ~ ^.*$'";
+                        var request = new HttpRequestMessage(banMethod, "/");
 
-                        log.LogInfo(() => $"VARNISH-SHIM: varnishadm {banArgs}");
+                        log.LogInfo(() => $"VARNISH-SHIM: Purging [{operation}].");
 
-                        var response = await NeonHelper.ExecuteCaptureAsync("varnishadm", banArgs);
-
-                        if (response.ExitCode != 0)
+                        if (operation.PurgeAll)
                         {
-                            log.LogWarn(() => $"VARNISH-SHIM: Ban failed [exitcode={response.ExitCode}]: {response.ErrorText}");
+                            request.Headers.Add("X-Ban-All", "yes");
+
+                            log.LogInfo(() => $"VARNISH-SHIM: Submitting BAN(X-Ban-All: yes)");
                         }
-                    }
-                    else
-                    {
-                        if (!GlobPattern.TryParse(operation.PurgePattern, out var glob))
+                        else
                         {
-                            log.LogWarn(() => $"VARNISH-SHIM: Purge: [{operation.PurgePattern}] is not a valid GLOB pattern.");
+                            if (!GlobPattern.TryParse(operation.UrlPattern, out var glob))
+                            {
+                                log.LogWarn(() => $"VARNISH-SHIM: Purge: [{operation.UrlPattern}] is not a valid GLOB pattern.");
+                            }
+
+                            var urlRegex = $"(?i){glob.RegexPattern}";  // The "(?i)" prefix makes the regex case insensitive.
+
+                            request.Headers.Add("X-Ban-Host", operation.OriginHost);
+                            request.Headers.Add("X-Ban-Port", operation.OriginPort.ToString());
+                            request.Headers.Add("X-Ban-Url-Regex", urlRegex);
+
+                            log.LogInfo(() => $"VARNISH-SHIM: Submitting BAN(X-Ban-Host: {operation.OriginHost}, X-Ban-Port: {operation.OriginPort}, X-Ban-Url-Regex: {urlRegex})");
                         }
 
-                        var banArgs = $"-n {workDir} ban obj.http.x-host == \"{operation.OriginHost}\" && obj.http.x-port == \"{operation.OriginPort}\" && obj.http.x-url ~ {glob.RegexPattern}";
+                        var response = await client.SendAsync(request);
 
-                        // Backslashes in the regex need to be escaped.
-
-                        banArgs = banArgs.Replace("\\", "\\\\");
-
-                        log.LogInfo(() => $"VARNISH-SHIM: varnishadm {banArgs}");
-
-                        var response = await NeonHelper.ExecuteCaptureAsync("varnishadm", banArgs);
-
-                        if (response.ExitCode != 0)
+                        if (response.StatusCode != HttpStatusCode.OK)
                         {
-                            log.LogWarn(() => $"VARNISH-SHIM: Ban failed [exitcode={response.ExitCode}]: {response.AllText}");
+                            log.LogWarn(() => $"VARNISH-SHIM: Ban failed [status={response.StatusCode}]: {response.ReasonPhrase}");
+                        }
+                        else
+                        {
+                            log.LogInfo(() => $"VARNISH-SHIM: Ban submitted.");
                         }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                log.LogError(e);
+                catch (Exception e)
+                {
+                    log.LogError(e);
+                }
             }
         }
 

@@ -149,7 +149,7 @@ namespace TestHive
 
             if (response.Headers.TryGetValues("X-Varnish", out var values))
             {
-                var value = values.Single().Trim();
+                var value  = values.Single().Trim();
                 var fields = value.Split(' ');
 
                 return fields.Length == 2 && int.TryParse(fields[0], out var v1) && int.TryParse(fields[1], out var v2);

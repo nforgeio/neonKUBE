@@ -27,6 +27,17 @@ namespace TestHive
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Cache_Purge_Security()
+        {
+            // Verify that non-local BAN requests are rejected.  This is important because
+            // this prevents DOS attacks.
+
+            await Task.Delay(0);
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Cache_Purge()
         {
             var trafficManager = hive.PublicTraffic;

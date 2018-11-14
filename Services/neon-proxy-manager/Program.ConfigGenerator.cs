@@ -1239,6 +1239,18 @@ backend stub {{
 ";
                 sbVarnishVcl.Append(vclHeader);
 
+                // Methods like BAN can only be submitted from the local via the [localhost]
+                // loopback address for security.
+
+                sbVarnishVcl.AppendLine();
+                sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
+                sbVarnishVcl.AppendLine($"# Define an ACL used to ensure that requests were submitted on the local machine.");
+                sbVarnishVcl.AppendLine();
+                sbVarnishVcl.AppendLine($"acl acl_secure {{");
+                sbVarnishVcl.AppendLine($"    \"localhost\";");
+                sbVarnishVcl.AppendLine($"}}");
+
+
                 // Generate the [vcl_backend_error] subroutine to return a synthetic
                 // response with a more responable error message than Varnish generates
                 // (which is "Guru Meditation").
@@ -1256,7 +1268,7 @@ backend stub {{
                 sbVarnishVcl.AppendLine($"synthetic({{\"<html>");
                 sbVarnishVcl.AppendLine($"<head><title>neonHIVE Proxy Cache Error</title></head>");
                 sbVarnishVcl.AppendLine($"<body>");
-                sbVarnishVcl.AppendLine($"<h1>503: Service Unavailable</h1>");
+                sbVarnishVcl.AppendLine($"<b>503: Service Unavailable</b>");
                 sbVarnishVcl.AppendLine($"No origin servers are healthy.");
                 sbVarnishVcl.AppendLine($"</body>");
                 sbVarnishVcl.AppendLine($"</html>");
@@ -1276,8 +1288,7 @@ backend stub {{
                 sbVarnishVcl.AppendLine($"synthetic({{\"<html>");
                 sbVarnishVcl.AppendLine($"<head><title>neonHIVE Proxy Cache</title></head>");
                 sbVarnishVcl.AppendLine($"<body>");
-                sbVarnishVcl.AppendLine($"<h1>\"}} + resp.status + \": \" + resp.reason + {{\"</h1>");
-                sbVarnishVcl.AppendLine($"Unable to handle this request.");
+                sbVarnishVcl.AppendLine($"<b>\"}} + resp.status + \": \" + resp.reason + {{\"</b>");
                 sbVarnishVcl.AppendLine($"</body>");
                 sbVarnishVcl.AppendLine($"</html>");
                 sbVarnishVcl.AppendLine($"\"}} );");
@@ -1292,9 +1303,9 @@ backend stub {{
                 sbVarnishVcl.AppendLine($"# some request properties we'll need for lurker friendly ban expressions.");
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"sub vcl_backend_response {{");
-                sbVarnishVcl.AppendLine($"    set beresp.http.x-host = bereq.http.host;");
-                sbVarnishVcl.AppendLine($"    set beresp.http.x-port = bereq.http.port;");
-                sbVarnishVcl.AppendLine($"    set beresp.http.x-url  = bereq.http.url;");
+                sbVarnishVcl.AppendLine($"    set beresp.http.x-ban-host = bereq.http.host;");
+                sbVarnishVcl.AppendLine($"    set beresp.http.x-ban-port = bereq.http.port;");
+                sbVarnishVcl.AppendLine($"    set beresp.http.x-ban-url  = bereq.http.url;");
                 sbVarnishVcl.AppendLine($"}}");
 
                 // Generate the backends for each HTTP rule that enables caching
@@ -1524,6 +1535,17 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 // Where PORT is the proxy frontend port that received the request, PREFIX
                 // is the path prefix (defaults to "/") and HOSTNAME identifies the request 
                 // hosts (without any ":PORT" part).
+                //
+                // This also implements the BAN method.  This requires these headers to ban
+                // content from a specific origin server:
+                //
+                //      X-Ban-Host      - the origin hostname
+                //      X-Ban-Port      - the origin port
+                //      X-Ban-Url-Regex - the regular expression used to match the URLs to be banned
+                //
+                // or just this header to purge all cached content:
+                //
+                //      X-Ban-All: yes
 
                 sbVarnishVcl.AppendLine();
                 sbVarnishVcl.AppendLine($"#------------------------------------------------------------------------------");
@@ -1534,7 +1556,34 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                 sbVarnishVcl.AppendLine($"    if (!req.http.X-Neon-Frontend) {{");
                 sbVarnishVcl.AppendLine($"        if (req.method == \"OPTIONS\" || req.method == \"HEAD\") {{");
                 sbVarnishVcl.AppendLine($"            return (synth(200)); # Treat this as an HAProxy health probe.");
+
+                // Handle BAN requests.
+                //
+                // Note that we can't allow just anyone to ban content because that would be an effective
+                // denial of service technique.  We're going to solve this by requiring BAN requests to
+                // be submitted only from the local machine using the [localhost] loopback address.
+
+                sbVarnishVcl.AppendLine($"        }} else if (req.method == \"BAN\") {{");
+                sbVarnishVcl.AppendLine($"            if (!(client.ip ~ acl_secure)) {{");
+                sbVarnishVcl.AppendLine($"                return (synth(403, \"BAN requests must be submitted locally.\"));");
+                sbVarnishVcl.AppendLine($"            }}");
+                sbVarnishVcl.AppendLine($"            if (req.http.X-Ban-All ~ \"(?i)^yes$\") {{");
+                sbVarnishVcl.AppendLine($"                ban (\"obj.http.x-ban-host ~ .*\");");
+                sbVarnishVcl.AppendLine($"            }} else {{");
+                sbVarnishVcl.AppendLine($"                if (!req.http.X-Ban-Host) {{");
+                sbVarnishVcl.AppendLine($"                    return (synth(400, \"BAN requires the [X-Ban-Host] header.\"));");
+                sbVarnishVcl.AppendLine($"                }}");
+                sbVarnishVcl.AppendLine($"                if (!req.http.X-Ban-Port) {{");
+                sbVarnishVcl.AppendLine($"                    return (synth(400, \"BAN requires the [X-Ban-Port] header.\"));");
+                sbVarnishVcl.AppendLine($"                }}");
+                sbVarnishVcl.AppendLine($"                if (!req.http.X-Ban-Url-Regex) {{");
+                sbVarnishVcl.AppendLine($"                    return (synth(400, \"BAN requires the [X-Ban-Url-Regex] header.\"));");
+                sbVarnishVcl.AppendLine($"                }}");
+                sbVarnishVcl.AppendLine($"                ban (\"obj.http.x-ban-host == \" + req.http.X-Ban-Host + \" && obj.http.x-ban-port == \" + req.http.X-Ban-Port + \" && obj.http.x-ban-url ~ \" + req.http.X-Ban-Url-Regex);");
+                sbVarnishVcl.AppendLine($"            }}");
+                sbVarnishVcl.AppendLine($"            return (synth(200, \"Ban submitted.\"));");
                 sbVarnishVcl.AppendLine($"        }}");
+
                 sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Frontend] header is required.\"));");
                 sbVarnishVcl.AppendLine($"    }} else if (req.http.X-Neon-Frontend == \"\") {{");
                 sbVarnishVcl.AppendLine($"        return (synth(400, \"[X-Neon-Frontend] header cannot be empty.\"));");
@@ -1568,9 +1617,10 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
                     }
                 }
 
-                sbVarnishVcl.AppendLine($"    }}");
-                sbVarnishVcl.AppendLine($"    else {{");
-                sbVarnishVcl.AppendLine($"        return (synth(503, \"[\" + req.http.X-Neon-Frontend + \"] does not map to a traffic director rule.\"));");
+                // Return an error when there's no match.
+
+                sbVarnishVcl.AppendLine($"    }} else {{");
+                sbVarnishVcl.AppendLine($"        return (synth(503, \"[X-Neon-Frontend: \" + req.http.X-Neon-Frontend + \"] does not map to a traffic director rule.\"));");
                 sbVarnishVcl.AppendLine($"    }}");
 
                 sbVarnishVcl.AppendLine($"}}");
@@ -1588,8 +1638,8 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             sbVarnishVcl.AppendLine($"        set resp.http.X-Neon-Proxy-Cache = \"hits=\" + obj.hits;");
             sbVarnishVcl.AppendLine($"    }}");
             sbVarnishVcl.AppendLine($"    # Remove the internal lurker friendly ban headers.");
-            sbVarnishVcl.AppendLine($"    unset resp.http.x-host;");
-            sbVarnishVcl.AppendLine($"    unset resp.http.x-port;");
+            sbVarnishVcl.AppendLine($"    unset resp.http.x-ban-host;");
+            sbVarnishVcl.AppendLine($"    unset resp.http.x-ban-port;");
             sbVarnishVcl.AppendLine($"    unset resp.http.x-url;");
             sbVarnishVcl.AppendLine($"    return(deliver);");
             sbVarnishVcl.AppendLine($"}}");

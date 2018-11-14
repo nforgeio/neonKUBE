@@ -220,7 +220,6 @@ namespace Neon.Common
 
                             case '?':
                             case '[':
-                            case '\\':
                             case '^':
                             case '$':
                             case '|':
