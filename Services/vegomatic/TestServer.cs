@@ -34,9 +34,23 @@ namespace NeonVegomatic
     /// is actually working.
     /// </para>
     /// <para>
-    /// Call <see cref="ExecAsync(CommandLine)"/> to start.  The argument specifies
-    /// the <b>server-id</b> for the instance.  A UUID will be generated otherwise.
+    /// Call <see cref="ExecAsync(CommandLine)"/> to start.  The following
+    /// command line arguments are supported.
     /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><b>server-id=VALUE</b></term>
+    ///     <description>
+    ///     Specifies the <b>server-id</b> for the instance.  A UUID will be generated otherwise.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>expires=SECONDS</b></term>
+    ///     <description>
+    ///     The default response expiration seconds.  This defaults to <b>0</b>.
+    ///     </description>
+    /// </item>
+    /// </list>
     /// <para>
     /// The server supports the following URI query parameters:
     /// </para>
@@ -84,7 +98,8 @@ namespace NeonVegomatic
         //---------------------------------------------------------------------
         // Statics and local types.
 
-        private static string serverId = Guid.NewGuid().ToString("D").ToLowerInvariant();
+        private static string defaultServerId = Guid.NewGuid().ToString("D").ToLowerInvariant();
+        private static double defaultExpires  = 0;
 
         /// <summary>
         /// Implements the service.
@@ -104,7 +119,7 @@ namespace NeonVegomatic
                         var bodyMode = "server-id";
                         var bodyText = string.Empty;
                         var delay    = TimeSpan.Zero;
-                        var expires  = TimeSpan.Zero;
+                        var expires  = TimeSpan.FromSeconds(defaultExpires);
 
                         // Parse any query parameters.
 
@@ -166,7 +181,7 @@ namespace NeonVegomatic
                             default:
                             case "server-id":
 
-                                await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(serverId));
+                                await context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(defaultServerId));
                                 break;
                         }
                     });
@@ -182,13 +197,46 @@ namespace NeonVegomatic
         /// <param name="commandLine">The command line arguments will be returned as response headers.</param>
         public async Task ExecAsync(CommandLine commandLine)
         {
-            // The first argument is the [server-id], if present.
+            // Process the command line arguments.
 
-            var arg = commandLine.Arguments.FirstOrDefault();
-
-            if (arg != null)
+            foreach (var arg in commandLine.Arguments)
             {
-                serverId = arg;
+                var fields = arg.Split(new char[] { '=' }, 2);
+
+                if (fields.Length != 2)
+                {
+                    Console.WriteLine($"Invalid argument: [{arg}].  [NAME=VALUE] expected.");
+                    Program.Exit(1);
+                }
+
+                var name  = fields[0].ToLowerInvariant();
+                var value = fields[1];
+
+                switch (name)
+                {
+                    case "server-id":
+
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            defaultServerId = value;
+                        }
+                        break;
+
+                    case "expires":
+
+                        if (!double.TryParse(value, out defaultExpires) || defaultExpires < 0.0)
+                        {
+                            Console.WriteLine($"Invalid expiration seconds: [{arg}]");
+                            Program.Exit(1);
+                        }
+                        break;
+
+                    default:
+
+                        Console.WriteLine($"Unexpected commandline argument: [{arg}]");
+                        Program.Exit(1);
+                        break;
+                }
             }
 
             // Start the web server.
