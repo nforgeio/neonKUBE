@@ -68,8 +68,8 @@ namespace NeonCli.Ansible
     //
     // purge_list   see comment                         specifies the origin server URIs to 
     //                                                  be purged when [state=purge].  These 
-    //                                                  are URIs including optional "?", "*" 
-    //                                                  or "**" wildcards.
+    //                                                  are URIs including optional "*" or
+    //                                                  "**" wildcards.
     //
     //                                                  Use "ALL" to purge all cached content.
     //

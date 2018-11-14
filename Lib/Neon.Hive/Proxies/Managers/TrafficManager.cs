@@ -366,9 +366,9 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="uriPatterns">
         /// One or more <b>case insensitive</b> patterns specifying which content is to be purged.  Each 
-        /// of these is either an origin server URI Optionally including a <b>"?"</b>, <b>"*"</b>, or 
-        /// <b>"**"</b> wildcards or this may be set to <b>"ALL"</b> which specifies that all cached 
-        /// content is to be purged.
+        /// of these is either an origin server URI Optionally including a <b>"*"</b>, or  <b>"**"</b> 
+        /// wildcards or this may be set to <b>"ALL"</b> which specifies that all cached  content is to
+        /// be purged.
         /// </param>
         public void Purge(params string[] uriPatterns)
         {

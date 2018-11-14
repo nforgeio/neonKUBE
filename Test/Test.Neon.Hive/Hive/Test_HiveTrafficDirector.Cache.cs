@@ -32,7 +32,7 @@ namespace TestHive
             var trafficManager = hive.PublicTraffic;
             var network        = HiveConst.PublicNetwork;
             var proxyPort      = 80;
-            var uuid           = Guid.NewGuid().ToString("D");  // Use to avoid cache conflicts from previous test runs.
+            var uuid           = Guid.NewGuid().ToString("D");  // Used to avoid cache conflicts from previous test runs.
 
             // We're going to configure a Vegomatic test instance with a 
             // caching load balancer rule and then fetch several different
@@ -80,19 +80,22 @@ namespace TestHive
 
                 // Spin up a two [vegomatic] service instances [vegomatic-0] and [vegomatic-1]
                 // so that we can ensure that purging one origin server's content doesn't impact
-                // the other's cached content.
+                // the other's cached content.  The default response expiration time will be
+                // configured as 300 seconds (5 minutes) so we can test cache purging.
+
+                var expireSeconds = 300;
 
                 NeonHelper.WaitForParallel(
                     new Action[]
                     {
                         () =>
                         {
-                            manager.SudoCommand($"docker service create --name vegomatic-0 --network {network} --replicas 1 {vegomaticImage} test-server").EnsureSuccess();
+                            manager.SudoCommand($"docker service create --name vegomatic-0 --network {network} --replicas 1 {vegomaticImage} test-server expires={expireSeconds}").EnsureSuccess();
                             WaitUntilReadyAsync(client.BaseAddress, "vegomatic-0").Wait();
                         },
                         () =>
                         {
-                            manager.SudoCommand($"docker service create --name vegomatic-1 --network {network} --replicas 1 {vegomaticImage} test-server").EnsureSuccess();
+                            manager.SudoCommand($"docker service create --name vegomatic-1 --network {network} --replicas 1 {vegomaticImage} test-server expires={expireSeconds}").EnsureSuccess();
                             WaitUntilReadyAsync(client.BaseAddress, "vegomatic-1").Wait();
                         }
                     });
@@ -103,20 +106,18 @@ namespace TestHive
                 HttpRequestMessage      request;
                 HttpResponseMessage     response;
 
-                var expireSeconds = 300;
-
                 var testUris = new string[]
                 {
-                    $"/{uuid}/test0.jpg?expires={expireSeconds}",
-                    $"/{uuid}/test1.jpg?expires={expireSeconds}",
-                    $"/{uuid}/test2.jpg?expires={expireSeconds}",
-                    $"/{uuid}/test0.png?expires={expireSeconds}",
-                    $"/{uuid}/test1.png?expires={expireSeconds}",
-                    $"/{uuid}/test2.png?expires={expireSeconds}",
-                    $"/{uuid}/foo/test.htm?expires={expireSeconds}",
-                    $"/{uuid}/foo/test.jpg?expires={expireSeconds}",
-                    $"/{uuid}/bar/test.htm?expires={expireSeconds}",
-                    $"/{uuid}/bar/test.jpg?expires={expireSeconds}",
+                    $"/{uuid}/test0.jpg",
+                    $"/{uuid}/test1.jpg",
+                    $"/{uuid}/test2.jpg",
+                    $"/{uuid}/test0.png",
+                    $"/{uuid}/test1.png",
+                    $"/{uuid}/test2.png",
+                    $"/{uuid}/foo/test.htm",
+                    $"/{uuid}/foo/test.jpg",
+                    $"/{uuid}/bar/test.htm",
+                    $"/{uuid}/bar/test.jpg",
                 };
 
                 for (int serverId = 0; serverId < 2; serverId++)
@@ -157,10 +158,10 @@ namespace TestHive
 
                 // Purge a single URI and verify.
 
-                trafficManager.Purge($"http://vegomatic-0/{uuid}/test0.jpg?expires={expireSeconds}");
+                trafficManager.Purge($"http://vegomatic-0/{uuid}/test0.jpg");
                 await Task.Delay(purgeWaitTime);
 
-                request              = new HttpRequestMessage(HttpMethod.Get, $"/{uuid}/test0.jpg?expires={expireSeconds}");
+                request              = new HttpRequestMessage(HttpMethod.Get, $"/{uuid}/test0.jpg");
                 request.Headers.Host = "vegomatic-0";
 
                 response = await client.SendAsync(request);

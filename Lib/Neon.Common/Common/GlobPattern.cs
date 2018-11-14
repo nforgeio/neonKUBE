@@ -28,7 +28,7 @@ namespace Neon.Common
     /// </para>
     /// <list type="bullet">
     /// <item>
-    /// Only <b>"*"</b>, <b>"**"</b>, and <b>"?"</b> wildcard chacacters are allowed.
+    /// Only <b>"*"</b> and <b>"**"</b> wildcard chacacters are allowed.
     /// <b>"!"</b> and <b>"[..]"</b> are not recognized.
     /// </item>
     /// <item>
@@ -36,9 +36,6 @@ namespace Neon.Common
     /// </item>
     /// <item>
     /// <b>"**"</b> matches zero or more directories.
-    /// </item>
-    /// <item>
-    /// <b>"?"</b> matches any single character except for <b>"/"</b>.
     /// </item>
     /// </list>
     /// </remarks>
@@ -222,10 +219,6 @@ namespace Neon.Common
                                 break;
 
                             case '?':
-
-                                sbRegex.Append("[^/]");
-                                break;
-
                             case '[':
                             case '\\':
                             case '^':

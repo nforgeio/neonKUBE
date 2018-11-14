@@ -59,7 +59,7 @@ ARGUMENTS:
     NAME        - Load balancer name: [public] or [private].
     RULE        - Rule name.
     FILE        - Path to a JSON or YAML file.
-    URI-PATTERN - Uri with optional ""?"", ""*"", ""**"" wildcards.
+    URI-PATTERN - Uri with optional ""*"", ""**"" wildcards.
     -           - Indicates that JSON/YAML is read from standard input.
 
 COMMANDS:

@@ -158,7 +158,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="originUri">
         /// The origin server URI to be removed with optional
-        /// <b>"?"</b>, <b>"*"</b>, or <b>"**"</b> wildcards.
+        /// <b>"*"</b>, or <b>"**"</b> wildcards.
         /// </param>
         public void AddPurgeOrigin(string originUri)
         {

@@ -85,29 +85,6 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void Question()
-        {
-            var glob = GlobPattern.Parse("test.?");
-
-            Assert.True(glob.IsMatch("test.a"));
-            Assert.True(glob.IsMatch("test.b"));
-
-            Assert.False(glob.IsMatch("test"));
-            Assert.False(glob.IsMatch("test."));
-            Assert.False(glob.IsMatch("test.ab"));
-
-            glob = GlobPattern.Parse("test.???");
-
-            Assert.True(glob.IsMatch("test.abc"));
-            Assert.True(glob.IsMatch("test.def"));
-
-            Assert.False(glob.IsMatch("test."));
-            Assert.False(glob.IsMatch("test.a"));
-            Assert.False(glob.IsMatch("test.ab"));
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Asterisk()
         {
             var glob = GlobPattern.Parse("test.*");
