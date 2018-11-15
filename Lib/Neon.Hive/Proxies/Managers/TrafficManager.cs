@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 using Consul;
 using Newtonsoft.Json;
@@ -365,22 +366,28 @@ namespace Neon.Hive
         /// services to purge the content specified.
         /// </summary>
         /// <param name="uriPatterns">
-        /// One or more <b>case insensitive</b> patterns specifying which content is to be purged.  Each 
-        /// of these is either an origin server URI Optionally including a <b>"*"</b>, or  <b>"**"</b> 
-        /// wildcards or this may be set to <b>"ALL"</b> which specifies that all cached  content is to
-        /// be purged.
+        /// <para>
+        /// One or more patterns specifying which content is to be purged.  Each  of these is either an 
+        /// origin server URI Optionally including a <b>"*"</b>, or  <b>"**"</b>  wildcards or this may 
+        /// be set to <b>"ALL"</b> which specifies that all cached  content is to be purged.
+        /// </para>
+        /// <note>
+        /// URI pattern matching is case-insensitive by default.
+        /// </note>
         /// </param>
-        public void Purge(params string[] uriPatterns)
+        /// <param name="caseSensitive">Optionally enable case sensitive matching.</param>
+        public void Purge(IEnumerable<string> uriPatterns, bool caseSensitive = false)
         {
-            if (uriPatterns == null || uriPatterns.Length == 0)
+            if (uriPatterns == null || uriPatterns.Count() == 0)
             {
                 return; // NOP
             }
 
             var message = new ProxyPurgeMessage()
             {
-                PublicCache  = IsPublic,
-                PrivateCache = !IsPublic
+                PublicCache   = IsPublic,
+                PrivateCache  = !IsPublic,
+                CaseSensitive = caseSensitive
             };
 
             foreach (var pattern in uriPatterns)

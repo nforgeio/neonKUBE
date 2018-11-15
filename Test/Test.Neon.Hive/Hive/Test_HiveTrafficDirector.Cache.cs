@@ -27,23 +27,15 @@ namespace TestHive
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
-        public async Task Cache_Purge_Security()
-        {
-            // Verify that non-local BAN requests are rejected.  This is important because
-            // this prevents DOS attacks.
-
-            await Task.Delay(0);
-            throw new NotImplementedException();
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public async Task Cache_Purge()
         {
             var trafficManager = hive.PublicTraffic;
             var network        = HiveConst.PublicNetwork;
             var proxyPort      = 80;
             var uuid           = Guid.NewGuid().ToString("D");  // Used to avoid cache conflicts from previous test runs.
+
+            // $debug(jeff.lill): DELETE THIS! ************************************************
+            uuid = "f898ab26-7d07-454c-a8d5-b359fdf46d36";
 
             // We're going to configure a Vegomatic test instance with a 
             // caching load balancer rule and then fetch several different
@@ -114,8 +106,8 @@ namespace TestHive
                 // Submit several requests to preload the cache for both origin servers.
                 // and verify that the items were cached.
 
-                HttpRequestMessage      request;
-                HttpResponseMessage     response;
+                HttpRequestMessage request;
+                HttpResponseMessage response;
 
                 var testUris = new string[]
                 {
@@ -139,7 +131,7 @@ namespace TestHive
                     {
                         // Load the item into the cache.
 
-                        request              = new HttpRequestMessage(HttpMethod.Get, $"{uri}");
+                        request = new HttpRequestMessage(HttpMethod.Get, $"{uri}");
                         request.Headers.Host = originHost;
 
                         response = await client.SendAsync(request);
@@ -150,7 +142,6 @@ namespace TestHive
                         // Ensure that it was actually cached.
 
                         request = new HttpRequestMessage(HttpMethod.Get, $"{uri}");
-
                         request.Headers.Host = originHost;
 
                         response = await client.SendAsync(request);
@@ -169,10 +160,10 @@ namespace TestHive
 
                 // Purge a single URI and verify.
 
-                trafficManager.Purge($"http://vegomatic-0/{uuid}/test0.jpg");
+                trafficManager.Purge(new string[] { $"http://vegomatic-0/{uuid}/test0.jpg" });
                 await Task.Delay(purgeWaitTime);
 
-                request              = new HttpRequestMessage(HttpMethod.Get, $"/{uuid}/test0.jpg");
+                request = new HttpRequestMessage(HttpMethod.Get, $"/{uuid}/test0.jpg");
                 request.Headers.Host = "vegomatic-0";
 
                 response = await client.SendAsync(request);
@@ -181,6 +172,17 @@ namespace TestHive
                 Assert.True(ViaVarnish(response));
                 Assert.False(CacheHit(response));   // Shouldn't be a cache hit because we just purged it.
             }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        public async Task Cache_Purge_Security()
+        {
+            // Verify that non-local BAN requests are rejected.  This is important because
+            // this prevents DOS attacks.
+
+            await Task.Delay(0);
+            throw new NotImplementedException();
         }
     }
 }

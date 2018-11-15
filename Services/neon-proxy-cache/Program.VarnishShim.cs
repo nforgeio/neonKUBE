@@ -663,12 +663,18 @@ backend stub {
                                 log.LogWarn(() => $"VARNISH-SHIM: Purge: [{operation.UrlPattern}] is not a valid GLOB pattern.");
                             }
 
-                            var urlRegex = $"(?i){glob.RegexPattern}";  // The "(?i)" prefix makes the regex case insensitive.
+                            var urlRegex = glob.RegexPattern;
+
+                            if (!message.CaseSensitive)
+                            {
+                                urlRegex = $"(?i){urlRegex}";   // The "(?i)" prefix makes the regex case insensitive.
+                            }
 
                             request.Headers.Add("X-Ban-Host", operation.OriginHost);
                             request.Headers.Add("X-Ban-Port", operation.OriginPort.ToString());
                             request.Headers.Add("X-Ban-Url-Regex", urlRegex);
 
+Console.WriteLine($"VARNISH-SHIM: *** URL-REGEX: " + urlRegex);
                             log.LogInfo(() => $"VARNISH-SHIM: Submitting BAN(X-Ban-Host: {operation.OriginHost}, X-Ban-Port: {operation.OriginPort}, X-Ban-Url-Regex: {urlRegex})");
                         }
 

@@ -160,6 +160,13 @@ namespace Neon.Hive
         public bool PrivateCache { get; set; } = false;
 
         /// <summary>
+        /// Enables case sensitive URI pattern matching.
+        /// </summary>
+        [JsonProperty(PropertyName = "CaseSensitive", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool CaseSensitive { get; set; } = false;
+
+        /// <summary>
         /// Lists the purge operations to be performed.
         /// </summary>
         [JsonProperty(PropertyName = "PurgeOperations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

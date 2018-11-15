@@ -177,5 +177,19 @@ namespace TestCommon
             Assert.False(GlobPattern.TryParse("//test.jpg", out glob));
             Assert.False(GlobPattern.TryParse("/test/**xx/test.jpg", out glob));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Escapes()
+        {
+            Assert.Equal("^\\?$", GlobPattern.Parse("?").RegexPattern);
+            Assert.Equal("^\\^$", GlobPattern.Parse("^").RegexPattern);
+            Assert.Equal("^\\$$", GlobPattern.Parse("$").RegexPattern);
+            Assert.Equal("^\\|$", GlobPattern.Parse("|").RegexPattern);
+            Assert.Equal("^\\+$", GlobPattern.Parse("+").RegexPattern);
+            Assert.Equal("^\\($", GlobPattern.Parse("(").RegexPattern);
+            Assert.Equal("^\\)$", GlobPattern.Parse(")").RegexPattern);
+            Assert.Equal("^\\.$", GlobPattern.Parse(".").RegexPattern);
+        }
     }
 }
