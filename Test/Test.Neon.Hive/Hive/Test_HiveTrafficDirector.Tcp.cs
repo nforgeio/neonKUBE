@@ -155,7 +155,7 @@ namespace TestHive
                         }));
                 }
 
-                await NeonHelper.WaitAllAsync(tasks);
+                await NeonHelper.WaitAllAsync(tasks, TimeSpan.FromSeconds(30));
                 Assert.Equal(2, uniqueResponses.Count);
             }
         }

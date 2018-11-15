@@ -253,7 +253,7 @@ namespace TestHive
                         }));
                 }
 
-                await NeonHelper.WaitAllAsync(tasks);
+                await NeonHelper.WaitAllAsync(tasks, TimeSpan.FromSeconds(30));
 
                 if (useCache)
                 {
@@ -511,7 +511,7 @@ namespace TestHive
                             }));
                     }
 
-                    await NeonHelper.WaitAllAsync(tasks);
+                    await NeonHelper.WaitAllAsync(tasks, TimeSpan.FromSeconds(30));
 
                     if (useCache)
                     {
@@ -604,11 +604,11 @@ namespace TestHive
                     tasks.Add(Task.Run(
                         () =>
                         {
-                            manager.SudoCommand($"docker service create --name {prefix.ServiceName} --network {network} --replicas 1 {vegomaticImage} test-server {prefix.ServiceName}").EnsureSuccess();
+                            manager.SudoCommand($"docker service create --name {prefix.ServiceName} --network {network} --replicas 1 {vegomaticImage} test-server server-id={prefix.ServiceName}").EnsureSuccess();
                         }));
                 }
 
-                await NeonHelper.WaitAllAsync(tasks);
+                await NeonHelper.WaitAllAsync(tasks, TimeSpan.FromSeconds(30));
 
                 // Create the traffic director rules.
 
