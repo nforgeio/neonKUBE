@@ -368,14 +368,28 @@ namespace Neon.Hive
         /// <param name="uriPatterns">
         /// <para>
         /// One or more patterns specifying which content is to be purged.  Each  of these is either an 
-        /// origin server URI Optionally including a <b>"*"</b>, or  <b>"**"</b>  wildcards or this may 
+        /// HAProxy frontend URI, optionally including <b>"*"</b> or  <b>"**"</b> wildcards or this may 
         /// be set to <b>"ALL"</b> which specifies that all cached  content is to be purged.
         /// </para>
         /// <note>
         /// URI pattern matching is case-insensitive by default.
         /// </note>
         /// </param>
-        /// <param name="caseSensitive">Optionally enable case sensitive matching.</param>
+        /// <param name="caseSensitive">Optionally enables case sensitive matching.</param>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// The URI pattern hostname and port needs to match a corresponding HAProxy frontend.
+        /// This is exactly what you'd expect for <b>public</b> traffic manager frontends listening
+        /// on ports 80 and 443 which will often cover all of your caching needs.
+        /// </para>
+        /// <para>
+        /// For the <b>private</b> traffic manager or non-standard frontend ports on the <b>public</b>
+        /// traffic manager, you'll need to explicitly specify the frontend port through which the
+        /// original traffic was routed.
+        /// </para>
+        /// </note>
+        /// </remarks>
         public void Purge(IEnumerable<string> uriPatterns, bool caseSensitive = false)
         {
             if (uriPatterns == null || uriPatterns.Count() == 0)
@@ -411,6 +425,14 @@ namespace Neon.Hive
             {
                 ProxyNotifyChannel.Publish(message);
             }
+        }
+
+        /// <summary>
+        /// Purges all cached items.
+        /// </summary>
+        public void PurgeAll()
+        {
+            Purge(new string[] { "all" });
         }
     }
 }

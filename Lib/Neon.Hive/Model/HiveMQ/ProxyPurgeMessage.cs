@@ -174,19 +174,18 @@ namespace Neon.Hive
         public List<PurgeOperation> PurgeOperations { get; set;} = new List<PurgeOperation>();
 
         /// <summary>
-        /// Adds an operation that purges content for a specific origin server from the cache.
+        /// Adds an operation that purges content for a HAProxy frontend from the cache.
         /// </summary>
-        /// <param name="originUri">
-        /// The origin server URI to be removed with optional
-        /// <b>"*"</b>, or <b>"**"</b> wildcards.
+        /// <param name="frontendUri">
+        /// The HAProxy frontend URI to be removed with optional <b>"*"</b> or <b>"**"</b> wildcards.
         /// </param>
-        public void AddPurgeOrigin(string originUri)
+        public void AddPurgeOrigin(string frontendUri)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(originUri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(frontendUri));
 
-            if (!Uri.TryCreate(originUri, UriKind.Absolute, out var uri))
+            if (!Uri.TryCreate(frontendUri, UriKind.Absolute, out var uri))
             {
-                throw new ArgumentException($"[{originUri}] is not a valid URI.");
+                throw new ArgumentException($"[{frontendUri}] is not a valid URI.");
             }
 
             var globPattern = uri.PathAndQuery;

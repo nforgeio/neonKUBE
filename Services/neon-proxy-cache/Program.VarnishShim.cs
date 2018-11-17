@@ -623,7 +623,7 @@ backend stub {
             //
             //      X-Ban-Host      - the origin hostname
             //      X-Ban-Port      - the origin port
-            //      X-Ban-Url-Regex - the regular expression used to match the URLs to be banned
+            //      X-Ban-Regex     - the origin URL regex (BASE64URL encoded)
             //
             // or just this header to purge all cached content:
             //
@@ -670,12 +670,21 @@ backend stub {
                                 urlRegex = $"(?i){urlRegex}";   // The "(?i)" prefix makes the regex case insensitive.
                             }
 
+                            // We need to encode the regex as BASE64URL which is base-64 but replacing "+" characters
+                            // with "-" and "/" with "_" to form a safe URL.
+
+                            var urlRegexEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(urlRegex));
+
+                            urlRegexEncoded = urlRegexEncoded.Replace('+', '-');
+                            urlRegexEncoded = urlRegexEncoded.Replace('/', '_');
+
                             request.Headers.Add("X-Ban-Host", operation.OriginHost);
                             request.Headers.Add("X-Ban-Port", operation.OriginPort.ToString());
-                            request.Headers.Add("X-Ban-Url-Regex", urlRegex);
+                            request.Headers.Add("X-Ban-Regex", urlRegexEncoded);
 
-Console.WriteLine($"VARNISH-SHIM: *** URL-REGEX: " + urlRegex);
-                            log.LogInfo(() => $"VARNISH-SHIM: Submitting BAN(X-Ban-Host: {operation.OriginHost}, X-Ban-Port: {operation.OriginPort}, X-Ban-Url-Regex: {urlRegex})");
+                            request.RequestUri = new Uri("/", UriKind.Relative);
+
+                            log.LogInfo(() => $"VARNISH-SHIM: Submitting BAN(X-Ban-Host: {operation.OriginHost}, X-Ban-Port: {operation.OriginPort}, Url-Regex: {urlRegex} Url-Regex-Encoded={urlRegexEncoded})");
                         }
 
                         var response = await client.SendAsync(request);

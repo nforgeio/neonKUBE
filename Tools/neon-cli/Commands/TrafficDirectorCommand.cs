@@ -44,8 +44,8 @@ USAGE:
     neon traffic NAME haproxy
     neon traffic NAME haproxy-bridge
     neon traffic NAME inspect
-    neon traffic NAME [--all] [--sys] list|ls
-    neon traffic NAME purge URI-PATTERN
+    neon traffic NAME list|ls [--all] [--sys] 
+    neon traffic NAME purge URI-PATTERN | ALL
     neon traffic NAME remove|rm RULE
     neon traffic NAME set FILE
     neon traffic NAME set -
@@ -59,7 +59,7 @@ ARGUMENTS:
     NAME        - Load balancer name: [public] or [private].
     RULE        - Rule name.
     FILE        - Path to a JSON or YAML file.
-    URI-PATTERN - Uri with optional ""*"", ""**"" wildcards.
+    URI-PATTERN - Uri with optional ""*"" and ""**"" wildcards.
     -           - Indicates that JSON/YAML is read from standard input.
 
 COMMANDS:
@@ -72,6 +72,7 @@ COMMANDS:
     inspect         - Displays JSON details for all traffic director
                       rules and settings.
     list|ls         - Lists the rule names.
+    purge           - Purges cached items by URI glob pattern or ALL items
     remove|rm       - Removes a named rule.
     set             - Adds or updates a rule from a file or by
                       reading standard input.  JSON or YAML
@@ -368,10 +369,22 @@ See the documentation for more traffic director rule and setting details.
 
                     if (string.IsNullOrEmpty(purgeUri))
                     {
-                        Console.Error.WriteLine("*** ERROR: [URI-PATTERN] argument expected.");
+                        Console.Error.WriteLine("*** ERROR: [URI-PATTERN] or [ALL] argument expected.");
                     }
 
-                    trafficManager.Purge(new string[] { purgeUri });
+                    if (purgeUri.Equals("all", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to purge all cached items for [{directorName.ToUpperInvariant()}]?"))
+                        {
+                            return;
+                        }
+
+                        trafficManager.PurgeAll();
+                    }
+                    else
+                    {
+                        trafficManager.Purge(new string[] { purgeUri });
+                    }
 
                     Console.WriteLine();
                     Console.WriteLine("Purge request submitted.");
