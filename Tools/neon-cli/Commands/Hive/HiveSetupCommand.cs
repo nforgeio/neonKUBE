@@ -3346,7 +3346,7 @@ systemctl start neon-volume-plugin
                 // Store the hive hosting options in the Vault so services that need to perform
                 // hosting level operations will have the credentials and other information to 
                 // modify the environment.  For example in cloud environments, the [neon-proxy-manager]
-                // service needs to be able to update the worker traffic director rules so they match
+                // service needs to be able to update the worker traffic manager rules so they match
                 // the current PUBLIC routes.
 
                 firstManager.InvokeIdempotentAction("setup/vault-hostingoptions",
@@ -3426,9 +3426,9 @@ systemctl start neon-volume-plugin
                     //
                     // We're going to assign up to 10 swarm nodes as the hosts for both
                     // the AMQP and Admin traffic, favoring non-manager nodes if possible.
-                    // This works because the services are behind a traffic director rule
+                    // This works because the services are behind a traffic manager rule
                     // so all we're using these hosts for is to have the Docker ingress
-                    // network forward traffic to the traffic director which will forward
+                    // network forward traffic to the traffic manager which will forward
                     // it on to a healthy RabbitMQ node.
                     //
                     // This should work pretty well and this will tolerate some changes
@@ -3491,7 +3491,7 @@ systemctl start neon-volume-plugin
                         () => hive.Globals.Set(HiveGlobals.HiveMQSettingsApp, hiveMQSettings));
 
                     // Persist the HiveMQ bootstrap settings to Consul.  These settings have no credentials
-                    // and reference the HiveMQ nodes directly (not via a traffic director rule).
+                    // and reference the HiveMQ nodes directly (not via a traffic manager rule).
 
                     hive.HiveMQ.SaveBootstrapSettings();
                 });
@@ -3834,7 +3834,7 @@ systemctl restart sshd
                     // Note that only the Ceph dashboard running on the lead MGR can actually
                     // render properly so non-leader MGR dashboards will redirect incoming 
                     // requests to the leader.  We're going to mitigate this by setting up
-                    // a traffic director rule that only considers 2XX responses as valid so
+                    // a traffic manager rule that only considers 2XX responses as valid so
                     // that we won't direct traffic to the non-lead MGRs that return 302
                     // redirects.
                     //
@@ -3857,7 +3857,7 @@ systemctl restart sshd
 
                             hive.Dashboard.Set(hiveFSDashboard);
 
-                            var rule = new TrafficDirectorHttpRule()
+                            var rule = new TrafficManagerHttpRule()
                             {
                                 Name     = "neon-hivefs-dashboard",
                                 System   = true,
@@ -3872,14 +3872,14 @@ systemctl restart sshd
                             // We're going to consider only servers that return 2xx status codes
                             // as healthy so we'll always direct traffic to the lead MGR.
 
-                            rule.CheckMode   = TrafficDirectorCheckMode.Http;
+                            rule.CheckMode   = TrafficManagerCheckMode.Http;
                             rule.CheckTls    = false;
                             rule.CheckExpect = @"rstatus ^2\d\d";
 
                             // Initialize the frontends and backends.
 
                             rule.Frontends.Add(
-                                new TrafficDirectorHttpFrontend()
+                                new TrafficManagerHttpFrontend()
                                 {
                                     ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
                                 });
@@ -3887,7 +3887,7 @@ systemctl restart sshd
                             foreach (var monNode in hive.Nodes.Where(n => n.Metadata.Labels.CephMON))
                             {
                                 rule.Backends.Add(
-                                    new TrafficDirectorHttpBackend()
+                                    new TrafficManagerHttpBackend()
                                     {
                                         Server = monNode.Metadata.PrivateAddress.ToString(),
                                         Port   = 7000,  // The [luminous] dashboard is hardcoded to port 7000
@@ -3922,7 +3922,7 @@ systemctl restart sshd
 
                             hive.Dashboard.Set(hiveFSDashboard);
 
-                            var rule = new TrafficDirectorTcpRule()
+                            var rule = new TrafficManagerTcpRule()
                             {
                                 Name     = "neon-hivefs-dashboard",
                                 System   = true,
@@ -3937,20 +3937,20 @@ systemctl restart sshd
                             // We're going to consider only servers that return 2xx status codes
                             // as healthy so we'll always direct traffic to the lead MGR.
 
-                            rule.CheckMode   = TrafficDirectorCheckMode.Http;
+                            rule.CheckMode   = TrafficManagerCheckMode.Http;
                             rule.CheckTls    = true;
                             rule.CheckExpect = @"rstatus ^2\d\d";
 
                             // Initialize the frontends and backends.
 
                             rule.Frontends.Add(
-                                new TrafficDirectorTcpFrontend()
+                                new TrafficManagerTcpFrontend()
                                 {
                                     ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
                                 });
 
                             rule.Backends.Add(
-                                new TrafficDirectorTcpBackend()
+                                new TrafficManagerTcpBackend()
                                 {
                                     Group      = HiveHostGroups.CephMON,
                                     GroupLimit = 5,

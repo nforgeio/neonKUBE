@@ -331,7 +331,7 @@ MODULES:
     neon_docker_service     - Manages Docker services
     neon-globals            - Manages hive global settings
     neon_hive_dns           - Manages hive DNS host overrides
-    neon_traffic_director   - Manages hive traffic directors  
+    neon_traffic_manager   - Manages hive traffic directors  
 ";
 
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)

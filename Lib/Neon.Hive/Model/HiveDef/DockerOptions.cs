@@ -203,7 +203,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Indicates whether the Docker ingress network should be used
-        /// for traffic director instances based on <see cref="AvoidIngressNetwork"/> and the current
+        /// for traffic manager instances based on <see cref="AvoidIngressNetwork"/> and the current
         /// hosting environment.
         /// </summary>
         /// <param name="hiveDefinition">The current hive definition.</param>

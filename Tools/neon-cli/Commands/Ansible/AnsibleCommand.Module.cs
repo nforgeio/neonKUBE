@@ -145,9 +145,9 @@ namespace NeonCli
                         new HiveDnsModule().Run(context);
                         break;
 
-                    case "neon_traffic_director":
+                    case "neon_traffic_manager":
 
-                        new TrafficDirectorModule().Run(context);
+                        new TrafficManagerModule().Run(context);
                         break;
 
                     default:

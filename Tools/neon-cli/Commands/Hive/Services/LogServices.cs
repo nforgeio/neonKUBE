@@ -207,11 +207,11 @@ namespace NeonCli
 
                             }).Wait();
 
-                        // Set the Kibana traffic director rule.
+                        // Set the Kibana traffic manager rule.
 
-                        firstManager.Status = "kibana traffic director rule";
+                        firstManager.Status = "kibana traffic manager rule";
 
-                        var rule = new TrafficDirectorHttpRule()
+                        var rule = new TrafficManagerHttpRule()
                         {
                             Name     = "neon-log-kibana",
                             System   = true,
@@ -220,13 +220,13 @@ namespace NeonCli
                         };
 
                         rule.Frontends.Add(
-                            new TrafficDirectorHttpFrontend()
+                            new TrafficManagerHttpFrontend()
                             {
                                 ProxyPort = HiveHostPorts.ProxyPrivateKibanaDashboard
                             });
 
                         rule.Backends.Add(
-                            new TrafficDirectorHttpBackend()
+                            new TrafficManagerHttpBackend()
                             {
                                 Server = "neon-log-kibana",
                                 Port   = NetworkPorts.Kibana
@@ -349,7 +349,7 @@ namespace NeonCli
             steps.Add(ActionStep.Create(hive.FirstManager.Name, "setup/elasticsearch-lbrule",
                 node =>
                 {
-                    var rule = new TrafficDirectorHttpRule()
+                    var rule = new TrafficManagerHttpRule()
                     {
                         Name     = "neon-log-esdata",
                         System   = true,
@@ -358,7 +358,7 @@ namespace NeonCli
                     };
 
                     rule.Frontends.Add(
-                        new TrafficDirectorHttpFrontend()
+                        new TrafficManagerHttpFrontend()
                         {
                             ProxyPort = HiveHostPorts.ProxyPrivateHttpLogEsData
                         });
@@ -366,7 +366,7 @@ namespace NeonCli
                     foreach (var esNode in esNodes)
                     {
                         rule.Backends.Add(
-                            new TrafficDirectorHttpBackend()
+                            new TrafficManagerHttpBackend()
                             {
                                 Server = esNode.Metadata.PrivateAddress.ToString(),
                                 Port = HiveHostPorts.LogEsDataHttp
@@ -497,17 +497,17 @@ namespace NeonCli
                     "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
                     ServiceHelper.ImagePlaceholderArg));
 
-            // Deploy the [neon-log-collector] traffic director rule.
+            // Deploy the [neon-log-collector] traffic manager rule.
 
             steps.Add(ActionStep.Create(hive.FirstManager.Name, "setup/neon-log-collection-lbrule",
                 node =>
                 {
-                    node.Status = "set neon-log-collector traffic director rule";
+                    node.Status = "set neon-log-collector traffic manager rule";
 
                     // Configure a private hive proxy TCP route so the [neon-log-host] containers
                     // will be able to reach the collectors.
 
-                    var rule = new TrafficDirectorTcpRule()
+                    var rule = new TrafficManagerTcpRule()
                     {
                         Name   = "neon-log-collector",
                         System = true,
@@ -515,13 +515,13 @@ namespace NeonCli
                     };
 
                     rule.Frontends.Add(
-                        new TrafficDirectorTcpFrontend()
+                        new TrafficManagerTcpFrontend()
                         {
                             ProxyPort = HiveHostPorts.ProxyPrivateTcpLogCollector
                         });
 
                     rule.Backends.Add(
-                        new TrafficDirectorTcpBackend()
+                        new TrafficManagerTcpBackend()
                         {
                             Server = "neon-log-collector",
                             Port   = NetworkPorts.TDAgentForward

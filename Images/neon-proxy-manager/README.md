@@ -8,13 +8,13 @@ From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* iden
 
 # Description
 
-This service dynamically generates HAProxy configurations from traffic director rules and certificates persisted to Consul and Vault for neonHIVE proxies based on the [neon-proxy-cache](https://hub.docker.com/r/nhive/neon-proxy-cache/) image.
+This service dynamically generates HAProxy configurations from traffic manager rules and certificates persisted to Consul and Vault for neonHIVE proxies based on the [neon-proxy-cache](https://hub.docker.com/r/nhive/neon-proxy-cache/) image.
 
 neonHIVEs deploy four related reverse HTTP/TCP proxy services:
 
-* `neon-proxy-public` which implements the public traffic director and is responsible for routing external network traffic (e.g. from an Internet facing traffic director or router) to hive services.
+* `neon-proxy-public` which implements the public traffic manager and is responsible for routing external network traffic (e.g. from an Internet facing traffic manager or router) to hive services.
 
-* `neon-proxy-private` which implements the private traffic director is used for internal routing for the scenarios the Docker overlay ingress network doesn't address out-of-the-box (e.g. traffic director and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
+* `neon-proxy-private` which implements the private traffic manager is used for internal routing for the scenarios the Docker overlay ingress network doesn't address out-of-the-box (e.g. traffic manager and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
 
 * `neon-proxy-cache-public` which can provide caching services for the public proxy.
 
@@ -24,7 +24,7 @@ The proxy services are based on the [neon-proxy](https://hub.docker.com/r/nhive/
 
 The `neon-proxy-manager` image handles the generation and updating of the proxy service configurations in Consul based on proxy definitions and TLS certificates loaded into Consul by the `neon-cli`.  These configurations are consumed by the HAProxy `neon-proxy-public` and `neon-proxy-private`, `neon-proxy-cache-public` and `neon-proxy-cache-private` services.
 
-`neon-proxy-manager` automatically manages the lifecycle of the `neon-proxy-cache-oublic` and `neon-proxy-cache-private` services by starting them when one or more corresponding traffic director rules enable caching and stopping then when no rules enable caching.  This means that `neon-proxy-manager` may only be deployed to hive managers and that the Docker Unix domain socket must be mapped in, so the `neon-proxy-manager` can control the caching services.
+`neon-proxy-manager` automatically manages the lifecycle of the `neon-proxy-cache-oublic` and `neon-proxy-cache-private` services by starting them when one or more corresponding traffic manager rules enable caching and stopping then when no rules enable caching.  This means that `neon-proxy-manager` may only be deployed to hive managers and that the Docker Unix domain socket must be mapped in, so the `neon-proxy-manager` can control the caching services.
 
 **HiveMQ** broadcast channels are used by `neon-proxy-manager` to notify the proxy and service instances of configuration changes.  A change notification message is published to the **proxy-public-update** channel when the public proxy configuration has changed or to **proxy-private-update** for private changes.  The `neon-proxy-public` service listens to the **proxy-public-update** channel and `neon-proxy-private` to the **neon-private-update** channel.
 
@@ -105,17 +105,17 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 * `proxies/*/proxy-conf` - public or private proxy's generated HAProxy and Varnish configurations as a ZIP archive.
 
-* `proxies/*/proxy-hash` - MD5 hash of the public or private traffic director's `*-proxy-conf` archive combined with the hash of all of the referenced certificates.  This is used by `neon-proxy` instances to detect when the proxy configuration has changed.
+* `proxies/*/proxy-hash` - MD5 hash of the public or private traffic manager's `*-proxy-conf` archive combined with the hash of all of the referenced certificates.  This is used by `neon-proxy` instances to detect when the proxy configuration has changed.
 
-* `status/*` (*json*) - proxy rule status at the time the `neon-proxy-manager` last processed hive rules for the named traffic director.
+* `status/*` (*json*) - proxy rule status at the time the `neon-proxy-manager` last processed hive rules for the named traffic manager.
 
 * `conf` - root key for proxy settings that need to be monitored for changes.
 
-* `reload` - set to a new UUID whenever a certificate or traffic director rule is changed.  `neon-proxy-manager` monitors this and republishes HAQProxy configurations when a change is detected.
+* `reload` - set to a new UUID whenever a certificate or traffic manager rule is changed.  `neon-proxy-manager` monitors this and republishes HAQProxy configurations when a change is detected.
 
-* `settings` - global (per proxy) settings for a traffic director formatted as JSON.
+* `settings` - global (per proxy) settings for a traffic manager formatted as JSON.
 
-* `rules` - named load traffic director formatted as JSON.
+* `rules` - named load traffic manager formatted as JSON.
 
 # Vault
 

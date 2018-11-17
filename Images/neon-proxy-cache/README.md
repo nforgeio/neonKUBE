@@ -6,7 +6,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* iden
 
 # Description
 
-This image integrates the high performance caching HTTP proxy (Varnish Cache)[http://varnish-cache.org] into the neonHIVE traffic director infrastructure.  This is deployed automatically as required.  This is not suitable for any other purpose.  You can use the [varnish](https://hub.docker.com/r/nhive/varnish/) image to deploy custom caches as part of Docker stacks, etc.
+This image integrates the high performance caching HTTP proxy (Varnish Cache)[http://varnish-cache.org] into the neonHIVE traffic manager infrastructure.  This is deployed automatically as required.  This is not suitable for any other purpose.  You can use the [varnish](https://hub.docker.com/r/nhive/varnish/) image to deploy custom caches as part of Docker stacks, etc.
 
 # Environment Variables
 
@@ -26,7 +26,7 @@ This image is configured by the following environment variables:
 
 # Deployment
 
-This image is deployed automatically by the **neon-proxy-manager** service when one or more traffic director rules enable caching for the **public** and/or **private** traffic director.  The **neon-proxy-public-cache** service will be deployed for the **public** traffic director and **neon-proxy-private-cache** for the **private** load balancer.
+This image is deployed automatically by the **neon-proxy-manager** service when one or more traffic manager rules enable caching for the **public** and/or **private** traffic manager.  The **neon-proxy-public-cache** service will be deployed for the **public** traffic manager and **neon-proxy-private-cache** for the **private** load balancer.
 
 **neon-proxy-manager** deploys the cache services with settings like:
 

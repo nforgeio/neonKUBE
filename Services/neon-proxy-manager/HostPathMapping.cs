@@ -29,17 +29,17 @@ using Neon.Hive;
 namespace NeonProxyManager
 {
     /// <summary>
-    /// Describes a specific host/path to backend name mapping for a traffic director rule frontend.
+    /// Describes a specific host/path to backend name mapping for a traffic manager rule frontend.
     /// </summary>
     public class HostPathMapping
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="rule">The associated traffic director rule.</param>
+        /// <param name="rule">The associated traffic manager rule.</param>
         /// <param name="frontend">The frontend that generated this mapping.</param>
         /// <param name="backendName">The backend name.</param>
-        public HostPathMapping(TrafficDirectorHttpRule rule, TrafficDirectorHttpFrontend frontend, string backendName)
+        public HostPathMapping(TrafficManagerHttpRule rule, TrafficManagerHttpFrontend frontend, string backendName)
         {
             Covenant.Requires<ArgumentNullException>(rule != null);
             Covenant.Requires<ArgumentNullException>(frontend != null);
@@ -51,14 +51,14 @@ namespace NeonProxyManager
         }
 
         /// <summary>
-        /// Returns thge associated traffic director rule.
+        /// Returns thge associated traffic manager rule.
         /// </summary>
-        public TrafficDirectorHttpRule Rule { get; private set; }
+        public TrafficManagerHttpRule Rule { get; private set; }
 
         /// <summary>
         /// Returns the frontend that generated this mapping.
         /// </summary>
-        public TrafficDirectorHttpFrontend Frontend { get; private set; }
+        public TrafficManagerHttpFrontend Frontend { get; private set; }
 
         /// <summary>
         /// Returns the backend name.

@@ -52,7 +52,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Marks the <b>neon-registry</b> traffic director rule as a system rule if the rule exists.
+        /// Marks the <b>neon-registry</b> traffic manager rule as a system rule if the rule exists.
         /// </summary>
         private void PrivateRegistryRule()
         {

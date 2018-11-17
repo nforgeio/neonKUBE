@@ -61,7 +61,7 @@ namespace NeonCli
             //      neon-hivemq-sysadmin
             //      neon-hivemq-app
             //
-            // We also need to reconfigure the AMPQ private [neon-hivemq-ampq] traffic director rule 
+            // We also need to reconfigure the AMPQ private [neon-hivemq-ampq] traffic manager rule 
             // as TCP because older builds incorrectly configured this as an HTTP proxy.
 
             controller.AddGlobalStep(GetStepLabel("hivemq-settings"), () => UpdateHiveMQSettings());
@@ -266,9 +266,9 @@ WantedBy=docker.service
             firstManager.DockerCommand(RunOptions.FaultOnError, $"docker service update --secret-rm=neon-hivemq-settings-neon --image {Program.ResolveDockerImage(Hive.Definition.Image.Proxy)} neon-proxy-private");
             firstManager.Status = string.Empty;
 
-            // Redeploy the [neon-hivemq-ampq] private traffic director to be a TCP rather than an HTTP proxy.
+            // Redeploy the [neon-hivemq-ampq] private traffic manager to be a TCP rather than an HTTP proxy.
 
-            var ampqRule = new TrafficDirectorTcpRule()
+            var ampqRule = new TrafficManagerTcpRule()
             {
                 Name = "neon-hivemq-ampq",
                 System = true,
@@ -276,13 +276,13 @@ WantedBy=docker.service
             };
 
             ampqRule.Frontends.Add(
-                new TrafficDirectorTcpFrontend()
+                new TrafficManagerTcpFrontend()
                 {
                     ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMPQ
                 });
 
             ampqRule.Backends.Add(
-                new TrafficDirectorTcpBackend()
+                new TrafficManagerTcpBackend()
                 {
                     Group = HiveHostGroups.HiveMQ,
                     GroupLimit = 5,

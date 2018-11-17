@@ -20,7 +20,7 @@ using Neon.Net;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles hive traffic director related operations for a <see cref="HiveProxy"/>.
+    /// Handles hive traffic manager related operations for a <see cref="HiveProxy"/>.
     /// </summary>
     public sealed class TrafficManager
     {
@@ -35,13 +35,13 @@ namespace Neon.Hive
         /// Internal constructor.
         /// </summary>
         /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
-        /// <param name="name">The traffic director name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="name">The traffic manager name (<b>public</b> or <b>private</b>).</param>
         /// <param name="useBootstrap">
         /// Optionally specifies that the instance should use the HiveMQ client
         /// to directly reference to the HiveMQ cluster nodes for broadcasting
         /// proxy update messages rather than routing traffic through the <b>private</b>
-        /// traffic director.  This is used internally to resolve chicken-and-the-egg
-        /// dilemmas for the traffic director and proxy implementations that rely on
+        /// traffic manager.  This is used internally to resolve chicken-and-the-egg
+        /// dilemmas for the traffic manager and proxy implementations that rely on
         /// HiveMQ messaging.
         /// </param>
         internal TrafficManager(HiveProxy hive, string name, bool useBootstrap = false)
@@ -55,7 +55,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the traffic director name.
+        /// Returns the traffic manager name.
         /// </summary>
         public string Name { get; private set; }
 
@@ -66,7 +66,7 @@ namespace Neon.Hive
         public bool IsPublic => Name.Equals("public", StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Returns the Consul key for the traffic director's global settings.
+        /// Returns the Consul key for the traffic manager's global settings.
         /// </summary>
         /// <returns>The Consul key path.</returns>
         private string GetProxySettingsKey()
@@ -75,7 +75,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the Consul key for a traffic director rule.
+        /// Returns the Consul key for a traffic manager rule.
         /// </summary>
         /// <param name="ruleName">The rule name.</param>
         /// <returns>The Consul key path.</returns>
@@ -85,19 +85,19 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the traffic director settings.
+        /// Returns the traffic manager settings.
         /// </summary>
-        /// <returns>The <see cref="TrafficDirectorSettings"/>.</returns>
-        public TrafficDirectorSettings GetSettings()
+        /// <returns>The <see cref="TrafficManagerSettings"/>.</returns>
+        public TrafficManagerSettings GetSettings()
         {
-            return hive.Consul.Client.KV.GetObject<TrafficDirectorSettings>(GetProxySettingsKey()).Result;
+            return hive.Consul.Client.KV.GetObject<TrafficManagerSettings>(GetProxySettingsKey()).Result;
         }
 
         /// <summary>
-        /// Updates the traffic director settings.
+        /// Updates the traffic manager settings.
         /// </summary>
         /// <param name="settings">The new settings.</param>
-        public void UpdateSettings(TrafficDirectorSettings settings)
+        public void UpdateSettings(TrafficManagerSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
@@ -106,24 +106,24 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the traffic director definition including its settings and rules.
+        /// Returns the traffic manager definition including its settings and rules.
         /// </summary>
-        /// <returns>The <see cref="TrafficDirectorDefinition"/>.</returns>
-        /// <exception cref="HiveException">Thrown if the traffic director definition could not be loaded.</exception>
-        public TrafficDirectorDefinition GetDefinition()
+        /// <returns>The <see cref="TrafficManagerDefinition"/>.</returns>
+        /// <exception cref="HiveException">Thrown if the traffic manager definition could not be loaded.</exception>
+        public TrafficManagerDefinition GetDefinition()
         {
             // Fetch the proxy settings and all of its rules to create a full [TrafficDirectorDefinition].
 
-            var proxyDefinition  = new TrafficDirectorDefinition() { Name = this.Name };
+            var proxyDefinition  = new TrafficManagerDefinition() { Name = this.Name };
             var proxySettingsKey = GetProxySettingsKey();
 
             if (hive.Consul.Client.KV.Exists(proxySettingsKey).Result)
             {
-                proxyDefinition.Settings = TrafficDirectorSettings.ParseJson(hive.Consul.Client.KV.GetString(proxySettingsKey).Result);
+                proxyDefinition.Settings = TrafficManagerSettings.ParseJson(hive.Consul.Client.KV.GetString(proxySettingsKey).Result);
             }
             else
             {
-                throw new HiveException($"Settings for traffic director [{Name}] do not exist or could not be loaded.");
+                throw new HiveException($"Settings for traffic manager [{Name}] do not exist or could not be loaded.");
             }
 
             foreach (var rule in ListRules())
@@ -152,7 +152,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Signals the <b>neon-proxy-manager</b> to immediately regenerate the traffic director and proxy configurations,
+        /// Signals the <b>neon-proxy-manager</b> to immediately regenerate the traffic manager and proxy configurations,
         /// without waiting for the periodic change detection (that happens at a 60 second interval by default).
         /// </summary>
         public void Update()
@@ -165,7 +165,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Deletes a traffic director rule if it exists.
+        /// Deletes a traffic manager rule if it exists.
         /// </summary>
         /// <param name="ruleName">The rule name.</param>
         /// <param name="deferUpdate">
@@ -207,11 +207,11 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns a traffic director rule if it exists.
+        /// Returns a traffic manager rule if it exists.
         /// </summary>
         /// <param name="ruleName">The rule name.</param>
-        /// <returns>The <see cref="TrafficDirectorRule"/> or <c>null</c>.</returns>
-        public TrafficDirectorRule GetRule(string ruleName)
+        /// <returns>The <see cref="TrafficManagerRule"/> or <c>null</c>.</returns>
+        public TrafficManagerRule GetRule(string ruleName)
         {
             Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(ruleName));
 
@@ -219,7 +219,7 @@ namespace Neon.Hive
 
             if (hive.Consul.Client.KV.Exists(ruleKey).Result)
             {
-                return TrafficDirectorRule.ParseJson(hive.Consul.Client.KV.GetString(ruleKey).Result);
+                return TrafficManagerRule.ParseJson(hive.Consul.Client.KV.GetString(ruleKey).Result);
             }
             else
             {
@@ -228,7 +228,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Adds or updates a traffic director rule.
+        /// Adds or updates a traffic manager rule.
         /// </summary>
         /// <param name="rule">The rule definition.</param>
         /// <param name="deferUpdate">
@@ -247,10 +247,10 @@ namespace Neon.Hive
         /// </param>
         /// <returns>
         /// <c>true</c> if it existed and was updated, <b>false</b>
-        /// if the traffic director rule didn't already exist and was added.
+        /// if the traffic manager rule didn't already exist and was added.
         /// </returns>
         /// <exception cref="HiveDefinitionException">Thrown if the rule is not valid.</exception>
-        public bool SetRule(TrafficDirectorRule rule, bool deferUpdate = false)
+        public bool SetRule(TrafficManagerRule rule, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>(rule != null);
             Covenant.Requires<ArgumentNullException>(HiveDefinition.IsValidName(rule.Name));
@@ -262,7 +262,7 @@ namespace Neon.Hive
                 // to the Internet for cloud deployments and to avoid operators
                 // being freaked out if they see a non-zero port here.
 
-                var httpRule = rule as TrafficDirectorHttpRule;
+                var httpRule = rule as TrafficManagerHttpRule;
 
                 if (httpRule != null)
                 {
@@ -273,7 +273,7 @@ namespace Neon.Hive
                 }
                 else
                 {
-                    var tcpRule = rule as TrafficDirectorTcpRule;
+                    var tcpRule = rule as TrafficManagerTcpRule;
 
                     if (tcpRule != null)
                     {
@@ -290,7 +290,7 @@ namespace Neon.Hive
             // We're going to minimially ensure that the rule is valid.  It would
             // be better to do full server side validation.
 
-            var context = new TrafficDirectorValidationContext(Name, GetSettings())
+            var context = new TrafficManagerValidationContext(Name, GetSettings())
             {
                 ValidateCertificates = false,   // Disable this because we didn't download the certs.
                 ValidateResolvers    = false
@@ -331,21 +331,21 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Lists the traffic director rules.
+        /// Lists the traffic manager rules.
         /// </summary>
         /// <param name="predicate">Optional predicate used to filter the output rules.</param>
-        /// <returns>The <see cref="IEnumerable{T}"/> of traffic director rules.</returns>
-        public IEnumerable<TrafficDirectorRule> ListRules(Func<TrafficDirectorRule, bool> predicate = null)
+        /// <returns>The <see cref="IEnumerable{T}"/> of traffic manager rules.</returns>
+        public IEnumerable<TrafficManagerRule> ListRules(Func<TrafficManagerRule, bool> predicate = null)
         {
             var rulesResponse = hive.Consul.Client.KV.ListOrDefault<JObject>($"{proxyManagerPrefix}/conf/{Name}/rules/").Result;
 
             if (rulesResponse != null)
             {
-                var rules = new List<TrafficDirectorRule>();
+                var rules = new List<TrafficManagerRule>();
 
                 foreach (var rulebject in rulesResponse)
                 {
-                    var rule = TrafficDirectorRule.ParseJson(rulebject.ToString());
+                    var rule = TrafficManagerRule.ParseJson(rulebject.ToString());
 
                     if (predicate == null || predicate(rule))
                     {
@@ -357,7 +357,7 @@ namespace Neon.Hive
             }
             else
             {
-                return new TrafficDirectorRule[0];
+                return new TrafficManagerRule[0];
             }
         }
 

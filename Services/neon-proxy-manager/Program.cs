@@ -44,7 +44,7 @@ namespace NeonProxyManager
     /// <summary>
     /// Implements the <b>neon-proxy-manager</b> service which is responsible for dynamically generating the HAProxy 
     /// configurations for the <c>neon-proxy-public</c>, <c>neon-proxy-private</c>, <c>neon-proxy-public-bridge</c>,
-    /// and <c>neon-proxy-private-bridge</c> services from the traffic director rules persisted in Consul and the TLS certificates
+    /// and <c>neon-proxy-private-bridge</c> services from the traffic manager rules persisted in Consul and the TLS certificates
     /// persisted in Vault.  See <a href="https://hub.docker.com/r/nhive/neon-proxy-manager/">nhive/neon-proxy-manager</a>  
     /// and <a href="https://hub.docker.com/r/nhive/neon-proxy/">nhive/neon-proxy</a> for more information.
     /// </summary>
@@ -191,7 +191,7 @@ namespace NeonProxyManager
                             //
                             // We're passing [useBootstrap=true] here so that the HiveMQ client will
                             // connect directly to the HiveMQ cluster nodes as opposed to routing
-                            // traffic through the private traffic director.  This is necessary because
+                            // traffic through the private traffic manager.  This is necessary because
                             // the load balancers rely on HiveMQ to broadcast update notifications.
                             //
                             // One consequence of this is that this service will need to be restarted

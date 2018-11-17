@@ -427,11 +427,11 @@ namespace NeonCli.Ansible
 
                     NeonHelper.WaitForParallel(volumeRemoveActions);
 
-                    // Remove the traffic director rule and certificate.
+                    // Remove the traffic manager rule and certificate.
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] traffic director rule.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] traffic manager rule.");
                     hive.PublicTraffic.RemoveRule("neon-registry");
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] traffic director certificate.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] traffic manager certificate.");
                     hive.Certificate.Remove("neon-registry");
 
                     // Remove any related Consul state.
@@ -606,7 +606,7 @@ namespace NeonCli.Ansible
                         context.WriteLine(AnsibleVerbosity.Trace, $"Adding hive DNS host entry for [{hostname}].");
                         hive.Dns.Set(dnsRedirect, waitUntilPropagated: true);
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Writing traffic director rule.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Writing traffic manager rule.");
                         hive.PublicTraffic.SetRule(GetRegistryTrafficDirectorRule(hostname));
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating the [neon-registry] service.");
@@ -653,7 +653,7 @@ namespace NeonCli.Ansible
 
                         if (hostnameChanged)
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating traffic director rule.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating traffic manager rule.");
                             hive.PublicTraffic.SetRule(GetRegistryTrafficDirectorRule(hostname));
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating hive DNS host entry for [{hostname}] (60 seconds).");
@@ -773,28 +773,28 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
         }
 
         /// <summary>
-        /// Returns the traffic director rule for the [neon-registry] service.
+        /// Returns the traffic manager rule for the [neon-registry] service.
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
-        /// <returns>The <see cref="TrafficDirectorHttpRule"/>.</returns>
-        private TrafficDirectorHttpRule GetRegistryTrafficDirectorRule(string hostname)
+        /// <returns>The <see cref="TrafficManagerHttpRule"/>.</returns>
+        private TrafficManagerHttpRule GetRegistryTrafficDirectorRule(string hostname)
         {
-            return new TrafficDirectorHttpRule()
+            return new TrafficManagerHttpRule()
             {
                 Name      = "neon-registry",
                 System    = true,
-                Frontends = new List<TrafficDirectorHttpFrontend>()
+                Frontends = new List<TrafficManagerHttpFrontend>()
                 {
-                    new TrafficDirectorHttpFrontend()
+                    new TrafficManagerHttpFrontend()
                     {
                         Host     = hostname,
                         CertName = "neon-registry",
                     }
                 },
 
-                Backends = new List<TrafficDirectorHttpBackend>()
+                Backends = new List<TrafficManagerHttpBackend>()
                 {
-                    new TrafficDirectorHttpBackend()
+                    new TrafficManagerHttpBackend()
                     {
                         Server = "neon-registry",
                         Port   = 5000

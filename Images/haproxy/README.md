@@ -8,7 +8,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* iden
 
 # Description
 
-HAProxy (Alpine) image used for both ingress and internal load balancing within a neonHIVE.  This image is deployed automatically during hive setup and integrates with Consul, Vault, and `neon-proxy-manager` services to update its configuration as hive traffic director rules change.
+HAProxy (Alpine) image used for both ingress and internal load balancing within a neonHIVE.  This image is deployed automatically during hive setup and integrates with Consul, Vault, and `neon-proxy-manager` services to update its configuration as hive traffic manager rules change.
 
 # Additional Packages
 

@@ -64,12 +64,12 @@ ARGUMENTS:
 
 COMMANDS:
 
-    help            - Prints traffic director rule details.
+    help            - Prints traffic manager rule details.
     get             - Output a specific rule as JSON by default.
                       Use [--yaml] to return as YAML.
-    haproxy         - Outputs the traffic director's HAProxy configuration.
+    haproxy         - Outputs the traffic manager's HAProxy configuration.
     haproxy-bridge  - Outputs the pet bridge's HAProxy configuration.
-    inspect         - Displays JSON details for all traffic director
+    inspect         - Displays JSON details for all traffic manager
                       rules and settings.
     list|ls         - Lists the rule names.
     purge           - Purges cached items by URI glob pattern or ALL items
@@ -77,22 +77,22 @@ COMMANDS:
     set             - Adds or updates a rule from a file or by
                       reading standard input.  JSON or YAML
                       input is supported.
-    settings        - Updates the global traffic director settings from
+    settings        - Updates the global traffic manager settings from
                       a JSON file or by reading standard input.
-    status          - Displays the current status for a traffic director.
+    status          - Displays the current status for a traffic manager.
     update          - Signals [neon-proxy-manager] to immediately deploy
                       any pending changes.
 
 OPTIONS:
 
-    --all           - List all traffic director rules 
+    --all           - List all traffic manager rules 
                       (system rules are excluded by default)
     --sys           - List only system rules
 ";
 
         private const string ruleHelp =
 @"
-neonHIVE proxies support two types of traffic director rules: HTTP/S and 
+neonHIVE proxies support two types of traffic manager rules: HTTP/S and 
 TCP.  Each rule defines one or more frontend and backends.
 
 HTTP/S frontends handle requests for a hostname for one or more hostname
@@ -100,7 +100,7 @@ and port combinations.  HTTPS is enabled by specifying the name of a
 certificate loaded into the hive.  The port defaults to 80 for HTTP
 and 443 for HTTPS.   The [https_redirect] option indicates that clients
 making HTTP requests should be redirected with the HTTPS scheme.  HTTP/S
-rules for the PUBLIC traffic director are exposed on the hosting environment's
+rules for the PUBLIC traffic manager are exposed on the hosting environment's
 Internet facing  load balancer by default on the standard ports 80/443. 
 It is possible  to change these public ports or disable exposure of
 individual rules.
@@ -165,7 +165,7 @@ Here's how this rule looks as YAML:
     - Server: 10.0.1.42
       Port:1000
 
-See the documentation for more traffic director rule and setting details.
+See the documentation for more traffic manager rule and setting details.
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -207,7 +207,7 @@ See the documentation for more traffic director rule and setting details.
             {
                 case "help":
 
-                    // $hack: This isn't really a traffic director name.
+                    // $hack: This isn't really a traffic manager name.
 
                     Console.WriteLine(ruleHelp);
                     Program.Exit(0);
@@ -264,7 +264,7 @@ See the documentation for more traffic director rule and setting details.
                         Program.Exit(1);
                     }
 
-                    // Fetch a specific traffic director rule and output it.
+                    // Fetch a specific traffic manager rule and output it.
 
                     var rule = trafficManager.GetRule(ruleName);
 
@@ -281,7 +281,7 @@ See the documentation for more traffic director rule and setting details.
                 case "haproxy-bridge":
                 case "varnish":
 
-                    // We're going to download the traffic director's ZIP archive containing the
+                    // We're going to download the traffic manager's ZIP archive containing the
                     // [haproxy.cfg] or [varnish.vcl] file, extract and write it to the console.
 
                     using (var consul = HiveHelper.OpenConsul())
@@ -468,7 +468,7 @@ See the documentation for more traffic director rule and setting details.
                         ruleText = File.ReadAllText(ruleFile);
                     }
 
-                    var trafficDirectorRule = TrafficDirectorRule.Parse(ruleText, strict: true);
+                    var trafficDirectorRule = TrafficManagerRule.Parse(ruleText, strict: true);
 
                     ruleName = trafficDirectorRule.Name;
 
@@ -481,7 +481,7 @@ See the documentation for more traffic director rule and setting details.
                     // Validate a clone of the rule with any implicit frontends.
 
                     var clonedRule = NeonHelper.JsonClone(trafficDirectorRule);
-                    var context    = new TrafficDirectorValidationContext(directorName, null)
+                    var context    = new TrafficManagerValidationContext(directorName, null)
                     {
                         ValidateCertificates = false    // Disable this because we didn't download the certs (see note above)
                     };
@@ -533,10 +533,10 @@ See the documentation for more traffic director rule and setting details.
                         settingsText = File.ReadAllText(settingsFile);
                     }
 
-                    var trafficDirectorSettings = TrafficDirectorSettings.Parse(settingsText, strict: true);
+                    var trafficDirectorSettings = TrafficManagerSettings.Parse(settingsText, strict: true);
 
                     trafficManager.UpdateSettings(trafficDirectorSettings);
-                    Console.WriteLine($"Traffic director [{directorName}] settings have been updated.");
+                    Console.WriteLine($"Traffic manager [{directorName}] settings have been updated.");
                     break;
 
                 case "status":
@@ -547,11 +547,11 @@ See the documentation for more traffic director rule and setting details.
 
                         if (statusJson == null)
                         {
-                            Console.Error.WriteLine($"*** ERROR: Status for traffic director [{directorName}] is not currently available.");
+                            Console.Error.WriteLine($"*** ERROR: Status for traffic manager [{directorName}] is not currently available.");
                             Program.Exit(1);
                         }
 
-                        var trafficDirectorStatus = NeonHelper.JsonDeserialize<TrafficDirectorStatus>(statusJson);
+                        var trafficDirectorStatus = NeonHelper.JsonDeserialize<TrafficManagerStatus>(statusJson);
 
                         Console.WriteLine();
                         Console.WriteLine($"Snapshot Time: {trafficDirectorStatus.TimestampUtc} (UTC)");

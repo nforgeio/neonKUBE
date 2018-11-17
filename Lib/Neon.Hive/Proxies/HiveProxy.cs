@@ -52,8 +52,8 @@ namespace Neon.Hive
         /// Optionally specifies that the instance should use the HiveMQ client
         /// should directly eference to the HiveMQ cluster nodes for broadcasting
         /// proxy update messages rather than routing traffic through the <b>private</b>
-        /// traffic director.  This is used internally to resolve chicken-and-the-egg
-        /// dilemmas for the traffic director and proxy implementations that rely on
+        /// traffic manager.  This is used internally to resolve chicken-and-the-egg
+        /// dilemmas for the traffic manager and proxy implementations that rely on
         /// HiveMQ messaging.
         /// </param>
         /// <param name="defaultRunOptions">
@@ -100,8 +100,8 @@ namespace Neon.Hive
         /// Optionally specifies that the instance should use the HiveMQ client
         /// should directly eference to the HiveMQ cluster nodes for broadcasting
         /// proxy update messages rather than routing traffic through the <b>private</b>
-        /// traffic director.  This is used internally to resolve chicken-and-the-egg
-        /// dilemmas for the traffic director and proxy implementations that rely on
+        /// traffic manager.  This is used internally to resolve chicken-and-the-egg
+        /// dilemmas for the traffic manager and proxy implementations that rely on
         /// HiveMQ messaging.
         /// </param>
         /// <param name="defaultRunOptions">
@@ -282,12 +282,12 @@ namespace Neon.Hive
         public DnsManager Dns { get; private set; }
 
         /// <summary>
-        /// Manages the hive's public traffic director.
+        /// Manages the hive's public traffic manager.
         /// </summary>
         public TrafficManager PublicTraffic { get; private set; }
 
         /// <summary>
-        /// Manages the hive's private traffic director.
+        /// Manages the hive's private traffic manager.
         /// </summary>
         public TrafficManager PrivateTraffic { get; private set; }
 
@@ -322,9 +322,9 @@ namespace Neon.Hive
         public HeadendClient Headend { get; private set; }
 
         /// <summary>
-        /// Returns the named traffic director manager.
+        /// Returns the named traffic manager manager.
         /// </summary>
-        /// <param name="name">The traffic director name (one of <b>public</b> or <b>private</b>).</param>
+        /// <param name="name">The traffic manager name (one of <b>public</b> or <b>private</b>).</param>
         public TrafficManager GetTrafficManager(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -554,7 +554,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Indicates that the hive certificates and or traffic director rules may have been changed.
+        /// Indicates that the hive certificates and or traffic manager rules may have been changed.
         /// This has the effect of signalling <b>neon-proxy-manager</b> to regenerate the proxy 
         /// definitions and update all of the load balancers when changes are detected.
         /// </summary>

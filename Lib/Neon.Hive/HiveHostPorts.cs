@@ -148,7 +148,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// This port is reserved and must not be assigned to any service.  This is
-        /// currently referenced by the manager traffic director rule for Azure deployments
+        /// currently referenced by the manager traffic manager rule for Azure deployments
         /// and it must not actually host a service.  See the <b>AzureHostingManager</b>
         /// source code for more information.
         /// </summary>

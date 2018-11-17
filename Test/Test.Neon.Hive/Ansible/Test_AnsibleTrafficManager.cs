@@ -50,7 +50,7 @@ namespace TestHive
         public void Public()
         {
             //-----------------------------------------------------------------
-            // Verify that we can add a simple public traffic director rule.
+            // Verify that we can add a simple public traffic manager rule.
 
             var playbook =
 $@"
@@ -58,7 +58,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: public
         state: present
         rule_name: test
@@ -76,11 +76,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var rule = (TrafficDirectorHttpRule)hive.PublicTraffic.GetRule("test");
+            var rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficDirectorMode.Http, rule.Mode);
+            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -97,7 +97,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: public
         state: present
         rule_name: test
@@ -115,11 +115,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficDirectorMode.Http, rule.Mode);
+            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -136,7 +136,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: public
         state: present
         rule_name: test
@@ -148,7 +148,7 @@ $@"
             - server: www.google.com
               port: 80
     - name: update
-      neon_traffic_director:
+      neon_traffic_manager:
         name: public
         state: update
 ";
@@ -158,11 +158,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficDirectorMode.Http, rule.Mode);
+            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -183,7 +183,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: public
         state: present
         rule_name: test
@@ -201,11 +201,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficDirectorMode.Http, rule.Mode);
+            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -222,7 +222,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: public
         state: absent
         rule_name: test
@@ -233,7 +233,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.Null(rule);
 
@@ -246,7 +246,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: public
         state: absent
         rule_name: test
@@ -257,7 +257,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.Null(rule);
 
@@ -270,12 +270,12 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: public
         state: absent
         rule_name: test
     - name: update
-      neon_traffic_director:
+      neon_traffic_manager:
         name: public
         state: update
 ";
@@ -290,7 +290,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.Null(rule);
         }
@@ -300,7 +300,7 @@ $@"
         public void Private()
         {
             //-----------------------------------------------------------------
-            // Verify that we can add a simple public traffic director rule.
+            // Verify that we can add a simple public traffic manager rule.
 
             var playbook =
 $@"
@@ -308,7 +308,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: private
         state: present
         rule_name: test
@@ -326,11 +326,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var rule = (TrafficDirectorHttpRule)hive.PrivateTraffic.GetRule("test");
+            var rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficDirectorMode.Http, rule.Mode);
+            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPrivateHttp, rule.Frontends.First().ProxyPort);
@@ -347,7 +347,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: private
         state: present
         rule_name: test
@@ -365,11 +365,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficDirectorMode.Http, rule.Mode);
+            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPrivateHttp, rule.Frontends.First().ProxyPort);
@@ -386,7 +386,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: private
         state: present
         rule_name: test
@@ -398,7 +398,7 @@ $@"
             - server: www.google.com
               port: 80
     - name: update
-      neon_traffic_director:
+      neon_traffic_manager:
         name: private
         state: update
 ";
@@ -412,11 +412,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficDirectorMode.Http, rule.Mode);
+            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPrivateHttp, rule.Frontends.First().ProxyPort);
@@ -433,7 +433,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: private
         state: present
         rule_name: test
@@ -451,11 +451,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficDirectorMode.Http, rule.Mode);
+            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPrivateHttp, rule.Frontends.First().ProxyPort);
@@ -472,7 +472,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: private
         state: absent
         rule_name: test
@@ -483,7 +483,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.Null(rule);
 
@@ -496,7 +496,7 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: private
         state: absent
         rule_name: test
@@ -507,7 +507,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.Null(rule);
 
@@ -520,12 +520,12 @@ $@"
   hosts: localhost
   tasks:
     - name: rule
-      neon_traffic_director:
+      neon_traffic_manager:
         name: private
         state: absent
         rule_name: test
     - name: update
-      neon_traffic_director:
+      neon_traffic_manager:
         name: private
         state: update
 ";
@@ -540,7 +540,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficDirectorHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.Null(rule);
         }

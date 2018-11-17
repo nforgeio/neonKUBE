@@ -175,7 +175,7 @@ namespace Neon.Xunit.Hive
     ///     <description>
     ///     <see cref="ClearTrafficDirectors(bool)"/><br/>
     ///     <see cref="ListTrafficDirectors(string, bool)"/><br/>
-    ///     <see cref="PutTrafficDirectorRule(string, TrafficDirectorRule, bool)"/><br/>
+    ///     <see cref="PutTrafficDirectorRule(string, TrafficManagerRule, bool)"/><br/>
     ///     <see cref="RemoveTrafficDirectorRule(string, string, bool)"/><br/>
     ///     </description>
     /// </item>
@@ -1083,9 +1083,9 @@ namespace Neon.Xunit.Hive
         // Load balancers/rules
 
         /// <summary>
-        /// Persists a traffic director rule object to the hive.
+        /// Persists a traffic manager rule object to the hive.
         /// </summary>
-        /// <param name="directorName">The traffic director name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="directorName">The traffic manager name (<b>public</b> or <b>private</b>).</param>
         /// <param name="rule">The rule.</param>
         /// <param name="deferUpdate">
         /// <para>
@@ -1101,7 +1101,7 @@ namespace Neon.Xunit.Hive
         /// the rule changes and then call <see cref="TrafficManager.Update()"/> afterwards.
         /// </para>
         /// </param>
-        public void PutTrafficDirectorRule(string directorName, TrafficDirectorRule rule, bool deferUpdate = false)
+        public void PutTrafficDirectorRule(string directorName, TrafficManagerRule rule, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
             Covenant.Requires<ArgumentNullException>(rule != null);
@@ -1115,9 +1115,9 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Persists a traffic director rule described as JSON or YAML text to the hive.
+        /// Persists a traffic manager rule described as JSON or YAML text to the hive.
         /// </summary>
-        /// <param name="directorName">The traffic director name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="directorName">The traffic manager name (<b>public</b> or <b>private</b>).</param>
         /// <param name="jsonOrYaml">The route JSON or YAML description.</param>
         /// <param name="deferUpdate">
         /// <para>
@@ -1142,18 +1142,18 @@ namespace Neon.Xunit.Hive
             this.CheckCluster();
 
             var directorManager = hive.GetTrafficManager(directorName);
-            var rule            = TrafficDirectorRule.Parse(jsonOrYaml);
+            var rule            = TrafficManagerRule.Parse(jsonOrYaml);
 
             directorManager.SetRule(rule);
         }
 
         /// <summary>
-        /// Lists traffic director rules.
+        /// Lists traffic manager rules.
         /// </summary>
-        /// <param name="directorName">The traffic director name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="directorName">The traffic manager name (<b>public</b> or <b>private</b>).</param>
         /// <param name="includeSystem">Optionally include built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
-        /// <returns>The rules for the named traffic director.</returns>
-        public List<TrafficDirectorRule> ListTrafficDirectors(string directorName, bool includeSystem = false)
+        /// <returns>The rules for the named traffic manager.</returns>
+        public List<TrafficManagerRule> ListTrafficDirectors(string directorName, bool includeSystem = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
 
@@ -1174,9 +1174,9 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Removes a traffic director rule.
+        /// Removes a traffic manager rule.
         /// </summary>
-        /// <param name="directorName">The traffic director name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="directorName">The traffic manager name (<b>public</b> or <b>private</b>).</param>
         /// <param name="name">The rule name.</param>
         /// <param name="deferUpdate">
         /// <para>
@@ -1206,7 +1206,7 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Removes all traffic director rules.
+        /// Removes all traffic manager rules.
         /// </summary>
         /// <param name="removeSystem">Optionally remove system rules as well.</param>
         /// <remarks>

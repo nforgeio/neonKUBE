@@ -299,7 +299,7 @@ namespace NeonProxyCache
         }
 
         /// <summary>
-        /// Configures Varnish based on the current traffic director configuration.
+        /// Configures Varnish based on the current traffic manager configuration.
         /// </summary>
         /// <remarks>
         /// This method will terminate the service if Varnish could not be started
@@ -568,7 +568,7 @@ backend stub {
                     // Read the cache settings and update the cache warmer.
 
                     var cacheSettingsJson = File.ReadAllText(Path.Combine(configFolder, "cache-settings.json"));
-                    var cacheSettings     = NeonHelper.JsonDeserialize<TrafficDirectorCacheSettings>(cacheSettingsJson);
+                    var cacheSettings     = NeonHelper.JsonDeserialize<TrafficManagerCacheSettings>(cacheSettingsJson);
 
                     UpdateCacheWarmer(cacheSettings);
                 }

@@ -6,7 +6,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* iden
 
 # Description
 
-This image deploys a high performing caching HTTP proxy based on [Varnish Cache](http://varnish-cache.org).  This can be placed in front of websites to improve webpage loading performance and reduce the load from the backends.  This image is also extended by [neon-proxy-cache](https://hub.docker.com/r/nhive/neon-proxy-cache/) that integrates HTTP caching into the neonHIVE traffic director infrastructure.
+This image deploys a high performing caching HTTP proxy based on [Varnish Cache](http://varnish-cache.org).  This can be placed in front of websites to improve webpage loading performance and reduce the load from the backends.  This image is also extended by [neon-proxy-cache](https://hub.docker.com/r/nhive/neon-proxy-cache/) that integrates HTTP caching into the neonHIVE traffic manager infrastructure.
 
 # Environment Variables
 
