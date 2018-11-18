@@ -173,10 +173,10 @@ namespace Neon.Xunit.Hive
     /// <item>
     ///     <term><b>Traffic Director Rules</b></term>
     ///     <description>
-    ///     <see cref="ClearTrafficDirectors(bool)"/><br/>
-    ///     <see cref="ListTrafficDirectors(string, bool)"/><br/>
-    ///     <see cref="PutTrafficDirectorRule(string, TrafficManagerRule, bool)"/><br/>
-    ///     <see cref="RemoveTrafficDirectorRule(string, string, bool)"/><br/>
+    ///     <see cref="ClearTrafficManagers(bool)"/><br/>
+    ///     <see cref="ListTrafficManagers(string, bool)"/><br/>
+    ///     <see cref="PutTrafficManagerRule(string, TrafficManagerRule, bool)"/><br/>
+    ///     <see cref="RemoveTrafficManagerRule(string, string, bool)"/><br/>
     ///     </description>
     /// </item>
     /// <item>
@@ -709,7 +709,7 @@ namespace Neon.Xunit.Hive
                         ClearServices();
                      // () => ClearContainers()     // Not implemented yet
                     },
-                    () => ClearTrafficDirectors(),
+                    () => ClearTrafficManagers(),
                 });
 
             // We're clearing these after the services and stacks so
@@ -1101,7 +1101,7 @@ namespace Neon.Xunit.Hive
         /// the rule changes and then call <see cref="TrafficManager.Update()"/> afterwards.
         /// </para>
         /// </param>
-        public void PutTrafficDirectorRule(string directorName, TrafficManagerRule rule, bool deferUpdate = false)
+        public void PutTrafficManagerRule(string directorName, TrafficManagerRule rule, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
             Covenant.Requires<ArgumentNullException>(rule != null);
@@ -1153,7 +1153,7 @@ namespace Neon.Xunit.Hive
         /// <param name="directorName">The traffic manager name (<b>public</b> or <b>private</b>).</param>
         /// <param name="includeSystem">Optionally include built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
         /// <returns>The rules for the named traffic manager.</returns>
-        public List<TrafficManagerRule> ListTrafficDirectors(string directorName, bool includeSystem = false)
+        public List<TrafficManagerRule> ListTrafficManagers(string directorName, bool includeSystem = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
 
@@ -1192,7 +1192,7 @@ namespace Neon.Xunit.Hive
         /// the rule changes and then call <see cref="TrafficManager.Update()"/> afterwards.
         /// </para>
         /// </param>
-        public void RemoveTrafficDirectorRule(string directorName, string name, bool deferUpdate = false)
+        public void RemoveTrafficManagerRule(string directorName, string name, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>((bool)!string.IsNullOrEmpty(directorName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1220,15 +1220,15 @@ namespace Neon.Xunit.Hive
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </para>
         /// </remarks>
-        public void ClearTrafficDirectors(bool removeSystem = false)
+        public void ClearTrafficManagers(bool removeSystem = false)
         {
             var deletions = false;
 
             foreach (var trafficManagerName in new string[] { "public", "private" })
             {
-                foreach (var route in ListTrafficDirectors(trafficManagerName, removeSystem))
+                foreach (var route in ListTrafficManagers(trafficManagerName, removeSystem))
                 {
-                    RemoveTrafficDirectorRule(trafficManagerName, route.Name, deferUpdate: true);
+                    RemoveTrafficManagerRule(trafficManagerName, route.Name, deferUpdate: true);
                     deletions = true;
                 }
             }
@@ -1238,6 +1238,12 @@ namespace Neon.Xunit.Hive
                 hive.PublicTraffic.Update();
                 hive.PrivateTraffic.Update();
             }
+
+            // Purge all cached content.
+
+            hive.PublicTraffic.PurgeAll();
+            hive.PrivateTraffic.PurgeAll();
+            Thread.Sleep(TimeSpan.FromSeconds(2));  // Give the purge some time to complete.
         }
 
         //---------------------------------------------------------------------

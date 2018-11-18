@@ -87,7 +87,7 @@ services:
                         publicRule.Frontends.Add(new TrafficManagerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPublicFirstUser });
                         publicRule.Backends.Add(new TrafficManagerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-                        hive.PutTrafficDirectorRule("public", publicRule);
+                        hive.PutTrafficManagerRule("public", publicRule);
                     },
                     () =>
                     {
@@ -97,7 +97,7 @@ services:
                         privateRule.Frontends.Add(new TrafficManagerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPrivateFirstUser });
                         privateRule.Backends.Add(new TrafficManagerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-                        hive.PutTrafficDirectorRule("private", privateRule);
+                        hive.PutTrafficManagerRule("private", privateRule);
                         hive.PutCertificate("test-certificate", TestCertificate.CombinedPem);
                         hive.SetSelfSignedCertificate("test-certificate2", "*.foo.com");
                     },
@@ -138,11 +138,11 @@ services:
             Assert.Equal(1, stack.ServiceCount);
             Assert.Single(hiveFixture.ListServices().Where(item => item.Name.Equals("test-stack_sleeper")));
 
-            Assert.Single(hiveFixture.ListTrafficDirectors("public"));
-            Assert.Single(hiveFixture.ListTrafficDirectors("public").Where(item => item.Name == "test-rule"));
+            Assert.Single(hiveFixture.ListTrafficManagers("public"));
+            Assert.Single(hiveFixture.ListTrafficManagers("public").Where(item => item.Name == "test-rule"));
 
-            Assert.Single(hiveFixture.ListTrafficDirectors("private"));
-            Assert.Single(hiveFixture.ListTrafficDirectors("private").Where(item => item.Name == "test-rule"));
+            Assert.Single(hiveFixture.ListTrafficManagers("private"));
+            Assert.Single(hiveFixture.ListTrafficManagers("private").Where(item => item.Name == "test-rule"));
 
             Assert.Equal(2, hiveFixture.ListCertificates().Count);
             Assert.Single(hiveFixture.ListCertificates().Where(item => item == "test-certificate"));
@@ -169,8 +169,8 @@ services:
             Assert.Empty(hiveFixture.ListSecrets());
             Assert.Empty(hiveFixture.ListConfigs());
             Assert.Empty(hiveFixture.ListNetworks());
-            Assert.Empty(hiveFixture.ListTrafficDirectors("public"));
-            Assert.Empty(hiveFixture.ListTrafficDirectors("private"));
+            Assert.Empty(hiveFixture.ListTrafficManagers("public"));
+            Assert.Empty(hiveFixture.ListTrafficManagers("private"));
             Assert.Empty(hiveFixture.ListCertificates());
 
             Assert.False(hiveFixture.Consul.KV.Exists("test/value1").Result);

@@ -533,9 +533,9 @@ See the documentation for more traffic manager rule and setting details.
                         settingsText = File.ReadAllText(settingsFile);
                     }
 
-                    var trafficDirectorSettings = TrafficManagerSettings.Parse(settingsText, strict: true);
+                    var trafficManagerSettings = TrafficManagerSettings.Parse(settingsText, strict: true);
 
-                    trafficManager.UpdateSettings(trafficDirectorSettings);
+                    trafficManager.UpdateSettings(trafficManagerSettings);
                     Console.WriteLine($"Traffic manager [{directorName}] settings have been updated.");
                     break;
 
@@ -551,13 +551,13 @@ See the documentation for more traffic manager rule and setting details.
                             Program.Exit(1);
                         }
 
-                        var trafficDirectorStatus = NeonHelper.JsonDeserialize<TrafficManagerStatus>(statusJson);
+                        var trafficManagerStatus = NeonHelper.JsonDeserialize<TrafficManagerStatus>(statusJson);
 
                         Console.WriteLine();
-                        Console.WriteLine($"Snapshot Time: {trafficDirectorStatus.TimestampUtc} (UTC)");
+                        Console.WriteLine($"Snapshot Time: {trafficManagerStatus.TimestampUtc} (UTC)");
                         Console.WriteLine();
 
-                        using (var reader = new StringReader(trafficDirectorStatus.Status))
+                        using (var reader = new StringReader(trafficManagerStatus.Status))
                         {
                             foreach (var line in reader.Lines())
                             {

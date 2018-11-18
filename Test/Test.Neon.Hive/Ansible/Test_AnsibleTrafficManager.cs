@@ -41,7 +41,7 @@ namespace TestHive
         {
             if (!fixture.LoginAndInitialize())
             {
-                fixture.ClearTrafficDirectors();
+                fixture.ClearTrafficManagers();
             }
 
             this.hiveFixture = fixture;
