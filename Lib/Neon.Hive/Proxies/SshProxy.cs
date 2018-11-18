@@ -3588,6 +3588,21 @@ echo $? > {cmdFolder}/exit
             return SemanticVersion.Parse(version);
         }
 
+        /// <summary>
+        /// Returns the current time (UTC) on the remote machine.
+        /// </summary>
+        /// <returns>The machine's current <see cref="DateTime"/> (UTC).</returns>
+        public DateTime GetTimeUtc()
+        {
+            var response = SudoCommand("date +%s", RunOptions.None);
+
+            response.EnsureSuccess();
+
+            var epochSeconds = long.Parse(response.OutputText.Trim());
+
+            return NeonHelper.UnixEpoch + TimeSpan.FromSeconds(epochSeconds);
+        }
+
         /// <inheritdoc/>
         public override string ToString()
         {

@@ -575,5 +575,17 @@ namespace Neon.Hive
                 node.LogLine(message);
             }
         }
+
+        /// <summary>
+        /// Returns the current time (UTC) for the hive by fetching the 
+        /// time from one of the hive managers.
+        /// </summary>
+        /// <returns>The hive's current <see cref="DateTime"/> (UTC).</returns>
+        public DateTime GetTimeUtc()
+        {
+            var manager = GetReachableManager();
+
+            return manager.GetTimeUtc();
+        }
     }
 }

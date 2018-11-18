@@ -106,6 +106,11 @@ namespace Neon.Common
         public const string DateFormatTZOffset = "yyyy-MM-ddTHH:mm:ss.fff+00:00";
 
         /// <summary>
+        /// Returns the Unix epoch time: 01-01-1970 (UTC).
+        /// </summary>
+        public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        /// <summary>
         /// Indicates whether the current application was built as 32 or 64-bit or <c>null</c>
         /// if this hasn't been determined yet.
         /// </summary>

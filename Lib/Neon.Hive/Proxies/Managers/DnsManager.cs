@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -196,6 +197,8 @@ namespace Neon.Hive
             {
                 Reload(wipe: true);
             }
+
+            SetChangeTime();
         }
 
         /// <summary>
@@ -250,6 +253,8 @@ namespace Neon.Hive
             {
                 Reload(wipe: true);
             }
+
+            SetChangeTime();
         }
 
         /// <summary>
@@ -258,7 +263,7 @@ namespace Neon.Hive
         /// <returns>The answers dictionary.</returns>
         public Dictionary<string, List<string>> GetAnswers()
         {
-            var hosts  = hive.Consul.Client.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsKey).Result;
+            var hosts   = hive.Consul.Client.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsKey).Result;
             var answers = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
 
             if (hosts == null)
@@ -317,6 +322,39 @@ namespace Neon.Hive
             }
 
             return answers;
+        }
+
+        /// <summary>
+        /// Sets the DNS <b>change-time-utc</b> Consul key to the current hive time.
+        /// </summary>
+        private void SetChangeTime()
+        {
+            var timeUtc = hive.GetTimeUtc();
+
+            hive.Consul.Client.KV.PutString($"{HiveConst.ConsulDnsRootKey}/change-time-utc", timeUtc.ToString(NeonHelper.DateFormatTZ)).Wait();
+        }
+
+        /// <summary>
+        /// Returns the time (UTC) when the hive DNS settings were last modified.
+        /// </summary>
+        /// <returns>The <see cref="DateTime"/> (UTC).</returns>
+        public DateTime GetChangeTime()
+        {
+            var changeTimeUtcString = hive.Consul.Client.KV.GetStringOrDefault($"{HiveConst.ConsulDnsRootKey}/change-time-utc").Result;
+
+            if (changeTimeUtcString != null && DateTime.TryParseExact(changeTimeUtcString, NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var changeTimeUtc))
+            {
+                return changeTimeUtc;
+            }
+            else
+            {
+                // Return the current hive time when there is no [change-time-utc] Consul key or it can't be parsed
+                // and also set the change time to the current time.
+
+                SetChangeTime();
+
+                return hive.GetTimeUtc();
+            }
         }
     }
 }

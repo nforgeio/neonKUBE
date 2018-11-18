@@ -840,7 +840,33 @@ namespace Neon.Xunit.Hive
             if (actions.Count > 0)
             {
                 NeonHelper.WaitForParallel(actions);
-                Thread.Sleep(ClearDelay);
+
+                // Fetch the current hive time and the last time the DNS was changed
+                // and then wait long enough such that at least [ClearDelay] time has
+                // elapsed since the DNS was last changed to ensure that any DNS answers
+                // cached on hive nodes have a chance to be evicted.
+
+                var hiveTime           = hive.GetTimeUtc();
+                var lastDnsChangeTime  = hive.Dns.GetChangeTime();
+                var elapsedSinceChange = (hiveTime - lastDnsChangeTime);
+
+                if (elapsedSinceChange < TimeSpan.Zero)
+                {
+                    // This shouldn't ever happen but we'll wait the full time just to be safe.
+
+                    Thread.Sleep(ClearDelay);
+                }
+                else if (elapsedSinceChange < ClearDelay)
+                {
+                    // Delay enough such that there [ClearDelay] has passed since the last change.
+
+                    Thread.Sleep(ClearDelay - elapsedSinceChange);
+                }
+                else
+                {
+                    // At least [ClearDelay] time has passed since the last change so we don't
+                    // need to delay any longer.
+                }
             }
         }
 
