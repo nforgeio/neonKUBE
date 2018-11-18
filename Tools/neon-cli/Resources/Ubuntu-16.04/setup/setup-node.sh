@@ -1265,16 +1265,6 @@ systemctl daemon-reload
 systemctl restart neon-dns-loader
 
 #------------------------------------------------------------------------------
-# Install Ansible related packages so common playbooks (like Docker related ones)
-# will run out-of-the-box.
-
-safe-apt-get install -yq python-pip
-pip install docker-py
-pip install docker-compose
-pip install pyyaml
-pip install jsondiff
-
-#------------------------------------------------------------------------------
 # Configure a CRON job that performs daily node maintenance including purging
 # unreferenced Docker images.
 
