@@ -47,9 +47,9 @@ namespace TestHive
         private const string testHostname = "vegomatic.test";
         private static TlsCertificate certificate;
 
-        private HiveFixture hiveFixture;
-        private HiveProxy hive;
-        private string vegomaticImage = $"nhive/vegomatic:{ThisAssembly.Git.Branch}-latest";
+        private HiveFixture     hiveFixture;
+        private HiveProxy       hive;
+        private string          vegomaticImage = $"nhive/vegomatic:{ThisAssembly.Git.Branch}-latest";
 
         public Test_HiveTrafficManager(HiveFixture fixture)
         {

@@ -71,9 +71,15 @@ namespace NeonCli.Ansible
     //                                                  are URIs including optional "*" or
     //                                                  "**" wildcards.
     //
-    //                                                  Use "ALL" to purge all cached content.
+    //                                                  Use "ALL" to purge all cached content
+    //                                                  across all rules handled by the traffic
+    //                                                  manager.
     //
-    // defer_update no          false                   see note below
+    // purge_case_sensitive no  false       true/false  indicates whether the purge_list URI
+    //                                                  patterns are to be evaluated as case
+    //                                                  sensitive
+    //
+    // defer_update no          false       true/false  see note below
     //
     // Deferred Updates
     // ----------------
@@ -299,6 +305,7 @@ namespace NeonCli.Ansible
             "rule",
             "state",
             "purge_list",
+            "purge_case_sensitive",
             "defer_update"
         };
 
@@ -359,7 +366,7 @@ namespace NeonCli.Ansible
                     throw new ArgumentException($"[name={name}] is not a one of the valid traffic manager names: [private] or [public].");
             }
 
-            if (state != "update")
+            if (state == "present" || state == "absent")
             {
                 context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [rule_name]");
 
@@ -583,7 +590,13 @@ namespace NeonCli.Ansible
 
                 case "purge":
 
-                    var purgeItems = context.ParseStringArray("purge_list");
+                    var purgeItems         = context.ParseStringArray("purge_list");
+                    var purgeCaseSensitive = context.ParseBool("purge_case_sensitive");
+
+                    if (!purgeCaseSensitive.HasValue)
+                    {
+                        purgeCaseSensitive = false;
+                    }
 
                     if (purgeItems.Count == 0)
                     {
@@ -591,7 +604,7 @@ namespace NeonCli.Ansible
                         break;
                     }
 
-                    trafficManager.Purge(purgeItems.ToArray());
+                    trafficManager.Purge(purgeItems.ToArray(), caseSensitive: purgeCaseSensitive.Value);
 
                     context.Changed = true;
                     context.WriteLine(AnsibleVerbosity.Info, $"Purge request submitted.");
