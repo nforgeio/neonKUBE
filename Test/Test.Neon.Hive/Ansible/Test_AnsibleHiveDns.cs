@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_AnsibleDnsHosts.cs
+// FILE:	    Test_AnsibleHiveDns.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -21,7 +21,7 @@ using Xunit;
 
 namespace TestHive
 {
-    public class Test_AnsibleDnsHosts : IClassFixture<HiveFixture>
+    public class Test_AnsibleHiveDns : IClassFixture<HiveFixture>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -33,7 +33,7 @@ namespace TestHive
 
         private HiveFixture hive;
 
-        public Test_AnsibleDnsHosts(HiveFixture fixture)
+        public Test_AnsibleHiveDns(HiveFixture fixture)
         {
             this.hive = fixture;
 
