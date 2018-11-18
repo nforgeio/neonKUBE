@@ -71,15 +71,10 @@ namespace NeonVegomatic
                         await new CephFS().ExecAsync(commandLine.Shift(1));
                         break;
 
+                    default:
                     case "test-server":
 
                         await new TestServer().ExecAsync(commandLine.Shift(1));
-                        break;
-
-                    default:
-
-                        log.LogError($"[{command}] is not a valid command.");
-                        Program.Exit(1, immediate: true);
                         break;
                 }
             }
