@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Xunit</RootNamespace>
-    <Version>18.10.0-alpha.4</Version>
+    <Version>18.11.0-alpha.5</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
     <Description>neonFORGE Xunit related extensions.</Description>

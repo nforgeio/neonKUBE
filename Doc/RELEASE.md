@@ -35,11 +35,15 @@
 
 8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-9. Run all of the unit tests and fix any important issues.
+9. Upgrade an older hive and verify by running Hive unit tests.
 
-10. Push the **PROD** branch to GitHub.
+10. Deploy a fresh hive and verify by running the hive unit tests.
 
-11. Create a new Git branch from PROD named for the release (like **release-18.10.0-alpha.4**) and push to GitHub.
+11. Fix any important issues and commit the changes.
+
+12. Push the **PROD** branch to GitHub.
+
+13. Create a new Git branch from PROD named for the release (like **release-18.10.0-alpha.4**) and push to GitHub.
 
 ## Post Release
 
