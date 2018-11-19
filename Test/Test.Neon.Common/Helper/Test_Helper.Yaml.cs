@@ -175,5 +175,25 @@ age: 56
             Assert.Equal("Jeff", after[0].Name);
             Assert.Equal("Darrian", after[1].Name);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void JsonToYaml()
+        {
+            // Verify that we can convert JSON to YAML.
+
+            var input = new YamlPerson()
+            {
+                Name = "Jeff",
+                Age = 56
+            };
+
+            var jsonText = NeonHelper.JsonSerialize(input);
+            var yamlText = NeonHelper.JsonToYaml(NeonHelper.JsonDeserialize<dynamic>(jsonText));
+            var output   = NeonHelper.YamlDeserialize<YamlPerson>(yamlText);
+
+            Assert.Equal(input.Name, output.Name);
+            Assert.Equal(input.Age, output.Age);
+        }
     }
 }

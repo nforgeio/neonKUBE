@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json.Linq;
+
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -135,6 +137,50 @@ namespace Neon.Common
 
                 throw new YamlException($"(line: {e.Start.Line}): {message}", e.InnerException);
             }
+        }
+
+        /// <summary>
+        /// Converts a JSON <see cref="JToken"/> to YAML text.
+        /// </summary>
+        /// <param name="value">The token value.</param>
+        /// <returns>The equivalent YAML text.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is not a supported token.</exception>
+        /// <remarks>
+        /// <note>
+        /// Property names are always converted to lower case when converting to YAML.
+        /// </note>
+        /// </remarks>
+        public static string JsonToYaml(JToken value)
+        {
+            Covenant.Requires<ArgumentNullException>(value != null);
+
+            return YamlSerialize(JTokenTokenToObject(value));
+        }
+
+        /// <summary>
+        /// Converts a JSON <see cref="JToken"/> to an object that can
+        /// be serialized by YamlDotNet.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <returns>The simplified object.</returns>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="token"/> is not a supported token.</exception>
+        private static object JTokenTokenToObject(JToken token)
+        {
+            if (token is JValue)
+            {
+                return ((JValue)token).Value;
+            }
+            else if (token is JArray)
+            {
+                return token.AsEnumerable().Select(JTokenTokenToObject).ToList();
+            }
+            else if (token is JObject)
+            {
+                return token.AsEnumerable().Cast<JProperty>().ToDictionary(x => x.Name.ToLowerInvariant(), x => JTokenTokenToObject(x.Value));
+            }
+
+            throw new ArgumentException("Unexpected token: " + token);
         }
     }
 }
