@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -140,47 +141,259 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a JSON <see cref="JToken"/> to YAML text.
+        /// Converts a JSON text to YAML.
         /// </summary>
-        /// <param name="value">The token value.</param>
+        /// <param name="jsonText">The JSON text.</param>
         /// <returns>The equivalent YAML text.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is not a supported token.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="jsonText"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="jsonText"/> does not specify a value, array, or object.</exception>
         /// <remarks>
         /// <note>
         /// Property names are always converted to lower case when converting to YAML.
         /// </note>
         /// </remarks>
-        public static string JsonToYaml(JToken value)
+        public static string JsonToYaml(string jsonText)
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
 
-            return YamlSerialize(JTokenTokenToObject(value));
+            // Note that we can't use [YamlSerialize()] because YamlDotNet doesn't
+            // appear to honor the input types for dynamic/dictionary based types.
+            // For example the string value "1001" will be serialized as the number
+            // 1001, so we lose the "stringness".  I suspect the same thing may happen
+            // for other property types.  This link seems to discuss a related problem:
+            //
+            //      https://stackoverflow.com/questions/50527836/yamldotnet-deserialize-integer-as-numeric-not-as-string
+            //
+            // We're going to work around this by doing our own serialization (GRRRR!).
+
+            var sbYaml = new StringBuilder();
+            var jToken = NeonHelper.JsonDeserialize<JToken>(jsonText);
+
+            SerializeYaml(sbYaml, jToken, 0);
+
+            return sbYaml.ToString();
         }
 
         /// <summary>
-        /// Converts a JSON <see cref="JToken"/> to an object that can
-        /// be serialized by YamlDotNet.
+        /// 
         /// </summary>
-        /// <param name="token">The token.</param>
-        /// <returns>The simplified object.</returns>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="token"/> is not a supported token.</exception>
-        private static object JTokenTokenToObject(JToken token)
+        /// <param name="sbYaml"></param>
+        /// <param name="jToken"></param>
+        /// <param name="nesting"></param>
+        /// <param name="isArrayElement"></param>
+        private static void SerializeYaml(StringBuilder sbYaml, JToken jToken, int nesting, bool isArrayElement = false)
         {
-            if (token is JValue)
+            string firstItemIndent;
+            string otherItemIndent;
+
+            if (!isArrayElement)
             {
-                return ((JValue)token).Value;
+                firstItemIndent =
+                otherItemIndent = new string(' ', nesting * 2);
             }
-            else if (token is JArray)
+            else
             {
-                return token.AsEnumerable().Select(JTokenTokenToObject).ToList();
-            }
-            else if (token is JObject)
-            {
-                return token.AsEnumerable().Cast<JProperty>().ToDictionary(x => x.Name.ToLowerInvariant(), x => JTokenTokenToObject(x.Value));
+                if (nesting == 0)
+                {
+                    firstItemIndent = "- ";
+                }
+                else
+                {
+                    firstItemIndent = new string(' ', (nesting - 1) * 2) + "- ";
+                }
+
+                otherItemIndent = new string(' ', nesting * 2);
             }
 
-            throw new ArgumentException("Unexpected token: " + token);
+            if (jToken is JArray)
+            {
+                var jArray = (JArray)jToken;
+
+                foreach (var item in jArray)
+                {
+                    SerializeYaml(sbYaml, item, nesting + 1, isArrayElement: true);
+                }
+            }
+            else if (jToken is JObject)
+            {
+                var jObject         = (JObject)jToken;
+                var properties      = jObject.Properties().ToList();
+                var isFirstProperty = true;
+
+                if (properties.Count > 0)
+                {
+                    foreach (var property in properties)
+                    {
+                        var propertyName  = property.Name.ToLowerInvariant();
+                        var propertyValue = property.Value;
+                        var indent        = string.Empty;
+
+                        if (isFirstProperty)
+                        {
+                            indent          = firstItemIndent;
+                            isFirstProperty = false;
+                        }
+                        else
+                        {
+                            indent = otherItemIndent;
+                        }
+
+                        if (propertyValue is JArray || propertyValue is JObject)
+                        {
+                            sbYaml.AppendLine($"{indent}{propertyName}:");
+                            SerializeYaml(sbYaml, propertyValue, nesting + 1);
+                        }
+                        else if (propertyValue is JValue)
+                        {
+                            sbYaml.AppendLine($"{indent}{propertyName}: {GetYamlValue((JValue)propertyValue)}");
+                        }
+                        else
+                        {
+                            throw new NotSupportedException($"Unexpected token: {property.Value}");
+                        }
+                    }
+                }
+                else
+                {
+                    throw new NotSupportedException("JObject with no properties cannot be serialized to YAML.");
+                }
+            }
+            else if (jToken is JValue)
+            {
+                var valueToken = (JValue)jToken;
+                var value      = GetYamlValue(valueToken);
+
+                sbYaml.AppendLine($"{firstItemIndent}{value}");
+            }
+            else
+            {
+                throw new ArgumentException($"Unexpected token: {jToken}");
+            }
+        }
+
+        private static readonly char[] specialYamlChars =
+            new char[]
+            {
+                ':','{','}','[',']',',','&','*','#','?','|','-','<','>','=','!','%','@','\\','\r','\n','"','\''
+            };
+
+        /// <summary>
+        /// Returns the serialized YAML value for a <see cref="JValue"/>.
+        /// </summary>
+        /// <param name="jValue">The value.</param>
+        /// <returns>The serialized value.</returns>
+        private static string GetYamlValue(JValue jValue)
+        {
+            switch (jValue.Type)
+            {
+                case JTokenType.Boolean:
+
+                    return (bool)jValue.Value ? "true" : "false";
+
+                case JTokenType.Integer:
+                case JTokenType.Float:
+
+                    return jValue.ToString();
+
+                case JTokenType.String:
+
+                    // Strings are a bit tricky:
+                    //
+                    //      * Strings like "true", "yes", "on", "false", "no", or "off" will be single quoted so they won't
+                    //        be misinterpreted as booleans.
+                    //
+                    //      * Strings like "1234" or "123.4" that parse as a number will be single quoted so they
+                    //        won't be misinterpreted as a number.
+                    //
+                    //      * Strings with special characters will to be double quoted with appropriate escapes.
+                    //
+                    //      * Otherwise, we can render the string without quotes.
+
+                    var value = (string)jValue.Value;
+
+                    // Handle reserved booleans.
+
+                    switch (value.ToLowerInvariant())
+                    {
+                        case "true":
+                        case "false":
+                        case "yes":
+                        case "no":
+                        case "on":
+                        case "off":
+
+                            return $"'{value}'";
+                    }
+
+                    // Handle strings that parse to a number.
+
+                    if (double.TryParse(value, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number))
+                    {
+                        return $"'{value}'";
+                    }
+
+                    // Handle strings with special characters.
+
+                    if (value.IndexOfAny(specialYamlChars) != -1)
+                    {
+                        var sb = new StringBuilder();
+
+                        sb.Append("\"");
+
+                        foreach (var ch in value)
+                        {
+                            switch (ch)
+                            {
+                                case '\r':
+
+                                    sb.Append("\\r");
+                                    break;
+
+                                case '\n':
+
+                                    sb.Append("\\n");
+                                    break;
+
+                                case '\'':
+
+                                    sb.Append("'");
+                                    break;
+
+                                case '"':
+
+                                    sb.Append("\\\"");
+                                    break;
+
+                                default:
+
+                                    sb.Append(ch);
+                                    break;
+                            }
+                        }
+
+                        sb.Append("\"");
+
+                        return sb.ToString();
+                    }
+
+                    // We dont need to quote the string.
+
+                    return value;
+
+                case JTokenType.Guid:
+                case JTokenType.TimeSpan:
+                case JTokenType.Uri:
+
+                    return $"\"{jValue.Value}\"";
+
+                case JTokenType.Null:
+
+                    return "null";
+
+                default:
+
+                    throw new NotImplementedException();
+            }
         }
     }
 }

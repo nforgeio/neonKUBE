@@ -5,11 +5,12 @@
 
 using System;
 using System.Collections.Generic;
-using YamlDotNet.Core;
+using System.Dynamic;
 
 using Neon.Common;
 using Neon.Xunit;
 
+using YamlDotNet.Core;
 using Xunit;
 
 namespace TestCommon
@@ -178,22 +179,181 @@ age: 56
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void JsonToYaml()
+        public void JsonToYaml_Basic()
         {
             // Verify that we can convert JSON to YAML.
 
             var input = new YamlPerson()
             {
                 Name = "Jeff",
-                Age = 56
+                Age  = 56
             };
 
             var jsonText = NeonHelper.JsonSerialize(input);
-            var yamlText = NeonHelper.JsonToYaml(NeonHelper.JsonDeserialize<dynamic>(jsonText));
+            var yamlText = NeonHelper.JsonToYaml(jsonText);
             var output   = NeonHelper.YamlDeserialize<YamlPerson>(yamlText);
 
             Assert.Equal(input.Name, output.Name);
             Assert.Equal(input.Age, output.Age);
+            NeonHelper.YamlDeserialize<dynamic>(yamlText);
+
+            // Ensure that JSON property strings that are integer values  
+            // retain their "stringness".
+
+            input = new YamlPerson()
+            {
+                Name = "1001",
+                Age  = 56
+            };
+
+            jsonText = NeonHelper.JsonSerialize(input);
+            yamlText = NeonHelper.JsonToYaml(jsonText);
+
+            Assert.Contains("'1001'", yamlText);
+            NeonHelper.YamlDeserialize<dynamic>(yamlText);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void JsonToYaml_Values()
+        {
+            var jsonText = @"
+{
+    ""int"": 10,
+    ""float"": 123.4,
+    ""string0"": ""hello world"",
+    ""string1"": ""hello \""world\"""",
+    ""string2"": ""hello world!"",
+    ""string3"": ""test=value"",
+    ""string4"": ""line1\nline2\n"",
+    ""bool0"": true,
+    ""bool1"": false,
+    ""is-null"" : null,
+    ""string-int"": ""3"",
+    ""string-float"": ""123.4"",
+    ""string-bool-true"": ""true"",
+    ""string-bool-false"": ""false"",
+    ""string-bool-yes"": ""yes"",
+    ""string-bool-no"": ""no"",
+    ""string-bool-on"": ""on"",
+    ""string-bool-off"": ""off"",
+    ""string-bool-yes"": ""yes"",
+    ""string-bool-no"": ""no"",
+}
+";
+            var yamlText = NeonHelper.JsonToYaml(jsonText);
+            var yamlExpected =
+@"int: 10
+float: 123.4
+string0: hello world
+string1: ""hello \""world\""""
+string2: ""hello world!""
+string3: ""test=value""
+string4: ""line1\nline2\n""
+bool0: true
+bool1: false
+is-null: null
+string-int: '3'
+string-float: '123.4'
+string-bool-true: 'true'
+string-bool-false: 'false'
+string-bool-on: 'on'
+string-bool-off: 'off'
+string-bool-yes: 'yes'
+string-bool-no: 'no'
+";
+            Assert.Equal(yamlExpected, yamlText);
+            NeonHelper.YamlDeserialize<dynamic>(yamlText);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void JsonToYaml_Object()
+        {
+            var jsonText = @"
+{
+  ""name"": ""level0"",
+  ""nested"": {
+    ""property0"": ""hello"",
+    ""property1"": ""world"",
+    ""property2"": {
+      ""hello"": ""world""
+    }
+  }
+}
+";
+            var yamlText = NeonHelper.JsonToYaml(jsonText);
+            var yamlExpected =
+@"name: level0
+nested:
+  property0: hello
+  property1: world
+  property2:
+    hello: world
+";
+            Assert.Equal(yamlExpected, yamlText);
+            NeonHelper.YamlDeserialize<dynamic>(yamlText);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void JsonToYaml_SimpleArray()
+        {
+            var jsonText = @"
+[
+    ""zero"",
+    ""one"",
+    ""two"",
+    ""three""
+]
+";
+            var yamlText = NeonHelper.JsonToYaml(jsonText);
+            var yamlExpected =
+@"- zero
+- one
+- two
+- three
+";
+            Assert.Equal(yamlExpected, yamlText);
+            NeonHelper.YamlDeserialize<dynamic>(yamlText);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void JsonToYaml_ObjectsAndArrays()
+        {
+            var jsonText = @"
+[
+    ""zero"",
+    {
+      ""name"": ""jeff"",
+      ""age"": 56,
+      ""pets"": [
+        ""lilly"",
+        ""butthead"",
+        ""poophead"",
+        {
+           ""name"": ""norman"",
+           ""type"": ""pony""
+        }
+      ]
+    }
+]
+";
+            var yamlText = NeonHelper.JsonToYaml(jsonText);
+            var yamlExpected =
+@"- zero
+- name: jeff
+  age: 56
+  pets:
+    - lilly
+    - butthead
+    - poophead
+    - name: norman
+      type: pony
+";
+            Assert.Equal(yamlExpected, yamlText);
+            NeonHelper.YamlDeserialize<dynamic>(yamlText);
         }
     }
 }
