@@ -7,12 +7,9 @@
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
     <Description>neonFORGE Xunit related extensions.</Description>
-    <PackageReleaseNotes>* BREAKING: Renamed `includeCore parameter to includeSystem to test fixtures for consistency.  This is unlikely to impact anyone.
+    <PackageReleaseNotes>* **BREAKING:** The `Xunit.TestHelper` class was relocated to the `Neon.Xunit` namespace to be consistent with the other test classes.
 
-* ContainerFixture.RunContainer() now pulls the container image first.
-* DockerFixture.Reset() ensures that all stacks are removed before resetting swarm mode to prevent orphaned networks.
-* ContainerFixture.RunContainer()` now pulls the container image first.
-* DockerFixture.Reset() ensures that all stacks are removed before resetting swarm mode to prevent orphaned networks.
+* Added the `TestHttpClient` to make it easy to disable connection reuse for load balancing tests, etc.
 </PackageReleaseNotes>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

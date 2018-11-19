@@ -8,16 +8,11 @@
     <Company>neonFORGE, LLC</Company>
     <Product>neonHIVE</Product>
     <Description>neonHIVE utilities.</Description>
-    <PackageReleaseNotes>* BREAKING: DnsHostsManager class renamed to DnsManager and HiveProxy.DnsHosts property renamed to just `Dns` in keeping with the "hive DNS" terminology change.  This is unlikely to impact anyone.
+    <PackageReleaseNotes>* **BREAKING:** [BREAKING: Rebrand "Load Balancer" as "Traffic Manager"](https://github.com/jefflill/NeonForge/issues/382)
 
-* BREAKING: GlobalsManager.TryGetJson() renamed to TryGetObject() and SetJson() renamed to Set().  This is unlikely to impact anyone.
-
-* BREAKING: [#80 Consul distributed locks don't work as expected](https://github.com/jefflill/NeonForge/issues/80).  This is unlikely to impact anyone.
-
-* Added the LoadBalancerRule.Normalize(bool) method to fix change detection in unit tests.
-* SshProxy.InvokeIdempotentAction() methods now return a boolean indicating whether the action was invoked.
-* Load balancer rules can now specify timeouts and health check intervals to override the defaults.
-* `LoadBalancerHttpRule` adds the `Cache` property to control site caching.</PackageReleaseNotes>
+* Added the `CommandResponse.EnsureSuccess()` method.  This throws an `ExecuteException` for non-zero exit codes.
+* Added the `SshProxy.GetTime()`.  This returns to current time (UTC) on the remote machine.
+* Added the `HiveProxy.GetTime()`.  This returns to current hive time (UTC) (from one of the hive managers).</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>

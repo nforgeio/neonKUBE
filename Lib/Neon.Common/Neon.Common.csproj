@@ -7,7 +7,9 @@
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonFORGE common library.</Description>
-    <PackageReleaseNotes>* BREAKING: Relocated classes to the Neon.Tasks namespace: AsyncAutoResetEvent, AsyncManualResetEvent, AsyncMutex, AsyncReaderWriterLock.
+    <PackageReleaseNotes>* Added the `GlobPattern` class that converts Git `.gitignore` inspired [glob patterns](https://git-scm.com/docs/gitignore) into regular expressions.
+* Added the `NeonHelper.UnixEpoch` property.  This returns the `DateTime` for the Unix epoch: 01-01-1970 (UTC)
+* Added `NeonHelper.JsonToYaml()`
 
 * Added the NeonHelper.OsDescription and FrameworkDescription properties.
 * Added the NeonHelper.GetEntryAssemblyPath() method.

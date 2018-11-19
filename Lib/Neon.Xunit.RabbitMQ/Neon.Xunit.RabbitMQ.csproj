@@ -8,9 +8,7 @@
     <Product>neonHIVE</Product>
     <Description>neonFORGE RabbitMQ Xunit testing helpers.</Description>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
-    <PackageReleaseNotes>* Published this new library to enable fast RabbitMQ based unit tests.  RabbitMQFixture is the new test fixture.
-* [#361 Basic RabbitMQ client API](https://github.com/jefflill/NeonForge/issues/361)
-</PackageReleaseNotes>
+    <PackageReleaseNotes>* NO CHANGES</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
   </PropertyGroup>
