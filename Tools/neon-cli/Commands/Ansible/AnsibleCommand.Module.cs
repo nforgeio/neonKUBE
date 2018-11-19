@@ -135,6 +135,11 @@ namespace NeonCli
                         new DockerServiceModule().Run(context);
                         break;
 
+                    case "neon_docker_stack":
+
+                        new DockerStackModule().Run(context);
+                        break;
+
                     case "neon_globals":
 
                         new GlobalsModule().Run(context);
