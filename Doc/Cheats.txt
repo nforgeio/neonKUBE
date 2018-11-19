@@ -32,7 +32,7 @@ neon hive set allow-unit-testing=true
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# RELEASE
+# PROD
 neon logout
 neon login rm root@home-small --force
 neon hive prepare %NF_ROOT%\Devops\test\hives\home-small\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
