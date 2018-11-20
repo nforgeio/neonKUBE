@@ -150,14 +150,14 @@ namespace NeonCli
                         new HiveDnsModule().Run(context);
                         break;
 
+                    case "neon_hivemq":
+
+                        new HiveMQModule().Run(context);
+                        break;
+
                     case "neon_traffic_manager":
 
                         new TrafficManagerModule().Run(context);
-                        break;
-
-                    case "neon_queue":
-
-                        new QueueModule().Run(context);
                         break;
 
                     default:

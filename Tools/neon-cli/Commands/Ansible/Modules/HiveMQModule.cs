@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    QueueModule.cs
+// FILE:	    HiveMQModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -36,12 +36,12 @@ using NeonCli.Ansible.Docker;
 namespace NeonCli.Ansible
 {
     //---------------------------------------------------------------------
-    // neon_queue:
+    // neon_hivemq:
     //
     // Synopsis:
     // ---------
     //
-    // Manages hive message queues.
+    // Manages HiveMQ.
     //
     // Requirements:
     // -------------
@@ -59,6 +59,11 @@ namespace NeonCli.Ansible
     //
     // command                  see comment                         array specifying the command and arguments
     //                                                              required if [state=command]
+    //
+    // node                     no          see comment             identifies the hive node where the command should be
+    //                                                              executed.  This node must be hosting a [neon-hivemq]
+    //                                                              container.  This defaults to a node hosting a RabbitMQ
+    //                                                              management node.
     //
     // This module currently supports only [state=command].  This is typically used to execute a
     // [rabbitmqctl] or [rabbitmqadmin] command within one of the HiveMQ manager containers.  You'll
@@ -80,7 +85,7 @@ namespace NeonCli.Ansible
     //    hosts: localhost
     //    tasks:
     //      - name: test
-    //        neon_queue:
+    //        neon_hivemq:
     //          name: 
     //          state: command
     //          command:
@@ -93,7 +98,7 @@ namespace NeonCli.Ansible
     /// <summary>
     /// Implements the <b>neon_docker_service</b> Ansible module.
     /// </summary>
-    public class QueuekModule : IAnsibleModule
+    public class HiveMQModule : IAnsibleModule
     {
         private HashSet<string> validModuleArgs = new HashSet<string>()
         {
@@ -121,6 +126,39 @@ namespace NeonCli.Ansible
 
             state = state.ToLowerInvariant();
 
+            var node = (SshProxy<NodeDefinition>)null;
+
+            if (context.Arguments.TryGetValue<string>("node", out var nodeName) && !string.IsNullOrEmpty(nodeName))
+            {
+                try
+                {
+                    node = hive.GetNode(nodeName);
+                }
+                catch (KeyNotFoundException)
+                {
+                    context.WriteErrorLine($"*** ERROR: Node [{nodeName}] does not exist.");
+                    return;
+                }
+
+                if (!node.Metadata.Labels.HiveMQ && !node.Metadata.Labels.HiveMQManager)
+                {
+                    context.WriteErrorLine($"*** ERROR: Node [{nodeName}] does not host HiveMQ.");
+                    return;
+                }
+            }
+            else
+            {
+                // Find a reachable hive node hosting a RabbitMQ management node.
+
+                node = hive.GetReachableNode(n => n.Metadata.Labels.HiveMQManager, ReachableHostMode.ReturnNull);
+
+                if (node == null)
+                {
+                    context.WriteErrorLine($"*** ERROR: None of the hive nodes hosting HiveMQ appear to be online.");
+                    return;
+                }
+            }
+
             var manager  = hive.GetReachableManager();
             var response = (CommandResponse)null;
 
@@ -128,12 +166,60 @@ namespace NeonCli.Ansible
             {
                 case "command":
 
-                    if (!context.Arguments.TryGetValue("command", out var stackObject))
+                    if (!context.Arguments.TryGetValue("command", out var command))
                     {
                         throw new ArgumentException($"[command] module argument is required when [state=command].");
                     }
 
-                    // We need to find a hive node with a running HiveMQ manager container.
+                    var commandArray = command as JArray;
+
+                    if (commandArray == null)
+                    {
+                        throw new ArgumentException("[command] module argument must be an array specifying the command and arguments.");
+                    }
+
+                    if (commandArray.Count == 0)
+                    {
+                        throw new ArgumentException("[command] module argument must be specify either the [rabbitmqctl] or [rabbitmqadmin] command.");
+                    }
+
+                    var commandAndArgs = new List<string>();
+
+                    foreach (var item in commandArray)
+                    {
+                        commandAndArgs.Add(item.ToString());
+                    }
+
+                    var rabbitCommand = commandAndArgs.First();
+
+                    switch (rabbitCommand)
+                    {
+                        case "rabbitmqctl":
+                        case "rabbitmqadmin":
+
+                            break;
+
+                        default:
+
+                            throw new ArgumentException($"[{commandAndArgs.First()}] is not a valid command.  Only [rabbitmqctl] or [rabbitmqadmin] are supported.");
+                    }
+
+                    response = node.SudoCommand($"docker exec neon-hivemq {rabbitCommand}", RunOptions.None, commandAndArgs.Skip(1));
+
+                    if (response.ExitCode != 0)
+                    {
+                        context.WriteErrorLine(response.AllText);
+                    }
+                    else
+                    {
+                        using (var reader = new StringReader(response.OutputText))
+                        {
+                            foreach (var line in reader.Lines())
+                            {
+                                context.WriteLine(AnsibleVerbosity.Important, line);
+                            }
+                        }
+                    }
 
                     context.Changed = true;
                     break;

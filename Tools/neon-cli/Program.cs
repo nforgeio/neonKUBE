@@ -104,6 +104,7 @@ COMMAND SUMMARY:
     neon hive node          ARGS
     neon hive prepare       [HIVE-DEF]
     neon hive registry      ARGS
+    neon hive queue         CMD...
     neon hive set           SETTING=VALUE
     neon hive setup         [HIVE-DEF]
     neon hive verify        [HIVE-DEF]
@@ -119,7 +120,6 @@ COMMAND SUMMARY:
     neon login status
     neon reboot             NODE...
     neon registry           CMD...
-    neon queue              CMD...
     neon run                -- CMD...
     neon scp                [NODE]
     neon ssh                [NODE]
@@ -233,15 +233,19 @@ OPTIONS:
             {
                 ICommand command;
 
-                CommandLine = new CommandLine(args);
+                CommandLine     = new CommandLine(args);
+                LeftCommandLine = CommandLine.Split("--").Left;
 
-                CommandLine.DefineOption("--machine-username");
-                CommandLine.DefineOption("--machine-password");
-                CommandLine.DefineOption("-os").Default = "ubuntu-16.04";
-                CommandLine.DefineOption("-q", "--quiet");
-                CommandLine.DefineOption("-m", "--max-parallel").Default = "5";
-                CommandLine.DefineOption("-w", "--wait").Default = "60";
-                CommandLine.DefineOption("--log-folder").Default = string.Empty;
+                foreach (var cmdLine in new CommandLine[] { CommandLine, LeftCommandLine })
+                {
+                    cmdLine.DefineOption("--machine-username");
+                    cmdLine.DefineOption("--machine-password");
+                    cmdLine.DefineOption("-os").Default = "ubuntu-16.04";
+                    cmdLine.DefineOption("-q", "--quiet");
+                    cmdLine.DefineOption("-m", "--max-parallel").Default = "5";
+                    cmdLine.DefineOption("-w", "--wait").Default = "60";
+                    cmdLine.DefineOption("--log-folder").Default = string.Empty;
+                }
 
                 var validOptions = new HashSet<string>();
 
@@ -302,7 +306,7 @@ OPTIONS:
                     new LoginRemoveCommand(),
                     new LoginStatusCommand(),
                     new LogoutCommand(),
-                    new QueueCommand(),
+                    new HiveMQCommand(),
                     new RebootCommand(),
                     new RegistryCommand(),
                     new RunCommand(),
@@ -318,7 +322,7 @@ OPTIONS:
 
                 // Parse the [--version=VERSION] option.
 
-                Version = CommandLine.GetOption("--version", ActualVersion);
+                Version = LeftCommandLine.GetOption("--version", ActualVersion);
 
                 var dashPos   = Version.IndexOf('-');
                 var versionOK = true;
@@ -374,8 +378,8 @@ OPTIONS:
 
                 // Handle the logging options.
 
-                LogPath = CommandLine.GetOption("--log-folder");
-                Quiet   = CommandLine.GetFlag("--quiet");
+                LogPath = LeftCommandLine.GetOption("--log-folder");
+                Quiet   = LeftCommandLine.GetFlag("--quiet");
 
                 if (!string.IsNullOrEmpty(LogPath))
                 {
@@ -437,7 +441,7 @@ OPTIONS:
                         {
                             shimCommand = true;
                         }
-                        else if (shimInfo.Shimability == DockerShimability.Optional && CommandLine.HasOption("--shim"))
+                        else if (shimInfo.Shimability == DockerShimability.Optional && LeftCommandLine.HasOption("--shim"))
                         {
                             shimCommand = true;
                         }
@@ -472,7 +476,7 @@ OPTIONS:
                             var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
                             var options      = shim.Terminal ? "-it" : "-i";
 
-                            if (CommandLine.HasOption("--noterminal"))
+                            if (LeftCommandLine.HasOption("--noterminal"))
                             {
                                 options = "-i";
                             }
@@ -627,18 +631,17 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 // We didn't run the command as a shim, so we're going to execute
                 // the command locally.
 
+                //-------------------------------------------------------------
                 // Process the standard command line options.
-
-                var leftCommandLine = CommandLine.Split(command.SplitItem).Left;
 
                 // Load the user name and password from the command line options, if present.
 
-                MachineUsername = leftCommandLine.GetOption("--machine-username", "sysadmin");
-                MachinePassword = leftCommandLine.GetOption("--machine-password", "sysadmin0000");
+                MachineUsername = LeftCommandLine.GetOption("--machine-username", "sysadmin");
+                MachinePassword = LeftCommandLine.GetOption("--machine-password", "sysadmin0000");
 
                 // Handle the other options.
 
-                var maxParallelOption = leftCommandLine.GetOption("--max-parallel");
+                var maxParallelOption = LeftCommandLine.GetOption("--max-parallel");
                 int maxParallel;
 
                 if (!int.TryParse(maxParallelOption, out maxParallel) || maxParallel < 1)
@@ -649,7 +652,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
                 Program.MaxParallel = maxParallel;
 
-                var     waitSecondsOption = leftCommandLine.GetOption("--wait");
+                var     waitSecondsOption = LeftCommandLine.GetOption("--wait");
                 double  waitSeconds;
 
                 if (!double.TryParse(waitSecondsOption, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out waitSeconds) || waitSeconds < 0)
@@ -660,11 +663,11 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
                 Program.WaitSeconds = waitSeconds;
 
-                Debug = leftCommandLine.HasOption("--debug");
+                Debug = LeftCommandLine.HasOption("--debug");
 
                 // Parse and check any [--image-tag=TAG] option.
 
-                DockerImageTag = leftCommandLine.GetOption("--image-tag");
+                DockerImageTag = LeftCommandLine.GetOption("--image-tag");
 
                 if (DockerImageTag != null)
                 {
@@ -713,7 +716,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                         validOptions.Add(optionName);
                     }
 
-                    foreach (var option in leftCommandLine.Options)
+                    foreach (var option in LeftCommandLine.Options)
                     {
                         if (!validOptions.Contains(option.Key))
                         {
@@ -983,6 +986,12 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// Returns the orignal program <see cref="CommandLine"/>.
         /// </summary>
         public static CommandLine CommandLine { get; private set; }
+
+        /// <summary>
+        /// Returns the part of the command line to the left of the [--] splitter
+        /// or the entire command line if there is no splitter.
+        /// </summary>
+        public static CommandLine LeftCommandLine { get; private set; }
 
         /// <summary>
         /// Returns the command line as a string with sensitive information like a password

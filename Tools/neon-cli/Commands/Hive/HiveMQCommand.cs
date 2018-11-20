@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    QueueCommand.cs
+// FILE:	    HiveMQCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,28 +25,31 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>queue</b> commands.
     /// </summary>
-    public class QueueCommand : CommandBase
+    public class HiveMQCommand : CommandBase
     {
         private const string usage = @"
-Manages the built-in RabbitMQ messaging cluster.
+Manages the built-in RabbitMQ messaging cluster via load-level CLI tools.
 
 USAGE:
 
-    neon [OPTIONS] queue control|ctl -- [ARGS...]
+    neon [OPTIONS] queue -- rabbitmqctl [ARGS...]
+    neon [OPTIONS] queue -- rabbitmqadmin [ARGS...]
 
 OPTIONS :
 
     --help          - Prints this commands help.
-    --node=NODE     - Specifies the target hive node.  The command select
+    --node=NODE     - Specifies the target hive node.  The command selectS
                       a reasonable target if this is not specified.
 
 COMMANDS:
 
-    queue control|ctl -- ARGS...
-    --------------------
-    Executes the [rabbitmqctl] management utility on one of the RabbitMQ
-    cluster nodes, passing any ARGS to the tool.  This can be used to 
-    manage VHosts, users, permissions, etc.
+    queue [OPTIONS] -- rabbitmqctl ARGS...
+    ---------------------------------------------z
+    Executes the [rabbitmqctl] management utility.
+
+    queue [OPTIONS] -- rabbitmqadmin ARGS...
+    ---------------------------------------------z
+    Executes the [rabbitmqadmin] management utility.
 ";
         private HiveProxy hive;
 
@@ -55,7 +58,7 @@ COMMANDS:
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "queue" }; }
+            get { return new string[] { "hive", "queue" }; }
         }
 
         /// <inheritdoc/>
@@ -116,16 +119,22 @@ COMMANDS:
             }
             else
             {
-                node = hive.GetReachableNode(n => n.Metadata.Labels.HiveMQ, ReachableHostMode.ReturnNull);
+                node = hive.GetReachableNode(n => n.Metadata.Labels.HiveMQManager, ReachableHostMode.ReturnNull);
 
                 if (node == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: None of the HiveMQ nodes appear to be online.");
+                    Console.Error.WriteLine($"*** ERROR: None of the hive nodes hosting HiveMQ nodes appear to be online.");
                     Program.Exit(1);
                 }
             }
 
-            var command = leftCommandLine.Arguments.Skip(1).FirstOrDefault();
+            if (rightCommandLine == null)
+            {
+                Console.Error.WriteLine($"*** ERROR: This command requires the \"--\" argument.");
+                Program.Exit(1);
+            }
+
+            var command = rightCommandLine.Arguments.FirstOrDefault();
 
             if (command == null)
             {
@@ -133,18 +142,21 @@ COMMANDS:
                 Program.Exit(1);
             }
 
+            var response = (CommandResponse)null;
+
             switch (command)
             {
-                case "control":
-                case "ctl":
+                case "rabbitmqctl":
 
-                    if (rightCommandLine == null)
-                    {
-                        Console.Error.WriteLine($"*** ERROR: The [{command}] command requires the \"--\" argument.");
-                        Program.Exit(1);
-                    }
+                    response = node.SudoCommand("docker exec neon-hivemq rabbitmqctl", RunOptions.None, rightCommandLine.Items.Skip(1));
 
-                    var response = node.SudoCommand("docker exec neon-hivemq rabbitmqctl", RunOptions.None, rightCommandLine.Items);
+                    Console.WriteLine(response.AllText);
+                    Program.Exit(response.ExitCode);
+                    break;
+
+                case "rabbitmqadmin":
+
+                    response = node.SudoCommand("docker exec neon-hivemq rabbitmqadmin", RunOptions.None, rightCommandLine.Items.Skip(1));
 
                     Console.WriteLine(response.AllText);
                     Program.Exit(response.ExitCode);
