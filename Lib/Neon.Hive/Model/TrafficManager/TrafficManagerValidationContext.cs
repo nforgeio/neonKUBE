@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficDirectorValidationContext.cs
+// FILE:	    TrafficManagerValidationContext.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -34,22 +34,22 @@ namespace Neon.Hive
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="trafficDirectorName">The traffic manager name.</param>
+        /// <param name="trafficManagerName">The traffic manager name.</param>
         /// <param name="settings">The traffic manager settings.</param>
         /// <param name="certificates">The optional certificates as name/value tuples.</param>
-        public TrafficManagerValidationContext(string trafficDirectorName, TrafficManagerSettings settings, Dictionary<string, TlsCertificate> certificates = null)
+        public TrafficManagerValidationContext(string trafficManagerName, TrafficManagerSettings settings, Dictionary<string, TlsCertificate> certificates = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(trafficDirectorName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(trafficManagerName));
 
-            this.TrafficDirectorName = trafficDirectorName;
-            this.Settings            = settings;
-            this.Certificates        = certificates ?? new Dictionary<string, TlsCertificate>();
+            this.trafficManagerName = trafficManagerName;
+            this.Settings           = settings;
+            this.Certificates       = certificates ?? new Dictionary<string, TlsCertificate>();
         }
 
         /// <summary>
         /// Returns the traffic manager name.
         /// </summary>
-        public string TrafficDirectorName { get; private set; }
+        public string trafficManagerName { get; private set; }
 
         /// <summary>
         /// Returns the traffic manager settings.

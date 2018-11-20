@@ -112,7 +112,7 @@ namespace Neon.Hive
         /// <exception cref="HiveException">Thrown if the traffic manager definition could not be loaded.</exception>
         public TrafficManagerDefinition GetDefinition()
         {
-            // Fetch the proxy settings and all of its rules to create a full [TrafficDirectorDefinition].
+            // Fetch the proxy settings and all of its rules to create a full [TrafficManagerDefinition].
 
             var proxyDefinition  = new TrafficManagerDefinition() { Name = this.Name };
             var proxySettingsKey = GetProxySettingsKey();

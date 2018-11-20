@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficDirectorTimeouts.cs
+// FILE:	    TrafficManagerTimeouts.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -40,15 +40,21 @@ namespace Neon.Hive
         public const double DefaultClientSeconds = 50.0;
 
         /// <summary>
-        /// The defaultmaximum time to wait for a server to acknowledge or transmit
+        /// The default maximum time to wait for a server to acknowledge or transmit
         /// data (<b>50 seconds</b>).
         /// </summary>
         public const double DefaultServerSeconds = 50.0;
 
         /// <summary>
-        /// The maximum time to wait for a health check (<b>5 seconds</b>).
+        /// The default maximum time to wait for a health check (<b>5 seconds</b>).
         /// </summary>
         public const double DefaultCheckSeconsds = 5.0;
+
+        /// <summary>
+        /// The default maximum time to keep a client side HTTP connection open after
+        /// returning the first response to wait for a another client request.
+        /// </summary>
+        public const double DefaultClientHttpKeepAliveSeconds = 0.5;
 
         /// <summary>
         /// The maximum time to wait for a connection attempt to a server.
@@ -65,6 +71,15 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "ClientSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultClientSeconds)]
         public double ClientSeconds { get; set; } = DefaultClientSeconds;
+
+        /// <summary>
+        /// The maximum time to keep a client side HTTP connection open after
+        /// returning the first response to wait for a another client request.
+        /// This defaults to <b>0.5 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClientHttpKeepAliveSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(DefaultClientHttpKeepAliveSeconds)]
+        public double ClientHttpKeepAliveSeconds { get; set; } = DefaultClientHttpKeepAliveSeconds;
 
         /// <summary>
         /// The maximum time to wait for a server to acknowledge or transmit
@@ -95,6 +110,11 @@ namespace Neon.Hive
             if (ClientSeconds <= 0.0)
             {
                 context.Error($"Load balancer timeout [{nameof(ClientSeconds)}={ClientSeconds}] is not positive.");
+            }
+
+            if (ClientHttpKeepAliveSeconds < 0.0)
+            {
+                context.Error($"Load balancer timeout [{nameof(ClientHttpKeepAliveSeconds)}={ClientHttpKeepAliveSeconds}] must not be negative.");
             }
 
             if (ServerSeconds <= 0.0)

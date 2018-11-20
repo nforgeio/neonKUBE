@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficDirectorCommand.cs
+// FILE:	    TrafficManagerCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,7 +28,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>traffic</b> command.
     /// </summary>
-    public class TrafficDirectorCommand : CommandBase
+    public class TrafficManagerCommand : CommandBase
     {
         private const string proxyManagerPrefix = "neon/service/neon-proxy-manager";
         private const string vaultCertPrefix    = "neon-secret/cert";
@@ -468,9 +468,9 @@ See the documentation for more traffic manager rule and setting details.
                         ruleText = File.ReadAllText(ruleFile);
                     }
 
-                    var trafficDirectorRule = TrafficManagerRule.Parse(ruleText, strict: true);
+                    var trafficManagerRule = TrafficManagerRule.Parse(ruleText, strict: true);
 
-                    ruleName = trafficDirectorRule.Name;
+                    ruleName = trafficManagerRule.Name;
 
                     if (!HiveDefinition.IsValidName(ruleName))
                     {
@@ -480,7 +480,7 @@ See the documentation for more traffic manager rule and setting details.
 
                     // Validate a clone of the rule with any implicit frontends.
 
-                    var clonedRule = NeonHelper.JsonClone(trafficDirectorRule);
+                    var clonedRule = NeonHelper.JsonClone(trafficManagerRule);
                     var context    = new TrafficManagerValidationContext(directorName, null)
                     {
                         ValidateCertificates = false    // Disable this because we didn't download the certs (see note above)
@@ -502,7 +502,7 @@ See the documentation for more traffic manager rule and setting details.
                         Program.Exit(1);
                     }
 
-                    if (trafficManager.SetRule(trafficDirectorRule))
+                    if (trafficManager.SetRule(trafficManagerRule))
                     {
                         Console.WriteLine($"Load balancer [{directorName}] rule [{ruleName}] has been updated.");
                     }

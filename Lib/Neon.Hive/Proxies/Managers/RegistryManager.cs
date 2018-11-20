@@ -477,7 +477,7 @@ fi
             hive.Dns.Set(GetRegistryDnsEntry(hostname), waitUntilPropagated: true);
 
             progress?.Invoke($"Writing traffic manager rule.");
-            hive.PublicTraffic.SetRule(GetRegistryTrafficDirectorRule(hostname));
+            hive.PublicTraffic.SetRule(GetRegistryTrafficManagerRule(hostname));
 
             progress?.Invoke($"Creating [neon-registry] service.");
 
@@ -688,7 +688,7 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
         /// <returns>The <see cref="TrafficManagerHttpRule"/>.</returns>
-        private TrafficManagerHttpRule GetRegistryTrafficDirectorRule(string hostname)
+        private TrafficManagerHttpRule GetRegistryTrafficManagerRule(string hostname)
         {
             return new TrafficManagerHttpRule()
             {

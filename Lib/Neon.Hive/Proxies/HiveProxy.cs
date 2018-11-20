@@ -558,7 +558,7 @@ namespace Neon.Hive
         /// This has the effect of signalling <b>neon-proxy-manager</b> to regenerate the proxy 
         /// definitions and update all of the load balancers when changes are detected.
         /// </summary>
-        public void SignalTrafficDirectorUpdate()
+        public void SignalTrafficManagerUpdate()
         {
             PublicTraffic.Update();
             PrivateTraffic.Update();

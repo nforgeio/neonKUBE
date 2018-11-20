@@ -381,14 +381,14 @@ namespace NeonProxyManager
 
             // Verify the configuration.
 
-            var trafficDirectorDefinition = new TrafficManagerDefinition()
+            var trafficManagerDefinition = new TrafficManagerDefinition()
             {
                 Name     = directorName,
                 Settings = settings,
                 Rules    = rules
             };
 
-            var validationContext = trafficDirectorDefinition.Validate(hiveCerts.ToTlsCertificateDictionary());
+            var validationContext = trafficManagerDefinition.Validate(hiveCerts.ToTlsCertificateDictionary());
 
             if (validationContext.HasErrors)
             {
@@ -415,33 +415,35 @@ global
 
 # Specify the maximum number of connections allowed for a proxy instance.
 
-    maxconn             {settings.MaxConnections}
+    maxconn                 {settings.MaxConnections}
 
 # Enable logging to syslog on the local Docker host under the
 # [HiveSysLogFacility_ProxyPublic] facility.
 
-    log                 ""${{NEON_NODE_IP}}:{HiveHostPorts.LogHostSysLog}"" len 65535 {HiveSysLogFacility.ProxyName}
+    log                     ""${{NEON_NODE_IP}}:{HiveHostPorts.LogHostSysLog}"" len 65535 {HiveSysLogFacility.ProxyName}
 
 # Certificate Authority and Certificate file locations:
 
-    ca-base             ""${{HAPROXY_CONFIG_FOLDER}}""
-    crt-base            ""${{HAPROXY_CONFIG_FOLDER}}""
+    ca-base                 ""${{HAPROXY_CONFIG_FOLDER}}""
+    crt-base                ""${{HAPROXY_CONFIG_FOLDER}}""
 
 # Disable TLS certificate verification for backend health checks:
 
-    ssl-server-verify   none
+    ssl-server-verify       none
 
 # Other settings
 
     tune.ssl.default-dh-param   {settings.MaxDHParamBits}
 
 defaults
-    balance             roundrobin
-    retries             2
-    timeout connect     {ToHaProxyTime(settings.Timeouts.ConnectSeconds)}
-    timeout client      {ToHaProxyTime(settings.Timeouts.ClientSeconds)}
-    timeout server      {ToHaProxyTime(settings.Timeouts.ServerSeconds)}
-    timeout check       {ToHaProxyTime(settings.Timeouts.CheckSeconds)}
+    balance                 roundrobin
+    retries                 2
+    http-reuse              safe
+    timeout connect         {ToHaProxyTime(settings.Timeouts.ConnectSeconds)}
+    timeout client          {ToHaProxyTime(settings.Timeouts.ClientSeconds)}
+    timeout http_keep-alive {ToHaProxyTime(settings.Timeouts.ClientHttpKeepAliveSeconds)}
+    timeout server          {ToHaProxyTime(settings.Timeouts.ServerSeconds)}
+    timeout check           {ToHaProxyTime(settings.Timeouts.CheckSeconds)}
 ");
 
             if (settings.Resolvers.Count > 0)
@@ -451,13 +453,13 @@ defaults
                     sbHaProxy.Append(
 $@"
 resolvers {resolver.Name}
-    resolve_retries     {resolver.ResolveRetries}
-    timeout retry       {ToHaProxyTime(resolver.RetrySeconds)}
-    hold valid          {ToHaProxyTime(resolver.HoldSeconds)}
+    resolve_retries         {resolver.ResolveRetries}
+    timeout retry           {ToHaProxyTime(resolver.RetrySeconds)}
+    hold valid              {ToHaProxyTime(resolver.HoldSeconds)}
 ");
                     foreach (var nameserver in resolver.NameServers)
                     {
-                        sbHaProxy.AppendLine($@"    nameserver          {nameserver.Name} {nameserver.Endpoint}");
+                        sbHaProxy.AppendLine($@"    nameserver              {nameserver.Name} {nameserver.Endpoint}");
                     }
                 }
             }
@@ -475,19 +477,19 @@ resolvers {resolver.Name}
 # Enable HAProxy statistics pages.
 
 frontend haproxy_stats
-    bind                *:{HiveConst.HAProxyStatsPort}
-    mode                http
-    log                 global
-    option              httplog
-    option              http-keep-alive
-    use_backend         haproxy_stats
+    bind                    *:{HiveConst.HAProxyStatsPort}
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  http-keep-alive
+    use_backend             haproxy_stats
 
 backend haproxy_stats
-    mode                http
-    stats               enable
-    stats               scope .
-    stats               uri {HiveConst.HaProxyStatsUri}
-    stats               refresh 5s
+    mode                    http
+    stats                   enable
+    stats                   scope .
+    stats                   uri {HiveConst.HaProxyStatsUri}
+    stats                   refresh 5s
 ");
             //-----------------------------------------------------------------
             // Verify that the rules don't conflict.

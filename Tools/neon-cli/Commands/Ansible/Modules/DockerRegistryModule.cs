@@ -607,7 +607,7 @@ namespace NeonCli.Ansible
                         hive.Dns.Set(dnsRedirect, waitUntilPropagated: true);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing traffic manager rule.");
-                        hive.PublicTraffic.SetRule(GetRegistryTrafficDirectorRule(hostname));
+                        hive.PublicTraffic.SetRule(GetRegistryTrafficManagerRule(hostname));
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating the [neon-registry] service.");
 
@@ -654,7 +654,7 @@ namespace NeonCli.Ansible
                         if (hostnameChanged)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating traffic manager rule.");
-                            hive.PublicTraffic.SetRule(GetRegistryTrafficDirectorRule(hostname));
+                            hive.PublicTraffic.SetRule(GetRegistryTrafficManagerRule(hostname));
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating hive DNS host entry for [{hostname}] (60 seconds).");
                             hive.Dns.Set(dnsRedirect, waitUntilPropagated: true);
@@ -777,7 +777,7 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
         /// <returns>The <see cref="TrafficManagerHttpRule"/>.</returns>
-        private TrafficManagerHttpRule GetRegistryTrafficDirectorRule(string hostname)
+        private TrafficManagerHttpRule GetRegistryTrafficManagerRule(string hostname)
         {
             return new TrafficManagerHttpRule()
             {

@@ -1159,7 +1159,7 @@ namespace Neon.Xunit.Hive
         /// the rule changes and then call <see cref="TrafficManager.Update()"/> afterwards.
         /// </para>
         /// </param>
-        public void PutTrafficDirectorRule(string directorName, string jsonOrYaml, bool deferUpdate = false)
+        public void PutTrafficManagerRule(string directorName, string jsonOrYaml, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));

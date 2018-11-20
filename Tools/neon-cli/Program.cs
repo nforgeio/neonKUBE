@@ -308,7 +308,7 @@ OPTIONS:
                     new RunCommand(),
                     new ScpCommand(),
                     new SshCommand(),
-                    new TrafficDirectorCommand(),
+                    new TrafficManagerCommand(),
                     new UploadCommand(),
                     new VaultCommand(),
                     new VersionCommand(),
