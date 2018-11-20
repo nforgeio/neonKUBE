@@ -220,6 +220,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Releases", "Releases", "{2B
 		Releases\18.10.0-alpha.4.md = Releases\18.10.0-alpha.4.md
 		Releases\18.10.1-alpha.4.md = Releases\18.10.1-alpha.4.md
 		Releases\18.11.0-alpha.5.md = Releases\18.11.0-alpha.5.md
+		Releases\18.11.1-alpha.6.md = Releases\18.11.1-alpha.6.md
 		Releases\18.9.0-preview.0.md = Releases\18.9.0-preview.0.md
 		Releases\18.9.1-preview.0.md = Releases\18.9.1-preview.0.md
 		Releases\18.9.2-alpha.md = Releases\18.9.2-alpha.md
