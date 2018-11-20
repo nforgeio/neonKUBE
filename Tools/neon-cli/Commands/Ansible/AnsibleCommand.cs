@@ -329,9 +329,11 @@ MODULES:
     neon_docker_login       - Manages Docker registry logins
     neon_docker_secret      - Manages Docker secrets
     neon_docker_service     - Manages Docker services
-    neon-globals            - Manages hive global settings
+    neon_docker_stack       - Manages Docker stacks
+    neon_globals            - Manages hive global settings
     neon_hive_dns           - Manages hive DNS host overrides
-    neon_traffic_manager   - Manages hive traffic directors  
+    neon_traffic_manager    - Manages hive traffic directors
+    neon_queue              - Manager hive message queues
 ";
 
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)

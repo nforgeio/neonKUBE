@@ -155,6 +155,11 @@ namespace NeonCli
                         new TrafficManagerModule().Run(context);
                         break;
 
+                    case "neon_queue":
+
+                        new QueueModule().Run(context);
+                        break;
+
                     default:
 
                         throw new ArgumentException($"[{module}] is not a recognized neonHIVE Ansible module.");

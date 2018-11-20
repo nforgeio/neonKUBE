@@ -103,6 +103,7 @@
     <None Include="neon-cli\modules\neon_couchbase_index.sh" />
     <None Include="neon-cli\modules\neon_couchbase_query.sh" />
     <None Include="neon-cli\modules\neon_dashboard.sh" />
+    <None Include="neon-cli\modules\neon_queue.sh" />
     <None Include="neon-cli\modules\neon_docker_stack.sh" />
     <None Include="neon-cli\modules\neon_globals.sh" />
     <None Include="neon-cli\modules\neon_hive_dns.sh" />
