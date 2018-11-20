@@ -117,7 +117,6 @@ if ($base)
 	Publish "$image_root\\haproxy"
 	Publish "$image_root\\neon-registry"
 	Publish "$image_root\\neon-registry-cache"
-	Publish "$image_root\\varnish"
 }
 
 if ($dotnetBase)
@@ -126,6 +125,7 @@ if ($dotnetBase)
 	Publish "$image_root\\aspnet"
 	Publish "$image_root\\ubuntu-16.04-dotnet"
 	Publish "$image_root\\ubuntu-16.04-aspnet"
+	Publish "$image_root\\varnish"
 }
 
 if ($dotnet)
