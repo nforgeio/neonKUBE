@@ -441,9 +441,9 @@ defaults
     http-reuse              safe
     timeout connect         {ToHaProxyTime(settings.Timeouts.ConnectSeconds)}
     timeout client          {ToHaProxyTime(settings.Timeouts.ClientSeconds)}
-    timeout http_keep-alive {ToHaProxyTime(settings.Timeouts.ClientHttpKeepAliveSeconds)}
     timeout server          {ToHaProxyTime(settings.Timeouts.ServerSeconds)}
     timeout check           {ToHaProxyTime(settings.Timeouts.CheckSeconds)}
+    timeout http-keep-alive {ToHaProxyTime(settings.Timeouts.HttpKeepAliveSeconds)}
 ");
 
             if (settings.Resolvers.Count > 0)
@@ -665,33 +665,33 @@ backend haproxy_stats
                     sbHaProxy.Append(
 $@"
 listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
-    mode                tcp
-    bind                *:{frontend.ProxyPort}
+    mode                    tcp
+    bind                    *:{frontend.ProxyPort}
 ");
 
                     if (tcpRule.MaxConnections > 0)
                     {
-                        sbHaProxy.AppendLine($"    maxconn             {tcpRule.MaxConnections}");
+                        sbHaProxy.AppendLine($"    maxconn                 {tcpRule.MaxConnections}");
                     }
 
                     if (tcpRule.Log)
                     {
-                        sbHaProxy.AppendLine($"    log                 global");
-                        sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + directorName, tcp: true)}");
+                        sbHaProxy.AppendLine($"    log                     global");
+                        sbHaProxy.AppendLine($"    log-format              {HiveHelper.GetProxyLogFormat("neon-proxy-" + directorName, tcp: true)}");
                     }
 
                     if (tcpRule.CheckMode != TrafficManagerCheckMode.Disabled && tcpRule.LogChecks)
                     {
-                        sbHaProxy.AppendLine($"    option              log-health-checks");
+                        sbHaProxy.AppendLine($"    option                  log-health-checks");
                     }
 
                     if (tcpRule.UseHttpCheckMode)
                     {
-                        sbHaProxy.AppendLine($"    option              httpchk {GetHttpCheckOptionArgs(tcpRule)}");
+                        sbHaProxy.AppendLine($"    option                  httpchk {GetHttpCheckOptionArgs(tcpRule)}");
 
                         if (!string.IsNullOrEmpty(tcpRule.CheckExpect))
                         {
-                            sbHaProxy.AppendLine($"    http-check          expect {tcpRule.CheckExpect.Trim()}");
+                            sbHaProxy.AppendLine($"    http-check              expect {tcpRule.CheckExpect.Trim()}");
                         }
                     }
 
@@ -699,25 +699,25 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
 
                     if (tcpRule.Timeouts.ConnectSeconds != settings.Timeouts.ConnectSeconds)
                     {
-                        sbHaProxy.AppendLine($"    timeout connect     {ToHaProxyTime(tcpRule.Timeouts.ConnectSeconds)}");
+                        sbHaProxy.AppendLine($"    timeout connect         {ToHaProxyTime(tcpRule.Timeouts.ConnectSeconds)}");
                     }
 
                     if (tcpRule.Timeouts.ClientSeconds != settings.Timeouts.ClientSeconds)
                     {
-                        sbHaProxy.AppendLine($"    timeout client      {ToHaProxyTime(tcpRule.Timeouts.ClientSeconds)}");
+                        sbHaProxy.AppendLine($"    timeout client          {ToHaProxyTime(tcpRule.Timeouts.ClientSeconds)}");
                     }
 
                     if (tcpRule.Timeouts.ServerSeconds != settings.Timeouts.ServerSeconds)
                     {
-                        sbHaProxy.AppendLine($"    timeout server      {ToHaProxyTime(tcpRule.Timeouts.ServerSeconds)}");
+                        sbHaProxy.AppendLine($"    timeout server          {ToHaProxyTime(tcpRule.Timeouts.ServerSeconds)}");
                     }
 
                     if (tcpRule.Timeouts.CheckSeconds != settings.Timeouts.CheckSeconds)
                     {
-                        sbHaProxy.AppendLine($"    timeout check       {ToHaProxyTime(tcpRule.Timeouts.CheckSeconds)}");
+                        sbHaProxy.AppendLine($"    timeout check           {ToHaProxyTime(tcpRule.Timeouts.CheckSeconds)}");
                     }
 
-                    sbHaProxy.AppendLine($"    default-server      inter {ToHaProxyTime(tcpRule.CheckSeconds)}");
+                    sbHaProxy.AppendLine($"    default-server          inter {ToHaProxyTime(tcpRule.CheckSeconds)}");
                 }
 
                 var checkArg    = tcpRule.CheckMode != TrafficManagerCheckMode.Disabled ? " check" : " no-check";
@@ -738,7 +738,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         backendName = backend.Name;
                     }
 
-                    sbHaProxy.AppendLine($"    server              {backendName} {backend.Server}:{backend.Port}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
+                    sbHaProxy.AppendLine($"    server                  {backendName} {backend.Server}:{backend.Port}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
                 }
             }
 
@@ -883,21 +883,21 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                     sbHaProxy.Append(
 $@"
 frontend {haProxyFrontend.Name}
-    mode                http
-    bind                *:{haProxyFrontend.Port}{certArg}
-    unique-id-header    {LogActivity.HttpHeader}
-    unique-id-format    {HiveConst.HAProxyUidFormat}
-    option              forwardfor
-    option              http-keep-alive
-    http-request        set-header X-Forwarded-Proto https if {{ ssl_fc }}
+    mode                    http
+    bind                    *:{haProxyFrontend.Port}{certArg}
+    unique-id-header        {LogActivity.HttpHeader}
+    unique-id-format        {HiveConst.HAProxyUidFormat}
+    option                  forwardfor
+    option                  http-keep-alive
+    http-request            set-header X-Forwarded-Proto https if {{ ssl_fc }}
 ");
 
                     if (haProxyFrontend.Log)
                     {
-                        sbHaProxy.AppendLine($"    capture             request header Host len 255");
-                        sbHaProxy.AppendLine($"    capture             request header User-Agent len 2048");
-                        sbHaProxy.AppendLine($"    log                 global");
-                        sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + directorName, tcp: false)}");
+                        sbHaProxy.AppendLine($"    capture                 request header Host len 255");
+                        sbHaProxy.AppendLine($"    capture                 request header User-Agent len 2048");
+                        sbHaProxy.AppendLine($"    log                     global");
+                        sbHaProxy.AppendLine($"    log-format              {HiveHelper.GetProxyLogFormat("neon-proxy-" + directorName, tcp: false)}");
                     }
 
                     // We need to keep track of the ACLs we've defined for each hostname
@@ -935,32 +935,32 @@ frontend {haProxyFrontend.Name}
                             if (!aclHosts.Contains(host))
                             {
                                 aclHosts.Add(host);
-                                sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
+                                sbHaProxy.AppendLine($"    acl                     {hostAclName} ssl_fc_sni {host}");
                             }
 
-                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg '{path}'");
+                            sbHaProxy.AppendLine($"    acl                     {pathAclName} path_beg '{path}'");
                             SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, path, hostPathMapping.Value, host, pathAclName, hostAclName);
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
+                            sbHaProxy.AppendLine($"    use_backend             {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
                         }
                         else if (!string.IsNullOrEmpty(host))
                         {
                             if (!aclHosts.Contains(host))
                             {
                                 aclHosts.Add(host);
-                                sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                                sbHaProxy.AppendLine($"    acl                     {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             }
 
-                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg '{path}'");
+                            sbHaProxy.AppendLine($"    acl                     {pathAclName} path_beg '{path}'");
                             SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, path, hostPathMapping.Value, host, pathAclName, hostAclName);
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
+                            sbHaProxy.AppendLine($"    use_backend             {hostPathMapping.Value.BackendName} if {hostAclName} {pathAclName}");
                         }
                         else
                         {
                             // The frontend does not specify a host so we'll use the backend
                             // if only the path matches.
 
-                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg '{path}'");
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {pathAclName}");
+                            sbHaProxy.AppendLine($"    acl                     {pathAclName} path_beg '{path}'");
+                            sbHaProxy.AppendLine($"    use_backend             {hostPathMapping.Value.BackendName} if {pathAclName}");
                         }
                     }
 
@@ -984,7 +984,7 @@ frontend {haProxyFrontend.Name}
                                 if (!aclHosts.Contains(host))
                                 {
                                     aclHosts.Add(host);
-                                    sbHaProxy.AppendLine($"    acl                 {hostAclName} ssl_fc_sni {host}");
+                                    sbHaProxy.AppendLine($"    acl                     {hostAclName} ssl_fc_sni {host}");
                                 }
                             }
                             else
@@ -992,11 +992,11 @@ frontend {haProxyFrontend.Name}
                                 if (!aclHosts.Contains(host))
                                 {
                                     aclHosts.Add(host);
-                                    sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                                    sbHaProxy.AppendLine($"    acl                     {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                                 }
                             }
 
-                            sbHaProxy.AppendLine($"    redirect            location {hostPathMapping.Value.Frontend.RedirectTo} if {hostAclName}");
+                            sbHaProxy.AppendLine($"    redirect                location {hostPathMapping.Value.Frontend.RedirectTo} if {hostAclName}");
                         }
                         else if (haProxyFrontend.Tls)
                         {
@@ -1007,25 +1007,25 @@ frontend {haProxyFrontend.Name}
                             }
 
                             SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host, hostAclName);
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName}");
+                            sbHaProxy.AppendLine($"    use_backend             {hostPathMapping.Value.BackendName} if {hostAclName}");
                         }
                         else if (!string.IsNullOrEmpty(host))
                         {
                             if (!aclHosts.Contains(host))
                             {
                                 aclHosts.Add(host);
-                                sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                                sbHaProxy.AppendLine($"    acl                     {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             }
 
                             SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host, hostAclName);
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName} if {hostAclName}");
+                            sbHaProxy.AppendLine($"    use_backend             {hostPathMapping.Value.BackendName} if {hostAclName}");
                         }
                         else
                         {
                             // The frontend does not specify a host so we'll always use the backend.
 
                             SetCacheFrontendHeader(sbHaProxy, haProxyFrontend, "/", hostPathMapping.Value, host);
-                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value.BackendName}");
+                            sbHaProxy.AppendLine($"    use_backend             {hostPathMapping.Value.BackendName}");
                         }
                     }
                 }
@@ -1062,58 +1062,65 @@ frontend {haProxyFrontend.Name}
                     sbHaProxy.Append(
 $@"
 backend http:{httpRule.Name}
-    mode                http
+    mode                    http
 ");
 
                     if (httpRule.Log)
                     {
-                        sbHaProxy.AppendLine($"    log                 global");
+                        sbHaProxy.AppendLine($"    log                     global");
                     }
+
+                    sbHaProxy.AppendLine($"    http-reuse              {NeonHelper.EnumToString(httpRule.BackendConnectionReuse)}");
 
                     if (checkMode != TrafficManagerCheckMode.Disabled)
                     {
                         if (httpRule.UseHttpCheckMode)
                         {
-                            sbHaProxy.AppendLine($"    option              httpchk {GetHttpCheckOptionArgs(httpRule)}");
-
                             if (!string.IsNullOrEmpty(httpRule.CheckExpect))
                             {
-                                sbHaProxy.AppendLine($"    http-check          expect {httpRule.CheckExpect.Trim()}");
+                                sbHaProxy.AppendLine($"    http-check              expect {httpRule.CheckExpect.Trim()}");
                             }
+
+                            sbHaProxy.AppendLine($"    option                  httpchk {GetHttpCheckOptionArgs(httpRule)}");
                         }
                         else if (httpRule.CheckMode == TrafficManagerCheckMode.Tcp)
                         {
-                            sbHaProxy.AppendLine($"    option              tcp-check");
+                            sbHaProxy.AppendLine($"    option                  tcp-check");
                         }
 
                         if (httpRule.CheckMode != TrafficManagerCheckMode.Disabled && httpRule.LogChecks)
                         {
-                            sbHaProxy.AppendLine($"    option              log-health-checks");
+                            sbHaProxy.AppendLine($"    option                  log-health-checks");
                         }
 
                         if (httpRule.Timeouts.CheckSeconds != settings.Timeouts.CheckSeconds)
                         {
-                            sbHaProxy.AppendLine($"    timeout check       {ToHaProxyTime(httpRule.Timeouts.CheckSeconds)}");
+                            sbHaProxy.AppendLine($"    timeout check           {ToHaProxyTime(httpRule.Timeouts.CheckSeconds)}");
                         }
 
-                        sbHaProxy.AppendLine($"    default-server      inter {ToHaProxyTime(httpRule.CheckSeconds)}");
+                        sbHaProxy.AppendLine($"    default-server          inter {ToHaProxyTime(httpRule.CheckSeconds)}");
                     }
 
                     // Explicitly set any rule timeouts that don't match the default settings.
 
                     if (httpRule.Timeouts.ConnectSeconds != settings.Timeouts.ConnectSeconds)
                     {
-                        sbHaProxy.AppendLine($"    timeout connect     {ToHaProxyTime(httpRule.Timeouts.ConnectSeconds)}");
+                        sbHaProxy.AppendLine($"    timeout connect         {ToHaProxyTime(httpRule.Timeouts.ConnectSeconds)}");
                     }
 
                     if (httpRule.Timeouts.ClientSeconds != settings.Timeouts.ClientSeconds)
                     {
-                        sbHaProxy.AppendLine($"    timeout client      {ToHaProxyTime(httpRule.Timeouts.ClientSeconds)}");
+                        sbHaProxy.AppendLine($"    timeout client          {ToHaProxyTime(httpRule.Timeouts.ClientSeconds)}");
                     }
 
                     if (httpRule.Timeouts.ServerSeconds != settings.Timeouts.ServerSeconds)
                     {
-                        sbHaProxy.AppendLine($"    timeout server      {ToHaProxyTime(httpRule.Timeouts.ServerSeconds)}");
+                        sbHaProxy.AppendLine($"    timeout server          {ToHaProxyTime(httpRule.Timeouts.ServerSeconds)}");
+                    }
+
+                    if (httpRule.Timeouts.HttpKeepAliveSeconds != settings.Timeouts.HttpKeepAliveSeconds)
+                    {
+                        sbHaProxy.AppendLine($"    timeout http-keep-alive {ToHaProxyTime(httpRule.Timeouts.HttpKeepAliveSeconds)}");
                     }
 
                     if (httpRule.Cache.Enabled)
@@ -1130,7 +1137,7 @@ backend http:{httpRule.Name}
 
                         var varnishBackend = isPublic ? "neon-proxy-public-cache" : "neon-proxy-private-cache";
 
-                        sbHaProxy.AppendLine($"    server              {varnishBackend} {varnishBackend}:80{initAddrArg}{resolversArg}");
+                        sbHaProxy.AppendLine($"    server                  {varnishBackend} {varnishBackend}:80{initAddrArg}{resolversArg}");
                     }
                     else
                     {
@@ -1156,11 +1163,11 @@ backend http:{httpRule.Name}
 
                             if (checkMode == TrafficManagerCheckMode.Disabled)
                             {
-                                sbHaProxy.AppendLine($"    server              {serverName} {backend.Server}:{backend.Port}{sslArg}{initAddrArg}{resolversArg}");
+                                sbHaProxy.AppendLine($"    server                  {serverName} {backend.Server}:{backend.Port}{sslArg}{initAddrArg}{resolversArg}");
                             }
                             else
                             {
-                                sbHaProxy.AppendLine($"    server              {serverName} {backend.Server}:{backend.Port}{sslArg}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
+                                sbHaProxy.AppendLine($"    server                  {serverName} {backend.Server}:{backend.Port}{sslArg}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
                             }
                         }
                     }
@@ -2404,18 +2411,18 @@ listen tcp:port-{port}
             // header and be directed to the corresponding backend:
             //
             // frontend: test
-            //      mode                http
-            //      bind                *:80
+            //      mode                    http
+            //      bind                    *:80
             //
-            //      acl                 is-test-com hdr_reg(host) -i test.com(:\d+)?
-            //      acl                 is-foo-bar path_beg '/foo/bar/'
-            //      http-request        set-header X-Neon-Frontend '80 /foo/bar/ vegomatic.test' if is-test-com is-foo-bar
-            //      use_backend         foo-bar if is-test-com is-foo-bar
+            //      acl                     is-test-com hdr_reg(host) -i test.com(:\d+)?
+            //      acl                     is-foo-bar path_beg '/foo/bar/'
+            //      http-request            set-header X-Neon-Frontend '80 /foo/bar/ vegomatic.test' if is-test-com is-foo-bar
+            //      use_backend             foo-bar if is-test-com is-foo-bar
             //
-            //      acl                 is-test-com hdr_reg(host) -i test.com(:\d+)?
-            //      acl                 is-foo path_beg '/foo/'
-            //      http-request        set-header X-Neon-Frontend '80 /foo/ vegomatic.test' if is-test-com is-foo
-            //      use_backend         foo-bar if is-test-com is-foo
+            //      acl                     is-test-com hdr_reg(host) -i test.com(:\d+)?
+            //      acl                     is-foo path_beg '/foo/'
+            //      http-request            set-header X-Neon-Frontend '80 /foo/ vegomatic.test' if is-test-com is-foo
+            //      use_backend             foo-bar if is-test-com is-foo
             //
             // I originally thought that for a http://test.com/foo/bar/test.jpg request that HAProxy
             // would match the first two ACLs, execute the first [http-request set-header], and the
@@ -2434,26 +2441,26 @@ listen tcp:port-{port}
             // This will look something like:
             //
             // frontend: test
-            //      mode                http
-            //      bind                *:80
+            //      mode                    http
+            //      bind                    *:80
             //
-            //      acl                 is-test-com hdr_reg(host) -i test.com(:\d+)?
-            //      acl                 is-foo-bar path_beg '/foo/bar/'
-            //      acl                 x-neon-frontend-found req.hdr(X-Neon-Frontend) -m found
-            //      http-request        set-header X-Neon-Frontend '80 /foo/bar/ vegomatic.test' if is-test-com is-foo-bar !x-neon-frontend-found-0
-            //      use_backend         foo-bar if is-test-com is-foo-bar
+            //      acl                     is-test-com hdr_reg(host) -i test.com(:\d+)?
+            //      acl                     is-foo-bar path_beg '/foo/bar/'
+            //      acl                     x-neon-frontend-found req.hdr(X-Neon-Frontend) -m found
+            //      http-request            set-header X-Neon-Frontend '80 /foo/bar/ vegomatic.test' if is-test-com is-foo-bar !x-neon-frontend-found-0
+            //      use_backend             foo-bar if is-test-com is-foo-bar
             //
-            //      acl                 is-test-comhdr_reg(host) -i test.com(:\d+)?
-            //      acl                 is-foo path_beg '/foo/'
-            //      acl                 x-neon-frontend-found req.hdr(X-Neon-Frontend) -m found
-            //      http-request        set-header X-Neon-Frontend '80 /foo/ vegomatic.test' if is-test-com is-foo !x-neon-frontend-found-1
-            //      use_backend         foo-bar if is-test-com is-foo
+            //      acl                     is-test-comhdr_reg(host) -i test.com(:\d+)?
+            //      acl                     is-foo path_beg '/foo/'
+            //      acl                     x-neon-frontend-found req.hdr(X-Neon-Frontend) -m found
+            //      http-request            set-header X-Neon-Frontend '80 /foo/ vegomatic.test' if is-test-com is-foo !x-neon-frontend-found-1
+            //      use_backend             foo-bar if is-test-com is-foo
 
-            sb.AppendLine($"    acl                 x-neon-frontend-found req.hdr(X-Neon-Frontend) -m found");
+            sb.AppendLine($"    acl                     x-neon-frontend-found req.hdr(X-Neon-Frontend) -m found");
 
             if (aclNames.Length == 0)
             {
-                sb.AppendLine($"    http-request        set-header X-Neon-Frontend '{proxyFrontendHeader}' if !x-neon-frontend-found");
+                sb.AppendLine($"    http-request            set-header X-Neon-Frontend '{proxyFrontendHeader}' if !x-neon-frontend-found");
             }
             else
             {
@@ -2469,7 +2476,7 @@ listen tcp:port-{port}
                     conditions += aclName;
                 }
 
-                sb.AppendLine($"    http-request        set-header X-Neon-Frontend '{proxyFrontendHeader}' if {conditions}");
+                sb.AppendLine($"    http-request            set-header X-Neon-Frontend '{proxyFrontendHeader}' if {conditions}");
             }
         }
     }

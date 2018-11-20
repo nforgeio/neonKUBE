@@ -73,15 +73,6 @@ namespace Neon.Hive
         public double ClientSeconds { get; set; } = DefaultClientSeconds;
 
         /// <summary>
-        /// The maximum time to keep a client side HTTP connection open after
-        /// returning the first response to wait for a another client request.
-        /// This defaults to <b>0.5 seconds</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "ClientHttpKeepAliveSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(DefaultClientHttpKeepAliveSeconds)]
-        public double ClientHttpKeepAliveSeconds { get; set; } = DefaultClientHttpKeepAliveSeconds;
-
-        /// <summary>
         /// The maximum time to wait for a server to acknowledge or transmit
         /// data.  This defaults to <b>50 seconds</b>.
         /// </summary>
@@ -95,6 +86,15 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "CheckSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultCheckSeconsds)]
         public double CheckSeconds { get; set; } = DefaultCheckSeconsds;
+
+        /// <summary>
+        /// The maximum time to keep a client side HTTP connection open after
+        /// returning the first response to wait for a another client request.
+        /// This defaults to <b>0.5 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "HttpKeepAliveSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(DefaultClientHttpKeepAliveSeconds)]
+        public double HttpKeepAliveSeconds { get; set; } = DefaultClientHttpKeepAliveSeconds;
 
         /// <summary>
         /// Validates the instance.
@@ -112,9 +112,9 @@ namespace Neon.Hive
                 context.Error($"Load balancer timeout [{nameof(ClientSeconds)}={ClientSeconds}] is not positive.");
             }
 
-            if (ClientHttpKeepAliveSeconds < 0.0)
+            if (HttpKeepAliveSeconds < 0.0)
             {
-                context.Error($"Load balancer timeout [{nameof(ClientHttpKeepAliveSeconds)}={ClientHttpKeepAliveSeconds}] must not be negative.");
+                context.Error($"Load balancer timeout [{nameof(HttpKeepAliveSeconds)}={HttpKeepAliveSeconds}] must not be negative.");
             }
 
             if (ServerSeconds <= 0.0)

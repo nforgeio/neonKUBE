@@ -48,6 +48,22 @@ namespace Neon.Hive
         public List<TrafficManagerHttpBackend> Backends { get; set; } = new List<TrafficManagerHttpBackend>();
 
         /// <summary>
+        /// <para>
+        /// Describes how backend connections to origin servers may be reused for subsequent
+        /// requests.  This maps directly to the <b>http-reuse </b>HAProxy and is discussed at length 
+        /// <a href="https://cbonte.github.io/haproxy-dconv/1.8/configuration.html#4.2-http-reuse">here</a>.
+        /// This defaults to <see cref="TrafficManagerHttpReuse.Safe"/>.
+        /// </para>
+        /// <note>
+        /// neonHIVE HTTP rules default to <see cref="TrafficManagerHttpReuse.Safe"/> where as HAProxy defaults
+        /// to <see cref="TrafficManagerHttpReuse.Never"/>.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "BackendConnectionReuse", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(TrafficManagerHttpReuse.Safe)]
+        public TrafficManagerHttpReuse BackendConnectionReuse { get; set; } = TrafficManagerHttpReuse.Safe;
+
+        /// <summary>
         /// HTTP caching related settings.  This defaults to <c>null</c> which disables any caching.
         /// </summary>
         [JsonProperty(PropertyName = "Cache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
