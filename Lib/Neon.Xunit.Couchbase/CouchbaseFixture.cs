@@ -202,7 +202,7 @@ namespace Neon.Xunit.Couchbase
             // retry creating the primary index (or a dummy index) until it works.
 
             var timeout = TimeSpan.FromMinutes(2);
-            var retry = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)timeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
+            var retry   = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)timeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
 
             retry.InvokeAsync(
                 async () =>

@@ -230,6 +230,11 @@ namespace Couchbase
             }
             catch (CouchbaseQueryResponseException e)
             {
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = e.Message;
+                }
+
                 throw new CouchbaseQueryResponseException(message, e.Status, e.Errors.ToList());
             }
         }
