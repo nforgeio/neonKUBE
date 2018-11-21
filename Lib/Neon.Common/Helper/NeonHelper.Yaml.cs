@@ -41,8 +41,8 @@ namespace Neon.Common
         //---------------------------------------------------------------------
         // Implementation
 
-        private static Lazy<Serializer> yamlSerializer =
-            new Lazy<Serializer>(
+        private static Lazy<ISerializer> yamlSerializer =
+            new Lazy<ISerializer>(
                 () =>
                 {
                     return new SerializerBuilder()
@@ -50,8 +50,8 @@ namespace Neon.Common
                         .Build();
                 });
 
-        private static Lazy<Deserializer> strictYamlDeserializer =
-            new Lazy<Deserializer>(
+        private static Lazy<IDeserializer> strictYamlDeserializer =
+            new Lazy<IDeserializer>(
                 () =>
                 {
                     return new DeserializerBuilder()
@@ -59,8 +59,8 @@ namespace Neon.Common
                         .Build();
                 });
 
-        private static Lazy<Deserializer> relaxedYamlDeserializer =
-            new Lazy<Deserializer>(
+        private static Lazy<IDeserializer> relaxedYamlDeserializer =
+            new Lazy<IDeserializer>(
                 () =>
                 {
                     return new DeserializerBuilder()
