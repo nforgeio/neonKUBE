@@ -27,7 +27,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EasyNetQ" Version="3.3.1" />
+    <PackageReference Include="EasyNetQ" Version="3.3.4" />
     <PackageReference Include="EasyNetQ.Management.Client" Version="1.0.0" />
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" />
   </ItemGroup>
