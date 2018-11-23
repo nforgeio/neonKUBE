@@ -458,7 +458,7 @@ OPTIONS:
 
                                 Directory.CreateDirectory(fullLogPath);
 
-                                logMount = $"-v {fullLogPath}:/log";
+                                logMount = $"--mount {fullLogPath}:/log";
                             }
 
                             shim.WriteScript();
@@ -472,8 +472,8 @@ OPTIONS:
                             //
                             // See: https://github.com/jefflill/NeonForge/issues/266
 
-                            var secretsMount = $"-v \"{secretsRoot}:/neonhive\"";
-                            var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
+                            var secretsMount = $"--mount \"source={secretsRoot},target=/neonhive\"";
+                            var shimMount    = $"--mount \"source={shim.ShimExternalFolder},target=/shim\"";
                             var options      = shim.Terminal ? "-it" : "-i";
 
                             if (LeftCommandLine.HasOption("--noterminal"))
@@ -507,9 +507,9 @@ OPTIONS:
 
                             foreach (var mappedFolder in shim.MappedFolders)
                             {
-                                var mode = mappedFolder.IsReadOnly ? "ro" : "rw";
+                                var readOnly = mappedFolder.IsReadOnly ? ",readonly" : string.Empty;
 
-                                sbMappedMount.AppendWithSeparator($"-v \"{mappedFolder.ClientFolderPath}:{mappedFolder.ContainerFolderPath}:{mode}\"");
+                                sbMappedMount.AppendWithSeparator($"--mount \"source={mappedFolder.ClientFolderPath},target={mappedFolder.ContainerFolderPath}{readOnly}\"");
                             }
 
                             // If the tool was built from the Git production branch then the Docker image
