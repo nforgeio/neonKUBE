@@ -71,6 +71,11 @@ namespace NeonVegomatic
                         await new CephFS().ExecAsync(commandLine.Shift(1));
                         break;
 
+                    case "issue-mntc":
+
+                        await new IssueMntc().ExecAsync(commandLine.Shift(1));
+                        break;
+
                     default:
                     case "test-server":
 
