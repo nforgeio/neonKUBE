@@ -10,7 +10,7 @@
 #   VERSION         - The base COUCHBASE image tag (e.g. "community-5.0.1")
 
 ARG         VERSION
-FROM        couchbase:${VERSION}
+FROM        couchbase/server:${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
