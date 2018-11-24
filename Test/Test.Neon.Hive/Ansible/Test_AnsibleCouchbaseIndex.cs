@@ -19,6 +19,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Retry;
 using Neon.Xunit;
 using Neon.Xunit.Couchbase;
 using Neon.Xunit.Hive;
@@ -55,7 +56,7 @@ namespace TestHive
 
             if (!couchbase.Start(noPrimary: true))
             {
-                // Flush the database if we didn't just start it.
+                // Clear the database if we didn't just start it.
 
                 couchbase.Clear();
             }
@@ -69,8 +70,21 @@ namespace TestHive
         /// <returns>The list of index information.</returns>
         private async Task<List<dynamic>> ListIndexesAsync()
         {
-            var indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id='{bucket.Name}'"));
-            var list    = new List<dynamic>();
+            // $hack(jeff.lill):
+            //
+            // This index query can fail for a random period of time after resetting
+            // Couchbase or after creating an index.  We're going to retry for up to
+            // 60 seconds until the query succeeds.
+
+            dynamic indexes = null;
+
+            await NeonBucket.ReadyRetry.InvokeAsync(
+                async () =>
+                {
+                    indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id='{bucket.Name}'"));
+                });
+
+            var list = new List<dynamic>();
 
             foreach (var index in indexes)
             {

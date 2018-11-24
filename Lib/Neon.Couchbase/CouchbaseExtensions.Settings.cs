@@ -12,7 +12,7 @@ using Couchbase.Authentication;
 using Couchbase.Configuration.Client;
 using Couchbase.Core;
 using Couchbase.Core.Serialization;
-
+using Couchbase.N1QL;
 using Neon.Common;
 using Neon.Data;
 using Neon.Time;
@@ -54,7 +54,7 @@ namespace Couchbase
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="credentials">Cluster credentials.</param>
         /// <returns>The connected <see cref="Cluster"/>.</returns>
-        public static Cluster OpenCluster(this CouchbaseSettings settings, Credentials credentials = null)
+        public static Cluster OpenCluster(this CouchbaseSettings settings, Credentials credentials)
         {
             Covenant.Requires<ArgumentNullException>(settings.Servers != null && settings.Servers.Count > 0);
             Covenant.Requires<ArgumentNullException>(credentials != null);
@@ -75,7 +75,7 @@ namespace Couchbase
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="username">The username.</param>
         /// <param name="password">The password.</param>
-        /// <param name="timeout">The optional timeout (defaults to 30 seconds).</param>
+        /// <param name="timeout">The optional timeout (defaults to 60 seconds).</param>
         /// <param name="ignoreDurability">Optionally configure the bucket to ignore durability parameters.</param>
         /// <returns>The connected <see cref="NeonBucket"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the bucket is not ready after waiting <paramref name="timeout"/>.</exception>
@@ -116,20 +116,24 @@ namespace Couchbase
 
             var cluster = new Cluster(config);
 
-            // We have to wait for two Couchbase operations to complete
+            // We have to wait for three Couchbase operations to complete
             // successfully:
             //
             //      1. Authenticate
             //      2. Open Bucket
+            //      3. List Indexes
             //
             // Each of these can fail if Couchbase isn't ready.  The Open Bucket
-            // can fail after the Authenticate succeeded because the bucket is still
-            // warming up.
+            // can fail after the Authenticate succeeded because the bucket is 
+            // still warming up in the cluster.
 
             if (timeout <= TimeSpan.Zero)
             {
-                timeout = TimeSpan.FromSeconds(30);
+                timeout = NeonBucket.ReadyTimeout;
             }
+
+            //-----------------------------------------------------------------
+            // Authenticate against the Couchbase cluster.
 
             var stopwatch = new Stopwatch();
 
@@ -151,7 +155,17 @@ namespace Couchbase
                 timeout: timeout,
                 pollTime: TimeSpan.FromSeconds(0.5));
 
+            //-----------------------------------------------------------------
+            // Open the bucket.  Note that we're going to recreate the bucket after
+            // each failed attempt because it doesn't seem to recover from connection
+            // failures.
+            //
+            // I believe this may be due to the index and or query services not being
+            // ready yet after Couchbase has just been spun up and the bucket isn't 
+            // notified when these become ready, even after some time passes.
+
             timeout = timeout - stopwatch.Elapsed;  // Adjust the timeout downward by the time taken to authenticate.
+            stopwatch.Restart();
 
             var bucket = (NeonBucket)null;
 
@@ -170,6 +184,16 @@ namespace Couchbase
                 },
                 timeout: timeout,
                 pollTime: TimeSpan.FromSeconds(0.5));
+
+            //-----------------------------------------------------------------
+            // Wait until the bucket can perform a simple read operation without
+            // failing.  It appears that we can see early failures for Couchbase
+            // clusters that have just been created (e.g. during unit tests).
+
+            timeout = timeout - stopwatch.Elapsed;  // Adjust the timeout downward by the time taken to connect.
+            stopwatch.Restart();
+
+            bucket.WaitUntilReadyAsync(timeout).Wait();
 
             return bucket;
         }

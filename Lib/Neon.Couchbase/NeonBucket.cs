@@ -54,6 +54,22 @@ namespace Couchbase
     /// </remarks>
     public class NeonBucket : IBucket
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// <b>HACk:</b> Returns the timeout used when ensuring that a bucket is ready for use.
+        /// </summary>
+        public static TimeSpan ReadyTimeout { get; private set; } = TimeSpan.FromSeconds(120);
+
+        /// <summary>
+        /// <b>HACk:</b> Returns the retry policy used when ensuring that a bucket is ready for use.
+        /// </summary>
+        public static LinearRetryPolicy ReadyRetry { get; private set; } = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)ReadyTimeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private IBucket             bucket;
         private CouchbaseSettings   settings;
         private bool                ignoreDurability;
@@ -112,6 +128,28 @@ namespace Couchbase
         private PersistTo Adjust(PersistTo persistTo)
         {
             return ignoreDurability ? PersistTo.Zero : persistTo;
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> This is used in special situations where the internal
+        /// backing bucket needs to be replaced.  This is currently used within the Couchbase
+        /// test fixture to set a new bucket after clearing a bucket.
+        /// </summary>
+        /// <param name="bucket">The bucket to be set.</param>
+        public void SetInternalBucket(IBucket bucket)
+        {
+            Covenant.Requires<ArgumentNullException>(bucket != null);
+
+            this.bucket = bucket;
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Returns the internal bucket.
+        /// </summary>
+        /// <returns></returns>
+        public IBucket GetInternalBucket()
+        {
+            return this.bucket;
         }
 
         //-----------------------------------------------------------------

@@ -219,6 +219,11 @@ namespace Couchbase
                 message += $"Couchbase Error [code={error.Code}]: {error.Message}{NeonHelper.LineEnding}";
             }
 
+            if (string.IsNullOrEmpty(message) && result.Exception != null)
+            {
+                message = result.Exception.Message;
+            }
+
             if (result.ShouldRetry())
             {
                 throw new TransientException(message, result.Exception);
@@ -245,7 +250,7 @@ namespace Couchbase
         /// </summary>
         /// <param name="bucket">The bucket.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CouchbaseResponseException">Thrown if the operation failed.</exception>
+        /// <exception cref="CouchbaseResponseException">Thrown if the bucket is not ready.</exception>
         public static async Task CheckAsync(this IBucket bucket)
         {
             // Note that it doesn't matter if this key actually exists 
@@ -259,22 +264,15 @@ namespace Couchbase
         /// Waits until the bucket is ready.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="timeout">The maximum time to wait.</param>
+        /// <param name="timeout">Optionally specifies the maximum time to wait (defaults to 60 seconds).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
-        public static async Task WaitUntilReadyAsync(this IBucket bucket, TimeSpan timeout)
+        public static async Task WaitUntilReadyAsync(this IBucket bucket, TimeSpan timeout = default)
         {
-            // One or more of the buncket nodes may be warming up or be offline
-            // or in another bad state.  Nodes will not be ready when they're
-            // warming up after node start or after the bucket was flushed.
-            //
-            // I'm just hardcoding a pause time for now, that appears to work.
-            // I tried to query the node status using the Couchbase [ClusterManager]
-            // class but that didn't work because it appears that the Couchbase Server
-            // REST API is returning the character set as "utf8" instead of
-            // "utf-8" with a dash.
-
-            await Task.Delay(TimeSpan.FromSeconds(10));
+            if (timeout == TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromSeconds(60);
+            }
 
             // Perform some small read operations until we see no exceptions.
 
@@ -293,6 +291,21 @@ namespace Couchbase
                     // Ignore these until the bucket is ready or we timeout.
 
                     exception = e;
+                }
+                catch (AggregateException e)
+                {
+                    if (e.Find<CouchbaseQueryResponseException>() != null ||
+                        e.Find<CouchbaseResponseException>() != null ||
+                        e.Find<TransientException>() != null)
+                    {
+                        // Ignore these until the bucket is ready or we timeout.
+
+                        exception = e;
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
 
                 Thread.Sleep(TimeSpan.FromMilliseconds(500));
@@ -1224,8 +1237,8 @@ namespace Couchbase
         /// <returns>The list of index information.</returns>
         public static async Task<List<CouchbaseIndex>> ListIndexesAsync(this IBucket bucket)
         {
-            var indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}"));
             var list    = new List<CouchbaseIndex>();
+            var indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}"));
 
             foreach (var index in indexes)
             {

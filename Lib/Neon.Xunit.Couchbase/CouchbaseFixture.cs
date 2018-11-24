@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Couchbase;
 using Couchbase.Linq;
@@ -45,7 +46,8 @@ namespace Neon.Xunit.Couchbase
     /// <threadsafety instance="true"/>
     public sealed class CouchbaseFixture : ContainerFixture
     {
-        private bool createPrimaryIndex;
+        private TimeSpan    couchbaseWarmupTime = TimeSpan.FromSeconds(10);
+        private bool        createPrimaryIndex;
 
         /// <summary>
         /// Constructs the fixture.
@@ -78,10 +80,9 @@ namespace Neon.Xunit.Couchbase
         /// <b>test</b> bucket by default (unless another is specified).
         /// </note>
         /// <para>
-        /// This method creates a primary index by default because
-        /// its very common for unit test to require a primary index.
-        /// You can avoid creating a primary index by passing
-        /// <paramref name="noPrimary"/><c>=true</c>.
+        /// This method creates a primary index by default because it's very common for 
+        /// unit tests to require a primary index. You can avoid creating a primary index 
+        /// by passing <paramref name="noPrimary"/><c>=true</c>.
         /// </para>
         /// <para>
         /// There are three basic patterns for using this fixture.
@@ -177,6 +178,7 @@ namespace Neon.Xunit.Couchbase
             }
 
             RunContainer(name, image, new string[] { "--detach", "-p", "8091-8094:8091-8094", "-p", "11210:11210" }, env: env);
+            Thread.Sleep(couchbaseWarmupTime);
 
             settings = settings ?? new CouchbaseSettings();
 
@@ -188,61 +190,12 @@ namespace Neon.Xunit.Couchbase
                 settings.Bucket = "test";
             }
 
-            Bucket   = settings.OpenBucket(username, password);
+            Bucket   = null;
             Settings = settings;
             Username = username;
             Password = password;
 
-            // Wait for the cluster to warm up.
-
-            Bucket.WaitUntilReadyAsync(TimeSpan.FromSeconds(10)).Wait();
-
-            // It appears that it may take a bit of time for the Couchbase query
-            // service to start in new container we started above.  We're going to
-            // retry creating the primary index (or a dummy index) until it works.
-
-            var timeout = TimeSpan.FromMinutes(2);
-            var retry   = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)timeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
-
-            retry.InvokeAsync(
-                async () =>
-                {
-                    if (Bucket == null)
-                    {
-                        Bucket = settings.OpenBucket(username, password);
-                    }
-
-                    try
-                    {
-                        if (!noPrimary)
-                        {
-                            await Bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(Bucket.Name)} using gsi");
-                            await Bucket.WaitForIndexAsync("#primary");
-                        }
-                        else
-                        {
-                            // Create a dummy index to ensure that the query service is ready
-                            // and then remove it.
-
-                            var dummyName = "idx_couchbase_test_fixture";
-
-                            await Bucket.QuerySafeAsync<dynamic>($"create index {CbHelper.LiteralName(dummyName)} on {CbHelper.LiteralName(Bucket.Name)} ({CbHelper.LiteralName("Field")}) using gsi");
-                            await Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(dummyName)} using gsi");
-                        }
-                    }
-                    catch
-                    {
-                        // It looks like we need to open a new bucket if the query service wasn't
-                        // ready.  We'll dispose the old bucket and set it to NULL here and then
-                        // open a fresh bucket above when the retry policy tries again.
-
-                        Bucket.Dispose();
-                        Bucket = null;
-
-                        throw;
-                    }
-
-                }).Wait();
+            ConnectBucket();
         }
 
         /// <summary>
@@ -266,6 +219,88 @@ namespace Neon.Xunit.Couchbase
         public string Password { get; private set; }
 
         /// <summary>
+        /// Establishes the bucket connection and waits until the Couchbase container is ready
+        /// to start handling requests.
+        /// </summary>
+        private void ConnectBucket()
+        {
+            // Give the Couchbase container a chance to spin up.
+
+            Thread.Sleep(TimeSpan.FromSeconds(10));
+
+            // It appears that it may take a bit of time for the Couchbase query
+            // service to start in new container we started above.  We're going to
+            // retry creating the primary index (or a dummy index) until it works.
+
+            NeonBucket bucket = null;
+
+            NeonBucket.ReadyRetry.InvokeAsync(
+                async () =>
+                {
+                    if (bucket == null)
+                    {
+                        bucket = Settings.OpenBucket(Username, Password);
+                    }
+
+                    try
+                    {
+                        // Create the primary index if requested.
+
+                        if (createPrimaryIndex)
+                        {
+                            await bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(bucket.Name)} using gsi");
+                            await bucket.WaitForIndexAsync("#primary");
+                        }
+
+                        // List the indexes to ensure the index and query services are ready.
+
+                        await bucket.ListIndexesAsync();
+
+                        // Ensure that the query service is running too.
+
+                        var query = new QueryRequest($"select meta({bucket.Name}).id, {bucket.Name}.* from {bucket.Name}")
+                            .ScanConsistency(ScanConsistency.RequestPlus);
+
+                        await bucket.QuerySafeAsync<dynamic>(query);
+                    }
+                    catch
+                    {
+                        // $hack(jeff.lill):
+                        //
+                        // It looks like we need to create a new bucket if the query service 
+                        // wasn't ready.  I'm guessing that this is due to the Couchbase index
+                        // service not being ready at the time the bucket was connected and
+                        // the bucket isn't smart enough to retry looking for the index service
+                        // afterwards.  This won't be a problem for most real-world scenarios
+                        // because for those, Couchbase will have been started long ago and
+                        // will continue running indefinitely.
+                        //
+                        // We'll dispose the old bucket and set it to NULL here and then
+                        // open a fresh bucket above when the retry policy tries again.
+
+                        bucket.Dispose();
+                        bucket = null;
+
+                        throw;
+                    }
+
+                }).Wait();
+
+            // Use the new bucket if this is the first Couchbase container created or
+            // else substitute the new underlying bucket into the existing bucket so
+            // that unit tests don't need to be aware of the change.
+
+            if (this.Bucket == null)
+            {
+                this.Bucket = bucket;
+            }
+            else
+            {
+                this.Bucket.SetInternalBucket(bucket.GetInternalBucket());
+            }
+        }
+
+        /// <summary>
         /// Removes all data and indexes from the database bucket and then recreates the
         /// primary index if an index was specified when the fixture was started.
         /// </summary>
@@ -273,14 +308,26 @@ namespace Neon.Xunit.Couchbase
         {
             CheckDisposed();
 
-            // Flush the bucket data.
+            // $todo(jeff.lill):
+            //
+            // The code below was originally intended to clear the Couchbase bucket
+            // in place and this seemed to work for several months and then it just stopped
+            // working in Nov 2018 after I upgraded the CouchbaseNetClient nuget package.
+            // The weird thing is that is still didn't work after I reverted.
+            //
+            // The problem seems to be due to a timing or race condition because if I pause
+            // execution after clearing, the subsequent unit test passes.  Unfortunately, I 
+            // haven't been able to figure out how to determine when everything is ready.
+            // I even tried executing the unit test query that fails but it succeeded here
+            // but still failed in the test.  I can't really explain that: perhaps 
+            // Couchbase restarted one or more services sometime after I cleared the
+            // bucket but after I checked for health below.
+            //
+            // It seems like the first test ran against a clean container always works
+            // so I'm going to revert to simply restarting the container and come back
+            // someday and remove this section.
 
-            using (var bucketManager = Bucket.CreateManager())
-            {
-                bucketManager.Flush();
-                Bucket.WaitUntilReadyAsync(TimeSpan.FromSeconds(30)).Wait();
-            }
-
+#if DIDNT_WORK
             // Drop all of the bucket indexes.
 
             var existingIndexes = Bucket.ListIndexesAsync().Result;
@@ -293,13 +340,42 @@ namespace Neon.Xunit.Couchbase
                 }
             }
 
-            // Create the primary index if this was enabled when the fixture was started.
+            // Flush the bucket data.
+
+            using (var bucketManager = Bucket.CreateManager())
+            {
+                NeonBucket.ReadyRetry.InvokeAsync(
+                    async () =>
+                    {
+                        bucketManager.Flush();
+                        await Bucket.WaitUntilReadyAsync();
+
+                    }).Wait();
+            }
+
+            // Wait until all of the indexes are actually deleted.
+
+            NeonHelper.WaitFor(
+                () =>
+                {
+                    var indexes = Bucket.ListIndexesAsync().Result;
+
+                    return indexes.Count == 0;
+                },
+                timeout: NeonBucket.ReadyTimeout,
+                pollTime: TimeSpan.FromMilliseconds(500));
+
+            // Recreate the primary index if one was enabled when the fixture was started.
 
             if (createPrimaryIndex)
             {
                 Bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
                 Bucket.WaitForIndexAsync("#primary").Wait();
             }
+#endif
+            base.Restart();
+            Thread.Sleep(couchbaseWarmupTime);
+            ConnectBucket();
         }
 
         /// <summary>

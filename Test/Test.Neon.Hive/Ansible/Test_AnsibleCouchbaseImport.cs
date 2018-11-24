@@ -39,7 +39,7 @@ namespace TestHive
 
             if (!couchbase.Start())
             {
-                // Flush the database if we didn't just start it.
+                // Clear the database if we didn't just start it.
 
                 couchbase.Clear();
             }

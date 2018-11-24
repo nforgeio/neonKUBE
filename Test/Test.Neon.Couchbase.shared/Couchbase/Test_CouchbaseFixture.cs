@@ -88,7 +88,7 @@ namespace TestCouchbase
 
             Assert.Equal(2, indexes.Count);     // Expecting the primary and new secondary index
 
-            // Flush the database and then verify that only the
+            // Clear the database and then verify that only the
             // recreated primary index exists.
 
             couchbase.Clear();
