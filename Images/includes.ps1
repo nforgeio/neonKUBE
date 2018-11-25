@@ -105,9 +105,44 @@ function PushImage
 			"*** PUSH: RETRYING"
 		}
 
-		& docker push "$Image"
+		# $hack(jeff.lill):
+		#
+		# I'm seeing [docker push ...] write "blob upload unknown" messages to the
+		# output and then it appears that the image manifest gets uploaded with no
+		# layers.  The Docker Hub dashboard reports comppressed size as 0 for the
+		# image/tag.  This appears to be transient because publishing again seems
+		# to fix this.
+		#
+		# It appears that the "blob upload unknown" problem happens for misconfigured
+		# Docker registries with multiple backends that do not share the same SECRET.
+		# This should never happen for Docker Hub, but that's what we're seeing.
+		# I wonder if this is due to a problem with their CDN (which is AWS CloudFront).
+		# I'm seeing these problems for the first time (I think) during Thanksgiving
+		# weekend (Black Friday and all) and I wonder if AWS has put CloudFront into
+		# a special (less compatible) mode to handle all of the eCommerce traffic.
+		#
+		# The screwy thing is that [docker push] still appears to return a zero
+		# exit code in this case.  I'm going to workaround this by using [Tee-Object]
+		# to capture the [docker push] output and then look for this string:
+		#
+		#		"blob upload unknown"
+		#
+		# and then retry if we see this.
+		#
+		# An alternative (and cleaner) approach would be to actually examine the
+		# repository as it appears in the remote registry to look for problems
+		# there.  Perhaps this is something we could do after implementing [neon-cli]
+		# registry commands.
+
+		& docker push "$Image" | Tee-Object -Variable pushOutput
 
 		$exitCode = $LastExitCode
+
+		if ($pushOutput -match 'blob upload unknown')
+		{
+			"*** PUSH: BLOB UPLOAD UNKNOWN"
+			$exitCode = 100
+		}
 
 		if ($exitCode -eq 0)
 		{
