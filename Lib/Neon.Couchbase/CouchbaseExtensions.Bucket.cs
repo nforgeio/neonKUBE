@@ -219,9 +219,16 @@ namespace Couchbase
                 message += $"Couchbase Error [code={error.Code}]: {error.Message}{NeonHelper.LineEnding}";
             }
 
-            if (string.IsNullOrEmpty(message) && result.Exception != null)
+            if (result.Exception != null)
             {
-                message = result.Exception.Message;
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = result.Exception.Message;
+                }
+                else
+                {
+                    message += ": " + result.Exception.Message;
+                }
             }
 
             if (result.ShouldRetry())
@@ -235,9 +242,13 @@ namespace Couchbase
             }
             catch (CouchbaseQueryResponseException e)
             {
-                if (string.IsNullOrEmpty(message))
+                if (e.InnerException == null)
                 {
                     message = e.Message;
+                }
+                else
+                {
+                    message = e.InnerException.Message;
                 }
 
                 throw new CouchbaseQueryResponseException(message, e.Status, e.Errors.ToList());
@@ -725,11 +736,53 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, IQueryRequest queryRequest, CancellationToken cancellationToken = default)
         {
-            var result = await bucket.QueryAsync<T>(queryRequest, cancellationToken);
+            Covenant.Requires<ArgumentNullException>(queryRequest != null);
 
-            VerifySuccess<T>(result);
+            // $todo(jeff.lill): This is a horrible hack!
+            //
+            // My [Test_AnsibleCouchbaseImport] unit tests were failing due to what
+            // looks like a transient query exception that doesn't happen for the 
+            // first test but then fails for most of the subsequent tests in any 
+            // given run.
+            //
+            // The weird thing is that I currently have the [CouchbaseFixture] perform
+            // the exect same query to ensure that the query service is ready before
+            // the test actually runs, so I'm not sure what the problem is.
+            //
+            // I've tried monkeying with timeouts and also trying very hard to ensure
+            // that I close/dispose the Couchbase client cluster and bucket between
+            // runs to no avail.
+            //
+            // This hack examines the query statement and will retry SELECT queries 
+            // which are naturally idempotent.  Other query types won't be retried.
+            //
+            // I need to move on to some other tasks now, but I do need to come back 
+            // some point and really try to nail this down.
 
-            return result.Rows;
+            var qr = queryRequest as QueryRequest;
+
+            if (qr != null && qr.GetOriginalStatement().Trim().StartsWith("select ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var retry = new LinearRetryPolicy(typeof(CouchbaseQueryResponseException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
+
+                return await retry.InvokeAsync(
+                    async () =>
+                    {
+                        var result = await bucket.QueryAsync<T>(queryRequest, cancellationToken);
+
+                        VerifySuccess<T>(result);
+
+                        return result.Rows;
+                    });
+            }
+            else
+            {
+                var result = await bucket.QueryAsync<T>(queryRequest, cancellationToken);
+
+                VerifySuccess<T>(result);
+
+                return result.Rows;
+            }
         }
 
         /// <summary>
@@ -742,6 +795,8 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, string query, CancellationToken cancellationToken = default)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query));
+
             return await QuerySafeAsync<T>(bucket, new QueryRequest(query), cancellationToken);
         }
 

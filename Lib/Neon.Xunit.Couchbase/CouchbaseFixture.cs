@@ -46,7 +46,7 @@ namespace Neon.Xunit.Couchbase
     /// <threadsafety instance="true"/>
     public sealed class CouchbaseFixture : ContainerFixture
     {
-        private TimeSpan    couchbaseWarmupTime = TimeSpan.FromSeconds(10);
+        private TimeSpan    warmupDelay = TimeSpan.FromSeconds(10);     // Time to allow Couchbase to start.
         private bool        createPrimaryIndex;
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Neon.Xunit.Couchbase
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
-        /// <param name="noPrimary">Optionally disable creation of a primary bucket index.</param>
+        /// <param name="noPrimary">Optionally disable creation of the primary bucket index.</param>
         /// <returns>
         /// <c>true</c> if the fixture wasn't previously initialized and
         /// this method call initialized it or <c>false</c> if the fixture
@@ -153,7 +153,7 @@ namespace Neon.Xunit.Couchbase
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
-        /// <param name="noPrimary">Optionally disable creation of a primary bucket index.</param>
+        /// <param name="noPrimary">Optionally disable creation of thea primary bucket index.</param>
         /// <returns>
         /// <c>true</c> if the fixture wasn't previously initialized and
         /// this method call initialized it or <c>false</c> if the fixture
@@ -177,8 +177,25 @@ namespace Neon.Xunit.Couchbase
                 return;
             }
 
-            RunContainer(name, image, new string[] { "--detach", "-p", "8091-8094:8091-8094", "-p", "11210:11210" }, env: env);
-            Thread.Sleep(couchbaseWarmupTime);
+            RunContainer(name, image, 
+                new string[] 
+                {
+                    "--detach",
+                    "--mount", "type=volume,target=/opt/couchbase/var",
+                    "-p", "4369:4369",
+                    "-p", "8091-8096:8091-8096",
+                    "-p", "9100-9105:9100-9105",
+                    "-p", "9110-9118:9110-9118",
+                    "-p", "9120-9122:9120-9122",
+                    "-p", "9999:9999",
+                    "-p", "11207:11207",
+                    "-p", "11209-11211:11209-11211",
+                    "-p", "18091-18096:18091-18096",
+                    "-p", "21100-21299:21100-21299"
+                }, 
+                env: env);
+
+            Thread.Sleep(warmupDelay);
 
             settings = settings ?? new CouchbaseSettings();
 
@@ -226,13 +243,30 @@ namespace Neon.Xunit.Couchbase
         {
             // Give the Couchbase container a chance to spin up.
 
-            Thread.Sleep(TimeSpan.FromSeconds(10));
+            Thread.Sleep(warmupDelay);
+
+            // Dispose any existing underlying cluster and bucket.
+
+            if (Bucket != null)
+            {
+                var existingBucket = Bucket.GetInternalBucket();
+
+                if (existingBucket != null)
+                {
+                    existingBucket.Cluster.CloseBucket(existingBucket);
+                    existingBucket.Cluster.Dispose();
+                    Bucket.SetInternalBucket(null);
+                }
+            }
 
             // It appears that it may take a bit of time for the Couchbase query
             // service to start in new container we started above.  We're going to
             // retry creating the primary index (or a dummy index) until it works.
 
-            NeonBucket bucket = null;
+            var bucket       = (NeonBucket)null;
+            var indexCreated = false;
+            var indexReady   = false;
+            var queryReady   = false;
 
             NeonBucket.ReadyRetry.InvokeAsync(
                 async () =>
@@ -244,24 +278,43 @@ namespace Neon.Xunit.Couchbase
 
                     try
                     {
-                        // Create the primary index if requested.
-
                         if (createPrimaryIndex)
                         {
-                            await bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(bucket.Name)} using gsi");
-                            await bucket.WaitForIndexAsync("#primary");
+                            // Create the primary index if requested.
+
+                            if (!indexCreated)
+                            {
+                                await bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(bucket.Name)} using gsi");
+                                indexCreated = true;
+                            }
+
+                            if (!indexReady)
+                            {
+                                await bucket.WaitForIndexAsync("#primary");
+                                indexReady = true;
+                            }
+
+                            // Ensure that the query service is running too.
+
+                            if (!queryReady)
+                            {
+                                var query = new QueryRequest($"select meta({bucket.Name}).id, {bucket.Name}.* from {bucket.Name}")
+                                    .ScanConsistency(ScanConsistency.RequestPlus);
+
+                                await bucket.QuerySafeAsync<dynamic>(query);
+                                queryReady = true;
+                            }
                         }
+                        else
+                        {
+                            // List the indexes to ensure the index service is ready when we didn't create a primary index.
 
-                        // List the indexes to ensure the index and query services are ready.
-
-                        await bucket.ListIndexesAsync();
-
-                        // Ensure that the query service is running too.
-
-                        var query = new QueryRequest($"select meta({bucket.Name}).id, {bucket.Name}.* from {bucket.Name}")
-                            .ScanConsistency(ScanConsistency.RequestPlus);
-
-                        await bucket.QuerySafeAsync<dynamic>(query);
+                            if (!queryReady)
+                            {
+                                await bucket.ListIndexesAsync();
+                                queryReady = true;
+                            }
+                        }
                     }
                     catch
                     {
@@ -374,7 +427,7 @@ namespace Neon.Xunit.Couchbase
             }
 #endif
             base.Restart();
-            Thread.Sleep(couchbaseWarmupTime);
+            Thread.Sleep(warmupDelay);
             ConnectBucket();
         }
 

@@ -135,11 +135,9 @@ namespace Couchbase
         /// backing bucket needs to be replaced.  This is currently used within the Couchbase
         /// test fixture to set a new bucket after clearing a bucket.
         /// </summary>
-        /// <param name="bucket">The bucket to be set.</param>
+        /// <param name="bucket">The bucket to be set or <c>null</c>.</param>
         public void SetInternalBucket(IBucket bucket)
         {
-            Covenant.Requires<ArgumentNullException>(bucket != null);
-
             this.bucket = bucket;
         }
 

@@ -36,13 +36,22 @@ You can override these settings and other settings by passing one or more of the
 
 # Deployment
 
-This image is intended to be deployed as a Docker container on the local machine using the following command.  Note that the container name below is [cb-test] but this can be customized as necessary.
+This image is intended to be deployed as a Docker container on the local machine using the following command.  Note that the container name below is [cb-test] but this can be customized as necessary and also that this example publishes all public Couchbase ports.  You may be able to get by with fewer ports depending on your scenario.
 
 ````
 docker run --detach \
     --name cb-test \
-    -p 8091-8094:8091-8094 \
-    -p 11210:11210 \
+    --mount type=volume,target=/opt/couchbase/var \
+    -p 4369:4369 \
+    -p 8091-8096:8091-8096 \
+    -p 9100-9105:9100-9105 \
+    -p 9110-9118:9110-9118 \
+    -p 9120-9122:9120-9122 \
+    -p 9999:9999 \
+    -p 11207:11207 \
+    -p 11209-11211:11209-11211 \
+    -p 18091-18096:18091-18096 \
+    -p 21100-21299:21100-21299 \
     nhive/couchbase-test
 ````
 &nbsp;

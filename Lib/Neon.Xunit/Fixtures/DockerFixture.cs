@@ -796,7 +796,7 @@ namespace Neon.Xunit
         {
             base.CheckDisposed();
 
-            DockerExecute("pull", image);
+            DockerExecute("pull", image).EnsureSuccess();
         }
 
         //---------------------------------------------------------------------

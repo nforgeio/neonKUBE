@@ -585,9 +585,9 @@ $@"*** ERROR: Cannot list Docker images.
                                 result = NeonHelper.ExecuteCapture("docker",
                                     new object[]
                                     {
-                                    "image",
-                                    "pull",
-                                    $"{HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}"
+                                        "image",
+                                        "pull",
+                                        $"{HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}"
                                     });
 
                                 if (result.ExitCode != 0)

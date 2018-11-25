@@ -84,11 +84,18 @@ namespace Neon.Data
         public int OperationTimeout { get; set; } = 10000;
 
         /// <summary>
-        /// Maximum time (milliseconds) to wait for a query to complete (defaults to 75 seconds).
+        /// Maximum time (milliseconds) to wait for a non-view query to complete (defaults to 75 seconds).
         /// </summary>
         [JsonProperty(PropertyName = "QueryRequestTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(75000)]
         public int QueryRequestTimeout { get; set; } = 75000;
+
+        /// <summary>
+        /// Maximum time (milliseconds) to wait for a view query to complete (defaults to 75 seconds).
+        /// </summary>
+        [JsonProperty(PropertyName = "ViewRequestTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(75000)]
+        public int ViewRequestTimeout { get; set; } = 75000;
 
         /// <summary>
         /// Maximum number of pooled connections to a server bucket (defaults to <b>5</b>).

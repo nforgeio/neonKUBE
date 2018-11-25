@@ -7,8 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Retry;
 
 namespace Neon.Xunit
 {
@@ -157,16 +159,25 @@ namespace Neon.Xunit
                 }
             }
 
-            // Pull and then start the container.
+            // Pull and then start the container.  Note that we're going to 
+            // retry the pull a few times to handle transitent issues. 
 
             var argsString = NeonHelper.NormalizeExecArgs("pull", image);
+            var pullRetry = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
 
-            result = NeonHelper.ExecuteCapture($"docker", argsString);
+            pullRetry.InvokeAsync(
+                async () =>
+                {
+                    result = NeonHelper.ExecuteCapture($"docker", argsString);
 
-            if (result.ExitCode != 0)
-            {
-                throw new Exception($"Cannot launch container [{image}]: {result.ErrorText}");
-            }
+                    if (result.ExitCode != 0)
+                    {
+                        throw new Exception($"Cannot pull container [{image}] - [exitcode={result.ExitCode}]: {result.ErrorText}");
+                    }
+
+                    await Task.CompletedTask;
+
+                }).Wait();
 
             var extraArgs = new List<string>();
 
@@ -191,7 +202,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot launch container [{image}]: {result.ErrorText}");
+                throw new Exception($"Cannot launch container [{image}] - [exitcode={result.ExitCode}]: {result.ErrorText}");
             }
             else
             {
@@ -216,13 +227,6 @@ namespace Neon.Xunit
                     {
                         throw new Exception($"Cannot remove container [{ContainerId}].");
                     }
-
-                    // $hack(jeff.lill):
-                    //
-                    // Give Docker a chance to reset any network mappings for the deleted container.
-                    // I'm not sure if this is really necessary.
-
-                    Thread.Sleep(TimeSpan.FromSeconds(2));
                 }
                 finally
                 {

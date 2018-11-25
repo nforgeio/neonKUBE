@@ -23,14 +23,6 @@ namespace TestHive
 {
     public class Test_AnsibleHiveMQ : IClassFixture<HiveFixture>
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        private static int hostId = 0;
-
-        //---------------------------------------------------------------------
-        // Instance members
-
         private HiveFixture hive;
 
         public Test_AnsibleHiveMQ(HiveFixture fixture)

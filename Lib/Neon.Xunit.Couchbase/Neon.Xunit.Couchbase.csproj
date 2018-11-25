@@ -26,6 +26,10 @@
 
   <ItemGroup>
     <PackageReference Include="CouchbaseNetClient" Version="2.7.1" />
+    <PackageReference Include="GitInfo" Version="2.0.20">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="xunit" Version="2.4.1" />
   </ItemGroup>
 

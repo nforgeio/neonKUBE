@@ -95,14 +95,10 @@ namespace Couchbase
             TimeSpan timeout = default(TimeSpan), 
             bool? ignoreDurability = null)
         {
-            var config = settings.ToClientConfig();
-
-            config.BucketConfigs.Clear();
-
-            config.BucketConfigs.Add(settings.Bucket,
+            var bucketConfig =
                 new BucketConfiguration()
                 {
-                    BucketName            = settings.Bucket,
+                    BucketName = settings.Bucket,
                     UseEnhancedDurability = settings.UseEnhancedDurability,
 
                     PoolConfiguration = new PoolConfiguration()
@@ -112,7 +108,19 @@ namespace Couchbase
                         MaxSize        = settings.MaxPoolConnections,
                         MinSize        = settings.MinPoolConnections
                     }
-                });
+                };
+
+            bucketConfig.PoolConfiguration.ClientConfiguration =
+                new ClientConfiguration()
+                {
+                    QueryRequestTimeout = (uint)settings.QueryRequestTimeout,
+                    ViewRequestTimeout  = settings.ViewRequestTimeout
+                };
+
+            var config = settings.ToClientConfig();
+
+            config.BucketConfigs.Clear();
+            config.BucketConfigs.Add(settings.Bucket, bucketConfig);
 
             var cluster = new Cluster(config);
 
