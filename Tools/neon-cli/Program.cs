@@ -156,9 +156,13 @@ OPTIONS:
 
     --help                              - Display help
     --debug                             - Set debug mode
+    --image-reg=REGISTRY                - Overrides the default Docker Hub 
+                                          registry (""nhive"" or ""nhivedev"")
+                                          for images when deploying or updating a hive
+                                          (usually for development/testing purposes)
     --image-tag=TAG                     - Replaces any [:latest] Docker image
-                                          tags when deploying a hive (usually
-                                          for development/testing purposes)
+                                          tags when deploying or updating a hive
+                                          (usually for development/testing purposes)
     --log-folder=LOG-FOLDER             - Optional log folder path
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
                                           configured in parallel [default=5]
@@ -258,6 +262,7 @@ OPTIONS:
                 validOptions.Add("--max-parallel");
                 validOptions.Add("-w");
                 validOptions.Add("--wait");
+                validOptions.Add("--image-reg");
                 validOptions.Add("--image-tag");
                 validOptions.Add("--noterminal");
                 validOptions.Add("--version");
@@ -574,7 +579,7 @@ $@"*** ERROR: Cannot list Docker images.
                                         var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                                         return fields.Length >= 2 &&
-                                            fields[0] == $"{HiveConst.NeonPublicRegistry}/neon-cli" &&
+                                            fields[0] == $"{HiveConst.NeonProdRegistry}/neon-cli" &&
                                             fields[1] == imageTag;
                                     });
 
@@ -587,7 +592,7 @@ $@"*** ERROR: Cannot list Docker images.
                                     {
                                         "image",
                                         "pull",
-                                        $"{HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}"
+                                        $"{HiveConst.NeonProdRegistry}/neon-cli:{imageTag}"
                                     });
 
                                 if (result.ExitCode != 0)
@@ -606,7 +611,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
                             try
                             {
-                                process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}");
+                                process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {HiveConst.NeonProdRegistry}/neon-cli:{imageTag}");
                             }
                             catch (Win32Exception)
                             {
@@ -664,6 +669,46 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 Program.WaitSeconds = waitSeconds;
 
                 Debug = LeftCommandLine.HasOption("--debug");
+
+                // Parse and check any [--image-reg=REGISTRY] option.
+
+                DockerImageReg = LeftCommandLine.GetOption("--image-reg");
+
+                if (DockerImageReg != null)
+                {
+                    if (DockerImageReg.Length == 0)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: [--image-reg={DockerImageReg}] cannot specify an empty registry.");
+                        Program.Exit(1);
+                    }
+
+                    if (DockerImageReg[0] == '.')
+                    {
+                        Console.Error.WriteLine($"*** ERROR: [--image-reg={DockerImageReg}] cannot start with a period (.).");
+                        Program.Exit(1);
+                    }
+
+                    foreach (var ch in DockerImageReg)
+                    {
+                        var upper = char.ToUpperInvariant(ch);
+
+                        if ('A' <= upper && upper <= 'Z')
+                        {
+                            continue;
+                        }
+                        else if ('0' <= upper && upper <= '9')
+                        {
+                            continue;
+                        }
+                        else if (ch == '_')
+                        {
+                            continue;
+                        }
+
+                        Console.Error.WriteLine($"*** ERROR: [--image-reg={DockerImageReg}] includes the invalid character [{ch}].  Only [a-zA-Z0-9_] are allowed.");
+                        Program.Exit(1);
+                    }
+                }
 
                 // Parse and check any [--image-tag=TAG] option.
 
@@ -798,8 +843,20 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         public static string GitBranch => ThisAssembly.Git.Branch;
 
         /// <summary>
+        /// Optionally set to the registry to be used to override any explicit or implicit <b>nhive</b>
+        /// or <b>nhivedev</b> organizations specified when deploying or updating a neonHIVE.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property is <c>null</c> by default but may be specified using the <b>--image-reg=REGISTRY</b>
+        /// command line option.  The main purpose of this is support development and testing scenarios.
+        /// </para>
+        /// </remarks>
+        public static string DockerImageReg { get; private set; } = null;
+
+        /// <summary>
         /// Optionally set to the tag to be used to override any explicit or implicit <b>:latest</b>
-        /// image tags specified when deploying a neonHIVE.
+        /// image tags specified when deploying or updating a neonHIVE.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -819,11 +876,23 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
         /// <summary>
         /// Resolves a Docker Image name/tag into the image specification to be actually deployed, taking
-        /// the <see cref="DockerImageTag"/> property into account.
+        /// the <see cref="DockerImageReg"/> and <see cref="DockerImageTag"/> properties into account.
         /// </summary>
         /// <param name="image">The input image specification.</param>
         /// <returns>The output specification.</returns>
         /// <remarks>
+        /// <para>
+        /// If <see cref="DockerImageReg"/> is empty and <paramref name="image"/> specifies the 
+        /// <see cref="HiveConst.NeonProdRegistry"/> and the Git branch used to build <b>neon-cli</b>
+        /// is not <b>PROD</b>, then the image registry will be set to <see cref="HiveConst.NeonDevRegistry"/>.
+        /// This ensures that non-production <b>neon-cli </b> builds will use the development Docker
+        /// images by default.
+        /// </para>
+        /// <para>
+        /// If <see cref="DockerImageReg"/> is not empty  and <paramref name="image"/> specifies the 
+        /// <see cref="HiveConst.NeonProdRegistry"/> then <see cref="DockerImageReg"/> will
+        /// replace the registry in the image.
+        /// </para>
         /// <para>
         /// If <see cref="DockerImageTag"/> is empty, then this method simply returns the <paramref name="image"/> 
         /// argument as passed.  Otherwise, if the image argument implicitly or explicitly specifies the
@@ -836,6 +905,36 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// </remarks>
         public static string ResolveDockerImage(string image)
         {
+            if (string.IsNullOrEmpty(image))
+            {
+                return image;
+            }
+
+            // Extract the registry from the image.  Note that this will
+            // be empty for official images on Docker Hub.
+
+            var registry = (string)null;
+            var p        = image.IndexOf('/');
+
+            if (p != -1)
+            {
+                registry = image.Substring(0, p);
+            }
+
+            if (!string.IsNullOrEmpty(registry) && registry == HiveConst.NeonProdRegistry)
+            {
+                var imageWithoutRegistry = image.Substring(registry.Length);
+
+                if (!string.IsNullOrEmpty(DockerImageReg))
+                {
+                    image = DockerImageReg + imageWithoutRegistry;
+                }
+                else if (!IsProd)
+                {
+                    image = HiveConst.NeonDevRegistry + imageWithoutRegistry;
+                }
+            }
+
             if (string.IsNullOrEmpty(DockerImageTag) || string.IsNullOrEmpty(image))
             {
                 return image;

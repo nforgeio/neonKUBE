@@ -446,7 +446,7 @@ fi
             string          password, 
             string          secret, 
             TlsCertificate  certificate, 
-            string          image    = HiveConst.NeonPublicRegistry + "/neon-registry", 
+            string          image    = HiveConst.NeonProdRegistry + "/neon-registry", 
             Action<string>  progress = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));

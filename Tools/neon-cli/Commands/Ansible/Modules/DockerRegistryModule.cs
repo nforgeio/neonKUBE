@@ -505,7 +505,7 @@ namespace NeonCli.Ansible
 
                     if (!context.Arguments.TryGetValue<string>("image", out var image))
                     {
-                        image = HiveConst.NeonPublicRegistry + "/neon-registry:latest";
+                        image = HiveConst.NeonProdRegistry + "/neon-registry:latest";
                     }
 
                     // Detect service changes.
@@ -743,7 +743,7 @@ docker run \
    --name neon-registry-prune \
    --restart-condition=none \
    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
-   {HiveConst.NeonPublicRegistry}/neon-registry garbage-collect
+   {HiveConst.NeonProdRegistry}/neon-registry garbage-collect
 
 # Restore [neon-registry] to READ/WRITE mode:
 

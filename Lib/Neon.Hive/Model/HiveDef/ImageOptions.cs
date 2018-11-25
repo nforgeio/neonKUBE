@@ -33,21 +33,21 @@ namespace Neon.Hive
     /// </summary>
     public class ImageOptions
     {
-        private const string defaultRegistryCache   = HiveConst.NeonPublicRegistry + "/neon-registry-cache:latest";
-        private const string defaultProxy           = HiveConst.NeonPublicRegistry + "/neon-proxy:latest";
-        private const string defaultProxyVault      = HiveConst.NeonPublicRegistry + "/neon-proxy-vault:latest";
-        private const string defaultProxyManager    = HiveConst.NeonPublicRegistry + "/neon-proxy-manager:latest";
-        private const string defaultHiveManager     = HiveConst.NeonPublicRegistry + "/neon-hive-manager:latest";
-        private const string defaultDns             = HiveConst.NeonPublicRegistry + "/neon-dns:latest";
-        private const string defaultDnsMon          = HiveConst.NeonPublicRegistry + "/neon-dns-mon:latest";
-        private const string defaultProxyCache      = HiveConst.NeonPublicRegistry + "/neon-proxy-cache:latest";
-        private const string defaultSecretRetriever = HiveConst.NeonPublicRegistry + "/neon-secret-retriever:latest";
-        private const string defaultHiveMQ          = HiveConst.NeonPublicRegistry + "/neon-hivemq:latest";
-        private const string defaultLogHost         = HiveConst.NeonPublicRegistry + "/neon-log-host:latest";
-        private const string defaultLogCollector    = HiveConst.NeonPublicRegistry + "/neon-log-collector:latest";
-        private const string defaultElasticsearch   = HiveConst.NeonPublicRegistry + "/elasticsearch:latest";
-        private const string defaultKibana          = HiveConst.NeonPublicRegistry + "/kibana:latest";
-        private const string defaultMetricbeat      = HiveConst.NeonPublicRegistry + "/metricbeat:latest";
+        private const string defaultRegistryCache   = HiveConst.NeonProdRegistry + "/neon-registry-cache:latest";
+        private const string defaultProxy           = HiveConst.NeonProdRegistry + "/neon-proxy:latest";
+        private const string defaultProxyVault      = HiveConst.NeonProdRegistry + "/neon-proxy-vault:latest";
+        private const string defaultProxyManager    = HiveConst.NeonProdRegistry + "/neon-proxy-manager:latest";
+        private const string defaultHiveManager     = HiveConst.NeonProdRegistry + "/neon-hive-manager:latest";
+        private const string defaultDns             = HiveConst.NeonProdRegistry + "/neon-dns:latest";
+        private const string defaultDnsMon          = HiveConst.NeonProdRegistry + "/neon-dns-mon:latest";
+        private const string defaultProxyCache      = HiveConst.NeonProdRegistry + "/neon-proxy-cache:latest";
+        private const string defaultSecretRetriever = HiveConst.NeonProdRegistry + "/neon-secret-retriever:latest";
+        private const string defaultHiveMQ          = HiveConst.NeonProdRegistry + "/neon-hivemq:latest";
+        private const string defaultLogHost         = HiveConst.NeonProdRegistry + "/neon-log-host:latest";
+        private const string defaultLogCollector    = HiveConst.NeonProdRegistry + "/neon-log-collector:latest";
+        private const string defaultElasticsearch   = HiveConst.NeonProdRegistry + "/elasticsearch:latest";
+        private const string defaultKibana          = HiveConst.NeonProdRegistry + "/kibana:latest";
+        private const string defaultMetricbeat      = HiveConst.NeonProdRegistry + "/metricbeat:latest";
 
         /// <summary>
         /// This is a regex we'll use to validate Docker image references.  I obtained
