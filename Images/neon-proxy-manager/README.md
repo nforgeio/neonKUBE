@@ -4,8 +4,6 @@ Images are tagged with the Git branch, image build date, and Git commit and an o
 
 The most recent production build will be tagged as `latest`.
 
-From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
-
 # Description
 
 This service dynamically generates HAProxy configurations from traffic manager rules and certificates persisted to Consul and Vault for neonHIVE proxies based on the [neon-proxy-cache](https://hub.docker.com/r/nhive/neon-proxy-cache/) image.

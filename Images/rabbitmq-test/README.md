@@ -4,8 +4,6 @@ RabbitMQ image intended for unit testing purposes.
 
 Supported images are tagged with the RabbitMQ version plus the image build date.  All images include the RabbitMQ management features.
 
-From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
-
 # Description
 
 **DO NOT USE FOR PRODUCTION**

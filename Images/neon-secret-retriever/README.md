@@ -4,8 +4,6 @@ Images are tagged with the Git branch, image build date, and Git commit and an o
 
 The most recent production build will be tagged as `latest`.
 
-From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
-
 # Description
 
 This image is intended to be deployed as a service with a Docker secret passed to it.  All the service does is read the secret and then persist it to a Consul key and then sleep until the service is removed.

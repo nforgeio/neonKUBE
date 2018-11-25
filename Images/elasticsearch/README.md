@@ -2,8 +2,6 @@
 
 Supported images are tagged with the Elasticsearch version plus the image build date.  The most recent production build is also tagged with `:latest`.
 
-From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
-
 **NOTE:**
 
 Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined system.  You should deploy the same version of each component to your cluster and when it's time to upgrade, always upgrade the Elasticsearch cluster first, followed by Metricbeat and Kibana.

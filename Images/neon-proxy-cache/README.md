@@ -2,8 +2,6 @@
 
 Supported images are tagged with the Varnish version plus the image build date.
 
-From time-to-time you may see images tagged like `:BRANCH-*` where *BRANCH* identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
-
 # Description
 
 This image integrates the high performance caching HTTP proxy (Varnish Cache)[http://varnish-cache.org] into the neonHIVE traffic manager infrastructure.  This is deployed automatically as required.  This is not suitable for any other purpose.  You can use the [varnish](https://hub.docker.com/r/nhive/varnish/) image to deploy custom caches as part of Docker stacks, etc.
