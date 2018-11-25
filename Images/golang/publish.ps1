@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/golang"
+	$registry = GetRegistry "golang"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"

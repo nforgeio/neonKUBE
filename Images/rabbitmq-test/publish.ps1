@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/rabbitmq-test"
+	$registry = GetRegistry "rabbitmq-test"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"

@@ -7,12 +7,14 @@
 #
 # ARGUMENTS:
 #
-#       BRANCH      - The current GitHub branch
-#       APPNAME     - Name of the application binary/script (e.g "vegomatic")
+#   ORGANIZATION    - The Docker Hub organization
+#   BRANCH          - The current GitHub branch
+#   APPNAME         - Name of the application binary/script (e.g "vegomatic")
 #                     This makes it easier to clone and reuse this Dockerfile.
 
+ARG         ORGANIZATION
 ARG         BRANCH
-FROM        nhive/aspnet:${BRANCH}-2.1
+FROM        ${ORGANIZATION}/aspnet:${BRANCH}-2.1
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

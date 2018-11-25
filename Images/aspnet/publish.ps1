@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/aspnet"
+	$registry = GetRegistry "aspnet"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$dotnetVersion"

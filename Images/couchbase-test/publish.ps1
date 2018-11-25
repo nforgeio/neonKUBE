@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/couchbase-test"
+	$registry = GetRegistry "couchbase-test"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"

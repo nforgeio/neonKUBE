@@ -7,11 +7,13 @@
 #
 # ARGUMENTS:
 #
+#   ORGANIZATION    - The Docker Hub organization
 #   BRANCH          - The current GitHub branch
 #   VERSION         - The TD-AGENT version (e.g. "3")
 
+ARG         ORGANIZATION
 ARG         BRANCH
-FROM        nhive/ubuntu-16.04:${BRANCH}-latest
+FROM        ${ORGANIZATION}/ubuntu-16.04:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

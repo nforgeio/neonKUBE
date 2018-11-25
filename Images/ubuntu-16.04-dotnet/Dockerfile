@@ -8,7 +8,8 @@
 #
 # ARGUMENTS:
 #
-#   VERSION     - The version of the .NET runtime to install (e.g. "2.1")
+#   ORGANIZATION    - The Docker Hub organization
+#   VERSION         - The version of the .NET runtime to install (e.g. "2.1")
 #
 # NOTE:
 #
@@ -17,7 +18,8 @@
 # "2.1.5" if that's the latest point release).  This means you only need to
 # rebuild the image to pick up the latest point release.
 
-FROM        nhive/ubuntu-16.04
+ARG         ORGANIZATION
+FROM        ${ORGANIZATION}/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

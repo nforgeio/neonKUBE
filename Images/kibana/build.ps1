@@ -19,7 +19,8 @@ param
 "* KIBANA:" + $tag
 "======================================="
 
-$branch = GitBranch
+$organization = DockerOrg
+$branch       = GitBranch
 
 # Build and publish the images.
 
@@ -32,7 +33,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" --build-arg "VERSION=$version" . }
 
 # Clean up
 

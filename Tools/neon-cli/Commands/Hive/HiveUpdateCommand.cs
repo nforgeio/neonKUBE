@@ -237,7 +237,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             var syncLock           = new object();
             var maxUpdates         = 0;
             var maxSecurityUpdates = 0;
-            var componentInfo      = hive.Headend.GetComponentInfo(hive.Globals.Version);
+            var componentInfo      = hive.Headend.GetComponentInfo(hive.Globals.Version, ThisAssembly.Git.Branch);
             var dockerVersions     = new Dictionary<SemanticVersion, int>();    // Counts the numbers versions installed
             var consulVersions     = new Dictionary<SemanticVersion, int>();    // on hive nodes.
             var vaultVersions      = new Dictionary<SemanticVersion, int>();

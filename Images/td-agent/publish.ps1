@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/td-agent"
+	$registry = GetRegistry "td-agent"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"

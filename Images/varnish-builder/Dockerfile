@@ -4,8 +4,13 @@
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # Used to build a slighlty customized version of Varnish.
+#
+# ARGUMENTS:
+#
+#   ORGANIZATION    - The Docker Hub organization
 
-FROM        nhive/ubuntu-16.04
+ARG         ORGANIZATION
+FROM        ${ORGANIZATION}/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

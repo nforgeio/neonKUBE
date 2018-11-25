@@ -18,8 +18,9 @@ param
 "* NEON-HIVE-MANAGER:" + $tag
 "======================================="
 
-$appname = "neon-hive-manager"
-$branch  = GitBranch
+$appname      = "neon-hive-manager"
+$organization = DockerOrg
+$branch       = GitBranch
 
 # Build and publish the app to a local [bin] folder.
 
@@ -38,7 +39,7 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" --build-arg "APPNAME=$appname" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" --build-arg "APPNAME=$appname" . }
 
 # Clean up
 

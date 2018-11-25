@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/alpine"
+	$registry = GetRegistry "alpine"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"

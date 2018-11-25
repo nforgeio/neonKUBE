@@ -27,7 +27,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/neon-hive-manager"
+	$registry = GetRegistry "neon-hive-manager"
 	$tag      = ImageTag
 	$branch   = GitBranch
 

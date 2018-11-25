@@ -28,7 +28,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/ubuntu-16.04"
+	$registry = GetRegistry "ubuntu-16.04"
 	$tag      = UtcDate
 	$branch   = GitBranch
 

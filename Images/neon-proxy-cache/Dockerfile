@@ -7,14 +7,16 @@
 #
 # ARGUMENTS:
 #
-#       BRANCH      - The current GitHub branch
-#       APPNAME     - Name of the application binary/script (e.g "neon-proxy-manager")
+#   ORGANIZATION    - The Docker Hub organization
+#   BRANCH          - The current GitHub branch
+#   APPNAME         - Name of the application binary/script (e.g "neon-proxy-manager")
 #                     This makes it easier to clone and reuse this Dockerfile.
-#       VERSION     - The specific [varnish] version (like: "6.0.0")
+#   VERSION         - The specific [varnish] version (like: "6.0.0")
 
+ARG         ORGANIZATION
 ARG         BRANCH
 ARG         VERSION
-FROM        nhive/varnish:${BRANCH}-${VERSION}
+FROM        ${ORGANIZATION}/varnish:${BRANCH}-${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

@@ -19,9 +19,10 @@ param
 "* NEON-CLI"
 "======================================="
 
-$appname  = "neon"
-$registry = "nhive/neon-cli"
-$branch   = GitBranch
+$appname      = "neon"
+$registry     = GetRegistry "neon-cli"
+$organization = DockerOrg
+$branch       = GitBranch
 
 # Build and publish the app to a local [bin] folder.
 
@@ -46,7 +47,7 @@ $version=$(& dotnet "$pwd\bin\$appname.dll" version -n)
 
 if (IsProd)
 {
-	Exec { docker build -t "${registry}:$version" --build-arg "BRANCH=$branch" --build-arg "APPNAME=$appname" . }
+	Exec { docker build -t "${registry}:$version" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" --build-arg "APPNAME=$appname" . }
 	PushImage "${registry}:$version"
 
 	Exec { docker tag "${registry}:$version" "${registry}:$branch-$version"}
@@ -63,7 +64,7 @@ if (IsProd)
 }
 else
 {
-	Exec { docker build -t "${registry}:$branch-$version" --build-arg "BRANCH=$branch" --build-arg "APPNAME=$appname" . }
+	Exec { docker build -t "${registry}:$branch-$version" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" --build-arg "APPNAME=$appname" . }
 	PushImage "${registry}:$branch-$version"
 
 	if ($latest)

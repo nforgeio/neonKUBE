@@ -18,6 +18,9 @@ param
 "* VARNISH:" + $tag
 "======================================="
 
+$organization = DockerOrg
+$branch       = GitBranch
+
 # Copy the common scripts.
 
 DeleteFolder _common
@@ -27,7 +30,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" --build-arg "FAMILY=$varnishFamily" --build-arg "VERSION=$varnishVersion" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" --build-arg "FAMILY=$varnishFamily" --build-arg "VERSION=$varnishVersion" . }
 
 # Clean up
 

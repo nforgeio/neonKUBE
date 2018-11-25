@@ -30,7 +30,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/varnish"
+	$registry = GetRegistry "varnish"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$varnishVersion-$date"

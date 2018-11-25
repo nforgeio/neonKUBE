@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/kibana"
+	$registry = GetRegistry "kibana"
 	$date     = UtcDate
 	$branch   = GitBranch
 

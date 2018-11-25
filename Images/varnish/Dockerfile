@@ -5,12 +5,14 @@
 #
 # ARGUMENTS:
 #
+#   ORGANIZATION    - The Docker Hub organization
 #   BRANCH      - The current GitHub branch
 #   FAMILY      - Identifies the major/minor version (like: "61")
 #   VERSION     - The specific version (like: "6.1.0")
 
+ARG         ORGANIZATION
 ARG         BRANCH
-FROM        nhive/ubuntu-16.04-dotnet:${BRANCH}-2.1
+FROM        ${ORGANIZATION}/ubuntu-16.04-dotnet:${BRANCH}-2.1
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         FAMILY

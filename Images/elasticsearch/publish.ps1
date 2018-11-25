@@ -30,7 +30,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/elasticsearch"
+	$registry = GetRegistry "elasticsearch"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"

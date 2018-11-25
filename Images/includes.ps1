@@ -5,6 +5,8 @@
 #
 # Misc image build related utilities.
 
+$ErrorActionPreference = "Stop"
+
 #------------------------------------------------------------------------------
 # Important source code paths.
 
@@ -160,6 +162,37 @@ function IsProd
 	$branch = git rev-parse --abbrev-ref HEAD
 
 	return $branch -eq "prod"
+}
+
+#------------------------------------------------------------------------------
+# Prefixes the image name passed with the correct Docker Hub organization 
+# for the current Git branch.
+
+function GetRegistry($image)
+{
+	if (IsProd)
+	{
+		return "nhive/" + $image
+	}
+	else
+	{
+		return "nhivedev/" + $image
+	}
+}
+
+#------------------------------------------------------------------------------
+# Returns the Docker Hub organization corresponding to the current Git nbranch.
+
+function DockerOrg
+{
+	if (IsProd)
+	{
+		return "nhive"
+	}
+	else
+	{
+		return "nhivedev"
+	}
 }
 
 #------------------------------------------------------------------------------

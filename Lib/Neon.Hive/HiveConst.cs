@@ -181,11 +181,11 @@ namespace Neon.Hive
         public static IEnumerable<string> DockerContainers =>
             new List<string>()
             {
+                "neon-hivemq",
                 "neon-log-esdata",
                 "neon-log-host",
                 "neon-log-metricbeat",
                 "neon-registry-cache",
-                "neon-hivemq"
             };
 
         /// <summary>
@@ -194,15 +194,19 @@ namespace Neon.Hive
         public static IEnumerable<string> DockerServices =>
             new List<string>()
             {
-                "neon-hive-manager",
                 "neon-dns",
                 "neon-dns-mon",
+                "neon-hive-manager",
                 "neon-log-collector",
                 "neon-log-kibana",
                 "neon-proxy-manager",
                 "neon-proxy-private",
                 "neon-proxy-public",
-                "neon-proxy-vault"
+                "neon-proxy-private-cache",
+                "neon-proxy-public-cache",
+                "neon-proxy-vault",
+                "neon-registry",
+                "neon-registry-cache",
             };
 
         /// <summary>

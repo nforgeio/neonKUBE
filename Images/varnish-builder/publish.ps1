@@ -27,7 +27,7 @@ function Build
 	(
 	)
 
-	$registry = "nhive/varnish-builder"
+	$registry = GetRegistry "varnish-builder"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "latest"

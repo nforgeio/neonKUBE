@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/neon-registry"
+	$registry = GetRegistry "neon-registry"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"

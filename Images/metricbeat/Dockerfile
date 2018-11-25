@@ -8,11 +8,13 @@
 #
 # ARGUMENTS:
 #
-#   BRANCH      - The current GitHub branch
-#   VERSION     - The Metricbeat version (e.g. "5.0.0")
+#   ORGANIZATION    - The Docker Hub organization
+#   BRANCH          - The current GitHub branch
+#   VERSION         - The Metricbeat version (e.g. "5.0.0")
 
+ARG         ORGANIZATION
 ARG         BRANCH
-FROM        nhive/ubuntu-16.04:${BRANCH}-latest
+FROM        ${ORGANIZATION}/ubuntu-16.04:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

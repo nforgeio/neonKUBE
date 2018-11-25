@@ -60,10 +60,13 @@ namespace Neon.Hive
         /// that is compatible with a specific version of a neonHIVE deployment.
         /// </summary>
         /// <param name="hiveVersion">The current hive version.</param>
+        /// <param name="branch">The Git branch used to build the client.</param>
         /// <returns>The <see cref="HiveComponentInfo"/>.</returns>
-        public HiveComponentInfo GetComponentInfo(string hiveVersion)
+        public HiveComponentInfo GetComponentInfo(string hiveVersion, string branch)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveVersion));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(branch));
+            Covenant.Requires<ArgumentException>(branch.IndexOf(' ') == -1);
 
             var versions = new HiveComponentInfo();
 
@@ -90,22 +93,30 @@ namespace Neon.Hive
             versions.ComponentToImage.Add("neon-proxy-manager",         "neon-proxy-manager");
             versions.ComponentToImage.Add("neon-proxy-private",         "neon-proxy");
             versions.ComponentToImage.Add("neon-proxy-public",          "neon-proxy");
+            versions.ComponentToImage.Add("neon-proxy-public-cache",    "neon-proxy-cache");
+            versions.ComponentToImage.Add("neon-proxy-private-cache",   "neon-proxy-cache");
             versions.ComponentToImage.Add("neon-proxy-vault",           "neon-proxy-vault");
+            versions.ComponentToImage.Add("neon-registry",              "neon-registry");
             versions.ComponentToImage.Add("neon-registry-cache",        "neon-registry-cache");
 
-            versions.ImageToFullyQualified.Add("elasticsearch",         "nhive/elasticsearch:latest");
-            versions.ImageToFullyQualified.Add("kibana",                "nhive/kibana:latest");
-            versions.ImageToFullyQualified.Add("metricbeat",            "nhive/metricbeat:latest");
-            versions.ImageToFullyQualified.Add("neon-dns",              "nhive/neon-dns:latest");
-            versions.ImageToFullyQualified.Add("neon-dns-mon",          "nhive/neon-dns-mon:latest");
-            versions.ImageToFullyQualified.Add("neon-hivemq",           "nhive/neon-hivemq:latest");
-            versions.ImageToFullyQualified.Add("neon-hive-manager",     "nhive/neon-hive-manager:latest");
-            versions.ImageToFullyQualified.Add("neon-log-collector",    "nhive/neon-log-collector:latest");
-            versions.ImageToFullyQualified.Add("neon-log-host",         "nhive/neon-log-host:latest");
-            versions.ImageToFullyQualified.Add("neon-proxy",            "nhive/neon-proxy:latest");
-            versions.ImageToFullyQualified.Add("neon-proxy-manager",    "nhive/neon-proxy-manager:latest");
-            versions.ImageToFullyQualified.Add("neon-proxy-vault",      "nhive/neon-proxy-vault:latest");
-            versions.ImageToFullyQualified.Add("neon-registry-cache",   "nhive/neon-registry-cache:latest");
+            var repoOrg = branch.Equals("prod", StringComparison.InvariantCultureIgnoreCase) ? "nhive" : "nhivedev";
+            var repoTag = branch.Equals("prod", StringComparison.InvariantCultureIgnoreCase) ? "latest" : $"{branch.ToLowerInvariant()}-latest";
+
+            versions.ImageToFullyQualified.Add("elasticsearch",         $"{repoOrg}/elasticsearch:{repoTag}");
+            versions.ImageToFullyQualified.Add("kibana",                $"{repoOrg}/kibana:{repoTag}");
+            versions.ImageToFullyQualified.Add("metricbeat",            $"{repoOrg}/metricbeat:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-dns",              $"{repoOrg}/neon-dns:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-dns-mon",          $"{repoOrg}/neon-dns-mon:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-hivemq",           $"{repoOrg}/neon-hivemq:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-hive-manager",     $"{repoOrg}/neon-hive-manager:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-log-collector",    $"{repoOrg}/neon-log-collector:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-log-host",         $"{repoOrg}/neon-log-host:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-proxy",            $"{repoOrg}/neon-proxy:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-proxy-cache",      $"{repoOrg}/neon-proxy-cache:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-proxy-manager",    $"{repoOrg}/neon-proxy-manager:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-proxy-vault",      $"{repoOrg}/neon-proxy-vault:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-registry",         $"{repoOrg}/neon-registry:{repoTag}");
+            versions.ImageToFullyQualified.Add("neon-registry-cache",   $"{repoOrg}/neon-registry-cache:{repoTag}");
 
             // Ensure that every system component has an image assignment.
 
@@ -142,7 +153,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Determines whether a specific Docker version is available and is compatible
-        /// with a neonHIVE.
+        /// with a neonHIVE version.
         /// </summary>
         /// <param name="hiveVersion">The current hive version.</param>
         /// <param name="dockerVersion">The Docker version being tested.</param>
@@ -161,8 +172,8 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Determines whether a specific HashiCorp Cobsul version is available and is compatible
-        /// with a neonHIVE.
+        /// Determines whether a specific HashiCorp Consul version is available and is compatible
+        /// with a neonHIVE version.
         /// </summary>
         /// <param name="hiveVersion">The current hive version.</param>
         /// <param name="consulVersion">The Cobsul version being tested.</param>
@@ -182,7 +193,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Determines whether a specific HashiCorp Vault version is available and is compatible
-        /// with a neonHIVE.
+        /// with a neonHIVE version.
         /// </summary>
         /// <param name="hiveVersion">The current hive version.</param>
         /// <param name="vaultVersion">The Docker version being tested.</param>

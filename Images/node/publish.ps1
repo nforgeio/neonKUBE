@@ -27,7 +27,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/node"
+	$registry = GetRegistry "node"
 	$tag      = ImageTag
 	$branch   = GitBranch
 

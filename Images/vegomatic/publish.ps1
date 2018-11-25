@@ -28,7 +28,7 @@ function Build
 	)
 
 
-	$registry = "nhive/vegomatic"
+	$registry = GetRegistry "vegomatic"
 	$tag      = ImageTag
 	$branch   = GitBranch
 

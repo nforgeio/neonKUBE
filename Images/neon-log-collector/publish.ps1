@@ -28,7 +28,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "nhive/neon-log-collector"
+	$registry = GetRegistry "neon-log-collector"
 	$tag      = ImageTag
 	$branch   = GitBranch
 

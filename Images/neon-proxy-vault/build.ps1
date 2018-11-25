@@ -18,6 +18,9 @@ param
 "* NEON-PROXY-VAULT"
 "======================================="
 
+$organization = DockerOrg
+$branch       = GitBranch
+
 # Copy the common scripts.
 
 DeleteFolder _common
@@ -27,7 +30,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" . }
 
 # Clean up
 

@@ -18,7 +18,8 @@ param
 "* NEON-LOG-HOST:" + $tag
 "======================================="
 
-$branch = GitBranch
+$organization = DockerOrg
+$branch       = GitBranch
 
 # Copy the common scripts.
 
@@ -29,7 +30,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" . }
 
 # Clean up
 

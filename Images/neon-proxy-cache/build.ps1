@@ -17,7 +17,9 @@ param
 "* NEON-PROXY-CACHE:" + $tag
 "======================================="
 
-$appname = "neon-proxy-cache"
+$appname      = "neon-proxy-cache"
+$organization = DockerOrg
+$branch       = GitBranch
 
 # Build and publish the app to a local [bin] folder.
 
@@ -36,7 +38,7 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "FAMILY=$varnishFamily" --build-arg "BRANCH=$branch" --build-arg "VERSION=$varnishVersion" --build-arg "APPNAME=$appname" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "FAMILY=$varnishFamily" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" --build-arg "VERSION=$varnishVersion" --build-arg "APPNAME=$appname" . }
 
 # Clean up
 

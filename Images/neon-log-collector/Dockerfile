@@ -9,10 +9,12 @@
 #
 # ARGUMENTS:
 #
+#   ORGANIZATION    - The Docker Hub organization
 #   BRANCH          - The current GitHub branch
 
+ARG         ORGANIZATION
 ARG         BRANCH
-FROM        nhive/td-agent:${BRANCH}-latest
+FROM        ${ORGANIZATION}/td-agent:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

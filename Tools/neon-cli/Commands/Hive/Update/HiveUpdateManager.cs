@@ -131,7 +131,7 @@ namespace NeonCli
                 }
             }
 
-            var componentInfo    = hive.Headend.GetComponentInfo(hive.Globals.Version);
+            var componentInfo    = hive.Headend.GetComponentInfo(hive.Globals.Version, ThisAssembly.Git.Branch);
             var systemContainers = HiveConst.DockerContainers;
             var systemServices   = HiveConst.DockerServices;
             var firstManager     = hive.FirstManager;

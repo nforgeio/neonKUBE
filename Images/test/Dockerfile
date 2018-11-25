@@ -5,8 +5,15 @@
 #
 # This base image deploys a simple container/or service used
 # for neonHIVE unit tests.
+#
+# ARGUMENTS:
+#
+#   ORGANIZATION    - The Docker Hub organization
+#   BRANCH          - The current GitHub branch
 
-FROM        nhive/alpine
+ARG         ORGANIZATION
+ARG         BRANCH
+FROM        ${ORGANIZATION}/alpine:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

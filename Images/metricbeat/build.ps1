@@ -20,7 +20,8 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$branch = GitBranch
+$organization = DockerOrg
+$branch       = GitBranch
 
 "   "
 "======================================="
@@ -36,7 +37,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "BRANCH=$branch" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" --build-arg "VERSION=$version" . }
 
 if ($latest)
 {
