@@ -29,7 +29,7 @@
 
 5. Ensure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
 
-6. Execute **as ADMIN**: `$/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **NuGet.org**.
+6. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **NuGet.org**.
 
 7. Commit all changes with a comment like: **RELEASE: 18.10.0-alpha.4** but **DO NOT** push to GitHub yet.
 

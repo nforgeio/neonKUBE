@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Jeff Lill</Authors>
-    <Version>18.11.0-alpha.5</Version>
+    <Version>18.11.1-alpha.6</Version>
     <Company>neonFORGE, LLC</Company>
     <Product>neonHIVE</Product>
     <Description>neonFORGE Couchbase Xunit testing helpers.</Description>

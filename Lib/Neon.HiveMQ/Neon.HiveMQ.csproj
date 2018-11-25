@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.HiveMQ</RootNamespace>
-    <Version>18.11.0-alpha.5</Version>
+    <Version>18.11.1-alpha.6</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonFORGE RabbitMQ extensions.</Description>
