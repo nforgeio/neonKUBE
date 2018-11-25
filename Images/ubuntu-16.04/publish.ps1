@@ -29,8 +29,9 @@ function Build
 	)
 
 	$registry = GetRegistry "ubuntu-16.04"
-	$tag      = UtcDate
+	$date     = UtcDate
 	$branch   = GitBranch
+	$tag      = "$branch-$date"
 
 	# Build and publish the images.
 

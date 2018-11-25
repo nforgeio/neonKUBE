@@ -33,20 +33,20 @@ function Build
 	$registry = GetRegistry "varnish"
 	$date     = UtcDate
 	$branch   = GitBranch
-	$tag      = "$varnishVersion-$date"
+	$tag      = "$branch-$varnishVersion"
 
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -varnishFamily $varnishFamily -varnishVersion $varnishVersion -tag $tag
     PushImage "${registry}:$tag"
 
-	Exec { docker tag "${registry}:$tag" "${registry}:$branch-$varnishVersion" }
-	PushImage "${registry}:$branch-$varnishVersion"
-
 	if (IsProd)
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:$varnishVersion" }
 		PushImage "${registry}:$varnishVersion"
+
+		Exec { docker tag "${registry}:$tag" "${registry}:$varnishVersion-$date" }
+		PushImage "${registry}:$varnishVersion-$date"
 	}
 
 	if ($latest)

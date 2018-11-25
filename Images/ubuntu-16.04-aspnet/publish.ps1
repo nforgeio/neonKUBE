@@ -32,20 +32,20 @@ function Build
 	$registry = GetRegistry "ubuntu-16.04-aspnet"
 	$date     = UtcDate
 	$branch   = GitBranch
-	$tag      = "${dotnetVersion}-${date}"
-
+	$tag      = "$branch-$dotnetVersion"
+	
 	# Build and publish the images.
 
 	. ./build.ps1 -registry $registry -tag $tag -version $dotnetVersion
 	PushImage "${registry}:$tag"
 
-	Exec { docker tag "${registry}:$tag" "${registry}:$branch-$dotnetVersion" }
-	PushImage "${registry}:$branch-$dotnetVersion"
-
 	if (IsProd)
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
 		PushImage "${registry}:$dotnetVersion"
+
+		Exec { docker tag "${registry}:$tag" "${registry}:${dotnetVersion}-${date}" }
+		PushImage "${registry}:$branch-$dotnetVersion"
 	}
 
 	if ($latest)
