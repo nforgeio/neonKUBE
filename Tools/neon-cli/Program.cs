@@ -894,9 +894,11 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// replace the registry in the image.
         /// </para>
         /// <para>
-        /// If <see cref="DockerImageTag"/> is empty, then this method simply returns the <paramref name="image"/> 
-        /// argument as passed.  Otherwise, if the image argument implicitly or explicitly specifies the
-        /// <b>:latest</b> tag, then the value returned will include the <see cref="DockerImageTag"/>.
+        /// If <see cref="DockerImageTag"/> is empty, then this method simply returns the <paramref name="image"/>
+        /// argument as passed.  Otherwise, if the image argument implicitly or explicitly specifies the 
+        /// <b>:latest</b> tag, then the image returned will be tagged with <see cref="DockerImageTag"/>
+        /// when that's not empty or <b>:latest</b> for the <b>PROD</b> branch or <b>:BRANCH-latest</b> 
+        /// for non-<b>PROD</b> branches.
         /// </para>
         /// <para>
         /// In all cases where <paramref name="image"/> specifies a non-latest tag, then the argument
@@ -935,7 +937,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 }
             }
 
-            if (string.IsNullOrEmpty(DockerImageTag) || string.IsNullOrEmpty(image))
+            if (string.IsNullOrEmpty(image))
             {
                 return image;
             }
@@ -951,7 +953,18 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
             if (normalized.EndsWith(":latest"))
             {
-                return normalized.Replace(":latest", $":{DockerImageTag}");
+                if (!string.IsNullOrEmpty(DockerImageTag))
+                {
+                    return normalized.Replace(":latest", $":{DockerImageTag}");
+                }
+                else if (IsProd)
+                {
+                    return normalized;
+                }
+                else
+                {
+                    return normalized.Replace(":latest", $":{ThisAssembly.Git.Branch.ToLowerInvariant()}-latest");
+                }
             }
             else
             {
