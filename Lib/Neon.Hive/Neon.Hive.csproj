@@ -8,11 +8,8 @@
     <Company>neonFORGE, LLC</Company>
     <Product>neonHIVE</Product>
     <Description>neonHIVE utilities.</Description>
-    <PackageReleaseNotes>* **BREAKING:** [BREAKING: Rebrand "Load Balancer" as "Traffic Manager"](https://github.com/jefflill/NeonForge/issues/382)
-
-* Added the `CommandResponse.EnsureSuccess()` method.  This throws an `ExecuteException` for non-zero exit codes.
-* Added the `SshProxy.GetTime()`.  This returns to current time (UTC) on the remote machine.
-* Added the `HiveProxy.GetTime()`.  This returns to current hive time (UTC) (from one of the hive managers).</PackageReleaseNotes>
+    <PackageReleaseNotes>**BREAKING:** AS few more APIs have been renamed from `TrafficDirector` to `TrafficManager`.
+</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
