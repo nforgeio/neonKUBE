@@ -100,12 +100,22 @@ function PushImage
 
 	for ($attempt=0; $attempt -lt $maxAttempts; $attempt++)
 	{
+		if ($attempt -gt 0)
+		{
+			"*** PUSH: RETRYING"
+		}
+
 		& docker push "$Image"
 
-		if ($LastExitCode -eq 0) {
+		$exitCode = $LastExitCode
+
+		if ($exitCode -eq 0)
+		{
 			return
 		}
 		
+		"*** PUSH: EXITCODE=$exitCode"
+
 		sleep 15
 	}
 
