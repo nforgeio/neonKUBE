@@ -485,7 +485,7 @@ namespace NeonCli
                     var publicCacheConstraintArgs = new List<string>();
                     var publicCacheReplicaArgs    = new List<string>();
 
-                    if (hive.Definition.Proxy.PublicCacheReplicas >= hive.Definition.Workers.Count())
+                    if (hive.Definition.Proxy.PublicCacheReplicas <= hive.Definition.Workers.Count())
                     {
                         publicCacheConstraintArgs.Add("--constraint");
                         publicCacheConstraintArgs.Add("node.role==worker");
