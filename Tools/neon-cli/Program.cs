@@ -562,6 +562,11 @@ $@"*** ERROR: Cannot list Docker images.
                                 Program.Exit(1);
                             }
 
+                            // Use the [nhive] Docker Hub registry for PROD releases and [nhivedev]
+                            // for all other branches.
+
+                            var sourceRegistry = IsProd ? HiveConst.NeonProdRegistry : HiveConst.NeonDevRegistry;
+
                             // The Docker image list output should look something like this:
                             //
                             //      REPOSITORY                  TAG                 IMAGE ID            CREATED             SIZE
@@ -579,7 +584,7 @@ $@"*** ERROR: Cannot list Docker images.
                                         var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                                         return fields.Length >= 2 &&
-                                            fields[0] == $"{HiveConst.NeonProdRegistry}/neon-cli" &&
+                                            fields[0] == $"{sourceRegistry}/neon-cli" &&
                                             fields[1] == imageTag;
                                     });
 
@@ -592,7 +597,7 @@ $@"*** ERROR: Cannot list Docker images.
                                     {
                                         "image",
                                         "pull",
-                                        $"{HiveConst.NeonProdRegistry}/neon-cli:{imageTag}"
+                                        $"{sourceRegistry}/neon-cli:{imageTag}"
                                     });
 
                                 if (result.ExitCode != 0)
@@ -611,7 +616,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
                             try
                             {
-                                process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {HiveConst.NeonProdRegistry}/neon-cli:{imageTag}");
+                                process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {sourceRegistry}/neon-cli:{imageTag}");
                             }
                             catch (Win32Exception)
                             {

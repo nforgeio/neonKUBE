@@ -21,17 +21,6 @@ using Neon.Net;
 
 using AzureEnvironment = Microsoft.Azure.Management.ResourceManager.Fluent.AzureEnvironment;
 
-// $todo(jeff.lill):
-//
-// I stubbed out Azure calls that weren't compiling due to changes
-// in the Azure class library (I've been using a very old version).
-
-#pragma warning disable 169 
-#pragma warning disable 649 
-
-#if AZURE_STUBBED
-#endif
-
 namespace Neon.Hive
 {
     /// <summary>
@@ -108,6 +97,50 @@ namespace Neon.Hive
         // In the future, it could be possible to relax the limits on node and perhaps application
         // endpoints as well, by provisioning the nodes in batches and recycling the SSH rules as 
         // we finish one batch of nodes and then start working on the next.
+        //
+        // My original plan was to load balance VPN traffic across the manager nodes but I couldn't
+        // get this to work.  The symptoms were:
+        //
+        //  * The load balancer would forward traffic to 1194 correctly
+        //    after the manager nodes were first provisioned.
+        //
+        //  * But this would stop working after the manager was rebooted.
+        //
+        //  * Using [tcpdump] on the manager, I could see SYN packets
+        //    coming from the load balancer to establish the TCP health
+        //    probe connection, but I was seeing no ACK packets from
+        //    OpenVPN.
+        //
+        //  * I tried establishing a TCP connection from one of the worker
+        //    nodes and was seeing full connections being made.
+        //
+        //  * I tried setting up a simple web server on another port (77)
+        //    on the manager and setting that as the health probe endpoint
+        //    and saw the same behavior: SYN packets but no ACKs.
+        //
+        //  * Load balancing works fine for the worker nodes and its
+        //    load balancer.
+        //
+        // It seems like this might have something to do with the fact that manager nodes have 
+        // the two NICs and we have the VPN return route configured, but it seems like we'd still
+        // see the ACK packets being generated on the manager in that case and then have them 
+        // being eaten up by the Azure gateway/router. I can't figure this out so I'm going to
+        // move on.
+        //
+        // Forwarded ports do work, so we're going to go with that.
+
+        // $todo(jeff.lill):
+        // 
+        // The fluent API currently requires at least one load balancing
+        // rule to be defined.  I reported this and Microsoft is going
+        // to refactor the API:
+        //
+        //      https://github.com/Azure/azure-sdk-for-net/issues/3173
+        //
+        // As a workaround, I'm going to load balance to a reserved unused
+        // port.  Note that this port will be explicitly blocked by a
+        // VPN network security group rule to prevent the odd security 
+        // breach.
 
         //---------------------------------------------------------------------
         // Private types
@@ -306,10 +339,6 @@ namespace Neon.Hive
         /// </param>
         public AzureHostingManager(HiveProxy hive, string logFolder = null)
         {
-#if !AZURE_STUBBED
-            throw new NotImplementedException("AzureHostingManager is currently stubbed.");
-#endif
-#if AZURE_STUBBED
             this.hive           = hive;
             this.hiveName       = hive.Definition.Name;
             this.hostOptions    = hive.Definition.Hosting;
@@ -355,7 +384,6 @@ namespace Neon.Hive
                     node.Metadata.Azure = new AzureNodeOptions();
                 }
             }
-#endif
         }
 
         /// <inheritdoc/>
@@ -375,7 +403,6 @@ namespace Neon.Hive
         /// </summary>
         private void AzureConnect()
         {
-#if AZURE_STUBBED
             if (azure != null)
             {
                 return; // Already connected.
@@ -413,7 +440,7 @@ namespace Neon.Hive
                         {
                             AuthenticationEndpoint  = azureOptions.Environment.AuthenticationEndpoint,
                             GraphEndpoint           = azureOptions.Environment.GraphEndpoint,
-                            ManagementEnpoint       = azureOptions.Environment.ManagementEnpoint,
+                            ManagementEndpoint      = azureOptions.Environment.ManagementEnpoint,
                             ResourceManagerEndpoint = azureOptions.Environment.ResourceManagerEndpoint
                         };
                         break;
@@ -437,7 +464,6 @@ namespace Neon.Hive
             azure = Azure.Configure()
                 .Authenticate(azureCredentials)
                 .WithSubscription(azureOptions.SubscriptionId);
-#endif
         }
 
         /// <inheritdoc/>
@@ -445,10 +471,7 @@ namespace Neon.Hive
         {
             // Identify the OSD Bluestore block device for OSD nodes.
 
-            if (hive.Definition.HiveFS.Enabled)
-            {
-                throw new NotImplementedException("$todo(jeff.lill): Implement this.");
-            }
+            // $todo(jeff.lill): Implement this
         }
 
         /// <inheritdoc/>
@@ -708,8 +731,7 @@ namespace Neon.Hive
         /// </summary>
         private void CreateResourceGroup()
         {
-#if AZURE_STUBBED
-            if (azure.ResourceGroups.CheckExistence(resourceGroup))
+            if (azure.ResourceGroups.Contain(resourceGroup))
             {
                 return;
             }
@@ -718,7 +740,6 @@ namespace Neon.Hive
                 .Define(resourceGroup)
                 .WithRegion(azureOptions.Region)
                 .Create();
-#endif
         }
 
         /// <summary>
@@ -733,37 +754,37 @@ namespace Neon.Hive
             {
                 pipLbManager = azure.PublicIPAddresses
                     .Define(pipLbManagerName)
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroup)
-                    .WithStaticIP()
-                    .WithLeafDomainLabel(managerLeafDomainPrefix + azureOptions.DomainLabel)
-                    .Create();
+                        .WithRegion(azureOptions.Region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithStaticIP()
+                        .WithLeafDomainLabel(managerLeafDomainPrefix + azureOptions.DomainLabel)
+                        .Create();
 
                 pipLbWorker = azure.PublicIPAddresses
                     .Define(pipLbWorkerName)
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroup)
-                    .WithStaticIP()
-                    .WithLeafDomainLabel(azureOptions.DomainLabel)
-                    .Create();
+                        .WithRegion(azureOptions.Region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithStaticIP()
+                        .WithLeafDomainLabel(azureOptions.DomainLabel)
+                        .Create();
             }
             else
             {
                 pipLbManager = azure.PublicIPAddresses
                     .Define(pipLbManagerName)
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroup)
-                    .WithDynamicIP()
-                    .WithLeafDomainLabel(managerLeafDomainPrefix + azureOptions.DomainLabel)
-                    .Create();
+                        .WithRegion(azureOptions.Region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithDynamicIP()
+                        .WithLeafDomainLabel(managerLeafDomainPrefix + azureOptions.DomainLabel)
+                        .Create();
 
                 pipLbWorker = azure.PublicIPAddresses
                     .Define(pipLbWorkerName)
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroup)
-                    .WithDynamicIP()
-                    .WithLeafDomainLabel(azureOptions.DomainLabel)
-                    .Create();
+                        .WithRegion(azureOptions.Region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithDynamicIP()
+                        .WithLeafDomainLabel(azureOptions.DomainLabel)
+                        .Create();
             }
 
             hive.Definition.Network.ManagerPublicAddress = pipLbManager.Fqdn;
@@ -784,12 +805,13 @@ namespace Neon.Hive
 
                 foreach (var azureNode in nodeDictionary.Values)
                 {
-                    var pipCreator = azure.PublicIPAddresses
-                        .Define($"{publicNamePrefix}{azureNode.Name}")
-                        .WithRegion(azureOptions.Region)
-                        .WithExistingResourceGroup(resourceGroup)
-                        .WithDynamicIP()
-                        .WithLeafDomainLabel($"{azureNode.Name}-{azureOptions.DomainLabel}");
+                    var pipCreator = 
+                        azure.PublicIPAddresses
+                            .Define($"{publicNamePrefix}{azureNode.Name}")
+                                .WithRegion(azureOptions.Region)
+                                .WithExistingResourceGroup(resourceGroup)
+                                .WithDynamicIP()
+                                .WithLeafDomainLabel($"{azureNode.Name}-{azureOptions.DomainLabel}");
 
                     nodePipCreators.Add(pipCreator);
                 }
@@ -824,21 +846,21 @@ namespace Neon.Hive
         {
             asetManager = azure.AvailabilitySets
                 .Define(asetManagerName)
-                .WithRegion(azureOptions.Region)
-                .WithExistingResourceGroup(resourceGroup)
-                .WithSku(AvailabilitySetSkuTypes.Managed)
-                .WithFaultDomainCount(2)
-                .WithUpdateDomainCount(5)
-                .Create();
+                    .WithRegion(azureOptions.Region)
+                    .WithExistingResourceGroup(resourceGroup)
+                    .WithSku(AvailabilitySetSkuTypes.Managed)
+                    .WithFaultDomainCount(2)
+                    .WithUpdateDomainCount(5)
+                    .Create();
 
             asetWorker = azure.AvailabilitySets
                 .Define(asetWorkerName)
-                .WithRegion(azureOptions.Region)
-                .WithExistingResourceGroup(resourceGroup)
-                .WithSku(AvailabilitySetSkuTypes.Managed)
-                .WithFaultDomainCount(azureOptions.FaultDomains)
-                .WithUpdateDomainCount(azureOptions.UpdateDomains)
-                .Create();
+                    .WithRegion(azureOptions.Region)
+                    .WithExistingResourceGroup(resourceGroup)
+                    .WithSku(AvailabilitySetSkuTypes.Managed)
+                    .WithFaultDomainCount(azureOptions.FaultDomains)
+                    .WithUpdateDomainCount(azureOptions.UpdateDomains)
+                    .Create();
         }
 
         /// <summary>
@@ -860,8 +882,8 @@ namespace Neon.Hive
 
                 var nsgVpnCreator = azure.NetworkSecurityGroups
                     .Define(nsgVpnName)
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroup);
+                        .WithRegion(azureOptions.Region)
+                        .WithExistingResourceGroup(resourceGroup);
 
                 priority = 3000;
 
@@ -869,14 +891,14 @@ namespace Neon.Hive
 
                 nsgVpnCreator
                     .DefineRule($"neon-AllowNodesInbound")
-                    .AllowInbound()
-                    .FromAddress(networkOptions.NodesSubnet)
-                    .FromAnyPort()
-                    .ToAnyAddress()
-                    .ToAnyPort()
-                    .WithAnyProtocol()
-                    .WithPriority(priority++)
-                    .Attach();
+                        .AllowInbound()
+                        .FromAddress(networkOptions.NodesSubnet)
+                        .FromAnyPort()
+                        .ToAnyAddress()
+                        .ToAnyPort()
+                        .WithAnyProtocol()
+                        .WithPriority(priority++)
+                        .Attach();
 
                 if (tempSsh)
                 {
@@ -887,28 +909,28 @@ namespace Neon.Hive
 
                     nsgVpnCreator
                         .DefineRule($"neon-AllowInbound-{NetworkPorts.SSH}")
-                        .AllowInbound()
-                        .FromAnyAddress()
-                        .FromAnyPort()
-                        .ToAnyAddress()
-                        .ToPort(NetworkPorts.SSH)
-                        .WithAnyProtocol()
-                        .WithPriority(priority++)
-                        .Attach();
+                            .AllowInbound()
+                            .FromAnyAddress()
+                            .FromAnyPort()
+                            .ToAnyAddress()
+                            .ToPort(NetworkPorts.SSH)
+                            .WithAnyProtocol()
+                            .WithPriority(priority++)
+                            .Attach();
                 }
 
                 // Allow outbound traffic to everywhere.
 
                 nsgVpnCreator
                     .DefineRule("neon-AllowAllOutbound")
-                    .AllowOutbound()
-                    .FromAnyAddress()
-                    .FromAnyPort()
-                    .ToAnyAddress()
-                    .ToAnyPort()
-                    .WithAnyProtocol()
-                    .WithPriority(3000)
-                    .Attach();
+                        .AllowOutbound()
+                        .FromAnyAddress()
+                        .FromAnyPort()
+                        .ToAnyAddress()
+                        .ToAnyPort()
+                        .WithAnyProtocol()
+                        .WithPriority(3000)
+                        .Attach();
 
                 nsgVpn = nsgVpnCreator.Create();
             }
@@ -918,10 +940,11 @@ namespace Neon.Hive
                 //-----------------------------------------------------------------
                 // Create the worker node security group.
 
-                var nsgNodeCreator = azure.NetworkSecurityGroups
-                .Define(nsgNodeName)
-                .WithRegion(azureOptions.Region)
-                .WithExistingResourceGroup(resourceGroup);
+                var nsgNodeCreator = 
+                    azure.NetworkSecurityGroups
+                        .Define(nsgNodeName)
+                        .WithRegion(azureOptions.Region)
+                        .WithExistingResourceGroup(resourceGroup);
 
                 // Allow inbound traffic for each of the public hive endpoints.
 
@@ -931,28 +954,28 @@ namespace Neon.Hive
                 {
                     nsgNodeCreator
                         .DefineRule($"neon-AllowClusterEndpoint-{endpoint.FrontendPort}")
-                        .AllowInbound()
-                        .FromAnyAddress()
-                        .FromAnyPort()
-                        .ToAnyAddress()
-                        .ToPort(endpoint.BackendPort)
-                        .WithAnyProtocol()
-                        .WithPriority(priority++)
-                        .Attach();
+                            .AllowInbound()
+                            .FromAnyAddress()
+                            .FromAnyPort()
+                            .ToAnyAddress()
+                            .ToPort(endpoint.BackendPort)
+                            .WithAnyProtocol()
+                            .WithPriority(priority++)
+                            .Attach();
                 }
 
                 // Allow OpenVPN traffic from the load balancer.
 
                 nsgNodeCreator
                     .DefineRule($"neon-AllowOpenVPN-{NetworkPorts.OpenVPN}")
-                    .AllowInbound()
-                    .FromAnyAddress()
-                    .FromAnyPort()
-                    .ToAnyAddress()
-                    .ToPort(NetworkPorts.OpenVPN)
-                    .WithAnyProtocol()
-                    .WithPriority(priority++)
-                    .Attach();
+                        .AllowInbound()
+                        .FromAnyAddress()
+                        .FromAnyPort()
+                        .ToAnyAddress()
+                        .ToPort(NetworkPorts.OpenVPN)
+                        .WithAnyProtocol()
+                        .WithPriority(priority++)
+                        .Attach();
 
                 // Temporarily allow inbound traffic to port SSH.  We'll delete this
                 // rule after the hive has been provisioned.
@@ -961,27 +984,27 @@ namespace Neon.Hive
 
                 nsgNodeCreator
                     .DefineRule($"neon-AllowInbound-{NetworkPorts.SSH}")
-                    .AllowInbound()
-                    .FromAnyAddress()
-                    .FromAnyPort()
-                    .ToAnyAddress()
-                    .ToPort(NetworkPorts.SSH)
-                    .WithAnyProtocol()
-                    .WithPriority(priority++)
-                    .Attach();
+                        .AllowInbound()
+                        .FromAnyAddress()
+                        .FromAnyPort()
+                        .ToAnyAddress()
+                        .ToPort(NetworkPorts.SSH)
+                        .WithAnyProtocol()
+                        .WithPriority(priority++)
+                        .Attach();
 
                 // Allow outbound traffic to everywhere.
 
                 nsgNodeCreator
                     .DefineRule("neon-AllowAllOutbound")
-                    .AllowOutbound()
-                    .FromAnyAddress()
-                    .FromAnyPort()
-                    .ToAnyAddress()
-                    .ToAnyPort()
-                    .WithAnyProtocol()
-                    .WithPriority(3000)
-                    .Attach();
+                        .AllowOutbound()
+                        .FromAnyAddress()
+                        .FromAnyPort()
+                        .ToAnyAddress()
+                        .ToAnyPort()
+                        .WithAnyProtocol()
+                        .WithPriority(3000)
+                        .Attach();
 
                 nsgNode = nsgNodeCreator.Create();
             }
@@ -998,16 +1021,16 @@ namespace Neon.Hive
 
             var vpnRoutesDef = azure.Networks.Manager.RouteTables
                 .Define(vpnRouteName)
-                .WithRegion(azureOptions.Region)
-                .WithExistingResourceGroup(resourceGroup);
+                    .WithRegion(azureOptions.Region)
+                    .WithExistingResourceGroup(resourceGroup);
 
             foreach (var manager in nodeDictionary.Values.Where(n => n.IsManager).OrderBy(n => n.Name))
             {
                 vpnRoutesDef
                     .DefineRoute($"vpn-return-via-{manager.Name}")
-                    .WithDestinationAddressPrefix(manager.Node.Metadata.VpnPoolSubnet)
-                    .WithNextHopToVirtualAppliance(manager.Node.Metadata.VpnPoolAddress)
-                    .Attach();
+                        .WithDestinationAddressPrefix(manager.Node.Metadata.VpnPoolSubnet)
+                        .WithNextHopToVirtualAppliance(manager.Node.Metadata.VpnPoolAddress)
+                        .Attach();
             }
 
             var vpnRoutes = vpnRoutesDef.Create();
@@ -1019,16 +1042,16 @@ namespace Neon.Hive
 
             var vnetCreator = azure.Networks
                 .Define(vnetName)
-                .WithRegion(azureOptions.Region)
-                .WithExistingResourceGroup(resourceGroup)
-                .WithAddressSpace(NetworkCidr.Normalize(networkOptions.CloudVNetSubnet))
-                .DefineSubnet(subnetNodesName)
-                    .WithAddressPrefix(NetworkCidr.Normalize(networkOptions.NodesSubnet))
-                    .WithExistingRouteTable(vpnRoutes.Id)
-                    .Attach()
-                .DefineSubnet(subnetVpnName)
-                    .WithAddressPrefix(NetworkCidr.Normalize(networkOptions.CloudVpnSubnet))
-                    .Attach();
+                    .WithRegion(azureOptions.Region)
+                    .WithExistingResourceGroup(resourceGroup)
+                    .WithAddressSpace(NetworkCidr.Normalize(networkOptions.CloudVNetSubnet))
+                    .DefineSubnet(subnetNodesName)
+                        .WithAddressPrefix(NetworkCidr.Normalize(networkOptions.NodesSubnet))
+                        .WithExistingRouteTable(vpnRoutes.Id)
+                        .Attach()
+                    .DefineSubnet(subnetVpnName)
+                        .WithAddressPrefix(NetworkCidr.Normalize(networkOptions.CloudVpnSubnet))
+                        .Attach();
 
             vnet = vnetCreator.Create();
         }
@@ -1047,7 +1070,6 @@ namespace Neon.Hive
         /// </remarks>
         private void CreateLoadbalancers(NetworkUpdateSets updateNetworks = NetworkUpdateSets.All, List<HostedEndpoint> endpoints = null, bool tempSsh = false)
         {
-#if AZURE_STUBBED
             tempSsh   = tempSsh && !hive.Definition.Hosting.Azure.PublicNodeAddresses;
             endpoints = endpoints ?? new List<HostedEndpoint>();
 
@@ -1056,92 +1078,33 @@ namespace Neon.Hive
                 //-----------------------------------------------------------------
                 // Create the load balancer for the manager nodes.
 
-                var lbDefManager = azure.LoadBalancers
-                    .Define(lbManagerName)
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroup)
-                    .DefinePublicFrontend(feConfigName)
-                        .WithExistingPublicIPAddress(pipLbManager)
-                        .Attach()
-                    .DefineBackend(bePoolName)
-                        .Attach()
+                var lbDefManager = 
+                    azure.LoadBalancers
+                        .Define(lbManagerName)
+                            .WithRegion(azureOptions.Region)
+                            .WithExistingResourceGroup(resourceGroup);
 
-                    // Dummy health probe (see note below).
-
-                    .DefineTcpProbe(probeName)
-                        .WithPort(HiveHostPorts.ReservedUnused)
-                        .WithIntervalInSeconds(60)
-                        .WithNumberOfProbes(2)
-                        .Attach();
-
-                // $note(jeff.lill):
-                //
-                // My original plan was to load balance VPN traffic across the
-                // manager nodes but I couldn't get this to work.  The symptoms
-                // were:
-                //
-                //  * The load balancer would forward traffic to 1194 correctly
-                //    after the manager nodes were first provisioned.
-                //
-                //  * But this would stop working after the manager was rebooted.
-                //
-                //  * Using [tcpdump] on the manager, I could see SYN packets
-                //    coming from the load balancer to establish the TCP health
-                //    probe connection, but I was seeing no ACK packets from
-                //    OpenVPN.
-                //
-                //  * I tried establishing a TCP connection from one of the worker
-                //    nodes and was seeing full connections being made.
-                //
-                //  * I tried setting up a simple web server on another port (77)
-                //    on the manager and setting that as the health probe endpoint
-                //    and saw the same behavior: SYN packets but no ACKs.
-                //
-                //  * Load balancing works fine for the worker nodes and its
-                //    load balancer.
-                //
-                // It seems like this might have something to do with the fact
-                // that manager nodes have the two NICs and we have the VPN
-                // return route configured, but it seems like we'd still see the
-                // ACK packets being generated on the manager in that case and
-                // then have them being eaten up by the Azure gateway/router.
-                // I can't figure this out so I'm going to move on.
-                //
-                // Forwarded ports do work, so we're going to go with that.
-
-                // $todo(jeff.lill):
-                // 
-                // The fluent API currently requires at least one load balancing
-                // rule to be defined.  I reported this and Microsoft is going
-                // to refactor the API:
-                //
-                //      https://github.com/Azure/azure-sdk-for-net/issues/3173
-                //
-                // As a workaround, I'm going to load balance to a reserved unused
-                // port.  Note that this port will be explicitly blocked by a
-                // VPN network security group rule to prevent the odd security 
-                // breach.
-
-                var lbManagerCreator = lbDefManager
-                    .DefineLoadBalancingRule($"neon-unused-tcp-{HiveHostPorts.ReservedUnused}")
-                    .WithProtocol(TransportProtocol.Tcp)
-                    .WithFrontend(feConfigName)
-                    .WithFrontendPort(HiveHostPorts.ReservedUnused)
-                    .WithProbe(probeName)
-                    .WithBackend(bePoolName)
-                    .WithIdleTimeoutInMinutes(5)
-                    .Attach();
+                var lbManagerCreator = 
+                    lbDefManager
+                        .DefineLoadBalancingRule($"neon-unused-tcp-{HiveHostPorts.ReservedUnused}")
+                            .WithProtocol(TransportProtocol.Tcp)
+                            .FromFrontend(feConfigName)
+                            .FromFrontendPort(HiveHostPorts.ReservedUnused)
+                            .ToBackend(bePoolName)
+                            .WithProbe(probeName)
+                            .WithIdleTimeoutInMinutes(5)
+                            .Attach();
 
                 foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsManager))
                 {
                     lbManagerCreator
                         .DefineInboundNatRule(azureNode.VpnNatRuleName)
-                        .WithProtocol(TransportProtocol.Tcp)
-                        .WithFrontend(feConfigName)
-                        .WithFrontendPort(azureNode.Node.Metadata.VpnFrontendPort)
-                        .WithBackendPort(NetworkPorts.OpenVPN)
-                        .WithIdleTimeoutInMinutes(5)
-                        .Attach();
+                            .WithProtocol(TransportProtocol.Tcp)
+                            .FromFrontend(feConfigName)
+                            .FromFrontendPort(azureNode.Node.Metadata.VpnFrontendPort)
+                            .ToBackendPort(NetworkPorts.OpenVPN)
+                            .WithIdleTimeoutInMinutes(5)
+                            .Attach();
                 }
 
                 if (tempSsh)
@@ -1150,14 +1113,21 @@ namespace Neon.Hive
                     {
                         lbManagerCreator
                             .DefineInboundNatRule(azureNode.SshNatRuleName)
-                            .WithProtocol(TransportProtocol.Tcp)
-                            .WithFrontend(feConfigName)
-                            .WithFrontendPort(azureNode.PublicSshPort)
-                            .WithBackendPort(NetworkPorts.SSH)
-                            .WithIdleTimeoutInMinutes(5)
-                            .Attach();
+                                .WithProtocol(TransportProtocol.Tcp)
+                                .FromFrontend(feConfigName)
+                                .FromFrontendPort(azureNode.PublicSshPort)
+                                .ToBackendPort(NetworkPorts.SSH)
+                                .WithIdleTimeoutInMinutes(5)
+                                .Attach();
                     }
                 }
+
+                lbManagerCreator.
+                    DefinePublicFrontend(feConfigName)
+                        .WithExistingPublicIPAddress(pipLbManager)
+                        .Attach()
+                    .DefineBackend(bePoolName)
+                        .Attach();
 
                 lbManager = lbManagerCreator.Create();
             }
@@ -1176,42 +1146,30 @@ namespace Neon.Hive
                     pipLbWorker = azure.PublicIPAddresses.GetByResourceGroup(resourceGroup, pipLbWorkerName);
                 }
 
-                var lbDefWorker = azure.LoadBalancers
-                    .Define(lbWorkerName)
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroup)
-                    .DefinePublicFrontend(feConfigName)
-                        .WithExistingPublicIPAddress(pipLbWorker)
-                        .Attach()
-                    .DefineBackend(bePoolName)
-                        .Attach()
-
-                    // We only need one probe because the Docker ingress network
-                    // and HAProxy handles internal hive fail-over.
-
-                    .DefineTcpProbe(probeName)
-                        .WithPort(HiveHostPorts.ProxyPublicHttp)
-                        .WithIntervalInSeconds(5)
-                        .WithNumberOfProbes(2)
-                        .Attach();
+                var lbDefWorker =
+                    azure.LoadBalancers
+                        .Define(lbWorkerName)
+                            .WithRegion(azureOptions.Region)
+                            .WithExistingResourceGroup(resourceGroup);
 
                 // Add a load balancing rule for each public hive endpoint.
 
-                IWithLoadBalancingRuleOrCreate lbWorkerCreator = null;
+                IWithLBRuleOrNatOrCreate lbWorkerCreator = null;
 
                 if (endpoints.Count > 0)
                 {
                     foreach (var endpoint in endpoints)
                     {
-                        lbWorkerCreator = lbDefWorker
-                            .DefineLoadBalancingRule($"neon-endpoint-tcp-{endpoint.FrontendPort}")
-                            .WithProtocol(TransportProtocol.Tcp)
-                            .WithFrontend(feConfigName)
-                            .WithFrontendPort(endpoint.FrontendPort)
-                            .WithProbe(probeName)
-                            .WithBackend(bePoolName)
-                            .WithBackendPort(endpoint.BackendPort)
-                            .Attach();
+                        lbWorkerCreator = 
+                            lbDefWorker
+                                .DefineLoadBalancingRule($"neon-endpoint-tcp-{endpoint.FrontendPort}")
+                                    .WithProtocol(TransportProtocol.Tcp)
+                                    .FromFrontend(feConfigName)
+                                    .FromFrontendPort(endpoint.FrontendPort)
+                                    .ToBackend(bePoolName)
+                                    .ToBackendPort(endpoint.BackendPort)
+                                    .WithProbe(probeName)
+                                    .Attach();
                     }
                 }
                 else
@@ -1229,15 +1187,16 @@ namespace Neon.Hive
                     // VPN network security group rule to prevent the odd security 
                     // breach.
 
-                    lbWorkerCreator = lbDefWorker
-                        .DefineLoadBalancingRule($"neon-unused-tcp-{HiveHostPorts.ReservedUnused}")
-                        .WithProtocol(TransportProtocol.Tcp)
-                        .WithFrontend(feConfigName)
-                        .WithFrontendPort(HiveHostPorts.ReservedUnused)
-                        .WithProbe(probeName)
-                        .WithBackend(bePoolName)
-                        .WithIdleTimeoutInMinutes(5)
-                        .Attach();
+                    lbWorkerCreator = 
+                        lbDefWorker
+                            .DefineLoadBalancingRule($"neon-unused-tcp-{HiveHostPorts.ReservedUnused}")
+                                .WithProtocol(TransportProtocol.Tcp)
+                                .FromFrontend(feConfigName)
+                                .FromFrontendPort(HiveHostPorts.ReservedUnused)
+                                .ToBackend(bePoolName)
+                                .WithProbe(probeName)
+                                .WithIdleTimeoutInMinutes(5)
+                                .Attach();
                 }
 
                 if (tempSsh)
@@ -1247,16 +1206,30 @@ namespace Neon.Hive
                         lbWorkerCreator
                             .DefineInboundNatRule(azureNode.SshNatRuleName)
                             .WithProtocol(TransportProtocol.Tcp)
-                            .WithFrontend(feConfigName)
-                            .WithFrontendPort(azureNode.PublicSshPort)
-                            .WithBackendPort(NetworkPorts.SSH)
+                            .FromFrontend(feConfigName)
+                            .FromFrontendPort(azureNode.PublicSshPort)
+                            .ToBackendPort(NetworkPorts.SSH)
                             .Attach();
                     }
                 }
 
-                lbWorker = lbWorkerCreator.Create();
+                lbWorker = lbWorkerCreator
+                    .DefinePublicFrontend(feConfigName)
+                        .WithExistingPublicIPAddress(pipLbWorker)
+                        .Attach()
+                    .DefineBackend(bePoolName)
+                        .Attach()
+
+                    // We only need one probe because the Docker ingress network
+                    // and HAProxy handles internal hive fail-over.
+
+                    .DefineTcpProbe(probeName)
+                        .WithPort(HiveHostPorts.ProxyPublicHttp)
+                        .WithIntervalInSeconds(5)
+                        .WithNumberOfProbes(2)
+                        .Attach()
+                    .Create();
             }
-#endif
         }
 
         /// <summary>
@@ -1274,13 +1247,14 @@ namespace Neon.Hive
                 // All nodes need a NIC in the [nodes] subnet.  This will be the primary
                 // (and only NIC) for workers and also the primary NIC for managers.
 
-                var nodeNicCreator = azure.NetworkInterfaces
-                    .Define($"{nodeNicNamePrefix}{azureNode.Node.Name}")
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroup)
-                    .WithExistingPrimaryNetwork(vnet)
-                    .WithSubnet(subnetNodesName)
-                    .WithPrimaryPrivateIPAddressStatic(azureNode.Node.Metadata.PrivateAddress);
+                var nodeNicCreator = 
+                    azure.NetworkInterfaces
+                        .Define($"{nodeNicNamePrefix}{azureNode.Node.Name}")
+                            .WithRegion(azureOptions.Region)
+                            .WithExistingResourceGroup(resourceGroup)
+                            .WithExistingPrimaryNetwork(vnet)
+                            .WithSubnet(subnetNodesName)
+                            .WithPrimaryPrivateIPAddressStatic(azureNode.Node.Metadata.PrivateAddress);
 
                 if (azureOptions.PublicNodeAddresses)
                 {
@@ -1405,16 +1379,17 @@ namespace Neon.Hive
                     primaryNic = azureNode.NodesNic;
                 }
 
-                var vmCreator = azure.VirtualMachines
-                    .Define($"{vmPrefix}{azureNode.Name}")
-                    .WithRegion(azureOptions.Region)
-                    .WithExistingResourceGroup(resourceGroup)
-                    .WithExistingPrimaryNetworkInterface(primaryNic)
-                    .WithPopularLinuxImage(KnownLinuxVirtualMachineImage.UbuntuServer16_04_Lts)
-                    .WithRootUsername(this.HostUsername)
-                    .WithRootPassword(this.HostPassword)
-                    .WithComputerName("ubuntu")  // DO NOT CHANGE: Node setup scripts require this server name.
-                    .WithDataDiskDefaultStorageAccountType(storageAccountType);
+                var vmCreator =
+                    azure.VirtualMachines
+                        .Define($"{vmPrefix}{azureNode.Name}")
+                            .WithRegion(azureOptions.Region)
+                            .WithExistingResourceGroup(resourceGroup)
+                            .WithExistingPrimaryNetworkInterface(primaryNic)
+                            .WithPopularLinuxImage(KnownLinuxVirtualMachineImage.UbuntuServer16_04_Lts)
+                            .WithRootUsername(this.HostUsername)
+                            .WithRootPassword(this.HostPassword)
+                            .WithComputerName("ubuntu")  // DO NOT CHANGE: Node setup scripts require this server name.
+                            .WithDataDiskDefaultStorageAccountType(storageAccountType);
 
                 if (secondaryNic != null)
                 {

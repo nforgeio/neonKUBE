@@ -6,7 +6,6 @@
   "AllowUnitTesting": true,
   "Hosting": {
     "Environment": "azure",
-    "CloudSubnet": "10.168.0.0/21",
     "Azure": {
       "SubscriptionId": "$<<NF_AZURE_SUBSCRIPTIONID>>",
       "TenantId": "$<<NF_AZURE_TENANTID>>",

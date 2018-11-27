@@ -207,32 +207,28 @@ Then you need to create credentials the **neon-cli** will use to authenticate wi
 
 3. Open a command window and use the command below to log into an Azure subscription.  The command may direct you to open a link in a browser and enter a code.
 
-  `azure login`
+  `az login`
 
-4. Run the command below to list your Azure subscriptions.  Save the **Subscription ID** where you’ll be provisioning your neonHIVE to the credentials file.
+4. Run the command below to list your Azure subscriptions.  Save the Subscription **id** and **tenantId** where you’ll be provisioning your neonHIVE to the credentials file.
 
-  `azure account list`
+  `az account list`
 
 5. Create the **neon-cli** application in the Azure Active Directory, specifying the new **PASSWORD** the **neon-cli** will use to log into Azure (you can use neon create password to generate a secure password):
 
-  `azure ad app create -n neon-cli \`<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;`--home-page http://neonhive.io \`<br/>
+  `az ad app create --display-name neon-cli \`<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;`--homepage http://neonhive.io \`<br/>
   &nbsp;&nbsp;&nbsp;&nbsp;`--identifier-uris http://neonhive.io/neon-cli \`<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;`-p PASSWORD`
+  &nbsp;&nbsp;&nbsp;&nbsp;`--password PASSWORD`
 
 6. Save the **Password** and **AppId** to the credentials file.
 
 7. Use the command below to create the service principal, passing the **AppId** captured above:
-  `azure ad sp create -a APP-ID`
+  `az ad sp create --id APPID`
 
 8. Save the **ObjectId** returned as the **ServicePrincipalId** to the credentials file.
 
 9. Grant the service principal owner rights to the subscription (advanced users may want to customize this to limit access to a specific resource group):
 
-  `azure role assignment create --objectId SERVICE-PRINCIPAL-ID \`<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;`-o Contributor \`<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;`-c /subscriptions/SUBSCRIPTION-ID`
-
-10. Run the following command and save the **TenantID** to your credentials file.  (This is the ID of your subscription’s Active Directory instance).
-
-  `azure account show`
+  `az role assignment create --assignee SERVICE-PRINCIPAL-ID \`<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;`--role Contributor \`<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;`--subscription SUBSCRIPTION-ID`
