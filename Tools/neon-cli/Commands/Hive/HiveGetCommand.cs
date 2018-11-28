@@ -40,13 +40,13 @@ HIVE IDENTIFIERS:
     hivemq-settings-neon        - HiveMQ [neon] account settings
     hivemq-settings-sysadmin    - HiveMQ [sysadmin] account settings
     log-retention-days          - number of days of logs to retain
-    password                    - root account password
     registries                  - lists the Docker registries and credentials
     setup-pending               - indicates whether hive setup is in progress
     sshkey-client-pem           - client SSH private key (PEM format)
     sshkey-client-ppk           - client SSH private key (PPK format)
     sshkey-fingerprint          - SSH host key fingerprint
-    username                    - root account username
+    ssh-password                - hive node admin password
+    ssh-username                - hive node admin username
     uuid                        - Hive UUID
     vault-token                 - Vault root token
     version                     - Hive software version
@@ -191,11 +191,6 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case "password":
-
-                        Console.Write(hiveLogin.SshPassword);
-                        break;
-
                     case "registries":
 
                         var registries = hive.Registry.List();
@@ -253,7 +248,12 @@ NODE IDENTIFIERS:
                         Console.Write(hiveLogin.SshClientKey.PrivatePPK);
                         break;
 
-                    case "username":
+                    case "ssh-password":
+
+                        Console.Write(hiveLogin.SshPassword);
+                        break;
+
+                    case "ssh-username":
 
                         Console.Write(hiveLogin.SshUsername);
                         break;
