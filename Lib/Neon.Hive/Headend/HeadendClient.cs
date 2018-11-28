@@ -70,8 +70,8 @@ namespace Neon.Hive
 
             var versions = new HiveComponentInfo();
 
-            versions.Docker        = "18.06.1-ce";
-            versions.DockerPackage = "docker-ce=18.03.1~ce-0~ubuntu";
+            versions.Docker           = "18.09.0-ce";
+            versions.DockerPackageUri = GetDockerPackageUri(versions.Docker, out var stub);
 
             versions.Consul        = "1.1.0";
             versions.Vault         = "0.10.3";
@@ -132,23 +132,38 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Converts a Docker version number into the fully qualified Debian
-        /// package name.
+        /// Converts a Docker version number into the fully qualified Debian package download URI.
         /// </summary>
-        /// <param name="version">The Docker version.</param>
+        /// <param name="version">The Docker version (like <b>18.06.1-ce</b>) or <b>latest</b>.</param>
         /// <param name="message">Returns as an informational message.</param>
-        /// <returns>The package name or <c>null</c> if no package exists for the version.</returns>
-        public string GetDockerPackage(string version, out string message)
+        /// <returns>The package URI or <c>null</c> if no package exists for the version.</returns>
+        public string GetDockerPackageUri(string version, out string message)
         {
             // $todo(jeff.lill): Hardcoded
 
             message = "ok";
 
-            // Strip the "-ce" suffix.
+            if (version == "latest")
+            {
+                version = "18.09.0-ce";
+            }
 
-            version = version.Replace("-ce", string.Empty);
+            switch (version)
+            {
+                case "18.03.0-ce":  
+                case "18.03.1-ce": 
+                case "18.06.0-ce":  
+                case "18.06.1-ce":  
+                case "18.09.0-ce":
 
-            return $"docker-ce={version}~ce-0~ubuntu";
+                    return $"https://s3.us-west-2.amazonaws.com/neonforge/neoncluster/docker-{version}-ubuntu-xenial-stable-amd64.deb";
+
+                default:
+
+                    message = $"Unknown or supported Docker version [{version}].";
+
+                    return null;
+            }
         }
 
         /// <summary>

@@ -27,6 +27,12 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 
+// $todo(jeff.lill): 
+//
+// [HiveDefinition.Validate()] should accept a parameter that enables a call to the
+// headend services so that the Docker, Consul, Vault, and other hive host software
+// versions can be validated.
+
 namespace Neon.Hive
 {
     /// <summary>

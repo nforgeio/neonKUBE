@@ -68,21 +68,25 @@ docker-ce | 17.03.0~ce-0~ubuntu-xenial | https://download.docker.com/linux/ubunt
 ```
   The package versions are in the second column the second column.
 
-5. Download the desired package like (specifying the desired version):
+5. Download the desired package (specifying the desired version), like:
 
 ```
 apt-get download docker-ce=5:18.09.0~3-0~ubuntu-xenial
 ```
 
-5. Rename the file to the standard format: **docker-ce-VERSION_DISTRO_CODENAME_REPOSITORY_amd64**, where:
+6. Use WinSCP to download the files to Windows.
 
-  **VERSION** is the Docker version, like: **18.09.1**
+7. Rename the file to the standard format: **docker-VERSION-DISTRO-CODENAME-REPOSITORY_amd64**, where:
+
+  **VERSION** is the *nice* Docker version, like: **18.09.1-ce**
   **DISTRO** identifies the Linux distribution, like: **ubuntu**
   **CODENAME** identifies the distribution version, like: **xenial**
   **REPOSITORY** identifies the source repository, like: **stable** or **edge**
 
-6. Upload the file to S3 and make it public: https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/FILENAME.deb
+  Example: `docker-18.09.0-ce-ubuntu-xenial-stable-amd64.deb`
 
-7. Update the headend services (or simulated services for now) to include a Docker version to URL mapping.
+8. Upload the file to S3 and make it public: https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/FILENAME.deb
+
+9. Update the headend services (or simulated services for now) to include a Docker version to URL mapping.
 
 
