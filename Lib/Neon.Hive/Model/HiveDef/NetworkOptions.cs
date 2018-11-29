@@ -506,6 +506,39 @@ namespace Neon.Hive
         public string Broadcast { get; set; } = null;
 
         /// <summary>
+        /// <para>
+        /// The network MTU to be used when configuring the Docker <b>ingress</b>
+        /// network.  This looks like it defaults to 1500 when a Docker cluster is
+        /// provisioned but this appears to be too large when hive hosts are deployed
+        /// as Hyper-V or XEN virtual machines (and perhaps in cloud environments as
+        /// well).
+        /// </para>
+        /// <para>
+        /// The default value of <b>1492</b> value should be small enough to allow 
+        /// additional VXLAN headers to be added to packets in these environments.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "IngressMTU", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(1492)]
+        public int IngressMTU { get; set; } = 1492;
+
+        /// <summary>
+        /// Specifies the subnet to configure for the Docker <b>ingress</b> network.
+        /// This defaults to <b>10.255.0.0/16</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "IngressSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("10.255.0.0/16")]
+        public string IngressSubnet { get; set; } = "10.255.0.0/16";
+
+        /// <summary>
+        /// Specifies the default gateway address to configure for the Docker 
+        /// <b>ingress</b> network.  This defaults to <b></b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "IngressGateway", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("10.255.0.1")]
+        public string IngressGateway { get; set; } = "10.255.0.1";
+
+        /// <summary>
         /// Used for checking subnet conflicts below.
         /// </summary>
         private class SubnetDefinition
@@ -759,7 +792,7 @@ namespace Neon.Hive
                 {
                     if (subnet == subnetTest)
                     {
-                        continue;   // Don't test against self.
+                        continue;   // Don't test against self.[
                     }
 
                     if (subnet.Cidr.Overlaps(subnetTest.Cidr))
@@ -767,6 +800,28 @@ namespace Neon.Hive
                         throw new HiveDefinitionException($"[{subnet.Name}={subnet.Cidr}] and [{subnetTest.Name}={subnetTest.Cidr}] overlap.");
                     }
                 }
+            }
+
+            // Verify the ingress network settings.
+
+            if (IngressMTU < 256)
+            {
+                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{IngressMTU}={IngressMTU}] cannot be less than [256].");
+            }
+
+            if (!NetworkCidr.TryParse(IngressSubnet, out var ingressSubnet))
+            {
+                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(IngressSubnet)}={IngressSubnet}] is not a valid subnet.");
+            }
+
+            if (!IPAddress.TryParse(IngressGateway, out var ingressGateway) || ingressGateway.AddressFamily != AddressFamily.InterNetwork)
+            {
+                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(IPAddress)}={IngressGateway}] is not a valid IPv4 address.");
+            }
+
+            if (!ingressSubnet.Contains(ingressGateway))
+            {
+                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(IPAddress)}={IngressGateway}] is within the [{nameof(IngressSubnet)}={IngressSubnet}].");
             }
         }
     }

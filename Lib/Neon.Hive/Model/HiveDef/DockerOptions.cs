@@ -179,17 +179,10 @@ namespace Neon.Hive
             {
                 return AvoidIngressNetwork.Value;
             }
-
-            // $todo(jeff.lill):
-            //
-            // We were having problems with the ingress network in the past so the
-            // commented out code below used to avoid the ingress network when
-            // deploying on local Hyper-V.  We'll leave this commented out for the
-            // time being but if the problem doesn't resurface, we should delete it.
-            //
-            //      https://github.com/jefflill/NeonForge/issues/104
-
-            return hiveDefinition.Hosting.Environment == HostingEnvironments.HyperVDev;
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>

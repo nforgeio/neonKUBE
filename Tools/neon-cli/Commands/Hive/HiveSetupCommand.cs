@@ -354,7 +354,7 @@ OPTIONS:
                 controller.AddStep("networks",
                     (node, stepDelay) =>
                         {
-                            CreateHiveNetworks(node, stepDelay);
+                            ConfigureHiveNetworks(node, stepDelay);
                         }, 
                         node => node == hive.FirstManager);
 
@@ -1624,12 +1624,39 @@ fi
         /// </summary>
         /// <param name="manager">The manager node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void CreateHiveNetworks(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
+        private void ConfigureHiveNetworks(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
         {
             manager.InvokeIdempotentAction("setup/docker-networks",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
+
+                    // We need to delete and recreate the Docker ingress network so we can
+                    // reduce the MTU from 1500 to 1492.  I believe this is what was causing
+                    // timeouts and perhaps poor performance when hive nodes are deployed as
+                    // Hyper-V and XEN virtual machines.
+
+                    var ingressScript =
+$@"
+docker network rm ingress << EOF
+y
+EOF
+
+docker network create \
+   --driver overlay \
+   --ingress \
+   --subnet={hive.Definition.Network.IngressSubnet} \
+   --gateway={hive.Definition.Network.IngressGateway} \
+   --opt com.docker.network.mtu={hive.Definition.Network.IngressMTU} \
+   ingress
+";
+                    var bundle = new CommandBundle(". ./ingress.sh");
+
+                    bundle.AddFile("ingress.sh", ingressScript, isExecutable: true);
+
+                    manager.SudoCommand(bundle);
+
+                    // Create the neonHIVE public and private networks.
 
                     manager.DockerCommand(
                         "docker network create",
