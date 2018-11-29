@@ -514,12 +514,12 @@ namespace Neon.Hive
         /// as well).
         /// </para>
         /// <para>
-        /// The default value is set to the more conservative <b>1492</b> value.
+        /// The default value is set to the more conservative <b>1400</b> value.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "MTU", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(1492)]
-        public int MTU { get; set; } = 1492;
+        public int MTU { get; set; } = 1400;
 
         /// <summary>
         /// <para>
@@ -530,13 +530,13 @@ namespace Neon.Hive
         /// well).
         /// </para>
         /// <para>
-        /// The default value of <b>1492</b> value should be small enough to allow 
+        /// The default value of <b>1400</b> value should be small enough to allow 
         /// additional VXLAN headers to be added to packets in these environments.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "IngressMTU", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(1492)]
-        public int IngressMTU { get; set; } = 1492;
+        public int IngressMTU { get; set; } = 1400;
 
         /// <summary>
         /// Specifies the subnet to configure for the Docker <b>ingress</b> network.

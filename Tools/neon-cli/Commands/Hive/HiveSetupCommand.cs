@@ -1169,9 +1169,9 @@ fi
 
             settings.Add("registry-mirrors", registries);
 
-            // I believe this will set the network MTU for all Docker containers.
+            // I believe this will set the default network MTU for all Docker networks.
 
-            //settings.Add("mtu", hive.Definition.Network.MTU);
+            settings.Add("mtu", hive.Definition.Network.MTU);
 
             return NeonHelper.JsonSerialize(settings, Formatting.Indented);
         }
@@ -1630,11 +1630,11 @@ fi
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void ConfigureHiveNetworks(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
         {
-            manager.InvokeIdempotentAction("setup/docker-networks",
+            Thread.Sleep(stepDelay);
+
+            manager.InvokeIdempotentAction("setup/ingress-network",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
-
                     // We need to delete and recreate the Docker ingress network so we can
                     // reduce the MTU from 1500 to 1492.  I believe this is what was causing
                     // timeouts and perhaps poor performance when hive nodes are deployed as
@@ -1668,26 +1668,30 @@ docker network create \
 
                     manager.Status = "network: ingress MTU and subnet";
                     manager.SudoCommand(bundle);
+                });
 
-                    // Create the neonHIVE public and private networks.
-
+            manager.InvokeIdempotentAction("setup/neon-public-network",
+                () =>
+                {
                     manager.Status = "network: neon-public";
                     manager.DockerCommand(
                         "docker network create",
                         "--driver", "overlay",
                         "--subnet", hive.Definition.Network.PublicSubnet,
                         "--opt", "encrypt",
-                        "--opt", $"com.docker.network.mtu={hive.Definition.Network.MTU}",
                         hive.Definition.Network.PublicAttachable ? "--attachable" : null,
                         HiveConst.PublicNetwork);
+                });
 
+            manager.InvokeIdempotentAction("setup/neon-private-network",
+                () =>
+                {
                     manager.Status = "network: neon-private";
                     manager.DockerCommand(
                         "docker network create",
                         "--driver", "overlay",
                         "--subnet", hive.Definition.Network.PrivateSubnet,
                         "--opt", "encrypt",
-                        "--opt", $"com.docker.network.mtu={hive.Definition.Network.MTU}",
                         hive.Definition.Network.PrivateAttachable ? "--attachable" : null,
                         HiveConst.PrivateNetwork);
                 });
