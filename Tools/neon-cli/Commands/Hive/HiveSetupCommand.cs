@@ -1169,6 +1169,10 @@ fi
 
             settings.Add("registry-mirrors", registries);
 
+            // I believe this will set the network MTU for all Docker containers.
+
+            //settings.Add("mtu", hive.Definition.Network.MTU);
+
             return NeonHelper.JsonSerialize(settings, Formatting.Indented);
         }
 
@@ -1660,30 +1664,30 @@ docker network create \
 ";
                     var bundle = new CommandBundle(". ./ingress.sh");
 
-                    bundle.AddFile("ingress.sh", ingressScript, isExecutable: true);
+                    //bundle.AddFile("ingress.sh", ingressScript, isExecutable: true);
 
-                    manager.Status = "network: ingress MTU and subnet";
-                    manager.SudoCommand(bundle);
+                    //manager.Status = "network: ingress MTU and subnet";
+                    //manager.SudoCommand(bundle);
 
                     // Create the neonHIVE public and private networks.
 
                     manager.Status = "network: neon-public";
                     manager.DockerCommand(
-                        $"docker network create",
-                        $"--driver", "overlay",
-                        $"--subnet", hive.Definition.Network.PublicSubnet,
-                        $"--opt", "encrypt",
-                        $"--opt com.docker.network.mtu={hive.Definition.Network.MTU}",
+                        "docker network create",
+                        "--driver", "overlay",
+                        "--subnet", hive.Definition.Network.PublicSubnet,
+                        "--opt", "encrypt",
+                        "--opt", $"com.docker.network.mtu={hive.Definition.Network.MTU}",
                         hive.Definition.Network.PublicAttachable ? "--attachable" : null,
                         HiveConst.PublicNetwork);
 
                     manager.Status = "network: neon-private";
                     manager.DockerCommand(
-                        $"docker network create",
-                        $"--driver", "overlay",
-                        $"--subnet", hive.Definition.Network.PrivateSubnet,
-                        $"--opt", "encrypt",
-                        $"--opt com.docker.network.mtu={hive.Definition.Network.MTU}",
+                        "docker network create",
+                        "--driver", "overlay",
+                        "--subnet", hive.Definition.Network.PrivateSubnet,
+                        "--opt", "encrypt",
+                        "--opt", $"com.docker.network.mtu={hive.Definition.Network.MTU}",
                         hive.Definition.Network.PrivateAttachable ? "--attachable" : null,
                         HiveConst.PrivateNetwork);
                 });
