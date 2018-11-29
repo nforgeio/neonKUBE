@@ -1662,10 +1662,12 @@ docker network create \
 
                     bundle.AddFile("ingress.sh", ingressScript, isExecutable: true);
 
+                    manager.Status = "network: ingress MTU and subnet";
                     manager.SudoCommand(bundle);
 
                     // Create the neonHIVE public and private networks.
 
+                    manager.Status = "network: neon-public";
                     manager.DockerCommand(
                         "docker network create",
                         "--driver", "overlay",
@@ -1674,6 +1676,7 @@ docker network create \
                         hive.Definition.Network.PublicAttachable ? "--attachable" : null,
                         HiveConst.PublicNetwork);
 
+                    manager.Status = "network: neon-private";
                     manager.DockerCommand(
                         "docker network create",
                         "--driver", "overlay",
