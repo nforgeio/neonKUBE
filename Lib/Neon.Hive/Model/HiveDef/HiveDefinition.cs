@@ -50,12 +50,12 @@ namespace Neon.Hive
         /// </summary>
         public const string VirtualSwarmManagerName = "swarm-manager";
 
-        private const string defaultDatacenter = "DATACENTER";
-        private const string defaultProvisioner = "unknown";
-        private readonly string[] defaultTimeSources = new string[] { "pool.ntp.org" };
-        private const string defaultDrivePrefix = "sd";
-        private const int defaultStepStaggerSeconds = 5;
-        private const bool defaultAllowUnitTesting = false;
+        private const string        defaultDatacenter = "DATACENTER";
+        private const string        defaultProvisioner = "unknown";
+        private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
+        private const string        defaultDrivePrefix = "sd";
+        private const int           defaultStepStaggerSeconds = 5;
+        private const bool          defaultAllowUnitTesting = false;
 
         /// <summary>
         /// Regex for verifying hive names for hosts, routes, groups, etc.
