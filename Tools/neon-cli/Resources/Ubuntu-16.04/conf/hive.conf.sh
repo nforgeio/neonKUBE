@@ -93,10 +93,6 @@ $<nodes.managers>
 export NEON_NTP_MANAGER_SOURCES=( $<ntp.manager.sources> )
 export NEON_NTP_WORKER_SOURCES=( $<ntp.worker.sources> )
 
-# Docker settings
-
-export NEON_DOCKER_VERSION=$<docker.version>
-
 # Consul settings
 
 export NEON_CONSUL_VERSION=$<consul.version>
@@ -159,8 +155,6 @@ $<nodes.manager.summary>
     echo 1>&2
     echo "NEON_NTP_MANAGER_SOURCES           = ${NEON_NTP_MANAGER_SOURCES}" 1>&2
     echo "NEON_NTP_WORKER_SOURCES            = ${NEON_NTP_WORKER_SOURCES}" 1>&2
-    echo 1>&2
-    echo "NEON_DOCKER_VERSION                = ${NEON_DOCKER_VERSION}" 1>&2
     echo 1>&2
     echo "NEON_CONSUL_VERSION                = ${NEON_CONSUL_VERSION}" 1>&2
     echo "NEON_CONSUL_OPTIONS                = ${NEON_CONSUL_OPTIONS}" 1>&2

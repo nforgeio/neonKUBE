@@ -41,7 +41,7 @@ namespace NeonCli
     /// This command works by mapping the current client directory into the <b>neon-cli</b> 
     /// container at <b>/cwd</b> and then generating the hosts and host variables files at
     /// <b>/etc/ansible</b> in the container and then running <b>ansible ARGS</b>, <b>ansible-galaxy ARGS</b>
-    /// <b>ansible-playbook ARGS</b>, or <b>ansible-vault ARGS</b> passing the SSH client 
+    /// <b>ansible-playbook ARGS</b>, or <b>ansible-vault ARGS</b> by passing the SSH client 
     /// certificate and any command line arguments after the "--".
     /// </para>
     /// <para>
@@ -688,7 +688,7 @@ MODULES:
             // I tried using [chmod] in the container to clear the executable permissions but it
             // didn't work (probably a Docker mapped file thing).
             //
-            // The workaround is to copy all of the passwords in the container the [/dev/shm/passwords]
+            // The workaround is to copy all of the passwords in the container to [/dev/shm/passwords]
             // so that they'll have no execute permissions.  We'll shim the command such that the
             // internal container command will reference passwords in copy folder.
 

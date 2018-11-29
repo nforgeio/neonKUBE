@@ -30,18 +30,18 @@ namespace Neon.Hive
     public class HiveComponentInfo
     {
         /// <summary>
-        /// The latest compatible Docker Engine.
+        /// The latest compatible Docker Engine version.
         /// </summary>
         [JsonProperty(PropertyName = "Docker", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Docker { get; set; }
 
         /// <summary>
-        /// The latest fully qualified Docker Debian package name.
+        /// The latest fully qualified Docker Debian package download URI.
         /// </summary>
         [JsonProperty(PropertyName = "DockerPackage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string DockerPackage { get; set; }
+        public string DockerPackageUri { get; set; }
 
         /// <summary>
         /// The latest compatible HashiCorp Consul.

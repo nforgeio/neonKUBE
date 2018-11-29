@@ -57,7 +57,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
         private HiveLogin       hiveLogin;
         private HiveProxy       hive;
         private string          version;
-        private string          package;
+        private string          dockerPackageUri;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -708,8 +708,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
                 Program.Exit(0);
             }
 
-            this.version = version;
-            this.package = hive.Headend.GetDockerPackage(version, out message);
+            this.version          = version;
+            this.dockerPackageUri = hive.Headend.GetDockerPackageUri(version, out message);
 
             var controller = new SetupController<NodeDefinition>($"hive update docker: {version}", hive.Nodes)
             {
@@ -771,8 +771,8 @@ The current login must have ROOT PERMISSIONS to update the hive.
             node.Status = "run: safe-apt-get update";
             node.SudoCommand("safe-apt-get update");
 
-            node.Status = $"run: safe-apt-get install -yq {package}";
-            node.SudoCommand($"safe-apt-get install -yq {package}");
+            node.Status = $"run: safe-apt-get install -yq {dockerPackageUri}";
+            node.SudoCommand($"safe-apt-get install -yq {dockerPackageUri}");
 
             node.Status = $"restart: docker";
             node.SudoCommand("systemctl restart docker");

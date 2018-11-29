@@ -426,9 +426,9 @@ namespace NeonCli
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(dockerVersion));
 
-            var newVersion   = (SemanticVersion)dockerVersion;
-            var pendingNodes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            var package      = hive.Headend.GetDockerPackage(dockerVersion, out var message);
+            var newVersion       = (SemanticVersion)dockerVersion;
+            var pendingNodes     = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            var dockerPackageUri = hive.Headend.GetDockerPackageUri(dockerVersion, out var message);
 
             // Update the managers first.
 
@@ -447,7 +447,7 @@ namespace NeonCli
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
-                        UpdateDocker(hive, node, package);
+                        UpdateDocker(hive, node, dockerPackageUri);
                     },
                     n => pendingNodes.Contains(n.Name),
                     parallelLimit: 1);
@@ -470,7 +470,7 @@ namespace NeonCli
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
-                        UpdateDocker(hive, node, package);
+                        UpdateDocker(hive, node, dockerPackageUri);
                     },
                     n => pendingNodes.Contains(n.Name),
                     parallelLimit: 1);
@@ -493,7 +493,7 @@ namespace NeonCli
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
-                        UpdateDocker(hive, node, package);
+                        UpdateDocker(hive, node, dockerPackageUri);
                     },
                     n => pendingNodes.Contains(n.Name),
                     parallelLimit: 1);
@@ -505,35 +505,39 @@ namespace NeonCli
         /// </summary>
         /// <param name="hive">The target hive.</param>
         /// <param name="node">The target node.</param>
-        /// <param name="package">The fully qualified Docker Debian poackage name.</param>
-        private static void UpdateDocker(HiveProxy hive, SshProxy<NodeDefinition> node, string package)
+        /// <param name="dockerPackageUri">The Docker Debian package URI.</param>
+        private static void UpdateDocker(HiveProxy hive, SshProxy<NodeDefinition> node, string dockerPackageUri)
         {
-            if (node.Metadata.InSwarm)
+            try
             {
-                node.Status = "swarm: drain services";
-                hive.Docker.DrainNode(node.Name);
+                if (node.Metadata.InSwarm)
+                {
+                    node.Status = "swarm: drain services";
+                    hive.Docker.DrainNode(node.Name);
+                }
+
+                node.Status = "stop: docker";
+                node.SudoCommand("systemctl stop docker").EnsureSuccess();
+
+                node.Status = "download: docker package";
+                node.SudoCommand($"curl {Program.CurlOptions} {dockerPackageUri} -o /tmp/docker.deb").EnsureSuccess();
+
+                node.Status = "update: docker";
+                node.SudoCommand("gdebi /tmp/docker.deb").EnsureSuccess();
+                node.SudoCommand("rm /tmp/docker.deb");
+
+                node.Status = "restart: docker";
+                node.SudoCommand("systemctl start docker").EnsureSuccess();
+
+                if (node.Metadata.InSwarm)
+                {
+                    node.Status = "swarm: activate";
+                    hive.Docker.ActivateNode(node.Name);
+                }
             }
-
-            node.Status = "stop: docker";
-            node.SudoCommand("systemctl stop docker");
-
-            node.Status = "update: docker";
-            node.SudoCommand("safe-apt-get update");
-
-            var failed = node.SudoCommand($"safe-apt-get install -yq {package}", RunOptions.LogOutput).ExitCode != 0;
-
-            node.Status = "restart: docker";
-            node.SudoCommand("systemctl start docker");
-
-            if (node.Metadata.InSwarm)
+            catch (Exception e)
             {
-                node.Status = "swarm: activate";
-                hive.Docker.ActivateNode(node.Name);
-            }
-
-            if (failed)
-            {
-                node.Fault("[docker] update failed.");
+                node.Fault($"[docker] update failed: {NeonHelper.ExceptionError(e)}");
             }
         }
 

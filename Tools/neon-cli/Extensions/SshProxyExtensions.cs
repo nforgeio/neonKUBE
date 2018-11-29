@@ -487,7 +487,19 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "net.powerdns.recursor.package.uri", hiveDefinition.Network.PdnsRecursorPackageUri);
             preprocessReader.Set("net.powerdns.recursor.hosts", GetPowerDnsHosts(hiveDefinition, nodeDefinition));
 
-            SetBashVariable(preprocessReader, "docker.version", hiveDefinition.Docker.PackageVersion);
+            var dockerPackageUri = new HeadendClient().GetDockerPackageUri(hiveDefinition.Docker.Version, out var packageMessage);
+
+            if (dockerPackageUri == null)
+            {
+                // $todo(jeff.lill:
+                //
+                // This should probably be replaced with hive definition validation code.
+
+                Console.WriteLine($"*** ERROR: {packageMessage}");
+                Program.Exit(1);
+            }
+
+            SetBashVariable(preprocessReader, "docker.packageuri", dockerPackageUri);
 
             SetBashVariable(preprocessReader, "consul.version", hiveDefinition.Consul.Version);
             SetBashVariable(preprocessReader, "consul.options", consulOptions);

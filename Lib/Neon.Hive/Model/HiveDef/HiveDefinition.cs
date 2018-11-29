@@ -27,6 +27,12 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 
+// $todo(jeff.lill): 
+//
+// [HiveDefinition.Validate()] should accept a parameter that enables a call to the
+// headend services so that the Docker, Consul, Vault, and other hive host software
+// versions can be validated.
+
 namespace Neon.Hive
 {
     /// <summary>
@@ -44,12 +50,12 @@ namespace Neon.Hive
         /// </summary>
         public const string VirtualSwarmManagerName = "swarm-manager";
 
-        private const string defaultDatacenter = "DATACENTER";
-        private const string defaultProvisioner = "unknown";
-        private readonly string[] defaultTimeSources = new string[] { "pool.ntp.org" };
-        private const string defaultDrivePrefix = "sd";
-        private const int defaultStepStaggerSeconds = 5;
-        private const bool defaultAllowUnitTesting = false;
+        private const string        defaultDatacenter = "DATACENTER";
+        private const string        defaultProvisioner = "unknown";
+        private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
+        private const string        defaultDrivePrefix = "sd";
+        private const int           defaultStepStaggerSeconds = 5;
+        private const bool          defaultAllowUnitTesting = false;
 
         /// <summary>
         /// Regex for verifying hive names for hosts, routes, groups, etc.

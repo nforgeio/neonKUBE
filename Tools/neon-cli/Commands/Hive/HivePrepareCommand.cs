@@ -218,9 +218,12 @@ Server Requirements:
             //
             // Note that we're not going to perform this check for the [Machine] hosting 
             // environment because we're expecting the bare machines to be already running 
-            // with the assigned addresses.
+            // with the assigned addresses and we're also not going to do this for cloud
+            // environments because we're assuming that the hive will run in its own private
+            // network so there'll ne no possibility of conflicts.
 
-            if (hive.Definition.Hosting.Environment != HostingEnvironments.Machine)
+            if (hive.Definition.Hosting.Environment != HostingEnvironments.Machine && 
+                !hive.Definition.Hosting.IsCloudProvider)
             {
                 Console.WriteLine();
                 Console.WriteLine("Scanning for IP address conflicts...");
@@ -245,7 +248,7 @@ Server Requirements:
                         using (var ping = new Ping())
                         {
                             // We're going to try pinging up to [pingAttempts] times for each node
-                            // just in case the network it sketchy and we're loosing reply packets.
+                            // just in case the network it sketchy and we're losing reply packets.
 
                             for (int i = 0; i < pingAttempts; i++)
                             {

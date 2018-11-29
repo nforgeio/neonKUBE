@@ -55,9 +55,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// The version of Docker to be installed like [17.03.0-ce].  You may also specify <b>latest</b>
-        /// to install the most recent production release or <b>test</b> or <b>experimental</b> to
-        /// install the latest releases from the test or experimental channels.
+        /// The version of Docker to be installed like [18.03.0-ce].  You may also specify <b>latest</b>
+        /// to install the most recent compatible stable release.
         /// </para>
         /// <note>
         /// Only Community Editions of Docker are supported at this time.
@@ -85,41 +84,6 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue("latest")]
         public string Version { get; set; } = "latest";
-
-        /// <summary>
-        /// Returns <b>latest</b>, <b>test</b>, or <b>experimental</b> for current releases 
-        /// or the specific Ubuntu APT package version to be installed.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public string PackageVersion
-        {
-            get
-            {
-                var version = Version.ToLowerInvariant();
-
-                switch (version)
-                {
-                    case "latest":
-                    case "test":
-                    case "experimental":
-
-                        return version;
-
-                    default:
-
-                        // Remove the "-ce" from the end of the version and then
-                        // return package version.
-
-                        if (!version.EndsWith("-ce"))
-                        {
-                            throw new NotSupportedException("Docker version must end with [-ce] because only Docker Community Edition is supported at this time.");
-                        }
-
-                        return version.Substring(0, version.Length - "-ce".Length);
-                }
-            }
-        }
 
         /// <summary>
         /// Specifies the Docker Registries and the required credentials that will
@@ -215,17 +179,10 @@ namespace Neon.Hive
             {
                 return AvoidIngressNetwork.Value;
             }
-
-            // $todo(jeff.lill):
-            //
-            // We were having problems with the ingress network in the past so the
-            // commented out code below used to avoid the ingress network when
-            // deploying on local Hyper-V.  We'll leave this commented out for the
-            // time being but if the problem doesn't resurface, we should delete it.
-            //
-            //      https://github.com/jefflill/NeonForge/issues/104
-
-            return hiveDefinition.Hosting.Environment == HostingEnvironments.HyperVDev;
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
