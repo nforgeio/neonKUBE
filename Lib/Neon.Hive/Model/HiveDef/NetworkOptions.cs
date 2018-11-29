@@ -532,7 +532,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Specifies the default gateway address to configure for the Docker 
-        /// <b>ingress</b> network.  This defaults to <b></b>.
+        /// <b>ingress</b> network.  This defaults to <b>10.255.0.1</b>.
         /// </summary>
         [JsonProperty(PropertyName = "IngressGateway", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue("10.255.0.1")]

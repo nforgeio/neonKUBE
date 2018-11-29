@@ -1638,9 +1638,17 @@ fi
 
                     var ingressScript =
 $@"
+# Delete the [ingress] network.
+
 docker network rm ingress << EOF
 y
 EOF
+
+# Give the network a chance to actually be deleted.
+
+sleep 10
+
+# Recreate the [ingress] network with the new settings.
 
 docker network create \
    --driver overlay \
