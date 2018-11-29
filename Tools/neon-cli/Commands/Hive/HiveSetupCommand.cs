@@ -1664,10 +1664,10 @@ docker network create \
 ";
                     var bundle = new CommandBundle(". ./ingress.sh");
 
-                    //bundle.AddFile("ingress.sh", ingressScript, isExecutable: true);
+                    bundle.AddFile("ingress.sh", ingressScript, isExecutable: true);
 
-                    //manager.Status = "network: ingress MTU and subnet";
-                    //manager.SudoCommand(bundle);
+                    manager.Status = "network: ingress MTU and subnet";
+                    manager.SudoCommand(bundle);
 
                     // Create the neonHIVE public and private networks.
 
