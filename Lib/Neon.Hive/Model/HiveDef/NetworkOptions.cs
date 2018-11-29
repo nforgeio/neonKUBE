@@ -507,6 +507,22 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
+        /// The network MTU to be used when configuring the Docker <b>neon=-public</b>
+        /// and <b>neon-private</b> networks.  This looks like it defaults to 1500 when
+        /// a Docker cluster is provisioned but this may be too large when hive hosts are
+        /// deployed as Hyper-V or XEN virtual machines (and perhaps in cloud environments
+        /// as well).
+        /// </para>
+        /// <para>
+        /// The default value is set to the more conservative <b>1492</b> value.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "MTU", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(1492)]
+        public int MTU { get; set; } = 1492;
+
+        /// <summary>
+        /// <para>
         /// The network MTU to be used when configuring the Docker <b>ingress</b>
         /// network.  This looks like it defaults to 1500 when a Docker cluster is
         /// provisioned but this appears to be too large when hive hosts are deployed
@@ -800,6 +816,13 @@ namespace Neon.Hive
                         throw new HiveDefinitionException($"[{subnet.Name}={subnet.Cidr}] and [{subnetTest.Name}={subnetTest.Cidr}] overlap.");
                     }
                 }
+            }
+
+            // Verify the [NetworkMTU] settings.
+
+            if (MTU < 256)
+            {
+                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{MTU}={MTU}] cannot be less than [256].");
             }
 
             // Verify the ingress network settings.

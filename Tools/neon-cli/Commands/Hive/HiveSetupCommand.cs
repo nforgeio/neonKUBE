@@ -1669,19 +1669,21 @@ docker network create \
 
                     manager.Status = "network: neon-public";
                     manager.DockerCommand(
-                        "docker network create",
-                        "--driver", "overlay",
-                        "--opt", "encrypt",
-                        "--subnet", hive.Definition.Network.PublicSubnet,
+                        $"docker network create",
+                        $"--driver", "overlay",
+                        $"--subnet", hive.Definition.Network.PublicSubnet,
+                        $"--opt", "encrypt",
+                        $"--opt com.docker.network.mtu={hive.Definition.Network.MTU}",
                         hive.Definition.Network.PublicAttachable ? "--attachable" : null,
                         HiveConst.PublicNetwork);
 
                     manager.Status = "network: neon-private";
                     manager.DockerCommand(
-                        "docker network create",
-                        "--driver", "overlay",
-                        "--opt", "encrypt",
-                        "--subnet", hive.Definition.Network.PrivateSubnet,
+                        $"docker network create",
+                        $"--driver", "overlay",
+                        $"--subnet", hive.Definition.Network.PrivateSubnet,
+                        $"--opt", "encrypt",
+                        $"--opt com.docker.network.mtu={hive.Definition.Network.MTU}",
                         hive.Definition.Network.PrivateAttachable ? "--attachable" : null,
                         HiveConst.PrivateNetwork);
                 });
