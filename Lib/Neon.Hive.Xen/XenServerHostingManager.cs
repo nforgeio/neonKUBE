@@ -513,6 +513,14 @@ nameserver 8.8.4.4
 
                         xenSshProxy.Status = FormatVmStatus(vmName, $"resize primary partition");
 
+                        // $hack(jeff.lill):
+                        //
+                        // I've seen a transient error here but can't reproduce it.  I'm going
+                        // to assume for now that the file system might not be quite ready for
+                        // this operation directly after the VM has been rebooted, so we're going
+                        // to delay for a few seconds before performing the operations.
+
+                        Thread.Sleep(TimeSpan.FromSeconds(5));
                         nodeProxy.SudoCommand("growpart /dev/xvda 1");
                         nodeProxy.SudoCommand("resize2fs /dev/xvda1");
 
