@@ -294,5 +294,19 @@ namespace Neon.Hive
         /// to obtain a random delay timespan.
         /// </summary>
         public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(250);
+
+        /// <summary>
+        /// The root account username baked into the Hyper-V and XenServer hive
+        /// host node virtual machine templates.  This is also used as the username
+        /// for hosts provisioned to clouds like Azure, Aws, and Google Cloud. 
+        /// </summary>
+        public const string DefaulVmTemplateUsername = "sysadmin";
+
+        /// <summary>
+        /// The root account password baked into the Hyper-V and XenServer hive
+        /// host node virtual machine templates.  Note that this will not be
+        /// used for hosts provisioned on public clouds for security reasons.
+        /// </summary>
+        public const string DefaulVmTemplatePassword = "sysadmin0000";
     }
 }

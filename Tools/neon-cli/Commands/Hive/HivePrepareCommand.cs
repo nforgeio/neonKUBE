@@ -130,8 +130,6 @@ Server Requirements:
                 Program.Exit(0);
             }
 
-            // Manually load all of the known hive manager assemblies.
-
             // Implement the command.
 
             packageCacheUri = commandLine.GetOption("--package-cache");     // This overrides the hive definition, if specified.
@@ -156,6 +154,47 @@ Server Requirements:
             var hiveDefinition = HiveDefinition.FromFile(hiveDefPath, strict: true);
 
             hiveDefinition.Provisioner = $"neon-cli:{Program.Version}";  // Identify this tool/version as the hive provisioner
+
+            // NOTE:
+            //
+            // Azure has implemented a more restrictive password policy and our
+            // default machine password does not meet the requirements:
+            //
+            // The supplied password must be between 6-72 characters long and must 
+            // satisfy at least 3 of password complexity requirements from the following: 
+            //
+            //      1. Contains an uppercase character
+            //      2. Contains a lowercase character
+            //      3. Contains a numeric digit
+            //      4. Contains a special character
+            //      5. Control characters are not allowed
+            //
+            // It's also probably not a great idea to use a static password when
+            // provisioning VMs in public clouds because it might be possible for
+            // somebody to use this fact the SSH into nodes while the hive is being
+            // setup and before we set the secure password at the end.
+            //
+            // This is less problematic for non-cloud environments because it's
+            // likely that the hosts won't initially be able to receive inbound 
+            // Internet traffic and besides, we need to have a known password
+            // embedded into the VM templates.
+            //
+            // We're going to handle this for cloud environments by looking
+            // at [Program.MachinePassword].  If this is set to the default
+            // machine password then we're going to replace it with a randomlly
+            // generated password with a few extra characters to ensure that
+            // it meets the target cloud's password requirements.  We'll use
+            // a non-default password if the operator specified one.
+
+            if (hiveDefinition.Hosting.IsCloudProvider && Program.MachinePassword == HiveConst.DefaulVmTemplatePassword)
+            {
+                Program.MachinePassword = NeonHelper.GetRandomPassword(20);
+
+                // Append a string that guarantees that the generated password meets
+                // cloud minimum requirements.
+
+                Program.MachinePassword += ".Aa0";
+            }
 
             // Note that hive prepare starts new log files.
 
@@ -503,8 +542,19 @@ Server Requirements:
             // initialize the hive's certificate authority files.  This command must be
             // run in the [neon-cli] container so we need to detect whether we're already
             // running in the tool container and do the right thing.
+            //
+            // Note that the we can't pass the original hive definition file to the command
+            // because the command will shim into a [neon-cli] container and any environment
+            // variable references within the definition won't be able to be resolved because
+            // the environment variables aren't mapped into the container.
+            //
+            // The solution is to persist a temporary copy of the loaded hive definition 
+            // that has already resolved environment variables to the neonFORGE temp folder
+            // and pass that.  The user's neonFORGE folder is encrypted in place so doing this
+            // will be as safe as storing hive logins there.
 
             string tempCaFolder;
+            string tempDefPath;
 
             if (HiveHelper.InToolContainer)
             {
@@ -514,6 +564,10 @@ Server Requirements:
             {
                 tempCaFolder = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
             }
+
+            tempDefPath = Path.Combine(HiveHelper.GetTempFolder(), $"{Guid.NewGuid().ToString("D").ToLowerInvariant()}.def.json");
+
+            File.WriteAllText(tempDefPath, NeonHelper.JsonSerialize(hive.Definition, Formatting.Indented));
 
             try
             {
@@ -527,11 +581,11 @@ Server Requirements:
 
                 if (HiveHelper.InToolContainer)
                 {
-                    Program.Execute(neonExecutable, "vpn", "ca", hiveDefPath, tempCaFolder);
+                    Program.Execute(neonExecutable, "vpn", "ca", tempDefPath, tempCaFolder);
                 }
                 else
                 {
-                    Program.Execute(neonExecutable, "vpn", "ca", hiveDefPath, tempCaFolder);
+                    Program.Execute(neonExecutable, "vpn", "ca", tempDefPath, tempCaFolder);
                 }
 
                 vpnCaFiles = VpnCaFiles.LoadFolder(tempCaFolder);
@@ -541,6 +595,11 @@ Server Requirements:
                 if (Directory.Exists(tempCaFolder))
                 {
                     Directory.Delete(tempCaFolder, recursive: true);
+                }
+
+                if (File.Exists(tempDefPath))
+                {
+                    File.Delete(tempDefPath);
                 }
             }
         }

@@ -44,21 +44,21 @@ namespace Neon.Hive
         // neonHIVEs will encounter three types of network traffic:
         //
         //      1. We provision the hive in two available sets: one for the manager nodes
-        //         and the other for the workers.  This is required because we need to tightly
-        //         control the Azure update and fault domains for the managers so we'll always
-        //         have a quorum.  Putting managers together with a lot of workers will make
-        //         it pretty likely that a quorum of managers might fall into the same update
+        //         and the other for the workers and pets.  This is required because we need to
+        //         tightly control the Azure update and fault domains for the managers so we'll
+        //         always have a quorum.  Putting managers together with a lot of workers will 
+        //         make t pretty likely that a quorum of managers might fall into the same update
         //         domain and be taken out at the same time.
         //
         //      2. We provision the hive with two load balancers, one for the managers and
-        //         the other for the workers.  This is required because a single Azure load
+        //         the other for the workers/pets.  This is required because a single Azure load
         //         balancer is unable to server traffic for VMs in different availability sets.
         //         Each load balancer is assigned a public IP address.  Once the hive is 
-        //         configured, the manager load balancer only handles VPN traffic and the worker 
-        //         load balancer handles application traffic.
+        //         configured, the manager load balancer only handles VPN traffic and the 
+        //         worker/pets load balancer handles application traffic.
         //
         //      3. We provision two network security groups: one for the NICs attached to the
-        //         the manager load balancer and the other for NICs attached to the worker 
+        //         the manager load balancer and the other for NICs attached to the worker/pets
         //         load balancer.
         //
         //      4. Provisioning SSH traffic: Early on during the Azure provisioning process, 
@@ -81,8 +81,9 @@ namespace Neon.Hive
         //      6. Application service traffic.  This is the website, webapi, and TCP traffic
         //         to your application services.  This traffic will be load balanced to every
         //         worker node, mapping the frontend port to an internal one.  Typically,
-        //         the PUBLIC neonHIVE proxy will be configured to receive the inbound
-        //         traffic on the Docker ingress network and forward it on to your Docker services.
+        //         the PUBLIC neonHIVE proxy will be configured to receive the inbound traffic
+        //         on the Docker ingress network and forward it on to your Docker services.
+        //         Note that the load balancer IS NOT configured to direct traffic to pets.
         //
         //      7. It is possible to assign a public IP address to each hive node.  This can
         //         help eliminate NAT port exhaustion in the load balancer for large hives making
@@ -155,17 +156,17 @@ namespace Neon.Hive
             /// <summary>
             /// Update all network load balancer and security rules.
             /// </summary>
-            All = Worker | Manager,
-
-            /// <summary>
-            /// Update the worker load balancer and security rules.
-            /// </summary>
-            Worker = 0x00000001,
+            All = WorkerAndPet | Manager,
 
             /// <summary>
             /// Update the manager load balancer and security rules.
             /// </summary>
-            Manager = 0x0000010
+            Manager = 0x0000001,
+
+            /// <summary>
+            /// Update the worker and pet load balancer and security rules.
+            /// </summary>
+            WorkerAndPet = 0x00000002
         }
 
         //---------------------------------------------------------------------
@@ -234,8 +235,8 @@ namespace Neon.Hive
             /// The public FQDN or IP address (as a string) to be used to connect to the
             /// node via SSH while provisioning the hive.  This will be set to the
             /// FQDN of <see cref="PublicAddress"/> if the hive nodes are being
-            /// provisioned with addresses or else the FQDN address of the hive manager
-            /// or worker load balancer.
+            /// provisioned with addresses or else the FQDN address of the hive 
+            /// manager or worker load balancer.
             /// </summary>
             public string PublicSshAddress { get; set; }
 
@@ -935,10 +936,10 @@ namespace Neon.Hive
                 nsgVpn = nsgVpnCreator.Create();
             }
 
-            if ((updateNetworks & NetworkUpdateSets.Worker) != 0)
+            if ((updateNetworks & NetworkUpdateSets.WorkerAndPet) != 0)
             {
                 //-----------------------------------------------------------------
-                // Create the worker node security group.
+                // Create the worker/pet node security group.
 
                 var nsgNodeCreator = 
                     azure.NetworkSecurityGroups
@@ -1132,7 +1133,7 @@ namespace Neon.Hive
                 lbManager = lbManagerCreator.Create();
             }
 
-            if ((updateNetworks & NetworkUpdateSets.Worker) != 0)
+            if ((updateNetworks & NetworkUpdateSets.WorkerAndPet) != 0)
             {
                 //-----------------------------------------------------------------
                 // Create the load balancer for the worker nodes.
@@ -1201,7 +1202,7 @@ namespace Neon.Hive
 
                 if (tempSsh)
                 {
-                    foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsWorker))
+                    foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsWorker || n.IsPet))
                     {
                         lbWorkerCreator
                             .DefineInboundNatRule(azureNode.SshNatRuleName)
@@ -1527,8 +1528,8 @@ iface eth1 inet dhcp
         {
             AzureConnect();
 
-            CreateNetworkSecurityGroups(NetworkUpdateSets.Worker, endpoints);
-            CreateLoadbalancers(NetworkUpdateSets.Worker, endpoints);
+            CreateNetworkSecurityGroups(NetworkUpdateSets.WorkerAndPet, endpoints);
+            CreateLoadbalancers(NetworkUpdateSets.WorkerAndPet, endpoints);
         }
     }
 }
