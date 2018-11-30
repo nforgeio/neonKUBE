@@ -197,6 +197,24 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Returns the path the neonFORGE temporary folder, creating the folder if it doesn't already exist.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        /// <remarks>
+        /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
+        /// to deploy and manage neonHIVEs.  The client will use this to store temporary files that may
+        /// include sensitive information because these folders are encrypted on disk.
+        /// </remarks>
+        public static string GetTempFolder()
+        {
+            var path = Path.Combine(GetHiveUserFolder(), "temp");
+
+            Directory.CreateDirectory(path);
+
+            return path;
+        }
+
+        /// <summary>
         /// Returns the path to the root folder containing the installed Ansible role files.
         /// </summary>
         /// <returns>The folder path.</returns>

@@ -1,5 +1,5 @@
 {
-  "Name": "test-azure",
+  "Name": "home-azure",
   "Datacenter": "westus2",
   "Environment": "development",
   "TimeSources": [ "0.pool.ntp.org" ],
@@ -80,16 +80,6 @@
       }
     },
     "pet-0": {
-      "Role": "pet",
-      "Azure": {
-        "VmSize": "Standard_DS2_v2",
-        "HardDriveCount": 0
-      },
-      "Labels": {
-        "LogEsData": true
-      }
-    },
-    "pet-1": {
       "Role": "pet",
       "Azure": {
         "VmSize": "Standard_DS2_v2",

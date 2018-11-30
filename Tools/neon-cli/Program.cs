@@ -178,6 +178,11 @@ OPTIONS:
     --version=VERSION                   - Overrides the neon-cli version
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for hive
                                           stablization (defaults to 60s).
+
+NOTE:
+
+Virtual machines provisioned to cloud environments like Azure and AWS will
+use a random password if [--machine-password] isn't explicitly set.
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -217,12 +222,13 @@ OPTIONS:
             HiveRootFolder  = HiveHelper.GetHiveUserFolder();
             HiveLoginFolder = HiveHelper.GetLoginFolder();
             HiveSetupFolder = HiveHelper.GetVmTemplatesFolder();
+            HiveTempFolder  = HiveHelper.GetTempFolder();
             CurrentHivePath = HiveHelper.CurrentPath;
 
             // We're going to special case the temp folder and locate this within the [/dev/shm] 
             // tmpfs based RAM drive if we're running in the tool container.
 
-            HiveTempFolder  = HiveHelper.InToolContainer ? "/dev/shm/temp" : Path.Combine(HiveRootFolder, "temp");
+            HiveTempFolder  = HiveHelper.InToolContainer ? "/dev/shm/temp" : HiveTempFolder;
 
             Directory.CreateDirectory(HiveLoginFolder);
             Directory.CreateDirectory(HiveTempFolder);
@@ -1206,6 +1212,11 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         public static string HiveSetupFolder { get; private set; }
 
         /// <summary>
+        /// Returns the path to the hive temp folder.
+        /// </summary>
+        public static string HiveTemppFolder { get; private set; }
+
+        /// <summary>
         /// Returns the path to the login information for the named hive.
         /// </summary>
         /// <param name="username">The operator's user name.</param>
@@ -1300,10 +1311,10 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         public static string MachineUsername { get; private set; }
 
         /// <summary>
-        /// Returns the password used to secure the hive nodes before they are setup.  This
-        /// defaults to <b>sysadmin0000</b> which is used for the neonHIVE machine templates.
+        /// The password used to secure the hive nodes before they are setup.  This defaults
+        /// to <b>sysadmin0000</b> which is used for the neonHIVE machine templates.
         /// </summary>
-        public static string MachinePassword { get; private set; }
+        public static string MachinePassword { get; set; }
 
         /// <summary>
         /// Returns the hive login information for the currently logged in hive or <c>null</c>.

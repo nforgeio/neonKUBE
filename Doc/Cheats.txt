@@ -38,7 +38,7 @@ neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@ho
 neon hive set allow-unit-testing=true
 # neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small
 #------------------------------------------------------------------------------
-# AZURE:
+# AZURE:JEFF
 neon logout
 neon login rm root@home-azure --force
 neon hive prepare %NF_ROOT%\Devops\test\hives\home-azure\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
