@@ -164,7 +164,7 @@ namespace Neon.Hive
             Manager = 0x0000001,
 
             /// <summary>
-            /// Update the worker and pet load balancer and security rules.
+            /// Update the worker/pet load balancer and security rules.
             /// </summary>
             WorkerAndPet = 0x00000002
         }
@@ -236,7 +236,7 @@ namespace Neon.Hive
             /// node via SSH while provisioning the hive.  This will be set to the
             /// FQDN of <see cref="PublicAddress"/> if the hive nodes are being
             /// provisioned with addresses or else the FQDN address of the hive 
-            /// manager or worker load balancer.
+            /// manager or worker/pet load balancer.
             /// </summary>
             public string PublicSshAddress { get; set; }
 
@@ -306,22 +306,22 @@ namespace Neon.Hive
         private AzureCredentials                azureCredentials;
         private IAzure                          azure;
         private string                          pipLbManagerName;
-        private string                          pipLbWorkerName;
+        private string                          pipLbNodeName;
         private IPublicIPAddress                pipLbManager;
-        private IPublicIPAddress                pipLbWorker;
+        private IPublicIPAddress                pipLbNode;
         private string                          subnetNodesName;
         private string                          subnetVpnName;
         private string                          vpnRouteName;
         private string                          vnetName;
         private INetwork                        vnet;
         private string                          lbManagerName;
-        private string                          lbWorkerName;
+        private string                          lbNoderName;
         private ILoadBalancer                   lbManager;
-        private ILoadBalancer                   lbWorker;
+        private ILoadBalancer                   lbNode;
         private string                          asetManagerName;
-        private string                          asetWorkerName;
+        private string                          asetNodeName;
         private IAvailabilitySet                asetManager;
-        private IAvailabilitySet                asetWorker;
+        private IAvailabilitySet                asetNode;
         private string                          nsgVpnName;
         private string                          nsgNodeName;
         private INetworkSecurityGroup           nsgVpn;
@@ -350,13 +350,13 @@ namespace Neon.Hive
             // Generate the Azure asset names for the hive.
 
             this.pipLbManagerName = $"{hiveName}-pip-lb-manager";
-            this.pipLbWorkerName  = $"{hiveName}-pip-lb-worker";
+            this.pipLbNodeName  = $"{hiveName}-pip-lb-node";
             this.vpnRouteName     = $"{hiveName}-vnet-routes";
             this.vnetName         = $"{hiveName}-vnet";
             this.lbManagerName    = $"{hiveName}-lb-manager";
-            this.lbWorkerName     = $"{hiveName}-lb-worker";
+            this.lbNoderName     = $"{hiveName}-lb-node";
             this.asetManagerName  = $"{hiveName}-aset-manager";
-            this.asetWorkerName   = $"{hiveName}-aset-worker";
+            this.asetNodeName   = $"{hiveName}-aset-node";
             this.nsgVpnName       = $"{hiveName}-nsg-vpn";
             this.nsgNodeName      = $"{hiveName}-nsg-node";
             this.subnetNodesName  = "nodes";
@@ -761,8 +761,8 @@ namespace Neon.Hive
                         .WithLeafDomainLabel(managerLeafDomainPrefix + azureOptions.DomainLabel)
                         .Create();
 
-                pipLbWorker = azure.PublicIPAddresses
-                    .Define(pipLbWorkerName)
+                pipLbNode = azure.PublicIPAddresses
+                    .Define(pipLbNodeName)
                         .WithRegion(azureOptions.Region)
                         .WithExistingResourceGroup(resourceGroup)
                         .WithStaticIP()
@@ -779,8 +779,8 @@ namespace Neon.Hive
                         .WithLeafDomainLabel(managerLeafDomainPrefix + azureOptions.DomainLabel)
                         .Create();
 
-                pipLbWorker = azure.PublicIPAddresses
-                    .Define(pipLbWorkerName)
+                pipLbNode = azure.PublicIPAddresses
+                    .Define(pipLbNodeName)
                         .WithRegion(azureOptions.Region)
                         .WithExistingResourceGroup(resourceGroup)
                         .WithDynamicIP()
@@ -789,7 +789,7 @@ namespace Neon.Hive
             }
 
             hive.Definition.Network.ManagerPublicAddress = pipLbManager.Fqdn;
-            hive.Definition.Network.WorkerPublicAddress  = pipLbWorker.Fqdn;
+            hive.Definition.Network.NodePublicAddress    = pipLbNode.Fqdn;
 
             //-----------------------------------------------------------------
             // Create dynamic public addresses for individual node VMs if requested.
@@ -835,7 +835,7 @@ namespace Neon.Hive
 
                 foreach (var azureNode in nodeDictionary.Values)
                 {
-                    azureNode.PublicSshAddress = azureNode.IsManager ? pipLbManager.Fqdn : pipLbWorker.Fqdn;
+                    azureNode.PublicSshAddress = azureNode.IsManager ? pipLbManager.Fqdn : pipLbNode.Fqdn;
                 }
             }
         }
@@ -854,8 +854,8 @@ namespace Neon.Hive
                     .WithUpdateDomainCount(5)
                     .Create();
 
-            asetWorker = azure.AvailabilitySets
-                .Define(asetWorkerName)
+            asetNode = azure.AvailabilitySets
+                .Define(asetNodeName)
                     .WithRegion(azureOptions.Region)
                     .WithExistingResourceGroup(resourceGroup)
                     .WithSku(AvailabilitySetSkuTypes.Managed)
@@ -1136,33 +1136,33 @@ namespace Neon.Hive
             if ((updateNetworks & NetworkUpdateSets.WorkerAndPet) != 0)
             {
                 //-----------------------------------------------------------------
-                // Create the load balancer for the worker nodes.
+                // Create the load balancer for the worker/pet nodes.
 
-                if (pipLbWorker == null)
+                if (pipLbNode == null)
                 {
-                    // We need to fetch the worker load balancer's public IP address
+                    // We need to fetch the worker/pet load balancer's public IP address
                     // if we don't already have it (e.g. when we're not in the process
                     // of configuring the hive).
 
-                    pipLbWorker = azure.PublicIPAddresses.GetByResourceGroup(resourceGroup, pipLbWorkerName);
+                    pipLbNode = azure.PublicIPAddresses.GetByResourceGroup(resourceGroup, pipLbNodeName);
                 }
 
-                var lbDefWorker =
+                var lbDefNode =
                     azure.LoadBalancers
-                        .Define(lbWorkerName)
+                        .Define(lbNoderName)
                             .WithRegion(azureOptions.Region)
                             .WithExistingResourceGroup(resourceGroup);
 
                 // Add a load balancing rule for each public hive endpoint.
 
-                IWithLBRuleOrNatOrCreate lbWorkerCreator = null;
+                IWithLBRuleOrNatOrCreate lbNodeCreator = null;
 
                 if (endpoints.Count > 0)
                 {
                     foreach (var endpoint in endpoints)
                     {
-                        lbWorkerCreator = 
-                            lbDefWorker
+                        lbNodeCreator = 
+                            lbDefNode
                                 .DefineLoadBalancingRule($"neon-endpoint-tcp-{endpoint.FrontendPort}")
                                     .WithProtocol(TransportProtocol.Tcp)
                                     .FromFrontend(feConfigName)
@@ -1188,8 +1188,8 @@ namespace Neon.Hive
                     // VPN network security group rule to prevent the odd security 
                     // breach.
 
-                    lbWorkerCreator = 
-                        lbDefWorker
+                    lbNodeCreator = 
+                        lbDefNode
                             .DefineLoadBalancingRule($"neon-unused-tcp-{HiveHostPorts.ReservedUnused}")
                                 .WithProtocol(TransportProtocol.Tcp)
                                 .FromFrontend(feConfigName)
@@ -1204,7 +1204,7 @@ namespace Neon.Hive
                 {
                     foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsWorker || n.IsPet))
                     {
-                        lbWorkerCreator
+                        lbNodeCreator
                             .DefineInboundNatRule(azureNode.SshNatRuleName)
                             .WithProtocol(TransportProtocol.Tcp)
                             .FromFrontend(feConfigName)
@@ -1214,9 +1214,9 @@ namespace Neon.Hive
                     }
                 }
 
-                lbWorker = lbWorkerCreator
+                lbNode = lbNodeCreator
                     .DefinePublicFrontend(feConfigName)
-                        .WithExistingPublicIPAddress(pipLbWorker)
+                        .WithExistingPublicIPAddress(pipLbNode)
                         .Attach()
                     .DefineBackend(bePoolName)
                         .Attach()
@@ -1246,7 +1246,7 @@ namespace Neon.Hive
             foreach (var azureNode in nodeDictionary.Values)
             {
                 // All nodes need a NIC in the [nodes] subnet.  This will be the primary
-                // (and only NIC) for workers and also the primary NIC for managers.
+                // (and only NIC) for worker/pets and also the primary NIC for managers.
 
                 var nodeNicCreator = 
                     azure.NetworkInterfaces
@@ -1282,8 +1282,8 @@ namespace Neon.Hive
                 {
                     nodeNicCreator
                         .WithExistingNetworkSecurityGroup(nsgNode)
-                        .WithExistingLoadBalancerBackend(lbWorker, bePoolName)
-                        .WithExistingLoadBalancerInboundNatRule(lbWorker, azureNode.SshNatRuleName);
+                        .WithExistingLoadBalancerBackend(lbNode, bePoolName)
+                        .WithExistingLoadBalancerInboundNatRule(lbNode, azureNode.SshNatRuleName);
                 }
 
                 nodeNicCreators.Add(nodeNicCreator);
@@ -1407,7 +1407,7 @@ namespace Neon.Hive
 
                 vmCreator
                     .WithSize(azureNode.Node.Metadata.Azure.VmSize.ToString())
-                    .WithExistingAvailabilitySet(azureNode.IsManager ? asetManager : asetWorker);
+                    .WithExistingAvailabilitySet(azureNode.IsManager ? asetManager : asetNode);
 
                 vmCreators.Add(vmCreator);
             }
@@ -1496,9 +1496,9 @@ iface eth1 inet dhcp
 
             AzureConnect();
 
-            lbWorker = azure.LoadBalancers.GetByResourceGroup(resourceGroup, lbWorkerName);
+            lbNode = azure.LoadBalancers.GetByResourceGroup(resourceGroup, lbNoderName);
 
-            foreach (var item in lbWorker.LoadBalancingRules.Where(r => r.Key.StartsWith("neon-endpoint-")))
+            foreach (var item in lbNode.LoadBalancingRules.Where(r => r.Key.StartsWith("neon-endpoint-")))
             {
                 HostedEndpointProtocol protocol;
 

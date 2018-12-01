@@ -303,7 +303,7 @@ namespace Neon.Hive
         public string ManagerPublicAddress { get; set; }
 
         /// <summary>
-        /// Optionally specifies the hive's worker public FQDN or IP address during 
+        /// Optionally specifies the hive's worker/pet public FQDN or IP address during 
         /// hive provisioning.
         /// </summary>
         /// <remarks>
@@ -316,9 +316,9 @@ namespace Neon.Hive
         /// This is not required for on-premise deployments.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "WorkerPublicAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "NodePublicAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public string WorkerPublicAddress { get; set; }
+        public string NodePublicAddress { get; set; }
 
         /// <summary>
         /// <para>
