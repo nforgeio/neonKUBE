@@ -252,6 +252,11 @@ ARGUMENTS:
             {
                 Console.Error.WriteLine($"*** ERROR: Hive login failed{viaVpn}: {NeonHelper.ExceptionError(e)}");
                 Console.Error.WriteLine("");
+
+                // Delete the current login because it failed.
+
+                CurrentHiveLogin.Delete();
+
                 Program.Exit(1);
             }
         }
