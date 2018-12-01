@@ -11,7 +11,6 @@
       "TenantId": "$<<NF_AZURE_TENANTID>>",
       "ApplicationId": "$<<NF_AZURE_APPLICATIONID>>",
       "Password": "$<<NF_AZURE_PASSWORD>>",
-      "ResourceGroup": "neon-dev",
       "Region": "westus2",
       "DomainLabel": "neonforge-99",
       "StaticHiveAddress": false,

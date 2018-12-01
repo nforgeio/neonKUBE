@@ -65,7 +65,8 @@ namespace Neon.Hive
         public string Password { get; set; }
 
         /// <summary>
-        /// Azure resource group where all hive components are to be provisioned.
+        /// Azure resource group where all hive components are to be provisioned.  This defaults
+        /// to the hive name but can be customized as required.
         /// </summary>
         [JsonProperty(PropertyName = "ResourceGroup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -331,7 +332,7 @@ namespace Neon.Hive
 
             if (string.IsNullOrEmpty(ResourceGroup))
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be empty.");
+                ResourceGroup = hiveDefinition.Name;
             }
 
             if (ResourceGroup.Length > 64)
