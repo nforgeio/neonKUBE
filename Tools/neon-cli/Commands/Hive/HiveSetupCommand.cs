@@ -137,6 +137,21 @@ OPTIONS:
                 Console.Error.WriteLine($"*** ERROR: Hive [{hiveLogin.HiveName}] has already been setup.");
             }
 
+            // $hack(jeff.lill):
+            //
+            // The [hive setup] command used to use the [Program.MachineUsername] and [Program.MachinePassword]
+            // settings directly but we changes this to let the [hive prepare] command do that and persist the
+            // credentials to the hive login so the setup command will use those.  We needed to do that because
+            // Azure no longer accepts the default password "sysadmin0000" as not meeting their new complexity
+            // requirements and also because cloud VMs will now be provisioned with secure passwords right out
+            // of the box.
+            //
+            // We're going to set the Program credentials to here so that we'll end up using the credentials
+            // from the login.  This isn't super clean.
+
+            Program.MachineUsername = hiveLogin.SshUsername;
+            Program.MachinePassword = hiveLogin.SshPassword;
+
             // Note that hive setup appends to existing log files.
 
             hive = new HiveProxy(hiveLogin, Program.CreateNodeProxy<NodeDefinition>, appendLog: true, useBootstrap: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
@@ -552,7 +567,6 @@ OPTIONS:
             hiveLogin.IsRoot       = true;
             hiveLogin.Username     = HiveConst.RootUser;
             hiveLogin.Definition   = hive.Definition;
-            hiveLogin.SshUsername  = Program.MachineUsername;
 
             if (hive.Definition.Vpn.Enabled)
             {
@@ -3714,7 +3728,7 @@ chmod 666 /run/ssh-key*
 
                     var script =
 $@"
-echo '{Program.MachineUsername}:{hiveLogin.SshPassword}' | chpasswd
+echo '{hiveLogin.SshUsername}:{hiveLogin.SshPassword}' | chpasswd
 ";
                     var bundle = new CommandBundle("./set-strong-password.sh");
 
@@ -3728,7 +3742,7 @@ echo '{Program.MachineUsername}:{hiveLogin.SshPassword}' | chpasswd
                         Program.Exit(response.ExitCode);
                     }
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(Program.MachineUsername, hiveLogin.SshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(hiveLogin.Username, hiveLogin.SshPassword));
                 });
         }
 

@@ -1308,7 +1308,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// Returns the username used to secure the hive nodes before they are setup.  This
         /// defaults to <b>sysadmin</b> which is used for the neonHIVE machine templates.
         /// </summary>
-        public static string MachineUsername { get; private set; }
+        public static string MachineUsername { get; set; }
 
         /// <summary>
         /// The password used to secure the hive nodes before they are setup.  This defaults
