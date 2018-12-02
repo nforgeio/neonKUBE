@@ -25,7 +25,7 @@ powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-bare jeff-latest
 # HOME-SMALL:JEFF
 neon logout
 neon login rm root@home-small --force
-neon hive prepare %NF_ROOT%\Devops\test\hives\home-small\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
+neon hive prepare %NF_ROOT%\Devops\test\hives\home-small\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force --image-tag=jeff-latest
 neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small --image-tag=jeff-latest
 neon hive set allow-unit-testing=true
 # neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small

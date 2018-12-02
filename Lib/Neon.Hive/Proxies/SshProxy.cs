@@ -1299,10 +1299,15 @@ namespace Neon.Hive
             SudoCommand($"mkdir -p {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
 
-            // Also ensure that the [/home/root] folder exists.
+            // Also ensure that these folders exist.
 
             SudoCommand("mkdir -p /home/root", RunOptions.LogOnErrorOnly);
             SudoCommand("chown root:root /home/root", RunOptions.LogOnErrorOnly);
+
+            SudoCommand("mkdir -p /home/root/.exec", RunOptions.LogOnErrorOnly);
+            SudoCommand("chown root:root /home/root/.exec", RunOptions.LogOnErrorOnly);
+
+            SudoCommand("chmod 777 /home/root/.exec", RunOptions.LogOnErrorOnly);           // $todo(jeff.lill): Another potential security problem?
         }
 
         /// <summary>
