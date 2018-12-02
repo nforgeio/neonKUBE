@@ -111,6 +111,14 @@ namespace Neon.Hive
         public bool IsRoot { get; set; }
 
         /// <summary>
+        /// Indicates whether a strong host SSH password was generated for the hive.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "HasStrongSshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool HasStrongSshPassword { get; set; }
+
+        /// <summary>
         /// The root SSH username for the hive nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -125,12 +133,20 @@ namespace Neon.Hive
         public string SshPassword { get; set; }
 
         /// <summary>
-        /// Indicates whether a strong host SSH password was generated for the hive.
-        /// This defaults to <c>false</c>.
+        /// <para>
+        /// The temporary root SSH password password for the hive nodes used while
+        /// provisoning the hive.  This will be replaced by <see cref="SshPassword"/>
+        /// once hive setup has completed.
+        /// </para>
+        /// <note>
+        /// This property can be useful for debugging hive provisioning or setup
+        /// problems before the final <see cref="SshPassword"/> password is
+        /// configured for all hive hosts (just before setup completed).
+        /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "HasStrongSshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool HasStrongSshPassword { get; set; }
+        [JsonProperty(PropertyName = "SshProvisionPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string SshProvisionPassword { get; set; }
 
         /// <summary>
         /// The public and private parts of the SSH client key when the hive is

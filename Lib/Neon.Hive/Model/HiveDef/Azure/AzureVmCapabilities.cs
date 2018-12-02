@@ -45,7 +45,7 @@ namespace Neon.Hive
             //-----------------------------------------------------------------
             // Standard-A
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A1, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A1, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 1,
                 RamSizeMB = 1750,
@@ -56,7 +56,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 2,
                 RamSizeMB = 3500,
@@ -67,7 +67,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A3, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A3, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 7000,
@@ -78,7 +78,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A4, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A4, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 1400,
@@ -89,7 +89,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A5, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A5, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 1,
                 RamSizeMB = 14000,
@@ -100,7 +100,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A6, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A6, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 2800,
@@ -111,7 +111,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A7, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A7, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 56000,
@@ -125,7 +125,7 @@ namespace Neon.Hive
             //-----------------------------------------------------------------
             // Standard-D-V2
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D1_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D1_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 1,
                 RamSizeMB = 3500,
@@ -136,7 +136,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D2_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D2_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 2,
                 RamSizeMB = 7000,
@@ -147,7 +147,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D3_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D3_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 14000,
@@ -158,7 +158,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D4_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D4_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 28000,
@@ -169,7 +169,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D5_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D5_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 16,
                 RamSizeMB = 56000,
@@ -180,7 +180,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D11_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D11_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 2,
                 RamSizeMB = 14000,
@@ -191,7 +191,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D12_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D12_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 28000,
@@ -202,7 +202,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D13_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D13_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 56000,
@@ -213,7 +213,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D14_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D14_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 16,
                 RamSizeMB = 112000,
@@ -224,7 +224,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D15_v2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D15_v2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 20,
                 RamSizeMB = 140000,
@@ -238,7 +238,7 @@ namespace Neon.Hive
             //-----------------------------------------------------------------
             // Standard-DS-V2
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS1_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS1_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 1,
                 RamSizeMB = 3500,
@@ -249,7 +249,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS2_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS2_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 2,
                 RamSizeMB = 7000,
@@ -260,7 +260,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS3_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS3_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 14000,
@@ -271,7 +271,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS4_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS4_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 28000,
@@ -282,7 +282,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS5_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS5_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 16,
                 RamSizeMB = 56000,
@@ -293,7 +293,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS11_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS11_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 2,
                 RamSizeMB = 14000,
@@ -304,7 +304,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS12_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS12_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 28000,
@@ -315,7 +315,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS13_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS13_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 56000,
@@ -326,7 +326,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS14_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS14_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 16,
                 RamSizeMB = 12000,
@@ -337,7 +337,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS15_v2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS15_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 20,
                 RamSizeMB = 140000,
@@ -351,7 +351,7 @@ namespace Neon.Hive
             //-----------------------------------------------------------------
             // Standard-G
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G1, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G1, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 2,
                 RamSizeMB = 28000,
@@ -362,7 +362,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 56000,
@@ -373,7 +373,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G3, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G3, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 112000,
@@ -384,7 +384,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G4, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G4, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 16,
                 RamSizeMB = 224000,
@@ -395,7 +395,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G5, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G5, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 32,
                 RamSizeMB = 448000,
@@ -409,7 +409,7 @@ namespace Neon.Hive
             //-----------------------------------------------------------------
             // Standard-GS
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS1, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS1, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 2,
                 RamSizeMB = 28000,
@@ -420,7 +420,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS2, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 56000,
@@ -431,7 +431,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS3, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 112000,
@@ -442,7 +442,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS4, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS4, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 16,
                 RamSizeMB = 224000,
@@ -453,7 +453,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS5, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS5, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 32,
                 RamSizeMB = 448000,
@@ -467,7 +467,7 @@ namespace Neon.Hive
             //-----------------------------------------------------------------
             // Standard-F
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F1, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F1, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 1,
                 RamSizeMB = 2000,
@@ -478,7 +478,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 2,
                 RamSizeMB = 4000,
@@ -489,7 +489,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 8000,
@@ -500,7 +500,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 16000,
@@ -511,7 +511,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16, AzureStorageTypes.StandardLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16, AzureStorageTypes.StandardHDD_LRS)
             {
                 CoreCount = 16,
                 RamSizeMB = 32000,
@@ -525,7 +525,7 @@ namespace Neon.Hive
             //-----------------------------------------------------------------
             // Standard-FS
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F1s, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F1s, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 1,
                 RamSizeMB = 2000,
@@ -536,7 +536,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2s, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2s, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 2,
                 RamSizeMB = 4000,
@@ -547,7 +547,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4s, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4s, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 4,
                 RamSizeMB = 8000,
@@ -558,7 +558,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8s, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8s, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 8,
                 RamSizeMB = 16000,
@@ -569,7 +569,7 @@ namespace Neon.Hive
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16s, AzureStorageTypes.StandardLRS, AzureStorageTypes.PremiumLRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16s, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
                 CoreCount = 16,
                 RamSizeMB = 32000,

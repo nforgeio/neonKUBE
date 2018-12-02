@@ -50,9 +50,9 @@ namespace Neon.Hive
         {
             switch (storageType)
             {
-                case AzureStorageTypes.StandardLRS:
+                case AzureStorageTypes.StandardHDD_LRS:
 
-                    // Azure currently standard disks sizes: 32GB, 64GB, 128GB, 512GB, and 1024GB (1TB)
+                    // Azure currently standard HDD sizes: 32GB, 64GB, 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
 
                     if (requestedSizeGB <= 32)
                     {
@@ -70,14 +70,30 @@ namespace Neon.Hive
                     {
                         return 512;
                     }
-                    else
+                    else if (requestedSizeGB <= 1024)
                     {
                         return 1024;
                     }
+                    else if (requestedSizeGB <= 2048)
+                    {
+                        return 2048;
+                    }
+                    else if (requestedSizeGB <= 8192)
+                    {
+                        return 8192;
+                    }
+                    else if (requestedSizeGB <= 16314)
+                    {
+                        return 16314;
+                    }
+                    else
+                    {
+                        return 32628;
+                    }
 
-                case AzureStorageTypes.PremiumLRS:
+                case AzureStorageTypes.StandardSSD_LRS:
 
-                    // Azure currently premium disks sizes: 128GB, 512GB, and 1024GB (1TB)
+                    // Azure currently standard SSD sizes: 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
 
                     if (requestedSizeGB <= 128)
                     {
@@ -87,9 +103,66 @@ namespace Neon.Hive
                     {
                         return 512;
                     }
-                    else 
+                    else if (requestedSizeGB <= 1024)
                     {
                         return 1024;
+                    }
+                    else if (requestedSizeGB <= 2048)
+                    {
+                        return 2048;
+                    }
+                    else if (requestedSizeGB <= 8192)
+                    {
+                        return 8192;
+                    }
+                    else if (requestedSizeGB <= 16314)
+                    {
+                        return 16314;
+                    }
+                    else
+                    {
+                        return 32628;
+                    }
+
+                case AzureStorageTypes.PremiumSSD_LRS:
+
+                    // Azure currently premium disks sizes: 32GB, 64GB, 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
+
+                    if (requestedSizeGB <= 32)
+                    {
+                        return 32;
+                    }
+                    else if (requestedSizeGB <= 64)
+                    {
+                        return 64;
+                    }
+                    else if (requestedSizeGB <= 128)
+                    {
+                        return 128;
+                    }
+                    else if (requestedSizeGB <= 512)
+                    {
+                        return 512;
+                    }
+                    else if (requestedSizeGB <= 1024)
+                    {
+                        return 1024;
+                    }
+                    else if (requestedSizeGB <= 2048)
+                    {
+                        return 2048;
+                    }
+                    else if (requestedSizeGB <= 8192)
+                    {
+                        return 8192;
+                    }
+                    else if (requestedSizeGB <= 16314)
+                    {
+                        return 16314;
+                    }
+                    else
+                    {
+                        return 32628;
                     }
 
                 default:

@@ -472,7 +472,15 @@ namespace Neon.Hive
         {
             // Identify the OSD Bluestore block device for OSD nodes.
 
-            // $todo(jeff.lill): Implement this
+            if (hive.Definition.HiveFS.Enabled)
+            {
+                foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
+                {
+                    var diskLetter = (char)('b' + node.Azure.HardDriveCount);
+
+                    node.Labels.CephOSDDevice = $"/dev/sd{diskLetter}";
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -491,7 +499,8 @@ namespace Neon.Hive
                 if (node.Azure.HardDriveCount == 0)
                 {
                     node.Labels.StorageCapacityGB = node.Azure.HardDriveSizeGB * node.Azure.HardDriveCount;
-                    node.Labels.StorageSSD        = node.Azure.StorageType == AzureStorageTypes.PremiumLRS;
+                    node.Labels.StorageSSD        = node.Azure.StorageType == AzureStorageTypes.PremiumSSD_LRS || 
+                                                    node.Azure.StorageType == AzureStorageTypes.StandardSSD_LRS;
                     node.Labels.StorageLocal      = false;
                     node.Labels.StorageEphemeral  = false;
                     node.Labels.StorageRedundant  = true;
@@ -1351,12 +1360,12 @@ namespace Neon.Hive
                 {
                     switch (azureNodeOptions.StorageType)
                     {
-                        case AzureStorageTypes.PremiumLRS:
+                        case AzureStorageTypes.PremiumSSD_LRS:
 
                             storageAccountType = StorageAccountTypes.PremiumLRS;
                             break;
 
-                        case AzureStorageTypes.StandardLRS:
+                        case AzureStorageTypes.StandardHDD_LRS:
 
                             storageAccountType = StorageAccountTypes.StandardLRS;
                             break;
@@ -1403,6 +1412,20 @@ namespace Neon.Hive
                     {
                         vmCreator.WithNewDataDisk(AzureHelper.GetDiskSizeGB(azureNodeOptions.StorageType, azureNodeOptions.HardDriveSizeGB), lun, CachingTypes.None);
                     }
+                }
+
+                if (hive.Definition.HiveFS.Enabled)
+                {
+                    // $todo(jeff.lill):
+                    //
+                    // We're only going to create one OSD drive for now.  In the future, we could create
+                    // multiple OSD drives and configure them as a single RAID0 partition.  This may not
+                    // end up being important as Azure keeps increasing the possible drive sizes (StandardSSD
+                    // is now previewing up to 32TB drives).
+
+                    var lun = azureNodeOptions.HardDriveCount + 1;  // The OSD drive will be the last mounted block device.
+
+                    vmCreator.WithNewDataDisk(AzureHelper.GetDiskSizeGB(azureNodeOptions.StorageType, azureNodeOptions.HardDriveSizeGB), lun, CachingTypes.None);
                 }
 
                 vmCreator

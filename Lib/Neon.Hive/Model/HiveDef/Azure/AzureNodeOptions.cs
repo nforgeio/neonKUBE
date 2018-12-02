@@ -30,7 +30,7 @@ namespace Neon.Hive
     public class AzureNodeOptions
     {
         private const AzureVmSizes          defaultVmSize      = AzureVmSizes.Standard_DS3_v2;
-        private const AzureStorageTypes     defaultStorageType = AzureStorageTypes.PremiumLRS;
+        private const AzureStorageTypes     defaultStorageType = AzureStorageTypes.StandardHDD_LRS;
 
         /// <summary>
         /// Specifies the Azure virtual machine size.  This defaults to <see cref="AzureVmSizes.Standard_DS3_v2"/>.
@@ -40,17 +40,24 @@ namespace Neon.Hive
         public AzureVmSizes VmSize { get; set; } = defaultVmSize;
 
         /// <summary>
-        /// Specifies the storage type to use for any mounted drives.  This defaults to <see cref="AzureStorageTypes.StandardLRS"/>.
+        /// <para>
+        /// Specifies the storage type to use for any mounted drives.  This defaults to <see cref="AzureStorageTypes.StandardHDD_LRS"/>
+        /// as the lowest cost option.
+        /// </para>
+        /// <note>
+        /// You should really consider upgrading production hives to one of the SSD based storage types.
+        /// </note>
         /// </summary>
         /// <remarks>
         /// <note>
-        /// All virtual machine sizes support <see cref="AzureStorageTypes.StandardLRS"/> which is why that
+        /// All virtual machine sizes support <see cref="AzureStorageTypes.StandardHDD_LRS"/> which is why that
         /// is the default value.  Consult the consult the Azure documentation to virtual machine size specified 
-        /// by <see cref="VmSize"/> can support <see cref="AzureStorageTypes.PremiumLRS"/>.
+        /// by <see cref="VmSize"/> can support <see cref="AzureStorageTypes.PremiumSSD_LRS"/>.
         /// </note>
         /// <para>
-        /// <see cref="AzureStorageTypes.StandardLRS"/> specifies relatively slow rotating hard drives and
-        /// <see cref="AzureStorageTypes.PremiumLRS"/> specifies fast SSD based drives.  Azure recommends that
+        /// <see cref="AzureStorageTypes.StandardHDD_LRS"/> specifies relatively slow rotating hard drives,
+        /// <see cref="AzureStorageTypes.StandardSSD_LRS"/> specifies standard SSD based drives,
+        /// <see cref="AzureStorageTypes.PremiumSSD_LRS"/> specifies fast SSD based drives.  Azure recommends that
         /// most production applications deploy with SSDs.
         /// </para>
         /// </remarks>
@@ -88,17 +95,28 @@ namespace Neon.Hive
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Azure <see cref="AzureStorageTypes.StandardLRS"/> based drives may be provisioned
+        /// Azure <see cref="AzureStorageTypes.StandardHDD_LRS"/> based drives may be provisioned
         /// with one of these sizes: <b>32 GB</b>, <b>64 GB</b>, <b>128 GB</b>, <b>256 GB</b>,
-        /// <b>512 GB</b> or <b>1024 GB</b>.
+        /// <b>512 GB</b>, <b>1TB</b>, <b>2TB</b>, <b>4TB</b> or <b>8TB</b>.
         /// </para>
         /// <para>
-        /// Azure <see cref="AzureStorageTypes.PremiumLRS"/> based drives may be provisioned
-        /// with fewer sizes: <b>128 GB</b>, <b>256 GB</b>, <b>512 GB</b> or <b>1024 GB</b>.
+        /// Azure <see cref="AzureStorageTypes.StandardSSD_LRS"/> based drives may be provisioned
+        /// with one of these sizes: <b>32 GB</b>, <b>64 GB</b>, <b>128 GB</b>, <b>256 GB</b>,
+        /// <b>512 GB</b>, <b>1TB</b>, <b>2TB</b>, <b>4TB</b>, <b>8TB</b>, <b>16TB</b> or <b>32TB</b>.
+        /// </para>
+        /// <para>
+        /// Azure <see cref="AzureStorageTypes.PremiumSSD_LRS"/> based drives may be provisioned
+        /// with sizes: <b>32GB</b>, <b>64GB</b>, <b>128GB</b>, <b>256GB</b>, <b>512GB</b>,
+        /// <b>1TB</b>, <b>2TB</b>, <b>4TB</b> or <b>8TB</b>.
         /// </para>
         /// <note>
         /// This size will be rounded up to the next valid drive size for the given storage type
         /// and rounded down to the maximum allowed size, if necessary.
+        /// </note>
+        /// <note>
+        /// The Azure drive sizes listed above may become out-of-date as Azure enhances their
+        /// services.  Review the Azure documentation for more information about what they
+        /// currently support.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "HardDriveSizeGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

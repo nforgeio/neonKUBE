@@ -488,12 +488,13 @@ Server Requirements:
             var hiveLoginPath = Program.GetHiveLoginPath(HiveConst.RootUser, hive.Definition.Name);
             var hiveLogin     = new HiveLogin()
             {
-                Path         = hiveLoginPath,
-                Username     = HiveConst.RootUser,
-                Definition   = hive.Definition,
-                SshUsername  = Program.MachineUsername,
-                SshPassword  = Program.MachinePassword,
-                SetupPending = true
+                Path                 = hiveLoginPath,
+                Username             = HiveConst.RootUser,
+                Definition           = hive.Definition,
+                SshUsername          = Program.MachineUsername,
+                SshPassword          = Program.MachinePassword,
+                SshProvisionPassword = Program.MachinePassword,
+                SetupPending         = true
             };
 
             if (hive.Definition.Vpn.Enabled)

@@ -30,7 +30,19 @@ namespace Neon.Hive
     {
         #pragma warning disable 1591 // Disable code comment warnings
 
-        StandardLRS,
-        PremiumLRS
+        /// <summary>
+        /// Standard managed spinning drives with local redundancy.
+        /// </summary>
+        StandardHDD_LRS,
+
+        /// <summary>
+        /// Standard managed SSD drives with local redundancy.
+        /// </summary>
+        StandardSSD_LRS,
+
+        /// <summary>
+        /// Premium managed SSD drives with local redundancy.
+        /// </summary>
+        PremiumSSD_LRS
     }
 }
