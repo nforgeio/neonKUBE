@@ -395,7 +395,7 @@ namespace Neon.Hive
                     processors:                 processors,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  diskBytes,
-                    snapshot:                hive.Definition.Hosting.XenServer.Snapshot,
+                    snapshot:                   hive.Definition.Hosting.XenServer.Snapshot,
                     extraDrives:                extraDrives,
                     primaryStorageRepository:   hive.Definition.Hosting.XenServer.StorageRepository,
                     extraStorageRespository:    hive.Definition.Hosting.XenServer.OsdStorageRepository);
