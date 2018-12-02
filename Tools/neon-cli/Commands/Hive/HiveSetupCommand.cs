@@ -3762,6 +3762,14 @@ echo '{hiveLogin.SshUsername}:{hiveLogin.SshPassword}' | chpasswd
 
 mkdir -p /dev/shm/ssh
 
+# For idempotentcy, ensure that the key file doesn't already exist to
+# avoid having the [ssh-keygen] command prompt and wait for permission
+# to overwrite it.
+
+if [ -f /dev/shm/ssh/ssh_host_rsa_key ] ; then
+    rm /dev/shm/ssh/ssh_host_rsa_key
+fi
+
 ssh-keygen -f /dev/shm/ssh/ssh_host_rsa_key -N '' -t rsa
 
 # Extract the host's SSL RSA key fingerprint to a temporary file

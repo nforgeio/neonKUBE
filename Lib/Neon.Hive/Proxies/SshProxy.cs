@@ -1298,6 +1298,11 @@ namespace Neon.Hive
 
             SudoCommand($"mkdir -p {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+
+            // Also ensure that the [/home/root] folder exists.
+
+            SudoCommand("mkdir -p /home/root", RunOptions.LogOnErrorOnly);
+            SudoCommand("chown root:root /home/root", RunOptions.LogOnErrorOnly);
         }
 
         /// <summary>
@@ -2707,9 +2712,6 @@ echo $? > {cmdFolder}/exit
         /// </note>
         /// <note>
         /// This command requires that the <b>unzip</b> package be installed on the host.
-        /// </note>
-        /// <note>
-        /// Any <c>null</c> arguments will be ignored.
         /// </note>
         /// </remarks>
         public CommandResponse SudoCommand(CommandBundle bundle, RunOptions runOptions = RunOptions.Defaults)

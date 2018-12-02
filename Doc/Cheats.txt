@@ -41,20 +41,21 @@ neon hive set allow-unit-testing=true
 # AZURE:JEFF
 neon logout
 neon login rm root@home-azure --force
-neon hive prepare %NF_ROOT%\Devops\test\hives\home-azure\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
+neon hive prepare %NF_ROOT%\Devops\test\hives\home-azure\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force --image-tag=jeff-latest
 neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-azure --image-tag=jeff-latest
 neon hive set allow-unit-testing=true
 #------------------------------------------------------------------------------
-
+# HOME-SMALL2:JEFF
 neon logout
 neon login rm root@home-small2 --force
-neon hive prepare %NF_ROOT%\Devops\test\hives\home-small2\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
+neon hive prepare %NF_ROOT%\Devops\test\hives\home-small2\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force --image-tag=jeff-latest
 neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@home-small2 --image-tag=jeff-latest
 neon hive set allow-unit-testing=true
-
+#------------------------------------------------------------------------------
+# WRT-JEFF:JEFF
 neon logout
 neon login rm root@wrt-jeff --force
-neon hive prepare %NF_ROOT%\Devops\test\hives\wrt-jeff\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force
+neon hive prepare %NF_ROOT%\Devops\test\hives\wrt-jeff\hive.json --log-folder=c:\hive-logs --max-parallel=10 --force --image-tag=jeff-latest
 neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@wrt-jeff --image-tag=jeff-latest
 neon hive set allow-unit-testing=true
 # neon hive setup --log-folder=c:\hive-logs --max-parallel=10 --unredacted root@wrt-jeff

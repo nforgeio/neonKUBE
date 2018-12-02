@@ -28,7 +28,7 @@
 #
 # This script is not entirely general purpose.  It will initialize RAID for multiple
 # mounted disks on Azure VMs but it doesn't do this for Hyper-V VMs or physical machines.
-# One problem is that I'm assuming that the mount disks will be named:
+# One problem is that I'm assuming that the mounted disks will be named:
 #
 #	/dev/sdc, /dev/sdd, /dev/sde...
 #

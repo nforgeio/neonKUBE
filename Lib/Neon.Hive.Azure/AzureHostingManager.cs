@@ -476,7 +476,7 @@ namespace Neon.Hive
             {
                 foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
                 {
-                    var diskLetter = (char)('b' + node.Azure.HardDriveCount);
+                    var diskLetter = (char)('c' + node.Azure.HardDriveCount);
 
                     node.Labels.CephOSDDevice = $"/dev/sd{diskLetter}";
                 }

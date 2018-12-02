@@ -520,6 +520,64 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "vault.dashboard", hiveDefinition.Dashboard.Vault ? "true" : "false");
 
             SetBashVariable(preprocessReader, "log.enabled", hiveDefinition.Log.Enabled);
+
+            //-----------------------------------------------------------------
+            // Configure the variables for the [setup-disk.sh] script.
+
+            switch (hiveDefinition.Hosting.Environment)
+            {
+                case HostingEnvironments.Aws:
+
+                    throw new NotImplementedException("$todo(jeff.lill)");
+
+                case HostingEnvironments.Azure:
+
+                    switch (Program.OSProperties.TargetOS)
+                    {
+                        case TargetOS.Ubuntu_16_04:
+
+                            // The primary Azure data drive is [/dev/sdb] so any mounted drive will be [/dev/sdc].
+
+                            if (nodeDefinition.Azure.HardDriveCount == 0)
+                            {
+                                SetBashVariable(preprocessReader, "data.disk", "PRIMARY");
+                            }
+                            else
+                            {
+                                SetBashVariable(preprocessReader, "data.disk", "/dev/sdc");
+                            }
+                            break;
+
+                        default:
+
+                            throw new NotImplementedException($"Support for [{Program.OSProperties.TargetOS}] is not implemented.");
+                    }
+
+                    break;
+
+                case HostingEnvironments.Google:
+
+                    throw new NotImplementedException("$todo(jeff.lill)");
+                    
+                case HostingEnvironments.HyperV:
+                case HostingEnvironments.HyperVDev:
+                case HostingEnvironments.Machine:
+                case HostingEnvironments.Unknown:
+                case HostingEnvironments.XenServer:
+
+                    // VMs for all of these environments simply host their data on the
+                    // primary OS disk only for now, the idea being that this disk
+                    // can be sized up as necessary.  There are valid scenarios where
+                    // folks would like the data on a different drive (e.g. for better
+                    // performance).  I'm putting support for that on the backlog.
+
+                    SetBashVariable(preprocessReader, "data.disk", "PRIMARY");
+                    break;
+
+                default:
+
+                    throw new NotImplementedException($"The [{hiveDefinition.Hosting.Environment}] hosting environment is not implemented.");
+            }
         }
 
         /// <summary>

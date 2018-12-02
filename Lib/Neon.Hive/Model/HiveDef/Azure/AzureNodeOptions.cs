@@ -66,8 +66,14 @@ namespace Neon.Hive
         public AzureStorageTypes StorageType { get; set; } = defaultStorageType;
 
         /// <summary>
+        /// <para>
         /// Specifies the number of managed Azure data drives to attach to the node's virtual machine.
         /// This defaults to <b>1</b>.
+        /// </para>
+        /// <note>
+        /// Currently only values of <b>0..1</b> are supported.  In the future we may allow multiple
+        /// data disks to be mounted and combined into a RAID0 array.
+        /// </note>
         /// </summary>
         /// <remarks>
         /// <note>
@@ -139,17 +145,22 @@ namespace Neon.Hive
 
             if (!caps.LoadBalancing)
             {
-                throw new HiveDefinitionException($"Hive node [{nodeName}] has size [{VmSize}] which does not support load balancing and cannot be used for a neonHIVE.");
+                throw new HiveDefinitionException($"Hive node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support load balancing and cannot be used for a neonHIVE.");
             }
 
             if (!caps.SupportsDataStorageType(StorageType))
             {
-                throw new HiveDefinitionException($"Hive node [{nodeName}] has size [{VmSize}] which does not support [{StorageType}] managed data drives.");
+                throw new HiveDefinitionException($"Hive node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support [{StorageType}] managed data drives.");
+            }
+
+            if (HardDriveCount > 1)
+            {
+                throw new HiveDefinitionException($"Hive node [{nodeName}] configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only zero or one managed drive is currently supported.");
             }
 
             if (caps.DataDriveCount < HardDriveCount)
             {
-                throw new HiveDefinitionException($"Hive node [{nodeName}] has size [{VmSize}] which does not support [{HardDriveCount}] managed data drives. Up to [{caps.DataDriveCount}] drives are allowed.");
+                throw new HiveDefinitionException($"Hive node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.DataDriveCount}] drives are allowed.");
             }
 
             AzureHelper.GetDiskSizeGB(StorageType, HardDriveSizeGB);
