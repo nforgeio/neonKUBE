@@ -146,11 +146,14 @@ OPTIONS:
             // requirements and also because cloud VMs will now be provisioned with secure passwords right out
             // of the box.
             //
+            // Note that if [hiveLogin.SshProvisionPassword == NULL] that means that all of the nodes have
+            // already been set to use the secure password so we'll use that instead.
+            //
             // We're going to set the Program credentials to here so that we'll end up using the credentials
             // from the login.  This isn't super clean.
 
             Program.MachineUsername = hiveLogin.SshUsername;
-            Program.MachinePassword = hiveLogin.SshPassword;
+            Program.MachinePassword = hiveLogin.SshProvisionPassword ?? hiveLogin.SshPassword;
 
             // Note that hive setup appends to existing log files.
 
@@ -516,12 +519,34 @@ OPTIONS:
 
             if (hive.Definition.HiveNode.PasswordLength > 0)
             {
+                // $todo(jeff.lill):
+                //
+                // Note that this step isn't entirely idempotent.  The problem happens
+                // when the password change fails on one or more of the nodes and succeeds
+                // on others.  This will result in SSH connection failures for the nodes
+                // that had their passwords changes.
+                //
+                // A possible workaround would be to try both the provisioning and new 
+                // password when connecting to nodes, but I'm going to defer this.
+                //
+                //      https://github.com/jefflill/NeonForge/issues/397
+
                 controller.AddStep("strong password",
                     (node, stepDelay) =>
                     {
                         SetStrongPassword(node, stepDelay);
                     });
             }
+
+            controller.AddGlobalStep("passwords set", () =>
+                {
+                    // This hidden step sets the SSH provisioning password to NULL to 
+                    // indicate that the finaly password has been set for all of the nodes.
+
+                    hiveLogin.SshProvisionPassword = null;
+                    hiveLogin.Save();
+                },
+                quiet: true);
 
             controller.AddGlobalStep("ssh certs", () => ConfigureSshCerts());
 

@@ -820,6 +820,20 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                         MachinePassword = NeonHelper.ReadConsolePassword("    password: ");
                     }
                 }
+                else
+                {
+                    // $hack(jeff.lill):
+                    //
+                    // Only the [neon hive prepare ...] command recognizes the [--machine-username] and
+                    // [--machine-password] options.  These can cause problems for other commands
+                    // so we're going to set both to NULL here.
+                    //
+                    // It would be cleaner to enable these only for the prepare command but the SSH proxy
+                    // authentication code is already a bit twisted and I don't want to mess with it.
+
+                    MachineUsername = null;
+                    MachinePassword = null;
+                }
 
                 if (command.SplitItem != null)
                 {
