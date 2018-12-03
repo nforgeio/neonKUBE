@@ -38,6 +38,21 @@ namespace Neon.Hive
         Standard_A6,
         Standard_A7,
 
+        Standard_A1_v2,
+        Standard_A2_v2,
+        Standard_A4_v2,
+        Standard_A8_v2,
+        Standard_A2M_v2,
+        Standard_A4M_v2,
+        Standard_A8M_v2,
+
+        Standard_B1S,
+        Standard_B1MS,
+        Standard_B2S,
+        Standard_B2MS,
+        Standard_B4MS,
+        Standard_B8MS,
+
         Standard_D1_v2,
         Standard_D2_v2,
         Standard_D3_v2,
@@ -49,6 +64,9 @@ namespace Neon.Hive
         Standard_D14_v2,
         Standard_D15_v2,
 
+        Standard_DC2S,
+        Standard_DC4S,
+
         Standard_DS1_v2,
         Standard_DS2_v2,
         Standard_DS3_v2,
@@ -59,6 +77,13 @@ namespace Neon.Hive
         Standard_DS13_v2,
         Standard_DS14_v2,
         Standard_DS15_v2,
+
+        Standard_D2S_v3,
+        Standard_D4S_v3,
+        Standard_D8s_v3,
+        Standard_D16S_v3,
+        Standard_D32S_v3,
+        Standard_D64S_v3,
 
         Standard_G1,
         Standard_G2,
@@ -78,10 +103,18 @@ namespace Neon.Hive
         Standard_F8,
         Standard_F16,
 
-        Standard_F1s,
-        Standard_F2s,
-        Standard_F4s,
-        Standard_F8s,
-        Standard_F16s,
+        Standard_F1S,
+        Standard_F2S,
+        Standard_F4S,
+        Standard_F8S,
+        Standard_F16S,
+
+        Standard_F2S_v2,
+        Standard_F4S_v2,
+        Standard_F8S_v2,
+        Standard_F16S_v2,
+        Standard_F32S_v2,
+        Standard_F64S_v2,
+        Standard_F72S_v2,
     }
 }

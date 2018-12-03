@@ -494,7 +494,7 @@ namespace Neon.Hive
                 var vmCaps = AzureVmCapabilities.Get(node.Azure.VmSize);
 
                 node.Labels.ComputeCores = vmCaps.CoreCount;
-                node.Labels.ComputeRamMB = vmCaps.RamSizeMB;
+                node.Labels.ComputeRamMB = vmCaps.RamMiB;
 
                 if (node.Azure.HardDriveCount == 0)
                 {
@@ -507,7 +507,7 @@ namespace Neon.Hive
                 }
                 else
                 {
-                    node.Labels.StorageCapacityGB = vmCaps.EphemeralDriveGB;
+                    node.Labels.StorageCapacityGB = vmCaps.EphemeralDriveGiB;
                     node.Labels.StorageSSD        = vmCaps.EphemeralDriveSSD;
                     node.Labels.StorageLocal      = true;
                     node.Labels.StorageEphemeral  = true;

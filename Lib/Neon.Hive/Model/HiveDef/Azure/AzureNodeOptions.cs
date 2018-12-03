@@ -156,9 +156,9 @@ namespace Neon.Hive
                 throw new HiveDefinitionException($"Hive node [{nodeName}] configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only zero or one managed drive is currently supported.");
             }
 
-            if (caps.DataDriveCount < HardDriveCount)
+            if (caps.MaxDataDrives < HardDriveCount)
             {
-                throw new HiveDefinitionException($"Hive node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.DataDriveCount}] drives are allowed.");
+                throw new HiveDefinitionException($"Hive node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.MaxDataDrives}] drives are allowed.");
             }
 
             AzureHelper.GetDiskSizeGB(StorageType, HardDriveSizeGB);
