@@ -1301,13 +1301,22 @@ namespace Neon.Hive
 
             // $hack(jeff.lill):
             //
-            // All of a sudden I find that I need these folders too for [/root/home]:
+            // All of a sudden I find that I need these folders too.
 
             SudoCommand("mkdir -p /home/root", RunOptions.LogOnErrorOnly);
             SudoCommand("chown root:root /home/root", RunOptions.LogOnErrorOnly);
 
+            SudoCommand("mkdir -p /home/root/.archive", RunOptions.LogOnErrorOnly);
+            SudoCommand("chmod 750 /home/root/.archive", RunOptions.LogOnErrorOnly);
+
+            SudoCommand("mkdir -p /home/root/.download", RunOptions.LogOnErrorOnly);
+            SudoCommand("chmod 750 /home/root/.download", RunOptions.LogOnErrorOnly);
+
             SudoCommand("mkdir -p /home/root/.exec", RunOptions.LogOnErrorOnly);
             SudoCommand("chmod 777 /home/root/.exec", RunOptions.LogOnErrorOnly);           // $todo(jeff.lill): Another potential security problem?
+
+            SudoCommand("mkdir -p /home/root/.secrets", RunOptions.LogOnErrorOnly);
+            SudoCommand("chmod 750 /home/root/.secrets", RunOptions.LogOnErrorOnly);
 
             SudoCommand("mkdir -p /home/root/.upload", RunOptions.LogOnErrorOnly);
             SudoCommand("chmod 777 /home/root/.upload", RunOptions.LogOnErrorOnly);         // $todo(jeff.lill): Another potential security problem?
