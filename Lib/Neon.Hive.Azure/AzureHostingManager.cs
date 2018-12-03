@@ -340,23 +340,23 @@ namespace Neon.Hive
         /// </param>
         public AzureHostingManager(HiveProxy hive, string logFolder = null)
         {
-            this.hive           = hive;
-            this.hiveName       = hive.Definition.Name;
-            this.hostOptions    = hive.Definition.Hosting;
-            this.networkOptions = hive.Definition.Network;
-            this.azureOptions   = hostOptions.Azure;
-            this.resourceGroup  = azureOptions.ResourceGroup;
+            this.hive             = hive;
+            this.hiveName         = hive.Definition.Name;
+            this.hostOptions      = hive.Definition.Hosting;
+            this.networkOptions   = hive.Definition.Network;
+            this.azureOptions     = hostOptions.Azure;
+            this.resourceGroup    = azureOptions.ResourceGroup;
 
             // Generate the Azure asset names for the hive.
 
             this.pipLbManagerName = $"{hiveName}-pip-lb-manager";
-            this.pipLbNodeName  = $"{hiveName}-pip-lb-node";
+            this.pipLbNodeName    = $"{hiveName}-pip-lb-node";
             this.vpnRouteName     = $"{hiveName}-vnet-routes";
             this.vnetName         = $"{hiveName}-vnet";
             this.lbManagerName    = $"{hiveName}-lb-manager";
-            this.lbNoderName     = $"{hiveName}-lb-node";
+            this.lbNoderName      = $"{hiveName}-lb-node";
             this.asetManagerName  = $"{hiveName}-aset-manager";
-            this.asetNodeName   = $"{hiveName}-aset-node";
+            this.asetNodeName     = $"{hiveName}-aset-node";
             this.nsgVpnName       = $"{hiveName}-nsg-vpn";
             this.nsgNodeName      = $"{hiveName}-nsg-node";
             this.subnetNodesName  = "nodes";
@@ -1353,8 +1353,8 @@ namespace Neon.Hive
 
             foreach (var azureNode in nodeDictionary.Values)
             {
-                var azureNodeOptions   = azureNode.Node.Metadata.Azure;
-                var storageAccountType = StorageAccountTypes.StandardLRS;
+                var azureNodeOptions     = azureNode.Node.Metadata.Azure;
+                var osStorageAccountType = StorageAccountTypes.StandardLRS;
 
                 if (azureNodeOptions.HardDriveCount > 0)
                 {
@@ -1362,12 +1362,17 @@ namespace Neon.Hive
                     {
                         case AzureStorageTypes.PremiumSSD_LRS:
 
-                            storageAccountType = StorageAccountTypes.PremiumLRS;
+                            osStorageAccountType = StorageAccountTypes.PremiumLRS;
+                            break;
+
+                        case AzureStorageTypes.StandardSSD_LRS:
+
+                            osStorageAccountType = StorageAccountTypes.StandardSSDLRS;
                             break;
 
                         case AzureStorageTypes.StandardHDD_LRS:
 
-                            storageAccountType = StorageAccountTypes.StandardLRS;
+                            osStorageAccountType = StorageAccountTypes.StandardLRS;
                             break;
 
                         default:
@@ -1399,7 +1404,7 @@ namespace Neon.Hive
                             .WithRootUsername(this.HostUsername)
                             .WithRootPassword(this.HostPassword)
                             .WithComputerName("ubuntu")  // DO NOT CHANGE: Node setup scripts require this server name.
-                            .WithDataDiskDefaultStorageAccountType(storageAccountType);
+                            .WithDataDiskDefaultStorageAccountType(osStorageAccountType);
 
                 if (secondaryNic != null)
                 {

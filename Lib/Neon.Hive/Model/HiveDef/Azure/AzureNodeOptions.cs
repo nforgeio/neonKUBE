@@ -86,9 +86,7 @@ namespace Neon.Hive
         /// This is not recommended for neonHIVE nodes.
         /// </para>
         /// <para>
-        /// For most hives, you'll wish to provision one or more drives per node.  Multiple
-        /// drives will be auytomatically combined into a consolidated RAID0 drive on the node.
-        /// The size of each drive is specified by <see cref="HardDriveSizeGB"/>.
+        /// For most hives, you'll wish to provision one or more drives per node.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "HardDriveCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -96,8 +94,8 @@ namespace Neon.Hive
         public int HardDriveCount { get; set; } = 1;
 
         /// <summary>
-        /// Specifies the size of each of the mounted managed drives in gigabytes.  Multiple
-        /// managed drives will be combined into a single large RAID0 drive.
+        /// Specifies the size of each of the mounted managed drives in gigabytes.  This
+        /// defaults to <b>64GB</b>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -127,7 +125,7 @@ namespace Neon.Hive
         /// </remarks>
         [JsonProperty(PropertyName = "HardDriveSizeGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(128)]
-        public int HardDriveSizeGB { get; set; } = 128;
+        public int HardDriveSizeGB { get; set; } = 64;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
