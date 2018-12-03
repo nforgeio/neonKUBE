@@ -1310,10 +1310,10 @@ namespace Neon.Hive
             SudoCommand("chmod 750 /home/root/.archive", RunOptions.LogOnErrorOnly);
 
             SudoCommand("mkdir -p /home/root/.download", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 750 /home/root/.download", RunOptions.LogOnErrorOnly);
+            SudoCommand("chmod 777 /home/root/.download", RunOptions.LogOnErrorOnly);       // $todo(jeff.lill): Another potential security problem?
 
             SudoCommand("mkdir -p /home/root/.exec", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 777 /home/root/.exec", RunOptions.LogOnErrorOnly);           // $todo(jeff.lill): Another potential security problem?
+            SudoCommand("chmod 777 /home/root/.exec", RunOptions.LogOnErrorOnly);
 
             SudoCommand("mkdir -p /home/root/.secrets", RunOptions.LogOnErrorOnly);
             SudoCommand("chmod 750 /home/root/.secrets", RunOptions.LogOnErrorOnly);
