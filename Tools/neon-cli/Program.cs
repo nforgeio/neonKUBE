@@ -32,6 +32,8 @@ namespace NeonCli
     /// </summary>
     public static class Program
     {
+        private static DockerShim shim;     // $hack(jeff.lill): Exit() uses this to ensure that shim folders are deleted.
+
         /// <summary>
         /// The actual program version.  This may be different from <see cref="Version"/>
         /// if the <b>--version=VERSION</b> option was specified to force a specific
@@ -410,7 +412,7 @@ use a random password if [--machine-password] isn't explicitly set.
 
                 int exitCode;
 
-                using (var shim = new DockerShim(CommandLine))
+                using (shim = new DockerShim(CommandLine))
                 {
                     var secretsRoot = HiveHelper.GetHiveUserFolder(ignoreNeonToolContainerVar: true);
 
@@ -484,8 +486,8 @@ use a random password if [--machine-password] isn't explicitly set.
                             // See: https://github.com/jefflill/NeonForge/issues/266
 
                             var secretsMount = $"--mount type=bind,source=\"{secretsRoot}\",target=/neonhive";
-                            var shimMount    = $"--mount type=bind,source=\"{shim.ShimExternalFolder}\",target=/shim";
-                            var options      = shim.Terminal ? "-it" : "-i";
+                            var shimMount = $"--mount type=bind,source=\"{shim.ShimExternalFolder}\",target=/shim";
+                            var options = shim.Terminal ? "-it" : "-i";
 
                             if (LeftCommandLine.HasOption("--noterminal"))
                             {
@@ -643,6 +645,8 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                         }
                     }
                 }
+
+                shim = null;    // $jack(jeff.lill): Lets the Exit() method know that it doesn't need to dispose this.
 
                 // We didn't run the command as a shim, so we're going to execute
                 // the command locally.
@@ -1111,6 +1115,21 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <param name="exitCode">The exit code.</param>
         public static void Exit(int exitCode)
         {
+            if (shim != null)
+            {
+                // $hack(jeff.lill):
+                //
+                // Calling Exit() short circuits the using statement above so we're
+                // going to dispose the shim here instead (if there is one).  I had
+                // accumulated almost 38K shim folders over the past siz months or so.
+                // This should help prevent that.
+                //
+                //      https://github.com/jefflill/NeonForge/issues/394
+
+                shim.Dispose();
+                shim = null;
+            }
+
             if (HiveHelper.IsConnected)
             {
                 HiveHelper.CloseHive();
