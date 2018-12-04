@@ -47,6 +47,7 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_A1, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 1,
                 RamMiB = 1750,
                 EphemeralDriveGiB = 225,
@@ -58,6 +59,7 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_A2, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 2,
                 RamMiB = 3500,
                 EphemeralDriveGiB = 490,
@@ -69,6 +71,7 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_A3, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 4,
                 RamMiB = 7000,
                 EphemeralDriveGiB = 1000,
@@ -80,6 +83,7 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_A4, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 8,
                 RamMiB = 1400,
                 EphemeralDriveGiB = 2040,
@@ -91,6 +95,7 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_A5, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 1,
                 RamMiB = 14000,
                 EphemeralDriveGiB = 490,
@@ -102,6 +107,7 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_A6, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 4,
                 RamMiB = 2800,
                 EphemeralDriveGiB = 1000,
@@ -113,6 +119,7 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_A7, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 8,
                 RamMiB = 56000,
                 EphemeralDriveGiB = 2040,
@@ -131,6 +138,7 @@ namespace Neon.Hive
                 RamMiB = 2000,
                 EphemeralDriveGiB = 10,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 2
             };
 
@@ -142,6 +150,7 @@ namespace Neon.Hive
                 RamMiB = 4000,
                 EphemeralDriveGiB = 20,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -153,6 +162,7 @@ namespace Neon.Hive
                 RamMiB = 8000,
                 EphemeralDriveGiB = 40,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 8
             };
 
@@ -164,6 +174,7 @@ namespace Neon.Hive
                 RamMiB = 16000,
                 EphemeralDriveGiB = 80,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 16
             };
 
@@ -175,6 +186,7 @@ namespace Neon.Hive
                 RamMiB = 16000,
                 EphemeralDriveGiB = 20,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -186,6 +198,7 @@ namespace Neon.Hive
                 RamMiB = 32000,
                 EphemeralDriveGiB = 40,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 8
             };
 
@@ -197,6 +210,7 @@ namespace Neon.Hive
                 RamMiB = 64000,
                 EphemeralDriveGiB = 80,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 16
             };
 
@@ -211,6 +225,7 @@ namespace Neon.Hive
                 RamMiB = 1000,
                 EphemeralDriveGiB = 4,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 2
             };
 
@@ -222,6 +237,7 @@ namespace Neon.Hive
                 RamMiB = 2000,
                 EphemeralDriveGiB = 4,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 2
             };
 
@@ -233,6 +249,7 @@ namespace Neon.Hive
                 RamMiB = 4000,
                 EphemeralDriveGiB = 8,
                 EphemeralDriveSSD = true,
+                MaxNics = 3,
                 MaxDataDrives = 4
             };
 
@@ -244,6 +261,7 @@ namespace Neon.Hive
                 RamMiB = 8000,
                 EphemeralDriveGiB = 16,
                 EphemeralDriveSSD = true,
+                MaxNics = 3,
                 MaxDataDrives = 4
             };
 
@@ -255,6 +273,7 @@ namespace Neon.Hive
                 RamMiB = 16000,
                 EphemeralDriveGiB = 32,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 8
             };
 
@@ -266,6 +285,7 @@ namespace Neon.Hive
                 RamMiB = 32000,
                 EphemeralDriveGiB = 64,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 16
             };
 
@@ -278,6 +298,7 @@ namespace Neon.Hive
                 RamMiB = 8000,
                 EphemeralDriveGiB = 100,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 2
             };
 
@@ -289,6 +310,7 @@ namespace Neon.Hive
                 RamMiB = 16000,
                 EphemeralDriveGiB = 200,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -303,6 +325,7 @@ namespace Neon.Hive
                 RamMiB = 3500,
                 EphemeralDriveGiB = 50,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 2
             };
 
@@ -314,6 +337,7 @@ namespace Neon.Hive
                 RamMiB = 7000,
                 EphemeralDriveGiB = 100,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -325,6 +349,7 @@ namespace Neon.Hive
                 RamMiB = 14000,
                 EphemeralDriveGiB = 200,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 8
             };
 
@@ -336,6 +361,7 @@ namespace Neon.Hive
                 RamMiB = 28000,
                 EphemeralDriveGiB = 400,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 16
             };
 
@@ -347,6 +373,7 @@ namespace Neon.Hive
                 RamMiB = 56000,
                 EphemeralDriveGiB = 800,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -354,10 +381,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_D11_v2, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 2,
                 RamMiB = 14000,
                 EphemeralDriveGiB = 100,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 4
             };
 
@@ -365,10 +394,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_D12_v2, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 4,
                 RamMiB = 28000,
                 EphemeralDriveGiB = 200,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 8
             };
 
@@ -376,10 +407,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_D13_v2, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 8,
                 RamMiB = 56000,
                 EphemeralDriveGiB = 400,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 16
             };
 
@@ -387,10 +420,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_D14_v2, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 16,
                 RamMiB = 112000,
                 EphemeralDriveGiB = 800,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -398,10 +433,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_D15_v2, AzureStorageTypes.StandardHDD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 20,
                 RamMiB = 140000,
                 EphemeralDriveGiB = 1000,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 40
             };
 
@@ -416,6 +453,7 @@ namespace Neon.Hive
                 RamMiB = 3500,
                 EphemeralDriveGiB = 7,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 2
             };
 
@@ -427,6 +465,7 @@ namespace Neon.Hive
                 RamMiB = 7000,
                 EphemeralDriveGiB = 14,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -438,6 +477,7 @@ namespace Neon.Hive
                 RamMiB = 14000,
                 EphemeralDriveGiB = 28,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 8
             };
 
@@ -449,6 +489,7 @@ namespace Neon.Hive
                 RamMiB = 28000,
                 EphemeralDriveGiB = 56,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 16
             };
 
@@ -460,6 +501,7 @@ namespace Neon.Hive
                 RamMiB = 56000,
                 EphemeralDriveGiB = 800,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -467,10 +509,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS11_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 2,
                 RamMiB = 14000,
                 EphemeralDriveGiB = 100,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 4
             };
 
@@ -478,10 +522,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS12_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 4,
                 RamMiB = 28000,
                 EphemeralDriveGiB = 200,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 8
             };
 
@@ -489,10 +535,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS13_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 8,
                 RamMiB = 56000,
                 EphemeralDriveGiB = 400,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 16
             };
 
@@ -500,10 +548,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS14_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 16,
                 RamMiB = 12000,
                 EphemeralDriveGiB = 800,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -511,10 +561,12 @@ namespace Neon.Hive
 
             caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS15_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
             {
+                IsDeprecated = true,
                 CoreCount = 20,
                 RamMiB = 140000,
                 EphemeralDriveGiB = 1000,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 40
             };
 
@@ -529,6 +581,7 @@ namespace Neon.Hive
                 RamMiB = 8000,
                 EphemeralDriveGiB = 16,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -540,6 +593,7 @@ namespace Neon.Hive
                 RamMiB = 16000,
                 EphemeralDriveGiB = 32,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 8
             };
 
@@ -551,6 +605,7 @@ namespace Neon.Hive
                 RamMiB = 32000,
                 EphemeralDriveGiB = 64,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 16
             };
 
@@ -562,6 +617,7 @@ namespace Neon.Hive
                 RamMiB = 64000,
                 EphemeralDriveGiB = 128,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -573,6 +629,7 @@ namespace Neon.Hive
                 RamMiB = 128000,
                 EphemeralDriveGiB = 256,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -584,11 +641,11 @@ namespace Neon.Hive
                 RamMiB = 512000,
                 EphemeralDriveGiB = 512,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
-
 
             //-----------------------------------------------------------------
             // Standard-F
@@ -599,6 +656,7 @@ namespace Neon.Hive
                 RamMiB = 2000,
                 EphemeralDriveGiB = 16,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 2
             };
 
@@ -610,6 +668,7 @@ namespace Neon.Hive
                 RamMiB = 4000,
                 EphemeralDriveGiB = 32,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -621,6 +680,7 @@ namespace Neon.Hive
                 RamMiB = 8000,
                 EphemeralDriveGiB = 64,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 8
             };
 
@@ -632,6 +692,7 @@ namespace Neon.Hive
                 RamMiB = 16000,
                 EphemeralDriveGiB = 128,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 16
             };
 
@@ -643,6 +704,7 @@ namespace Neon.Hive
                 RamMiB = 32000,
                 EphemeralDriveGiB = 256,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -657,6 +719,7 @@ namespace Neon.Hive
                 RamMiB = 2000,
                 EphemeralDriveGiB = 4,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 2
             };
 
@@ -668,6 +731,7 @@ namespace Neon.Hive
                 RamMiB = 4000,
                 EphemeralDriveGiB = 8,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -679,6 +743,7 @@ namespace Neon.Hive
                 RamMiB = 8000,
                 EphemeralDriveGiB = 16,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 8
             };
 
@@ -690,6 +755,7 @@ namespace Neon.Hive
                 RamMiB = 16000,
                 EphemeralDriveGiB = 32,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 16
             };
 
@@ -701,6 +767,205 @@ namespace Neon.Hive
                 RamMiB = 32000,
                 EphemeralDriveGiB = 64,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
+            // Standard-E-V3
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E2_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 2,
+                RamMiB = 16,
+                EphemeralDriveGiB = 50,
+                EphemeralDriveSSD = true,
+                MaxNics = 2,
+                MaxDataDrives = 4
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E4_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 4,
+                RamMiB = 32,
+                EphemeralDriveGiB = 100,
+                EphemeralDriveSSD = true,
+                MaxNics = 2,
+                MaxDataDrives = 8
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E8_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 8,
+                RamMiB = 64,
+                EphemeralDriveGiB = 200,
+                EphemeralDriveSSD = true,
+                MaxNics = 4,
+                MaxDataDrives = 16
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E16_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 16,
+                RamMiB = 128,
+                EphemeralDriveGiB = 400,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E20_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 20,
+                RamMiB = 160,
+                EphemeralDriveGiB = 500,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E32_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 32,
+                RamMiB = 256,
+                EphemeralDriveGiB = 800,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E64_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 432,
+                EphemeralDriveGiB = 1600,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E64I_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 432,
+                EphemeralDriveGiB = 1600,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
+            // Standard-ES-V3
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES2_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 2,
+                RamMiB = 16,
+                EphemeralDriveGiB = 32,
+                EphemeralDriveSSD = true,
+                MaxNics = 2,
+                MaxDataDrives = 4
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES4_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 4,
+                RamMiB = 32,
+                EphemeralDriveGiB = 64,
+                EphemeralDriveSSD = true,
+                MaxNics = 2,
+                MaxDataDrives = 8
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES8_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 8,
+                RamMiB = 64,
+                EphemeralDriveGiB = 128,
+                EphemeralDriveSSD = true,
+                MaxNics = 4,
+                MaxDataDrives = 16
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES16_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 16,
+                RamMiB = 128,
+                EphemeralDriveGiB = 256,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES20_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 20,
+                RamMiB = 160,
+                EphemeralDriveGiB = 320,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES32_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 32,
+                RamMiB = 256,
+                EphemeralDriveGiB = 512,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES64_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 432,
+                EphemeralDriveGiB = 864,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES64I_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 432,
+                EphemeralDriveGiB = 864,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -715,6 +980,7 @@ namespace Neon.Hive
                 RamMiB = 4000,
                 EphemeralDriveGiB = 16,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -726,6 +992,7 @@ namespace Neon.Hive
                 RamMiB = 8000,
                 EphemeralDriveGiB = 32,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 8
             };
 
@@ -737,6 +1004,7 @@ namespace Neon.Hive
                 RamMiB = 16000,
                 EphemeralDriveGiB = 64,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 16
             };
 
@@ -748,6 +1016,7 @@ namespace Neon.Hive
                 RamMiB = 32,
                 EphemeralDriveGiB = 128,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 32
             };
 
@@ -759,6 +1028,7 @@ namespace Neon.Hive
                 RamMiB = 64,
                 EphemeralDriveGiB = 256,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -770,6 +1040,7 @@ namespace Neon.Hive
                 RamMiB = 128,
                 EphemeralDriveGiB = 512,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -781,6 +1052,7 @@ namespace Neon.Hive
                 RamMiB = 144,
                 EphemeralDriveGiB = 576,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -795,6 +1067,7 @@ namespace Neon.Hive
                 RamMiB = 28000,
                 EphemeralDriveGiB = 384,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -806,6 +1079,7 @@ namespace Neon.Hive
                 RamMiB = 56000,
                 EphemeralDriveGiB = 768,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 8
             };
 
@@ -817,6 +1091,7 @@ namespace Neon.Hive
                 RamMiB = 112000,
                 EphemeralDriveGiB = 1536,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 16
             };
 
@@ -828,6 +1103,7 @@ namespace Neon.Hive
                 RamMiB = 224000,
                 EphemeralDriveGiB = 3072,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -839,6 +1115,7 @@ namespace Neon.Hive
                 RamMiB = 448000,
                 EphemeralDriveGiB = 6144,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 64
             };
 
@@ -853,6 +1130,7 @@ namespace Neon.Hive
                 RamMiB = 28000,
                 EphemeralDriveGiB = 384,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 4
             };
 
@@ -864,6 +1142,7 @@ namespace Neon.Hive
                 RamMiB = 56000,
                 EphemeralDriveGiB = 768,
                 EphemeralDriveSSD = true,
+                MaxNics = 2,
                 MaxDataDrives = 8
             };
 
@@ -875,6 +1154,7 @@ namespace Neon.Hive
                 RamMiB = 112000,
                 EphemeralDriveGiB = 1536,
                 EphemeralDriveSSD = true,
+                MaxNics = 4,
                 MaxDataDrives = 16
             };
 
@@ -886,6 +1166,7 @@ namespace Neon.Hive
                 RamMiB = 224000,
                 EphemeralDriveGiB = 3072,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 32
             };
 
@@ -897,11 +1178,591 @@ namespace Neon.Hive
                 RamMiB = 448000,
                 EphemeralDriveGiB = 6144,
                 EphemeralDriveSSD = true,
+                MaxNics = 8,
                 MaxDataDrives = 64
             };
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
+            //-----------------------------------------------------------------
+            // Standard-LS-V2
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L4S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 4,
+                RamMiB = 32,
+                EphemeralDriveGiB = 678,
+                EphemeralDriveSSD = true,
+                MaxNics = 2,
+                MaxDataDrives = 16
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L8S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 8,
+                RamMiB = 64,
+                EphemeralDriveGiB = 1388,
+                EphemeralDriveSSD = true,
+                MaxNics = 4,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L16S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 16,
+                RamMiB = 128,
+                EphemeralDriveGiB = 2807,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L32S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 32,
+                RamMiB = 256,
+                EphemeralDriveGiB = 5630,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
+            // Standard-H
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H8, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 8,
+                RamMiB = 56,
+                EphemeralDriveGiB = 1000,
+                EphemeralDriveSSD = true,
+                MaxNics = 2,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H8M, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 8,
+                RamMiB = 112,
+                EphemeralDriveGiB = 1000,
+                EphemeralDriveSSD = true,
+                MaxNics = 2,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 16,
+                RamMiB = 112,
+                EphemeralDriveGiB = 2000,
+                EphemeralDriveSSD = true,
+                MaxNics = 4,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16M, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 16,
+                RamMiB = 224,
+                EphemeralDriveGiB = 2000,
+                EphemeralDriveSSD = true,
+                MaxNics = 4,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16MR, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 16,
+                RamMiB = 224,
+                EphemeralDriveGiB = 2000,
+                EphemeralDriveSSD = true,
+                MaxNics = 4,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16R, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 16,
+                RamMiB = 112,
+                EphemeralDriveGiB = 2000,
+                EphemeralDriveSSD = true,
+                MaxNics = 4,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
+            // Standard-M
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M8MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 8,
+                RamMiB = 218750,
+                EphemeralDriveGiB = 256,
+                EphemeralDriveSSD = true,
+                MaxNics = 4,
+                MaxDataDrives = 8
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M16MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 16,
+                RamMiB = 437500,
+                EphemeralDriveGiB = 512,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 16
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M32TS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 32,
+                RamMiB = 192000,
+                EphemeralDriveGiB = 1024,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M32LS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 256000,
+                EphemeralDriveGiB = 1024,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M32MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 875000,
+                EphemeralDriveGiB = 1024,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 1024000,
+                EphemeralDriveGiB = 7168,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 1792000,
+                EphemeralDriveGiB = 2048,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64M, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 1792000,
+                EphemeralDriveGiB = 7168,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 1024000,
+                EphemeralDriveGiB = 2048,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64LS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 64,
+                RamMiB = 512000,
+                EphemeralDriveGiB = 2048,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 128,
+                RamMiB = 2048000,
+                EphemeralDriveGiB = 14336,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128M, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 128,
+                RamMiB = 3892000,
+                EphemeralDriveGiB = 14336,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 128,
+                RamMiB = 3892000,
+                EphemeralDriveGiB = 4096,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 128,
+                RamMiB = 2048,
+                EphemeralDriveGiB = 4096,
+                EphemeralDriveSSD = true,
+                MaxNics = 8,
+                MaxDataDrives = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
+            // Standard-NC
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC6, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 6,
+                RamMiB = 56,
+                EphemeralDriveGiB = 340,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 24,
+                MaxNics = 1,
+                GpuCount = 1,
+                GpuRamGiB = 8
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC12, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 12,
+                RamMiB = 112,
+                EphemeralDriveGiB = 680,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 48,
+                MaxNics = 2,
+                GpuCount = 2,
+                GpuRamGiB = 16
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 24,
+                RamMiB = 224,
+                EphemeralDriveGiB = 1440,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 64,
+                MaxNics = 4,
+                GpuCount = 4,
+                GpuRamGiB = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24R, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 24,
+                RamMiB = 224,
+                EphemeralDriveGiB = 1440,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 64,
+                MaxNics = 4,
+                GpuCount = 4,
+                GpuRamGiB = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
+            // Standard-NC-V2
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC6S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 6,
+                RamMiB = 112,
+                EphemeralDriveGiB = 736,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 12,
+                MaxNics = 4,
+                GpuCount = 1,
+                GpuRamGiB = 16
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC12S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 12,
+                RamMiB = 224,
+                EphemeralDriveGiB = 1474,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 24,
+                MaxNics = 8,
+                GpuCount = 2,
+                GpuRamGiB = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 24,
+                RamMiB = 448,
+                EphemeralDriveGiB = 2948,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 32,
+                MaxNics = 8,
+                GpuCount = 4,
+                GpuRamGiB = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24RS_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 24,
+                RamMiB = 448,
+                EphemeralDriveGiB = 2948,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 32,
+                MaxNics = 8,
+                GpuCount = 4,
+                GpuRamGiB = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
+            // Standard-NC-V3
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC6S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 6,
+                RamMiB = 112,
+                EphemeralDriveGiB = 736,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 12,
+                MaxNics = 4,
+                GpuCount = 1,
+                GpuRamGiB = 16
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC12S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 12,
+                RamMiB = 224,
+                EphemeralDriveGiB = 1474,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 24,
+                MaxNics = 8,
+                GpuCount = 2,
+                GpuRamGiB = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 24,
+                RamMiB = 448,
+                EphemeralDriveGiB = 2948,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 32,
+                MaxNics = 8,
+                GpuCount = 4,
+                GpuRamGiB = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24RS_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 24,
+                RamMiB = 448,
+                EphemeralDriveGiB = 2948,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 32,
+                MaxNics = 4,
+                GpuCount = 8,
+                GpuRamGiB = 64
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
+            // Standard-ND
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND6S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 6,
+                RamMiB = 112,
+                EphemeralDriveGiB = 736,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 12,
+                MaxNics = 4,
+                GpuCount = 1,
+                GpuRamGiB = 24
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND12S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 12,
+                RamMiB = 224,
+                EphemeralDriveGiB = 1474,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 24,
+                MaxNics = 8,
+                GpuCount = 2,
+                GpuRamGiB = 48
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND24S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 24,
+                RamMiB = 448,
+                EphemeralDriveGiB = 2948,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 32,
+                MaxNics = 8,
+                GpuCount = 4,
+                GpuRamGiB = 96
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND24RS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 24,
+                RamMiB = 448,
+                EphemeralDriveGiB = 2948,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 32,
+                MaxNics = 8,
+                GpuCount = 4,
+                GpuRamGiB = 96
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
+            // Standard-NV
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NV6, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 6,
+                RamMiB = 56,
+                EphemeralDriveGiB = 340,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 24,
+                MaxNics = 1,
+                GpuCount = 1,
+                GpuRamGiB = 8
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NV12, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 12,
+                RamMiB = 112,
+                EphemeralDriveGiB = 680,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 48,
+                MaxNics = 2,
+                GpuCount = 2,
+                GpuRamGiB = 16
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NV24, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            {
+                CoreCount = 24,
+                RamMiB = 224,
+                EphemeralDriveGiB = 1440,
+                EphemeralDriveSSD = true,
+                MaxDataDrives = 64,
+                MaxNics = 4,
+                GpuCount = 4,
+                GpuRamGiB = 32
+            };
+
+            vmSizeToCapabilities.Add(caps.VmSize, caps);
+
+            //-----------------------------------------------------------------
             // Verify that we have a valid definition for every know MV size.
 
             var sbError = new StringBuilder();
@@ -932,6 +1793,11 @@ namespace Neon.Hive
                 if (caps.EphemeralDriveGiB <= 0)
                 {
                     sbError.AppendLine($"[{vmSize}.{nameof(AzureVmCapabilities.EphemeralDriveGiB)}]: is not positive.");
+                }
+
+                if (caps.MaxNics <= 0)
+                {
+                    sbError.AppendLine($"[{vmSize}.{nameof(AzureVmCapabilities.MaxNics)}]: is not positive.");
                 }
 
                 if (caps.MaxDataDrives <= 0)
@@ -991,6 +1857,16 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Returns <c>true</c> if Azure has deprecated the VM size.
+        /// </summary>
+        public bool IsDeprecated { get; private set; }
+
+        /// <summary>
+        /// Returns <c>true</c> if this VM size is not supported by neonHIVE.
+        /// </summary>
+        public bool NotSupported { get; private set; } = false;
+
+        /// <summary>
         /// Returns the associated <see cref="AzureVmSizes"/> value.
         /// </summary>
         public AzureVmSizes VmSize { get; private set; }
@@ -1021,9 +1897,24 @@ namespace Neon.Hive
         public int MaxDataDrives { get; private set; }
 
         /// <summary>
+        /// Returns the maximum number of network interfaces that can be attached.
+        /// </summary>
+        public int MaxNics { get; private set; }
+
+        /// <summary>
         /// Returns <c>true</c> if the VM supports load balancing.
         /// </summary>
         public bool LoadBalancing { get; private set; } = true;
+
+        /// <summary>
+        /// Returns the number of GPUs.
+        /// </summary>
+        public int GpuCount { get; private set; } = 0;
+
+        /// <summary>
+        /// Returns the amount of GPU RAM in GiB.
+        /// </summary>
+        public int GpuRamGiB { get; private set; } = 0;
 
         /// <summary>
         /// Hash set of the supported data drive storage account types.
