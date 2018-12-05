@@ -74,8 +74,7 @@ mkdir -p /usr/share/elasticsearch/config/scripts
 
 mkdir -p /mnt/esdata
 
-# Start Elasticsearch under the [elasticsearch] user because it is
-# not able to run as [root].
+# Log the settings.
 
 . log-info.sh "Starting [Elasticsearch]"
 . log-info.sh "ELASTICSEARCH_CLUSTER: ${ELASTICSEARCH_CLUSTER}"
@@ -87,6 +86,9 @@ mkdir -p /mnt/esdata
 . log-info.sh "ELASTICSEARCH_QUORUM: ${ELASTICSEARCH_QUORUM}"
 . log-info.sh "ELASTICSEARCH_BOOTSTRAP_NODES: ${ELASTICSEARCH_BOOTSTRAP_NODES}"
 . log-info.sh "ES_JAVA_OPTS: ${ES_JAVA_OPTS}"
+
+# Start Elasticsearch under the [elasticsearch] user because it is
+# not able to run as [root].
    
 chown --recursive :elasticsearch /mnt/esdata/
 chmod --recursive 770 /mnt/esdata/
