@@ -67,7 +67,7 @@ neon hive set allow-unit-testing=true
 #
 # You need to be careful to ensure that the specified GIT_VMOD_DYNAMIC_BRANCH is
 # compatible with the associated version of Varnish.  You'll find this information
-# in the README file for the branch.  The libvmod-synamic MASTER branch currently
+# in the README file for the branch.  The libvmod-dynamic MASTER branch currently
 # works for Varnish 6.1 but this may change when Varnish 6.2 or later is released.
 
 # Varnish 6.0
