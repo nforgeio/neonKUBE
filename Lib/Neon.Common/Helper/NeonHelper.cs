@@ -270,7 +270,7 @@ namespace Neon.Common
             else if (input.EndsWith("GB", StringComparison.OrdinalIgnoreCase))
             {
                 units = Giga;
-                trim = 2;
+                trim  = 2;
             }
             else if (input.EndsWith("TB", StringComparison.OrdinalIgnoreCase))
             {
@@ -295,7 +295,7 @@ namespace Neon.Common
             else if (input.EndsWith("G", StringComparison.OrdinalIgnoreCase))
             {
                 units = Giga;
-                trim = 1;
+                trim  = 1;
             }
             else if (input.EndsWith("T", StringComparison.OrdinalIgnoreCase))
             {
