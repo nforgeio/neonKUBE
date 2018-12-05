@@ -113,6 +113,16 @@ namespace Neon.Hive
             {
                 throw new HiveDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(RetentionDays)}={RetentionDays}]: This must be >= 0.");
             }
+
+            if (!NeonHelper.TryParseCount(EsMemory, out var esMemoryBytes))
+            {
+                throw new HiveDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsMemory)}={EsMemory}].");
+            }
+
+            if (esMemoryBytes < 1.5 * NeonHelper.Giga)
+            {
+                throw new HiveDefinitionException($"[{nameof(LogOptions)}.{nameof(EsMemory)}={EsMemory}] cannot be less than [1.5GB].");
+            }
         }
     }
 }

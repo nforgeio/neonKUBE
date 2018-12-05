@@ -73,8 +73,7 @@
     "KeyThreshold": 1
   },
   "Log": {
-    "Enabled": true,
-    "EsMemory": "1GB"
+    "Enabled": true
   },
   "HiveMQ": {
     "Precompile": true
