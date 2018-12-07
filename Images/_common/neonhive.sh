@@ -339,7 +339,7 @@ export HiveHostPorts_ProxyPublicFirstUser=5120
 
 # The first [neon-proxy-public] port available for routing custom
 # HTTP/S or TCP services.
-export HiveHostPorts_ProxyPublicLastUser=5299
+export HiveHostPorts_ProxyPublicLastUser=${HiveHostPorts_ProxyPublicLast}
 
 #----------------------------------------------------------
 # Ports [5300-5499] are reserved for the private hive proxy.
@@ -395,7 +395,7 @@ export HiveHostPorts_ProxyPrivateFirstUser=5320
 
 # The first [neon-proxy-private] port available for routing custom
 # HTTP/S or TCP services.
-export HiveHostPorts_ProxyPrivateLastUser=5499
+export HiveHostPorts_ProxyPrivateLastUser=${HiveHostPorts_ProxyPrivateLast}
 
 #------------------------------------------------------------------------------
 # HiveSysLogFacility:
