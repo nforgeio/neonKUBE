@@ -705,6 +705,25 @@ namespace Neon.Net
 
             return reachableHosts.Values;
         }
+
+        /// <summary>
+        /// Computes the TCP maximum segment size for a given MTU, optionally taking a
+        /// VXLAN wrapper headers into account.
+        /// </summary>
+        /// <param name="mtu">Specifies the target MTU (defaults to 1500).</param>
+        /// <param name="vxLan">Optionally indicates that traffic is routed via a VXLAN.</param>
+        /// <returns>The maximum segment size in bytes.</returns>
+        public static int ComputeMSS(int mtu = NetConst.DefaultMTU, bool vxLan = false)
+        {
+            var mss = mtu - NetConst.TCPHeader;
+
+            if (vxLan)
+            {
+                mss -= NetConst.VXLANHeader;
+            }
+
+            return mss;
+        }
     }
 }
 
