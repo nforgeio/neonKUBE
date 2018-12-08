@@ -27,7 +27,7 @@ namespace Neon.Hive
     /// <summary>
     /// HTTP caching related settings.
     /// </summary>
-    public class TrafficManagerrHttpCache
+    public class TrafficManagerHttpCache
     {
         private const int defaultWarmSeconds = 120;
 
@@ -117,7 +117,7 @@ namespace Neon.Hive
         {
             if (DnsTTL < 1)
             {
-                context.Error($"[{nameof(TrafficManagerrHttpCache)}.{nameof(DnsTTL)}={DnsTTL}] cannot be less than 1 second.");
+                context.Error($"[{nameof(TrafficManagerHttpCache)}.{nameof(DnsTTL)}={DnsTTL}] cannot be less than 1 second.");
             }
 
             WarmTargets = WarmTargets ?? new List<TrafficManagerWarmTarget>();

@@ -94,7 +94,7 @@ namespace TestHive
                         Name = $"vegomatic-{serverId}",
                         CheckExpect = "status 200",
                         CheckSeconds = 1,
-                        Cache = new TrafficManagerrHttpCache() { Enabled = true }
+                        Cache = new TrafficManagerHttpCache() { Enabled = true }
                     };
 
                     rule.Frontends.Add(
@@ -318,7 +318,7 @@ namespace TestHive
                 Name         = $"vegomatic",
                 CheckExpect  = "status 200",
                 CheckSeconds = 1,
-                Cache        = new TrafficManagerrHttpCache() { Enabled = true }
+                Cache        = new TrafficManagerHttpCache() { Enabled = true }
             };
 
             rule.Frontends.Add(

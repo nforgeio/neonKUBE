@@ -78,7 +78,7 @@ namespace TestHive
 
                 if (useCache)
                 {
-                    rule.Cache = new TrafficManagerrHttpCache() { Enabled = true };
+                    rule.Cache = new TrafficManagerHttpCache() { Enabled = true };
                 }
 
                 rule.Frontends.Add(
@@ -325,7 +325,7 @@ namespace TestHive
 
                 if (useCache)
                 {
-                    rule.Cache = new TrafficManagerrHttpCache() { Enabled = true };
+                    rule.Cache = new TrafficManagerHttpCache() { Enabled = true };
                 }
 
                 foreach (var hostname in hostnames)
@@ -623,7 +623,7 @@ namespace TestHive
 
                     if (useCache)
                     {
-                        rule.Cache = new TrafficManagerrHttpCache() { Enabled = true };
+                        rule.Cache = new TrafficManagerHttpCache() { Enabled = true };
                     }
 
                     var frontend = new TrafficManagerHttpFrontend()
@@ -783,7 +783,7 @@ namespace TestHive
                     CheckSeconds = 1,
                 };
 
-                rule.Cache = new TrafficManagerrHttpCache() { Enabled = true };
+                rule.Cache = new TrafficManagerHttpCache() { Enabled = true };
                 rule.Cache.WarmTargets.Add(
                     new TrafficManagerWarmTarget()
                     {

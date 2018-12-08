@@ -69,6 +69,15 @@ namespace Neon.Hive
         public int GroupLimit { get; set; } = 0;
 
         /// <summary>
+        /// The maximum number of connections to be allowed for this
+        /// backend server or zero if the number of connections is to be
+        /// unlimited.  This defaults to <b>0</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "MaxConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public int MaxConnections { get; set; } = 0;
+
+        /// <summary>
         /// Validates the backend.
         /// </summary>
         /// <param name="context">The validation context.</param>
@@ -104,6 +113,11 @@ namespace Neon.Hive
             if (!NetHelper.IsValidPort(Port))
             {
                 context.Error($"Rule [{ruleName}] has backend server with invalid [{nameof(Port)}={Port}] which is outside the range of valid TCP ports.");
+            }
+
+            if (MaxConnections < 0)
+            {
+                context.Error($"Rule [{ruleName}] has backend server with invalid [{nameof(MaxConnections)}={MaxConnections}].");
             }
         }
 

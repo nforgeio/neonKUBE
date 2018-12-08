@@ -41,7 +41,7 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(trafficManagerName));
 
-            this.trafficManagerName = trafficManagerName;
+            this.TrafficManagerName = trafficManagerName;
             this.Settings           = settings;
             this.Certificates       = certificates ?? new Dictionary<string, TlsCertificate>();
         }
@@ -49,7 +49,7 @@ namespace Neon.Hive
         /// <summary>
         /// Returns the traffic manager name.
         /// </summary>
-        public string trafficManagerName { get; private set; }
+        public string TrafficManagerName { get; private set; }
 
         /// <summary>
         /// Returns the traffic manager settings.

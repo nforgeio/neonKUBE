@@ -34,6 +34,7 @@ namespace Neon.Hive
         // Static members
 
         private const int defaultMaxConnections = 32000;
+        private const int defaultSslCacheSize   = 100000;
 
         /// <summary>
         /// Parses a <see cref="TrafficManagerSettings"/> from a JSON or YAML string,
@@ -159,6 +160,17 @@ namespace Neon.Hive
         [JsonProperty(PropertyName = "MaxConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultMaxConnections)]
         public int MaxConnections { get; set; } = defaultMaxConnections;
+
+        /// <summary>
+        /// The maximum number of SSL handshakes that can be cached.  This helps speed
+        /// subsequent client SSL connections because we can avoid the CPU intensive
+        /// cryptographic operations.  Note that each cached handshake will consume
+        /// about 200 bytes or RAM.  This defaults to <b>100000</b> entries or about 
+        /// 20 MiB of RAM.
+        /// </summary>
+        [JsonProperty(PropertyName = "SslCacheSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultSslCacheSize)]
+        public int SslCacheSize { get; set; } = defaultSslCacheSize;
 
         /// <summary>
         /// The default endpoint timeouts.

@@ -355,7 +355,16 @@ namespace Neon.HiveMQ
                 customServiceAction = r => { };
             }
 
-            return RabbitHutch.CreateBus(config, customServiceAction);
+            var bus = RabbitHutch.CreateBus(config, customServiceAction);
+
+            if (!bus.IsConnected)
+            {
+                bus.Dispose();
+
+                throw new Exception("Cannot to connect to RabbitMQ.");
+            }
+
+            return bus;
         }
 
         /// <summary>

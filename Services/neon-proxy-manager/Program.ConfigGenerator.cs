@@ -28,6 +28,7 @@ using Neon.Hive;
 using Neon.HiveMQ;
 using Neon.Tasks;
 using Neon.Time;
+using Neon.Net;
 
 namespace NeonProxyManager
 {
@@ -252,6 +253,7 @@ namespace NeonProxyManager
             var isPublic               = directorName.Equals("public", StringComparison.InvariantCultureIgnoreCase);
             var configError            = false;
             var log                    = new LogRecorder(Program.log);
+            var mss                    = NetHelper.ComputeMSS(mtu: hive.Definition.Network.MTU, vxLan: true);
 
             log.LogInfo(() => $"Rebuilding traffic manager [{proxyDisplayName}].");
 
@@ -264,7 +266,7 @@ namespace NeonProxyManager
             string                  proxyPrefix = $"{proxyConfKey}/{directorName}";
             var                     rules       = new Dictionary<string, TrafficManagerRule>();
             var                     hostGroups  = hiveDefinition.GetHostGroups(excludeAllGroup: false);
-            TrafficManagerSettings settings;
+            TrafficManagerSettings  settings;
 
             try
             {
@@ -330,7 +332,7 @@ namespace NeonProxyManager
 
             foreach (TrafficManagerHttpRule httpRule in rules.Values.Where(r => r.Mode == TrafficManagerMode.Http))
             {
-                httpRule.Cache = httpRule.Cache ?? new TrafficManagerrHttpCache();
+                httpRule.Cache = httpRule.Cache ?? new TrafficManagerHttpCache();
             }
 
             // Record some details about the rules.
@@ -417,6 +419,13 @@ global
 
     maxconn                 {settings.MaxConnections}
 
+# Specify the maximum number of cached SSL handshakes.  These can improve
+# performance for subsequent client SSL connections by avoiding expensive
+# crypotographic computations.  Note that each cached connection consumes
+# about 200 bytes of RAM.
+
+    tune.ssl.cachesize      {settings.SslCacheSize}
+
 # Enable logging to syslog on the local Docker host under the
 # [HiveSysLogFacility_ProxyPublic] facility.
 
@@ -477,7 +486,7 @@ resolvers {resolver.Name}
 # Enable HAProxy statistics pages.
 
 frontend haproxy_stats
-    bind                    *:{HiveConst.HAProxyStatsPort}
+    bind                    *:{HiveConst.HAProxyStatsPort} mss {mss}
     mode                    http
     log                     global
     option                  httplog
@@ -658,7 +667,7 @@ backend haproxy_stats
                     resolversArg = $" resolvers {tcpRule.Resolver}";
                 }
 
-                // Generate the frontend and it's associated backend servers.
+                // Generate the frontend and its associated backend servers.
 
                 foreach (var frontend in tcpRule.Frontends)
                 {
@@ -666,12 +675,16 @@ backend haproxy_stats
 $@"
 listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
     mode                    tcp
-    bind                    *:{frontend.ProxyPort}
+    bind                    *:{frontend.ProxyPort} mss {mss}
 ");
 
-                    if (tcpRule.MaxConnections > 0)
+                    if (frontend.MaxConnections > 0)
                     {
-                        sbHaProxy.AppendLine($"    maxconn                 {tcpRule.MaxConnections}");
+                        sbHaProxy.AppendLine($"    maxconn                 {frontend.MaxConnections}");
+                    }
+                    else
+                    {
+                        sbHaProxy.AppendLine($"    maxconn                 {frontend.MaxConnections}");
                     }
 
                     if (tcpRule.Log)
@@ -738,7 +751,14 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         backendName = backend.Name;
                     }
 
-                    sbHaProxy.AppendLine($"    server                  {backendName} {backend.Server}:{backend.Port}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
+                    var maxconn = $" maxconn {settings.MaxConnections}";
+
+                    if (backend.MaxConnections > 0)
+                    {
+                        maxconn = $" maxconn {backend.MaxConnections}";
+                    }
+
+                    sbHaProxy.AppendLine($"    server                  {backendName} {backend.Server}:{backend.Port}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}{maxconn}");
                 }
             }
 
@@ -878,13 +898,15 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         certArg = $" ssl strict-sni crt certs-{haProxyFrontend.Name.Replace(':', '-')}";
                     }
 
-                    var scheme = haProxyFrontend.Tls ? "https" : "http";
+                    var scheme  = haProxyFrontend.Tls ? "https" : "http";
+                    var maxconn = haProxyFrontend.Frontend.MaxConnections > 0 ? haProxyFrontend.Frontend.MaxConnections : settings.MaxConnections;
 
                     sbHaProxy.Append(
 $@"
 frontend {haProxyFrontend.Name}
     mode                    http
-    bind                    *:{haProxyFrontend.Port}{certArg}
+    bind                    *:{haProxyFrontend.Port}{certArg} mss {mss}
+    maxconn                 {maxconn}
     unique-id-header        {LogActivity.HttpHeader}
     unique-id-format        {HiveConst.HAProxyUidFormat}
     option                  forwardfor
@@ -1131,13 +1153,21 @@ backend http:{httpRule.Name}
                         // NOTE:
                         //
                         // We're going to assume that the Varnish backend is always healthy because
-                        // there's only one server specifyed here and we're relying on Docker to
+                        // there's only one server specified here and we're relying on Docker to
                         // manage failover between multiple proxy instances.  So we're not going
                         // enable health checks.
 
                         var varnishBackend = isPublic ? "neon-proxy-public-cache" : "neon-proxy-private-cache";
 
-                        sbHaProxy.AppendLine($"    server                  {varnishBackend} {varnishBackend}:80{initAddrArg}{resolversArg}");
+                        // $todo(jeff.lill):
+                        // 
+                        // I'm setting a fixed smallish [maxconn] here because in many scenarios is might be
+                        // a good idea to restrain the number of connections to Varnish for better performance.
+                        // Perhaps we need another rule setting to allow operators to customize this.
+
+                        var maxconn = $" maxconn 64";
+
+                        sbHaProxy.AppendLine($"    server                  {varnishBackend} {varnishBackend}:80{initAddrArg}{resolversArg}{maxconn}");
                     }
                     else
                     {
@@ -1161,13 +1191,20 @@ backend http:{httpRule.Name}
                                 sslArg = $" ssl verify required";
                             }
 
+                            var maxconn = $" maxconn {settings.MaxConnections}";
+
+                            if (backend.MaxConnections > 0)
+                            {
+                                maxconn = $" maxconn {backend.MaxConnections}";
+                            }
+
                             if (checkMode == TrafficManagerCheckMode.Disabled)
                             {
-                                sbHaProxy.AppendLine($"    server                  {serverName} {backend.Server}:{backend.Port}{sslArg}{initAddrArg}{resolversArg}");
+                                sbHaProxy.AppendLine($"    server                  {serverName} {backend.Server}:{backend.Port}{sslArg}{initAddrArg}{resolversArg}{maxconn}");
                             }
                             else
                             {
-                                sbHaProxy.AppendLine($"    server                  {serverName} {backend.Server}:{backend.Port}{sslArg}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}");
+                                sbHaProxy.AppendLine($"    server                  {serverName} {backend.Server}:{backend.Port}{sslArg}{checkArg}{checkSslArg}{initAddrArg}{resolversArg}{maxconn}");
                             }
                         }
                     }
@@ -1976,7 +2013,7 @@ defaults
 # Enable HAProxy statistics pages.
 
 frontend haproxy_stats
-    bind                *:{HiveConst.HAProxyStatsPort}
+    bind                *:{HiveConst.HAProxyStatsPort} mss {mss}
     mode                http
     option              http-keep-alive
     use_backend         haproxy_stats
@@ -2025,7 +2062,7 @@ backend haproxy_stats
 $@"
 listen tcp:port-{port}
     mode                tcp
-    bind                *:{port}
+    bind                *:{port} mss {mss}
 ");
 
                 // Bridge logging is disabled for now.
@@ -2412,7 +2449,7 @@ listen tcp:port-{port}
             //
             // frontend: test
             //      mode                    http
-            //      bind                    *:80
+            //      bind                    *:80 mss 1452
             //
             //      acl                     is-test-com hdr_reg(host) -i test.com(:\d+)?
             //      acl                     is-foo-bar path_beg '/foo/bar/'
@@ -2442,7 +2479,7 @@ listen tcp:port-{port}
             //
             // frontend: test
             //      mode                    http
-            //      bind                    *:80
+            //      bind                    *:80 mss 1452
             //
             //      acl                     is-test-com hdr_reg(host) -i test.com(:\d+)?
             //      acl                     is-foo-bar path_beg '/foo/bar/'

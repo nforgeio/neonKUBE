@@ -68,7 +68,7 @@ namespace Neon.Hive
         /// </summary>
         [JsonProperty(PropertyName = "Cache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public TrafficManagerrHttpCache Cache { get; set; }
+        public TrafficManagerHttpCache Cache { get; set; }
 
         /// <summary>
         /// Returns the list of backends selected to be targeted by processing any

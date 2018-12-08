@@ -443,7 +443,7 @@ namespace NeonProxy
                         }
                         else
                         {
-                            log.LogCritical(() => "HAPROXY-SHIM: Terminating service because there is no valid copnfiguration to fall back on.");
+                            log.LogCritical(() => "HAPROXY-SHIM: Terminating service because there is no valid configuration to fall back to.");
                             Program.Exit(1);
                             return;
                         }

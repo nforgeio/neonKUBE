@@ -26,7 +26,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes a TCP traffic manager frontend.
     /// </summary>
-    public class TrafficManagerTcpFrontend
+    public class TrafficManagerTcpFrontend : TrafficManagerFrontend
     {
         /// <summary>
         /// The TCP HAProxy frontend port for this rule.
@@ -55,6 +55,8 @@ namespace Neon.Hive
         /// <param name="rule">The parent rule.</param>
         public void Validate(TrafficManagerValidationContext context, TrafficManagerTcpRule rule)
         {
+            base.Validate(context, rule);
+
             if (PublicPort > 0 && !NetHelper.IsValidPort(PublicPort))
             {
                 context.Error($"Load balancer [{nameof(PublicPort)}={PublicPort}] is not a valid network port.");

@@ -51,16 +51,6 @@ namespace Neon.Hive
         public List<TrafficManagerTcpBackend> Backends { get; set; } = new List<TrafficManagerTcpBackend>();
 
         /// <summary>
-        /// The maximum overall number of connections to be allowed for this
-        /// rule or zero if the number of connections will be limited
-        /// to the overall pool of connections specified by <see cref="TrafficManagerSettings.MaxConnections"/>.
-        /// This defaults to <b>0</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "MaxConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(0)]
-        public int MaxConnections { get; set; } = 0;
-
-        /// <summary>
         /// Validates the rule.
         /// </summary>
         /// <param name="context">The validation context.</param>
@@ -112,13 +102,6 @@ namespace Neon.Hive
                 }
 
                 frontendMap.Add(key);
-            }
-
-            // Verify [MaxConnections]
-
-            if (MaxConnections < 0 || MaxConnections > ushort.MaxValue)
-            {
-                context.Error($"Rule [{Name}] specifies invalid [{nameof(MaxConnections)}={MaxConnections}].");
             }
         }
 

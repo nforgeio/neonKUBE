@@ -35,7 +35,7 @@ namespace Neon.Hive
         //---------------------------------------------------------------------
         // Static members
 
-        private static INeonLogger      log = LogManager.Default.GetLogger<HiveMQManager>();
+        private static INeonLogger                  log = LogManager.Default.GetLogger<HiveMQManager>();
 
         //---------------------------------------------------------------------
         // Local types

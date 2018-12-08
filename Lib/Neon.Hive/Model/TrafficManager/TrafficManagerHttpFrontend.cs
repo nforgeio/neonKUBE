@@ -28,7 +28,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes an HTTP/HTTPS traffic manager frontend.
     /// </summary>
-    public class TrafficManagerHttpFrontend
+    public class TrafficManagerHttpFrontend : TrafficManagerFrontend
     {
         /// <summary>
         /// <para>
@@ -231,6 +231,8 @@ namespace Neon.Hive
         /// <param name="rule">The parent rule.</param>
         public void Validate(TrafficManagerValidationContext context, TrafficManagerHttpRule rule)
         {
+            base.Validate(context, rule);
+
             if (rule.Frontends.Count > 1 ||
                 !string.IsNullOrEmpty(CertName) ||
                 ProxyPort == 0 ||

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerCommand.cs
+// FILE:	    TrafficCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,7 +28,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>traffic</b> command.
     /// </summary>
-    public class TrafficManagerCommand : CommandBase
+    public class TrafficCommand : CommandBase
     {
         private const string proxyManagerPrefix = "neon/service/neon-proxy-manager";
         private const string vaultCertPrefix    = "neon-secret/cert";

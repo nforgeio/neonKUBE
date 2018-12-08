@@ -53,7 +53,7 @@ namespace NeonCli
         /// hive.  <b>neon-cli</b> checks this to ensure that it is capable of
         /// managing a hive or if it is too old.
         /// </summary>
-        public const string MinimumVersion = "18.9.4-alpha";
+        public const string MinimumVersion = "18.12.0-alpha.7";
     
         /// <summary>
         /// CURL command common options.
@@ -325,7 +325,7 @@ use a random password if [--machine-password] isn't explicitly set.
                     new RunCommand(),
                     new ScpCommand(),
                     new SshCommand(),
-                    new TrafficManagerCommand(),
+                    new TrafficCommand(),
                     new UploadCommand(),
                     new VaultCommand(),
                     new VersionCommand(),

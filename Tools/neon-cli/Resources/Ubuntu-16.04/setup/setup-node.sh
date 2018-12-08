@@ -331,15 +331,34 @@ fi
 
 #------------------------------------------------------------------------------
 # Edit [/etc/sysctl.conf] to boost the number of RAM pages a process can map
-# as well as increasing the number of available ephemeral TCP ports.
+# as well as increasing the number of available source ephemeral TCP ports,
+# pending connection backlog, packet receive queue size.
 
 cat <<EOF >> /etc/sysctl.conf
 
 # Allow processes to lock up to 64GB worth of 4K pages into RAM.
 vm.max_map_count = 16777216
 
+# Set the network packet receive queue.
+net.core.netdev_max_backlog = 2000
+
 # Specify the range of TCP ports that can be used by client sockets.
 net.ipv4.ip_local_port_range = 9000 65535
+
+# Set the pending TCP connection backlog.
+net.core.somaxconn = 25000
+net.ipv4.tcp_max_syn_backlog = 25000
+EOF
+
+#------------------------------------------------------------------------------
+# iptables may be configured to track only a small number of TCP connections by
+# default.  We're going to explicitly set the limit to 1 million connections.
+# This will consume about 8MiB of RAM.
+
+cat <<EOF > /etc/modprobe.d/nf_conntrack.conf
+# Explicitly set the maximum number of TCP connections that iptables can track.
+# Note that this number is multiplied by 8 to obtain the connection count.
+options nf_conntrack hashsize=125000
 EOF
 
 #------------------------------------------------------------------------------
