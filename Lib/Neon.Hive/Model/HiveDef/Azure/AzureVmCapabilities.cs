@@ -1854,6 +1854,14 @@ namespace Neon.Hive
             {
                 this.SupportedDataStorageTypes.Add(type);
             }
+
+            // Note that all Azure VMs can support standard SSDs so we'll
+            // add that here if it's not already specified.
+
+            if (!this.SupportedDataStorageTypes.Contains(AzureStorageTypes.StandardSSD_LRS))
+            {
+                this.SupportedDataStorageTypes.Add(AzureStorageTypes.StandardSSD_LRS);
+            }
         }
 
         /// <summary>
