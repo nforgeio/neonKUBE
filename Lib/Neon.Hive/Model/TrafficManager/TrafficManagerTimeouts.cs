@@ -58,7 +58,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The maximum time to wait for a connection attempt to a server.
-        /// Specify <b>0</b> for unlimited.  This defaults to <b>5 seconds</b>. 
+        /// This defaults to <b>5 seconds</b>. 
         /// </summary>
         [JsonProperty(PropertyName = "ConnectSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultConnectSeconds)]
@@ -66,8 +66,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// The maximum time to wait for a client to continue transmitting a
-        /// request.  Specify <b>0</b> for unlimited.  This defaults to 
-        /// <b>50 seconds</b>.
+        /// request.  Specify <b>0</b> for effectively unlimited (actually 7 days).
+        /// This defaults to  <b>50 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ClientSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultClientSeconds)]
@@ -75,8 +75,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// The maximum time to wait for a server to acknowledge or transmit
-        /// data.  Specify <b>0</b> for unlimited.  This defaults to 
-        /// <b>50 seconds</b>.
+        /// data.  Specify <b>0</b> for effectively unlimited (actually 7 days).
+        /// This defaults to  <b>50 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ServerSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultServerSeconds)]
@@ -92,7 +92,8 @@ namespace Neon.Hive
         /// <summary>
         /// The maximum time to keep a client side HTTP connection open after
         /// returning the first response to wait for a another client request.
-        /// Specify <b>0</b> for unlimited.  This defaults to <b>0.5 seconds</b>.
+        /// Specify <b>0</b> for essentually unlimited (actually 7 days).
+        /// This defaults to <b>50 seconds</b>.  This defaults to <b>0.5 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "HttpKeepAliveSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultClientHttpKeepAliveSeconds)]

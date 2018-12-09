@@ -470,6 +470,65 @@ namespace Neon.Hive
         /// <inheritdoc/>
         public override void Validate(HiveDefinition hiveDefinition)
         {
+            // Ensure that the VM sizes specified have minimum capabilities.
+
+            foreach (var node in hiveDefinition.Nodes)
+            {
+                var vmCaps = AzureVmCapabilities.Get(node.Azure.VmSize);
+
+                if (vmCaps == null)
+                {
+                    throw new HiveDefinitionException($"Not Implemented: Node [{node.Name}] uses the [{node.Azure.VmSize}] Azure VM size which is not currently defined.  Please submit an issue.");
+                }
+
+                int minCores;
+                int minRamMiB;
+                int minNics;
+
+                switch (node.Role)
+                {
+                    case NodeRole.Manager:
+
+                        minCores  = HiveConst.MinManagerCores;
+                        minRamMiB = HiveConst.MinManagerRamMiB;
+                        minNics   = HiveConst.MinManagerNics;
+                        break;
+
+                    case NodeRole.Worker:
+
+                        minCores  = HiveConst.MinWorkerCores;
+                        minRamMiB = HiveConst.MinWorkerRamMiB;
+                        minNics   = HiveConst.MinWorkerNics;
+                        break;
+
+                    case NodeRole.Pet:
+
+                        minCores  = HiveConst.MinPetCores;
+                        minRamMiB = HiveConst.MinPetRamMiB;
+                        minNics   = HiveConst.MinPetNics;
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
+
+                if (vmCaps.CoreCount < minCores)
+                {
+                    throw new HiveDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [CORES={vmCaps.CoreCount}] which is too small.  At least [{minCores}] cores are required for [{node.Role}] nodes.");
+                }
+
+                if (vmCaps.RamMiB < minRamMiB)
+                {
+                    throw new HiveDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [RAM={vmCaps.RamMiB} MiB] which is too small.  At least [{minRamMiB} MiB] RAM is required for [{node.Role}] nodes.");
+                }
+
+                if (vmCaps.MaxNics < minNics)
+                {
+                    throw new HiveDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [MaxNics={vmCaps.MaxNics}] which is too small.  At least [{minNics}] network interfaces are required for [{node.Role}] nodes.");
+                }
+            }
+
             // Identify the OSD Bluestore block device for OSD nodes.
 
             if (hive.Definition.HiveFS.Enabled)

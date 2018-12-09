@@ -1822,7 +1822,10 @@ namespace Neon.Hive
         /// Returns the <see cref="AzureVmCapabilities"/> for a specified VM size.
         /// </summary>
         /// <param name="vmSize">The VM size.</param>
-        /// <returns>The requested <see cref="AzureVmCapabilities"/>.</returns>
+        /// <returns>
+        /// The requested <see cref="AzureVmCapabilities"/> or <c>null</c> 
+        /// if information about the VM cannot be located.
+        /// </returns>
         public static AzureVmCapabilities Get(AzureVmSizes vmSize)
         {
             AzureVmCapabilities result;
@@ -1833,7 +1836,7 @@ namespace Neon.Hive
             }
             else
             {
-                throw new NotImplementedException(); // Shouldn't ever happen.
+                return null; // Shouldn't ever happen.
             }
         }
 

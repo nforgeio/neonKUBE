@@ -308,5 +308,50 @@ namespace Neon.Hive
         /// used for hosts provisioned on public clouds for security reasons.
         /// </summary>
         public const string DefaulVmTemplatePassword = "sysadmin0000";
+
+        /// <summary>
+        /// The minimum number of cores required by manager nodes.
+        /// </summary>
+        public const int MinManagerCores = 2;
+
+        /// <summary>
+        /// The minimum number of cores required by worker nodes.
+        /// </summary>
+        public const int MinWorkerCores = 2;
+
+        /// <summary>
+        /// The minimum number of cores required by pet nodes.
+        /// </summary>
+        public const int MinPetCores = 1;
+
+        /// <summary>
+        /// The minimum RAM (MiB) required for manager nodes.
+        /// </summary>
+        public const int MinManagerRamMiB = 4000;
+
+        /// <summary>
+        /// The minimum RAM (MiB) required for worker nodes.
+        /// </summary>
+        public const int MinWorkerRamMiB = 4000;
+
+        /// <summary>
+        /// The minimum RAM (MiB) required for pet nodes.
+        /// </summary>
+        public const int MinPetRamMiB = 2000;
+
+        /// <summary>
+        /// The minimum required network interface cards for manager nodes.
+        /// </summary>
+        public const int MinManagerNics = 2;
+
+        /// <summary>
+        /// The minimum required network interface cards for worker nodes.
+        /// </summary>
+        public const int MinWorkerNics = 1;
+
+        /// <summary>
+        /// The minimum required network interface cards for pet nodes.
+        /// </summary>
+        public const int MinPetNics = 1;
     }
 }
