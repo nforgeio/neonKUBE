@@ -197,13 +197,15 @@ namespace NeonCli
                                     ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMQP
                                 });
 
-                            amqpRule.Backends.Add(
-                                new TrafficManagerTcpBackend()
-                                {
-                                    Group      = HiveHostGroups.HiveMQ,
-                                    GroupLimit = 5,
-                                    Port       = HiveHostPorts.HiveMQAMQP
-                                });
+                            foreach (var ampqNode in hive.Nodes.Where(n => n.Metadata.Labels.HiveMQ))
+                            {
+                                amqpRule.Backends.Add(
+                                    new TrafficManagerTcpBackend()
+                                    {
+                                         Server = ampqNode.PrivateAddress.ToString(),
+                                         Port   = HiveHostPorts.HiveMQAMQP
+                                    });
+                            }
 
                             hive.PrivateTraffic.SetRule(amqpRule);
 

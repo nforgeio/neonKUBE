@@ -449,10 +449,10 @@ defaults
     retries                 2
     http-reuse              safe
     timeout connect         {ToHaProxyTime(settings.Timeouts.ConnectSeconds)}
-    timeout client          {ToHaProxyTime(settings.Timeouts.ClientSeconds)}
-    timeout server          {ToHaProxyTime(settings.Timeouts.ServerSeconds)}
+    timeout client          {ToHaProxyTime(settings.Timeouts.ClientSeconds, treatZeroAsInfinite: true)}
+    timeout server          {ToHaProxyTime(settings.Timeouts.ServerSeconds, treatZeroAsInfinite: true)}
     timeout check           {ToHaProxyTime(settings.Timeouts.CheckSeconds)}
-    timeout http-keep-alive {ToHaProxyTime(settings.Timeouts.HttpKeepAliveSeconds)}
+    timeout http-keep-alive {ToHaProxyTime(settings.Timeouts.HttpKeepAliveSeconds, treatZeroAsInfinite: true)}
 ");
 
             if (settings.Resolvers.Count > 0)
@@ -722,12 +722,12 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
 
                     if (tcpRule.Timeouts.ClientSeconds != settings.Timeouts.ClientSeconds)
                     {
-                        sbHaProxy.AppendLine($"    timeout client          {ToHaProxyTime(tcpRule.Timeouts.ClientSeconds)}");
+                        sbHaProxy.AppendLine($"    timeout client          {ToHaProxyTime(tcpRule.Timeouts.ClientSeconds, treatZeroAsInfinite: true)}");
                     }
 
                     if (tcpRule.Timeouts.ServerSeconds != settings.Timeouts.ServerSeconds)
                     {
-                        sbHaProxy.AppendLine($"    timeout server          {ToHaProxyTime(tcpRule.Timeouts.ServerSeconds)}");
+                        sbHaProxy.AppendLine($"    timeout server          {ToHaProxyTime(tcpRule.Timeouts.ServerSeconds, treatZeroAsInfinite: true)}");
                     }
 
                     if (tcpRule.Timeouts.CheckSeconds != settings.Timeouts.CheckSeconds)
@@ -2316,9 +2316,17 @@ listen tcp:port-{port}
         /// consisting of an integer followed by a unit.  See <a href="http://cbonte.github.io/haproxy-dconv/1.8/configuration.html#2.4">HAProxy Time Format</a>
         /// </summary>
         /// <param name="seconds">The seconds.</param>
+        /// <param name="treatZeroAsInfinite">
+        /// Optionally generate a very large value (1 week) when <paramref name="seconds"/> is <b>0</b>.
+        /// </param>
         /// <returns>The formatted time value.</returns>
-        private static string ToHaProxyTime(double seconds)
+        private static string ToHaProxyTime(double seconds, bool treatZeroAsInfinite = false)
         {
+            if (treatZeroAsInfinite && seconds == 0.0)
+            {
+                return "7d";
+            }
+
             if (seconds < 0.0)
             {
                 seconds = 0.0;
