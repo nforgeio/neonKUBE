@@ -739,9 +739,14 @@ tls-auth ta.key 0 # This file is secret
 cipher AES-256-CBC 
 
 # Enable compression on the VPN link.
-# If you enable it here, you must also
-# enable it in the client config file.
-comp-lzo
+# Don't enable this unless it is also
+# enabled in the client config file.
+#
+# We're not enabling this due to the
+# VORACLE security vulnerablity:
+#
+#   https://community.openvpn.net/openvpn/wiki/VORACLE
+#
 
 # The maximum number of concurrently connected
 # clients we want to allow.

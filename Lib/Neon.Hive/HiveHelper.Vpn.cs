@@ -558,7 +558,13 @@ cipher AES-256-CBC
 # Enable compression on the VPN link.
 # Don't enable this unless it is also
 # enabled in the server config file.
-comp-lzo
+#
+# We're not enabling this due to the
+# VORACLE security vulnerablity:
+#
+#   https://community.openvpn.net/openvpn/wiki/VORACLE
+#
+#comp-lzo
 
 # Set log file verbosity.
 verb 3
