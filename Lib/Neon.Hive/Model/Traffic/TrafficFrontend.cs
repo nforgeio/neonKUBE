@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerFrontend.cs
+// FILE:	    TrafficFrontend.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -27,12 +27,12 @@ namespace Neon.Hive
     /// <summary>
     /// Base class for traffic manager frontends. 
     /// </summary>
-    public class TrafficManagerFrontend
+    public class TrafficFrontend
     {
         /// <summary>
         /// The maximum number of connections to be allowed for this
         /// frontend or zero if the number of connections will be limited
-        /// to the overall pool of connections specified by <see cref="TrafficManagerSettings.MaxConnections"/>.
+        /// to the overall pool of connections specified by <see cref="TrafficSettings.MaxConnections"/>.
         /// This defaults to <b>0</b>.
         /// </summary>
         [JsonProperty(PropertyName = "MaxConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -44,7 +44,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="rule">The parent rule.</param>
-        public void Validate(TrafficManagerValidationContext context, TrafficManagerRule rule)
+        public void Validate(TrafficValidationContext context, TrafficRule rule)
         {
             // Verify [MaxConnections]
 

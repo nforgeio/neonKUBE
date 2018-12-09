@@ -39,7 +39,7 @@ namespace NeonProxyManager
         /// <param name="rule">The associated traffic manager rule.</param>
         /// <param name="frontend">The frontend that generated this mapping.</param>
         /// <param name="backendName">The backend name.</param>
-        public HostPathMapping(TrafficManagerHttpRule rule, TrafficManagerHttpFrontend frontend, string backendName)
+        public HostPathMapping(TrafficHttpRule rule, TrafficHttpFrontend frontend, string backendName)
         {
             Covenant.Requires<ArgumentNullException>(rule != null);
             Covenant.Requires<ArgumentNullException>(frontend != null);
@@ -53,12 +53,12 @@ namespace NeonProxyManager
         /// <summary>
         /// Returns thge associated traffic manager rule.
         /// </summary>
-        public TrafficManagerHttpRule Rule { get; private set; }
+        public TrafficHttpRule Rule { get; private set; }
 
         /// <summary>
         /// Returns the frontend that generated this mapping.
         /// </summary>
-        public TrafficManagerHttpFrontend Frontend { get; private set; }
+        public TrafficHttpFrontend Frontend { get; private set; }
 
         /// <summary>
         /// Returns the backend name.

@@ -568,7 +568,7 @@ backend stub {
                     // Read the cache settings and update the cache warmer.
 
                     var cacheSettingsJson = File.ReadAllText(Path.Combine(configFolder, "cache-settings.json"));
-                    var cacheSettings     = NeonHelper.JsonDeserialize<TrafficManagerCacheSettings>(cacheSettingsJson);
+                    var cacheSettings     = NeonHelper.JsonDeserialize<TrafficCacheSettings>(cacheSettingsJson);
 
                     UpdateCacheWarmer(cacheSettings);
                 }

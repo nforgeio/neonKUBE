@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerHttpRule.cs
+// FILE:	    TrafficHttpRule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -23,56 +23,56 @@ namespace Neon.Hive
     /// Describes a traffic manager rule that forwards traffic from 
     /// HTTP and/or HTTPS frontends to HTTP backend servers.
     /// </summary>
-    public class TrafficManagerHttpRule : TrafficManagerRule
+    public class TrafficHttpRule : TrafficRule
     {
-        private List<TrafficManagerHttpBackend> selectedBackends;    // Used to cache selected backends
+        private List<TrafficHttpBackend> selectedBackends;    // Used to cache selected backends
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public TrafficManagerHttpRule()
+        public TrafficHttpRule()
         {
-            base.Mode = TrafficManagerMode.Http;
+            base.Mode = TrafficMode.Http;
         }
 
         /// <summary>
         /// The traffic manager frontend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Frontends", Required = Required.Always)]
-        public List<TrafficManagerHttpFrontend> Frontends { get; set; } = new List<TrafficManagerHttpFrontend>();
+        public List<TrafficHttpFrontend> Frontends { get; set; } = new List<TrafficHttpFrontend>();
 
         /// <summary>
         /// The traffic manager backend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Backends", Required = Required.Always)]
-        public List<TrafficManagerHttpBackend> Backends { get; set; } = new List<TrafficManagerHttpBackend>();
+        public List<TrafficHttpBackend> Backends { get; set; } = new List<TrafficHttpBackend>();
 
         /// <summary>
         /// <para>
         /// Describes how backend connections to origin servers may be reused for subsequent
         /// requests.  This maps directly to the <b>http-reuse </b>HAProxy and is discussed at length 
         /// <a href="https://cbonte.github.io/haproxy-dconv/1.8/configuration.html#4.2-http-reuse">here</a>.
-        /// This defaults to <see cref="TrafficManagerHttpReuse.Safe"/>.
+        /// This defaults to <see cref="TrafficHttpReuse.Safe"/>.
         /// </para>
         /// <note>
-        /// neonHIVE HTTP rules default to <see cref="TrafficManagerHttpReuse.Safe"/> where as HAProxy defaults
-        /// to <see cref="TrafficManagerHttpReuse.Never"/>.
+        /// neonHIVE HTTP rules default to <see cref="TrafficHttpReuse.Safe"/> where as HAProxy defaults
+        /// to <see cref="TrafficHttpReuse.Never"/>.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "BackendConnectionReuse", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(TrafficManagerHttpReuse.Safe)]
-        public TrafficManagerHttpReuse BackendConnectionReuse { get; set; } = TrafficManagerHttpReuse.Safe;
+        [DefaultValue(TrafficHttpReuse.Safe)]
+        public TrafficHttpReuse BackendConnectionReuse { get; set; } = TrafficHttpReuse.Safe;
 
         /// <summary>
         /// HTTP caching related settings.  This defaults to <c>null</c> which disables any caching.
         /// </summary>
         [JsonProperty(PropertyName = "Cache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public TrafficManagerHttpCache Cache { get; set; }
+        public TrafficHttpCache Cache { get; set; }
 
         /// <summary>
         /// Returns the list of backends selected to be targeted by processing any
-        /// backends with <see cref="TrafficManagerBackend.Group"/> and <see cref="TrafficManagerBackend.GroupLimit"/>
+        /// backends with <see cref="TrafficBackend.Group"/> and <see cref="TrafficBackend.GroupLimit"/>
         /// properties configured to dynamically select backend target nodes.
         /// </summary>
         /// <param name="hostGroups">
@@ -90,7 +90,7 @@ namespace Neon.Hive
         /// instance and then return the same selected backends thereafter.
         /// </note>
         /// </remarks>
-        public List<TrafficManagerHttpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
+        public List<TrafficHttpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
         {
             Covenant.Requires<ArgumentNullException>(hostGroups != null);
 
@@ -125,7 +125,7 @@ namespace Neon.Hive
 
             var processedGroups = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            selectedBackends = new List<TrafficManagerHttpBackend>();
+            selectedBackends = new List<TrafficHttpBackend>();
 
             foreach (var backend in Backends)
             {
@@ -181,12 +181,12 @@ namespace Neon.Hive
         /// Validates the rule.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public override void Validate(TrafficManagerValidationContext context)
+        public override void Validate(TrafficValidationContext context)
         {
             base.Validate(context);
 
-            Frontends = Frontends ?? new List<TrafficManagerHttpFrontend>();
-            Backends  = Backends ?? new List<TrafficManagerHttpBackend>();
+            Frontends = Frontends ?? new List<TrafficHttpFrontend>();
+            Backends  = Backends ?? new List<TrafficHttpBackend>();
 
             if (Frontends.Count == 0)
             {
@@ -329,7 +329,7 @@ namespace Neon.Hive
                 // The Varnish open source release doesn't support TLS backends.  This requires 
                 // Varnish Plus (of course) which is very expensive.
 
-                foreach (TrafficManagerHttpBackend backend in Backends)
+                foreach (TrafficHttpBackend backend in Backends)
                 {
                     if (backend.Tls)
                     {
@@ -448,8 +448,8 @@ namespace Neon.Hive
         /// <b>INTERNAL USE ONLY:</b> Returns the frontend corresponding to a cache warming target URI.
         /// </summary>
         /// <param name="target">The warming target.</param>
-        /// <returns>The corresponding <see cref="TrafficManagerHttpFrontend"/>"/> or <c>null</c> if there's no match.</returns>
-        public TrafficManagerHttpFrontend GetFrontendForWarmTarget(TrafficManagerWarmTarget target)
+        /// <returns>The corresponding <see cref="TrafficHttpFrontend"/>"/> or <c>null</c> if there's no match.</returns>
+        public TrafficHttpFrontend GetFrontendForWarmTarget(TrafficWarmTarget target)
         {
             // We'll match frontends on scheme, hostname, port, and longest path prefix.
             //

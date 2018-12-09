@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerHttpCache.cs
+// FILE:	    TrafficHttpCache.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -27,12 +27,12 @@ namespace Neon.Hive
     /// <summary>
     /// HTTP caching related settings.
     /// </summary>
-    public class TrafficManagerHttpCache
+    public class TrafficHttpCache
     {
         private const int defaultWarmSeconds = 120;
 
         /// <summary>
-        /// Enables HTTP caching for a <see cref="TrafficManagerHttpRule"/>.  This defaults to <c>false</c>.
+        /// Enables HTTP caching for a <see cref="TrafficHttpRule"/>.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
@@ -106,21 +106,21 @@ namespace Neon.Hive
         /// </summary>
         [JsonProperty(PropertyName = "WarmTargets", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<TrafficManagerWarmTarget> WarmTargets { get; set; } = new List<TrafficManagerWarmTarget>();
+        public List<TrafficWarmTarget> WarmTargets { get; set; } = new List<TrafficWarmTarget>();
 
         /// <summary>
         /// Validates the settings.
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="rule">The parent rule.</param>
-        public void Validate(TrafficManagerValidationContext context, TrafficManagerHttpRule rule)
+        public void Validate(TrafficValidationContext context, TrafficHttpRule rule)
         {
             if (DnsTTL < 1)
             {
-                context.Error($"[{nameof(TrafficManagerHttpCache)}.{nameof(DnsTTL)}={DnsTTL}] cannot be less than 1 second.");
+                context.Error($"[{nameof(TrafficHttpCache)}.{nameof(DnsTTL)}={DnsTTL}] cannot be less than 1 second.");
             }
 
-            WarmTargets = WarmTargets ?? new List<TrafficManagerWarmTarget>();
+            WarmTargets = WarmTargets ?? new List<TrafficWarmTarget>();
 
             // Verify that each warm target has valid properties and that they
             // all match at one of the rule frontends.

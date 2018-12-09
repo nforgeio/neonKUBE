@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerNameserver.cs
+// FILE:	    TrafficNameserver.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,7 +26,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes a traffic manager DNS resolver nameserver.
     /// </summary>
-    public class TrafficManagerNameserver
+    public class TrafficNameserver
     {
         /// <summary>
         /// Unique label for the nameserver.
@@ -44,7 +44,7 @@ namespace Neon.Hive
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(TrafficManagerValidationContext context)
+        public void Validate(TrafficValidationContext context)
         {
             if (string.IsNullOrWhiteSpace(Name))
             {
@@ -69,7 +69,7 @@ namespace Neon.Hive
 
                 if (!isValid)
                 {
-                    context.Error($"[{nameof(TrafficManagerNameserver)}.{nameof(Name)}={Endpoint}] is not valid.");
+                    context.Error($"[{nameof(TrafficNameserver)}.{nameof(Name)}={Endpoint}] is not valid.");
                 }
             }
         }

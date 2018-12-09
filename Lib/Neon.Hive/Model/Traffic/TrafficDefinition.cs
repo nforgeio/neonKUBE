@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerDefinition.cs
+// FILE:	    TrafficDefinition.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -27,7 +27,7 @@ namespace Neon.Hive
     /// <summary>
     /// Holds the definition of a neonHIVE traffic manager.
     /// </summary>
-    public class TrafficManagerDefinition
+    public class TrafficDefinition
     {
         /// <summary>
         /// The traffic manager name (currently <b>public</b> or <b>private</b>).
@@ -39,24 +39,24 @@ namespace Neon.Hive
         /// The traffic manager settings.
         /// </summary>
         [JsonProperty(PropertyName = "Settings", Required = Required.Always)]
-        public TrafficManagerSettings Settings { get; set; }
+        public TrafficSettings Settings { get; set; }
 
         /// <summary>
         /// The traffic manager rule dictionary keyed by name.
         /// </summary>
         [JsonProperty(PropertyName = "Rules", Required = Required.Always)]
-        public Dictionary<string, TrafficManagerRule> Rules { get; set; } = new Dictionary<string, TrafficManagerRule>();
+        public Dictionary<string, TrafficRule> Rules { get; set; } = new Dictionary<string, TrafficRule>();
 
         /// <summary>
         /// Validates the traffic manager definition.
         /// </summary>
         /// <param name="certificates">The dictionary of hive certificates keyed by name.</param>
-        /// <returns>The <see cref="TrafficManagerValidationContext"/>.</returns>
-        public TrafficManagerValidationContext Validate(Dictionary<string, TlsCertificate> certificates)
+        /// <returns>The <see cref="TrafficValidationContext"/>.</returns>
+        public TrafficValidationContext Validate(Dictionary<string, TlsCertificate> certificates)
         {
             Covenant.Requires<ArgumentNullException>(certificates != null);
 
-            var context = new TrafficManagerValidationContext(Name, Settings, certificates);
+            var context = new TrafficValidationContext(Name, Settings, certificates);
 
             // Validate the existing settings and rules.
 
@@ -73,15 +73,15 @@ namespace Neon.Hive
             //      * HTTP rules on the same port cannot mix TLS and non-TLS.
             //      * Only one TCP port per rule is allowed.
 
-            var httpMap       = new Dictionary<string, TrafficManagerHttpRule>(StringComparer.OrdinalIgnoreCase);
+            var httpMap       = new Dictionary<string, TrafficHttpRule>(StringComparer.OrdinalIgnoreCase);
             var httpPortToTls = new Dictionary<int, bool>();
-            var tcpMap        = new Dictionary<int, TrafficManagerTcpRule>();
+            var tcpMap        = new Dictionary<int, TrafficTcpRule>();
 
             // Scan HTTP rules.
 
-            foreach (var rule in Rules.Values.Where(r => r.Mode == TrafficManagerMode.Http).OrderBy(r => r.Name.ToLowerInvariant()))
+            foreach (var rule in Rules.Values.Where(r => r.Mode == TrafficMode.Http).OrderBy(r => r.Name.ToLowerInvariant()))
             {
-                var httpRule = (TrafficManagerHttpRule)rule;
+                var httpRule = (TrafficHttpRule)rule;
 
                 foreach (var frontend in httpRule.Frontends)
                 {
@@ -122,9 +122,9 @@ namespace Neon.Hive
 
             // Scan the TCP rules.
 
-            foreach (var rule in Rules.Values.Where(r => r.Mode == TrafficManagerMode.Tcp).OrderBy(r => r.Name.ToLowerInvariant()))
+            foreach (var rule in Rules.Values.Where(r => r.Mode == TrafficMode.Tcp).OrderBy(r => r.Name.ToLowerInvariant()))
             {
-                var tcpRule = (TrafficManagerTcpRule)rule;
+                var tcpRule = (TrafficTcpRule)rule;
 
                 foreach (var frontend in tcpRule.Frontends)
                 {

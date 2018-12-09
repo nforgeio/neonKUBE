@@ -89,23 +89,23 @@ namespace TestHive
 
                 for (int serverId = 0; serverId < 2; serverId++)
                 {
-                    var rule = new TrafficManagerHttpRule()
+                    var rule = new TrafficHttpRule()
                     {
                         Name = $"vegomatic-{serverId}",
                         CheckExpect = "status 200",
                         CheckSeconds = 1,
-                        Cache = new TrafficManagerHttpCache() { Enabled = true }
+                        Cache = new TrafficHttpCache() { Enabled = true }
                     };
 
                     rule.Frontends.Add(
-                        new TrafficManagerHttpFrontend()
+                        new TrafficHttpFrontend()
                         {
                             Host = $"vegomatic-{serverId}",
                             ProxyPort = proxyPort
                         });
 
                     rule.Backends.Add(
-                        new TrafficManagerHttpBackend()
+                        new TrafficHttpBackend()
                         {
                             Server = $"vegomatic-{serverId}",
                             Port = 80
@@ -313,23 +313,23 @@ namespace TestHive
 
             // Configure a traffic manager rule (with caching enabled).
 
-            var rule = new TrafficManagerHttpRule()
+            var rule = new TrafficHttpRule()
             {
                 Name         = $"vegomatic",
                 CheckExpect  = "status 200",
                 CheckSeconds = 1,
-                Cache        = new TrafficManagerHttpCache() { Enabled = true }
+                Cache        = new TrafficHttpCache() { Enabled = true }
             };
 
             rule.Frontends.Add(
-                new TrafficManagerHttpFrontend()
+                new TrafficHttpFrontend()
                 {
                     Host      = $"vegomatic",
                     ProxyPort = proxyPort
                 });
 
             rule.Backends.Add(
-                new TrafficManagerHttpBackend()
+                new TrafficHttpBackend()
                 {
                     Server = $"vegomatic",
                     Port   = 80

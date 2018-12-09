@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerTimeouts.cs
+// FILE:	    TrafficTimeouts.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,7 +26,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes traffic manager timeouts.
     /// </summary>
-    public class TrafficManagerTimeouts
+    public class TrafficTimeouts
     {
         /// <summary>
         /// The default maximum time to wait for a connection attempt to a server (<b>5 seconds</b>).
@@ -103,7 +103,7 @@ namespace Neon.Hive
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(TrafficManagerValidationContext context)
+        public void Validate(TrafficValidationContext context)
         {
             if (ConnectSeconds < 0.0)
             {

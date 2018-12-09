@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerWarmTarget.cs
+// FILE:	    TrafficWarmTarget.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -20,7 +20,7 @@ namespace Neon.Hive
     /// the <b>neon-proxy-public-cache</b> or <b>neon-proxy-private-cache</b> 
     /// services proactively pulls content into the cache.
     /// </summary>
-    public class TrafficManagerWarmTarget
+    public class TrafficWarmTarget
     {
         private const string defaultUserAgent     = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36";
         private const double defaultUpdateSeconds = 60;
@@ -32,7 +32,7 @@ namespace Neon.Hive
         /// </para>
         /// <note>
         /// The URI <b>scheme</b>, <b>hostname</b>, and <b>port</b> must map to
-        /// one of the parent <see cref="TrafficManagerHttpRule"/> frontends.
+        /// one of the parent <see cref="TrafficHttpRule"/> frontends.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Uri", Required = Required.Always)]
@@ -67,16 +67,16 @@ namespace Neon.Hive
         /// Validates the item.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(TrafficManagerValidationContext context)
+        public void Validate(TrafficValidationContext context)
         {
             if (string.IsNullOrEmpty(Uri))
             {
-                context.Error($"[{nameof(TrafficManagerWarmTarget)}.{nameof(Uri)}] cannot be NULL or empty.");
+                context.Error($"[{nameof(TrafficWarmTarget)}.{nameof(Uri)}] cannot be NULL or empty.");
             }
 
             if (!System.Uri.TryCreate(Uri, UriKind.Absolute, out var uri))
             {
-                context.Error($"[{nameof(TrafficManagerWarmTarget)}.{nameof(Uri)}={Uri}] is not a valid fully qualified URI.");
+                context.Error($"[{nameof(TrafficWarmTarget)}.{nameof(Uri)}={Uri}] is not a valid fully qualified URI.");
             }
 
             if (UpdateSeconds <= 0)

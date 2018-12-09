@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerHttpBackend.cs
+// FILE:	    TrafficTcpBackend.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,23 +25,16 @@ using Neon.Net;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Describes an HTTP/HTTPS traffic manager backend.
+    /// Describes a TCP traffic manager backend.
     /// </summary>
-    public class TrafficManagerHttpBackend : TrafficManagerBackend
+    public class TrafficTcpBackend : TrafficBackend
     {
-        /// <summary>
-        /// Forward the request to this backend using TLS (defaults to <c>false</c>).
-        /// </summary>
-        [JsonProperty(PropertyName = "Tls", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool Tls { get; set; } = false;
-
         /// <summary>
         /// Validates the backend.
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="rule">The parent rule.</param>
-        public void Validate(TrafficManagerValidationContext context, TrafficManagerHttpRule rule)
+        public void Validate(TrafficValidationContext context, TrafficTcpRule rule)
         {
             base.Validate(context, rule.Name);
         }

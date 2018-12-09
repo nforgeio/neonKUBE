@@ -67,7 +67,7 @@ namespace NeonProxyManager
         /// Constructor.
         /// </summary>
         /// <param name="frontend">The associated frontend.</param>
-        public HAProxyHttpFrontend(TrafficManagerHttpFrontend frontend)
+        public HAProxyHttpFrontend(TrafficHttpFrontend frontend)
         {
             Covenant.Requires<ArgumentNullException>(frontend != null);
 
@@ -77,7 +77,7 @@ namespace NeonProxyManager
         /// <summary>
         /// Returns the associated frontend.
         /// </summary>
-        public TrafficManagerHttpFrontend Frontend { get; private set; }
+        public TrafficHttpFrontend Frontend { get; private set; }
 
         /// <summary>
         /// Returns the HAProxy frontend name.

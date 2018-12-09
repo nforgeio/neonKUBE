@@ -687,26 +687,26 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
         /// Returns the traffic manager rule for the [neon-registry] service.
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
-        /// <returns>The <see cref="TrafficManagerHttpRule"/>.</returns>
-        private TrafficManagerHttpRule GetRegistryTrafficManagerRule(string hostname)
+        /// <returns>The <see cref="TrafficHttpRule"/>.</returns>
+        private TrafficHttpRule GetRegistryTrafficManagerRule(string hostname)
         {
-            return new TrafficManagerHttpRule()
+            return new TrafficHttpRule()
             {
                 Name   = "neon-registry",
                 System = true,
 
-                Frontends = new List<TrafficManagerHttpFrontend>()
+                Frontends = new List<TrafficHttpFrontend>()
                 {
-                    new TrafficManagerHttpFrontend()
+                    new TrafficHttpFrontend()
                     {
                         Host     = hostname,
                         CertName = "neon-registry",
                     }
                 },
 
-                Backends = new List<TrafficManagerHttpBackend>()
+                Backends = new List<TrafficHttpBackend>()
                 {
-                    new TrafficManagerHttpBackend()
+                    new TrafficHttpBackend()
                     {
                         Server = "neon-registry",
                         Port   = 5000

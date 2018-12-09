@@ -48,7 +48,7 @@ namespace NeonProxyCache
             /// Constructor.
             /// </summary>
             /// <param name="target">The associated target.</param>
-            public WarmTargetStatus(TrafficManagerWarmTarget target)
+            public WarmTargetStatus(TrafficWarmTarget target)
             {
                 Covenant.Requires<ArgumentNullException>(target != null);
 
@@ -60,7 +60,7 @@ namespace NeonProxyCache
             /// <summary>
             /// Returns the cache warming target.
             /// </summary>
-            public TrafficManagerWarmTarget Target { get; private set; }
+            public TrafficWarmTarget Target { get; private set; }
 
             /// <summary>
             /// The last time (UTC) this target was fetched or <see cref="DateTime.MinValue"/>
@@ -189,7 +189,7 @@ namespace NeonProxyCache
         /// a proxy configuration update.  The cache warmer will begin pulling any new content.
         /// </summary>
         /// <param name="cacheSettings">The new cache settings.</param>
-        private static void UpdateCacheWarmer(TrafficManagerCacheSettings cacheSettings)
+        private static void UpdateCacheWarmer(TrafficCacheSettings cacheSettings)
         {
             Covenant.Requires<ArgumentNullException>(cacheSettings != null);
 

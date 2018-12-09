@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerStatus.cs
+// FILE:	    TrafficStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,12 +26,12 @@ namespace Neon.Hive
     /// <summary>
     /// Describes the route status for a traffic manager.
     /// </summary>
-    public class TrafficManagerStatus
+    public class TrafficStatus
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public TrafficManagerStatus()
+        public TrafficStatus()
         {
             this.TimestampUtc = DateTime.UtcNow;
         }

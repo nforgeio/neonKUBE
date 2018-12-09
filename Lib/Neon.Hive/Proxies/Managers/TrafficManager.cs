@@ -87,17 +87,17 @@ namespace Neon.Hive
         /// <summary>
         /// Returns the traffic manager settings.
         /// </summary>
-        /// <returns>The <see cref="TrafficManagerSettings"/>.</returns>
-        public TrafficManagerSettings GetSettings()
+        /// <returns>The <see cref="TrafficSettings"/>.</returns>
+        public TrafficSettings GetSettings()
         {
-            return hive.Consul.Client.KV.GetObject<TrafficManagerSettings>(GetProxySettingsKey()).Result;
+            return hive.Consul.Client.KV.GetObject<TrafficSettings>(GetProxySettingsKey()).Result;
         }
 
         /// <summary>
         /// Updates the traffic manager settings.
         /// </summary>
         /// <param name="settings">The new settings.</param>
-        public void UpdateSettings(TrafficManagerSettings settings)
+        public void UpdateSettings(TrafficSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
@@ -108,18 +108,18 @@ namespace Neon.Hive
         /// <summary>
         /// Returns the traffic manager definition including its settings and rules.
         /// </summary>
-        /// <returns>The <see cref="TrafficManagerDefinition"/>.</returns>
+        /// <returns>The <see cref="TrafficDefinition"/>.</returns>
         /// <exception cref="HiveException">Thrown if the traffic manager definition could not be loaded.</exception>
-        public TrafficManagerDefinition GetDefinition()
+        public TrafficDefinition GetDefinition()
         {
             // Fetch the proxy settings and all of its rules to create a full [TrafficManagerDefinition].
 
-            var proxyDefinition  = new TrafficManagerDefinition() { Name = this.Name };
+            var proxyDefinition  = new TrafficDefinition() { Name = this.Name };
             var proxySettingsKey = GetProxySettingsKey();
 
             if (hive.Consul.Client.KV.Exists(proxySettingsKey).Result)
             {
-                proxyDefinition.Settings = TrafficManagerSettings.ParseJson(hive.Consul.Client.KV.GetString(proxySettingsKey).Result);
+                proxyDefinition.Settings = TrafficSettings.ParseJson(hive.Consul.Client.KV.GetString(proxySettingsKey).Result);
             }
             else
             {
@@ -210,8 +210,8 @@ namespace Neon.Hive
         /// Returns a traffic manager rule if it exists.
         /// </summary>
         /// <param name="ruleName">The rule name.</param>
-        /// <returns>The <see cref="TrafficManagerRule"/> or <c>null</c>.</returns>
-        public TrafficManagerRule GetRule(string ruleName)
+        /// <returns>The <see cref="TrafficRule"/> or <c>null</c>.</returns>
+        public TrafficRule GetRule(string ruleName)
         {
             Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(ruleName));
 
@@ -219,7 +219,7 @@ namespace Neon.Hive
 
             if (hive.Consul.Client.KV.Exists(ruleKey).Result)
             {
-                return TrafficManagerRule.ParseJson(hive.Consul.Client.KV.GetString(ruleKey).Result);
+                return TrafficRule.ParseJson(hive.Consul.Client.KV.GetString(ruleKey).Result);
             }
             else
             {
@@ -250,7 +250,7 @@ namespace Neon.Hive
         /// if the traffic manager rule didn't already exist and was added.
         /// </returns>
         /// <exception cref="HiveDefinitionException">Thrown if the rule is not valid.</exception>
-        public bool SetRule(TrafficManagerRule rule, bool deferUpdate = false)
+        public bool SetRule(TrafficRule rule, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>(rule != null);
             Covenant.Requires<ArgumentNullException>(HiveDefinition.IsValidName(rule.Name));
@@ -262,7 +262,7 @@ namespace Neon.Hive
                 // to the Internet for cloud deployments and to avoid operators
                 // being freaked out if they see a non-zero port here.
 
-                var httpRule = rule as TrafficManagerHttpRule;
+                var httpRule = rule as TrafficHttpRule;
 
                 if (httpRule != null)
                 {
@@ -273,7 +273,7 @@ namespace Neon.Hive
                 }
                 else
                 {
-                    var tcpRule = rule as TrafficManagerTcpRule;
+                    var tcpRule = rule as TrafficTcpRule;
 
                     if (tcpRule != null)
                     {
@@ -290,7 +290,7 @@ namespace Neon.Hive
             // We're going to minimially ensure that the rule is valid.  It would
             // be better to do full server side validation.
 
-            var context = new TrafficManagerValidationContext(Name, GetSettings())
+            var context = new TrafficValidationContext(Name, GetSettings())
             {
                 ValidateCertificates = false,   // Disable this because we didn't download the certs.
                 ValidateResolvers    = false
@@ -335,17 +335,17 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="predicate">Optional predicate used to filter the output rules.</param>
         /// <returns>The <see cref="IEnumerable{T}"/> of traffic manager rules.</returns>
-        public IEnumerable<TrafficManagerRule> ListRules(Func<TrafficManagerRule, bool> predicate = null)
+        public IEnumerable<TrafficRule> ListRules(Func<TrafficRule, bool> predicate = null)
         {
             var rulesResponse = hive.Consul.Client.KV.ListOrDefault<JObject>($"{proxyManagerPrefix}/conf/{Name}/rules/").Result;
 
             if (rulesResponse != null)
             {
-                var rules = new List<TrafficManagerRule>();
+                var rules = new List<TrafficRule>();
 
                 foreach (var rulebject in rulesResponse)
                 {
-                    var rule = TrafficManagerRule.ParseJson(rulebject.ToString());
+                    var rule = TrafficRule.ParseJson(rulebject.ToString());
 
                     if (predicate == null || predicate(rule))
                     {
@@ -357,7 +357,7 @@ namespace Neon.Hive
             }
             else
             {
-                return new TrafficManagerRule[0];
+                return new TrafficRule[0];
             }
         }
 

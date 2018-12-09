@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerCheckMode.cs
+// FILE:	    TrafficCheckMode.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -27,7 +27,7 @@ namespace Neon.Hive
     /// <summary>
     /// Enumerates the health checking modes for testing load balanced endpoints.
     /// </summary>
-    public enum TrafficManagerCheckMode
+    public enum TrafficCheckMode
     {
         /// <summary>
         /// Disables health checks against the endpoints.
@@ -36,22 +36,22 @@ namespace Neon.Hive
         Disabled = 0,
 
         /// <summary>
-        /// Performs TCP connection checks against <see cref="TrafficManagerTcpRule"/> rules and
-        /// HTTP checks against <see cref="TrafficManagerTcpRule"/> rules.
+        /// Performs TCP connection checks against <see cref="TrafficTcpRule"/> rules and
+        /// HTTP checks against <see cref="TrafficTcpRule"/> rules.
         /// </summary>
         [EnumMember(Value = "default")]
         Default,
 
         /// <summary>
-        /// Performs TCP connection checks for an <see cref="TrafficManagerTcpRule"/> as well
-        /// as <see cref="TrafficManagerTcpRule"/> rules.
+        /// Performs TCP connection checks for an <see cref="TrafficTcpRule"/> as well
+        /// as <see cref="TrafficTcpRule"/> rules.
         /// </summary>
         [EnumMember(Value = "tcp")]
         Tcp,
 
         /// <summary>
-        /// Performs HTTP connection checks for an <see cref="TrafficManagerTcpRule"/> as well
-        /// as <see cref="TrafficManagerHttpRule"/> rules.
+        /// Performs HTTP connection checks for an <see cref="TrafficTcpRule"/> as well
+        /// as <see cref="TrafficHttpRule"/> rules.
         /// </summary>
         [EnumMember(Value = "http")]
         Http

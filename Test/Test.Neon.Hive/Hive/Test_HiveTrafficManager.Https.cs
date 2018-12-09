@@ -74,7 +74,7 @@ namespace TestHive
 
                 // Configure the traffic manager rule.
 
-                var rule = new TrafficManagerHttpRule()
+                var rule = new TrafficHttpRule()
                 {
                     Name         = "vegomatic",
                     CheckExpect  = "status 200",
@@ -83,11 +83,11 @@ namespace TestHive
 
                 if (useCache)
                 {
-                    rule.Cache = new TrafficManagerHttpCache() { Enabled = true };
+                    rule.Cache = new TrafficHttpCache() { Enabled = true };
                 }
 
                 rule.Frontends.Add(
-                    new TrafficManagerHttpFrontend()
+                    new TrafficHttpFrontend()
                     {
                         Host      = testHostname,
                         ProxyPort = proxyPort,
@@ -95,7 +95,7 @@ namespace TestHive
                     });
 
                 rule.Backends.Add(
-                    new TrafficManagerHttpBackend()
+                    new TrafficHttpBackend()
                     {
                         Server = serviceName,
                         Port   = 80
@@ -330,7 +330,7 @@ namespace TestHive
 
                 // Configure the traffic manager rule.
 
-                var rule = new TrafficManagerHttpRule()
+                var rule = new TrafficHttpRule()
                 {
                     Name         = "vegomatic",
                     CheckExpect  = "status 200",
@@ -339,13 +339,13 @@ namespace TestHive
 
                 if (useCache)
                 {
-                    rule.Cache = new TrafficManagerHttpCache() { Enabled = true };
+                    rule.Cache = new TrafficHttpCache() { Enabled = true };
                 }
 
                 foreach (var hostname in hostnames)
                 {
                     rule.Frontends.Add(
-                        new TrafficManagerHttpFrontend()
+                        new TrafficHttpFrontend()
                         {
                             Host      = hostname,
                             ProxyPort = proxyPort,
@@ -354,7 +354,7 @@ namespace TestHive
                 }
 
                 rule.Backends.Add(
-                    new TrafficManagerHttpBackend()
+                    new TrafficHttpBackend()
                     {
                         Server = serviceName,
                         Port   = 80
@@ -639,7 +639,7 @@ namespace TestHive
 
                 foreach (var prefix in prefixes)
                 {
-                    var rule = new TrafficManagerHttpRule()
+                    var rule = new TrafficHttpRule()
                     {
                         Name         = prefix.ServiceName,
                         CheckExpect  = "status 200",
@@ -648,10 +648,10 @@ namespace TestHive
 
                     if (useCache)
                     {
-                        rule.Cache = new TrafficManagerHttpCache() { Enabled = true };
+                        rule.Cache = new TrafficHttpCache() { Enabled = true };
                     }
 
-                    var frontend = new TrafficManagerHttpFrontend()
+                    var frontend = new TrafficHttpFrontend()
                     {
                         Host      = hostname,
                         ProxyPort = proxyPort,
@@ -666,7 +666,7 @@ namespace TestHive
                     rule.Frontends.Add(frontend);
 
                     rule.Backends.Add(
-                        new TrafficManagerHttpBackend()
+                        new TrafficHttpBackend()
                         {
                             Server = prefix.ServiceName,
                             Port   = 80
@@ -813,23 +813,23 @@ namespace TestHive
 
                 // Configure the traffic manager rule.
 
-                var rule = new TrafficManagerHttpRule()
+                var rule = new TrafficHttpRule()
                 {
                     Name         = "vegomatic",
                     CheckExpect  = "status 200",
                     CheckSeconds = 1,
                 };
 
-                rule.Cache = new TrafficManagerHttpCache() { Enabled = true };
+                rule.Cache = new TrafficHttpCache() { Enabled = true };
                 rule.Cache.WarmTargets.Add(
-                    new TrafficManagerWarmTarget()
+                    new TrafficWarmTarget()
                     {
                          UpdateSeconds = 1.0,
                          Uri           = warmUri.ToString()
                     });
 
                 rule.Frontends.Add(
-                    new TrafficManagerHttpFrontend()
+                    new TrafficHttpFrontend()
                     {
                         Host      = testHostname,
                         ProxyPort = proxyPort,
@@ -837,7 +837,7 @@ namespace TestHive
                     });
 
                 rule.Backends.Add(
-                    new TrafficManagerHttpBackend()
+                    new TrafficHttpBackend()
                     {
                         Server = serviceName,
                         Port   = 80

@@ -79,11 +79,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            var rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -118,11 +118,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -161,11 +161,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -204,11 +204,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -236,7 +236,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.Null(rule);
 
@@ -260,7 +260,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.Null(rule);
 
@@ -293,7 +293,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.Null(rule);
         }
@@ -329,11 +329,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
+            var rule = (TrafficHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPrivateHttp, rule.Frontends.First().ProxyPort);
@@ -368,11 +368,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPrivateHttp, rule.Frontends.First().ProxyPort);
@@ -415,11 +415,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPrivateHttp, rule.Frontends.First().ProxyPort);
@@ -454,11 +454,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("test.com", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPrivateHttp, rule.Frontends.First().ProxyPort);
@@ -486,7 +486,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.Null(rule);
 
@@ -510,7 +510,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.Null(rule);
 
@@ -543,7 +543,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PrivateTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PrivateTraffic.GetRule("test");
 
             Assert.Null(rule);
         }
@@ -585,11 +585,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            var rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("vegomatic.test", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -628,11 +628,11 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
-            Assert.Equal(TrafficManagerMode.Http, rule.Mode);
+            Assert.Equal(TrafficMode.Http, rule.Mode);
             Assert.Single(rule.Frontends);
             Assert.Equal("vegomatic.test", rule.Frontends.First().Host);
             Assert.Equal(HiveHostPorts.ProxyPublicHttp, rule.Frontends.First().ProxyPort);
@@ -838,7 +838,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (TrafficManagerHttpRule)hive.PublicTraffic.GetRule("test");
+            rule = (TrafficHttpRule)hive.PublicTraffic.GetRule("test");
 
             Assert.Null(rule);
         }

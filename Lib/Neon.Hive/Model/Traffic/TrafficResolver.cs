@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerResolver.cs
+// FILE:	    TrafficResolver.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,7 +25,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes a traffic manager DNS resolver.
     /// </summary>
-    public class TrafficManagerResolver
+    public class TrafficResolver
     {
         /// <summary>
         /// The unique name for the resolver.
@@ -37,7 +37,7 @@ namespace Neon.Hive
         /// The resolver's name servers.
         /// </summary>
         [JsonProperty(PropertyName = "NameServers", Required = Required.Always)]
-        public List<TrafficManagerNameserver> NameServers { get; set; } = new List<TrafficManagerNameserver>();
+        public List<TrafficNameserver> NameServers { get; set; } = new List<TrafficNameserver>();
 
         /// <summary>
         /// The number of times to retry a failed resolution (defaults to <b>3</b>).
@@ -64,7 +64,7 @@ namespace Neon.Hive
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(TrafficManagerValidationContext context)
+        public void Validate(TrafficValidationContext context)
         {
             if (string.IsNullOrWhiteSpace(Name))
             {

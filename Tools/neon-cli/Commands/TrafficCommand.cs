@@ -468,7 +468,7 @@ See the documentation for more traffic manager rule and setting details.
                         ruleText = File.ReadAllText(ruleFile);
                     }
 
-                    var trafficManagerRule = TrafficManagerRule.Parse(ruleText, strict: true);
+                    var trafficManagerRule = TrafficRule.Parse(ruleText, strict: true);
 
                     ruleName = trafficManagerRule.Name;
 
@@ -481,7 +481,7 @@ See the documentation for more traffic manager rule and setting details.
                     // Validate a clone of the rule with any implicit frontends.
 
                     var clonedRule = NeonHelper.JsonClone(trafficManagerRule);
-                    var context    = new TrafficManagerValidationContext(directorName, null)
+                    var context    = new TrafficValidationContext(directorName, null)
                     {
                         ValidateCertificates = false    // Disable this because we didn't download the certs (see note above)
                     };
@@ -533,7 +533,7 @@ See the documentation for more traffic manager rule and setting details.
                         settingsText = File.ReadAllText(settingsFile);
                     }
 
-                    var trafficManagerSettings = TrafficManagerSettings.Parse(settingsText, strict: true);
+                    var trafficManagerSettings = TrafficSettings.Parse(settingsText, strict: true);
 
                     trafficManager.UpdateSettings(trafficManagerSettings);
                     Console.WriteLine($"Traffic manager [{directorName}] settings have been updated.");
@@ -551,7 +551,7 @@ See the documentation for more traffic manager rule and setting details.
                             Program.Exit(1);
                         }
 
-                        var trafficManagerStatus = NeonHelper.JsonDeserialize<TrafficManagerStatus>(statusJson);
+                        var trafficManagerStatus = NeonHelper.JsonDeserialize<TrafficStatus>(statusJson);
 
                         Console.WriteLine();
                         Console.WriteLine($"Snapshot Time: {trafficManagerStatus.TimestampUtc} (UTC)");

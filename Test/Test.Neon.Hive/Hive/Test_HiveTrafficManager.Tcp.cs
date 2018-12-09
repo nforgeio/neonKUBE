@@ -67,20 +67,20 @@ namespace TestHive
 
                 // Configure the traffic manager rule.
 
-                var rule = new TrafficManagerTcpRule()
+                var rule = new TrafficTcpRule()
                 {
                     Name         = "vegomatic",
                     CheckSeconds = 1,
                 };
 
                 rule.Frontends.Add(
-                    new TrafficManagerTcpFrontend()
+                    new TrafficTcpFrontend()
                     {
                         ProxyPort = proxyPort
                     });
 
                 rule.Backends.Add(
-                    new TrafficManagerTcpBackend()
+                    new TrafficTcpBackend()
                     {
                         Server = serviceName,
                         Port   = 80

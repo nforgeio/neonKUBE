@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerCheckHeader.cs
+// FILE:	    TrafficCheckHeader.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,12 +28,12 @@ namespace Neon.Hive
     /// Describes an HTTP header to be included with an HTTP health
     /// check submitted to a load balanced backend.
     /// </summary>
-    public class TrafficManagerCheckHeader
+    public class TrafficCheckHeader
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public TrafficManagerCheckHeader()
+        public TrafficCheckHeader()
         {
         }
 
@@ -42,7 +42,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="name">The header name.</param>
         /// <param name="value">The header value.</param>
-        public TrafficManagerCheckHeader(string name, string value)
+        public TrafficCheckHeader(string name, string value)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name));
             Covenant.Requires<ArgumentNullException>(value != null);
@@ -67,11 +67,11 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="rule">The parent rule.</param>
-        public void Validate(TrafficManagerValidationContext context, TrafficManagerRule rule)
+        public void Validate(TrafficValidationContext context, TrafficRule rule)
         {
             if (string.IsNullOrWhiteSpace(Name))
             {
-                context.Error($"Rule [{rule.Name}] specifies a NULL or empty [{nameof(TrafficManagerCheckHeader)}.{nameof(TrafficManagerCheckHeader.Name)}].");
+                context.Error($"Rule [{rule.Name}] specifies a NULL or empty [{nameof(TrafficCheckHeader)}.{nameof(TrafficCheckHeader.Name)}].");
             }
 
             foreach (var ch in Name)
@@ -81,13 +81,13 @@ namespace Neon.Hive
                     continue;
                 }
 
-                context.Error($"Rule [{rule.Name}] specifies a [{nameof(TrafficManagerCheckHeader)}.{nameof(TrafficManagerCheckHeader.Name)}] with the invalid character [{ch}].");
+                context.Error($"Rule [{rule.Name}] specifies a [{nameof(TrafficCheckHeader)}.{nameof(TrafficCheckHeader.Name)}] with the invalid character [{ch}].");
                 break;
             }
 
             if (string.IsNullOrWhiteSpace(Value))
             {
-                context.Error($"Rule [{rule.Name}] specifies a NULL [{nameof(TrafficManagerCheckHeader)}.{nameof(TrafficManagerCheckHeader.Value)}].");
+                context.Error($"Rule [{rule.Name}] specifies a NULL [{nameof(TrafficCheckHeader)}.{nameof(TrafficCheckHeader.Value)}].");
             }
 
             // $todo(jeff.lill):

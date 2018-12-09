@@ -3952,7 +3952,7 @@ systemctl restart sshd
 
                             hive.Dashboard.Set(hiveFSDashboard);
 
-                            var rule = new TrafficManagerHttpRule()
+                            var rule = new TrafficHttpRule()
                             {
                                 Name     = "neon-hivefs-dashboard",
                                 System   = true,
@@ -3967,14 +3967,14 @@ systemctl restart sshd
                             // We're going to consider only servers that return 2xx status codes
                             // as healthy so we'll always direct traffic to the lead MGR.
 
-                            rule.CheckMode   = TrafficManagerCheckMode.Http;
+                            rule.CheckMode   = TrafficCheckMode.Http;
                             rule.CheckTls    = false;
                             rule.CheckExpect = @"rstatus ^2\d\d";
 
                             // Initialize the frontends and backends.
 
                             rule.Frontends.Add(
-                                new TrafficManagerHttpFrontend()
+                                new TrafficHttpFrontend()
                                 {
                                     ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
                                 });
@@ -3982,7 +3982,7 @@ systemctl restart sshd
                             foreach (var monNode in hive.Nodes.Where(n => n.Metadata.Labels.CephMON))
                             {
                                 rule.Backends.Add(
-                                    new TrafficManagerHttpBackend()
+                                    new TrafficHttpBackend()
                                     {
                                         Server = monNode.Metadata.PrivateAddress.ToString(),
                                         Port   = 7000,  // The [luminous] dashboard is hardcoded to port 7000
@@ -4017,7 +4017,7 @@ systemctl restart sshd
 
                             hive.Dashboard.Set(hiveFSDashboard);
 
-                            var rule = new TrafficManagerTcpRule()
+                            var rule = new TrafficTcpRule()
                             {
                                 Name     = "neon-hivefs-dashboard",
                                 System   = true,
@@ -4032,20 +4032,20 @@ systemctl restart sshd
                             // We're going to consider only servers that return 2xx status codes
                             // as healthy so we'll always direct traffic to the lead MGR.
 
-                            rule.CheckMode   = TrafficManagerCheckMode.Http;
+                            rule.CheckMode   = TrafficCheckMode.Http;
                             rule.CheckTls    = true;
                             rule.CheckExpect = @"rstatus ^2\d\d";
 
                             // Initialize the frontends and backends.
 
                             rule.Frontends.Add(
-                                new TrafficManagerTcpFrontend()
+                                new TrafficTcpFrontend()
                                 {
                                     ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
                                 });
 
                             rule.Backends.Add(
-                                new TrafficManagerTcpBackend()
+                                new TrafficTcpBackend()
                                 {
                                     Group      = HiveHostGroups.CephMON,
                                     GroupLimit = 5,

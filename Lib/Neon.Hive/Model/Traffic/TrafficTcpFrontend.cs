@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerTcpFrontend.cs
+// FILE:	    TrafficTcpFrontend.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,7 +26,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes a TCP traffic manager frontend.
     /// </summary>
-    public class TrafficManagerTcpFrontend : TrafficManagerFrontend
+    public class TrafficTcpFrontend : TrafficFrontend
     {
         /// <summary>
         /// The TCP HAProxy frontend port for this rule.
@@ -53,7 +53,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="rule">The parent rule.</param>
-        public void Validate(TrafficManagerValidationContext context, TrafficManagerTcpRule rule)
+        public void Validate(TrafficValidationContext context, TrafficTcpRule rule)
         {
             base.Validate(context, rule);
 

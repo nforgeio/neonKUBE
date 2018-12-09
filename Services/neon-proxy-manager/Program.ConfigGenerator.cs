@@ -140,12 +140,12 @@ namespace NeonProxyManager
                                         // hive pet nodes.
 
                                         var publicBuildStatus = await BuildProxyConfigAsync("public", hiveCerts);
-                                        var publicProxyStatus = new TrafficManagerStatus() { Status = publicBuildStatus.Status };
+                                        var publicProxyStatus = new TrafficStatus() { Status = publicBuildStatus.Status };
 
                                         await consul.KV.PutString($"{proxyStatusKey}/public", NeonHelper.JsonSerialize(publicProxyStatus), terminator.CancellationToken);
 
                                         var privateBuildStatus = await BuildProxyConfigAsync("private", hiveCerts);
-                                        var privateProxyStatus = new TrafficManagerStatus() { Status = privateBuildStatus.Status };
+                                        var privateProxyStatus = new TrafficStatus() { Status = privateBuildStatus.Status };
 
                                         await consul.KV.PutString($"{proxyStatusKey}/private", NeonHelper.JsonSerialize(privateProxyStatus), terminator.CancellationToken);
 
@@ -199,7 +199,7 @@ namespace NeonProxyManager
         }
 
         /// <returns>The option argument string.</returns>
-        private static string GetHttpCheckOptionArgs(TrafficManagerRule rule)
+        private static string GetHttpCheckOptionArgs(TrafficRule rule)
         {
             Covenant.Requires<ArgumentNullException>(rule != null);
 
@@ -244,7 +244,7 @@ namespace NeonProxyManager
         /// <returns>
         /// A tuple including the traffic manager's rule dictionary and publication status details.
         /// </returns>
-        private static async Task<(Dictionary<string, TrafficManagerRule> Rules, string Status)> 
+        private static async Task<(Dictionary<string, TrafficRule> Rules, string Status)> 
             BuildProxyConfigAsync(string directorName, HiveCerts hiveCerts)
         {
             var proxyDisplayName       = directorName.ToUpperInvariant();
@@ -263,14 +263,14 @@ namespace NeonProxyManager
 
             // Load the traffic manager's settings and rules.
 
-            string                  proxyPrefix = $"{proxyConfKey}/{directorName}";
-            var                     rules       = new Dictionary<string, TrafficManagerRule>();
-            var                     hostGroups  = hiveDefinition.GetHostGroups(excludeAllGroup: false);
-            TrafficManagerSettings  settings;
+            string              proxyPrefix = $"{proxyConfKey}/{directorName}";
+            var                 rules       = new Dictionary<string, TrafficRule>();
+            var                 hostGroups  = hiveDefinition.GetHostGroups(excludeAllGroup: false);
+            TrafficSettings     settings;
 
             try
             {
-                settings = await consul.KV.GetObjectOrDefault<TrafficManagerSettings>($"{proxyPrefix}/settings", terminator.CancellationToken);
+                settings = await consul.KV.GetObjectOrDefault<TrafficSettings>($"{proxyPrefix}/settings", terminator.CancellationToken);
 
                 if (settings == null)
                 {
@@ -295,7 +295,7 @@ namespace NeonProxyManager
                             throw new NotImplementedException();
                     }
 
-                    settings = new TrafficManagerSettings()
+                    settings = new TrafficSettings()
                     {
                         ProxyPorts = proxyPorts
                     };
@@ -312,7 +312,7 @@ namespace NeonProxyManager
                 {
                     foreach (var ruleKey in result.Response)
                     {
-                        var rule = TrafficManagerRule.ParseJson(Encoding.UTF8.GetString(ruleKey.Value));
+                        var rule = TrafficRule.ParseJson(Encoding.UTF8.GetString(ruleKey.Value));
 
                         rules.Add(rule.Name, rule);
                     }
@@ -330,15 +330,15 @@ namespace NeonProxyManager
 
             // Ensure that all of the HTTP rules have a non-NULL cache property.
 
-            foreach (TrafficManagerHttpRule httpRule in rules.Values.Where(r => r.Mode == TrafficManagerMode.Http))
+            foreach (TrafficHttpRule httpRule in rules.Values.Where(r => r.Mode == TrafficMode.Http))
             {
-                httpRule.Cache = httpRule.Cache ?? new TrafficManagerHttpCache();
+                httpRule.Cache = httpRule.Cache ?? new TrafficHttpCache();
             }
 
             // Record some details about the rules.
 
-            var httpRuleCount = rules.Values.Count(r => r.Mode == TrafficManagerMode.Http);
-            var tcpRuleCount  = rules.Values.Count(r => r.Mode == TrafficManagerMode.Tcp);
+            var httpRuleCount = rules.Values.Count(r => r.Mode == TrafficMode.Http);
+            var tcpRuleCount  = rules.Values.Count(r => r.Mode == TrafficMode.Tcp);
 
             // Record HTTP rule summaries.
 
@@ -352,8 +352,8 @@ namespace NeonProxyManager
                 log.Record($"HTTP Rules [count={httpRuleCount}]");
                 log.Record("------------------------------");
 
-                foreach (TrafficManagerHttpRule rule in rules.Values
-                    .Where(r => r.Mode == TrafficManagerMode.Http)
+                foreach (TrafficHttpRule rule in rules.Values
+                    .Where(r => r.Mode == TrafficMode.Http)
                     .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     log.Record();
@@ -370,8 +370,8 @@ namespace NeonProxyManager
                 log.Record($"TCP Rules [count={tcpRuleCount}]");
                 log.Record("------------------------------");
 
-                foreach (TrafficManagerTcpRule rule in rules.Values
-                    .Where(r => r.Mode == TrafficManagerMode.Tcp)
+                foreach (TrafficTcpRule rule in rules.Values
+                    .Where(r => r.Mode == TrafficMode.Tcp)
                     .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     log.Record();
@@ -383,7 +383,7 @@ namespace NeonProxyManager
 
             // Verify the configuration.
 
-            var trafficManagerDefinition = new TrafficManagerDefinition()
+            var trafficManagerDefinition = new TrafficDefinition()
             {
                 Name     = directorName,
                 Settings = settings,
@@ -505,10 +505,10 @@ backend haproxy_stats
 
             // Verify that TCP rules don't have conflicting publically facing ports.
 
-            var publicTcpPortToRule = new Dictionary<int, TrafficManagerRule>();
+            var publicTcpPortToRule = new Dictionary<int, TrafficRule>();
 
-            foreach (TrafficManagerTcpRule rule in rules.Values
-                .Where(r => r.Mode == TrafficManagerMode.Tcp))
+            foreach (TrafficTcpRule rule in rules.Values
+                .Where(r => r.Mode == TrafficMode.Tcp))
             {
                 foreach (var frontend in rule.Frontends)
                 {
@@ -517,7 +517,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out TrafficManagerRule conflictRule))
+                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out TrafficRule conflictRule))
                     {
                         log.LogError(() => $"TCP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
@@ -534,15 +534,15 @@ backend haproxy_stats
             // to a TCP rule and the hostname/port/prefix combination can't already be assigned 
             // to another frontend.
 
-            var publicHttpHostPortPrefixToRule = new Dictionary<string, TrafficManagerRule>();
+            var publicHttpHostPortPrefixToRule = new Dictionary<string, TrafficRule>();
 
             // Verify that Internet facing ports are assigned a single TCP rule.  HTTP
             // rules can share a port since HAProxy can use the hostname in requests for
             // routing.  We do though need to ensure that the combination of host/port/prefix
             // is unique for every HTTP rule thnough.
 
-            foreach (TrafficManagerHttpRule rule in rules.Values
-                .Where(r => r.Mode == TrafficManagerMode.Http))
+            foreach (TrafficHttpRule rule in rules.Values
+                .Where(r => r.Mode == TrafficMode.Http))
             {
                 foreach (var frontend in rule.Frontends)
                 {
@@ -551,7 +551,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out TrafficManagerRule conflictRule))
+                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out TrafficRule conflictRule))
                     {
                         var conflictRuleType = conflictRule.Mode.ToString().ToUpperInvariant();
 
@@ -560,7 +560,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    if (rule.Mode == TrafficManagerMode.Http)
+                    if (rule.Mode == TrafficMode.Http)
                     {
                         var hostPortPrefix = $"{frontend.Host}:{frontend.ProxyPort}:{frontend.PathPrefix ?? string.Empty}";
 
@@ -581,14 +581,14 @@ backend haproxy_stats
             // Verify that TCP rules don't have conflicting HAProxy frontends.  For
             // TCP, this means that a port can have only one assigned frontend.
 
-            var haTcpProxyPortToRule = new Dictionary<int, TrafficManagerRule>();
+            var haTcpProxyPortToRule = new Dictionary<int, TrafficRule>();
 
-            foreach (TrafficManagerTcpRule rule in rules.Values
-                .Where(r => r.Mode == TrafficManagerMode.Tcp))
+            foreach (TrafficTcpRule rule in rules.Values
+                .Where(r => r.Mode == TrafficMode.Tcp))
             {
                 foreach (var frontend in rule.Frontends)
                 {
-                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out TrafficManagerRule conflictRule))
+                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out TrafficRule conflictRule))
                     {
                         log.LogError(() => $"TCP rule [{rule.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
@@ -605,10 +605,10 @@ backend haproxy_stats
             // port and then ensure that only one HTTP frontend maps to a hostname/port/prefix
             // combination.
 
-            var haHttpProxyHostPortPrefixToRule = new Dictionary<string, TrafficManagerRule>(StringComparer.OrdinalIgnoreCase);
+            var haHttpProxyHostPortPrefixToRule = new Dictionary<string, TrafficRule>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (TrafficManagerHttpRule rule in rules.Values
-                .Where(r => r.Mode == TrafficManagerMode.Http))
+            foreach (TrafficHttpRule rule in rules.Values
+                .Where(r => r.Mode == TrafficMode.Http))
             {
                 foreach (var frontend in rule.Frontends)
                 {
@@ -617,7 +617,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out TrafficManagerRule conflictRule))
+                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out TrafficRule conflictRule))
                     {
                         log.LogError(() => $"HTTP rule [{rule.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
@@ -644,7 +644,7 @@ backend haproxy_stats
             var hasTcpRules = false;
 
             if (rules.Values
-                .Where(r => r.Mode == TrafficManagerMode.Tcp)
+                .Where(r => r.Mode == TrafficMode.Tcp)
                 .Count() > 0)
             {
                 hasTcpRules = true;
@@ -653,8 +653,8 @@ backend haproxy_stats
                 sbHaProxy.AppendLine("# TCP Rules");
             }
 
-            foreach (TrafficManagerTcpRule tcpRule in rules.Values
-                .Where(r => r.Mode == TrafficManagerMode.Tcp))
+            foreach (TrafficTcpRule tcpRule in rules.Values
+                .Where(r => r.Mode == TrafficMode.Tcp))
             {
                 // Generate the resolvers argument to be used to locate the
                 // backend servers.
@@ -693,7 +693,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         sbHaProxy.AppendLine($"    log-format              {HiveHelper.GetProxyLogFormat("neon-proxy-" + directorName, tcp: true)}");
                     }
 
-                    if (tcpRule.CheckMode != TrafficManagerCheckMode.Disabled && tcpRule.LogChecks)
+                    if (tcpRule.CheckMode != TrafficCheckMode.Disabled && tcpRule.LogChecks)
                     {
                         sbHaProxy.AppendLine($"    option                  log-health-checks");
                     }
@@ -738,11 +738,11 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                     sbHaProxy.AppendLine($"    default-server          inter {ToHaProxyTime(tcpRule.CheckSeconds)}");
                 }
 
-                var checkArg    = tcpRule.CheckMode != TrafficManagerCheckMode.Disabled ? " check" : " no-check";
+                var checkArg    = tcpRule.CheckMode != TrafficCheckMode.Disabled ? " check" : " no-check";
                 var checkSslArg = tcpRule.CheckTls ? " check-ssl" : string.Empty;
                 var serverIndex = 0;
 
-                if (tcpRule.CheckMode == TrafficManagerCheckMode.Disabled)
+                if (tcpRule.CheckMode == TrafficCheckMode.Disabled)
                 {
                     checkSslArg = string.Empty;
                 }
@@ -784,7 +784,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
             var haProxyFrontends = new Dictionary<int, HAProxyHttpFrontend>();
 
             if (rules.Values
-                .Where(r => r.Mode == TrafficManagerMode.Http)
+                .Where(r => r.Mode == TrafficMode.Http)
                 .Count() > 0)
             {
                 if (hasTcpRules)
@@ -799,8 +799,8 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                 // the HAProxy frontends we'll need to generate.  This dictionary will be
                 // keyed by the host/path.
 
-                foreach (TrafficManagerHttpRule httpRule in rules.Values
-                    .Where(r => r.Mode == TrafficManagerMode.Http)
+                foreach (TrafficHttpRule httpRule in rules.Values
+                    .Where(r => r.Mode == TrafficMode.Http)
                     .OrderBy(r => r.Name))
                 {
                     foreach (var frontend in httpRule.Frontends)
@@ -828,10 +828,10 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                             //
                             // I'm not entirely sure that this check is really necessary.
 
-                            TrafficManagerHttpRule conflictRule = null;
+                            TrafficHttpRule conflictRule = null;
 
-                            foreach (TrafficManagerHttpRule checkRule in rules.Values
-                                .Where(r => r.Mode == TrafficManagerMode.Http && r != httpRule))
+                            foreach (TrafficHttpRule checkRule in rules.Values
+                                .Where(r => r.Mode == TrafficMode.Http && r != httpRule))
                             {
                                 if (checkRule.Frontends.Count(fe => fe.ProxyPort == frontend.ProxyPort && fe.Host.Equals(frontend.Host, StringComparison.CurrentCultureIgnoreCase)) > 0)
                                 {
@@ -1059,9 +1059,9 @@ frontend {haProxyFrontend.Name}
 
                 // Generate the HTTP backends
 
-                foreach (TrafficManagerHttpRule httpRule in rules.Values
-                    .Where(r => r.Mode == TrafficManagerMode.Http)
-                    .Where(r => ((TrafficManagerHttpRule)r).Backends.Count > 0)
+                foreach (TrafficHttpRule httpRule in rules.Values
+                    .Where(r => r.Mode == TrafficMode.Http)
+                    .Where(r => ((TrafficHttpRule)r).Backends.Count > 0)
                     .OrderBy(r => r.Name))
                 {
                     // Generate the resolvers argument to be used to locate the
@@ -1074,14 +1074,14 @@ frontend {haProxyFrontend.Name}
                         resolversArg = $" resolvers {httpRule.Resolver}";
                     }
 
-                    var checkArg    = httpRule.CheckMode != TrafficManagerCheckMode.Disabled ? " check" : " no-check";
+                    var checkArg    = httpRule.CheckMode != TrafficCheckMode.Disabled ? " check" : " no-check";
                     var checkSslArg = httpRule.CheckTls ? " check-ssl" : string.Empty;
                     var initAddrArg = " init-addr last,libc,none";
                     var backends    = httpRule.SelectBackends(hostGroups);
 
                     var checkMode = httpRule.CheckMode;
 
-                    if (httpRule.CheckMode == TrafficManagerCheckMode.Disabled)
+                    if (httpRule.CheckMode == TrafficCheckMode.Disabled)
                     {
                         checkSslArg = string.Empty;
                     }
@@ -1099,7 +1099,7 @@ backend http:{httpRule.Name}
 
                     sbHaProxy.AppendLine($"    http-reuse              {NeonHelper.EnumToString(httpRule.BackendConnectionReuse)}");
 
-                    if (checkMode != TrafficManagerCheckMode.Disabled)
+                    if (checkMode != TrafficCheckMode.Disabled)
                     {
                         if (httpRule.UseHttpCheckMode)
                         {
@@ -1110,12 +1110,12 @@ backend http:{httpRule.Name}
 
                             sbHaProxy.AppendLine($"    option                  httpchk {GetHttpCheckOptionArgs(httpRule)}");
                         }
-                        else if (httpRule.CheckMode == TrafficManagerCheckMode.Tcp)
+                        else if (httpRule.CheckMode == TrafficCheckMode.Tcp)
                         {
                             sbHaProxy.AppendLine($"    option                  tcp-check");
                         }
 
-                        if (httpRule.CheckMode != TrafficManagerCheckMode.Disabled && httpRule.LogChecks)
+                        if (httpRule.CheckMode != TrafficCheckMode.Disabled && httpRule.LogChecks)
                         {
                             sbHaProxy.AppendLine($"    option                  log-health-checks");
                         }
@@ -1203,7 +1203,7 @@ backend http:{httpRule.Name}
                                 maxconn = $" maxconn {backend.MaxConnections}";
                             }
 
-                            if (checkMode == TrafficManagerCheckMode.Disabled)
+                            if (checkMode == TrafficCheckMode.Disabled)
                             {
                                 sbHaProxy.AppendLine($"    server                  {serverName} {backend.Server}:{backend.Port}{sslArg}{initAddrArg}{resolversArg}{maxconn}");
                             }
@@ -1240,7 +1240,7 @@ backend http:{httpRule.Name}
             // [varnish.vcl] file within the ZIP archive.
 
             var sbVarnishVcl = new StringBuilder();
-            var httpRules    = rules.Where(r => r.Value.Mode == TrafficManagerMode.Http).Select(r => (TrafficManagerHttpRule)r.Value);
+            var httpRules    = rules.Where(r => r.Value.Mode == TrafficMode.Http).Select(r => (TrafficHttpRule)r.Value);
             var cachingRules = httpRules
                 .Where(r => r.Cache.Enabled && r.Backends.Count() > 0)
                 .OrderBy(r => r.Name.ToUpperInvariant())
@@ -1381,8 +1381,8 @@ backend stub {{
                 // is only one origin server (in which case we might as well forward
                 // the request because there's no better place to send it).
 
-                var probeEnabled = rule.CheckMode != TrafficManagerCheckMode.Disabled &&
-                                   rule.CheckMode != TrafficManagerCheckMode.Tcp &&
+                var probeEnabled = rule.CheckMode != TrafficCheckMode.Disabled &&
+                                   rule.CheckMode != TrafficCheckMode.Tcp &&
                                    rule.Backends.Count > 1;
 
                 sbVarnishVcl.AppendLine();
@@ -1680,7 +1680,7 @@ backend rule_{ruleIndex}_backend_{backendIndex} {{
             // Generate the cache settings which will be deployed as the
             // [cache-settings.json] file within the ZIP archive.
 
-            var cacheSettings = new TrafficManagerCacheSettings();
+            var cacheSettings = new TrafficCacheSettings();
 
             foreach (var rule in httpRules.Where(r => r.Cache.Enabled))
             {
@@ -2037,8 +2037,8 @@ backend haproxy_stats
 
             var bridgePorts = new HashSet<int>();
 
-            foreach (TrafficManagerTcpRule tcpRule in rules.Values
-                .Where(r => r.Mode == TrafficManagerMode.Tcp))
+            foreach (TrafficTcpRule tcpRule in rules.Values
+                .Where(r => r.Mode == TrafficMode.Tcp))
             {
                 foreach (var frontEnd in tcpRule.Frontends)
                 {
@@ -2049,8 +2049,8 @@ backend haproxy_stats
                 }
             }
 
-            foreach (TrafficManagerHttpRule httpRule in rules.Values
-                .Where(r => r.Mode == TrafficManagerMode.Http))
+            foreach (TrafficHttpRule httpRule in rules.Values
+                .Where(r => r.Mode == TrafficMode.Http))
             {
                 foreach (var frontEnd in httpRule.Frontends)
                 {
@@ -2193,7 +2193,7 @@ listen tcp:port-{port}
         /// </summary>
         /// <param name="publicRules">The public proxy rules.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task UpdateHiveNetwork(Dictionary<string, TrafficManagerRule> publicRules)
+        private static async Task UpdateHiveNetwork(Dictionary<string, TrafficRule> publicRules)
         {
             try
             {
@@ -2242,8 +2242,8 @@ listen tcp:port-{port}
                 // Build a dictionary mapping the traffic manager frontend ports to 
                 // internal HAProxy frontend ports for the latest rules.
 
-                foreach (TrafficManagerTcpRule rule in publicRules.Values
-                    .Where(r => r.Mode == TrafficManagerMode.Tcp))
+                foreach (TrafficTcpRule rule in publicRules.Values
+                    .Where(r => r.Mode == TrafficMode.Tcp))
                 {
                     foreach (var frontend in rule.Frontends)
                     {
@@ -2254,8 +2254,8 @@ listen tcp:port-{port}
                     }
                 }
 
-                foreach (TrafficManagerHttpRule rule in publicRules.Values
-                    .Where(r => r.Mode == TrafficManagerMode.Http))
+                foreach (TrafficHttpRule rule in publicRules.Values
+                    .Where(r => r.Mode == TrafficMode.Http))
                 {
                     foreach (var frontend in rule.Frontends)
                     {
@@ -2376,7 +2376,7 @@ listen tcp:port-{port}
         /// </summary>
         /// <param name="log">The log recorder.</param>
         /// <param name="rule">The rule.</param>
-        private static void RecordRule(LogRecorder log, TrafficManagerRule rule)
+        private static void RecordRule(LogRecorder log, TrafficRule rule)
         {
             //  We're going to write a line with then rule name and then output
             // the rule it self as YAML, indented by 2 characters for readability.
@@ -2410,7 +2410,7 @@ listen tcp:port-{port}
             Covenant.Requires<ArgumentNullException>(sb != null);
             Covenant.Requires<ArgumentNullException>(haProxyFrontend != null);
             Covenant.Requires<ArgumentNullException>(hostPathMapping != null);
-            Covenant.Requires<ArgumentException>(hostPathMapping.Rule.Mode == TrafficManagerMode.Http);
+            Covenant.Requires<ArgumentException>(hostPathMapping.Rule.Mode == TrafficMode.Http);
 
             string proxyFrontendHeader;
 

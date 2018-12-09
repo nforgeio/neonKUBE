@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerSettings.cs
+// FILE:	    TrafficSettings.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,7 +28,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes the global settings for a neonHIVE traffic manager.
     /// </summary>
-    public class TrafficManagerSettings
+    public class TrafficSettings
     {
         //---------------------------------------------------------------------
         // Static members
@@ -37,13 +37,13 @@ namespace Neon.Hive
         private const int defaultSslCacheSize   = 100000;
 
         /// <summary>
-        /// Parses a <see cref="TrafficManagerSettings"/> from a JSON or YAML string,
+        /// Parses a <see cref="TrafficSettings"/> from a JSON or YAML string,
         /// automatically detecting the input format.
         /// </summary>
         /// <param name="jsonOrYaml">The JSON or YAML input.</param>
         /// <param name="strict">Optionally require that all input properties map to settings properties.</param>
-        /// <returns>The parsed <see cref="TrafficManagerSettings"/>.</returns>
-        public static TrafficManagerSettings Parse(string jsonOrYaml, bool strict = false)
+        /// <returns>The parsed <see cref="TrafficSettings"/>.</returns>
+        public static TrafficSettings Parse(string jsonOrYaml, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
 
@@ -58,29 +58,29 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Parses a <see cref="TrafficManagerRule"/> from a JSON string.
+        /// Parses a <see cref="TrafficRule"/> from a JSON string.
         /// </summary>
         /// <param name="jsonText">The input string.</param>
         /// <param name="strict">Optionally require that all input properties map to settings properties.</param>
-        /// <returns>The parsed <see cref="TrafficManagerSettings"/>.</returns>
-        public static TrafficManagerSettings ParseJson(string jsonText, bool strict = false)
+        /// <returns>The parsed <see cref="TrafficSettings"/>.</returns>
+        public static TrafficSettings ParseJson(string jsonText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
 
-            return NeonHelper.JsonDeserialize<TrafficManagerSettings>(jsonText, strict);
+            return NeonHelper.JsonDeserialize<TrafficSettings>(jsonText, strict);
         }
 
         /// <summary>
-        /// Parses a <see cref="TrafficManagerRule"/> from a YAML string.
+        /// Parses a <see cref="TrafficRule"/> from a YAML string.
         /// </summary>
         /// <param name="yamlText">The input string.</param>
         /// <param name="strict">Optionally require that all input properties map to settings properties.</param>
-        /// <returns>The parsed <see cref="TrafficManagerSettings"/>.</returns>
-        public static TrafficManagerSettings ParseYaml(string yamlText, bool strict = false)
+        /// <returns>The parsed <see cref="TrafficSettings"/>.</returns>
+        public static TrafficSettings ParseYaml(string yamlText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yamlText));
 
-            return NeonHelper.YamlDeserialize<TrafficManagerSettings>(yamlText, strict);
+            return NeonHelper.YamlDeserialize<TrafficSettings>(yamlText, strict);
         }
 
         //---------------------------------------------------------------------
@@ -177,7 +177,7 @@ namespace Neon.Hive
         /// </summary>
         [JsonProperty(PropertyName = "Timeouts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public TrafficManagerTimeouts Timeouts { get; set; } = new TrafficManagerTimeouts();
+        public TrafficTimeouts Timeouts { get; set; } = new TrafficTimeouts();
 
         /// <summary>
         /// <para>
@@ -189,7 +189,7 @@ namespace Neon.Hive
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Resolvers")]
-        public List<TrafficManagerResolver> Resolvers { get; set; } = new List<TrafficManagerResolver>();
+        public List<TrafficResolver> Resolvers { get; set; } = new List<TrafficResolver>();
 
         /// <summary>
         /// <para>
@@ -257,21 +257,21 @@ namespace Neon.Hive
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(TrafficManagerValidationContext context)
+        public void Validate(TrafficValidationContext context)
         {
-            Timeouts              = Timeouts ?? new TrafficManagerTimeouts();
-            Resolvers             = Resolvers ?? new List<TrafficManagerResolver>();
+            Timeouts              = Timeouts ?? new TrafficTimeouts();
+            Resolvers             = Resolvers ?? new List<TrafficResolver>();
             BridgeTargetAddresses = BridgeTargetAddresses ?? new List<IPAddress>();
 
             if (!Resolvers.Exists(r => r.Name == "docker"))
             {
                 Resolvers.Add(
-                    new TrafficManagerResolver()
+                    new TrafficResolver()
                     {
                         Name = "docker",
-                        NameServers = new List<TrafficManagerNameserver>()
+                        NameServers = new List<TrafficNameserver>()
                         {
-                            new TrafficManagerNameserver()
+                            new TrafficNameserver()
                             {
                                 Name     = "docker0",
                                 Endpoint = HiveConst.DockerDnsEndpoint

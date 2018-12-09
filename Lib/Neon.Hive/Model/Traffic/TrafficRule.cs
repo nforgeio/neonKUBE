@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerRule.cs
+// FILE:	    TrafficRule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -20,7 +20,7 @@ namespace Neon.Hive
     /// <summary>
     /// The base class for traffic manager rules.
     /// </summary>
-    public class TrafficManagerRule
+    public class TrafficRule
     {
         //---------------------------------------------------------------------
         // Static members
@@ -31,13 +31,13 @@ namespace Neon.Hive
         private const string defaultResolverName = "docker";
 
         /// <summary>
-        /// Parses a <see cref="TrafficManagerRule"/> from a JSON or YAML string,
+        /// Parses a <see cref="TrafficRule"/> from a JSON or YAML string,
         /// automatically detecting the input format.
         /// </summary>
         /// <param name="jsonOrYaml">The JSON or YAML input.</param>
         /// <param name="strict">Optionally require that all input properties map to rule properties.</param>
-        /// <returns>The parsed object instance derived from <see cref="TrafficManagerRule"/>.</returns>
-        public static TrafficManagerRule Parse(string jsonOrYaml, bool strict = false)
+        /// <returns>The parsed object instance derived from <see cref="TrafficRule"/>.</returns>
+        public static TrafficRule Parse(string jsonOrYaml, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
 
@@ -52,68 +52,68 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Parses a <see cref="TrafficManagerRule"/> from a JSON string.
+        /// Parses a <see cref="TrafficRule"/> from a JSON string.
         /// </summary>
         /// <param name="jsonText">The input string.</param>
         /// <param name="strict">Optionally require that all input properties map to rule properties.</param>
-        /// <returns>The parsed object instance derived from <see cref="TrafficManagerRule"/>.</returns>
-        public static TrafficManagerRule ParseJson(string jsonText, bool strict = false)
+        /// <returns>The parsed object instance derived from <see cref="TrafficRule"/>.</returns>
+        public static TrafficRule ParseJson(string jsonText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
 
             // We're going to ignore unmatched properties here because we
             // we're reading the base rule class first.
 
-            var baseRule = NeonHelper.JsonDeserialize<TrafficManagerRule>(jsonText);
+            var baseRule = NeonHelper.JsonDeserialize<TrafficRule>(jsonText);
 
             // Now that we know the rule mode, we can deserialize the full rule.
 
             switch (baseRule.Mode)
             {
-                case TrafficManagerMode.Http:
+                case TrafficMode.Http:
 
-                    return NeonHelper.JsonDeserialize<TrafficManagerHttpRule>(jsonText, strict);
+                    return NeonHelper.JsonDeserialize<TrafficHttpRule>(jsonText, strict);
 
-                case TrafficManagerMode.Tcp:
+                case TrafficMode.Tcp:
 
-                    return NeonHelper.JsonDeserialize<TrafficManagerTcpRule>(jsonText, strict);
+                    return NeonHelper.JsonDeserialize<TrafficTcpRule>(jsonText, strict);
 
                 default:
 
-                    throw new NotImplementedException($"Unsupported [{nameof(TrafficManagerRule)}.{nameof(Mode)}={baseRule.Mode}].");
+                    throw new NotImplementedException($"Unsupported [{nameof(TrafficRule)}.{nameof(Mode)}={baseRule.Mode}].");
             }
         }
 
         /// <summary>
-        /// Parses a <see cref="TrafficManagerRule"/> from a YAML string.
+        /// Parses a <see cref="TrafficRule"/> from a YAML string.
         /// </summary>
         /// <param name="yamlText">The input string.</param>
         /// <param name="strict">Optionally require that all input properties map to rule properties.</param>
-        /// <returns>The parsed object instance derived from <see cref="TrafficManagerRule"/>.</returns>
-        public static TrafficManagerRule ParseYaml(string yamlText, bool strict = false)
+        /// <returns>The parsed object instance derived from <see cref="TrafficRule"/>.</returns>
+        public static TrafficRule ParseYaml(string yamlText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yamlText));
 
             // We're going to ignore unmatched properties here because we
             // we're reading the base rule class first.
 
-            var baseRule = NeonHelper.YamlDeserialize<TrafficManagerRule>(yamlText, strict: false);
+            var baseRule = NeonHelper.YamlDeserialize<TrafficRule>(yamlText, strict: false);
 
             // Now that we know the rule mode, we can deserialize the full rule.
 
             switch (baseRule.Mode)
             {
-                case TrafficManagerMode.Http:
+                case TrafficMode.Http:
 
-                    return NeonHelper.YamlDeserialize<TrafficManagerHttpRule>(yamlText, strict);
+                    return NeonHelper.YamlDeserialize<TrafficHttpRule>(yamlText, strict);
 
-                case TrafficManagerMode.Tcp:
+                case TrafficMode.Tcp:
 
-                    return NeonHelper.YamlDeserialize<TrafficManagerTcpRule>(yamlText, strict);
+                    return NeonHelper.YamlDeserialize<TrafficTcpRule>(yamlText, strict);
 
                 default:
 
-                    throw new NotImplementedException($"Unsupported [{nameof(TrafficManagerRule)}.{nameof(Mode)}={baseRule.Mode}].");
+                    throw new NotImplementedException($"Unsupported [{nameof(TrafficRule)}.{nameof(Mode)}={baseRule.Mode}].");
             }
         }
 
@@ -128,11 +128,11 @@ namespace Neon.Hive
         public string Name { get; set; } = null;
 
         /// <summary>
-        /// Indicates whether HTTP or TCP traffic is to be handled (defaults to <see cref="TrafficManagerMode.Http"/>).
+        /// Indicates whether HTTP or TCP traffic is to be handled (defaults to <see cref="TrafficMode.Http"/>).
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Always)]
-        [DefaultValue(TrafficManagerMode.Http)]
-        public TrafficManagerMode Mode { get; set; } = TrafficManagerMode.Http;
+        [DefaultValue(TrafficMode.Http)]
+        public TrafficMode Mode { get; set; } = TrafficMode.Http;
 
         /// <summary>
         /// <para>
@@ -172,24 +172,24 @@ namespace Neon.Hive
 
         /// <summary>
         /// Specifies the type of backend health checks to be performed.  This defaults to
-        /// <see cref="TrafficManagerCheckMode.Default"/> which will perform TCP connection 
-        /// checks for <see cref="TrafficManagerTcpRule"/> rules and HTTP checks for 
-        /// <see cref="TrafficManagerHttpRule"/> rules.
+        /// <see cref="TrafficCheckMode.Default"/> which will perform TCP connection 
+        /// checks for <see cref="TrafficTcpRule"/> rules and HTTP checks for 
+        /// <see cref="TrafficHttpRule"/> rules.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// You may set this to <see cref="TrafficManagerCheckMode.Http"/> to perform HTTP
-        /// checks for <see cref="TrafficManagerTcpRule"/> rules or <see cref="TrafficManagerCheckMode.Tcp"/>
-        /// to perform TCP checks for <see cref="TrafficManagerHttpRule"/> rules.
+        /// You may set this to <see cref="TrafficCheckMode.Http"/> to perform HTTP
+        /// checks for <see cref="TrafficTcpRule"/> rules or <see cref="TrafficCheckMode.Tcp"/>
+        /// to perform TCP checks for <see cref="TrafficHttpRule"/> rules.
         /// </para>
         /// <para>
-        /// You can also set this to <see cref="TrafficManagerCheckMode.Disabled"/> to disable
+        /// You can also set this to <see cref="TrafficCheckMode.Disabled"/> to disable
         /// endpoint checking.  In this case, endpoints will always be considered healthy.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "Check", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(TrafficManagerCheckMode.Default)]
-        public TrafficManagerCheckMode CheckMode { get; set; } = TrafficManagerCheckMode.Default;
+        [DefaultValue(TrafficCheckMode.Default)]
+        public TrafficCheckMode CheckMode { get; set; } = TrafficCheckMode.Default;
 
         /// <summary>
         /// Specifies the interval to wait between health checks.  This defaults to
@@ -201,8 +201,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// Indicates that endpoint health check connections should be secured with TLS.
-        /// This can be enabled  for both <see cref="TrafficManagerHttpRule"/> and 
-        /// <see cref="TrafficManagerTcpRule"/> rules.  This defaults to <c>false</c>.
+        /// This can be enabled  for both <see cref="TrafficHttpRule"/> and 
+        /// <see cref="TrafficTcpRule"/> rules.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "CheckTls", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
@@ -210,12 +210,12 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// The relative URI the traffic manager will use to verify the backend server health when <see cref="TrafficManagerRule.CheckMode"/> is <c>true</c> .  
+        /// The relative URI the traffic manager will use to verify the backend server health when <see cref="TrafficRule.CheckMode"/> is <c>true</c> .  
         /// The health check must return a <b>2xx</b> or <b>3xx</b> HTTP  status code to be considered healthy.  This defaults to the
         /// relative path <b>/</b>.  You can also set this to <c>null</c> or the empty string to disable HTTP based checks.
         /// </para>
         /// <para>
-        /// You can also set this to <c>null</c> to enable simple TCP connect checks if <see cref="TrafficManagerRule.CheckMode"/> 
+        /// You can also set this to <c>null</c> to enable simple TCP connect checks if <see cref="TrafficRule.CheckMode"/> 
         /// is enabled.
         /// </para>
         /// </summary>
@@ -253,7 +253,7 @@ namespace Neon.Hive
         /// </summary>
         [JsonProperty(PropertyName = "CheckHeaders", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<TrafficManagerCheckHeader> CheckHeaders { get; set; } = new List<TrafficManagerCheckHeader>();
+        public List<TrafficCheckHeader> CheckHeaders { get; set; } = new List<TrafficCheckHeader>();
 
         /// <summary>
         /// <para>
@@ -284,11 +284,11 @@ namespace Neon.Hive
         public string CheckExpect { get; set; } = "rstatus 2\\d\\d";
 
         /// <summary>
-        /// The endpoint timeouts.  These default to standard timeouts defined by <see cref="TrafficManagerTimeouts"/>.
+        /// The endpoint timeouts.  These default to standard timeouts defined by <see cref="TrafficTimeouts"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Timeouts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public TrafficManagerTimeouts Timeouts { get; set; } = null;
+        public TrafficTimeouts Timeouts { get; set; } = null;
 
         /// <summary>
         /// Optionally indicates that this is to be considered to be a <b>system</b> rule
@@ -311,10 +311,10 @@ namespace Neon.Hive
             {
                 switch (CheckMode)
                 {
-                    case TrafficManagerCheckMode.Default:  return this is TrafficManagerHttpRule;
-                    case TrafficManagerCheckMode.Disabled: return false;
-                    case TrafficManagerCheckMode.Http:     return true;
-                    case TrafficManagerCheckMode.Tcp:      return false;
+                    case TrafficCheckMode.Default:  return this is TrafficHttpRule;
+                    case TrafficCheckMode.Disabled: return false;
+                    case TrafficCheckMode.Http:     return true;
+                    case TrafficCheckMode.Tcp:      return false;
                     default:                               throw new NotImplementedException($"Unexpected traffic manager [{nameof(CheckMode)}={CheckMode}].");
                 }
             }
@@ -324,9 +324,9 @@ namespace Neon.Hive
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public virtual void Validate(TrafficManagerValidationContext context)
+        public virtual void Validate(TrafficValidationContext context)
         {
-            Timeouts = Timeouts ?? new TrafficManagerTimeouts();
+            Timeouts = Timeouts ?? new TrafficTimeouts();
 
             if (string.IsNullOrEmpty(Name))
             {
@@ -349,7 +349,7 @@ namespace Neon.Hive
             }
 
             Resolver     = Resolver ?? defaultResolverName;
-            CheckHeaders = CheckHeaders ?? new List<TrafficManagerCheckHeader>();
+            CheckHeaders = CheckHeaders ?? new List<TrafficCheckHeader>();
 
             foreach (var checkHeader in CheckHeaders)
             {

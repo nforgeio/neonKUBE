@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerTcpRule.cs
+// FILE:	    TrafficTcpRule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,16 +26,16 @@ namespace Neon.Hive
     /// Describes a rule that forwards TCP traffic from TCP frontends
     /// to TCP backends.
     /// </summary>
-    public class TrafficManagerTcpRule : TrafficManagerRule
+    public class TrafficTcpRule : TrafficRule
     {
-        private List<TrafficManagerTcpBackend> selectedBackends;     // Used to cache selected backends
+        private List<TrafficTcpBackend> selectedBackends;     // Used to cache selected backends
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public TrafficManagerTcpRule()
+        public TrafficTcpRule()
         {
-            base.Mode = TrafficManagerMode.Tcp;
+            base.Mode = TrafficMode.Tcp;
         }
 
         /// <summary>
@@ -51,24 +51,24 @@ namespace Neon.Hive
         /// The traffic manager frontend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Frontends", Required = Required.Always)]
-        public List<TrafficManagerTcpFrontend> Frontends { get; set; } = new List<TrafficManagerTcpFrontend>();
+        public List<TrafficTcpFrontend> Frontends { get; set; } = new List<TrafficTcpFrontend>();
 
         /// <summary>
         /// The traffic manager backend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Backends", Required = Required.Always)]
-        public List<TrafficManagerTcpBackend> Backends { get; set; } = new List<TrafficManagerTcpBackend>();
+        public List<TrafficTcpBackend> Backends { get; set; } = new List<TrafficTcpBackend>();
 
         /// <summary>
         /// Validates the rule.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public override void Validate(TrafficManagerValidationContext context)
+        public override void Validate(TrafficValidationContext context)
         {
             base.Validate(context);
 
-            Frontends = Frontends ?? new List<TrafficManagerTcpFrontend>();
-            Backends  = Backends ?? new List<TrafficManagerTcpBackend>();
+            Frontends = Frontends ?? new List<TrafficTcpFrontend>();
+            Backends  = Backends ?? new List<TrafficTcpBackend>();
 
             if (Frontends.Count == 0)
             {
@@ -116,7 +116,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Returns the list of backends selected to be targeted by processing any
-        /// backends with <see cref="TrafficManagerBackend.Group"/> and <see cref="TrafficManagerBackend.GroupLimit"/>
+        /// backends with <see cref="TrafficBackend.Group"/> and <see cref="TrafficBackend.GroupLimit"/>
         /// properties configured to dynamically select backend target nodes.
         /// </summary>
         /// <param name="hostGroups">
@@ -134,7 +134,7 @@ namespace Neon.Hive
         /// on an instance and then return the same selected backends thereafter.
         /// </note>
         /// </remarks>
-        public List<TrafficManagerTcpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
+        public List<TrafficTcpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
         {
             Covenant.Requires<ArgumentNullException>(hostGroups != null);
 
@@ -169,7 +169,7 @@ namespace Neon.Hive
 
             var processedGroups = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            selectedBackends = new List<TrafficManagerTcpBackend>();
+            selectedBackends = new List<TrafficTcpBackend>();
 
             foreach (var backend in Backends)
             {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerHttpFrontend.cs
+// FILE:	    TrafficHttpFrontend.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,7 +28,7 @@ namespace Neon.Hive
     /// <summary>
     /// Describes an HTTP/HTTPS traffic manager frontend.
     /// </summary>
-    public class TrafficManagerHttpFrontend : TrafficManagerFrontend
+    public class TrafficHttpFrontend : TrafficFrontend
     {
         /// <summary>
         /// <para>
@@ -229,7 +229,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="rule">The parent rule.</param>
-        public void Validate(TrafficManagerValidationContext context, TrafficManagerHttpRule rule)
+        public void Validate(TrafficValidationContext context, TrafficHttpRule rule)
         {
             base.Validate(context, rule);
 

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerBackend.cs
+// FILE:	    TrafficBackend.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -27,7 +27,7 @@ namespace Neon.Hive
     /// <summary>
     /// Base class for traffic manager backends.
     /// </summary>
-    public class TrafficManagerBackend
+    public class TrafficBackend
     {
         /// <summary>
         /// The optional server backend server name.  The <b>neon-proxy-manager</b> will
@@ -82,7 +82,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="ruleName">The parent rule name.</param>
-        public virtual void Validate(TrafficManagerValidationContext context, string ruleName)
+        public virtual void Validate(TrafficValidationContext context, string ruleName)
         {
             if (!string.IsNullOrEmpty(Name) && !HiveDefinition.IsValidName(Name))
             {
@@ -138,7 +138,7 @@ namespace Neon.Hive
 
             if (string.IsNullOrEmpty(Group))
             {
-                throw new InvalidOperationException($"[{nameof(TrafficManagerBackend)}.{nameof(Group)}()] works only for rule backends that target a group.");
+                throw new InvalidOperationException($"[{nameof(TrafficBackend)}.{nameof(Group)}()] works only for rule backends that target a group.");
             }
 
             if (!hostGroups.TryGetValue(Group, out var groupNodes))

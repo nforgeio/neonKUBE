@@ -175,7 +175,7 @@ namespace Neon.Xunit.Hive
     ///     <description>
     ///     <see cref="ClearTrafficManagers(bool)"/><br/>
     ///     <see cref="ListTrafficManagers(string, bool)"/><br/>
-    ///     <see cref="PutTrafficManagerRule(string, TrafficManagerRule, bool)"/><br/>
+    ///     <see cref="PutTrafficManagerRule(string, TrafficRule, bool)"/><br/>
     ///     <see cref="RemoveTrafficManagerRule(string, string, bool)"/><br/>
     ///     </description>
     /// </item>
@@ -1127,7 +1127,7 @@ namespace Neon.Xunit.Hive
         /// the rule changes and then call <see cref="TrafficManager.Update()"/> afterwards.
         /// </para>
         /// </param>
-        public void PutTrafficManagerRule(string directorName, TrafficManagerRule rule, bool deferUpdate = false)
+        public void PutTrafficManagerRule(string directorName, TrafficRule rule, bool deferUpdate = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
             Covenant.Requires<ArgumentNullException>(rule != null);
@@ -1168,7 +1168,7 @@ namespace Neon.Xunit.Hive
             this.CheckCluster();
 
             var directorManager = hive.GetTrafficManager(directorName);
-            var rule            = TrafficManagerRule.Parse(jsonOrYaml);
+            var rule            = TrafficRule.Parse(jsonOrYaml);
 
             directorManager.SetRule(rule);
         }
@@ -1179,7 +1179,7 @@ namespace Neon.Xunit.Hive
         /// <param name="directorName">The traffic manager name (<b>public</b> or <b>private</b>).</param>
         /// <param name="includeSystem">Optionally include built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
         /// <returns>The rules for the named traffic manager.</returns>
-        public List<TrafficManagerRule> ListTrafficManagers(string directorName, bool includeSystem = false)
+        public List<TrafficRule> ListTrafficManagers(string directorName, bool includeSystem = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(directorName));
 

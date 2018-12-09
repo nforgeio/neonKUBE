@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerValidationContext.cs
+// FILE:	    TrafficValidationContext.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -29,7 +29,7 @@ namespace Neon.Hive
     /// accessed while validating a tree of traffic manager settings
     /// and rules.
     /// </summary>
-    public class TrafficManagerValidationContext
+    public class TrafficValidationContext
     {
         /// <summary>
         /// Constructor.
@@ -37,7 +37,7 @@ namespace Neon.Hive
         /// <param name="trafficManagerName">The traffic manager name.</param>
         /// <param name="settings">The traffic manager settings.</param>
         /// <param name="certificates">The optional certificates as name/value tuples.</param>
-        public TrafficManagerValidationContext(string trafficManagerName, TrafficManagerSettings settings, Dictionary<string, TlsCertificate> certificates = null)
+        public TrafficValidationContext(string trafficManagerName, TrafficSettings settings, Dictionary<string, TlsCertificate> certificates = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(trafficManagerName));
 
@@ -54,7 +54,7 @@ namespace Neon.Hive
         /// <summary>
         /// Returns the traffic manager settings.
         /// </summary>
-        public TrafficManagerSettings Settings { get; private set; }
+        public TrafficSettings Settings { get; private set; }
 
         /// <summary>
         /// Returns a dictionary that maps case sensitive certificate names to the

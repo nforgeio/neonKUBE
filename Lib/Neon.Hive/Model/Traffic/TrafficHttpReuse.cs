@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerHttpReuse.cs
+// FILE:	    TrafficHttpReuse.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -35,7 +35,7 @@ namespace Neon.Hive
     /// to <see cref="Never"/>.
     /// </note>
     /// </summary>
-    public enum TrafficManagerHttpReuse
+    public enum TrafficHttpReuse
     {
         /// <summary>
         /// This is the recommended strategy. The first request of a

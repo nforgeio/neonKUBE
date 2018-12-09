@@ -81,21 +81,21 @@ services:
                     },
                     () =>
                     {
-                        var publicRule = new TrafficManagerTcpRule();
+                        var publicRule = new TrafficTcpRule();
 
                         publicRule.Name = "test-rule";
-                        publicRule.Frontends.Add(new TrafficManagerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPublicFirstUser });
-                        publicRule.Backends.Add(new TrafficManagerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
+                        publicRule.Frontends.Add(new TrafficTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPublicFirstUser });
+                        publicRule.Backends.Add(new TrafficTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
                         hive.PutTrafficManagerRule("public", publicRule);
                     },
                     () =>
                     {
-                        var privateRule = new TrafficManagerTcpRule();
+                        var privateRule = new TrafficTcpRule();
 
                         privateRule.Name = "test-rule";
-                        privateRule.Frontends.Add(new TrafficManagerTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPrivateFirstUser });
-                        privateRule.Backends.Add(new TrafficManagerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
+                        privateRule.Frontends.Add(new TrafficTcpFrontend() { ProxyPort = HiveHostPorts.ProxyPrivateFirstUser });
+                        privateRule.Backends.Add(new TrafficTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
                         hive.PutTrafficManagerRule("private", privateRule);
                         hive.PutCertificate("test-certificate", TestCertificate.CombinedPem);

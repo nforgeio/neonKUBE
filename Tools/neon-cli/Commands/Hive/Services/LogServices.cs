@@ -211,7 +211,7 @@ namespace NeonCli
 
                         firstManager.Status = "kibana traffic manager rule";
 
-                        var rule = new TrafficManagerHttpRule()
+                        var rule = new TrafficHttpRule()
                         {
                             Name     = "neon-log-kibana",
                             System   = true,
@@ -220,13 +220,13 @@ namespace NeonCli
                         };
 
                         rule.Frontends.Add(
-                            new TrafficManagerHttpFrontend()
+                            new TrafficHttpFrontend()
                             {
                                 ProxyPort = HiveHostPorts.ProxyPrivateKibanaDashboard
                             });
 
                         rule.Backends.Add(
-                            new TrafficManagerHttpBackend()
+                            new TrafficHttpBackend()
                             {
                                 Server = "neon-log-kibana",
                                 Port   = NetworkPorts.Kibana
@@ -349,7 +349,7 @@ namespace NeonCli
             steps.Add(ActionStep.Create(hive.FirstManager.Name, "setup/elasticsearch-lbrule",
                 node =>
                 {
-                    var rule = new TrafficManagerHttpRule()
+                    var rule = new TrafficHttpRule()
                     {
                         Name     = "neon-log-esdata",
                         System   = true,
@@ -358,7 +358,7 @@ namespace NeonCli
                     };
 
                     rule.Frontends.Add(
-                        new TrafficManagerHttpFrontend()
+                        new TrafficHttpFrontend()
                         {
                             ProxyPort = HiveHostPorts.ProxyPrivateHttpLogEsData
                         });
@@ -366,7 +366,7 @@ namespace NeonCli
                     foreach (var esNode in esNodes)
                     {
                         rule.Backends.Add(
-                            new TrafficManagerHttpBackend()
+                            new TrafficHttpBackend()
                             {
                                 Server = esNode.Metadata.PrivateAddress.ToString(),
                                 Port = HiveHostPorts.LogEsDataHttp
@@ -507,7 +507,7 @@ namespace NeonCli
                     // Configure a private hive proxy TCP route so the [neon-log-host] containers
                     // will be able to reach the collectors.
 
-                    var rule = new TrafficManagerTcpRule()
+                    var rule = new TrafficTcpRule()
                     {
                         Name   = "neon-log-collector",
                         System = true,
@@ -515,13 +515,13 @@ namespace NeonCli
                     };
 
                     rule.Frontends.Add(
-                        new TrafficManagerTcpFrontend()
+                        new TrafficTcpFrontend()
                         {
                             ProxyPort = HiveHostPorts.ProxyPrivateTcpLogCollector
                         });
 
                     rule.Backends.Add(
-                        new TrafficManagerTcpBackend()
+                        new TrafficTcpBackend()
                         {
                             Server = "neon-log-collector",
                             Port   = NetworkPorts.TDAgentForward

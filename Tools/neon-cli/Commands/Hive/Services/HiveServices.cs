@@ -153,13 +153,13 @@ namespace NeonCli
                     // Initialize the public and private traffic manager managers.
 
                     hive.PublicTraffic.UpdateSettings(
-                        new TrafficManagerSettings()
+                        new TrafficSettings()
                         {
                             ProxyPorts = HiveConst.PublicProxyPorts
                         });
 
                     hive.PrivateTraffic.UpdateSettings(
-                        new TrafficManagerSettings()
+                        new TrafficSettings()
                         {
                             ProxyPorts = HiveConst.PrivateProxyPorts
                         });
@@ -172,7 +172,7 @@ namespace NeonCli
                         {
                             // Deploy private traffic manager for the AMQP endpoints.
 
-                            var amqpRule = new TrafficManagerTcpRule()
+                            var amqpRule = new TrafficTcpRule()
                             {
                                 Name     = "neon-hivemq-amqp",
                                 System   = true,
@@ -185,14 +185,14 @@ namespace NeonCli
                             //
                             //      https://github.com/jefflill/NeonForge/issues/new
 
-                            amqpRule.Timeouts = new TrafficManagerTimeouts()
+                            amqpRule.Timeouts = new TrafficTimeouts()
                             {
                                 ClientSeconds = 0,
                                 ServerSeconds = 0
                             };
 
                             amqpRule.Frontends.Add(
-                                new TrafficManagerTcpFrontend()
+                                new TrafficTcpFrontend()
                                 {
                                     ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMQP
                                 });
@@ -200,7 +200,7 @@ namespace NeonCli
                             foreach (var ampqNode in hive.Nodes.Where(n => n.Metadata.Labels.HiveMQ))
                             {
                                 amqpRule.Backends.Add(
-                                    new TrafficManagerTcpBackend()
+                                    new TrafficTcpBackend()
                                     {
                                          Server = ampqNode.PrivateAddress.ToString(),
                                          Port   = HiveHostPorts.HiveMQAMQP
@@ -211,7 +211,7 @@ namespace NeonCli
 
                             // Deploy private traffic manager for the management endpoints.
 
-                            var adminRule = new TrafficManagerHttpRule()
+                            var adminRule = new TrafficHttpRule()
                             {
                                 Name     = "neon-hivemq-management",
                                 System   = true,
@@ -221,13 +221,13 @@ namespace NeonCli
                             // Initialize the frontends and backends.
 
                             adminRule.Frontends.Add(
-                                new TrafficManagerHttpFrontend()
+                                new TrafficHttpFrontend()
                                 {
                                     ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAdmin
                                 });
 
                             adminRule.Backends.Add(
-                                new TrafficManagerHttpBackend()
+                                new TrafficHttpBackend()
                                 {
                                     Group      = HiveHostGroups.HiveMQManagers,
                                     GroupLimit = 5,

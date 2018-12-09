@@ -431,7 +431,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, "Parsing rule");
 
-                    var newRule = TrafficManagerRule.Parse(ruleText, strict: true);
+                    var newRule = TrafficRule.Parse(ruleText, strict: true);
 
                     context.WriteLine(AnsibleVerbosity.Trace, "Rule parsed successfully");
 
@@ -449,7 +449,7 @@ namespace NeonCli.Ansible
 
                     if (!string.Equals(ruleName, newRule.Name, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        throw new ArgumentException($"The [rule_name={ruleName}] argument and the rule's [{nameof(TrafficManagerRule.Name)}={newRule.Name}] property are not the same.");
+                        throw new ArgumentException($"The [rule_name={ruleName}] argument and the rule's [{nameof(TrafficRule.Name)}={newRule.Name}] property are not the same.");
                     }
 
                     context.WriteLine(AnsibleVerbosity.Trace, "Rule name matched.");
@@ -459,7 +459,7 @@ namespace NeonCli.Ansible
                     context.WriteLine(AnsibleVerbosity.Trace, "Validating rule.");
 
                     var proxySettings     = trafficManager.GetSettings();
-                    var validationContext = new TrafficManagerValidationContext(name, proxySettings);
+                    var validationContext = new TrafficValidationContext(name, proxySettings);
 
                     // $hack(jeff.lill):
                     //

@@ -268,7 +268,7 @@ WantedBy=docker.service
 
             // Redeploy the [neon-hivemq-ampq] private traffic manager to be a TCP rather than an HTTP proxy.
 
-            var ampqRule = new TrafficManagerTcpRule()
+            var ampqRule = new TrafficTcpRule()
             {
                 Name = "neon-hivemq-ampq",
                 System = true,
@@ -276,13 +276,13 @@ WantedBy=docker.service
             };
 
             ampqRule.Frontends.Add(
-                new TrafficManagerTcpFrontend()
+                new TrafficTcpFrontend()
                 {
                     ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMQP
                 });
 
             ampqRule.Backends.Add(
-                new TrafficManagerTcpBackend()
+                new TrafficTcpBackend()
                 {
                     Group = HiveHostGroups.HiveMQ,
                     GroupLimit = 5,

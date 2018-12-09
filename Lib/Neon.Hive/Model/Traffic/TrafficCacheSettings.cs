@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerCacheSettings.cs
+// FILE:	    TrafficCacheSettings.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -29,21 +29,21 @@ namespace Neon.Hive
     /// as the <b>cache-settings.json</b> file.  This will be consumed by the <b>neon-proxy-cache</b>
     /// services to implement cache warming and perhaps other features in the future.
     /// </summary>
-    public class TrafficManagerCacheSettings
+    public class TrafficCacheSettings
     {
         /// <summary>
         /// Specifies the backend objects to be proactively loaded to implement cache warming.
         /// </summary>
         [JsonProperty(PropertyName = "WarmTargets", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<TrafficManagerWarmTarget> WarmTargets { get; set; } = new List<TrafficManagerWarmTarget>();
+        public List<TrafficWarmTarget> WarmTargets { get; set; } = new List<TrafficWarmTarget>();
 
         /// <summary>
         /// Normalizes the instance.
         /// </summary>
         public void Normalize()
         {
-            WarmTargets = WarmTargets ?? new List<TrafficManagerWarmTarget>();
+            WarmTargets = WarmTargets ?? new List<TrafficWarmTarget>();
         }
     }
 }

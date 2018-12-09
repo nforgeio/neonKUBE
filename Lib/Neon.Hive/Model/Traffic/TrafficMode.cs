@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficManagerMode.cs
+// FILE:	    TrafficMode.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,7 +26,7 @@ namespace Neon.Hive
     /// <summary>
     /// Indicates whether TCP or HTTP connections should be load balanced.
     /// </summary>
-    public enum TrafficManagerMode
+    public enum TrafficMode
     {
         /// <summary>
         /// Load balancer mode is undefined.

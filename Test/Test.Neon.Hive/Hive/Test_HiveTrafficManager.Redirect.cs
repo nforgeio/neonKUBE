@@ -106,14 +106,14 @@ namespace TestHive
 
             if (singleRule)
             {
-                var rule = new TrafficManagerHttpRule()
+                var rule = new TrafficHttpRule()
                 {
                     Name = testName,
                 };
 
                 foreach (var redirect in redirections)
                 {
-                    var frontend = new TrafficManagerHttpFrontend()
+                    var frontend = new TrafficHttpFrontend()
                     {
                         Host       = redirect.FromUri.Host,
                         ProxyPort  = redirect.FromUri.Port,
@@ -136,12 +136,12 @@ namespace TestHive
 
                 foreach (var redirect in redirections)
                 {
-                    var rule = new TrafficManagerHttpRule()
+                    var rule = new TrafficHttpRule()
                     {
                         Name = $"{testName}-{redirectIndex}",
                     };
 
-                    var frontend = new TrafficManagerHttpFrontend()
+                    var frontend = new TrafficHttpFrontend()
                     {
                         Host       = redirect.FromUri.Host,
                         ProxyPort  = redirect.FromUri.Port,
