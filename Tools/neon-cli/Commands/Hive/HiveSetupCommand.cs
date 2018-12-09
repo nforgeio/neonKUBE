@@ -3551,7 +3551,7 @@ systemctl start neon-volume-plugin
                     var hiveMQSettings = new HiveMQSettings()
                     {
                         AmqpHosts   = hosts,
-                        AmqpPort    = HiveHostPorts.ProxyPrivateHiveMQAMPQ,
+                        AmqpPort    = HiveHostPorts.ProxyPrivateHiveMQAMQP,
                         AdminHosts  = hosts,
                         AdminPort   = HiveHostPorts.ProxyPrivateHiveMQAdmin,
                         TlsEnabled  = false,

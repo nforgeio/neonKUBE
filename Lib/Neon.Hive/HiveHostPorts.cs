@@ -131,9 +131,9 @@ namespace Neon.Hive
         public const int HiveMQEPMD = 5009;
 
         /// <summary>
-        /// The RabbitMQ message broker AMPQ port.
+        /// The RabbitMQ message broker AMQP port.
         /// </summary>
-        public const int HiveMQAMPQ = 5010;
+        public const int HiveMQAMQP = 5010;
 
         /// <summary>
         /// The RabbitMQ message broker cluster internal communication port.
@@ -262,9 +262,9 @@ namespace Neon.Hive
         public const int ProxyPrivateKibanaDashboard = 5305;
 
         /// <summary>
-        /// The port assigned to the load balanced HiveMQ AMPQ endpoint.
+        /// The port assigned to the load balanced HiveMQ AMQP endpoint.
         /// </summary>
-        public const int ProxyPrivateHiveMQAMPQ = 5306;
+        public const int ProxyPrivateHiveMQAMQP = 5306;
 
         /// <summary>
         /// The port assigned to the load balanced HiveMQ management 

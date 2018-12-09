@@ -39,6 +39,15 @@ namespace Neon.Hive
         }
 
         /// <summary>
+        /// Enables the transmission of low-level keep-alive packets from HAProxy to both the
+        /// client and backends to detect dropped connections.  The interval at which these
+        /// packets are transmitted are determined by the operating system configuration.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "KeepAlive", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        public bool KeepAlive { get; set; } = false;
+
+        /// <summary>
         /// The traffic manager frontend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Frontends", Required = Required.Always)]

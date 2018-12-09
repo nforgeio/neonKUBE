@@ -147,7 +147,7 @@ namespace Neon.HiveMQ
                     return false;
                 }
 
-                // Verify the AMPQ hosts and port.
+                // Verify the AMQP hosts and port.
 
                 if (AmqpHosts == null || AmqpHosts.Count == 0)
                 {

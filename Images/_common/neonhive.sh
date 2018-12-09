@@ -155,7 +155,7 @@ export NetworkPorts_CouchbaseApi=8092
 # The Couchbase Sync Gateway administration REST API port.
 export NetworkPorts_CouchbaseSyncGatewayAdmin=4985
 
-# The Advanced Messaging Queue Protocol (AMPQ) port (e.g. RabbitMQ).
+# The Advanced Messaging Queue Protocol (AMQP) port (e.g. RabbitMQ).
 export NetworkPorts_AMQP=5672
 
 # RabbitMQ Admin dashboard port.
@@ -294,8 +294,8 @@ export HiveHostPorts_CephDashboard=5008
 # The RabbitMQ/Erlang peer discovery protocol port.
 export HiveHostPorts_HiveMQEPMD=5009
 
-# The RabbitMQ message broker AMPQ port.
-export HiveHostPorts_HiveMQAMPQ=5010
+# The RabbitMQ message broker AMQP port.
+export HiveHostPorts_HiveMQAMQP=5010
 
 # The RabbitMQ message broker cluster internal communication port.
 export HiveHostPorts_HiveMQDIST=5011
@@ -381,8 +381,8 @@ export HiveHostPorts_ProxyPrivateHttpCephDashboard=5304
 # The port assigned to the load balanced Kibana dashboard.
 export HiveHostPorts_ProxyPrivateKibanaDashboard=5305
 
-# The port assigned to the load balanced HiveMQ AMPQ endpoint.
-export HiveHostPorts_ProxyPrivateHiveMQAMPQ=5306
+# The port assigned to the load balanced HiveMQ AMQP endpoint.
+export HiveHostPorts_ProxyPrivateHiveMQAMQP=5306
 
 # The port assigned to the load balanced HiveMQ management 
 # plugin.  This serves the management REST API as well as

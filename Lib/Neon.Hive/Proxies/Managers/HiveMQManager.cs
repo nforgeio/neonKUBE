@@ -426,7 +426,7 @@ namespace Neon.Hive
         {
             var settings = new HiveMQSettings()
             {
-                AmqpPort    = HiveHostPorts.HiveMQAMPQ,
+                AmqpPort    = HiveHostPorts.HiveMQAMQP,
                 AdminPort   = HiveHostPorts.HiveMQManagement,
                 TlsEnabled  = false,
                 Username    = null,

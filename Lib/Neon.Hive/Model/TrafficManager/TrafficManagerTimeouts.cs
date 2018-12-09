@@ -58,7 +58,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The maximum time to wait for a connection attempt to a server.
-        /// This defaults to <b>5 seconds</b>.
+        /// Specify <b>0</b> for unlimited.  This defaults to <b>5 seconds</b>. 
         /// </summary>
         [JsonProperty(PropertyName = "ConnectSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultConnectSeconds)]
@@ -66,7 +66,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// The maximum time to wait for a client to continue transmitting a
-        /// request.  This defaults to <b>50 seconds</b>.
+        /// request.  Specify <b>0</b> for unlimited.  This defaults to 
+        /// <b>50 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ClientSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultClientSeconds)]
@@ -74,7 +75,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// The maximum time to wait for a server to acknowledge or transmit
-        /// data.  This defaults to <b>50 seconds</b>.
+        /// data.  Specify <b>0</b> for unlimited.  This defaults to 
+        /// <b>50 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ServerSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultServerSeconds)]
@@ -90,7 +92,7 @@ namespace Neon.Hive
         /// <summary>
         /// The maximum time to keep a client side HTTP connection open after
         /// returning the first response to wait for a another client request.
-        /// This defaults to <b>0.5 seconds</b>.
+        /// Specify <b>0</b> for unlimited.  This defaults to <b>0.5 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "HttpKeepAliveSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultClientHttpKeepAliveSeconds)]
@@ -102,24 +104,24 @@ namespace Neon.Hive
         /// <param name="context">The validation context.</param>
         public void Validate(TrafficManagerValidationContext context)
         {
-            if (ConnectSeconds <= 0.0)
+            if (ConnectSeconds < 0.0)
             {
-                context.Error($"Load balancer timeout [{nameof(ConnectSeconds)}={ConnectSeconds}] is not positive.");
+                context.Error($"Load balancer timeout [{nameof(ConnectSeconds)}={ConnectSeconds}] is not valid.");
             }
 
-            if (ClientSeconds <= 0.0)
+            if (ClientSeconds < 0.0)
             {
-                context.Error($"Load balancer timeout [{nameof(ClientSeconds)}={ClientSeconds}] is not positive.");
+                context.Error($"Load balancer timeout [{nameof(ClientSeconds)}={ClientSeconds}] is not valid.");
             }
 
             if (HttpKeepAliveSeconds < 0.0)
             {
-                context.Error($"Load balancer timeout [{nameof(HttpKeepAliveSeconds)}={HttpKeepAliveSeconds}] must not be negative.");
+                context.Error($"Load balancer timeout [{nameof(HttpKeepAliveSeconds)}={HttpKeepAliveSeconds}] is not valid.");
             }
 
-            if (ServerSeconds <= 0.0)
+            if (ServerSeconds < 0.0)
             {
-                context.Error($"Load balancer timeout [{nameof(ServerSeconds)}={ServerSeconds}] is not positive.");
+                context.Error($"Load balancer timeout [{nameof(ServerSeconds)}={ServerSeconds}] is not valid.");
             }
 
             if (CheckSeconds <= 0.0)

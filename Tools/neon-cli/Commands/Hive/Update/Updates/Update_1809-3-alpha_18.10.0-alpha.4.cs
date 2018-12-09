@@ -278,7 +278,7 @@ WantedBy=docker.service
             ampqRule.Frontends.Add(
                 new TrafficManagerTcpFrontend()
                 {
-                    ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMPQ
+                    ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMQP
                 });
 
             ampqRule.Backends.Add(
@@ -286,7 +286,7 @@ WantedBy=docker.service
                 {
                     Group = HiveHostGroups.HiveMQ,
                     GroupLimit = 5,
-                    Port = HiveHostPorts.HiveMQAMPQ
+                    Port = HiveHostPorts.HiveMQAMQP
                 });
 
             Hive.PrivateTraffic.SetRule(ampqRule);

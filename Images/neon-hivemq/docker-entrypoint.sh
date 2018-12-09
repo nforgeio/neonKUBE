@@ -213,6 +213,9 @@ else
     exit 1
 fi
 
+echo                                                                                        >> $config_path
+echo "heartbeat                                   = 60"                                     >> $config_path
+
 # Other configuration settings:
 
 hipe_compile=false

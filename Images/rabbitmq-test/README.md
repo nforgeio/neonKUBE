@@ -13,7 +13,7 @@ This image is intended for development and testing purposes.  It provisions the 
 Admin Username: **Administrator**
 Admin Password: **password**
 
-The container exposes the AMPQ service on its standard port **5672** and the administrative REST API on its standard port **15672**.
+The container exposes the AMQP service on its standard port **5672** and the administrative REST API on its standard port **15672**.
 
 # Configuration
 

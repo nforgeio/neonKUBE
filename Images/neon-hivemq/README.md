@@ -40,9 +40,9 @@ RabbitMQ configuration is performed using environment variables as described [he
 
 * `RABBITMQ_DISK_FREE_LIMIT` - (*optional*) specifies the minimum bytes of free disk space available when RabbitMQ will begin throttling messages via flow control.  This is an absolute number of bytes like `1000000000` or `100MB`.  This defaults to twice the available RAM plus `1GB` to help prevent RabbitMQ from filling the disk up on hive host nodes.
 
-* `RABBITMQ_SSL_CERTFILE` - (*optional*) enables TLS security for both the AMPQ endpoint as well as the RabbitMQ dashboard by specifying the path to the TLS certificate file.
+* `RABBITMQ_SSL_CERTFILE` - (*optional*) enables TLS security for both the AMQP endpoint as well as the RabbitMQ dashboard by specifying the path to the TLS certificate file.
 
-* `RABBITMQ_SSL_KEYFILE` - (*optional*) enables TLS security for both the AMPQ endpoint as well as the RabbitMQ dashboard by specifying the path to the TLS private key file.
+* `RABBITMQ_SSL_KEYFILE` - (*optional*) enables TLS security for both the AMQP endpoint as well as the RabbitMQ dashboard by specifying the path to the TLS private key file.
 
 * `MANAGEMENT_PLUGIN` - (*optional*) enables the RabbitMQ management plugin for the node.  This defaults to `false`.
 

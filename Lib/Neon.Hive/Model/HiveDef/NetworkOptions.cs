@@ -518,7 +518,7 @@ namespace Neon.Hive
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "MTU", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(1492)]
+        [DefaultValue(1400)]
         public int MTU { get; set; } = 1400;
 
         /// <summary>
@@ -535,7 +535,7 @@ namespace Neon.Hive
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "IngressMTU", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(1492)]
+        [DefaultValue(1400)]
         public int IngressMTU { get; set; } = 1400;
 
         /// <summary>

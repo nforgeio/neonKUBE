@@ -242,7 +242,7 @@ namespace Neon.Net
         public const int OpenVPN = 1194;
 
         /// <summary>
-        /// The Advanced Messaging Queue Protocol (AMPQ) port (e.g. RabbitMQ).
+        /// The Advanced Messaging Queue Protocol (AMQP) port (e.g. RabbitMQ).
         /// </summary>
         public const int AMQP = 5672;
 

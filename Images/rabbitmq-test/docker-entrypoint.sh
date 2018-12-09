@@ -87,14 +87,16 @@ echo 127.0.0.1 rmq-test.hive >> /etc/hosts
 
 # Generate the RabbitMQ config file.
 
-echo                                                                                    >> $config_path
-echo "# Connection Settings"                                                            >> $config_path
-echo                                                                                    >> $config_path
-echo "listeners.tcp.default                       = 0.0.0.0:$RABBITMQ_NODE_PORT"        >> $config_path
-echo                                                                                    >> $config_path
-echo "management.listener.ip                      = 0.0.0.0"                            >> $config_path
-echo "management.listener.port                    = $RABBITMQ_MANAGEMENT_PORT"          >> $config_path
-echo "management.listener.ssl                     = false"                              >> $config_path
+echo                                                                                        >> $config_path
+echo "# Connection Settings"                                                                >> $config_path
+echo                                                                                        >> $config_path
+echo "listeners.tcp.default                       = 0.0.0.0:$RABBITMQ_NODE_PORT"            >> $config_path
+echo                                                                                        >> $config_path
+echo "management.listener.ip                      = 0.0.0.0"                                >> $config_path
+echo "management.listener.port                    = $RABBITMQ_MANAGEMENT_PORT"              >> $config_path
+echo "management.listener.ssl                     = false"                                  >> $config_path
+echo                                                                                        >> $config_path
+echo "heartbeat                                   = 60"                                     >> $config_path
 
 # Other configuration settings:
 

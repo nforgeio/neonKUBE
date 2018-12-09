@@ -698,6 +698,11 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                         sbHaProxy.AppendLine($"    option                  log-health-checks");
                     }
 
+                    if (tcpRule.KeepAlive)
+                    {
+                        sbHaProxy.AppendLine($"    option                  tcpka");
+                    }
+
                     if (tcpRule.UseHttpCheckMode)
                     {
                         sbHaProxy.AppendLine($"    option                  httpchk {GetHttpCheckOptionArgs(tcpRule)}");

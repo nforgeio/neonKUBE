@@ -170,30 +170,42 @@ namespace NeonCli
                     hive.FirstManager.InvokeIdempotentAction("setup/hivemq-traffic-manager-rules",
                         () =>
                         {
-                            // Deploy private traffic manager for the AMPQ endpoints.
+                            // Deploy private traffic manager for the AMQP endpoints.
 
-                            var ampqRule = new TrafficManagerTcpRule()
+                            var amqpRule = new TrafficManagerTcpRule()
                             {
-                                Name     = "neon-hivemq-ampq",
+                                Name     = "neon-hivemq-amqp",
                                 System   = true,
                                 Resolver = null
                             };
 
-                            ampqRule.Frontends.Add(
+                            // We're going to set this up to allow idle connections for up to
+                            // five minutes.  In theory, AMQP connections should never be idle
+                            // this long because we've enabled level 7 keep-alive.
+                            //
+                            //      https://github.com/jefflill/NeonForge/issues/new
+
+                            amqpRule.Timeouts = new TrafficManagerTimeouts()
+                            {
+                                ClientSeconds = 0,
+                                ServerSeconds = 0
+                            };
+
+                            amqpRule.Frontends.Add(
                                 new TrafficManagerTcpFrontend()
                                 {
-                                    ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMPQ
+                                    ProxyPort = HiveHostPorts.ProxyPrivateHiveMQAMQP
                                 });
 
-                            ampqRule.Backends.Add(
+                            amqpRule.Backends.Add(
                                 new TrafficManagerTcpBackend()
                                 {
                                     Group      = HiveHostGroups.HiveMQ,
                                     GroupLimit = 5,
-                                    Port       = HiveHostPorts.HiveMQAMPQ
+                                    Port       = HiveHostPorts.HiveMQAMQP
                                 });
 
-                            hive.PrivateTraffic.SetRule(ampqRule);
+                            hive.PrivateTraffic.SetRule(amqpRule);
 
                             // Deploy private traffic manager for the management endpoints.
 
@@ -620,7 +632,7 @@ namespace NeonCli
                         "--env", $"RABBITMQ_USE_LONGNAME=true",
                         "--env", $"RABBITMQ_DEFAULT_USER=sysadmin",
                         "--env", $"RABBITMQ_DEFAULT_PASS=password",
-                        "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.HiveMQAMPQ}",
+                        "--env", $"RABBITMQ_NODE_PORT={HiveHostPorts.HiveMQAMQP}",
                         "--env", $"RABBITMQ_DIST_PORT={HiveHostPorts.HiveMQDIST}",
                         "--env", $"RABBITMQ_MANAGEMENT_PORT={HiveHostPorts.HiveMQManagement}",
                         "--env", $"RABBITMQ_ERLANG_COOKIE={hive.Definition.HiveMQ.ErlangCookie}",
@@ -634,7 +646,7 @@ namespace NeonCli
                         "--mount", "type=volume,source=neon-hivemq,target=/var/lib/rabbitmq",
                         "--mount", "type=bind,source=/etc/neon/certs,target=/etc/neon/certs,readonly",
                         "--publish", $"{HiveHostPorts.HiveMQEPMD}:{HiveHostPorts.HiveMQEPMD}",
-                        "--publish", $"{HiveHostPorts.HiveMQAMPQ}:{HiveHostPorts.HiveMQAMPQ}",
+                        "--publish", $"{HiveHostPorts.HiveMQAMQP}:{HiveHostPorts.HiveMQAMQP}",
                         "--publish", $"{HiveHostPorts.HiveMQDIST}:{HiveHostPorts.HiveMQDIST}",
                         "--publish", $"{HiveHostPorts.HiveMQManagement}:{HiveHostPorts.HiveMQManagement}",
                         "--memory", HiveDefinition.ValidateSize(hive.Definition.HiveMQ.RamLimit, typeof(HiveMQOptions), nameof(hive.Definition.HiveMQ.RamLimit)),
