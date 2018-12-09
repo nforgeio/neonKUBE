@@ -439,7 +439,7 @@ See the documentation for more traffic manager rule and setting details.
                     // expiration dates) and save this to Consul so it would be easy to
                     // download.  Perhaps do the same for the rules?
 
-                    if (commandLine.Arguments.Length != 1)
+                    if (commandLine.Arguments.Length != 2)
                     {
                         Console.Error.WriteLine("*** ERROR: FILE or [-] argument expected.");
                         Program.Exit(1);
@@ -449,7 +449,7 @@ See the documentation for more traffic manager rule and setting details.
                     // YAML, automatcially detecting the format.  We always persist
                     // rules as JSON though.
 
-                    var ruleFile = commandLine.Arguments[0];
+                    var ruleFile = commandLine.Arguments[1];
 
                     string ruleText;
 
