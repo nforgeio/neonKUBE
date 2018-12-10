@@ -56,4 +56,4 @@ $noImagePush = $nopush
 # Note that we need to pass the full .NET Core version
 # (e.g. "2.1.5" instead of just "2.1").
 
-Build -haProxyVersion 1.8.13 -dotnetVersion 2.1.5 -latest
+Build -haProxyVersion 1.8.14 -dotnetVersion 2.1.5 -latest

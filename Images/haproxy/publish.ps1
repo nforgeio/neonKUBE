@@ -65,6 +65,7 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
+	Build 1.8.13 -latest
 }
 
-Build 1.8.13 -latest
+Build 1.8.14 -latest
