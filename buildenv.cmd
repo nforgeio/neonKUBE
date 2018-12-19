@@ -50,7 +50,7 @@ if not exist "%NF_ROOT%\Build" mkdir "%NF_ROOT%\Build"
 
 REM Configure the PATH.
 REM
-REM Note that some tools like PuTTY and 7-Zip may be installed assoc
+REM Note that some tools like PuTTY and 7-Zip may be installed as
 REM x86 or x64 to different directories.  We'll include commands that
 REM attempt to add both locations to the path and the [pathtool] is
 REM smart enough to only add directories that actually exist.

@@ -6,7 +6,9 @@ The neonFORGE, LLC technology stack.
 
 Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a computer.
 ## Workstation Configuration
-Follow steps below to configure a development or test workstation.
+
+Follow the steps below to configure a development or test workstation:
+
 1. Make sure that Windows is **fully updated**.
 
 2. I highly recommend that you configure Windows to display hidden files:
