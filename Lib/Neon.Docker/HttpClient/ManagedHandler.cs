@@ -313,7 +313,7 @@ namespace Microsoft.Net.Http.Client
                 request.SetConnectionPortProperty(proxyUri.Port);
                 return ProxyMode.Http;
             }
-            // Tunneling generates a completely seperate request, don't alter the original, just the connection address.
+            // Tunneling generates a completely separate request, don't alter the original, just the connection address.
             request.SetConnectionHostProperty(proxyUri.DnsSafeHost);
             request.SetConnectionPortProperty(proxyUri.Port);
             return ProxyMode.Tunnel;

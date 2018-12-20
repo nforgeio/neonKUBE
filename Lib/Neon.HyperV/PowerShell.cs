@@ -255,7 +255,7 @@ catch [Exception] {{
                         if (pos < columnUnderlines.Length)
                         {
                             // Reduce the column width by one if this isn't the last column
-                            // to ignore the space seperating columns.
+                            // to ignore the space separating columns.
 
                             column.Width--;
                         }
