@@ -138,7 +138,7 @@ namespace Neon.Common
             {
                 // Remove any existing descriptors with the same service type.
                 // This allows the initialization of default services that 
-                // may be overriden later.
+                // may be overridden later.
                 //
                 // I believe there should only ever be one service with any
                 // given service type in the collection, but ServicesCollection

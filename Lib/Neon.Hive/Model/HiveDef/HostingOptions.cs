@@ -117,7 +117,7 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// The default username to use for connecting the hypervisor host machines specified by <see cref="VmHosts"/>.
-        /// This may be overriden for specific hypervisor machines.  This defaults to <c>null</c>.
+        /// This may be overridden for specific hypervisor machines.  This defaults to <c>null</c>.
         /// </para>
         /// <note>
         /// This defaults to <b>root</b> for XenServer based environments.
@@ -129,7 +129,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The default password to use for connecting the hypervisor host machines specified by <see cref="VmHosts"/>.
-        /// This may be overriden for specific hypervisor machines within <see cref="VmHosts"/> items.  This defaults to <c>null</c>.
+        /// This may be overridden for specific hypervisor machines within <see cref="VmHosts"/> items.  This defaults to <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "VmHostPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
