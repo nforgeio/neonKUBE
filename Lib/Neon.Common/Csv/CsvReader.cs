@@ -193,5 +193,17 @@ namespace Neon.Csv
 
             return fields;
         }
+
+        /// <summary>
+        /// Returns an enumerator that returns the data rows from a <see cref="CsvReader"/>.
+        /// </summary>
+        /// <returns>The next row as a <see cref="List{String}"/>.</returns>
+        public IEnumerable<List<string>> Rows()
+        {
+            for (var row = Read(); row != null; row = Read())
+            {
+                yield return row;
+            }
+        }
     }
 }

@@ -14,9 +14,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Csv;
 using Neon.IO;
 
-namespace Neon.HyperV
+using Newtonsoft.Json.Linq;
+
+namespace Neon.Windows
 {
     /// <summary>
     /// <para>
@@ -26,43 +29,41 @@ namespace Neon.HyperV
     /// This class requires elevated administrative rights.
     /// </note>
     /// </summary>
-    internal class PowerShell
+    public class PowerShell : IDisposable
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        private class Column
-        {
-            /// <summary>
-            /// Column title.
-            /// </summary>
-            public string Title;
-
-            /// <summary>
-            /// Index of the starting position for the column data.
-            /// </summary>
-            public int Start;
-
-            /// <summary>
-            /// Column width (number of characters).
-            /// </summary>
-            public int Width;
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private const int PowershellBufferWidth = 16192;
+
+        private Action<string>  outputAction;
+        private Action<string>  errorAction;
 
         /// <summary>
         /// Default constructor to be used to execute local PowerShell commands.
         /// </summary>
-        public PowerShell()
+        /// <param name="outputAction">Optionally specifies an action to receive logged output.</param>
+        /// <param name="errorAction">Optionally specifies an action to receive logged error output.</param>
+        /// <exception cref="NotSupportedException">Thrown if we're not running on Windows.</exception>
+        /// <remarks>
+        /// You can pass callbacks to the <paramref name="outputAction"/> and/or <paramref name="errorAction"/>
+        /// parameters to be receive logged output and errors.  Note that <paramref name="outputAction"/> will receive
+        /// both STDERR and STDOUT text if <paramref name="errorAction"/> isn't specified.
+        /// </remarks>
+        public PowerShell(Action<string> outputAction = null, Action<string> errorAction = null)
         {
             if (!NeonHelper.IsWindows)
             {
-                throw new NotSupportedException($"{nameof(HyperVClient)} is only supported on Windows.");
+                throw new NotSupportedException("PowerShell is only supported on Windows.");
             }
+
+            this.outputAction = outputAction;
+            this.errorAction  = errorAction;
+        }
+
+        /// <summary>
+        /// Finalizer.
+        /// </summary>
+        ~PowerShell()
+        {
+            Dispose(false);
         }
 
         /// <summary>
@@ -132,8 +133,8 @@ namespace Neon.HyperV
         /// <param name="noEnvironmentVars">
         /// Optionally disables that environment variable subsitution (defaults to <c>false</c>).
         /// </param>
-        /// <returns>The list of <c>dynamic</c> objects parsed from the command response.</returns>
-        /// <exception cref="HyperVException">Thrown if the command failed.</exception>
+        /// <returns>The command response.</returns>
+        /// <exception cref="PowerShellException">Thrown if the command failed.</exception>
         public string Execute(string command, bool noEnvironmentVars = false)
         {
             using (var file = new TempFile(suffix: ".ps1"))
@@ -148,7 +149,7 @@ catch [Exception] {{
     exit 1
 }}
 ");
-                var result = NeonHelper.ExecuteCapture("powershell.exe", $"-file \"{file.Path}\"");
+                var result = NeonHelper.ExecuteCapture("pwsh.exe", $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
 
                 // $hack(jeff.lill):
                 //
@@ -158,7 +159,7 @@ catch [Exception] {{
 
                 if (result.ExitCode != 0 || result.ErrorText.Length > 0)
                 {
-                    throw new HyperVException(result.AllText);
+                    throw new PowerShellException(result.AllText);
                 }
 
                 return result.AllText;
@@ -166,7 +167,7 @@ catch [Exception] {{
         }
 
         /// <summary>
-        /// Executes a PowerShell command that returns a result table, subsituting any
+        /// Executes a PowerShell command that returns result JSON, subsituting any
         /// environment variable references of the form <b>${NAME}</b> and returning a list 
         /// of <c>dynamic</c> objects parsed from the table with the object property
         /// names set to the table column names and the values parsed as strings.
@@ -176,8 +177,8 @@ catch [Exception] {{
         /// Optionally disables that environment variable subsitution (defaults to <c>false</c>).
         /// </param>
         /// <returns>The list of <c>dynamic</c> objects parsed from the command response.</returns>
-        /// <exception cref="HyperVException">Thrown if the command failed.</exception>
-        public List<dynamic> ExecuteTable(string command, bool noEnvironmentVars = false)
+        /// <exception cref="PowerShellException">Thrown if the command failed.</exception>
+        public List<dynamic> ExecuteJson(string command, bool noEnvironmentVars = false)
         {
             Covenant.Requires<ArgumentNullException>(command != null);
 
@@ -195,17 +196,21 @@ catch [Exception] {{
 
             using (var file = new TempFile(suffix: ".ps1"))
             {
+                // Note that we're hardcoding DEPTH=4.  This seems like a
+                // reasonable limit.  We don't want this to be too large
+                // because often times the objects returned have cycles.
+
                 File.WriteAllText(file.Path,
 $@"
 try {{
-    {command} | Out-String -Width {PowershellBufferWidth} | Format-Table
+    {command} | ConvertTo-Json -Depth 4 -EnumsAsStrings -AsArray
 }}
 catch [Exception] {{
     write-host $_Exception.Message
     exit 1
 }}
 ");
-                var result = NeonHelper.ExecuteCapture("powershell.exe", $"-file \"{file.Path}\"");
+                var result = NeonHelper.ExecuteCapture("pwsh.exe", $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
 
                 // $hack(jeff.lill):
                 //
@@ -215,85 +220,22 @@ catch [Exception] {{
 
                 if (result.ExitCode != 0 || result.ErrorText.Length > 0)
                 {
-                    throw new HyperVException(result.AllText);
+                    throw new PowerShellException(result.AllText);
                 }
 
-                // Parse the output text as a table.
+                // Even though we specified [-AsArray] we still get a empty string
+                // for operations that return an empty list (like Get-VM when there
+                // are no VMs).  I'm not sure this happens for all such commands but
+                // we'll handle that here.
 
-                using (var reader = new StringReader(result.OutputText))
+                var json = result.OutputText;
+
+                if (string.IsNullOrEmpty(json))
                 {
-                    var columnTitles     = reader.ReadLine();   // Line with the column titles
-                    var columnUnderlines = reader.ReadLine();   // Line with the "----" column underlines
-                    var columns          = new List<Column>();
-
-                    // Parse the underlines to determine the column positions.
-
-                    var pos = 0;
-
-                    while (pos < columnUnderlines.Length)
-                    {
-                        var column = new Column();
-
-                        column.Start = pos;
-
-                        // Skip over the underlines for the current column.
-
-                        while (pos < columnUnderlines.Length && columnUnderlines[pos] == '-')
-                        {
-                            pos++;
-                        }
-
-                        // Skip over the whitespace between the underlines.
-
-                        while (pos < columnUnderlines.Length && columnUnderlines[pos] == ' ')
-                        {
-                            pos++;
-                        }
-
-                        column.Width = pos - column.Start;
-
-                        if (pos < columnUnderlines.Length)
-                        {
-                            // Reduce the column width by one if this isn't the last column
-                            // to ignore the space separating columns.
-
-                            column.Width--;
-                        }
-
-                        columns.Add(column);
-                    }
-
-                    // Extract the column titles.
-
-                    foreach (var column in columns)
-                    {
-                        column.Title = columnTitles.Substring(column.Start, column.Width).Trim();
-                    }
-
-                    // Parse the data lines.
-
-                    var items = new List<dynamic>();
-
-                    for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
-                    {
-                        if (line.Length == 0)
-                        {
-                            continue;   // Ignore blank lines.
-                        }
-
-                        var item = new ExpandoObject();
-                        var itemDictionary = (IDictionary<string, object>)item;
-
-                        foreach (var column in columns)
-                        {
-                            itemDictionary.Add(column.Title, line.Substring(column.Start, column.Width).TrimEnd());
-                        }
-
-                        items.Add(item);
-                    }
-
-                    return items;
+                    json = "[]";
                 }
+
+                return NeonHelper.JsonDeserialize<List<dynamic>>(json);
             }
         }
     }

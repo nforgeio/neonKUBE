@@ -19,7 +19,7 @@ namespace Neon
         /// <summary>
         /// The company name to use for all Neon assemblies.
         /// </summary>
-        public const string Company = "NeonForge, LLC";
+        public const string Company = "neonFORGE, LLC";
 
         /// <summary>
         /// The copyright statement to be included in all assemblies.
@@ -29,7 +29,7 @@ namespace Neon
         /// <summary>
         /// The product statement to be included in all assemblies.
         /// </summary>
-        public const string Product = "neonHIVE";
+        public const string Product = "ksetup";
 
         /// <summary>
         /// The build configuration.

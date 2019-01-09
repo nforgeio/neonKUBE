@@ -355,7 +355,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Used by <see cref="ExecuteCapture(string, string, TimeSpan?, Process)"/> to redirect process output streams.
+        /// Used to redirect process output streams.
         /// </summary>
         private sealed class ProcessStreamRedirector
         {
@@ -364,6 +364,8 @@ namespace Neon.Common
             public StringBuilder    sbError        = new StringBuilder();
             public bool             isOutputClosed = false;
             public bool             isErrorClosed  = false;
+            public Action<string>   outputAction   = null;
+            public Action<string>   errorAction    = null;
 
             public void OnOutput(object sendingProcess, DataReceivedEventArgs args)
             {
@@ -376,6 +378,11 @@ namespace Neon.Common
                     else
                     {
                         sbOutput.AppendLine(args.Data);
+
+                        if (outputAction != null)
+                        {
+                            outputAction(args.Data + NeonHelper.LineEnding);
+                        }
                     }
                 }
             }
@@ -391,6 +398,15 @@ namespace Neon.Common
                     else
                     {
                         sbError.AppendLine(args.Data);
+
+                        if (errorAction != null)
+                        {
+                            errorAction(args.Data + NeonHelper.LineEnding);
+                        }
+                        else if (outputAction != null)
+                        {
+                            outputAction(args.Data + NeonHelper.LineEnding);
+                        }
                     }
                 }
             }
@@ -417,6 +433,8 @@ namespace Neon.Common
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
+        /// <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
+        /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
         /// <returns>
         /// The <see cref="ExecuteResult"/> including the process exit code and capture 
         /// standard output and error streams.
@@ -429,10 +447,22 @@ namespace Neon.Common
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.
         /// </note>
+        /// <para>
+        /// You can optionally specify the <paramref name="outputAction"/> and/or <paramref name="errorAction"/>
+        /// callbacks to receive the process output as it is received.  <paramref name="outputAction"/> will 
+        /// be called with both the STDOUT and STDERR streams if <paramref name="errorAction"/> is <c>null</c>
+        /// otherwise it will called only with STDOUT text.
+        /// </para>
         /// </remarks>
-        public static ExecuteResult ExecuteCapture(string path, object[] args, TimeSpan? timeout = null, Process process = null)
+        public static ExecuteResult ExecuteCapture(
+            string          path, 
+            object[]        args, 
+            TimeSpan?       timeout = null,
+            Process         process = null,
+            Action<string>  outputAction = null,
+            Action<string>  errorAction = null)
         {
-            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process);
+            return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, outputAction, errorAction);
         }
 
         /// <summary>
@@ -448,6 +478,8 @@ namespace Neon.Common
         /// <param name="process">
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
+        /// <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
+        /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
         /// <returns>
         /// The <see cref="ExecuteResult"/> including the process exit code and capture 
         /// standard output and error streams.
@@ -460,12 +492,28 @@ namespace Neon.Common
         /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
         /// parameter will not be killed in this case.
         /// </note>
+        /// <para>
+        /// You can optionally specify the <paramref name="outputAction"/> and/or <paramref name="errorAction"/>
+        /// callbacks to receive the process output as it is received.  <paramref name="outputAction"/> will 
+        /// be called with both the STDOUT and STDERR streams if <paramref name="errorAction"/> is <c>null</c>
+        /// otherwise it will called only with STDOUT text.
+        /// </para>
         /// </remarks>
-        public static ExecuteResult ExecuteCapture(string path, string args, TimeSpan? timeout = null, Process process = null)
+        public static ExecuteResult ExecuteCapture(
+            string          path, 
+            string          args, 
+            TimeSpan?       timeout = null,
+            Process         process = null,
+            Action<string>  outputAction = null,
+            Action<string>  errorAction = null)
         {
             var processInfo     = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
-            var redirector      = new ProcessStreamRedirector();
             var externalProcess = process != null;
+            var redirector      = new ProcessStreamRedirector()
+            {
+                outputAction = outputAction,
+                errorAction  = errorAction
+            };
 
             if (process == null)
             {
@@ -510,11 +558,11 @@ namespace Neon.Common
                                     // to receive all the data
 
                 return new ExecuteResult()
-                    {
-                        ExitCode   = process.ExitCode,
-                        OutputText = redirector.sbOutput.ToString(),
-                        ErrorText  = redirector.sbError.ToString()
-                    };
+                {
+                    ExitCode   = process.ExitCode,
+                    OutputText = redirector.sbOutput.ToString(),
+                    ErrorText  = redirector.sbError.ToString()
+                };
             }
             finally
             {

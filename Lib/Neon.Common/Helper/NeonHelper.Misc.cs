@@ -976,7 +976,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Recursively deletes a file folder, ignoring any errors.
+        /// Recursively deletes a file system folder, ignoring any errors.
         /// </summary>
         /// <param name="folder">The folder path.</param>
         public static void DeleteFolder(string folder)
@@ -985,7 +985,7 @@ namespace Neon.Common
             {
                 try
                 {
-                    Directory.Delete(folder, recursive: true);
+                    DeleteFolderContents(folder);
                 }
                 catch
                 {
@@ -1004,31 +1004,82 @@ namespace Neon.Common
             {
                 try
                 {
-                    foreach (var file in Directory.GetFiles(folder, "*.*", SearchOption.TopDirectoryOnly))
+                    foreach (var path in Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories))
                     {
                         try
                         {
-                            File.Delete(file);
+                            var attributes = File.GetAttributes(path);
+
+                            if (attributes.HasFlag(FileAttributes.ReadOnly))
+                            {
+                                File.SetAttributes(path, attributes & ~FileAttributes.ReadOnly);
+                            }
+
+                            File.Delete(path);
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            // We see this exception when trying to delete read-only files
+                            // so we'll clear the read-only flag and try again.
+
+                            try
+                            {
+                                File.SetAttributes(path, FileAttributes.Normal);
+                                File.Delete(path);
+                            }
+                            catch
+                            {
+                                // Intentionally ignored.
+                            }
                         }
                         catch
                         {
+                            // Intentionally ignored.
                         }
                     }
 
-                    foreach (var directory in Directory.GetDirectories(folder))
-                    {
-                        try
-                        {
-                            Directory.Delete(directory);
-                        }
-                        catch
-                        {
-                        }
-                    }
+                    DeleteDirectory(folder, 0, deleteTop: false);
                 }
                 catch
                 {
-                    // Intentionally ignoring errors.
+                    // Intentionally ignored.
+                }
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Recursively deletes a directory.  Note that this assumes that any files
+        /// have already been deleted.
+        /// </para>
+        /// <note>
+        /// This method intentially ignores any errors.
+        /// </note>
+        /// </summary>
+        /// <param name="path">The directory path.</param>
+        /// <param name="level">The nesting level (top == 0).</param>
+        /// <param name="deleteTop">Optionally deletes the top directory.</param>
+        private static void DeleteDirectory(string path, int level, bool deleteTop = false)
+        {
+            foreach (var subdirectory in Directory.GetDirectories(path, "*.*", SearchOption.TopDirectoryOnly))
+            {
+                if (subdirectory == "." || subdirectory == "..")
+                {
+                    continue;
+                }
+
+                DeleteDirectory(subdirectory, level + 1);
+            }
+
+            if (level > 0 || deleteTop)
+            {
+                try
+                {
+                    Directory.Delete(path);
+                }
+                catch
+                {
+                    // Intentionally ignored.
                 }
             }
         }

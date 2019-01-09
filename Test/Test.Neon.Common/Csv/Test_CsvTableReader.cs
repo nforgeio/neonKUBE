@@ -121,6 +121,36 @@ no,10";
             Assert.Null(reader.ReadRow());
             Assert.Null(reader.ReadRow());
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void CsvTableReader_RowEnumeration()
+        {
+            CsvTableReader reader;
+            string table =
+@"Col1,Col2,Col2
+1,10
+2,20
+3,30
+4,40
+";
+            reader = new CsvTableReader(new CsvReader(table));
+
+            Assert.Equal(2, reader.ColumnMap.Count);
+
+            var count = 0;
+
+            foreach (var row in reader.Rows())
+            {
+                count++;
+
+                Assert.Equal(count, int.Parse(row[0]));
+                Assert.Equal(count * 10, int.Parse(row[1]));
+            }
+
+            Assert.Null(reader.ReadRow());
+            Assert.Equal(4, count);
+        }
     }
 }
 

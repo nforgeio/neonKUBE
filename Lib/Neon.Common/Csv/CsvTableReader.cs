@@ -17,7 +17,7 @@ namespace Neon.Csv
     /// <para>
     /// This class makes it easy to process tabular data loaded from a CSV file,
     /// where the first row of the file contains the row header strings that
-    /// name the table columns.
+    /// identify the table columns.
     /// </para>
     /// <para>
     /// Initialize an instance by passing a <see cref="CsvReader" />, stream, string, or file path to the 
@@ -142,7 +142,7 @@ namespace Neon.Csv
 
         /// <summary>
         /// Returns the dictionary that case insensitvely maps a column name to 
-        /// the zero base index of the column.
+        /// the zero based index of the column.
         /// </summary>
         public Dictionary<string, int> ColumnMap
         {
@@ -158,6 +158,18 @@ namespace Neon.Csv
             row = reader.Read();
 
             return row;
+        }
+
+        /// <summary>
+        /// Returns an enumerator that returns the data rows from a <see cref="CsvTableReader"/>.
+        /// </summary>
+        /// <returns>The next row as a <see cref="List{String}"/>.</returns>
+        public IEnumerable<List<string>> Rows()
+        {
+            for (var row = ReadRow(); row != null; row = ReadRow())
+            {
+                yield return row;
+            }
         }
 
         /// <summary>

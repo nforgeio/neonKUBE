@@ -18,6 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Windows;
+
+using Newtonsoft.Json.Linq;
 
 namespace Neon.HyperV
 {
@@ -256,6 +259,10 @@ namespace Neon.HyperV
             {
                 powershell.Execute($"Resize-VHD -Path \"{tempDrivePath}\" -SizeBytes {diskSize}");
             }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
             finally
             {
                 // Restore the drive to its original file name.
@@ -277,11 +284,25 @@ namespace Neon.HyperV
                 command += $" -SwitchName \"{switchName}\"";
             }
 
-            powershell.Execute(command);
+            try
+            {
+                powershell.Execute(command);
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
 
             // We need to configure the VM's processor count and min/max memory settings.
 
-            powershell.Execute($"Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {minimumMemorySize} -MemoryMaximumBytes {memorySize}");
+            try
+            {
+                powershell.Execute($"Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {minimumMemorySize} -MemoryMaximumBytes {memorySize}");
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
 
             // Create and attach any additional drives as required.
 
@@ -308,8 +329,15 @@ namespace Neon.HyperV
 
                     var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
 
-                    powershell.Execute($"New-VHD -Path \"{drive.Path}\" {fixedOrDynamic} -SizeBytes {drive.Size} -BlockSizeBytes 1MB");
-                    powershell.Execute($"Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\"");
+                    try
+                    {
+                        powershell.Execute($"New-VHD -Path \"{drive.Path}\" {fixedOrDynamic} -SizeBytes {drive.Size} -BlockSizeBytes 1MB");
+                        powershell.Execute($"Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\"");
+                    }
+                    catch (Exception e)
+                    {
+                        throw new HyperVException(e.Message, e);
+                    }
 
                     diskNumber++;
                 }
@@ -320,7 +348,14 @@ namespace Neon.HyperV
 
             if (!checkpointDrives)
             {
-                powershell.Execute($"Set-VM -CheckpointType Disabled -Name \"{machineName}\"");
+                try
+                {
+                    powershell.Execute($"Set-VM -CheckpointType Disabled -Name \"{machineName}\"");
+                }
+                catch (Exception e)
+                {
+                    throw new HyperVException(e.Message, e);
+                }
             }
         }
 
@@ -338,7 +373,14 @@ namespace Neon.HyperV
 
             // Remove the machine along with any of of its virtual hard drive files.
 
-            powershell.Execute($"Remove-VM -Name \"{machineName}\" -Force");
+            try
+            {
+                powershell.Execute($"Remove-VM -Name \"{machineName}\" -Force");
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
 
             foreach (var drivePath in drives)
             {
@@ -354,15 +396,23 @@ namespace Neon.HyperV
         {
             CheckDisposed();
 
-            var machines = new List<VirtualMachine>();
-            var table    = powershell.ExecuteTable("Get-VM");
-
-            foreach (dynamic rawMachine in table)
+            try
             {
-                machines.Add(ExtractVM(rawMachine));
+                var machines = new List<VirtualMachine>();
+                var table    = powershell.ExecuteJson("Get-VM");
+
+                foreach (dynamic rawMachine in table)
+                {
+                    machines.Add(ExtractVM(rawMachine));
+                }
+
+                return machines;
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
             }
 
-            return machines;
         }
 
         /// <summary>
@@ -375,12 +425,19 @@ namespace Neon.HyperV
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
             CheckDisposed();
 
-            var machines = new List<VirtualMachine>();
-            var table = powershell.ExecuteTable($"Get-VM -Name \"{machineName}\"");
+            try
+            {
+                var machines = new List<VirtualMachine>();
+                var table    = powershell.ExecuteJson($"Get-VM -Name \"{machineName}\"");
 
-            Covenant.Assert(table.Count == 1);
+                Covenant.Assert(table.Count == 1);
 
-            return ExtractVM(table.First());
+                return ExtractVM(table.First());
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
         }
 
         /// <summary>
@@ -405,7 +462,14 @@ namespace Neon.HyperV
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
             CheckDisposed();
 
-            powershell.Execute($"Start-VM -Name \"{machineName}\"");
+            try
+            {
+                powershell.Execute($"Start-VM -Name \"{machineName}\"");
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
         }
 
         /// <summary>
@@ -417,7 +481,14 @@ namespace Neon.HyperV
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
             CheckDisposed();
 
-            powershell.Execute($"Stop-VM -Name \"{machineName}\"");
+            try
+            {
+                powershell.Execute($"Stop-VM -Name \"{machineName}\"");
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
         }
 
         /// <summary>
@@ -428,15 +499,23 @@ namespace Neon.HyperV
         /// <returns>The list of fully qualified virtual drive file paths.</returns>
         public List<string> GetVMDrives(string machineName)
         {
-            var drives = new List<string>();
-            var rawDrives = powershell.ExecuteTable($"Get-VMHardDiskDrive -VMName \"{machineName}\"");
-
-            foreach (dynamic rawDrive in rawDrives)
+            try
             {
-                drives.Add(rawDrive.Path);
+                var drives    = new List<string>();
+                var rawDrives = powershell.ExecuteJson($"Get-VMHardDiskDrive -VMName \"{machineName}\"");
+
+                foreach (dynamic rawDrive in rawDrives)
+                {
+                    drives.Add(rawDrive.Path);
+                }
+
+                return drives;
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
             }
 
-            return drives;
         }
 
         /// <summary>
@@ -445,44 +524,52 @@ namespace Neon.HyperV
         /// <returns>The list of switches.</returns>
         public List<VirtualSwitch> ListVMSwitches()
         {
-            var switches    = new List<VirtualSwitch>();
-            var rawSwitches = powershell.ExecuteTable($"Get-VMSwitch");
-
-            foreach (dynamic rawSwitch in rawSwitches)
+            try
             {
-                var virtualSwitch
-                    = new VirtualSwitch()
-                    {
-                        Name = rawSwitch.Name
-                    };
+                var switches    = new List<VirtualSwitch>();
+                var rawSwitches = powershell.ExecuteJson($"Get-VMSwitch");
 
-                switch (rawSwitch.SwitchType)
+                foreach (dynamic rawSwitch in rawSwitches)
                 {
-                    case "Internal":
+                    var virtualSwitch
+                        = new VirtualSwitch()
+                        {
+                            Name = rawSwitch.Name
+                        };
 
-                        virtualSwitch.Type = VirtualSwitchType.Internal;
-                        break;
+                    switch (rawSwitch.SwitchType)
+                    {
+                        case "Internal":
 
-                    case "External":
+                            virtualSwitch.Type = VirtualSwitchType.Internal;
+                            break;
 
-                        virtualSwitch.Type = VirtualSwitchType.External;
-                        break;
+                        case "External":
 
-                    case "Private":
+                            virtualSwitch.Type = VirtualSwitchType.External;
+                            break;
 
-                        virtualSwitch.Type = VirtualSwitchType.Private;
-                        break;
+                        case "Private":
 
-                    default:
+                            virtualSwitch.Type = VirtualSwitchType.Private;
+                            break;
 
-                        virtualSwitch.Type = VirtualSwitchType.Unknown;
-                        break;
+                        default:
+
+                            virtualSwitch.Type = VirtualSwitchType.Unknown;
+                            break;
+                    }
+
+                    switches.Add(virtualSwitch);
                 }
 
-                switches.Add(virtualSwitch);
+                return switches;
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
             }
 
-            return switches;
         }
 
         /// <summary>
@@ -542,106 +629,116 @@ namespace Neon.HyperV
                 throw new HyperVException($"Cannot identify a connected network adapter.");
             }
 
-            var adapters      = powershell.ExecuteTable($"Get-NetAdapter");
-            var targetAdapter = (string)null;
-
-            foreach (dynamic adapter in adapters)
+            try
             {
-                if (((string)adapter.Name).Equals(connectedAdapter.Name, StringComparison.InvariantCultureIgnoreCase))
+                var adapters      = powershell.ExecuteJson($"Get-NetAdapter");
+                var targetAdapter = (string)null;
+
+                foreach (dynamic adapter in adapters)
                 {
-                    targetAdapter = adapter.Name;
-                    break;
-                }
-            }
-
-            if (targetAdapter == null)
-            {
-                throw new HyperVException($"Internal Error: Cannot identify a connected network adapter.");
-            }
-
-            powershell.Execute($"New-VMSwitch -Name \"{switchName}\" -NetAdapterName \"{targetAdapter}\"");
-        }
-
-        /// <summary>
-        /// Returns the virtual network adapters attached to the name virtual machine.
-        /// </summary>
-        /// <param name="machineName">The machine name.</param>
-        /// <param name="waitForAddresses">Optionally waits until the adapter has been able to acquire at least one IPv4 address.</param>
-        /// <returns>The list of network adapters.</returns>
-        public List<VirtualNetworkAdapter> ListVMNetworkAdapters(string machineName, bool waitForAddresses = false)
-        {
-            var stopwatch = new Stopwatch();
-
-            while (true)
-            {
-                var adapters    = new List<VirtualNetworkAdapter>();
-                var rawAdapters = powershell.ExecuteTable($"Get-VMNetworkAdapter -VMName \"{machineName}\"");
-
-                adapters.Clear();
-
-                foreach (dynamic rawAdapter in rawAdapters)
-                {
-                    var adapter
-                        = new VirtualNetworkAdapter()
-                        {
-                            Name           = rawAdapter.Name,
-                            VMName         = rawAdapter.VMName,
-                            IsManagementOs = ((string)rawAdapter.IsManagementOs).Equals("True", StringComparison.InvariantCultureIgnoreCase),
-                            SwitchName     = rawAdapter.SwitchName,
-                            MacAddress     = rawAdapter.MacAddress,
-                            Status         = rawAdapter.Status
-                        };
-
-                    // Parse the IP addresses.
-
-                    string addresses = rawAdapter.IPAddresses;
-
-                    if (addresses.Length >= 2)
+                    if (((string)adapter.Name).Equals(connectedAdapter.Name, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        // Strip the curly braces off both ends of the field.
-
-                        addresses = addresses.Substring(1, addresses.Length - 2);
-
-                        foreach (var address in addresses.Split(','))
-                        {
-                            if (!string.IsNullOrEmpty(address))
-                            {
-                                var ipAddress = IPAddress.Parse(address.Trim());
-
-                                if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
-                                {
-                                    adapter.Addresses.Add(IPAddress.Parse(address.Trim()));
-                                }
-                            }
-                        }
-                    }
-
-                    adapters.Add(adapter);
-                }
-
-                var retry = false;
-
-                foreach (var adapter in adapters)
-                {
-                    if (adapter.Addresses.Count == 0 && waitForAddresses)
-                    {
-                        if (stopwatch.Elapsed >= TimeSpan.FromSeconds(30))
-                        {
-                            throw new TimeoutException($"Network adapter [{adapter.Name}] for virtual machine [{machineName}] was not able to acquire an IP address.");
-                        }
-
-                        retry = true;
+                        targetAdapter = adapter.Name;
                         break;
                     }
                 }
 
-                if (retry)
+                if (targetAdapter == null)
                 {
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
-                    continue;
+                    throw new HyperVException($"Internal Error: Cannot identify a connected network adapter.");
                 }
 
-                return adapters;
+                powershell.Execute($"New-VMSwitch -Name \"{switchName}\" -NetAdapterName \"{targetAdapter}\"");
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
+            }
+        }
+
+        /// <summary>
+        /// Returns the virtual network adapters attached to the named virtual machine.
+        /// </summary>
+        /// <param name="machineName">The machine name.</param>
+        /// <param name="waitForAddresses">Optionally waits until at least one adapter has been able to acquire at least one IPv4 address.</param>
+        /// <returns>The list of network adapters.</returns>
+        public List<VirtualNetworkAdapter> ListVMNetworkAdapters(string machineName, bool waitForAddresses = false)
+        {
+            try
+            {
+                var stopwatch = new Stopwatch();
+
+                while (true)
+                {
+                    var adapters    = new List<VirtualNetworkAdapter>();
+                    var rawAdapters = powershell.ExecuteJson($"Get-VMNetworkAdapter -VMName \"{machineName}\"");
+
+                    adapters.Clear();
+
+                    foreach (dynamic rawAdapter in rawAdapters)
+                    {
+                        var adapter
+                            = new VirtualNetworkAdapter()
+                            {
+                                Name           = rawAdapter.Name,
+                                VMName         = rawAdapter.VMName,
+                                IsManagementOs = ((string)rawAdapter.IsManagementOs).Equals("True", StringComparison.InvariantCultureIgnoreCase),
+                                SwitchName     = rawAdapter.SwitchName,
+                                MacAddress     = rawAdapter.MacAddress,
+                                Status         = (string)((JArray)rawAdapter.Status).FirstOrDefault()
+                            };
+
+                        // Parse the IP addresses.
+
+                        var addresses = (JArray)rawAdapter.IPAddresses;
+
+                        if (addresses.Count > 0)
+                        {
+                            foreach (string address in addresses)
+                            {
+                                if (!string.IsNullOrEmpty(address))
+                                {
+                                    var ipAddress = IPAddress.Parse(address.Trim());
+
+                                    if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+                                    {
+                                        adapter.Addresses.Add(IPAddress.Parse(address.Trim()));
+                                    }
+                                }
+                            }
+                        }
+
+                        adapters.Add(adapter);
+                    }
+
+                    var retry = false;
+
+                    foreach (var adapter in adapters)
+                    {
+                        if (adapter.Addresses.Count == 0 && waitForAddresses)
+                        {
+                            if (stopwatch.Elapsed >= TimeSpan.FromSeconds(30))
+                            {
+                                throw new TimeoutException($"Network adapter [{adapter.Name}] for virtual machine [{machineName}] was not able to acquire an IP address.");
+                            }
+
+                            retry = true;
+                            break;
+                        }
+                    }
+
+                    if (retry)
+                    {
+                        Thread.Sleep(TimeSpan.FromSeconds(1));
+                        continue;
+                    }
+
+                    return adapters;
+                }
+            }
+            catch (Exception e)
+            {
+                throw new HyperVException(e.Message, e);
             }
         }
     }
