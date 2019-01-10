@@ -35,7 +35,7 @@ namespace NeonCli
 
             switch (Program.OSProperties.TargetOS)
             {
-                case TargetOS.Ubuntu_16_04:
+                case TargetOS.CoreOS:
 
                     if (!response.OutputText.Contains("Ubuntu 16.04"))
                     {
@@ -169,7 +169,7 @@ TCPKeepAlive yes
         /// </summary>
         /// <param name="node">The server to be updated.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
-        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
+        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
         {
             node.Status = "environment variables";
 
@@ -312,7 +312,7 @@ TCPKeepAlive yes
         /// <param name="node">The target hive node.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition, bool shutdown = false)
+        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition, bool shutdown = false)
         {
             if (node.FileExists($"{HiveHostFolders.State}/setup/prepared"))
             {
@@ -327,7 +327,7 @@ TCPKeepAlive yes
             //-----------------------------------------------------------------
             // Package manager configuration.
 
-            if (!hiveDefinition.HiveNode.AllowPackageManagerIPv6)
+            if (!hiveDefinition.NodeOptions.AllowPackageManagerIPv6)
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
                 // with the package mirrors, since IPv6 often doesn't work.
@@ -338,7 +338,7 @@ TCPKeepAlive yes
 
             // Configure [apt] to retry.
 
-            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{hiveDefinition.HiveNode.PackageManagerRetries}\";");
+            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{hiveDefinition.NodeOptions.PackageManagerRetries}\";");
             node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries");
 
             //-----------------------------------------------------------------

@@ -110,9 +110,9 @@ namespace Neon.Kube
         /// initialized to their default values.
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
-        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(HiveDefinition hiveDefinition)
+        public void Validate(ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
@@ -123,17 +123,17 @@ namespace Neon.Kube
 
             if (!hiveDefinition.Network.StaticIP)
             {
-                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to XenServer.");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to XenServer.");
             }
 
             if (string.IsNullOrEmpty(HostXvaUri) || !Uri.TryCreate(HostXvaUri, UriKind.Absolute, out Uri uri))
             {
-                throw new HiveDefinitionException($"[{nameof(XenServerOptions)}.{nameof(HostXvaUri)}] is required when deploying to XenServer.");
+                throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(HostXvaUri)}] is required when deploying to XenServer.");
             }
 
             if (string.IsNullOrEmpty(StorageRepository))
             {
-                throw new HiveDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
+                throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
             }
 
             if (string.IsNullOrEmpty(OsdStorageRepository))

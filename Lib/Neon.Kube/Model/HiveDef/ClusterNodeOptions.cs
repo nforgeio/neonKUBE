@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HiveNodeOptions.cs
+// FILE:	    ClusterNodeOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,11 +28,10 @@ namespace Neon.Kube
     /// <summary>
     /// Describes hive host node options.
     /// </summary>
-    public class HiveNodeOptions
+    public class ClusterNodeOptions
     {
-        private const TargetOS      defaultOperatingSystem         = TargetOS.Ubuntu_16_04;
+        private const TargetOS      defaultOperatingSystem         = TargetOS.CoreOS;
         private const AuthMethods   defaultSshAuth                 = AuthMethods.Tls;
-        private const OsUpgrade     defaultUpgrade                 = OsUpgrade.Full;
         private const int           defaultPasswordLength          = 20;
         private const bool          defaultPasswordAuth            = true;
         private const bool          defaultEnableVolumeNetshare    = true;
@@ -41,20 +40,11 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the target host operating system.  This currently defaults
-        /// to <see cref="TargetOS.Ubuntu_16_04"/>.
+        /// to <see cref="TargetOS.CoreOS"/>.
         /// </summary>
         [JsonProperty(PropertyName = "OperatingSystem", Required = Required.Default)]
         [DefaultValue(defaultOperatingSystem)]
         public TargetOS OperatingSystem { get; set; } = defaultOperatingSystem;
-
-        /// <summary>
-        /// Specifies whether the host node operating system should be upgraded
-        /// during hive preparation.  This defaults to <see cref="OsUpgrade.Full"/>
-        /// to pick up most criticial updates.
-        /// </summary>
-        [JsonProperty(PropertyName = "Upgrade", Required = Required.Default)]
-        [DefaultValue(defaultUpgrade)]
-        public OsUpgrade Upgrade { get; set; } = defaultUpgrade;
 
         /// <summary>
         /// <para>
@@ -102,13 +92,13 @@ namespace Neon.Kube
         /// initialized to their default values.
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
-        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(HiveDefinition hiveDefinition)
+        public void Validate(ClusterDefinition hiveDefinition)
         {
             if (PasswordLength > 0 && PasswordLength < 8)
             {
-                throw new HiveDefinitionException($"[{nameof(HiveNodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
+                throw new ClusterDefinitionException($"[{nameof(ClusterNodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
             }
         }
     }

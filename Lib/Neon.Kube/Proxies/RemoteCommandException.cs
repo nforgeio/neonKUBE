@@ -14,8 +14,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Consul;
-
 using Neon.Common;
 using Neon.IO;
 using Neon.Net;

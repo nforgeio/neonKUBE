@@ -81,18 +81,10 @@ namespace Neon.Kube
         public string Username { get; set; }
 
         /// <summary>
-        /// Specifies whether communication with the hive should be made via
-        /// the VPN or directly (the default).
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool ViaVpn { get; set; }
-
-        /// <summary>
         /// The hive definition.
         /// </summary>
         [JsonProperty(PropertyName = "Definition", Required = Required.Always)]
-        public HiveDefinition Definition { get; set; }
+        public ClusterDefinition Definition { get; set; }
 
         /// <summary>
         /// Indicates that the credentials are not fully initialized.  This will be <c>true</c> when
@@ -177,13 +169,6 @@ namespace Neon.Kube
         public string SshHiveHostPublicKey { get; set; }
 
         /// <summary>
-        /// The HashiCorp Vault credentials.
-        /// </summary>
-        [JsonProperty(PropertyName = "VaultCredentials", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public VaultCredentials VaultCredentials { get; set;}
-
-        /// <summary>
         /// Username for the Ceph dashboard.
         /// </summary>
         [JsonProperty(PropertyName = "CephDashboardUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -247,28 +232,11 @@ namespace Neon.Kube
         public string SwarmWorkerToken { get; set; }
 
         /// <summary>
-        /// The VPN credentials if a management VPN is enabled for the hive.
-        /// </summary>
-        [JsonProperty(PropertyName = "VpnCredentials", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public VpnCredentials VpnCredentials { get; set; }
-
-        /// <summary>
         /// Ceph Storage Cluster configuration.
         /// </summary>
         [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public CephConfig Ceph { get; set; }
-
-        /// <summary>
-        /// Returns <c>true</c> if the login includes root HashiCorp Vault credentials.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool HasVaultRootCredentials
-        {
-            get { return VaultCredentials != null && !string.IsNullOrEmpty(VaultCredentials.RootToken); }
-        }
 
         /// <summary>
         /// Used internally to indicate that any local machine initialization has already
@@ -319,11 +287,6 @@ namespace Neon.Kube
             SwarmWorkerToken      = null;
             SshHiveHostPrivateKey = null;
             Ceph                  = null;
-
-            if (VpnCredentials != null)
-            {
-                VpnCredentials.CaZipKey = null;
-            }
 
             if (HiveCertificate != null)
             {

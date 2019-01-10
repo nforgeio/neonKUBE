@@ -225,26 +225,6 @@ namespace Neon.Kube
         public const string ContainerSecretsFolder = "/var/run/secrets";
 
         /// <summary>
-        /// Returns the hive host ports to be published by the <b>neon-proxy-public</b> service.
-        /// </summary>
-        public static readonly HiveProxyPorts PublicProxyPorts =
-            new HiveProxyPorts(
-                range: new HiveProxyPortRange(HiveHostPorts.ProxyPublicFirst, HiveHostPorts.ProxyPublicLast),
-                ports: new List<int>()
-                {
-                    80,
-                    443
-                });
-
-        /// <summary>
-        /// Returns the hive host ports to be published by the <b>neon-proxy-private</b> service.
-        /// </summary>
-        public static readonly HiveProxyPorts PrivateProxyPorts =
-            new HiveProxyPorts(
-                range: new HiveProxyPortRange(HiveHostPorts.ProxyPrivateFirst, HiveHostPorts.ProxyPrivateLast),
-                ports: null);
-
-        /// <summary>
         /// The default username for component dashboards and management tools (like Ceph and RabbitMQ).
         /// </summary>
         public const string DefaultUsername = "sysadmin";

@@ -81,7 +81,7 @@ namespace Neon.Kube
 
         private const string defaultSwitchName = "neonHIVE";
 
-        private HiveProxy                       hive;
+        private ClusterProxy                    hive;
         private SetupController<NodeDefinition> controller;
         private bool                            forceVmOverwrite;
         private string                          driveTemplatePath;
@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVDevHostingManager(HiveProxy hive, string logFolder = null)
+        public HyperVDevHostingManager(ClusterProxy hive, string logFolder = null)
         {
             hive.HostingManager = this;
 
@@ -119,7 +119,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(HiveDefinition hiveDefinition)
+        public override void Validate(ClusterDefinition hiveDefinition)
         {
             // Identify the OSD Bluestore block device for OSD nodes.
 
@@ -171,7 +171,7 @@ namespace Neon.Kube
 
                 if (node.Labels.ComputeRamMB == 0)
                 {
-                    node.Labels.ComputeRamMB = (int)(HiveDefinition.ValidateSize(hive.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
+                    node.Labels.ComputeRamMB = (int)(ClusterDefinition.ValidateSize(hive.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
                 }
 
                 if (node.Labels.StorageCapacityGB == 0)

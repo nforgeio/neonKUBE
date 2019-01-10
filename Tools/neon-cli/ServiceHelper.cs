@@ -39,7 +39,7 @@ namespace NeonCli
         /// <summary>
         /// Use this argument to specify the target image in a <b>docker service create ...</b>
         /// or <b>docker run ...</b> command that will eventually be passed to one of 
-        /// <see cref="StartService(HiveProxy, string, string, IBashCommandFormatter, RunOptions)"/> or 
+        /// <see cref="StartService(ClusterProxy, string, string, IBashCommandFormatter, RunOptions)"/> or 
         /// <see cref="StartContainer(SshProxy{NodeDefinition}, string, string, RunOptions, IBashCommandFormatter[])"/> so
         /// those methods can generate a more useful script that includes a parameter
         /// so that images and services can be easily upgraded.
@@ -156,7 +156,7 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void StartService(HiveProxy hive, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void StartService(ClusterProxy hive, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(serviceName));
@@ -235,7 +235,7 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void AddServiceStartSteps(HiveProxy hive, ConfigStepList steps, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void AddServiceStartSteps(ClusterProxy hive, ConfigStepList steps, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(steps != null);
@@ -360,7 +360,7 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void AddContainerStartSteps(HiveProxy hive, ConfigStepList steps, SshProxy<NodeDefinition> node, string containerName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void AddContainerStartSteps(ClusterProxy hive, ConfigStepList steps, SshProxy<NodeDefinition> node, string containerName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(steps != null);

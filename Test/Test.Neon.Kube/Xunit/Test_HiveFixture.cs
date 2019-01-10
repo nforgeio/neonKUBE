@@ -25,8 +25,8 @@ namespace TestHive
 {
     public class Test_HiveFixture : IClassFixture<HiveFixture>
     {
-        private HiveFixture hiveFixture;
-        private HiveProxy hive;
+        private HiveFixture     hiveFixture;
+        private ClusterProxy    hive;
 
         public Test_HiveFixture(HiveFixture hive)
         {

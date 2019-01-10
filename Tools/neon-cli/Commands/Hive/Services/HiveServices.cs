@@ -40,13 +40,13 @@ namespace NeonCli
     /// </summary>
     public class HiveServices
     {
-        private HiveProxy hive;
+        private ClusterProxy hive;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
-        public HiveServices(HiveProxy hive)
+        public HiveServices(ClusterProxy hive)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 
@@ -641,7 +641,7 @@ namespace NeonCli
                         "--env", $"RABBITMQ_VM_MEMORY_HIGH_WATERMARK={hive.Definition.HiveMQ.RamHighWatermark}",
                         hipeCompileArgs,
                         managementPluginArgs,
-                        "--env", $"RABBITMQ_DISK_FREE_LIMIT={HiveDefinition.ValidateSize(hive.Definition.HiveMQ.DiskFreeLimit, typeof(HiveMQOptions), nameof(hive.Definition.HiveMQ.DiskFreeLimit))}",
+                        "--env", $"RABBITMQ_DISK_FREE_LIMIT={ClusterDefinition.ValidateSize(hive.Definition.HiveMQ.DiskFreeLimit, typeof(HiveMQOptions), nameof(hive.Definition.HiveMQ.DiskFreeLimit))}",
                         //"--env", $"RABBITMQ_SSL_CERTFILE=/etc/neon/certs/hive.crt",
                         //"--env", $"RABBITMQ_SSL_KEYFILE=/etc/neon/certs/hive.key",
                         "--env", $"ERL_EPMD_PORT={HiveHostPorts.HiveMQEPMD}",
@@ -651,7 +651,7 @@ namespace NeonCli
                         "--publish", $"{HiveHostPorts.HiveMQAMQP}:{HiveHostPorts.HiveMQAMQP}",
                         "--publish", $"{HiveHostPorts.HiveMQDIST}:{HiveHostPorts.HiveMQDIST}",
                         "--publish", $"{HiveHostPorts.HiveMQManagement}:{HiveHostPorts.HiveMQManagement}",
-                        "--memory", HiveDefinition.ValidateSize(hive.Definition.HiveMQ.RamLimit, typeof(HiveMQOptions), nameof(hive.Definition.HiveMQ.RamLimit)),
+                        "--memory", ClusterDefinition.ValidateSize(hive.Definition.HiveMQ.RamLimit, typeof(HiveMQOptions), nameof(hive.Definition.HiveMQ.RamLimit)),
                         "--restart", "always",
                         ServiceHelper.ImagePlaceholderArg));
 

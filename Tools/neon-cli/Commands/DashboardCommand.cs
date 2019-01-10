@@ -53,9 +53,9 @@ dashboard names are reserved for use as commands:
 
     get, list, ls, rm, remove, set
 ";
-        private HiveLogin       hiveLogin;
-        private HiveProxy       hive;
-        private HashSet<string> reserved;
+        private HiveLogin           hiveLogin;
+        private ClusterProxy        hive;
+        private HashSet<string>     reserved;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -85,7 +85,7 @@ dashboard names are reserved for use as commands:
         public override void Run(CommandLine commandLine)
         {
             hiveLogin = Program.ConnectHive();
-            hive     = new HiveProxy(hiveLogin);
+            hive     = new ClusterProxy(hiveLogin);
             reserved = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
             {
                 "get",
@@ -155,7 +155,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            if (!HiveDefinition.IsValidName(name) || reserved.Contains(name))
+            if (!ClusterDefinition.IsValidName(name) || reserved.Contains(name))
             {
                 Console.Error.WriteLine($"*** ERROR: [{name}] is not a valid dashboard name.");
                 Program.Exit(1);
@@ -207,7 +207,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            if (!HiveDefinition.IsValidName(name) || reserved.Contains(name))
+            if (!ClusterDefinition.IsValidName(name) || reserved.Contains(name))
             {
                 Console.Error.WriteLine($"*** ERROR: [{name}] is not a valid dashboard name.");
                 Program.Exit(1);
@@ -242,7 +242,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            if (!HiveDefinition.IsValidName(name) || reserved.Contains(name))
+            if (!ClusterDefinition.IsValidName(name) || reserved.Contains(name))
             {
                 Console.Error.WriteLine($"*** ERROR: [{name}] is not a valid dashboard name.");
                 Program.Exit(1);

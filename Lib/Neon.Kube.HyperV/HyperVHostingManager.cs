@@ -51,7 +51,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private HiveProxy hive;
+        private ClusterProxy    hive;
 
         /// <summary>
         /// Constructor.
@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVHostingManager(HiveProxy hive, string logFolder = null)
+        public HyperVHostingManager(ClusterProxy hive, string logFolder = null)
         {
             hive.HostingManager = this;
 
@@ -78,7 +78,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(HiveDefinition hiveDefinition)
+        public override void Validate(ClusterDefinition hiveDefinition)
         {
             // Identify the OSD Bluestore block device for OSD nodes.
 

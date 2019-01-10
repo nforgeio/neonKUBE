@@ -40,7 +40,7 @@ namespace NeonCli
             /// </summary>
             /// <param name="name">The local file name.</param>
             /// <param name="hasVariables">
-            /// Indicates whether the file references variables from a <see cref="HiveDefinition"/>
+            /// Indicates whether the file references variables from a <see cref="ClusterDefinition"/>
             /// that need to be expanded.
             /// </param>
             public File(string name, bool hasVariables = false)
@@ -79,7 +79,7 @@ namespace NeonCli
             }
 
             /// <summary>
-            /// Indicates whether the file references variables from a <see cref="HiveDefinition"/>
+            /// Indicates whether the file references variables from a <see cref="ClusterDefinition"/>
             /// that need to be expanded.
             /// </summary>
             public bool HasVariables { get; private set; }

@@ -1200,7 +1200,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 }
                 else if (HiveHelper.Hive != null)
                 {
-                    return OSProperties.For(HiveHelper.Hive.Definition.HiveNode.OperatingSystem);
+                    return OSProperties.For(HiveHelper.Hive.Definition.NodeOptions.OperatingSystem);
                 }
                 else
                 {
@@ -1443,7 +1443,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 switch (Program.OSProperties.TargetOS)
                 {
-                    case TargetOS.Ubuntu_16_04:
+                    case TargetOS.CoreOS:
 
                         return ResourceFiles.Root.GetFolder("Ubuntu-16.04");
 
@@ -1463,7 +1463,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 switch (Program.OSProperties.TargetOS)
                 {
-                    case TargetOS.Ubuntu_16_04:
+                    case TargetOS.CoreOS:
 
                         return ServiceManager.Systemd;
 

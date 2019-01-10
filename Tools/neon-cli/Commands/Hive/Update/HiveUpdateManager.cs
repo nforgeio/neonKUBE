@@ -74,7 +74,7 @@ namespace NeonCli
         /// <param name="imageTag">Optionally overrides the default image tag.</param>
         /// <returns>The number of pending updates.</returns>
         /// <exception cref="HiveException">Thrown if there was an error selecting the updates.</exception>
-        public static int AddHiveUpdateSteps(HiveProxy hive, SetupController<NodeDefinition> controller, out bool restartRequired, bool servicesOnly = false, int serviceUpdateParallism = 1, string imageTag = null)
+        public static int AddHiveUpdateSteps(ClusterProxy hive, SetupController<NodeDefinition> controller, out bool restartRequired, bool servicesOnly = false, int serviceUpdateParallism = 1, string imageTag = null)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 
@@ -313,7 +313,7 @@ namespace NeonCli
         /// <param name="componentName">The service or container name.</param>
         /// <param name="imageTag"></param>
         /// <returns>The fully qualified image or <c>null</c> if there is no known image for the service or container.</returns>
-        private static string GetUpdateImage(HiveProxy hive, HiveComponentInfo componentInfo, string componentName, string imageTag = null)
+        private static string GetUpdateImage(ClusterProxy hive, HiveComponentInfo componentInfo, string componentName, string imageTag = null)
         {
             if (!componentInfo.ComponentToImage.TryGetValue(componentName, out var imageName))
             {
@@ -421,7 +421,7 @@ namespace NeonCli
         /// In this case, the current version will remain.
         /// </note>
         /// </remarks>
-        public static void AddDockerUpdateSteps(HiveProxy hive, SetupController<NodeDefinition> controller, string dockerVersion)
+        public static void AddDockerUpdateSteps(ClusterProxy hive, SetupController<NodeDefinition> controller, string dockerVersion)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(dockerVersion));
@@ -506,7 +506,7 @@ namespace NeonCli
         /// <param name="hive">The target hive.</param>
         /// <param name="node">The target node.</param>
         /// <param name="dockerPackageUri">The Docker Debian package URI.</param>
-        private static void UpdateDocker(HiveProxy hive, SshProxy<NodeDefinition> node, string dockerPackageUri)
+        private static void UpdateDocker(ClusterProxy hive, SshProxy<NodeDefinition> node, string dockerPackageUri)
         {
             try
             {
@@ -559,7 +559,7 @@ namespace NeonCli
         /// to stablize.  This defaults to <see cref="Program.WaitSeconds"/>.
         /// </param>
         public static void AddRestartClusterStep(
-            HiveProxy                           hive, 
+            ClusterProxy                           hive, 
             SetupController<NodeDefinition>     controller, 
             Func<NodeDefinition, bool>          predicate    = null, 
             string                              stepLabel    = null, 

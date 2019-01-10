@@ -86,15 +86,6 @@ namespace Neon.Kube
         public string Version { get; set; } = "latest";
 
         /// <summary>
-        /// Specifies the Docker Registries and the required credentials that will
-        /// be made available to the hive.  Note that the Docker public registry
-        /// will always be available to new hives.
-        /// </summary>
-        [JsonProperty(PropertyName = "Registries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public List<RegistryCredentials> Registries { get; set; } = new List<RegistryCredentials>();
-
-        /// <summary>
         /// Optionally indicates that local pull-thru Docker registry caches are to be deployed
         /// on the hive manager nodes.  This defaults to <c>true</c>.
         /// </summary>
@@ -171,7 +162,7 @@ namespace Neon.Kube
         /// hosting environment.
         /// </summary>
         /// <param name="hiveDefinition">The current hive definition.</param>
-        public bool GetAvoidIngressNetwork(HiveDefinition hiveDefinition)
+        public bool GetAvoidIngressNetwork(ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
@@ -235,14 +226,13 @@ namespace Neon.Kube
         /// initialized to their default values.
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
-        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(HiveDefinition hiveDefinition)
+        public void Validate(ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
-            Version             = Version ?? "latest";
-            Registries = Registries ?? new List<RegistryCredentials>();
+            Version = Version ?? "latest";
 
             if (RestartDelaySeconds < 0)
             {
@@ -265,7 +255,7 @@ namespace Neon.Kube
 
                 if (!version.EndsWith("-ce"))
                 {
-                    throw new HiveDefinitionException($"[{nameof(DockerOptions)}.{Version}] does not specify a Docker community edition.  neonHIVE only supports Docker Community Edition at this time.");
+                    throw new ClusterDefinitionException($"[{nameof(DockerOptions)}.{Version}] does not specify a Docker community edition.  neonHIVE only supports Docker Community Edition at this time.");
                 }
             }
 
@@ -316,15 +306,6 @@ namespace Neon.Kube
                 }
             }
 #endif
-            foreach (var registry in Registries)
-            {
-                var hostname = registry.Registry;
-
-                if (string.IsNullOrEmpty(hostname) || !HiveDefinition.DnsHostRegex.IsMatch(hostname))
-                {
-                    throw new HiveDefinitionException($"[{nameof(DockerOptions)}.{nameof(Registries)}] includes a [{nameof(Neon.Kube.RegistryCredentials.Registry)}={hostname}] is not a valid registry hostname.");
-                }
-            }
         }
 
         /// <summary>
@@ -332,7 +313,6 @@ namespace Neon.Kube
         /// </summary>
         public void ClearSecrets()
         {
-            Registries.Clear();
         }
     }
 }

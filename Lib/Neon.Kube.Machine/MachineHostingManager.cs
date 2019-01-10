@@ -52,7 +52,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private HiveProxy                       hive;
+        private ClusterProxy                    hive;
         private SetupController<NodeDefinition> controller;
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public MachineHostingManager(HiveProxy hive, string logFolder = null)
+        public MachineHostingManager(ClusterProxy hive, string logFolder = null)
         {
             hive.HostingManager = this;
 
@@ -86,7 +86,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(HiveDefinition hiveDefinition)
+        public override void Validate(ClusterDefinition hiveDefinition)
         {
             // Ensure that the OSD Bluestore block device have been specified.
 
@@ -96,7 +96,7 @@ namespace Neon.Kube
                 {
                     if (string.IsNullOrEmpty(node.Labels.CephOSDDevice))
                     {
-                        throw new HiveDefinitionException($"Hosting environment [{HostingEnvironments.Machine}] requires that the OSD node [{node.Name}] explicitly set [{nameof(NodeLabels)}.{nameof(NodeLabels.CephOSDDevice)}] to the target OSD block device (like: [/dev/sdb]).");
+                        throw new ClusterDefinitionException($"Hosting environment [{HostingEnvironments.Machine}] requires that the OSD node [{node.Name}] explicitly set [{nameof(NodeLabels)}.{nameof(NodeLabels.CephOSDDevice)}] to the target OSD block device (like: [/dev/sdb]).");
                     }
                 }
             }

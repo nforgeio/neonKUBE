@@ -82,7 +82,7 @@ Note that THIS CAN BE DANGEROUS, so be sure you know what you're doing.
             }
 
             var hiveLogin = Program.ConnectHive();
-            var hive      = new HiveProxy(hiveLogin);
+            var hive      = new ClusterProxy(hiveLogin);
 
             if (commandLine.Arguments.Length != 1)
             {

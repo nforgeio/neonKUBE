@@ -61,7 +61,7 @@ ARGUMENTS:
 
             // Parse and validate the hive definition.
 
-            HiveDefinition.FromFile(commandLine.Arguments[0], strict: true);
+            ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
 
             Console.WriteLine("");
             Console.WriteLine("*** The hive definition is OK.");

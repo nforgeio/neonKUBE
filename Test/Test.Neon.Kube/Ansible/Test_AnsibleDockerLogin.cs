@@ -38,7 +38,7 @@ namespace TestHive
     public class Test_AnsibleDockerLogin : IClassFixture<HiveFixture>
     {
         private HiveFixture     hiveFixture;
-        private HiveProxy       hive;
+        private ClusterProxy    hive;
 
         public Test_AnsibleDockerLogin(HiveFixture fixture)
         {

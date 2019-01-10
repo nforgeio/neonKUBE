@@ -506,39 +506,6 @@ namespace Neon.Kube
         public string Broadcast { get; set; } = null;
 
         /// <summary>
-        /// <para>
-        /// The network MTU to be used when configuring the Docker <b>neon=-public</b>
-        /// and <b>neon-private</b> networks.  This looks like it defaults to 1500 when
-        /// a Docker cluster is provisioned but this may be too large when hive hosts are
-        /// deployed as Hyper-V or XEN virtual machines (and perhaps in cloud environments
-        /// as well).
-        /// </para>
-        /// <para>
-        /// The default value is set to the more conservative <b>1400</b> value.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "MTU", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(1400)]
-        public int MTU { get; set; } = 1400;
-
-        /// <summary>
-        /// <para>
-        /// The network MTU to be used when configuring the Docker <b>ingress</b>
-        /// network.  This looks like it defaults to 1500 when a Docker cluster is
-        /// provisioned but this appears to be too large when hive hosts are deployed
-        /// as Hyper-V or XEN virtual machines (and perhaps in cloud environments as
-        /// well).
-        /// </para>
-        /// <para>
-        /// The default value of <b>1400</b> value should be small enough to allow 
-        /// additional VXLAN headers to be added to packets in these environments.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "IngressMTU", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(1400)]
-        public int IngressMTU { get; set; } = 1400;
-
-        /// <summary>
         /// Specifies the subnet to configure for the Docker <b>ingress</b> network.
         /// This defaults to <b>10.255.0.0/16</b>.
         /// </summary>
@@ -586,9 +553,9 @@ namespace Neon.Kube
         /// initialized to their default values.
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
-        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(HiveDefinition hiveDefinition)
+        public void Validate(ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
@@ -596,21 +563,21 @@ namespace Neon.Kube
 
             if (!NetworkCidr.TryParse(PublicSubnet, out var cidr))
             {
-                throw new HiveDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PublicSubnet)}={PublicSubnet}].");
+                throw new ClusterDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PublicSubnet)}={PublicSubnet}].");
             }
 
             subnets.Add(new SubnetDefinition(nameof(PublicSubnet), cidr));
 
             if (!NetworkCidr.TryParse(PrivateSubnet, out cidr))
             {
-                throw new HiveDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PrivateSubnet)}={PrivateSubnet}].");
+                throw new ClusterDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PrivateSubnet)}={PrivateSubnet}].");
             }
 
             subnets.Add(new SubnetDefinition(nameof(PrivateSubnet), cidr));
 
             if (PublicSubnet == PrivateSubnet)
             {
-                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PublicSubnet)}] cannot be the same as [{nameof(PrivateSubnet)}] .");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PublicSubnet)}] cannot be the same as [{nameof(PrivateSubnet)}] .");
             }
 
             if (Nameservers == null || Nameservers.Length == 0)
@@ -622,7 +589,7 @@ namespace Neon.Kube
             {
                 if (!IPAddress.TryParse(nameserver, out var address))
                 {
-                    throw new HiveDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
+                    throw new ClusterDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
                 }
             }
 
@@ -630,7 +597,7 @@ namespace Neon.Kube
 
             if (!Uri.TryCreate(PdnsRecursorPackageUri, UriKind.Absolute, out var uri3))
             {
-                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsRecursorPackageUri)}={PdnsRecursorPackageUri}] is not a valid URI.");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsRecursorPackageUri)}={PdnsRecursorPackageUri}] is not a valid URI.");
             }
 
             if (hiveDefinition.Hosting.IsCloudProvider)
@@ -644,12 +611,12 @@ namespace Neon.Kube
 
                 if (!NetworkCidr.TryParse(CloudSubnet, out var cloudSubnetCidr))
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] is not a valid IPv4 subnet.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] is not a valid IPv4 subnet.");
                 }
 
                 if (cloudSubnetCidr.PrefixLength != 21)
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] prefix length is not valid.  Only [/21] subnets are currently supported.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] prefix length is not valid.  Only [/21] subnets are currently supported.");
                 }
 
                 // Compute [NodeSubnet] by splitting [HiveSubnet] in quarters and taking the
@@ -667,36 +634,7 @@ namespace Neon.Kube
 
                 if (hiveDefinition.Nodes.Count() > nodesSubnetCidr.AddressCount - 4)
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] subnet not large enough for the [{hiveDefinition.Nodes.Count()}] node addresses.");
-                }
-
-                // Verify/Compute VPN properties.
-
-                if (hiveDefinition.Vpn.Enabled)
-                {
-                    // Compute [CloudVpnSubnet] by taking the second quarter of [HiveSubnet].
-
-                    NetworkCidr cloudVpnCidr;
-
-                    cloudVpnCidr   = new NetworkCidr(nodesSubnetCidr.NextAddress, cloudSubnetCidr.PrefixLength + 2);
-                    CloudVpnSubnet = cloudVpnCidr.ToString();
-
-                    // Compute [CloudVNetSubnet] by taking the first half of [CloudSubnet],
-                    // which includes both [NodesSubnet] and [CloudVpnSubnet].
-
-                    NetworkCidr cloudVNetSubnet;
-
-                    cloudVNetSubnet = new NetworkCidr(cloudSubnetCidr.Address, cloudSubnetCidr.PrefixLength + 1);
-                    CloudVNetSubnet = cloudVNetSubnet.ToString();
-
-                    // Compute [VpnPoolSubnet] by taking the upper half of [HiveSubnet].
-
-                    NetworkCidr vpnPoolCidr;
-
-                    vpnPoolCidr   = new NetworkCidr(cloudVpnCidr.NextAddress, 22);
-                    VpnPoolSubnet = vpnPoolCidr.ToString();
-
-                    subnets.Add(new SubnetDefinition(nameof(VpnPoolSubnet), vpnPoolCidr));
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] subnet not large enough for the [{hiveDefinition.Nodes.Count()}] node addresses.");
                 }
             }
             else
@@ -705,7 +643,7 @@ namespace Neon.Kube
 
                 if (!NetworkCidr.TryParse(PremiseSubnet, out var premiseCidr))
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
                 }
 
                 // Verify [Gateway]
@@ -720,12 +658,12 @@ namespace Neon.Kube
 
                 if (!IPAddress.TryParse(Gateway, out var gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
                 }
 
                 if (!premiseCidr.Contains(gateway))
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
                 }
 
                 // Verify [Broadcast]
@@ -740,63 +678,24 @@ namespace Neon.Kube
 
                 if (!IPAddress.TryParse(Broadcast, out var broadcast) || broadcast.AddressFamily != AddressFamily.InterNetwork)
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] is not a valid IPv4 address.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] is not a valid IPv4 address.");
                 }
 
                 if (!premiseCidr.Contains(broadcast))
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
                 }
 
                 // Verify [NodesSubnet].
 
                 if (!NetworkCidr.TryParse(NodesSubnet, out var nodesSubnetCidr))
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not a valid IPv4 subnet.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not a valid IPv4 subnet.");
                 }
 
                 if (!premiseCidr.Contains(nodesSubnetCidr))
                 {
-                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
-                }
-
-                // Verify VPN properties for on-premise environments.
-
-                if (hiveDefinition.Vpn.Enabled)
-                {
-                    if (hiveDefinition.Hosting.IsOnPremiseProvider)
-                    {
-                        if (string.IsNullOrEmpty(ManagerPublicAddress))
-                        {
-                            throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagerPublicAddress)}] is required for on-premise deployments that enable VPN.  Set the public IP address or FQDN of your hive router.");
-                        }
-                    }
-
-                    // Verify [VpnPoolSubnet].
-
-                    if (!NetworkCidr.TryParse(VpnPoolSubnet, out var vpnPoolCidr))
-                    {
-                        throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is not a valid subnet.");
-                    }
-
-                    if (vpnPoolCidr.PrefixLength > 23)
-                    {
-                        throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is too small.  The subnet prefix length cannot be longer than [23].");
-                    }
-
-                    subnets.Add(new SubnetDefinition(nameof(VpnPoolSubnet), vpnPoolCidr));
-
-                    if (nodesSubnetCidr.Overlaps(vpnPoolCidr))
-                    {
-                        throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] overlap.");
-                    }
-
-                    subnets.Add(new SubnetDefinition(nameof(NodesSubnet), nodesSubnetCidr));
-
-                    if (!premiseCidr.Contains(vpnPoolCidr))
-                    {
-                        throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
-                    }
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
                 }
             }
 
@@ -813,38 +712,26 @@ namespace Neon.Kube
 
                     if (subnet.Cidr.Overlaps(subnetTest.Cidr))
                     {
-                        throw new HiveDefinitionException($"[{subnet.Name}={subnet.Cidr}] and [{subnetTest.Name}={subnetTest.Cidr}] overlap.");
+                        throw new ClusterDefinitionException($"[{subnet.Name}={subnet.Cidr}] and [{subnetTest.Name}={subnetTest.Cidr}] overlap.");
                     }
                 }
             }
 
-            // Verify the [NetworkMTU] settings.
-
-            if (MTU < 256)
-            {
-                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{MTU}={MTU}] cannot be less than [256].");
-            }
-
             // Verify the ingress network settings.
-
-            if (IngressMTU < 256)
-            {
-                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{IngressMTU}={IngressMTU}] cannot be less than [256].");
-            }
 
             if (!NetworkCidr.TryParse(IngressSubnet, out var ingressSubnet))
             {
-                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(IngressSubnet)}={IngressSubnet}] is not a valid subnet.");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(IngressSubnet)}={IngressSubnet}] is not a valid subnet.");
             }
 
             if (!IPAddress.TryParse(IngressGateway, out var ingressGateway) || ingressGateway.AddressFamily != AddressFamily.InterNetwork)
             {
-                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(IPAddress)}={IngressGateway}] is not a valid IPv4 address.");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(IPAddress)}={IngressGateway}] is not a valid IPv4 address.");
             }
 
             if (!ingressSubnet.Contains(ingressGateway))
             {
-                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(IPAddress)}={IngressGateway}] is within the [{nameof(IngressSubnet)}={IngressSubnet}].");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(IPAddress)}={IngressGateway}] is within the [{nameof(IngressSubnet)}={IngressSubnet}].");
             }
         }
     }

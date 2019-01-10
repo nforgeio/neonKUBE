@@ -63,7 +63,7 @@ namespace Neon.Kube
         /// <param name="hiveDefinition">The current hive definition,</param>
         /// <param name="nodeGroups">The hive node groups.</param>
         /// <param name="entryHostname">The parent <see cref="DnsEntry"/>'s hostname.</param>
-        public void Validate(List<string> warnings, HiveDefinition hiveDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups, string entryHostname)
+        public void Validate(List<string> warnings, ClusterDefinition hiveDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups, string entryHostname)
         {
             Covenant.Requires<ArgumentException>(hiveDefinition != null);
             Covenant.Requires<ArgumentException>(nodeGroups != null);
@@ -88,7 +88,7 @@ namespace Neon.Kube
             }
             else
             {
-                if (!IPAddress.TryParse(Target, out var address) && !HiveDefinition.DnsHostRegex.IsMatch(Target))
+                if (!IPAddress.TryParse(Target, out var address) && !ClusterDefinition.DnsHostRegex.IsMatch(Target))
                 {
                     warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] is not a valid IP address or DNS hostname for [{nameof(DnsEntry)}={entryHostname}].");
                 }

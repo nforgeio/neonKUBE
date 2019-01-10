@@ -77,9 +77,9 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="parentOptionName">Identifies the parent option type (used in error messages).</param>
-        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(HiveDefinition hiveDefinition, string parentOptionName)
+        public void Validate(ClusterDefinition hiveDefinition, string parentOptionName)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 

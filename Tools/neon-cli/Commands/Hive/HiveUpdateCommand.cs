@@ -55,7 +55,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
 ";
 
         private HiveLogin       hiveLogin;
-        private HiveProxy       hive;
+        private ClusterProxy       hive;
         private string          version;
         private string          dockerPackageUri;
 
@@ -89,7 +89,7 @@ The current login must have ROOT PERMISSIONS to update the hive.
             Console.WriteLine();
 
             hiveLogin = Program.ConnectHive();
-            hive      = new HiveProxy(hiveLogin);
+            hive      = new ClusterProxy(hiveLogin);
 
             var command     = commandLine.Arguments.ElementAtOrDefault(0);
             var force       = commandLine.HasOption("--force");

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HiveProxy.cs
+// FILE:	    ClusterProxy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -15,7 +15,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Consul;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -29,9 +28,9 @@ using Neon.Time;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Remotely manages a neonHIVE.
+    /// Remotely manages a neonKUBE.
     /// </summary>
-    public class HiveProxy : IDisposable
+    public class ClusterProxy : IDisposable
     {
         private RunOptions                                                          defaultRunOptions;
         private Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>>     nodeProxyCreator;
@@ -68,7 +67,7 @@ namespace Neon.Kube
         /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
         /// argument is passed.
         /// </remarks>
-        public HiveProxy(
+        public ClusterProxy(
             HiveLogin hiveLogin,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
             bool                                                            appendLog         = false,
@@ -116,8 +115,8 @@ namespace Neon.Kube
         /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
         /// argument is passed.
         /// </remarks>
-        public HiveProxy(
-            HiveDefinition hiveDefinition,
+        public ClusterProxy(
+            ClusterDefinition hiveDefinition,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator = null,
             bool                                                            appendLog = false,
             bool                                                            useBootstrap      = false,
@@ -166,20 +165,6 @@ namespace Neon.Kube
             this.appendLog         = appendLog;
             this.Headend           = new HeadendClient();
 
-            // Initialize the managers.
-
-            this.Docker            = new DockerManager(this);
-            this.Certificate       = new CertificateManager(this);
-            this.Dashboard         = new DashboardManager(this);
-            this.Dns               = new DnsManager(this);
-            this.PublicTraffic     = new TrafficManager(this, "public", useBootstrap: useBootstrap);
-            this.PrivateTraffic    = new TrafficManager(this, "private", useBootstrap: useBootstrap);
-            this.Registry          = new RegistryManager(this);
-            this.Globals           = new GlobalsManager(this);
-            this.Consul            = new ConsulManager(this);
-            this.Vault             = new VaultManager(this);
-            this.HiveMQ            = new HiveMQManager(this);
-
             CreateNodes();
         }
 
@@ -199,8 +184,6 @@ namespace Neon.Kube
         {
             if (disposing)
             {
-                Consul.Dispose();
-                Vault.Dispose();
                 Headend.Dispose();
 
                 GC.SuppressFinalize(this);
@@ -249,7 +232,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the hive definition.
         /// </summary>
-        public HiveDefinition Definition { get; private set; }
+        public ClusterDefinition Definition { get; private set; }
 
         /// <summary>
         /// Returns the read-only list of hive node proxies.
@@ -262,88 +245,9 @@ namespace Neon.Kube
         public SshProxy<NodeDefinition> FirstManager { get; private set; }
 
         /// <summary>
-        /// Manages Docker components.
-        /// </summary>
-        public DockerManager Docker { get; private set; }
-
-        /// <summary>
-        /// Manages the hive TLS certificates.
-        /// </summary>
-        public CertificateManager Certificate { get; private set; }
-
-        /// <summary>
-        /// Manages the hive dashboards.
-        /// </summary>
-        public DashboardManager Dashboard { get; private set; }
-
-        /// <summary>
-        /// Manages the local hive DNS.
-        /// </summary>
-        public DnsManager Dns { get; private set; }
-
-        /// <summary>
-        /// Manages the hive's public traffic manager.
-        /// </summary>
-        public TrafficManager PublicTraffic { get; private set; }
-
-        /// <summary>
-        /// Manages the hive's private traffic manager.
-        /// </summary>
-        public TrafficManager PrivateTraffic { get; private set; }
-
-        /// <summary>
-        /// Manages the hive's Docker registry credentials and local registry.
-        /// </summary>
-        public RegistryManager Registry { get; private set; }
-
-        /// <summary>
-        /// Manages the hive's global setting manager.
-        /// </summary>
-        public GlobalsManager Globals { get; private set; }
-
-        /// <summary>
-        /// Returns the hive's Consul manager.
-        /// </summary>
-        public ConsulManager Consul { get; private set; }
-
-        /// <summary>
-        /// Manages the hive Vault.
-        /// </summary>
-        public VaultManager Vault { get; private set; }
-
-        /// <summary>
-        /// Manages the hive messaging cluster.
-        /// </summary>
-        public HiveMQManager HiveMQ { get; private set; }
-
-        /// <summary>
         /// Provides access to neonHIVE headend services.
         /// </summary>
         public HeadendClient Headend { get; private set; }
-
-        /// <summary>
-        /// Returns the named traffic manager manager.
-        /// </summary>
-        /// <param name="name">The traffic manager name (one of <b>public</b> or <b>private</b>).</param>
-        public TrafficManager GetTrafficManager(string name)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-
-            switch (name.ToLowerInvariant())
-            {
-                case "public":
-
-                    return PublicTraffic;
-
-                case "private":
-
-                    return PrivateTraffic;
-
-                default:
-
-                    throw new ArgumentException($"[{name}] is not a valid proxy name.  Specify [public] or [private].");
-            }
-        }
 
         /// <summary>
         /// Specifies the <see cref="RunOptions"/> to use when executing commands that 
@@ -367,14 +271,6 @@ namespace Neon.Kube
         public IEnumerable<SshProxy<NodeDefinition>> Workers
         {
             get { return Nodes.Where(n => n.Metadata.IsWorker).OrderBy(n => n.Name); }
-        }
-
-        /// <summary>
-        /// Enumerates the hive pet node proxies sorted in ascending order by name.
-        /// </summary>
-        public IEnumerable<SshProxy<NodeDefinition>> Pets
-        {
-            get { return Nodes.Where(n => n.Metadata.IsPet).OrderBy(n => n.Name); }
         }
 
         /// <summary>
@@ -551,17 +447,6 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(node != null);
 
             return GetFileUploadSteps(new List<SshProxy<NodeDefinition>>() { node }, path, text, tabStop, outputEncoding, permissions);
-        }
-
-        /// <summary>
-        /// Indicates that the hive certificates and or traffic manager rules may have been changed.
-        /// This has the effect of signalling <b>neon-proxy-manager</b> to regenerate the proxy 
-        /// definitions and update all of the load balancers when changes are detected.
-        /// </summary>
-        public void SignalTrafficManagerUpdate()
-        {
-            PublicTraffic.Update();
-            PrivateTraffic.Update();
         }
 
         /// <summary>

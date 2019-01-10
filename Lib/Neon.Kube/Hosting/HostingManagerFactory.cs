@@ -70,7 +70,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(HiveProxy hive, string logFolder = null)
+        public HostingManager GetManager(ClusterProxy hive, string logFolder = null)
         {
             CheckInitialized();
 
@@ -86,13 +86,13 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void Validate(HiveDefinition hiveDefinition)
+        public void Validate(ClusterDefinition hiveDefinition)
         {
             CheckInitialized();
 
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
-            var hive    = new HiveProxy(hiveDefinition);
+            var hive    = new ClusterProxy(hiveDefinition);
             var manager = GetManager(hive);
 
             if (manager == null)

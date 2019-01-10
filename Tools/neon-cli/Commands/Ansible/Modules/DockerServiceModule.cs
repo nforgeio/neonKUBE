@@ -494,7 +494,7 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[name] module argument is required.");
             }
 
-            if (!HiveDefinition.IsValidName(name))
+            if (!ClusterDefinition.IsValidName(name))
             {
                 throw new ArgumentException($"[name={name}] is not a valid Docker service name.");
             }

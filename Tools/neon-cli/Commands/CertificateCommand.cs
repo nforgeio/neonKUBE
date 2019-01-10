@@ -181,7 +181,7 @@ certificates, and then finally the private key.
                         Program.Exit(1);
                     }
 
-                    if (!HiveDefinition.IsValidName(certName))
+                    if (!ClusterDefinition.IsValidName(certName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
                         Program.Exit(1);
@@ -294,7 +294,7 @@ certificates, and then finally the private key.
                         Program.Exit(1);
                     }
 
-                    if (!HiveDefinition.IsValidName(certName))
+                    if (!ClusterDefinition.IsValidName(certName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
                         Program.Exit(1);
@@ -332,7 +332,7 @@ certificates, and then finally the private key.
                             Program.Exit(1);
                         }
 
-                        if (!HiveDefinition.IsValidName(certName))
+                        if (!ClusterDefinition.IsValidName(certName))
                         {
                             Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
                             Program.Exit(1);

@@ -228,7 +228,7 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[hostname] module argument is required.");
             }
 
-            if (!HiveDefinition.DnsHostRegex.IsMatch(hostname))
+            if (!ClusterDefinition.DnsHostRegex.IsMatch(hostname))
             {
                 throw new ArgumentException($"[hostname={hostname}] is not a valid DNS hostname.");
             }

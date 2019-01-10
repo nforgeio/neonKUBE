@@ -24,7 +24,7 @@ namespace TestHive
     public class Test_AnsibleGlobals : IClassFixture<HiveFixture>
     {
         private HiveFixture     hiveFixture;
-        private HiveProxy       hive;
+        private ClusterProxy    hive;
 
         public Test_AnsibleGlobals(HiveFixture fixture)
         {

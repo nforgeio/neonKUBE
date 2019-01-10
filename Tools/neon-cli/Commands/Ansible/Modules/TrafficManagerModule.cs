@@ -375,7 +375,7 @@ namespace NeonCli.Ansible
                     throw new ArgumentException($"[rule_name] module argument is required.");
                 }
 
-                if (!HiveDefinition.IsValidName(ruleName))
+                if (!ClusterDefinition.IsValidName(ruleName))
                 {
                     throw new ArgumentException($"[rule_name={ruleName}] is not a valid traffic manager rule name.");
                 }

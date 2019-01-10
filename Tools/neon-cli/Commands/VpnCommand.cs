@@ -107,7 +107,7 @@ USAGE:
 
         private string          caFolder;
         private HiveLogin       hiveLogin;
-        private HiveProxy       hive;
+        private ClusterProxy    hive;
 
         /// <summary>
         /// Default constructor.
@@ -340,7 +340,7 @@ USAGE:
         /// <param name="user">The user name.</param>
         /// <param name="rootPrivileges">Indicates whether the user has root hive priviledges.</param>
         /// <returns>The configuration file text.</returns>
-        private string GetClientConfig(HiveDefinition hiveDefinition, string user, bool rootPrivileges)
+        private string GetClientConfig(ClusterDefinition hiveDefinition, string user, bool rootPrivileges)
         {
             // Make sure the user name is reasonable and doesn't conflict with
             // any of the other ca/cert file names.
@@ -420,7 +420,7 @@ subjectAltName          = email:nobody@nowhere.com
         {
             DirectNotAllowed();
 
-            var hiveDefinition = HiveDefinition.FromFile(defPath, strict: true);
+            var hiveDefinition = ClusterDefinition.FromFile(defPath, strict: true);
 
             // This implements the steps described here:
             // 

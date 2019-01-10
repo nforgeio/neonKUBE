@@ -258,7 +258,7 @@ See the documentation for more traffic manager rule and setting details.
                         Program.Exit(1);
                     }
 
-                    if (!HiveDefinition.IsValidName(ruleName))
+                    if (!ClusterDefinition.IsValidName(ruleName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{ruleName}] is not a valid rule name.");
                         Program.Exit(1);
@@ -407,7 +407,7 @@ See the documentation for more traffic manager rule and setting details.
                         Program.Exit(1);
                     }
 
-                    if (!HiveDefinition.IsValidName(ruleName))
+                    if (!ClusterDefinition.IsValidName(ruleName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{ruleName}] is not a valid rule name.");
                         Program.Exit(1);
@@ -472,7 +472,7 @@ See the documentation for more traffic manager rule and setting details.
 
                     ruleName = trafficManagerRule.Name;
 
-                    if (!HiveDefinition.IsValidName(ruleName))
+                    if (!ClusterDefinition.IsValidName(ruleName))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{ruleName}] is not a valid rule name.");
                         Program.Exit(1);

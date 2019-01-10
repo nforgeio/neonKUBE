@@ -37,7 +37,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
-        public static void CheckManager(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
+        public static void CheckManager(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsManager);
@@ -71,7 +71,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The server node.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
-        public static void CheckWorkersOrPet(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
+        public static void CheckWorkersOrPet(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsWorker || node.Metadata.IsPet);
@@ -104,7 +104,7 @@ namespace NeonCli
         /// Verifies the hive log service health.
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
-        public static void CheckLogServices(HiveProxy hive)
+        public static void CheckLogServices(ClusterProxy hive)
         {
             if (!hive.Definition.Log.Enabled)
             {
@@ -120,7 +120,7 @@ namespace NeonCli
         /// Verifies the log collector service health.
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
-        private static void CheckLogCollectorService(HiveProxy hive)
+        private static void CheckLogCollectorService(ClusterProxy hive)
         {
             // $todo(jeff.lill): Implement this.
         }
@@ -129,7 +129,7 @@ namespace NeonCli
         /// Verifies the log Elasticsearch hive health.
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
-        private static void CheckLogEsDataService(HiveProxy hive)
+        private static void CheckLogEsDataService(ClusterProxy hive)
         {
             // $todo(jeff.lill): Implement this.
         }
@@ -138,7 +138,7 @@ namespace NeonCli
         /// Verifies the log Kibana service health.
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
-        private static void CheckLogKibanaService(HiveProxy hive)
+        private static void CheckLogKibanaService(ClusterProxy hive)
         {
             // $todo(jeff.lill): Implement this.
         }
@@ -148,7 +148,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
-        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
+        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
@@ -240,7 +240,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
-        private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
+        private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
@@ -319,7 +319,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target hive node.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
-        private static void CheckDocker(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
+        private static void CheckDocker(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
         {
             node.Status = "checking: docker";
 
@@ -338,7 +338,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
-        private static void CheckConsul(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
+        private static void CheckConsul(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
         {
             node.Status = "checking: consul";
 
@@ -370,7 +370,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The node.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
-        private static void CheckVault(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
+        private static void CheckVault(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
         {
             // $todo(jeff.lill): Implement this.
 

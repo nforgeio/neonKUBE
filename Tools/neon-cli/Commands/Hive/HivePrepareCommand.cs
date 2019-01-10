@@ -75,7 +75,7 @@ Server Requirements:
         private const string    logEndMarker    = "# HIVE-END-PREPARE ############################################################";
         private const string    logFailedMarker = "# HIVE-END-PREPARE-FAILED #####################################################";
 
-        private HiveProxy       hive;
+        private ClusterProxy       hive;
         private HostingManager  hostingManager;
         private string          hiveDefPath;
         private string          packageCacheUri;
@@ -149,9 +149,9 @@ Server Requirements:
             hiveDefPath = commandLine.Arguments[0];
             force       = commandLine.GetFlag("--force");
 
-            HiveDefinition.ValidateFile(hiveDefPath, strict: true);
+            ClusterDefinition.ValidateFile(hiveDefPath, strict: true);
 
-            var hiveDefinition = HiveDefinition.FromFile(hiveDefPath, strict: true);
+            var hiveDefinition = ClusterDefinition.FromFile(hiveDefPath, strict: true);
 
             hiveDefinition.Provisioner = $"neon-cli:{Program.Version}";  // Identify this tool/version as the hive provisioner
 
@@ -198,7 +198,7 @@ Server Requirements:
 
             // Note that hive prepare starts new log files.
 
-            hive = new HiveProxy(hiveDefinition, Program.CreateNodeProxy<NodeDefinition>, appendLog: false, useBootstrap: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+            hive = new ClusterProxy(hiveDefinition, Program.CreateNodeProxy<NodeDefinition>, appendLog: false, useBootstrap: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
             if (File.Exists(Program.GetHiveLoginPath(HiveConst.RootUser, hive.Definition.Name)))
             {
@@ -206,7 +206,7 @@ Server Requirements:
                 Program.Exit(1);
             }
 
-            Program.OSProperties = OSProperties.For(hiveDefinition.HiveNode.OperatingSystem);
+            Program.OSProperties = OSProperties.For(hiveDefinition.NodeOptions.OperatingSystem);
 
             // Configure global options.
 

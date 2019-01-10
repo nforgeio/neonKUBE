@@ -43,11 +43,6 @@ namespace Neon.Xunit
         public const string NeonCouchbase = "Neon.Couchbase";
 
         /// <summary>
-        /// Identifies <b>Neon.HiveMQ</b> tests.
-        /// </summary>
-        public const string NeonHiveMQ = "Neon.HiveMQ";
-
-        /// <summary>
         /// Identifies <b>neon-cli</b> tests.
         /// </summary>
         public const string NeonCli = "neon-cli";

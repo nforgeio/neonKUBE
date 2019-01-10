@@ -12,7 +12,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Consul;
 using Newtonsoft.Json;
 
 using Neon.Common;
@@ -59,7 +58,6 @@ namespace Neon.Kube
 
         private List<CredentialRequest> credentialRequests = new List<CredentialRequest>();
         private HiveLogin               hiveLogin;
-        private VaultClient             vaultClient;
 
         /// <summary>
         /// Default constructor.
@@ -157,65 +155,6 @@ namespace Neon.Kube
             // $todo(jeff.lill): Implement this.
 
             throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Returns a <see cref="VaultClient"/> for the attached hive using the root token.
-        /// </summary>
-        private VaultClient VaultClient
-        {
-            get
-            {
-                if (vaultClient == null)
-                {
-                    vaultClient = HiveHelper.OpenVault(HiveCredentials.FromVaultToken(hiveLogin.VaultCredentials.RootToken));
-                }
-
-                return vaultClient;
-            }
-        }
-
-        /// <summary>
-        /// Called internally by <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> 
-        /// to create any requested Vault and Consul credentials and add them to the dictionary.
-        /// </summary>
-        /// <param name="hive">The attached hive.</param>
-        /// <param name="hiveLogin">The hive login.</param>
-        internal void Realize(HiveProxy hive, HiveLogin hiveLogin)
-        {
-            this.hiveLogin = hiveLogin;
-
-            HiveCredentials credentials;
-
-            foreach (var request in credentialRequests)
-            {
-                switch (request.Type)
-                {
-                    case CredentialType.VaultToken:
-
-                        // Serialize the credentials as JSON and persist.
-
-                        credentials = HiveCredentials.FromVaultToken(request.Token);
-
-                        Add(request.SecretName, NeonHelper.JsonSerialize(credentials, Formatting.Indented));
-                        break;
-
-                    case CredentialType.VaultAppRole:
-
-                        // Serialize the credentials as JSON and persist.
-
-                        credentials = VaultClient.GetAppRoleCredentialsAsync(request.RoleName).Result;
-
-                        Add(request.SecretName, NeonHelper.JsonSerialize(credentials, Formatting.Indented));
-                        break;
-
-                    case CredentialType.ConsulToken:
-
-                        // $todo(jeff.lill): Implement this.
-
-                        break;
-                }
-            }
         }
     }
 }

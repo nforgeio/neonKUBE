@@ -130,7 +130,7 @@ namespace NeonCli
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="nodeDefinition">The target node definition.</param>
         /// <returns>The host definitions.</returns>
-        private static string GetPowerDnsHosts(HiveDefinition hiveDefinition, NodeDefinition nodeDefinition)
+        private static string GetPowerDnsHosts(ClusterDefinition hiveDefinition, NodeDefinition nodeDefinition)
         {
             var sbHosts = new StringBuilder();
 
@@ -197,7 +197,7 @@ namespace NeonCli
         /// <param name="preprocessReader">The reader.</param>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="nodeDefinition">The target node definition.</param>
-        private static void SetHiveVariables(PreprocessReader preprocessReader, HiveDefinition hiveDefinition, NodeDefinition nodeDefinition)
+        private static void SetHiveVariables(PreprocessReader preprocessReader, ClusterDefinition hiveDefinition, NodeDefinition nodeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(preprocessReader != null);
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
@@ -534,7 +534,7 @@ namespace NeonCli
 
                     switch (Program.OSProperties.TargetOS)
                     {
-                        case TargetOS.Ubuntu_16_04:
+                        case TargetOS.CoreOS:
 
                             // The primary Azure data drive is [/dev/sdb] so any mounted drive will be [/dev/sdc].
 
@@ -588,7 +588,7 @@ namespace NeonCli
         /// <param name="hiveDefinition">The hive definition or <c>null</c>.</param>
         /// <param name="file">The resource file.</param>
         /// <param name="targetPath">The target path on the remote server.</param>
-        private static void UploadFile<TMetadata>(this SshProxy<TMetadata> node, HiveDefinition hiveDefinition, ResourceFiles.File file, string targetPath)
+        private static void UploadFile<TMetadata>(this SshProxy<TMetadata> node, ClusterDefinition hiveDefinition, ResourceFiles.File file, string targetPath)
             where TMetadata : class
         {
             using (var input = file.ToStream())
@@ -642,7 +642,7 @@ namespace NeonCli
         /// <typeparam name="Metadata">The node metadata type.</typeparam>
         /// <param name="node">The remote node.</param>
         /// <param name="hiveDefinition">The hive definition or <c>null</c>.</param>
-        public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, HiveDefinition hiveDefinition = null)
+        public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, ClusterDefinition hiveDefinition = null)
             where Metadata : class
         {
             Covenant.Requires<ArgumentNullException>(node != null);
@@ -675,7 +675,7 @@ namespace NeonCli
         /// <typeparam name="TMetadata">The server's metadata type.</typeparam>
         /// <param name="server">The remote server.</param>
         /// <param name="hiveDefinition">The hive definition or <c>null</c>.</param>
-        public static void UploadResources<TMetadata>(this SshProxy<TMetadata> server, HiveDefinition hiveDefinition = null)
+        public static void UploadResources<TMetadata>(this SshProxy<TMetadata> server, ClusterDefinition hiveDefinition = null)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(server != null);

@@ -46,7 +46,7 @@ namespace Neon.Kube
         /// could be located for the specified hive environment.
         /// </returns>
         /// <exception cref="HiveException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
-        HostingManager GetManager(HiveProxy hive, string logFolder = null);
+        HostingManager GetManager(ClusterProxy hive, string logFolder = null);
 
         /// <summary>
         /// Determines whether a hosting environment is hosted in the cloud.

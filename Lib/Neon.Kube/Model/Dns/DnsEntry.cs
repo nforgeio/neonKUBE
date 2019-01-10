@@ -54,14 +54,14 @@ namespace Neon.Kube
         /// <param name="hiveDefinition">The current hive definition,</param>
         /// <param name="nodeGroups">The hive node groups.</param>
         /// <returns>The list of warnings (if any).</returns>
-        public List<string> Validate(HiveDefinition hiveDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups)
+        public List<string> Validate(ClusterDefinition hiveDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups)
         {
             Covenant.Requires<ArgumentException>(hiveDefinition != null);
             Covenant.Requires<ArgumentException>(nodeGroups != null);
 
             var warnings = new List<string>();
 
-            if (string.IsNullOrEmpty(Hostname) || !HiveDefinition.IsValidName(Hostname))
+            if (string.IsNullOrEmpty(Hostname) || !ClusterDefinition.IsValidName(Hostname))
             {
                 warnings.Add($"Invalid [{nameof(DnsEntry)}.{nameof(Hostname)}={Hostname}].");
             }

@@ -74,7 +74,7 @@ namespace NeonCli
         /// <summary>
         /// The hive proxy.
         /// </summary>
-        HiveProxy Hive { get; set; }
+        ClusterProxy Hive { get; set; }
 
         /// <summary>
         /// Returns the hive login.

@@ -133,9 +133,9 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="nodeName">The associated node name.</param>
-        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(HiveDefinition hiveDefinition, string nodeName)
+        public void Validate(ClusterDefinition hiveDefinition, string nodeName)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
@@ -143,22 +143,22 @@ namespace Neon.Kube
 
             if (!caps.LoadBalancing)
             {
-                throw new HiveDefinitionException($"Hive node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support load balancing and cannot be used for a neonHIVE.");
+                throw new ClusterDefinitionException($"Hive node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support load balancing and cannot be used for a neonHIVE.");
             }
 
             if (!caps.SupportsDataStorageType(StorageType))
             {
-                throw new HiveDefinitionException($"Hive node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support [{StorageType}] managed data drives.");
+                throw new ClusterDefinitionException($"Hive node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support [{StorageType}] managed data drives.");
             }
 
             if (HardDriveCount > 1)
             {
-                throw new HiveDefinitionException($"Hive node [{nodeName}] configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only zero or one managed drive is currently supported.");
+                throw new ClusterDefinitionException($"Hive node [{nodeName}] configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only zero or one managed drive is currently supported.");
             }
 
             if (caps.MaxDataDrives < HardDriveCount)
             {
-                throw new HiveDefinitionException($"Hive node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.MaxDataDrives}] drives are allowed.");
+                throw new ClusterDefinitionException($"Hive node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.MaxDataDrives}] drives are allowed.");
             }
 
             AzureHelper.GetDiskSizeGB(StorageType, HardDriveSizeGB);

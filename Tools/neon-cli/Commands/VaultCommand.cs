@@ -61,7 +61,7 @@ NOTE: The following Vault commands are not supported:
 
       init, rekey, server and ssh
 ";
-        private HiveProxy           hive;
+        private ClusterProxy        hive;
         private VaultCredentials    vaultCredentials;
 
         private const string remoteVaultPath = "/usr/local/bin/vault";
@@ -112,7 +112,7 @@ NOTE: The following Vault commands are not supported:
 
             var hiveLogin = Program.ConnectHive();
 
-            hive             = new HiveProxy(hiveLogin);
+            hive             = new ClusterProxy(hiveLogin);
             vaultCredentials = hiveLogin.VaultCredentials;
 
             if (rightCommandLine == null)

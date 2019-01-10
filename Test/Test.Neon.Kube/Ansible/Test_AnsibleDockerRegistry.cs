@@ -34,7 +34,7 @@ namespace TestHive
     public class Test_AnsibleDockerRegistry : IClassFixture<HiveFixture>
     {
         private HiveFixture     hiveFixture;
-        private HiveProxy       hive;
+        private ClusterProxy    hive;
 
         public Test_AnsibleDockerRegistry(HiveFixture fixture)
         {

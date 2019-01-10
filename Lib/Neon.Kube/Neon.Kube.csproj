@@ -33,13 +33,9 @@
   <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
   <ItemGroup>
-    <PackageReference Include="Consul" Version="0.7.2.6" />
-    <PackageReference Include="CouchbaseNetClient" Version="2.7.1" />
     <PackageReference Include="DNS" Version="5.0.0" />
-    <PackageReference Include="Linq2Couchbase" Version="1.4.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="RabbitMQ.Client" Version="5.1.0" />
     <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
@@ -55,7 +51,6 @@
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
     <ProjectReference Include="..\Neon.Docker\Neon.Docker.csproj" />
-    <ProjectReference Include="..\Neon.HiveMQ\Neon.HiveMQ.csproj" />
   </ItemGroup>
 
   <ItemGroup>

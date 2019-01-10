@@ -37,7 +37,7 @@ namespace TestSamples
     public class Test_Hive : IClassFixture<HiveFixture>
     {
         private HiveFixture     hiveFixture;
-        private HiveProxy       hive;
+        private ClusterProxy       hive;
         private HostsFixture    hosts;
 
         public Test_Hive(HiveFixture fixture)

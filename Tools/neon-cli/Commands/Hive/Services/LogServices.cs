@@ -82,13 +82,13 @@ namespace NeonCli
     /// </remarks>
     public class LogServices
     {
-        private HiveProxy hive;
+        private ClusterProxy hive;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
-        public LogServices(HiveProxy hive)
+        public LogServices(ClusterProxy hive)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 

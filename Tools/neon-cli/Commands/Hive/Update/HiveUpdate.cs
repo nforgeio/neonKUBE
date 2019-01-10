@@ -40,7 +40,7 @@ namespace NeonCli
         }
 
         /// <inheritdoc/>
-        public HiveProxy Hive { get; set; }
+        public ClusterProxy Hive { get; set; }
 
         /// <inheritdoc/>
         public HiveLogin HiveLogin => Hive?.HiveLogin;

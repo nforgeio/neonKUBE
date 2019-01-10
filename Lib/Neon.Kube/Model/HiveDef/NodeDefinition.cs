@@ -48,8 +48,6 @@ namespace Neon.Kube
         {
             var node = new NodeDefinition();
 
-            node.Labels.Parse(labels);
-
             return node;
         }
 
@@ -63,7 +61,6 @@ namespace Neon.Kube
         /// </summary>
         public NodeDefinition()
         {
-            Labels = new NodeLabels(this);
         }
 
         /// <summary>
@@ -158,29 +155,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns <c>true</c> for nodes that are part of the neonHIVE but not 
-        /// within the Docker Swarm.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool IsPet
-        {
-            get
-            {
-                switch (Role.ToLowerInvariant())
-                {
-                    case NodeRole.Pet:
-
-                        return true;
-
-                    default:
-
-                        return false;
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns <c>true</c> for nodes that are members of the Docker Swarm.
         /// </summary>
         [JsonIgnore]
@@ -244,14 +218,6 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "VpnPoolSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string VpnPoolSubnet { get; set; }
-
-        /// <summary>
-        /// Specifies the Docker labels to be assigned to the host node.  These can provide
-        /// detailed information such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
-        /// for more information.
-        /// </summary>
-        [JsonProperty(PropertyName = "Labels")]
-        public NodeLabels Labels { get; set; }
 
         /// <summary>
         /// Specifies the hive host groups to which this node belongs.  This can be used to organize
@@ -327,7 +293,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <returns>The number of cores.</returns>
-        public int GetVmProcessors(HiveDefinition hiveDefinition)
+        public int GetVmProcessors(ClusterDefinition hiveDefinition)
         {
             if (VmProcessors != 0)
             {
@@ -345,15 +311,15 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetVmMemory(HiveDefinition hiveDefinition)
+        public long GetVmMemory(ClusterDefinition hiveDefinition)
         {
             if (!string.IsNullOrEmpty(VmMemory))
             {
-                return HiveDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
+                return ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
             }
             else
             {
-                return HiveDefinition.ValidateSize(hiveDefinition.Hosting.VmMemory, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Hosting.VmMemory));
+                return ClusterDefinition.ValidateSize(hiveDefinition.Hosting.VmMemory, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Hosting.VmMemory));
             }
         }
 
@@ -363,15 +329,15 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetVmMinimumMemory(HiveDefinition hiveDefinition)
+        public long GetVmMinimumMemory(ClusterDefinition hiveDefinition)
         {
             if (!string.IsNullOrEmpty(VmMinimumMemory))
             {
-                return HiveDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+                return ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             }
             else if (!string.IsNullOrEmpty(hiveDefinition.Hosting.VmMinimumMemory))
             {
-                return HiveDefinition.ValidateSize(hiveDefinition.Hosting.VmMinimumMemory, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Hosting.VmMinimumMemory));
+                return ClusterDefinition.ValidateSize(hiveDefinition.Hosting.VmMinimumMemory, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Hosting.VmMinimumMemory));
             }
             else
             {
@@ -387,118 +353,15 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetVmDisk(HiveDefinition hiveDefinition)
+        public long GetVmDisk(ClusterDefinition hiveDefinition)
         {
             if (!string.IsNullOrEmpty(VmDisk))
             {
-                return HiveDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
+                return ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
             }
             else
             {
-                return HiveDefinition.ValidateSize(hiveDefinition.Hosting.VmDisk, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Hosting.VmDisk));
-            }
-        }
-
-        /// <summary>
-        /// Returns the size in bytes of the Ceph drive created for this node if 
-        /// integrated Ceph storage cluster is enabled.
-        /// </summary>
-        /// <param name="hiveDefinition">The hive definition.</param>
-        /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephOSDDriveSize(HiveDefinition hiveDefinition)
-        {
-            if (!hiveDefinition.HiveFS.Enabled)
-            {
-                return 0;
-            }
-
-            if (Labels.CephOSDDriveSizeGB > 0)
-            {
-                return Labels.CephOSDDriveSizeGB * NeonHelper.Giga;
-            }
-            else
-            {
-                Labels.CephOSDDriveSizeGB = (int)(HiveDefinition.ValidateSize(hiveDefinition.HiveFS.OSDDriveSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.HiveFS.OSDDriveSize))/NeonHelper.Giga);
-
-                return (long)Labels.CephOSDDriveSizeGB * NeonHelper.Giga;
-            }
-        }
-
-        /// <summary>
-        /// Returns the size in bytes of RAM to allocate to the OSD cache
-        /// on this node integrated Ceph storage cluster is enabled and
-        /// OSD is deployed to the node.
-        /// </summary>
-        /// <param name="hiveDefinition">The hive definition.</param>
-        /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephOSDCacheSize(HiveDefinition hiveDefinition)
-        {
-            if (!hiveDefinition.HiveFS.Enabled)
-            {
-                return 0;
-            }
-
-            if (Labels.CephOSDCacheSizeMB > 0)
-            {
-                return Labels.CephOSDCacheSizeMB * NeonHelper.Mega;
-            }
-            else
-            {
-                Labels.CephOSDCacheSizeMB = (int)(HiveDefinition.ValidateSize(hiveDefinition.HiveFS.OSDCacheSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.HiveFS.OSDCacheSize))/NeonHelper.Mega);
-
-                return (long)Labels.CephOSDCacheSizeMB * NeonHelper.Mega;
-            }
-        }
-
-        /// <summary>
-        /// Returns the size in bytes of drive space to allocate to the
-        /// OSD journal on this node integrated Ceph storage cluster is 
-        /// enabled and OSD is deployed to the node.
-        /// </summary>
-        /// <param name="hiveDefinition">The hive definition.</param>
-        /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephOSDJournalSize(HiveDefinition hiveDefinition)
-        {
-            if (!hiveDefinition.HiveFS.Enabled)
-            {
-                return 0;
-            }
-
-            if (Labels.CephOSDJournalSizeMB > 0)
-            {
-                return Labels.CephOSDJournalSizeMB * NeonHelper.Mega;
-            }
-            else
-            {
-                Labels.CephOSDJournalSizeMB = (int)(HiveDefinition.ValidateSize(hiveDefinition.HiveFS.OSDJournalSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.HiveFS.OSDJournalSize)) / NeonHelper.Mega);
-
-                return (long)Labels.CephOSDJournalSizeMB * NeonHelper.Mega;
-            }
-        }
-
-        /// <summary>
-        /// Returns the size in bytes of RAM to allocate to the MDS cache
-        /// on this node integrated Ceph storage cluster is enabled and
-        /// MDS is deployed to the node.
-        /// </summary>
-        /// <param name="hiveDefinition">The hive definition.</param>
-        /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephMDSCacheSize(HiveDefinition hiveDefinition)
-        {
-            if (!hiveDefinition.HiveFS.Enabled)
-            {
-                return 0;
-            }
-
-            if (Labels.CephMDSCacheSizeMB > 0)
-            {
-                return Labels.CephMDSCacheSizeMB * NeonHelper.Mega;
-            }
-            else
-            {
-                Labels.CephMDSCacheSizeMB = (int)(HiveDefinition.ValidateSize(hiveDefinition.HiveFS.MDSCacheSize, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.HiveFS.MDSCacheSize)) / NeonHelper.Mega);
-
-                return (long)Labels.CephMDSCacheSizeMB * NeonHelper.Mega;
+                return ClusterDefinition.ValidateSize(hiveDefinition.Hosting.VmDisk, hiveDefinition.Hosting.GetType(), nameof(hiveDefinition.Hosting.VmDisk));
             }
         }
 
@@ -516,74 +379,58 @@ namespace Neon.Kube
         /// <param name="hiveDefinition">The hive definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(HiveDefinition hiveDefinition)
+        public void Validate(ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
-            Labels     = Labels ?? new NodeLabels(this);
             HostGroups = HostGroups ?? new List<string>();
 
             if (Name == null)
             {
-                throw new HiveDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}] property is required.");
             }
 
-            if (!HiveDefinition.IsValidName(Name))
+            if (!ClusterDefinition.IsValidName(Name))
             {
-                throw new HiveDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             if (name == "localhost")
             {
-                throw new HiveDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
             }
 
             if (Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new HiveDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [node-] are reserved.");
-            }
-
-            if (Name.Equals(HiveDefinition.VirtualSwarmManagerName, StringComparison.InvariantCultureIgnoreCase))
-            {
-                throw new HiveDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [{HiveDefinition.VirtualSwarmManagerName}] is reserved for targeting Swarm related Ansible tasks.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [node-] are reserved.");
             }
 
             if (hiveDefinition.Hosting.IsOnPremiseProvider)
             {
                 if (string.IsNullOrEmpty(PrivateAddress))
                 {
-                    throw new HiveDefinitionException($"Node [{Name}] requires [{nameof(PrivateAddress)}] when hosting in an on-premise facility.");
+                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(PrivateAddress)}] when hosting in an on-premise facility.");
                 }
 
                 if (!IPAddress.TryParse(PrivateAddress, out var nodeAddress))
                 {
-                    throw new HiveDefinitionException($"Node [{Name}] has invalid IP address [{PrivateAddress}].");
+                    throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{PrivateAddress}].");
                 }
             }
-
-            if (IsManager && hiveDefinition.Hosting.IsOnPremiseProvider && hiveDefinition.Vpn.Enabled)
-            {
-                if (!NetHelper.IsValidPort(VpnFrontendPort))
-                {
-                    throw new HiveDefinitionException($"Manager node [{Name}] has [{nameof(VpnFrontendPort)}={VpnFrontendPort}] which is not a valid network port.");
-                }
-            }
-
-            Labels.Validate(hiveDefinition);
 
             foreach (var group in HostGroups)
             {
                 if (string.IsNullOrWhiteSpace(group))
                 {
-                    throw new HiveDefinitionException($"Node [{Name}] assigns an empty group in [{nameof(HostGroups)}].");
+                    throw new ClusterDefinitionException($"Node [{Name}] assigns an empty group in [{nameof(HostGroups)}].");
                 }
                 else if (HiveHostGroups.BuiltIn.Contains(group))
                 {
-                    throw new HiveDefinitionException($"Node [{Name}] assigns the standard [{group}] in [{nameof(HostGroups)}].  Standard groups cannot be explicitly assigned since [neon-cli] handles them automatically.");
+                    throw new ClusterDefinitionException($"Node [{Name}] assigns the standard [{group}] in [{nameof(HostGroups)}].  Standard groups cannot be explicitly assigned since [neon-cli] handles them automatically.");
                 }
                 else if (!groupNameRegex.IsMatch(group))
                 {
-                    throw new HiveDefinitionException($"Node [{Name}] assigns the invalid group [{group}] in [{nameof(HostGroups)}].  Group names must start with a letter and then can be followed by zero or more letters, digits, dashes, and underscores.");
+                    throw new ClusterDefinitionException($"Node [{Name}] assigns the invalid group [{group}] in [{nameof(HostGroups)}].  Group names must start with a letter and then can be followed by zero or more letters, digits, dashes, and underscores.");
                 }
             }
 
@@ -596,27 +443,27 @@ namespace Neon.Kube
             {
                 if (string.IsNullOrEmpty(VmHost))
                 {
-                    throw new HiveDefinitionException($"Node [{Name}] does not specify a hypervisor [{nameof(NodeDefinition)}.{nameof(NodeDefinition.VmHost)}].");
+                    throw new ClusterDefinitionException($"Node [{Name}] does not specify a hypervisor [{nameof(NodeDefinition)}.{nameof(NodeDefinition.VmHost)}].");
                 }
                 else if (hiveDefinition.Hosting.VmHosts.FirstOrDefault(h => h.Name.Equals(VmHost, StringComparison.InvariantCultureIgnoreCase)) == null)
                 {
-                    throw new HiveDefinitionException($"Node [{Name}] references hypervisor [{VmHost}] which is defined in [{nameof(HostingOptions)}={nameof(HostingOptions.VmHosts)}].");
+                    throw new ClusterDefinitionException($"Node [{Name}] references hypervisor [{VmHost}] which is defined in [{nameof(HostingOptions)}={nameof(HostingOptions.VmHosts)}].");
                 }
             }
 
             if (VmMemory != null)
             {
-                HiveDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
+                ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
             }
 
             if (VmMinimumMemory != null)
             {
-                HiveDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+                ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             }
 
             if (VmDisk != null)
             {
-                HiveDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
+                ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
             }
         }
     }

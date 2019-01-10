@@ -66,7 +66,7 @@ The other Docker commands supporting file arguments or that take
 input from [stdin] will need to be run directly on the host using
 the [neon exec] command.
 ";
-        private HiveProxy        hive;
+        private ClusterProxy    hive;
 
         private const string remoteDockerPath = "/usr/bin/docker";
 
@@ -116,7 +116,7 @@ the [neon exec] command.
 
             var hiveLogin = Program.ConnectHive();
 
-            hive = new HiveProxy(hiveLogin);
+            hive = new ClusterProxy(hiveLogin);
 
             // Determine which node we're going to target.
 

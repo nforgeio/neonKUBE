@@ -281,14 +281,6 @@ namespace Neon.Kube
             {
                 get { return Node.Metadata.IsWorker; }
             }
-
-            /// <summary>
-            /// Returns <c>true</c> if the node is a pet.
-            /// </summary>
-            public bool IsPet
-            {
-                get { return Node.Metadata.IsPet; }
-            }
         }
 
         //---------------------------------------------------------------------
@@ -296,7 +288,7 @@ namespace Neon.Kube
 
         private const string managerLeafDomainPrefix = "vpn-";
 
-        private HiveProxy                       hive;
+        private ClusterProxy                    hive;
         private HostingOptions                  hostOptions;
         private NetworkOptions                  networkOptions;
         private AzureOptions                    azureOptions;
@@ -338,7 +330,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AzureHostingManager(HiveProxy hive, string logFolder = null)
+        public AzureHostingManager(ClusterProxy hive, string logFolder = null)
         {
             this.hive             = hive;
             this.hiveName         = hive.Definition.Name;
@@ -468,7 +460,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(HiveDefinition hiveDefinition)
+        public override void Validate(ClusterDefinition hiveDefinition)
         {
             // Ensure that the VM sizes specified have minimum capabilities.
 
@@ -478,7 +470,7 @@ namespace Neon.Kube
 
                 if (vmCaps == null)
                 {
-                    throw new HiveDefinitionException($"Not Implemented: Node [{node.Name}] uses the [{node.Azure.VmSize}] Azure VM size which is not currently defined.  Please submit an issue.");
+                    throw new ClusterDefinitionException($"Not Implemented: Node [{node.Name}] uses the [{node.Azure.VmSize}] Azure VM size which is not currently defined.  Please submit an issue.");
                 }
 
                 int minCores;
@@ -515,17 +507,17 @@ namespace Neon.Kube
 
                 if (vmCaps.CoreCount < minCores)
                 {
-                    throw new HiveDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [CORES={vmCaps.CoreCount}] which is too small.  At least [{minCores}] cores are required for [{node.Role}] nodes.");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [CORES={vmCaps.CoreCount}] which is too small.  At least [{minCores}] cores are required for [{node.Role}] nodes.");
                 }
 
                 if (vmCaps.RamMiB < minRamMiB)
                 {
-                    throw new HiveDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [RAM={vmCaps.RamMiB} MiB] which is too small.  At least [{minRamMiB} MiB] RAM is required for [{node.Role}] nodes.");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [RAM={vmCaps.RamMiB} MiB] which is too small.  At least [{minRamMiB} MiB] RAM is required for [{node.Role}] nodes.");
                 }
 
                 if (vmCaps.MaxNics < minNics)
                 {
-                    throw new HiveDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [MaxNics={vmCaps.MaxNics}] which is too small.  At least [{minNics}] network interfaces are required for [{node.Role}] nodes.");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [MaxNics={vmCaps.MaxNics}] which is too small.  At least [{minNics}] network interfaces are required for [{node.Role}] nodes.");
                 }
             }
 
@@ -678,12 +670,12 @@ namespace Neon.Kube
 
                 if (!subnet.Contains(nodeAddress))
                 {
-                    throw new HiveDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which is not within the [{subnet}] subnet assigned to the hive.");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which is not within the [{subnet}] subnet assigned to the hive.");
                 }
 
                 if (allocatedAddresses.Contains(nodeAddress.ToString()))
                 {
-                    throw new HiveDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which conflicts with reserved Azure addresses (the first 4 and last addresses in the [{subnet}] subnet) or with another node.");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which conflicts with reserved Azure addresses (the first 4 and last addresses in the [{subnet}] subnet) or with another node.");
                 }
 
                 allocatedAddresses.Add(nodeAddress.ToString());
@@ -704,7 +696,7 @@ namespace Neon.Kube
                 {
                     if (NetHelper.AddressEquals(nextAddress, lastAddress))
                     {
-                        throw new HiveDefinitionException($"Cannot fit [{hive.Definition.Nodes.Count()}] nodes into the [{subnet}] subnet on Azure.  You need to expand the subnet.");
+                        throw new ClusterDefinitionException($"Cannot fit [{hive.Definition.Nodes.Count()}] nodes into the [{subnet}] subnet on Azure.  You need to expand the subnet.");
                     }
 
                     if (!allocatedAddresses.Contains(nextAddress.ToString()))

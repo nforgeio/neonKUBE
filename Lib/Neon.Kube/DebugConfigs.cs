@@ -12,7 +12,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Consul;
 using Newtonsoft.Json;
 
 using Neon.Common;
@@ -74,7 +73,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hive">The attached hive.</param>
         /// <param name="hiveLogin">The hive login.</param>
-        internal void Realize(HiveProxy hive, HiveLogin hiveLogin)
+        internal void Realize(ClusterProxy hive, HiveLogin hiveLogin)
         {
             // This is a NOP because we already added all of the configs
             // to the base dictionary in the [Add()] methods.

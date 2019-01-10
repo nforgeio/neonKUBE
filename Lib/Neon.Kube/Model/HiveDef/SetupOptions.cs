@@ -70,12 +70,12 @@ namespace Neon.Kube
         /// initialized to their default values.
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
-        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
-        public void Validate(HiveDefinition hiveDefinition)
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        public void Validate(ClusterDefinition hiveDefinition)
         {
             if (StepStaggerSeconds < 0)
             {
-                throw new HiveDefinitionException($"[{nameof(SetupOptions)}.{nameof(StepStaggerSeconds)}={StepStaggerSeconds}] cannot be negative.");
+                throw new ClusterDefinitionException($"[{nameof(SetupOptions)}.{nameof(StepStaggerSeconds)}={StepStaggerSeconds}] cannot be negative.");
             }
         }
     }

@@ -115,7 +115,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
 ";
 
         private HiveLogin    hiveLogin;
-        private HiveProxy    hive;
+        private ClusterProxy    hive;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -145,7 +145,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
             }
 
             hiveLogin = Program.ConnectHive();
-            hive      = new HiveProxy(hiveLogin);
+            hive      = new ClusterProxy(hiveLogin);
 
             var command  = commandLine.Arguments.ElementAt(0);
             var yaml     = commandLine.HasOption("--yaml");
@@ -471,7 +471,7 @@ host groups if they don't already exist (named like: [GROUPNAME.HIVENAME.nhive.i
         {
             Covenant.Requires<ArgumentNullException>(hostname == null);
 
-            if (!HiveDefinition.DnsHostRegex.IsMatch(hostname))
+            if (!ClusterDefinition.DnsHostRegex.IsMatch(hostname))
             {
                 Console.Error.WriteLine($"*** ERROR: [{hostname}] is not a valid DNS hostname.");
                 Program.Exit(1);

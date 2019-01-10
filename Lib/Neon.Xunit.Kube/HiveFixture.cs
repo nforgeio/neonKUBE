@@ -58,7 +58,7 @@ namespace Neon.Xunit.Hive
     /// <para>
     /// neonHIVEs do not allow the <see cref="HiveFixture"/> to perform unit
     /// tests by default, as a safety measure.  You can enable this before hive
-    /// deployment by setting <see cref="HiveDefinition.AllowUnitTesting"/><c>=true</c>
+    /// deployment by setting <see cref="ClusterDefinition.AllowUnitTesting"/><c>=true</c>
     /// or by manually invoking this command for an existing hive:
     /// </para>
     /// <code>
@@ -266,7 +266,7 @@ namespace Neon.Xunit.Hive
         // Instance members
 
         private object                                      syncLock   = new object();
-        private HiveProxy                                   hive;
+        private ClusterProxy                                   hive;
         private bool                                        resetOnInitialize;
         private bool                                        disableChecks;
         private Dictionary<string, List<NodeDefinition>>    nodeGroups;
@@ -478,7 +478,7 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Returns the <see cref="global::Neon.Kube.HiveProxy"/> for the test hive
+        /// Returns the <see cref="global::Neon.Kube.ClusterProxy"/> for the test hive
         /// that can be used to get information about the hive as well as to invoke commands
         /// on individual hive nodes.
         /// </summary>
@@ -488,10 +488,10 @@ namespace Neon.Xunit.Hive
         /// unit tests:
         /// </para>
         /// <para>
-        /// <see cref="global::Neon.Kube.HiveProxy.HiveLogin"/> returns the desearialized
+        /// <see cref="global::Neon.Kube.ClusterProxy.HiveLogin"/> returns the desearialized
         /// hive login information, including host node and HashiCorp Vault credentials. 
-        /// <see cref="global::Neon.Kube.HiveProxy.Definition"/> returns the hive
-        /// definition.  You can also access the <see cref="global::Neon.Kube.HiveProxy.Nodes"/>
+        /// <see cref="global::Neon.Kube.ClusterProxy.Definition"/> returns the hive
+        /// definition.  You can also access the <see cref="global::Neon.Kube.ClusterProxy.Nodes"/>
         /// collection to obtain <see cref="SshProxy{NodeDefinition}"/> proxies that can be used
         /// to submit SSH commands to hive nodes.
         /// </para>
@@ -500,7 +500,7 @@ namespace Neon.Xunit.Hive
         /// so you'll need to take care to run only one command at a time on each node.
         /// </note>
         /// </remarks>
-        public HiveProxy Hive
+        public ClusterProxy Hive
         {
             get
             {

@@ -113,7 +113,7 @@ command.
 
             // Perform the reboots.
 
-            var hive       = new HiveProxy(hiveLogin);
+            var hive       = new ClusterProxy(hiveLogin);
             var controller = new SetupController<NodeDefinition>(Program.SafeCommandLine, hive.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
             {
                 ShowStatus  = !Program.Quiet,

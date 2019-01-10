@@ -65,7 +65,7 @@ OPTIONS:
 
         private string              hiveLoginPath;
         private HiveLogin           hiveLogin;
-        private HiveProxy           hive;
+        private ClusterProxy           hive;
         private string              managerNodeNames     = string.Empty;
         private string              managerNodeAddresses = string.Empty;
         private int                 managerCount         = 0;
@@ -157,7 +157,7 @@ OPTIONS:
 
             // Note that hive setup appends to existing log files.
 
-            hive = new HiveProxy(hiveLogin, Program.CreateNodeProxy<NodeDefinition>, appendLog: true, useBootstrap: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+            hive = new ClusterProxy(hiveLogin, Program.CreateNodeProxy<NodeDefinition>, appendLog: true, useBootstrap: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
             // We need to ensure that any necessary VPN connection is opened if we're
             // not provisioning on-premise or not running in the tool container.
@@ -214,7 +214,7 @@ OPTIONS:
 
             controller.AddWaitUntilOnlineStep("connect");
 
-            switch (hive.Definition.HiveNode.SshAuth)
+            switch (hive.Definition.NodeOptions.SshAuth)
             {
                 case AuthMethods.Password:
 
@@ -228,7 +228,7 @@ OPTIONS:
 
                 default:
 
-                    throw new NotSupportedException($"Unsupported SSH authentication method [{hive.Definition.HiveNode.SshAuth}].");
+                    throw new NotSupportedException($"Unsupported SSH authentication method [{hive.Definition.NodeOptions.SshAuth}].");
             }
 
             if (sshTlsAuth)
@@ -504,9 +504,9 @@ OPTIONS:
 
             if (!hiveLogin.HasStrongSshPassword)
             {
-                if (hive.Definition.HiveNode.PasswordLength > 0)
+                if (hive.Definition.NodeOptions.PasswordLength > 0)
                 {
-                    hiveLogin.SshPassword          = NeonHelper.GetRandomPassword(hive.Definition.HiveNode.PasswordLength);
+                    hiveLogin.SshPassword          = NeonHelper.GetRandomPassword(hive.Definition.NodeOptions.PasswordLength);
                     hiveLogin.HasStrongSshPassword = true;
                 }
                 else
@@ -517,7 +517,7 @@ OPTIONS:
                 hiveLogin.Save();
             }
 
-            if (hive.Definition.HiveNode.PasswordLength > 0)
+            if (hive.Definition.NodeOptions.PasswordLength > 0)
             {
                 // $todo(jeff.lill):
                 //
@@ -1331,7 +1331,7 @@ fi
                     // Upgrade Linux packages if requested.  We're doing this after
                     // deploying the APT package proxy so it'll be faster.
 
-                    switch (hive.Definition.HiveNode.Upgrade)
+                    switch (hive.Definition.NodeOptions.Upgrade)
                     {
                         case OsUpgrade.Partial:
 
@@ -1547,7 +1547,7 @@ fi
                     // Upgrade Linux packages if requested.  We're doing this after
                     // deploying the APT package proxy so it'll be faster.
 
-                    switch (hive.Definition.HiveNode.Upgrade)
+                    switch (hive.Definition.NodeOptions.Upgrade)
                     {
                         case OsUpgrade.Partial:
 
@@ -2336,7 +2336,7 @@ public network = {hiveSubnet}
 auth cluster required = cephx
 auth service required = cephx
 auth client required = cephx
-osd journal size = {HiveDefinition.ValidateSize(hive.Definition.HiveFS.OSDJournalSize, hive.Definition.HiveFS.GetType(), nameof(hive.Definition.HiveFS.OSDJournalSize)) / NeonHelper.Mega}
+osd journal size = {ClusterDefinition.ValidateSize(hive.Definition.HiveFS.OSDJournalSize, hive.Definition.HiveFS.GetType(), nameof(hive.Definition.HiveFS.OSDJournalSize)) / NeonHelper.Mega}
 osd pool default size = {hive.Definition.HiveFS.OSDReplicaCount}
 osd pool default min size = {hive.Definition.HiveFS.OSDReplicaCountMin}
 osd pool default pg num = {hive.Definition.HiveFS.OSDPlacementGroups}

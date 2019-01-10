@@ -22,10 +22,5 @@ namespace Neon.Kube
         /// The node is a hive worker.
         /// </summary>
         public const string Worker = "worker";
-
-        /// <summary>
-        /// The node is a member of the neonHIVE but is not part of the Docker Swarm.
-        /// </summary>
-        public const string Pet = "pet";
     }
 }

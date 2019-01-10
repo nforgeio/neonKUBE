@@ -56,7 +56,7 @@ USAGE:
             }
 
             var hiveLogin = Program.ConnectHive();
-            var hive      = new HiveProxy(hiveLogin);
+            var hive      = new ClusterProxy(hiveLogin);
 
             // $todo(jeff.lill): Implement this
         }

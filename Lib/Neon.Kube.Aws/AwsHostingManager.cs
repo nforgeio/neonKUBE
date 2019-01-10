@@ -51,7 +51,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private HiveProxy hive;
+        private ClusterProxy    hive;
 
         /// <summary>
         /// Constructor.
@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AwsHostingManager(HiveProxy hive, string logFolder = null)
+        public AwsHostingManager(ClusterProxy hive, string logFolder = null)
         {
             hive.HostingManager = this;
 
@@ -78,7 +78,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(HiveDefinition hiveDefinition)
+        public override void Validate(ClusterDefinition hiveDefinition)
         {
             // Identify the OSD Bluestore block device for OSD nodes.
 
@@ -111,18 +111,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override List<HostedEndpoint> GetPublicEndpoints()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
         public override bool CanUpdatePublicEndpoints => true;
-
-        /// <inheritdoc/>
-        public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
-        {
-        }
 
         /// <inheritdoc/>
         public override string DrivePrefix

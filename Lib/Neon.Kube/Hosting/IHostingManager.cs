@@ -42,8 +42,8 @@ namespace Neon.Kube
         /// properties as required.
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
-        /// <exception cref="HiveDefinitionException">Thrown if any problems were detected.</exception>
-        void Validate(HiveDefinition hiveDefinition);
+        /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
+        void Validate(ClusterDefinition hiveDefinition);
 
         /// <summary>
         /// Creates and initializes the hive resources such as the virtual machines,
@@ -84,22 +84,9 @@ namespace Neon.Kube
         void AddPostVpnSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
-        /// Returns the endpoints currently exposed to the public for the deployment.
-        /// </summary>
-        /// <returns>The list of <see cref="HostedEndpoint"/> instances.</returns>
-        List<HostedEndpoint> GetPublicEndpoints();
-
-        /// <summary>
         /// Returns <c>true</c> if the hive manager is able to update the deployment's load balancer and security rules.
         /// </summary>
         bool CanUpdatePublicEndpoints { get; }
-
-        /// <summary>
-        /// Updates the deployment's load balancer and security rules to allow traffic 
-        /// for the specified endpoints into the hive.
-        /// </summary>
-        /// <param name="endpoints">The endpoints.</param>
-        void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);
 
         /// <summary>
         /// <para>

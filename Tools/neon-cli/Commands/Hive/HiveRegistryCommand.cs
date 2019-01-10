@@ -66,7 +66,7 @@ when these aren't specified.
             }
 
             var hiveLogin = Program.ConnectHive();
-            var hive      = new HiveProxy(hiveLogin);
+            var hive      = new ClusterProxy(hiveLogin);
             var command   = commandLine.Arguments.ElementAtOrDefault(0);
             var registry  = commandLine.Arguments.ElementAtOrDefault(1);
 
@@ -116,7 +116,7 @@ when these aren't specified.
                         Program.Exit(1);
                     }
 
-                    if (!HiveDefinition.DnsHostRegex.IsMatch(registry))
+                    if (!ClusterDefinition.DnsHostRegex.IsMatch(registry))
                     {
                         Console.Error.WriteLine($"***ERROR: [{registry}] is not a valid registry hostname.");
                         Program.Exit(1);
@@ -182,7 +182,7 @@ when these aren't specified.
                         Program.Exit(1);
                     }
 
-                    if (!HiveDefinition.DnsHostRegex.IsMatch(registry))
+                    if (!ClusterDefinition.DnsHostRegex.IsMatch(registry))
                     {
                         Console.Error.WriteLine($"***ERROR: [{registry}] is not a valid registry hostname.");
                         Program.Exit(1);

@@ -34,7 +34,7 @@ namespace TestHive
     public class Test_AnsibleTrafficManager : IClassFixture<HiveFixture>
     {
         private HiveFixture     hiveFixture;
-        private HiveProxy       hive;
+        private ClusterProxy    hive;
         private string          vegomaticImage = $"nhive/vegomatic:{ThisAssembly.Git.Branch}-latest";
 
         public Test_AnsibleTrafficManager(HiveFixture fixture)

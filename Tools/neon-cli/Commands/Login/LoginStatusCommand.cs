@@ -49,7 +49,7 @@ USAGE:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            HiveProxy    hive;
+            ClusterProxy    hive;
 
             if (commandLine.HasHelpOption)
             {
@@ -71,7 +71,7 @@ USAGE:
 
             // Parse and validate the hive definition.
 
-            hive = new HiveProxy(hiveLogin,
+            hive = new ClusterProxy(hiveLogin,
                 (nodeName, publicAddress, privateAddress, append) =>
                 {
                     return new SshProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, hiveLogin.GetSshCredentials(), TextWriter.Null);

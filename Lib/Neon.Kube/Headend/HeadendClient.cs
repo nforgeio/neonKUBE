@@ -15,7 +15,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Consul;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -83,7 +82,6 @@ namespace Neon.Kube
 
             versions.ComponentToImage.Add("neon-dns",                   "neon-dns");
             versions.ComponentToImage.Add("neon-dns-mon",               "neon-dns-mon");
-            versions.ComponentToImage.Add("neon-hivemq",                "neon-hivemq");
             versions.ComponentToImage.Add("neon-hive-manager",          "neon-hive-manager");
             versions.ComponentToImage.Add("neon-log-esdata",            "elasticsearch");
             versions.ComponentToImage.Add("neon-log-collector",         "neon-log-collector");
@@ -107,7 +105,6 @@ namespace Neon.Kube
             versions.ImageToFullyQualified.Add("metricbeat",            $"{repoOrg}/metricbeat:{repoTag}");
             versions.ImageToFullyQualified.Add("neon-dns",              $"{repoOrg}/neon-dns:{repoTag}");
             versions.ImageToFullyQualified.Add("neon-dns-mon",          $"{repoOrg}/neon-dns-mon:{repoTag}");
-            versions.ImageToFullyQualified.Add("neon-hivemq",           $"{repoOrg}/neon-hivemq:{repoTag}");
             versions.ImageToFullyQualified.Add("neon-hive-manager",     $"{repoOrg}/neon-hive-manager:{repoTag}");
             versions.ImageToFullyQualified.Add("neon-log-collector",    $"{repoOrg}/neon-log-collector:{repoTag}");
             versions.ImageToFullyQualified.Add("neon-log-host",         $"{repoOrg}/neon-log-host:{repoTag}");

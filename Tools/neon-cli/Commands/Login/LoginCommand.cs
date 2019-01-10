@@ -76,7 +76,7 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            HiveProxy    hiveProxy;
+            ClusterProxy    hiveProxy;
 
             if (commandLine.HasHelpOption || commandLine.Arguments.Length == 0)
             {
@@ -203,7 +203,7 @@ ARGUMENTS:
 
             Console.Error.WriteLine("Authenticating...");
 
-            hiveProxy = new HiveProxy(hiveLogin,
+            hiveProxy = new ClusterProxy(hiveLogin,
                 (nodeName, publicAddress, privateAddress, append) =>
                 {
                     return new SshProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, hiveLogin.GetSshCredentials(), TextWriter.Null);

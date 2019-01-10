@@ -432,9 +432,9 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The associated <see cref="HiveProxy"/> or <c>null</c>.
+        /// The associated <see cref="ClusterProxy"/> or <c>null</c>.
         /// </summary>
-        public HiveProxy Hive { get; internal set; }
+        public ClusterProxy Hive { get; internal set; }
 
         /// <summary>
         /// Returns the display name for the server.
@@ -3190,7 +3190,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public bool RegistryLogin(string registry, string username = null, string password = null)
         {
-            Covenant.Requires<ArgumentException>(HiveDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
 
             if (HiveHelper.IsDockerPublicRegistry(registry))
             {
@@ -3253,7 +3253,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public bool RegistryLogout(string registry)
         {
-            Covenant.Requires<ArgumentException>(HiveDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
 
             if (HiveHelper.IsDockerPublicRegistry(registry))
             {
@@ -3270,117 +3270,6 @@ echo $? > {cmdFolder}/exit
             {
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Starts or restarts the <b>neon-registry-cache</b> container running on 
-        /// the node with new upstream registry credentials.
-        /// </summary>
-        /// <param name="registry">The target registry hostname.</param>
-        /// <param name="username">Optional username.</param>
-        /// <param name="password">Optional password.</param>
-        /// <returns><c>true</c> if the operation succeeded or was unnecessary.</returns>
-        /// <remarks>
-        /// <note>
-        /// This method currently does nothing but return <c>true</c> for non-manager
-        /// nodes or if the registry specified is not the Docker public registry
-        /// because cache supports only the public registry or if the registry
-        /// cache is not enabled for this hive.
-        /// </note>
-        /// </remarks>
-        public bool RestartRegistryCache(string registry, string username = null, string password = null)
-        {
-            Covenant.Requires<ArgumentException>(HiveDefinition.DnsHostRegex.IsMatch(registry));
-
-            username = username ?? string.Empty;
-            password = password ?? string.Empty;
-
-            // Return immediately if this is a NOP for the current node and environment.
-
-            if (!HiveHelper.IsDockerPublicRegistry(registry) || !Hive.Definition.Docker.RegistryCache)
-            {
-                return true;
-            }
-
-            // $hack(jeff.lill)
-
-            var nodeDefinition = Metadata as NodeDefinition;
-
-            if (nodeDefinition == null || nodeDefinition.Role != NodeRole.Manager)
-            {
-                return true;
-            }
-
-            // Stop any existing registry cache container.  Note that we'll
-            // also determine Docker image being used so we can restart with
-            // the same one (if it has been changed since hive deployment).
-
-            var image    = Hive.Definition.Image.RegistryCache;    // Default to this if there's no container.
-            var response = DockerCommand(RunOptions.None, "docker", "ps", "-a", "--filter", "name=neon-registry-cache", "--format", "{{.Image}}");
-
-            if (response.ExitCode != 0)
-            {
-                return false;
-            }
-
-            if (response.OutputText.Trim() != string.Empty)
-            {
-                image = response.OutputText.Trim();
-            }
-
-            response = DockerCommand(RunOptions.None, "docker", "rm", "--force", "neon-registry-cache");
-
-            if (response.ExitCode != 0)
-            {
-                return false;
-            }
-
-            // Start/restart the registry cache.
-
-            var runCommand = new CommandBundle(
-                "docker run",
-                "--name", "neon-registry-cache",
-                "--detach",
-                "--restart", "always",
-                "--publish", $"{HiveHostPorts.DockerRegistryCache}:5000",
-                "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
-                "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
-                "--env", $"HOSTNAME={Name}.{Hive.Definition.Hostnames.RegistryCache}",
-                "--env", $"REGISTRY={registry}",
-                "--env", $"USERNAME={username}",
-                "--env", $"PASSWORD={password}",
-                "--env", "LOG_LEVEL=info",
-                image);
-
-            response = SudoCommand(runCommand);
-
-            if (response.ExitCode != 0)
-            {
-                return false;
-            }
-
-            // Upload a script so it will be easier to manually restart the container.
-
-            // $todo(jeff.lill);
-            //
-            // Persisting the registry credentials in the uploaded script here is 
-            // probably not the best idea, but I really like the idea of having
-            // this script available to make it easy to restart the cache if
-            // necessary.
-            //
-            // There are a couple of mitigating factors:
-            //
-            //      * The scripts folder can only be accessed by the ROOT user
-            //      * These are Docker public registry credentials only
-            //
-            // Users can create and use read-only credentials, which is 
-            // probably a best practice anyway for most hives or they
-            // can deploy a custom registry (whose crdentials will be 
-            // persisted to Vault).
-
-            UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash(), permissions: "700");
-
-            return true;
         }
 
         /// <summary>
@@ -3404,7 +3293,7 @@ echo $? > {cmdFolder}/exit
         public void WaitForDnsHost(string hostname, TimeSpan timeout = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
-            Covenant.Requires<ArgumentNullException>(HiveDefinition.DnsHostRegex.IsMatch(hostname));
+            Covenant.Requires<ArgumentNullException>(ClusterDefinition.DnsHostRegex.IsMatch(hostname));
 
             if (timeout <= TimeSpan.Zero)
             {

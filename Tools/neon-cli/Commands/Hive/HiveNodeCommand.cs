@@ -55,7 +55,7 @@ USAGE:
             }
 
             var hiveLogin = Program.ConnectHive();
-            var hive      = new HiveProxy(hiveLogin);
+            var hive      = new ClusterProxy(hiveLogin);
             var command   = commandLine.Arguments.ElementAtOrDefault(0);
 
             switch (command)

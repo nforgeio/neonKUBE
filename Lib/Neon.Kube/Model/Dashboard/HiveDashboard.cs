@@ -76,7 +76,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="hiveDefinition">The current hive definition,</param>
         /// <returns>The list of warnings (if any).</returns>
-        public List<string> Validate(HiveDefinition hiveDefinition)
+        public List<string> Validate(ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentException>(hiveDefinition != null);
 

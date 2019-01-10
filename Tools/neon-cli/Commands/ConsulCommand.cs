@@ -51,7 +51,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
       hive host, not the local workstation and you'll need to specify
       a fully qualified path.
 ";
-        private HiveProxy hive;
+        private ClusterProxy hive;
 
         private const string remoteConsulPath = "/usr/local/bin/consul";
 
@@ -98,7 +98,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
 
             var hiveLogin = Program.ConnectHive();
 
-            hive = new HiveProxy(hiveLogin);
+            hive = new ClusterProxy(hiveLogin);
 
             // Determine which node we're going to target.
 

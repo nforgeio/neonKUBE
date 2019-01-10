@@ -180,9 +180,9 @@ namespace Neon.Kube
         /// initialized to their default values.
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
-        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(HiveDefinition hiveDefinition)
+        public void Validate(ClusterDefinition hiveDefinition)
         {
             RegistryCache   = VerifyImage(nameof(RegistryCache), RegistryCache ?? defaultRegistryCache);
             Proxy           = VerifyImage(nameof(Proxy), Proxy ?? defaultProxy);
@@ -207,12 +207,12 @@ namespace Neon.Kube
         /// <param name="propertyName">The image property name.</param>
         /// <param name="image">The image reference to be checked.</param>
         /// <returns>The image reference.</returns>
-        /// <exception cref="HiveDefinitionException">Thrown if the image reference is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the image reference is not valid.</exception>
         private string VerifyImage(string propertyName, string image)
         {
             if (image == null || !imageRegex.IsMatch(image))
             {
-                throw new HiveDefinitionException($"[{nameof(ImageOptions)}={image}] is not a valid Docker image reference.");
+                throw new ClusterDefinitionException($"[{nameof(ImageOptions)}={image}] is not a valid Docker image reference.");
             }
 
             return image;

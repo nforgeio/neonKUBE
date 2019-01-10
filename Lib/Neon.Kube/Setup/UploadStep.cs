@@ -72,7 +72,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Run(HiveProxy hive)
+        public override void Run(ClusterProxy hive)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 

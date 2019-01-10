@@ -39,7 +39,7 @@ namespace NeonCli
     /// </remarks>
     public class RegistryCache
     {
-        private HiveProxy   hive;
+        private ClusterProxy   hive;
         private string      hiveLoginPath;
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="hive">The hive proxy.</param>
         /// <param name="hiveLoginPath">The path to the hive login file.</param>
-        public RegistryCache(HiveProxy hive, string hiveLoginPath)
+        public RegistryCache(ClusterProxy hive, string hiveLoginPath)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
 

@@ -282,9 +282,9 @@ namespace Neon.Kube
         /// initialized to their default values.
         /// </summary>
         /// <param name="hiveDefinition">The hive definition.</param>
-        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(HiveDefinition hiveDefinition)
+        public void Validate(ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
@@ -295,37 +295,37 @@ namespace Neon.Kube
                     continue;
                 }
 
-                throw new HiveDefinitionException($"Hive name [{hiveDefinition.Name}] is not valid for Azure deployment.  Only letters, digits, dashes, or underscores are allowed.");
+                throw new ClusterDefinitionException($"Hive name [{hiveDefinition.Name}] is not valid for Azure deployment.  Only letters, digits, dashes, or underscores are allowed.");
             }
 
             if (string.IsNullOrEmpty(SubscriptionId))
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(TenantId))
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(TenantId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(ApplicationId))
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(ApplicationId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ApplicationId)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Password))
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(Password)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(Password)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(Region)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(Region)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(DomainLabel))
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(DomainLabel)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(DomainLabel)}] property cannot be empty.");
             }
 
             // Verify [ResourceGroup].
@@ -337,24 +337,24 @@ namespace Neon.Kube
 
             if (ResourceGroup.Length > 64)
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be longer than 64 characters.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be longer than 64 characters.");
             }
 
             if (!char.IsLetter(ResourceGroup.First()))
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must begin with a letter.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must begin with a letter.");
             }
 
             if (ResourceGroup.Last() == '_' || ResourceGroup.Last() == '-')
             {
-                throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must not end with a dash or underscore.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must not end with a dash or underscore.");
             }
 
             foreach (var ch in ResourceGroup)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
-                    throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must include only letters, digits, dashes or underscores.");
+                    throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must include only letters, digits, dashes or underscores.");
                 }
             }
 
@@ -369,12 +369,12 @@ namespace Neon.Kube
 
             if (hiveDefinition.Managers.Count() > HiveConst.MaxManagers)
             {
-                throw new HiveDefinitionException($"Hive manager count [{hiveDefinition.Managers.Count()}] exceeds the [{HiveConst.MaxManagers}] limit for neonHIVEs.");
+                throw new ClusterDefinitionException($"Hive manager count [{hiveDefinition.Managers.Count()}] exceeds the [{HiveConst.MaxManagers}] limit for neonHIVEs.");
             }
 
             if (hiveDefinition.Nodes.Count() > AzureHelper.MaxHiveNodes)
             {
-                throw new HiveDefinitionException($"Hive node count [{hiveDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxHiveNodes}] limit for neonHIVEs deployed to Azure.");
+                throw new ClusterDefinitionException($"Hive node count [{hiveDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxHiveNodes}] limit for neonHIVEs deployed to Azure.");
             }
         }
     }

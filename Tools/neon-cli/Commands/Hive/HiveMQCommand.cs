@@ -51,7 +51,7 @@ COMMANDS:
     ---------------------------------------------z
     Executes the [rabbitmqadmin] management utility.
 ";
-        private HiveProxy hive;
+        private ClusterProxy hive;
 
         private const string remoteConsulPath = "/usr/local/bin/consul";
 
@@ -98,7 +98,7 @@ COMMANDS:
 
             var hiveLogin = Program.ConnectHive();
 
-            hive = new HiveProxy(hiveLogin);
+            hive = new ClusterProxy(hiveLogin);
 
             // Determine which node we're going to target.
 

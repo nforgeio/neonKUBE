@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TrafficStatus.cs
+// FILE:	    ClusterDefinitionException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -9,7 +9,6 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -24,28 +23,24 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes the route status for a traffic manager.
+    /// Describes hive definition errors.
     /// </summary>
-    public class TrafficStatus
+    public class ClusterDefinitionException : Exception
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
-        public TrafficStatus()
+        public ClusterDefinitionException()
         {
-            this.TimestampUtc = DateTime.UtcNow;
         }
 
         /// <summary>
-        /// The last time the <b>neon-proxy-manager</b> finished processing rules for the traffic manager.
+        /// Consstructs an instance with a message.
         /// </summary>
-        [JsonProperty(PropertyName = "TimestampUtc", Required = Required.Always)]
-        public DateTime TimestampUtc { get; set; }
-
-        /// <summary>
-        /// Logs generated when the rules were processed.
-        /// </summary>
-        [JsonProperty(PropertyName = "Status", Required = Required.Always)]
-        public string Status { get; set; }
+        /// <param name="message">The message.</param>
+        public ClusterDefinitionException(string message)
+            : base(message)
+        {
+        }
     }
 }

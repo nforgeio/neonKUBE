@@ -803,17 +803,6 @@ namespace Neon.Kube
                                 sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                             }
                         }
-
-                        if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsPet))
-                        {
-                            sbDisplay.AppendLine();
-                            sbDisplay.AppendLine(" Pets:");
-
-                            foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsPet))
-                            {
-                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
-                            }
-                        }
                     }
                     else
                     {

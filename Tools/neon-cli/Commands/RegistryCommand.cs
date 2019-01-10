@@ -175,7 +175,7 @@ is running or EXITCODE=1 if it's not.
 
                     if (!string.IsNullOrEmpty(registry))
                     {
-                        if (!HiveDefinition.NameRegex.IsMatch(registry))
+                        if (!ClusterDefinition.NameRegex.IsMatch(registry))
                         {
                             Console.Error.WriteLine($"*** ERROR: [{registry}] is not a valid hostname.");
                             Program.Exit(1);
@@ -211,7 +211,7 @@ is running or EXITCODE=1 if it's not.
 
                     registry = commandLine.Arguments.ElementAtOrDefault(1);
 
-                    if (!string.IsNullOrEmpty(registry) && !HiveDefinition.NameRegex.IsMatch(registry))
+                    if (!string.IsNullOrEmpty(registry) && !ClusterDefinition.NameRegex.IsMatch(registry))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{registry}] is not a valid hostname.");
                         Program.Exit(1);
@@ -244,7 +244,7 @@ is running or EXITCODE=1 if it's not.
                                 Program.Exit(1);
                             }
 
-                            if (!HiveDefinition.NameRegex.IsMatch(registry))
+                            if (!ClusterDefinition.NameRegex.IsMatch(registry))
                             {
                                 Console.Error.WriteLine($"*** ERROR: [{registry}] is not a valid hostname.");
                                 Program.Exit(1);

@@ -31,7 +31,7 @@ namespace Neon.Kube
         /// <summary>
         /// Ubuntu 16.04 LTS.
         /// </summary>
-        [EnumMember(Value = "ubuntu-16.04")]
-        Ubuntu_16_04
+        [EnumMember(Value = "CoreOS")]
+        CoreOS
     }
 }

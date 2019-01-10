@@ -89,7 +89,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public abstract void Validate(HiveDefinition hiveDefinition);
+        public abstract void Validate(ClusterDefinition hiveDefinition);
 
         /// <inheritdoc/>
         public abstract bool Provision(bool force);
@@ -104,13 +104,7 @@ namespace Neon.Kube
         public abstract void AddPostVpnSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
-        public abstract List<HostedEndpoint> GetPublicEndpoints();
-
-        /// <inheritdoc/>
         public abstract bool CanUpdatePublicEndpoints { get; }
-
-        /// <inheritdoc/>
-        public abstract void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);
 
         /// <inheritdoc/>
         public abstract string DrivePrefix { get; }

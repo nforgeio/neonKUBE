@@ -32,7 +32,7 @@ namespace TestHive
         // Instance members
 
         private HiveFixture     hiveFixture;
-        private HiveProxy       hive;
+        private ClusterProxy    hive;
 
         public Test_AnsibleDashboard(HiveFixture fixture)
         {

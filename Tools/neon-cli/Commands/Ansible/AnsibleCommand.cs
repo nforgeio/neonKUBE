@@ -838,9 +838,9 @@ MODULES:
                         Program.Exit(0);
                     }
 
-                    if (login.Definition.HiveNode.SshAuth != AuthMethods.Tls)
+                    if (login.Definition.NodeOptions.SshAuth != AuthMethods.Tls)
                     {
-                        Console.Error.WriteLine($"*** ERROR: The [ansible exec] command requires that the hive nodes were deployed with [{nameof(HiveNodeOptions)}.{nameof(HiveNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
+                        Console.Error.WriteLine($"*** ERROR: The [ansible exec] command requires that the hive nodes were deployed with [{nameof(ClusterNodeOptions)}.{nameof(ClusterNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
                         Program.Exit(1);
                     }
 
@@ -875,9 +875,9 @@ MODULES:
                         Program.Exit(0);
                     }
 
-                    if (login.Definition.HiveNode.SshAuth != AuthMethods.Tls)
+                    if (login.Definition.NodeOptions.SshAuth != AuthMethods.Tls)
                     {
-                        Console.Error.WriteLine($"*** ERROR: The [ansible play] command requires that the hive nodes were deployed with [{nameof(HiveNodeOptions)}.{nameof(HiveNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
+                        Console.Error.WriteLine($"*** ERROR: The [ansible play] command requires that the hive nodes were deployed with [{nameof(ClusterNodeOptions)}.{nameof(ClusterNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
                         Program.Exit(1);
                     }
 
@@ -1605,7 +1605,7 @@ retries = 4
         private void GenerateAnsibleFiles(HiveLogin login)
         {
             var hiveLogin = Program.ConnectHive();
-            var hive      = new HiveProxy(hiveLogin);
+            var hive      = new ClusterProxy(hiveLogin);
 
             // IMPLEMENTATION NOTE:
             //
@@ -1671,7 +1671,7 @@ retries = 4
             {
                 // Special-case the implicit Docker Swarm manager node (not in a group).
 
-                writer.WriteLine(HiveDefinition.VirtualSwarmManagerName);
+                writer.WriteLine(ClusterDefinition.VirtualSwarmManagerName);
 
                 // Write the groups.
 
@@ -1703,8 +1703,8 @@ retries = 4
             var swarmManagerNode    = NeonHelper.JsonClone(swarmManager.Metadata);
             var swarmManagerAddress = swarmManagerNode.PrivateAddress;
 
-            swarmManagerNode.Name           = HiveDefinition.VirtualSwarmManagerName;
-            swarmManagerNode.PrivateAddress = HiveDefinition.VirtualSwarmManagerName;  // This references a record we'll add to [/etc/hosts] below.
+            swarmManagerNode.Name           = ClusterDefinition.VirtualSwarmManagerName;
+            swarmManagerNode.PrivateAddress = ClusterDefinition.VirtualSwarmManagerName;  // This references a record we'll add to [/etc/hosts] below.
 
             swarmManagerNodes.Add(swarmManagerNode);
 
@@ -1819,7 +1819,7 @@ retries = 4
 $@"
 # Identifies a (hopefully) healthy swarm manager node.
 
-{swarmManagerAddress} {HiveDefinition.VirtualSwarmManagerName}
+{swarmManagerAddress} {ClusterDefinition.VirtualSwarmManagerName}
 "));
         }
     }
