@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         docker-entrypoint.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Loads the Docker host node environment variables before launching HAProxy.
 

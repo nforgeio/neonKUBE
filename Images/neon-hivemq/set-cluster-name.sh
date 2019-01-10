@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         set-cluster-name.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # This script is executed by [docker-entrypoint.sh] to run in parallel while the
 # RabbitMQ server spins up.  This script spins while waiting for RabbitMQ to

@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         docker-entrypoint.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Runs the [varnish] HTTP caching proxy with some simple configuration options.
 

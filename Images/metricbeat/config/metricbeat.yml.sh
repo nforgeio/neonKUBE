@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         metricbeat.yml.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Generates the Metricbeat configuration file by replacing environment variable
 # references (I had trouble with embedding these directly into the YML file).

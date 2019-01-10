@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         safe-apt-get
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Wraps the [apt-get] command such that the command is retried a few times 
 # with a delay due to apparent network failures.  [apt-get] actually returns 

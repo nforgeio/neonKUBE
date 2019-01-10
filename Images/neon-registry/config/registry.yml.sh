@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         registry.yml.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Generates the Docker registry configuration file [/registry.yml] 
 # by substituting environment variables.

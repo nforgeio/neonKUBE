@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         vault-auth.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # This script logs the container into Vault by reading the Vault credentials
 # at [/run/secrets/${VAULT_CREDENTIALS}] and then setting the VAULT_TOKEN environment

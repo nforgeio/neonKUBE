@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         setup-ssd.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # NOTE: This script must be run under [sudo].
 #
@@ -66,7 +66,7 @@ if ${NEON_NODE_SSD} ; then
 #------------------------------------------------------------------------------
 # FILE:         neon-tune-ssd
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # This script is generated during setup by [setup-ssd.sh] to execute
 # the commands necessary to properly tune any attached SSDs

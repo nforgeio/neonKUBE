@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         setup-node.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # NOTE: This script must be run under [sudo].
 #
@@ -397,7 +397,7 @@ cat <<EOF >> /etc/systemd/journald.conf
 #------------------------------------------------------------------------------
 # FILE:         journald.conf
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Configure the systemd journal to perist the journal to the file system at
 # [/var/log/journal].  We need this so the node's [neon-log-host] service
@@ -458,7 +458,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
 #------------------------------------------------------------------------------
 # FILE:         neon-cleaner
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # This is a simple service script that periodically cleans accumulated files
 # on the host node including:
@@ -1166,7 +1166,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-dns-reload
 #------------------------------------------------------------------------------
 # FILE:         neon-dns-reload
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # This script signals the PowerDNS Recursor to reload its host file and
 # optionally wipe any cached DNS records.
@@ -1214,7 +1214,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-dns-loader
 #------------------------------------------------------------------------------
 # FILE:         neon-dns-loader
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # This script runs as the local [neon-dns-loader] service which is responsible
 # for watching for the presence of a file created by the [neon-dns] Docker
@@ -1292,7 +1292,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-host-maintenance
 #------------------------------------------------------------------------------
 # FILE:         neon-host-maintenance
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # This script runs is invoked by CRON to perform periodic host maintenance incuding
 # purging unreferenced Docker images to avoid maxing out the file system.  This
@@ -1312,7 +1312,7 @@ cat <<EOF > /etc/cron.d/neon-host-maintenance
 #------------------------------------------------------------------------------
 # FILE:         neon-host-maintenance
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Daily neonHIVE related host maintenance scheduled for 9:15pm system time (UTC)
 # or the middle of the night Pacific time.

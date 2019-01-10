@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    HiveSetupCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -963,7 +963,7 @@ export CONSUL_HTTP_FULLADDR=http://{hive.Definition.Hostnames.Consul}:{hive.Defi
 $@"#------------------------------------------------------------------------------
 # FILE:         /etc/neon/host-env
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # This script can be mounted into containers that require extended knowledge
 # about the hive and host node.  This will be generally be mounted to the container

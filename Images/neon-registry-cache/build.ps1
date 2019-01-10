@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Builds a neonHIVE [neon-registry-cache] image with the specified version, subversion
 # and majorversion.  The image built will be a slightly modified version of the 

@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         elasticsearch.yml.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Generates the Elasticsearch configuration file [elasticsearch.yml] by
 # substituting environment variables.  I ran into some trouble using 
