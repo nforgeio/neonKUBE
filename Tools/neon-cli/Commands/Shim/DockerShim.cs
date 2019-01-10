@@ -18,7 +18,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
-using Neon.Hive;
+using Neon.Kube;
 
 namespace NeonCli
 {

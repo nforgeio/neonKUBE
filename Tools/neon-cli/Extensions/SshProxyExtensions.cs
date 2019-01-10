@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.IO;
 using Neon.Net;
 

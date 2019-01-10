@@ -5,8 +5,8 @@
     <Version>7.0.0-preview.0</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonHIVE</Product>
-    <Description>Hyper-V provisioning.</Description>
+    <Product>neonKUBE</Product>
+    <Description>neonKUBE Hyper-V provisioning.</Description>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>* NO CHANGES</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

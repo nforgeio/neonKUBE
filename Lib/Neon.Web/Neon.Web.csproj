@@ -5,8 +5,8 @@
     <Version>18.11.1-alpha.6</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonHIVE</Product>
-    <Description>neonForge website and API related classes and enhancements.</Description>
+    <Product>neonKUBE</Product>
+    <Description>neonKUBE website and API related classes and enhancements.</Description>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>* NO CHANGES</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

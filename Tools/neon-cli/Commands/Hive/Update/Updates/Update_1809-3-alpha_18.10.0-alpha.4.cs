@@ -17,7 +17,7 @@ using ICSharpCode.SharpZipLib.Zip;
 
 using Neon.Common;
 using Neon.IO;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.HiveMQ;
 using Neon.Net;
 

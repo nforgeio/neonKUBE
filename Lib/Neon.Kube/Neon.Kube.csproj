@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Neon.Kube</RootNamespace>
+    <Authors>Jeff Lill</Authors>
+    <Version>18.11.1-alpha.6</Version>
+    <Company>neonFORGE, LLC</Company>
+    <Product>neonKUBE</Product>
+    <Description>neonKUBE utilities.</Description>
+    <PackageReleaseNotes>**BREAKING:** AS few more APIs have been renamed from `TrafficDirector` to `TrafficManager`.
+</PackageReleaseNotes>
+    <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
+    <DocumentationFile>bin\Debug\Neon.Kube.xml</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0</DefineConstants>
+    <DocumentationFile>bin\Release\Neon.Kube.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />
+
+  <ItemGroup>
+    <PackageReference Include="Consul" Version="0.7.2.6" />
+    <PackageReference Include="CouchbaseNetClient" Version="2.7.1" />
+    <PackageReference Include="DNS" Version="5.0.0" />
+    <PackageReference Include="Linq2Couchbase" Version="1.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="RabbitMQ.Client" Version="5.1.0" />
+    <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
+    <PackageReference Include="SSH.NET" Version="2016.1.0" />
+    <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
+    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+    <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
+    <PackageReference Include="System.Net.Ping" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
+    <PackageReference Include="YamlDotNet" Version="5.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
+    <ProjectReference Include="..\Neon.Docker\Neon.Docker.csproj" />
+    <ProjectReference Include="..\Neon.HiveMQ\Neon.HiveMQ.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+
+</Project>

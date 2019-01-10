@@ -20,7 +20,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
 using Neon.Diagnostics;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.Retry;
 
 namespace CouchbaseTest

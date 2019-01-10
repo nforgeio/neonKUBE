@@ -29,7 +29,7 @@ using Neon.Cryptography;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.Net;
 
 using NeonCli.Ansible.Couchbase;

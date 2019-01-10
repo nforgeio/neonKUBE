@@ -25,7 +25,7 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;

@@ -19,7 +19,7 @@ using Newtonsoft.Json;
 using YamlDotNet.RepresentationModel;
 
 using Neon.Common;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.IO;
 using System.Diagnostics.Contracts;
 

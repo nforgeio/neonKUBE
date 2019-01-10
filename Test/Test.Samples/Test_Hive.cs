@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.Xunit;
 using Neon.Xunit.Hive;
 

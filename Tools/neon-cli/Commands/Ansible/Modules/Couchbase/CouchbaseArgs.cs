@@ -28,7 +28,7 @@ using YamlDotNet.Serialization.NamingConventions;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.Data;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.IO;
 using Neon.Net;
 

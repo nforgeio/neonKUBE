@@ -26,7 +26,7 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
-using Neon.Hive;
+using Neon.Kube;
 
 // $todo(jeff.lill): Modify insert keys to work like the Ansible [neon_couchbase_import] module.
 

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>18.11.1-alpha.6</Version>
+    <Authors>Jeff Lill</Authors>
+    <Company>neonFORGE, LLC</Company>
+    <Product>neonKUBE</Product>
+    <Description>neonKUBE Bare Machine Hosting.</Description>
+    <PackageReleaseNotes>* NO CHANGES</PackageReleaseNotes>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\Neon.Kube.Machine.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\Neon.Kube.Machine.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+  </ItemGroup>
+
+</Project>

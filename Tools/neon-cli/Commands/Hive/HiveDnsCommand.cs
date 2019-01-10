@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 using Neon.Common;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.Net;
 using System.Diagnostics.Contracts;
 

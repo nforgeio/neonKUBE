@@ -72,7 +72,7 @@ services:
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void ClearVolumes()
         {
             //-----------------------------------------------------------------

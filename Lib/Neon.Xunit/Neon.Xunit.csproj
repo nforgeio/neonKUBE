@@ -6,7 +6,7 @@
     <Version>18.11.1-alpha.6</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Description>neonFORGE Xunit related extensions.</Description>
+    <Description>neonKUBE Xunit related extensions.</Description>
     <PackageReleaseNotes>* **BREAKING:** The `Xunit.TestHelper` class was relocated to the `Neon.Xunit` namespace to be consistent with the other test classes.
 
 * Added the `TestHttpClient` to make it easy to disable connection reuse for load balancing tests, etc.
@@ -14,7 +14,7 @@
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
-    <Product>neonHIVE</Product>
+    <Product>neonKUBE</Product>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
   </PropertyGroup>

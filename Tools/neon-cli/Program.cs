@@ -22,7 +22,7 @@ using Newtonsoft.Json;
 using Neon;
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Hive;
+using Neon.Kube;
 
 namespace NeonCli
 {

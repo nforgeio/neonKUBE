@@ -24,7 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\Neon.Stack.Couchbase.Lite.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.Couchbase.Lite.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,7 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Neon.Stack.Couchbase.Lite.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.Couchbase.Lite.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Couchbase.Lite, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">

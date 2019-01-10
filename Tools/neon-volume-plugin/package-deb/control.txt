@@ -1,8 +1,0 @@
-﻿Package: neon-volume-plugin
-Version: PACKAGE_VERSION
-Section: base
-Priority: optional
-Architecture: amd64
-Depends: 
-Maintainer: Jeff Lill <jeff@lilltek.com>
-Description: Docker volume plugin driver for neonHIVE integrated CephFS.

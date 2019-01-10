@@ -19,7 +19,7 @@ using Newtonsoft.Json;
 using Renci.SshNet.Common;
 
 using Neon.Common;
-using Neon.Hive;
+using Neon.Kube;
 
 namespace NeonCli
 {

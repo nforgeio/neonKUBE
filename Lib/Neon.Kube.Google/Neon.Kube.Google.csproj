@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>18.11.1-alpha.6</Version>
+    <Company>neonFORGE, LLC</Company>
+    <Product>neonKUBE</Product>
+    <Description>neonKUBE Google Hosting.</Description>
+    <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <PackageReleaseNotes>* NO CHANGES</PackageReleaseNotes>
+    <Authors>Jeff Lill</Authors>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\Neon.Kube.Google.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\Neon.Kube.Google.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />
+
+</Project>

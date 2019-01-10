@@ -18,7 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Hive;
+using Neon.Kube;
 
 namespace Neon.Xen
 {

@@ -26,7 +26,7 @@ using YamlDotNet.Serialization.NamingConventions;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.Net;
 
 namespace NeonCli.Ansible

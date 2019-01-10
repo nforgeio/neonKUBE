@@ -33,9 +33,9 @@ namespace Neon.Xunit
         public const string NeonCommon = "Neon.Common";
 
         /// <summary>
-        /// Identifies <b>Neon.Hive</b> tests.
+        /// Identifies <b>Neon.Kube</b> tests.
         /// </summary>
-        public const string NeonHive = "Neon.Hive";
+        public const string NeonKube = "Neon.Kube";
 
         /// <summary>
         /// Identifies <b>Neon.Couchbase</b> tests.

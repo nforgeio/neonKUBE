@@ -16,7 +16,7 @@ using ICSharpCode.SharpZipLib.Zip;
 
 using Neon.Common;
 using Neon.IO;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.Net;
 
 namespace NeonCli

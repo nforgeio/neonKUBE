@@ -28,7 +28,7 @@ using Neon.Cryptography;
 using Neon.Common;
 using Neon.Docker;
 using Neon.IO;
-using Neon.Hive;
+using Neon.Kube;
 using Neon.Net;
 
 using NeonCli.Ansible.Docker;

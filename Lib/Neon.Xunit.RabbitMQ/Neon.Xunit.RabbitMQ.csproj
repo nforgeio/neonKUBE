@@ -5,8 +5,8 @@
     <Version>18.11.1-alpha.6</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonHIVE</Product>
-    <Description>neonFORGE RabbitMQ Xunit testing helpers.</Description>
+    <Product>neonKUBE</Product>
+    <Description>neonKUBE RabbitMQ Xunit testing helpers.</Description>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>* NO CHANGES</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
@@ -15,6 +15,9 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\Neon.Xunit.RabbitMQ.xml</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

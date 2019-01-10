@@ -5,8 +5,8 @@
     <Version>7.0.0-preview.0</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonHIVE</Product>
-    <Description>XenServer provisioning.</Description>
+    <Product>neonKUBE</Product>
+    <Description>neonKUBE XenServer provisioning.</Description>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>* NO CHANGES</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Hive\Neon.Hive.csproj" />
+    <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
   </ItemGroup>
 
 </Project>

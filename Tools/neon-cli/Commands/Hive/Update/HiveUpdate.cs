@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.IO;
-using Neon.Hive;
+using Neon.Kube;
 
 namespace NeonCli
 {

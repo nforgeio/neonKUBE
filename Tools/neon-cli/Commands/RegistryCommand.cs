@@ -19,7 +19,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Cryptography;
-using Neon.Hive;
+using Neon.Kube;
 
 namespace NeonCli
 {
