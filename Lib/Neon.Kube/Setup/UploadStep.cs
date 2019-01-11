@@ -4,15 +4,8 @@
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Neon.Common;
 
 namespace Neon.Kube
 {
@@ -72,11 +65,11 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Run(ClusterProxy hive)
+        public override void Run(ClusterProxy cluster)
         {
-            Covenant.Requires<ArgumentNullException>(hive != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null);
 
-            var node   = hive.GetNode(nodeName);
+            var node   = cluster.GetNode(nodeName);
             var status = this.ToString();
 
             node.UploadText(path, text, tabStop, outputEncoding);

@@ -83,7 +83,7 @@ namespace Neon.Kube
         public const string LabelDatacenter = ClusterDefinition.ReservedLabelPrefix + ".cluster.datacenter";
 
         /// <summary>
-        /// Reserved label name that identifies the hive environment.
+        /// Reserved label name that identifies the cluster environment.
         /// </summary>
         public const string LabelEnvironment = ClusterDefinition.ReservedLabelPrefix + ".cluster.environment";
 

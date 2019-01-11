@@ -211,11 +211,11 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Run(ClusterProxy hive)
+        public override void Run(ClusterProxy cluster)
         {
-            Covenant.Requires<ArgumentNullException>(hive != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null);
 
-            var node = hive.GetNode(nodeName);
+            var node = cluster.GetNode(nodeName);
 
             if (operationName == null)
             {
@@ -340,7 +340,7 @@ namespace Neon.Kube
         /// <see cref="ToBash"/> does not support commands with attached files.
         /// </exception>
         /// <remarks>
-        /// This can be useful for making copies of hive configuration commands
+        /// This can be useful for making copies of cluster configuration commands
         /// on the server as scripts for situations where system operators need
         /// to manually tweak things.
         /// </remarks>

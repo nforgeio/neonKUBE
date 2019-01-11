@@ -100,8 +100,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder holding the user specific hive files such
-        /// as hive logins, Ansible passwords, etc.
+        /// Returns the path the folder holding the user specific cluster files such
+        /// as cluster logins, Ansible passwords, etc.
         /// </summary>
         /// <param name="ignoreNeonToolContainerVar">
         /// Optionally ignore the presence of a <b>NEON_TOOL_CONTAINER</b> environment 
@@ -111,7 +111,7 @@ namespace Neon.Kube
         /// <remarks>
         /// The actual path return depends on the presence of the <b>NEON_TOOL_CONTAINER</b>
         /// environment variable.  <b>NEON_TOOL_CONTAINER=1</b> then we're running in a 
-        /// shimmed Docker container and we'll expect the hive login information to be mounted
+        /// shimmed Docker container and we'll expect the cluster login information to be mounted
         /// at <b>/neonhive</b>.  Otherwise, we'll return a suitable path within the 
         /// current user's home directory.
         /// </remarks>
@@ -171,12 +171,12 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage neonHIVEs.  Each known hive will have a JSON file named
+        /// to deploy and manage neonHIVEs.  Each known cluster will have a JSON file named
         /// <b><i>hive-name</i>.json</b> holding the serialized <see cref="Kube.ClusterLogin"/> 
-        /// information for the hive.
+        /// information for the cluster.
         /// </para>
         /// <para>
-        /// The <b>.current</b> file (if present) specifies the name of the hive to be considered
+        /// The <b>.current</b> file (if present) specifies the name of the cluster to be considered
         /// to be currently logged in.
         /// </para>
         /// </remarks>
@@ -234,7 +234,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the file indicating which hive is currently logged in.
+        /// Returns the path to the file indicating which cluster is currently logged in.
         /// </summary>
         public static string CurrentPath
         {
@@ -242,11 +242,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the login information for the named hive.
+        /// Returns the path to the login information for the named cluster.
         /// </summary>
         /// <param name="username">The operator's user name.</param>
-        /// <param name="hiveName">The hive name.</param>
-        /// <returns>The path to the hive's credentials file.</returns>
+        /// <param name="hiveName">The cluster name.</param>
+        /// <returns>The path to the cluster's credentials file.</returns>
         public static string GetLoginPath(string username, string hiveName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
@@ -256,7 +256,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the current user's hive virtual machine templates
+        /// Returns the path to the current user's cluster virtual machine templates
         /// folder, creating the directory if it doesn't already exist.
         /// </summary>
         /// <returns>The path to the neonHIVE setup folder.</returns>
@@ -270,24 +270,24 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the hive login for the currently logged in hive and
-        /// establishes a hive connection.
+        /// Returns the cluster login for the currently logged in hive and
+        /// establishes a cluster connection.
         /// </summary>
         /// <param name="noConnect">
-        /// Optionally indicates that the method should not connect to the hive
+        /// Optionally indicates that the method should not connect to the cluster
         /// and should simply return the current login if one is available.
         /// </param>
         /// <param name="clientVersion">
         /// Optionally specifies the current <b>neon-cli</b> version to be checked
-        /// against the hive's minimum required client.
+        /// against the cluster's minimum required client.
         /// </param>
-        /// <exception cref="VersionException">Thrown if the client is not capable of managing the hive.</exception>
-        /// <returns>The current hive login or <c>null</c>.</returns>
+        /// <exception cref="VersionException">Thrown if the client is not capable of managing the cluster.</exception>
+        /// <returns>The current cluster login or <c>null</c>.</returns>
         /// <remarks>
         /// <note>
-        /// The tricky thing here is that the hive definition nodes 
-        /// within the hive login returned will actually be loaded from
-        /// the hive itself or the cached copy.
+        /// The tricky thing here is that the cluster definition nodes 
+        /// within the cluster login returned will actually be loaded from
+        /// the cluster itself or the cached copy.
         /// </note>
         /// </remarks>
         public static ClusterLogin GetLogin(bool noConnect = false, string clientVersion = null)
@@ -324,7 +324,7 @@ namespace Neon.Kube
                 }
                 else
                 {
-                    // The referenced hive file doesn't exist so quietly remove the ".current" file.
+                    // The referenced cluster file doesn't exist so quietly remove the ".current" file.
 
                     File.Delete(CurrentPath);
                 }
@@ -334,25 +334,25 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the cached hive definition for the named hive.
+        /// Returns the path to the cached cluster definition for the named hive.
         /// </summary>
         /// <param name="username">The operator's user name.</param>
-        /// <param name="hiveName">The hive name.</param>
+        /// <param name="clusterName">The hive name.</param>
         /// <returns>The path to the hive's credentials file.</returns>
-        public static string GetCachedDefinitionPath(string username, string hiveName)
+        public static string GetCachedDefinitionPath(string username, string clusterName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(GetLoginFolder(), $"{username}@{hiveName}.def.json");
+            return Path.Combine(GetLoginFolder(), $"{username}@{clusterName}.def.json");
         }
 
         /// <summary>
-        /// Splits a hive login in the form of <b>USER@HIVE</b> into
-        /// the operator's username and the hive name.
+        /// Splits a cluster login in the form of <b>USER@HIVE</b> into
+        /// the operator's username and the cluster name.
         /// </summary>
-        /// <param name="login">The hive identifier.</param>
-        /// <returns>The username and hive name parts.</returns>
+        /// <param name="login">The cluster identifier.</param>
+        /// <returns>The username and cluster name parts.</returns>
         public static (bool IsOK, string Username, string HiveName) SplitLogin(string login)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(login));
@@ -368,17 +368,17 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Loads the hive login information for the current hive, performing any necessary decryption.
+        /// Loads the cluster login information for the current hive, performing any necessary decryption.
         /// </summary>
         /// <param name="username">The operator's user name.</param>
-        /// <param name="hiveName">The name of the target hive.</param>
+        /// <param name="clusterNamer">The name of the target hive.</param>
         /// <returns>The <see cref="Kube.ClusterLogin"/>.</returns>
-        public static ClusterLogin LoadHiveLogin(string username, string hiveName)
+        public static ClusterLogin LoadHiveLogin(string username, string clusterNamer)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterNamer));
 
-            var path      = Path.Combine(GetLoginFolder(), $"{username}@{hiveName}.login.json");
+            var path      = Path.Combine(GetLoginFolder(), $"{username}@{clusterNamer}.login.json");
             var hiveLogin = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(path));
 
             hiveLogin.Path = path;
@@ -406,7 +406,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the hive's Vault URI.
+        /// Returns the cluster's Vault URI.
         /// </summary>
         public static Uri VaultUri
         {
@@ -416,7 +416,7 @@ namespace Neon.Kube
 
                 if (string.IsNullOrEmpty(vaultUri))
                 {
-                    throw new NotSupportedException("Cannot access hive Vault because the [VAULT_ADDR] environment variable is not defined.");
+                    throw new NotSupportedException("Cannot access cluster Vault because the [VAULT_ADDR] environment variable is not defined.");
                 }
 
                 return new Uri(vaultUri);
@@ -424,7 +424,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the hive's Consul URI.
+        /// Returns the cluster's Consul URI.
         /// </summary>
         public static Uri ConsulUri
         {
@@ -434,7 +434,7 @@ namespace Neon.Kube
 
                 if (string.IsNullOrEmpty(consulUri))
                 {
-                    throw new NotSupportedException("Cannot access hive Consul because the [CONSUL_HTTP_FULLADDR] environment variable is not defined.");
+                    throw new NotSupportedException("Cannot access cluster Consul because the [CONSUL_HTTP_FULLADDR] environment variable is not defined.");
                 }
 
                 return new Uri(Environment.GetEnvironmentVariable("CONSUL_HTTP_FULLADDR"));
@@ -447,25 +447,25 @@ namespace Neon.Kube
         public static bool IsConnected { get; private set; } = false;
 
         /// <summary>
-        /// Returns the <see cref="Kube.ClusterLogin"/> for the opened hive. 
+        /// Returns the <see cref="Kube.ClusterLogin"/> for the opened cluster. 
         /// </summary>
         public static ClusterLogin HiveLogin { get; private set; } = null;
 
         /// <summary>
-        /// Returns the <see cref="ClusterProxy"/> for the opened hive.
+        /// Returns the <see cref="ClusterProxy"/> for the opened cluster.
         /// </summary>
-        public static ClusterProxy Hive { get; private set; } = null;
+        public static ClusterProxy Cluster { get; private set; } = null;
 
         /// <summary>
-        /// Simulates connecting the current application to the hive.
+        /// Simulates connecting the current application to the cluster.
         /// </summary>
-        /// <param name="login">The hive login information.</param>
+        /// <param name="login">The cluster login information.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
         public static ClusterProxy OpenHive(ClusterLogin login)
         {
             if (IsConnected)
             {
-                return ClusterHelper.Hive;
+                return ClusterHelper.Cluster;
             }
 
             log.LogInfo(() => $"Connecting to [{login.Username}@{login.ClusterName}].");
@@ -485,22 +485,22 @@ namespace Neon.Kube
                         return proxy;
                     }));
 
-            return ClusterHelper.Hive;
+            return ClusterHelper.Cluster;
         }
 
         /// <summary>
         /// <para>
-        /// Connects the current application to the hive.  This only works for applications
-        /// actually running in the hive.
+        /// Connects the current application to the cluster.  This only works for applications
+        /// actually running in the cluster.
         /// </para>
         /// <note>
         /// This should only be called by services that are actually deployed in running 
-        /// hive containers that have mapped in the hive node environment variables
+        /// cluster containers that have mapped in the hive node environment variables
         /// and host DNS mappings from <b>/etc/neon/host-env</b>.
         /// </note>
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        /// Thrown if the current process does not appear to be running as a hive container
+        /// Thrown if the current process does not appear to be running as a cluster container
         /// with the node environment variables mapped in.
         /// </exception>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
@@ -508,20 +508,20 @@ namespace Neon.Kube
         /// </remarks>
         public static ClusterProxy OpenHive()
         {
-            log.LogInfo(() => "Connecting to hive.");
+            log.LogInfo(() => "Connecting to cluster.");
 
             if (IsConnected)
             {
-                return Hive;
+                return Cluster;
             }
 
             remoteConnection = false;
 
             var sshCredentials = SshCredentials.None;
 
-            // Load the hive definition from Consul and initialize the [Hive] property.
+            // Load the cluster definition from Consul and initialize the [Hive] property.
             // Note that we need to hack [GetDefinitionAsync()] into believing that the 
-            // hive is already connected for this to work.
+            // cluster is already connected for this to work.
 
             ClusterDefinition definition = null;    // $todo(jeff.lill): FIX THIS
 
@@ -541,7 +541,7 @@ namespace Neon.Kube
                 Definition = definition
             };
 
-            var hive = OpenHive(
+            var cluster = OpenHive(
                 new ClusterProxy(HiveLogin,
                     (name, publicAddress, privateAddress, appendLog) =>
                     {
@@ -555,7 +555,7 @@ namespace Neon.Kube
 
             log.LogInfo(() => $"Connected to [{definition.Name}].");
 
-            return hive;
+            return cluster;
         }
 
         /// <summary>
@@ -581,7 +581,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Ensures that a hive login is properly initialized on the current machine.
+        /// Ensures that a cluster login is properly initialized on the current machine.
         /// </summary>
         /// <param name="login">The login.</param>
         internal static void InitLogin(ClusterLogin login)
@@ -593,7 +593,7 @@ namespace Neon.Kube
                 return; // Already initialized.
             }
 
-            // Ensure that the required hive certificates are trusted.
+            // Ensure that the required cluster certificates are trusted.
 
             if (NeonHelper.IsWindows)
             {
@@ -638,7 +638,7 @@ namespace Neon.Kube
             else if (NeonHelper.IsLinux && InToolContainer)
             {
                 // We're probably running as [neon-cli] within a shimmed Docker
-                // container so we'll need to trust the hive certificates.
+                // container so we'll need to trust the cluster certificates.
                 // We're going to assume that the container provides the
                 // [update-ca-certificates] tool.
 
@@ -656,12 +656,12 @@ namespace Neon.Kube
             {
                 // $todo(jeff.lill):
                 //
-                // We'll land here if we're actually running on the hive or
+                // We'll land here if we're actually running on the cluster or
                 // when/if we support [neon-cli] on Linux workstations.  We'll
                 // need to detect which is the case (perhaps with a new parameter
                 // or environment variable).
                 //
-                // For [neon-cli], we'll need to ensure that the hive certificates
+                // For [neon-cli], we'll need to ensure that the cluster certificates
                 // are trusted.  For Docker containers, we're going to assume 
                 // that the host node mounted its certificates into the container
                 // and that the container entrypoint script loaded them.
@@ -671,48 +671,48 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Connects to a hive using a <see cref="ClusterProxy"/>.  Note that this version does not
+        /// Connects to a cluster using a <see cref="ClusterProxy"/>.  Note that this version does not
         /// fully initialize the <see cref="HiveLogin"/> property.
         /// </summary>
-        /// <param name="hive">The hive proxy.</param>
+        /// <param name="cluster">The hive proxy.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        public static ClusterProxy OpenHive(ClusterProxy hive)
+        public static ClusterProxy OpenHive(ClusterProxy cluster)
         {
-            Covenant.Requires<ArgumentNullException>(hive != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null);
 
-            InitLogin(hive.HiveLogin);
+            InitLogin(cluster.HiveLogin);
 
             // Make this current login.
 
             if (IsConnected)
             {
-                return ClusterHelper.Hive;
+                return ClusterHelper.Cluster;
             }
 
             IsConnected = true;
-            Hive        = hive;
+            Cluster        = cluster;
 
            if (HiveLogin == null)
             {
                 HiveLogin =
                     new ClusterLogin()
                     {
-                        Definition = hive.Definition
+                        Definition = cluster.Definition
                     };
             }
 
             // Initialize some properties.
 
-            var clusterDefinition = Hive.Definition;
-            var healthyManager = Hive.GetReachableManager(ReachableHostMode.ReturnFirst);
+            var clusterDefinition = Cluster.Definition;
+            var healthyManager = Cluster.GetReachableManager(ReachableHostMode.ReturnFirst);
 
             // Simulate the environment variables initialized by a mounted [host-env] script.
 
             var hostingProvider = string.Empty;
 
-            if (hive.Definition.Hosting != null)
+            if (cluster.Definition.Hosting != null)
             {
-                hostingProvider = hive.Definition.Hosting.Environment.ToString().ToLowerInvariant();
+                hostingProvider = cluster.Definition.Hosting.Environment.ToString().ToLowerInvariant();
             }
 
             Environment.SetEnvironmentVariable("NEON_HIVE", clusterDefinition.Name);
@@ -723,7 +723,7 @@ namespace Neon.Kube
             Environment.SetEnvironmentVariable("NEON_NODE_ROLE", healthyManager.Metadata.Role);
             Environment.SetEnvironmentVariable("NEON_NODE_IP", healthyManager.Metadata.PrivateAddress.ToString());
 
-            return ClusterHelper.Hive;
+            return ClusterHelper.Cluster;
         }
 
         /// <summary>
@@ -736,7 +736,7 @@ namespace Neon.Kube
                 return;
             }
 
-            Hive             = null;
+            Cluster          = null;
             IsConnected      = false;
             remoteConnection = false;
         }
@@ -852,7 +852,7 @@ namespace Neon.Kube
 
             if (remoteConnection)
             {
-                settings = new DockerSettings(Hive.GetReachableManager().PrivateAddress);
+                settings = new DockerSettings(Cluster.GetReachableManager().PrivateAddress);
             }
             else
             {

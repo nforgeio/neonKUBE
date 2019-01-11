@@ -27,7 +27,7 @@ namespace Neon.Kube
     /// one or more files need to be uploaded to a neonHIVE host node and be used when a command is executed.
     /// </para>
     /// <para>
-    /// A good example of this is performing a <b>docker stack</b> command on the hive.  In this case, we need to
+    /// A good example of this is performing a <b>docker stack</b> command on the cluster.  In this case, we need to
     /// upload the DAB file along with any files it references and then we we'll want to execute the Docker client.
     /// </para>
     /// <para>
@@ -308,7 +308,7 @@ namespace Neon.Kube
         /// Thrown because <see cref="ToBash"/> does not support commands with attached files.
         /// </exception>
         /// <remarks>
-        /// This can be useful for making copies of hive configuration commands
+        /// This can be useful for making copies of cluster configuration commands
         /// on the server as scripts for situations where system operators need
         /// to manually tweak things.
         /// </remarks>

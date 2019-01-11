@@ -163,7 +163,7 @@ namespace Neon.Kube
         /// </list>
         /// <para>
         /// Enabling this directs the <b>neon-cli</b> to create a dynamic instance level IP
-        /// address for each cluster node and add a public network interface to each hive 
+        /// address for each cluster node and add a public network interface to each cluster 
         /// virtual machine.
         /// </para>
         /// <note>

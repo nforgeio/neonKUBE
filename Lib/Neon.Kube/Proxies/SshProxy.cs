@@ -52,13 +52,13 @@ namespace Neon.Kube
     /// </typeparam>
     /// <remarks>
     /// <para>
-    /// Construct an instance to connect to a specific hive node.  You may specify
+    /// Construct an instance to connect to a specific cluster node.  You may specify
     /// <typeparamref name="TMetadata"/> to associate application specific information
     /// or state with the instance.
     /// </para>
     /// <para>
     /// This class includes methods to invoke Linux commands on the node as well as
-    /// methods to issue Docker commands against the local node or the Swarm hive.
+    /// methods to issue Docker commands against the local node or the Swarm cluster.
     /// Methods are also provided to upload and download files.
     /// </para>
     /// <para>
@@ -96,7 +96,7 @@ namespace Neon.Kube
             // to any given server.
             //
             // This changed with thre [HiveFixture] implementation that attempts to
-            // parallelize hive reset operations for better test execution performance.
+            // parallelize cluster reset operations for better test execution performance.
             //
             // The symptom is that we see:
             //
@@ -190,7 +190,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="name">The display name for the server.</param>
         /// <param name="publicAddress">The public IP address or FQDN of the server or <c>null.</c></param>
-        /// <param name="privateAddress">The private hive IP address for the server.</param>
+        /// <param name="privateAddress">The private cluster IP address for the server.</param>
         /// <param name="credentials">The credentials to be used for establishing SSH connections.</param>
         /// <param name="logWriter">The optional <see cref="TextWriter"/> where operation logs will be written.</param>
         /// <exception cref="ArgumentNullException">
@@ -442,13 +442,13 @@ namespace Neon.Kube
         public string Name { get; private set; }
 
         /// <summary>
-        /// Returns the hive public IP address, FQDN, or <c>null</c> for the
+        /// Returns the cluster public IP address, FQDN, or <c>null</c> for the
         /// server.
         /// </summary>
         public string PublicAddress { get; private set; }
 
         /// <summary>
-        /// Returns the hive private IP address to used for connecting to the server.
+        /// Returns the cluster private IP address to used for connecting to the server.
         /// </summary>
         public IPAddress PrivateAddress { get; set; }
 
@@ -865,7 +865,7 @@ namespace Neon.Kube
             }
             catch (Exception e)
             {
-                throw new ClusterException($"Unable to connect to the hive within [{timeout}].", e);
+                throw new ClusterException($"Unable to connect to the cluster within [{timeout}].", e);
             }
         }
 
@@ -2457,7 +2457,7 @@ echo $? > {cmdFolder}/exit
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
-        /// A good example of this is performing a <b>docker stack</b> command on the hive.  In this case, we need to
+        /// A good example of this is performing a <b>docker stack</b> command on the cluster.  In this case, we need to
         /// upload the DAB file along with any files it references and then we we'll want to execute the Docker client.
         /// </para>
         /// <para>
@@ -2706,7 +2706,7 @@ echo $? > {cmdFolder}/exit
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
-        /// A good example of this is performing a <b>docker stack</b> command on the hive.  In this case, we need to
+        /// A good example of this is performing a <b>docker stack</b> command on the cluster.  In this case, we need to
         /// upload the DAB file along with any files it references and then we we'll want to execute the Docker 
         /// client.
         /// </para>
@@ -3184,7 +3184,7 @@ echo $? > {cmdFolder}/exit
         /// <remarks>
         /// <note>
         /// This does nothing but return <c>true</c> if the Docker public registry is 
-        /// specified and the hive has registry caches deployed because the 
+        /// specified and the cluster has registry caches deployed because the 
         /// caches handle authentication with the upstream registry in this case.
         /// </note>
         /// </remarks>
@@ -3247,7 +3247,7 @@ echo $? > {cmdFolder}/exit
         /// <remarks>
         /// <note>
         /// This does nothing but return <c>true</c> if the Docker public registry is 
-        /// specified and the hive has registry caches deployed because the 
+        /// specified and the cluster has registry caches deployed because the 
         /// caches handle authentication with the upstream registry in this case.
         /// </note>
         /// </remarks>
@@ -3274,7 +3274,7 @@ echo $? > {cmdFolder}/exit
 
         /// <summary>
         /// Waits for a specific hostname to resolve on the connected node.
-        /// This is useful for ensuring that hive DNS host entry changes
+        /// This is useful for ensuring that cluster DNS host entry changes
         /// have been propagated by the [neon-dns-mon], [neon-dns], and
         /// PowerDNS services and are ready for use.
         /// </summary>

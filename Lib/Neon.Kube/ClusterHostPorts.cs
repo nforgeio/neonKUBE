@@ -19,7 +19,7 @@ namespace Neon.Kube
     /// <note>
     /// <b>IMPORTANT:</b> Do not change any of these values without really knowing what
     /// you're doing.  It's likely that these values have been literally embedded
-    /// in hive configuration scripts as well as Docker images.  Any change is likely
+    /// in cluster configuration scripts as well as Docker images.  Any change is likely
     /// to break things.
     /// </note>
     /// <note>
@@ -77,7 +77,7 @@ namespace Neon.Kube
         // Hive reserved ports.
 
         /// <summary>
-        /// The local hive Docker registry port.
+        /// The local cluster Docker registry port.
         /// </summary>
         public const int DockerRegistryLocal = 5000;
 
@@ -121,7 +121,7 @@ namespace Neon.Kube
         public const int LogHostSysLog = 5007;
 
         /// <summary>
-        /// The port exposed by the hive's Ceph dashboard.
+        /// The port exposed by the cluster's Ceph dashboard.
         /// </summary>
         public const int CephDashboard = 5008;
 
@@ -156,10 +156,10 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // Ports [80/443] and [5100-5299] are reserved for the public proxy that 
-        // routes external traffic into the hive.
+        // routes external traffic into the cluster.
         //
         // [80/443]    are used to route external HTTP/HTTPS traffic
-        //             into the hive.
+        //             into the cluster.
         //
         // [5100-5102] are used to route general purpose TCP and specialized 
         //             HTTP/S traffic to application services.
@@ -181,13 +181,13 @@ namespace Neon.Kube
 
         /// <summary>
         /// The <b>neon-proxy-public</b> service port for routing external HTTP
-        /// (e.g. Internet) requests to services within the hive.
+        /// (e.g. Internet) requests to services within the cluster.
         /// </summary>
         public const int ProxyPublicHttp = 80;
 
         /// <summary>
         /// The <b>neon-proxy-public</b> service port for routing external HTTPS
-        /// (e.g. Internet) requests to services within the hive.
+        /// (e.g. Internet) requests to services within the cluster.
         /// </summary>
         public const int ProxyPublicHttps = 443;
 
@@ -204,7 +204,7 @@ namespace Neon.Kube
         public const int ProxyPublicLastUser = ProxyPublicLast;
 
         //---------------------------------------------------------------------
-        // Ports [5300-5499] are reserved for the private hive proxy.
+        // Ports [5300-5499] are reserved for the private cluster proxy.
         //
         // [5300-5301] are used to route general purpose HTTP/S traffic
         //             to both neonHIVE and application services.
@@ -252,7 +252,7 @@ namespace Neon.Kube
         public const int ProxyPrivateHttpLogEsData = 5303;
 
         /// <summary>
-        /// The port assigned to the hive Ceph web dashboard.
+        /// The port assigned to the cluster Ceph web dashboard.
         /// </summary>
         public const int ProxyPrivateHttpCephDashboard = 5304;
 

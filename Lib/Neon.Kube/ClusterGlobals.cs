@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Identifies the global hive Consul globals and settings.  These are located
+    /// Identifies the global cluster Consul globals and settings.  These are located
     /// under <b>neon/global</b>.  Settings with constant names prefixed by <b>User</b>
     /// are considered to be user-modifiable.  The other settings are generally managed
-    /// only by the hive and its tools.
+    /// only by the cluster and its tools.
     /// </summary>
     public static class ClusterGlobals
     {
@@ -25,38 +25,38 @@ namespace Neon.Kube
         public const string CreateDateUtc = "create-date-utc";
 
         /// <summary>
-        /// Current hive definition as compressed JSON text (UTF-8).
+        /// Current cluster definition as compressed JSON text (UTF-8).
         /// </summary>
         public const string DefinitionDeflate = "definition-deflated";
 
         /// <summary>
-        /// MD5 hash of the current hive definition.
+        /// MD5 hash of the current cluster definition.
         /// </summary>
         public const string DefinitionHash = "definition-hash";
 
         /// <summary>
-        /// Minimum <b>neon-cli</b> version allowed to manage the hive.
+        /// Minimum <b>neon-cli</b> version allowed to manage the cluster.
         /// </summary>
         public const string NeonCli = "neon-cli";
 
         /// <summary>
-        /// Current hive pets definition.
+        /// Current hive cluster definition.
         /// </summary>
         public const string PetsDefinition = "pets-definition";
 
         /// <summary>
-        /// Indicates whether hive setup is still in progress (bool).
+        /// Indicates whether cluster setup is still in progress (bool).
         /// </summary>
         public const string SetupPending = "setup-pending";
 
         /// <summary>
-        /// Hive globally unique ID assigned during hive setup.
+        /// Hive globally unique ID assigned during cluster setup.
         /// </summary>
         public const string Uuid = "uuid";
 
         /// <summary>
-        /// Version of the hive.  This is actually the version of <b>neon-cli</b> 
-        /// that created or last upgraded the hive.
+        /// Version of the cluster.  This is actually the version of <b>neon-cli</b> 
+        /// that created or last upgraded the cluster.
         /// </summary>
         public const string Version = "version";
 
@@ -96,7 +96,7 @@ namespace Neon.Kube
         // These settings are considered to be user modifiable.
 
         /// <summary>
-        /// Enables unit testing on the hive via <b>HiveFixture</b> (bool).
+        /// Enables unit testing on the cluster via <b>HiveFixture</b> (bool).
         /// </summary>
         public const string UserAllowUnitTesting = "allow-unit-testing";
 

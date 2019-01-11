@@ -252,7 +252,7 @@ namespace Neon.Kube
         public bool PrivateAttachable { get; set; } = true;
 
         /// <summary>
-        /// The IP addresses of the upstream DNS nameservers to be used by the hive.  This defaults to the 
+        /// The IP addresses of the upstream DNS nameservers to be used by the cluster.  This defaults to the 
         /// Google Public DNS servers: <b>[ "8.8.8.8", "8.8.4.4" ]</b> when the property is <c>null</c> or empty.
         /// </summary>
         /// <remarks>
@@ -348,7 +348,7 @@ namespace Neon.Kube
         ///     <description>
         ///     <see cref="CloudVNetSubnet"/>: The cloud address space is split in half and the 
         ///     first half will be used as the overall address space for the virtual network to
-        ///     be created for the hive.  The VNET address space will be split into equal
+        ///     be created for the cluster.  The VNET address space will be split into equal
         ///     sized subnets to be assigned to manager node NICs as well as NICs for all nodes.
         ///     </description>
         /// </item>

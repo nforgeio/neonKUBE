@@ -38,7 +38,7 @@ namespace Neon.Kube
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> The driver providing low-level access to hosting
         /// manager implementations.  This is initialized by a call to <c>HostingLoader.Initialize()</c>
-        /// defined withing the <b>Neon.Hive.Hosting</b> assembly.
+        /// defined withing the <b>Neon.Kube.Hosting</b> assembly.
         /// </summary>
         public static IHostingLoader Loader { get; set; }
 

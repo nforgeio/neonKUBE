@@ -34,8 +34,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// The title to be used for this dashboard when displayed in the global 
-        /// hive dashboard.
-        /// This defaults to <see cref="Name"/>.
+        /// cluster dashboard.  This defaults to <see cref="Name"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Title", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -58,7 +57,7 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// You may set the URL hostname to <b>reachable-manager</b> to target
-        /// the private IP address of the first reachable hive manager node.
+        /// the private IP address of the first cluster hive manager node.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Url", Required = Required.Always)]
@@ -74,7 +73,7 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the dashboard.  Any warning/errors will be returned as a string list.
         /// </summary>
-        /// <param name="clusterDefinition">The current hive definition,</param>
+        /// <param name="clusterDefinition">The current cluster definition,</param>
         /// <returns>The list of warnings (if any).</returns>
         public List<string> Validate(ClusterDefinition clusterDefinition)
         {

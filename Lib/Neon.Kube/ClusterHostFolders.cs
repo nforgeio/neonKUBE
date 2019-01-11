@@ -52,7 +52,7 @@ namespace Neon.Kube
         public const string Config = "/etc/neon";
 
         /// <summary>
-        /// The folder where hive tools can upload, unpack, and then
+        /// The folder where cluster tools can upload, unpack, and then
         /// execute <see cref="CommandBundle"/>s as well as store temporary
         /// command output files.
         /// </summary>

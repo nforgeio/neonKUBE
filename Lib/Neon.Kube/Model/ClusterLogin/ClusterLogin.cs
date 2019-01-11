@@ -118,7 +118,7 @@ namespace Neon.Kube
         public string SshUsername { get; set; }
 
         /// <summary>
-        /// The root SSH password password for the hive nodes.
+        /// The root SSH password password for the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -141,7 +141,7 @@ namespace Neon.Kube
         public string SshProvisionPassword { get; set; }
 
         /// <summary>
-        /// The public and private parts of the SSH client key when the hive is
+        /// The public and private parts of the SSH client key when the cluster is
         /// configured to authenticate clients via public keys or <c>null</c> when
         /// username/password authentication is enabled.
         /// </summary>
@@ -163,7 +163,7 @@ namespace Neon.Kube
         public string SshHiveHostPrivateKey { get; set; }
 
         /// <summary>
-        /// The SSH RSA private key used to secure the hive servers.
+        /// The SSH RSA private key used to secure the cluster servers.
         /// </summary>
         [JsonProperty(PropertyName = "SshHiveHostPublicKey")]
         public string SshHiveHostPublicKey { get; set; }

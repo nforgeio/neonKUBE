@@ -40,11 +40,11 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Run(ClusterProxy hive)
+        public override void Run(ClusterProxy cluster)
         {
-            Covenant.Requires<ArgumentNullException>(hive != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null);
 
-            var node = hive.GetNode(nodeName);
+            var node = cluster.GetNode(nodeName);
 
             node.SudoCommand("docker-volume-create", volumeName);
 

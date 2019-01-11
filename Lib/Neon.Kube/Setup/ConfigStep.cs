@@ -24,8 +24,8 @@ namespace Neon.Kube
         /// <summary>
         /// Implements the configuration step.
         /// </summary>
-        /// <param name="hive">The hive proxy instance.</param>
-        public abstract void Run(ClusterProxy hive);
+        /// <param name="cluster">The hive proxy instance.</param>
+        public abstract void Run(ClusterProxy cluster);
 
         /// <summary>
         /// Pause briefly to allow the configuration UI a chance to display

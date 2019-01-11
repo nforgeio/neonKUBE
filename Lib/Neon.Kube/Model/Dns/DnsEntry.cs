@@ -51,8 +51,8 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the DNS entry.  Any warning/errors will be returned as a string list.
         /// </summary>
-        /// <param name="clusterDefinition">The current hive definition,</param>
-        /// <param name="nodeGroups">The hive node groups.</param>
+        /// <param name="clusterDefinition">The current cluster definition,</param>
+        /// <param name="nodeGroups">The cluster node groups.</param>
         /// <returns>The list of warnings (if any).</returns>
         public List<string> Validate(ClusterDefinition clusterDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups)
         {

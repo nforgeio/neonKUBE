@@ -66,7 +66,7 @@ namespace Neon.Kube
         public const string ReservedLabelPrefix = "io.neonhive";
 
         /// <summary>
-        /// Parses a hive definition from JSON text.
+        /// Parses a cluster definition from JSON text.
         /// </summary>
         /// <param name="json">The JSON text.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
@@ -373,7 +373,7 @@ namespace Neon.Kube
         /// <note>
         /// The computed hash does not include the hosting provider details because these
         /// typically include hosting related secrets and so they are not persisted to
-        /// the hive Consul service.
+        /// the cluster Consul service.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Hash", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]

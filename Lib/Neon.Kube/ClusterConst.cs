@@ -27,17 +27,17 @@ namespace Neon.Kube
     public static class ClusterConst
     {
         /// <summary>
-        /// Name for the built-in hive user that has the ability to manage other users.
+        /// Name for the built-in cluster user that has the ability to manage other users.
         /// </summary>
         public const string RootUser = "root";
 
         /// <summary>
-        /// Name of the standard hive <b>public</b> overlay network.
+        /// Name of the standard cluster <b>public</b> overlay network.
         /// </summary>
         public const string PublicNetwork = "neon-public";
 
         /// <summary>
-        /// Name of the standard hive <b>private</b> overlay network.
+        /// Name of the standard cluster <b>private</b> overlay network.
         /// </summary>
         public const string PrivateNetwork = "neon-private";
 
@@ -136,7 +136,7 @@ namespace Neon.Kube
         public const string GitProdBranch = "prod";
 
         /// <summary>
-        /// Consul root key for hive globals variables and settings. 
+        /// Consul root key for cluster globals variables and settings. 
         /// </summary>
         public static readonly string GlobalKey = "neon/global";
 
@@ -161,7 +161,7 @@ namespace Neon.Kube
         public static readonly string ConsulDnsHostsMd5Key = $"{ConsulDnsRootKey}/answers/hosts.md5";
 
         /// <summary>
-        /// Consul key where hive dashboards are registered.
+        /// Consul key where cluster dashboards are registered.
         /// </summary>
         public const string ConsulDashboardsKey = "neon/dashboards";
 
@@ -171,7 +171,7 @@ namespace Neon.Kube
         public const string ConsulRegistryRootKey = "neon/service/neon-registry";
 
         /// <summary>
-        /// Identifies the dashboard folder where built-in hive dashboards will reside.
+        /// Identifies the dashboard folder where built-in cluster dashboards will reside.
         /// </summary>
         public const string DashboardSystemFolder = "system";
 
@@ -276,14 +276,14 @@ namespace Neon.Kube
         public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(250);
 
         /// <summary>
-        /// The root account username baked into the Hyper-V and XenServer hive
+        /// The root account username baked into the Hyper-V and XenServer cluster
         /// host node virtual machine templates.  This is also used as the username
         /// for hosts provisioned to clouds like Azure, Aws, and Google Cloud. 
         /// </summary>
         public const string DefaulVmTemplateUsername = "sysadmin";
 
         /// <summary>
-        /// The root account password baked into the Hyper-V and XenServer hive
+        /// The root account password baked into the Hyper-V and XenServer cluster
         /// host node virtual machine templates.  Note that this will not be
         /// used for hosts provisioned on public clouds for security reasons.
         /// </summary>

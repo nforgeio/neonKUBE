@@ -38,7 +38,7 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// Production cluster definitions should be configured with an XVA with a specific version
-        /// of the host operating system to ensure that hive nodes are provisioned with the same
+        /// of the host operating system to ensure that cluster nodes are provisioned with the same
         /// operating system version.
         /// </note>
         /// <note>
