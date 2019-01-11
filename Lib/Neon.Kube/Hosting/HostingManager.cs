@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    HostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -104,7 +104,13 @@ namespace Neon.Kube
         public abstract void AddPostVpnSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
+        public abstract List<HostedEndpoint> GetPublicEndpoints();
+
+        /// <inheritdoc/>
         public abstract bool CanUpdatePublicEndpoints { get; }
+
+        /// <inheritdoc/>
+        public abstract void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);
 
         /// <inheritdoc/>
         public abstract string DrivePrefix { get; }

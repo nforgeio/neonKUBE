@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    MachineHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -52,7 +52,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                    hive;
+        private ClusterProxy                       hive;
         private SetupController<NodeDefinition> controller;
 
         /// <summary>
@@ -88,18 +88,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition hiveDefinition)
         {
-            // Ensure that the OSD Bluestore block device have been specified.
-
-            if (hive.Definition.HiveFS.Enabled)
-            {
-                foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
-                {
-                    if (string.IsNullOrEmpty(node.Labels.CephOSDDevice))
-                    {
-                        throw new ClusterDefinitionException($"Hosting environment [{HostingEnvironments.Machine}] requires that the OSD node [{node.Name}] explicitly set [{nameof(NodeLabels)}.{nameof(NodeLabels.CephOSDDevice)}] to the target OSD block device (like: [/dev/sdb]).");
-                    }
-                }
-            }
         }
 
         /// <inheritdoc/>

@@ -124,74 +124,6 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Generates the PowerDNS Recursor hosts file for a node.  This will be uploaded
-        /// to <b>/etc/powerdns/hosts</b>.
-        /// </summary>
-        /// <param name="hiveDefinition">The hive definition.</param>
-        /// <param name="nodeDefinition">The target node definition.</param>
-        /// <returns>The host definitions.</returns>
-        private static string GetPowerDnsHosts(ClusterDefinition hiveDefinition, NodeDefinition nodeDefinition)
-        {
-            var sbHosts = new StringBuilder();
-
-            sbHosts.AppendLineLinux("# PowerDNS Recursor authoritatively answers for [*.HIVENAME.nhive.io] hostnames.");
-            sbHosts.AppendLineLinux("# on the local node using these mappings.");
-
-            sbHosts.AppendLineLinux();
-            sbHosts.AppendLineLinux("# Internal hive Consul mappings:");
-            sbHosts.AppendLineLinux();
-
-            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {hiveDefinition.Hostnames.Consul}");
-
-            foreach (var manager in hiveDefinition.Managers)
-            {
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{hiveDefinition.Hostnames.Consul}");
-            }
-
-            sbHosts.AppendLineLinux();
-            sbHosts.AppendLineLinux("# Internal hive Vault mappings:");
-            sbHosts.AppendLineLinux();
-            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {hiveDefinition.Hostnames.Vault}");
-
-            foreach (var manager in hiveDefinition.Managers)
-            {
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{hiveDefinition.Hostnames.Vault}");
-            }
-
-            if (hiveDefinition.Docker.RegistryCache)
-            {
-                sbHosts.AppendLineLinux();
-                sbHosts.AppendLineLinux("# Internal hive registry cache related mappings:");
-                sbHosts.AppendLineLinux();
-
-                foreach (var manager in hiveDefinition.Managers)
-                {
-                    sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{hiveDefinition.Hostnames.RegistryCache}");
-                }
-            }
-
-            if (hiveDefinition.Log.Enabled)
-            {
-                sbHosts.AppendLineLinux();
-                sbHosts.AppendLineLinux("# Internal hive log pipeline related mappings:");
-                sbHosts.AppendLineLinux();
-
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {hiveDefinition.Hostnames.LogEsData}");
-            }
-
-            sbHosts.AppendLineLinux();
-            sbHosts.AppendLineLinux("# Internal hive RabbitMQ related mappings:");
-            sbHosts.AppendLineLinux();
-
-            foreach (var node in hiveDefinition.SortedNodes.Where(n => n.Labels.HiveMQ))
-            {
-                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(node)} {node.Name}.{hiveDefinition.Hostnames.HiveMQ}");
-            }
-
-            return sbHosts.ToString();
-        }
-
-        /// <summary>
         /// Sets hive definition related variables for a <see cref="PreprocessReader"/>.
         /// </summary>
         /// <param name="preprocessReader">The reader.</param>
@@ -217,13 +149,13 @@ namespace NeonCli
             //
             // NOTE: We need to use Linux-style line endings.
 
-            var sbManagers                  = new StringBuilder();
-            var sbManagerNamesArray         = new StringBuilder();
-            var sbManagerAddressesArray     = new StringBuilder();
+            var sbManagers = new StringBuilder();
+            var sbManagerNamesArray = new StringBuilder();
+            var sbManagerAddressesArray = new StringBuilder();
             var sbPeerManagerAddressesArray = new StringBuilder();
-            var sbManagerNodesSummary       = new StringBuilder();
-            var index                       = 0;
-            var managerNameWidth            = 0;
+            var sbManagerNodesSummary = new StringBuilder();
+            var index = 0;
+            var managerNameWidth = 0;
 
             sbManagerNamesArray.Append("(");
             sbManagerAddressesArray.Append("(");
@@ -298,7 +230,7 @@ namespace NeonCli
             // Generate the manager and worker NTP time sources.
 
             var managerTimeSources = string.Empty;
-            var workerTimeSources  = string.Empty;
+            var workerTimeSources = string.Empty;
 
             if (hiveDefinition.TimeSources != null)
             {
@@ -348,30 +280,7 @@ namespace NeonCli
                 throw new NotImplementedException();
             }
 
-            if (hiveDefinition.DebugMode)
-            {
-                // Expose the Docker Swarm REST API on the node's internal hive IP address so it
-                // can be reached by apps like [neon-proxy-manager] running off the manager node
-                // (potentially in the debugger).
-
-                sbDockerOptions.AppendWithSeparator($"-H tcp://{nodeDefinition.PrivateAddress}:{NetworkPorts.Docker}");
-            }
-
             preprocessReader.Set("docker.options", sbDockerOptions);
-            
-            // Define the Consul command line options.
-
-            var consulOptions = string.Empty;
-
-            if (hiveDefinition.Dashboard.Consul)
-            {
-                if (consulOptions.Length > 0)
-                {
-                    consulOptions += " ";
-                }
-
-                consulOptions += "-ui";
-            }
 
             // Format the network upstream nameservers as semicolon separated
             // to be compatible with the PowerDNS Recursor [forward-zones-recurse]
@@ -440,52 +349,12 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.folders.tmpfs", HiveHostFolders.Tmpfs);
             SetBashVariable(preprocessReader, "neon.folders.tools", HiveHostFolders.Tools);
 
-            preprocessReader.Set("neon.hosts.neon-log-es-data", hiveDefinition.Hostnames.LogEsData);
-
             SetBashVariable(preprocessReader, "nodes.manager.count", hiveDefinition.Managers.Count());
             preprocessReader.Set("nodes.managers", sbManagers);
             preprocessReader.Set("nodes.manager.summary", sbManagerNodesSummary);
 
             SetBashVariable(preprocessReader, "ntp.manager.sources", managerTimeSources);
-            SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
-
-            if (!hiveDefinition.BareDocker)
-            {
-                // When we're not deploying bare Docker, the manager nodes will use the 
-                // configured name servers as the hive's upstream DNS and the worker
-                // nodes will be configured to query the name servers.
-
-                if (nodeDefinition.IsManager)
-                {
-                    preprocessReader.Set("net.nameservers", nameservers);
-                }
-                else
-                {
-                    var managerNameservers = string.Empty;
-
-                    foreach (var manager in hiveDefinition.Managers)
-                    {
-                        if (managerNameservers.Length > 0)
-                        {
-                            managerNameservers += ";";
-                        }
-
-                        managerNameservers += manager.PrivateAddress.ToString();
-                    }
-
-                    preprocessReader.Set("net.nameservers", managerNameservers);
-                }
-            }
-            else
-            {
-                // All servers use the configured upstream nameservers when we're not
-                // deploying the Local DNS.
-
-                preprocessReader.Set("net.nameservers", nameservers);
-            }
-
-            SetBashVariable(preprocessReader, "net.powerdns.recursor.package.uri", hiveDefinition.Network.PdnsRecursorPackageUri);
-            preprocessReader.Set("net.powerdns.recursor.hosts", GetPowerDnsHosts(hiveDefinition, nodeDefinition));
+            NewMethod(preprocessReader, workerTimeSources);
 
             var dockerPackageUri = new HeadendClient().GetDockerPackageUri(hiveDefinition.Docker.Version, out var packageMessage);
 
@@ -500,25 +369,6 @@ namespace NeonCli
             }
 
             SetBashVariable(preprocessReader, "docker.packageuri", dockerPackageUri);
-
-            SetBashVariable(preprocessReader, "consul.version", hiveDefinition.Consul.Version);
-            SetBashVariable(preprocessReader, "consul.options", consulOptions);
-            SetBashVariable(preprocessReader, "consul.address", $"{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
-            SetBashVariable(preprocessReader, "consul.fulladdress", $"https://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
-            SetBashVariable(preprocessReader, "consul.hostname", hiveDefinition.Hostnames.Consul);
-            SetBashVariable(preprocessReader, "consul.port", hiveDefinition.Consul.Port);
-            SetBashVariable(preprocessReader, "consul.tls", hiveDefinition.Consul.Tls ? "true" : "false");
-
-            SetBashVariable(preprocessReader, "vault.version", hiveDefinition.Vault.Version);
-
-            SetBashVariable(preprocessReader, "vault.download", $"https://releases.hashicorp.com/vault/{hiveDefinition.Vault.Version}/vault_{hiveDefinition.Vault.Version}_linux_amd64.zip");
-            SetBashVariable(preprocessReader, "vault.hostname", hiveDefinition.Hostnames.Vault);
-            SetBashVariable(preprocessReader, "vault.port", hiveDefinition.Vault.Port);
-            SetBashVariable(preprocessReader, "vault.consulpath", "vault/");
-            SetBashVariable(preprocessReader, "vault.maximumlease", hiveDefinition.Vault.MaximimLease);
-            SetBashVariable(preprocessReader, "vault.defaultlease", hiveDefinition.Vault.DefaultLease);
-            SetBashVariable(preprocessReader, "vault.dashboard", hiveDefinition.Dashboard.Vault ? "true" : "false");
-
             SetBashVariable(preprocessReader, "log.enabled", hiveDefinition.Log.Enabled);
 
             //-----------------------------------------------------------------
@@ -532,33 +382,22 @@ namespace NeonCli
 
                 case HostingEnvironments.Azure:
 
-                    switch (Program.OSProperties.TargetOS)
+                    // The primary Azure data drive is [/dev/sdb] so any mounted drive will be [/dev/sdc].
+
+                    if (nodeDefinition.Azure.HardDriveCount == 0)
                     {
-                        case TargetOS.CoreOS:
-
-                            // The primary Azure data drive is [/dev/sdb] so any mounted drive will be [/dev/sdc].
-
-                            if (nodeDefinition.Azure.HardDriveCount == 0)
-                            {
-                                SetBashVariable(preprocessReader, "data.disk", "PRIMARY");
-                            }
-                            else
-                            {
-                                SetBashVariable(preprocessReader, "data.disk", "/dev/sdc");
-                            }
-                            break;
-
-                        default:
-
-                            throw new NotImplementedException($"Support for [{Program.OSProperties.TargetOS}] is not implemented.");
+                        SetBashVariable(preprocessReader, "data.disk", "PRIMARY");
                     }
-
+                    else
+                    {
+                        SetBashVariable(preprocessReader, "data.disk", "/dev/sdc");
+                    }
                     break;
 
                 case HostingEnvironments.Google:
 
                     throw new NotImplementedException("$todo(jeff.lill)");
-                    
+
                 case HostingEnvironments.HyperV:
                 case HostingEnvironments.HyperVDev:
                 case HostingEnvironments.Machine:
@@ -578,6 +417,11 @@ namespace NeonCli
 
                     throw new NotImplementedException($"The [{hiveDefinition.Hosting.Environment}] hosting environment is not implemented.");
             }
+        }
+
+        private static void NewMethod(PreprocessReader preprocessReader, string workerTimeSources)
+        {
+            SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
         }
 
         /// <summary>

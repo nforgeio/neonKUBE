@@ -61,11 +61,6 @@ namespace NeonCli
         public const string CurlOptions = "-4fsSLv --retry 10 --retry-delay 30"; 
 
         /// <summary>
-        /// Host node operating system properties or <c>null</c>.
-        /// </summary>
-        private static OSProperties osProperties;
-
-        /// <summary>
         /// Program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
@@ -283,8 +278,11 @@ use a random password if [--machine-password] isn't explicitly set.
                     Program.Exit(0);
                 }
 
+                // $todo(jeff.lill): Implement new commands
+
                 var commands = new List<ICommand>()
                 {
+#if TODO
                     new AnsibleCommand(),
                     new CouchbaseCommand(),
                     new CertificateCommand(),
@@ -331,6 +329,7 @@ use a random password if [--machine-password] isn't explicitly set.
                     new VersionCommand(),
                     new VpnCommand(),
                     new ZipCommand()
+#endif
                 };
 
                 // Parse the [--version=VERSION] option.
@@ -431,13 +430,6 @@ use a random password if [--machine-password] isn't explicitly set.
                             {
                                 Console.Error.WriteLine(Program.MustLoginMessage);
                                 Program.Exit(1);
-                            }
-
-                            if (HiveLogin.ViaVpn)
-                            {
-                                HiveHelper.VpnOpen(HiveLogin,
-                                    onStatus: message => Console.Error.WriteLine(message),
-                                    onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
                             }
                         }
 
@@ -1188,30 +1180,6 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// The host node operating system information.
-        /// </summary>
-        public static OSProperties OSProperties
-        {
-            get
-            {
-                if (osProperties != null)
-                {
-                    return osProperties;
-                }
-                else if (HiveHelper.Hive != null)
-                {
-                    return OSProperties.For(HiveHelper.Hive.Definition.NodeOptions.OperatingSystem);
-                }
-                else
-                {
-                    throw new InvalidOperationException($"[{nameof(Program)}.{nameof(OSProperties)}] property is not set.");
-                }
-            }
-
-            set { osProperties = value; }
-        }
-
-        /// <summary>
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
         /// source code branch.
         /// </summary>
@@ -1321,18 +1289,11 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 throw new Exception($"Hive login [{hiveLogin.LoginName}] does not reference a fully configured hive.  Use the [neon hive setup...] command to complete hive configuration.");
             }
 
+            // $todo(jeff.lill): IMPLEMENT THIS
+
+#if TODO
             HiveHelper.OpenHiveRemote(loginPath: HiveHelper.GetLoginPath(HiveConst.RootUser, Program.HiveLogin.HiveName));
-
-            // Note that we never try to connect the VPN from within the
-            // [neon-cli] container.  Its expected that the VPN is always
-            // established on the operator's workstation.
-
-            if (!HiveHelper.InToolContainer && hiveLogin.ViaVpn)
-            {
-                HiveHelper.VpnOpen(hiveLogin,
-                    onStatus: message => Console.Error.WriteLine(message),
-                    onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
-            }
+#endif
 
             return hiveLogin;
         }
@@ -1437,42 +1398,12 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <summary>
         /// Returns the folder holding the Linux resource files for the target operating system.
         /// </summary>
-        public static ResourceFiles.Folder LinuxFolder
-        {
-            get
-            {
-                switch (Program.OSProperties.TargetOS)
-                {
-                    case TargetOS.CoreOS:
-
-                        return ResourceFiles.Root.GetFolder("Ubuntu-16.04");
-
-                    default:
-
-                        throw new NotImplementedException($"Unexpected [{Program.OSProperties.TargetOS}] target operating system.");
-                }
-            }
-        }
+        public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("CoreOS");
 
         /// <summary>
         /// Identifies the service manager present on the target Linux distribution.
         /// </summary>
-        public static ServiceManager ServiceManager
-        {
-            get
-            {
-                switch (Program.OSProperties.TargetOS)
-                {
-                    case TargetOS.CoreOS:
-
-                        return ServiceManager.Systemd;
-
-                    default:
-
-                        throw new NotImplementedException($"Unexpected [{Program.OSProperties.TargetOS}] target operating system.");
-                }
-            }
-        }
+        public static ServiceManager ServiceManager => ServiceManager.Systemd;
 
         /// <summary>
         /// Presents the user with a yes/no question and waits for a response.

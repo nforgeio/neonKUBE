@@ -30,21 +30,12 @@ namespace Neon.Kube
     /// </summary>
     public class ClusterNodeOptions
     {
-        private const TargetOS      defaultOperatingSystem         = TargetOS.CoreOS;
         private const AuthMethods   defaultSshAuth                 = AuthMethods.Tls;
         private const int           defaultPasswordLength          = 20;
         private const bool          defaultPasswordAuth            = true;
         private const bool          defaultEnableVolumeNetshare    = true;
         private const bool          defaultAllowPackageManagerIPv6 = false;
         private const int           defaultPackageManagerRetries   = 5;
-
-        /// <summary>
-        /// Specifies the target host operating system.  This currently defaults
-        /// to <see cref="TargetOS.CoreOS"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "OperatingSystem", Required = Required.Default)]
-        [DefaultValue(defaultOperatingSystem)]
-        public TargetOS OperatingSystem { get; set; } = defaultOperatingSystem;
 
         /// <summary>
         /// <para>

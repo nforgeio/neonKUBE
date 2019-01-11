@@ -61,6 +61,7 @@ namespace Neon.Kube
         /// </summary>
         public NodeDefinition()
         {
+            Labels = new NodeLabels(this);
         }
 
         /// <summary>
@@ -170,6 +171,14 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Role", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(NodeRole.Worker)]
         public string Role { get; set; } = NodeRole.Worker;
+
+        /// <summary>
+        /// Specifies the Docker labels to be assigned to the host node.  These can provide
+        /// detailed information such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
+        /// for more information.
+        /// </summary>
+        [JsonProperty(PropertyName = "Labels")]
+        public NodeLabels Labels { get; set; }
 
         /// <summary>
         /// <para>

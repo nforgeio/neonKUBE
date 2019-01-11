@@ -250,7 +250,7 @@ namespace NeonCli
                             new File("logstash-index-pattern.json", hasVariables: false),
                             new File("logstash-template.json", hasVariables: false)
                         }),
-                    new Folder("Ubuntu-16.04",
+                    new Folder("CoreOS",
                         folders: new List<Folder>()
                         {
                             new Folder("conf",

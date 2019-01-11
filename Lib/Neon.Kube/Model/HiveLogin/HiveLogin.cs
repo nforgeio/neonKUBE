@@ -271,7 +271,7 @@ namespace Neon.Kube
                 // and set them somewhere in the [NeonKube] class (perhaps as the current
                 // login).
                 //
-                // This note is repeated in: HiveProxy.cs
+                // This note is repeated in: ClusterProxy.cs
 
                 return SshCredentials.None;
             }

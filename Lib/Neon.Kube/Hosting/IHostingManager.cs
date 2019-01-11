@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    IHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -84,9 +84,22 @@ namespace Neon.Kube
         void AddPostVpnSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
+        /// Returns the endpoints currently exposed to the public for the deployment.
+        /// </summary>
+        /// <returns>The list of <see cref="HostedEndpoint"/> instances.</returns>
+        List<HostedEndpoint> GetPublicEndpoints();
+
+        /// <summary>
         /// Returns <c>true</c> if the hive manager is able to update the deployment's load balancer and security rules.
         /// </summary>
         bool CanUpdatePublicEndpoints { get; }
+
+        /// <summary>
+        /// Updates the deployment's load balancer and security rules to allow traffic 
+        /// for the specified endpoints into the hive.
+        /// </summary>
+        /// <param name="endpoints">The endpoints.</param>
+        void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);
 
         /// <summary>
         /// <para>

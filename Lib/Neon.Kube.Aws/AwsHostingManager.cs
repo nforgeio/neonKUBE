@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    AwsHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -51,7 +51,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy    hive;
+        private ClusterProxy hive;
 
         /// <summary>
         /// Constructor.
@@ -80,12 +80,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition hiveDefinition)
         {
-            // Identify the OSD Bluestore block device for OSD nodes.
-
-            if (hive.Definition.HiveFS.Enabled)
-            {
-                throw new NotImplementedException("$todo(jeff.lill): Implement this.");
-            }
         }
 
         /// <inheritdoc/>
@@ -111,7 +105,18 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public override List<HostedEndpoint> GetPublicEndpoints()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public override bool CanUpdatePublicEndpoints => true;
+
+        /// <inheritdoc/>
+        public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
+        {
+        }
 
         /// <inheritdoc/>
         public override string DrivePrefix

@@ -33,19 +33,9 @@ namespace NeonCli
 
             var response = node.SudoCommand("lsb_release -a");
 
-            switch (Program.OSProperties.TargetOS)
+            if (!response.OutputText.Contains("CoreOS"))
             {
-                case TargetOS.CoreOS:
-
-                    if (!response.OutputText.Contains("Ubuntu 16.04"))
-                    {
-                        node.Fault("Expected [Ubuntu 16.04].");
-                    }
-                    break;
-
-                default:
-
-                    throw new NotImplementedException($"Support for [{nameof(TargetOS)}.{Program.OSProperties.TargetOS}] is not implemented.");
+                node.Fault("Expected [CoreOS].");
             }
         }
 
@@ -225,7 +215,6 @@ TCPKeepAlive yes
             }
 
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
-            sb.AppendLine($"NEON_NODE_FS={hiveDefinition.HiveFS.Enabled.ToString().ToLowerInvariant()}");
 
             if (node.Metadata != null)
             {
@@ -243,8 +232,6 @@ TCPKeepAlive yes
             }
 
             sb.AppendLine($"NEON_UPSTREAM_DNS=\"{sbNameservers}\"");
-            sb.AppendLine($"NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hiveDefinition)}");
-
             sb.AppendLine($"NEON_ARCHIVE_FOLDER={HiveHostFolders.Archive}");
             sb.AppendLine($"NEON_BIN_FOLDER={HiveHostFolders.Bin}");
             sb.AppendLine($"NEON_CONFIG_FOLDER={HiveHostFolders.Config}");
@@ -256,49 +243,6 @@ TCPKeepAlive yes
             sb.AppendLine($"NEON_STATE_FOLDER={HiveHostFolders.State}");
             sb.AppendLine($"NEON_TMPFS_FOLDER={HiveHostFolders.Tmpfs}");
             sb.AppendLine($"NEON_TOOLS_FOLDER={HiveHostFolders.Tools}");
-
-            // Append Consul and Vault addresses.
-
-            // All nodes will be configured such that host processes using the HashiCorp Consul 
-            // CLI will access the Consul cluster via local Consul instance.  This will be a 
-            // server for manager nodes and a proxy for workers and pets.
-
-            if (hiveDefinition.Consul.Tls)
-            {
-                sb.AppendLine($"CONSUL_HTTP_SSL=true");
-                sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
-                sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"https://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
-            }
-            else
-            {
-                sb.AppendLine($"CONSUL_HTTP_SSL=false");
-                sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
-                sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"http://{hiveDefinition.Hostnames.Consul}:{hiveDefinition.Consul.Port}");
-            }
-
-            // All nodes will be configured such that host processes using the HashiCorp Vault 
-            // CLI will access the Vault cluster via the [neon-proxy-vault] proxy service
-            // by default.
-
-            sb.AppendLine($"VAULT_ADDR={hiveDefinition.VaultProxyUri}");
-
-            if (node.Metadata != null)
-            {
-                if (node.Metadata.IsManager)
-                {
-                    // Manager hosts may use the [VAULT_DIRECT_ADDR] environment variable to 
-                    // access Vault without going through the [neon-proxy-vault] proxy.  This
-                    // points to the Vault instance running locally.
-                    //
-                    // This is useful when configuring Vault.
-
-                    sb.AppendLine($"VAULT_DIRECT_ADDR={hiveDefinition.GetVaultDirectUri(node.Name)}");
-                }
-                else
-                {
-                    sb.AppendLine($"VAULT_DIRECT_ADDR=");
-                }
-            }
 
             // Upload the new environment to the server.
 

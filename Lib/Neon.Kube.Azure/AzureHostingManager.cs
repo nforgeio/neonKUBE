@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    AzureHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Diagnostics.Contracts;
@@ -288,7 +288,7 @@ namespace Neon.Kube
 
         private const string managerLeafDomainPrefix = "vpn-";
 
-        private ClusterProxy                    hive;
+        private ClusterProxy                       hive;
         private HostingOptions                  hostOptions;
         private NetworkOptions                  networkOptions;
         private AzureOptions                    azureOptions;
@@ -493,13 +493,6 @@ namespace Neon.Kube
                         minNics   = HiveConst.MinWorkerNics;
                         break;
 
-                    case NodeRole.Pet:
-
-                        minCores  = HiveConst.MinPetCores;
-                        minRamMiB = HiveConst.MinPetRamMiB;
-                        minNics   = HiveConst.MinPetNics;
-                        break;
-
                     default:
 
                         throw new NotImplementedException();
@@ -518,18 +511,6 @@ namespace Neon.Kube
                 if (vmCaps.MaxNics < minNics)
                 {
                     throw new ClusterDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [MaxNics={vmCaps.MaxNics}] which is too small.  At least [{minNics}] network interfaces are required for [{node.Role}] nodes.");
-                }
-            }
-
-            // Identify the OSD Bluestore block device for OSD nodes.
-
-            if (hive.Definition.HiveFS.Enabled)
-            {
-                foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
-                {
-                    var diskLetter = (char)('c' + node.Azure.HardDriveCount);
-
-                    node.Labels.CephOSDDevice = $"/dev/sd{diskLetter}";
                 }
             }
         }
@@ -584,11 +565,6 @@ namespace Neon.Kube
             }
 
             foreach (var node in hive.Workers.OrderBy(n => n.Name))
-            {
-                node.SshPort = nextSshPort++;
-            }
-
-            foreach (var node in hive.Pets.OrderBy(n => n.Name))
             {
                 node.SshPort = nextSshPort++;
             }
@@ -761,20 +737,6 @@ namespace Neon.Kube
             // Worker node SSH ports.
 
             foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsWorker).OrderBy(n => n.Name))
-            {
-                if (azureOptions.PublicNodeAddresses)
-                {
-                    azureNode.PublicSshPort = NetworkPorts.SSH;
-                }
-                else
-                {
-                    azureNode.PublicSshPort = nextSshFrontendPort++;
-                }
-            }
-
-            // Pet node SSH ports.
-
-            foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsPet).OrderBy(n => n.Name))
             {
                 if (azureOptions.PublicNodeAddresses)
                 {
@@ -1262,7 +1224,7 @@ namespace Neon.Kube
 
                 if (tempSsh)
                 {
-                    foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsWorker || n.IsPet))
+                    foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsWorker))
                     {
                         lbNodeCreator
                             .DefineInboundNatRule(azureNode.SshNatRuleName)
@@ -1468,20 +1430,6 @@ namespace Neon.Kube
                     {
                         vmCreator.WithNewDataDisk(AzureHelper.GetDiskSizeGB(azureNodeOptions.StorageType, azureNodeOptions.HardDriveSizeGB), lun, CachingTypes.None);
                     }
-                }
-
-                if (hive.Definition.HiveFS.Enabled)
-                {
-                    // $todo(jeff.lill):
-                    //
-                    // We're only going to create one OSD drive for now.  In the future, we could create
-                    // multiple OSD drives and configure them as a single RAID0 partition.  This may not
-                    // end up being important as Azure keeps increasing the possible drive sizes (StandardSSD
-                    // is now previewing up to 32TB drives).
-
-                    var lun = azureNodeOptions.HardDriveCount + 1;  // The OSD drive will be the last mounted block device.
-
-                    vmCreator.WithNewDataDisk(AzureHelper.GetDiskSizeGB(azureNodeOptions.StorageType, azureNodeOptions.HardDriveSizeGB), lun, CachingTypes.None);
                 }
 
                 vmCreator

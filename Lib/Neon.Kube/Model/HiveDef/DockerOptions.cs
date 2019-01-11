@@ -301,7 +301,7 @@ namespace Neon.Kube
                     }
                     catch (Exception e)
                     {
-                        throw new HiveDefinitionException($"Cannot confirm that Docker release [{version}] exists at [{uri}].  {NeonHelper.ExceptionError(e)}");
+                        throw new ClusterDefinitionException($"Cannot confirm that Docker release [{version}] exists at [{uri}].  {NeonHelper.ExceptionError(e)}");
                     }
                 }
             }

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    HyperVDevHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -81,7 +81,7 @@ namespace Neon.Kube
 
         private const string defaultSwitchName = "neonHIVE";
 
-        private ClusterProxy                    hive;
+        private ClusterProxy                       hive;
         private SetupController<NodeDefinition> controller;
         private bool                            forceVmOverwrite;
         private string                          driveTemplatePath;
@@ -121,15 +121,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition hiveDefinition)
         {
-            // Identify the OSD Bluestore block device for OSD nodes.
-
-            if (hive.Definition.HiveFS.Enabled)
-            {
-                foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
-                {
-                    node.Labels.CephOSDDevice = "/dev/sdb";
-                }
-            }
         }
 
         /// <inheritdoc/>
@@ -651,21 +642,6 @@ namespace Neon.Kube
                     hyperv.RemoveVM(vmName);
                 }
 
-                // We need to create a raw drive if the node hosts a Ceph OSD.
-
-                var extraDrives = new List<VirtualDrive>();
-
-                if (node.Metadata.Labels.CephOSD)
-                {
-                    extraDrives.Add(
-                        new VirtualDrive()
-                        {
-                            IsDynamic = true,
-                            Size      = node.Metadata.GetCephOSDDriveSize(hive.Definition),
-                            Path      = Path.Combine(vmDriveFolder, $"{vmName}-[1].vhdx")
-                        });
-                }
-
                 // Create the virtual machine if it doesn't already exist.
 
                 var processors     = node.Metadata.GetVmProcessors(hive.Definition);
@@ -681,8 +657,7 @@ namespace Neon.Kube
                     memorySize: memoryBytes.ToString(),
                     minimumMemorySize: minMemoryBytes.ToString(),
                     drivePath: drivePath,
-                    switchName: switchName,
-                    extraDrives: extraDrives);
+                    switchName: switchName);
 
                 node.Status = $"start virtual machine";
 

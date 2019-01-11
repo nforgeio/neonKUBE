@@ -24,9 +24,9 @@
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
   <ItemGroup>
-    <Compile Remove="Resources\Ubuntu-16.04\source\**" />
-    <EmbeddedResource Remove="Resources\Ubuntu-16.04\source\**" />
-    <None Remove="Resources\Ubuntu-16.04\source\**" />
+    <Compile Remove="Resources\CoreOS\source\**" />
+    <EmbeddedResource Remove="Resources\CoreOS\source\**" />
+    <None Remove="Resources\CoreOS\source\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -65,16 +65,16 @@
     <None Update="Resources\Elasticsearch\logstash-template.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\archive\setup-disk.sh">
+    <None Update="Resources\CoreOS\archive\setup-disk.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\conf\hive.conf.sh">
+    <None Update="Resources\CoreOS\conf\hive.conf.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\conf\cluster.conf.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-apt-proxy.sh">
+    <None Update="Resources\CoreOS\setup\setup-apt-proxy.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-apt-proxy.sh.txt">
@@ -83,22 +83,22 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-apt-ready.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-consul-proxy.sh">
+    <None Update="Resources\CoreOS\setup\setup-consul-proxy.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-consul-proxy.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-consul-server.sh">
+    <None Update="Resources\CoreOS\setup\setup-consul-server.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-consul-server.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-disk.sh">
+    <None Update="Resources\CoreOS\setup\setup-disk.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-docker.sh">
+    <None Update="Resources\CoreOS\setup\setup-docker.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-docker.sh.txt">
@@ -107,82 +107,82 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-dotnet.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-environment.sh">
+    <None Update="Resources\CoreOS\setup\setup-environment.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-environment.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-exists.sh">
+    <None Update="Resources\CoreOS\setup\setup-exists.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-exists.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-node.sh">
+    <None Update="Resources\CoreOS\setup\setup-node.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-node.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-ntp.sh">
+    <None Update="Resources\CoreOS\setup\setup-ntp.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-ntp.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-prep-node.sh">
+    <None Update="Resources\CoreOS\setup\setup-prep-node.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-prep-node.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-ssd.sh">
+    <None Update="Resources\CoreOS\setup\setup-ssd.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-ssd.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-utility.sh">
+    <None Update="Resources\CoreOS\setup\setup-utility.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-utility.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-vault-client.sh">
+    <None Update="Resources\CoreOS\setup\setup-vault-client.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-vault-client.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\setup\setup-vault-server.sh">
+    <None Update="Resources\CoreOS\setup\setup-vault-server.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-vault-server.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\tools\docker-volume-create.sh">
+    <None Update="Resources\CoreOS\tools\docker-volume-create.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-create.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\tools\docker-volume-exists.sh">
+    <None Update="Resources\CoreOS\tools\docker-volume-exists.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-exists.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\tools\docker-volume-rm.sh">
+    <None Update="Resources\CoreOS\tools\docker-volume-rm.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-rm.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\tools\safe-apt-get.sh">
+    <None Update="Resources\CoreOS\tools\safe-apt-get.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\updates\010297_010298.zip">
+    <None Update="Resources\CoreOS\updates\010297_010298.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

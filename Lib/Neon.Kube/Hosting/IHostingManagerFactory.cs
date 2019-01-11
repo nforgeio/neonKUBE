@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    IHostingManagerFactory.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -36,7 +36,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the <see cref="HostingManager"/> implementation for a specific environment.
         /// </summary>
-        /// <param name="hive">The hive being managed.</param>
+        /// <param name="cluster">The hive being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
@@ -46,7 +46,7 @@ namespace Neon.Kube
         /// could be located for the specified hive environment.
         /// </returns>
         /// <exception cref="HiveException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
-        HostingManager GetManager(ClusterProxy hive, string logFolder = null);
+        HostingManager GetManager(ClusterProxy cluster, string logFolder = null);
 
         /// <summary>
         /// Determines whether a hosting environment is hosted in the cloud.

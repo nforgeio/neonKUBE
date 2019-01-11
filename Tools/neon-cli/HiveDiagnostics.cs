@@ -58,11 +58,6 @@ namespace NeonCli
                 CheckConsul(node, hiveDefinition);
             }
 
-            if (!node.IsFaulted)
-            {
-                CheckVault(node, hiveDefinition);
-            }
-
             node.Status = "healthy";
         }
 
@@ -74,7 +69,7 @@ namespace NeonCli
         public static void CheckWorkersOrPet(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentException>(node.Metadata.IsWorker || node.Metadata.IsPet);
+            Covenant.Requires<ArgumentException>(node.Metadata.IsWorker);
             Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             if (!node.IsFaulted)
@@ -90,11 +85,6 @@ namespace NeonCli
             if (!node.IsFaulted)
             {
                 CheckConsul(node, hiveDefinition);
-            }
-
-            if (!node.IsFaulted)
-            {
-                CheckVault(node, hiveDefinition);
             }
 
             node.Status = "healthy";
@@ -362,55 +352,6 @@ namespace NeonCli
                 default:
 
                     throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
-        /// Verifies Vault health for a node.
-        /// </summary>
-        /// <param name="node">The node.</param>
-        /// <param name="hiveDefinition">The hive definition.</param>
-        private static void CheckVault(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
-        {
-            // $todo(jeff.lill): Implement this.
-
-            return;
-
-            node.Status = "checking: vault";
-
-            // This is a minimal health test that just verifies that Vault
-            // is listening for requests.  We're going to ping the local
-            // Vault instance at [/v1/sys/health].
-            //
-            // Note that this should return a 500 status code with some
-            // JSON content.  The reason for this is because we have not
-            // yet initialized and unsealed the vault.
-
-            var targetUrl = $"https://{node.Metadata.PrivateAddress}:{hiveDefinition.Vault.Port}/v1/sys/health?standbycode=200";
-
-            using (var client = new HttpClient())
-            {
-                try
-                {
-                    var response = client.GetAsync(targetUrl).Result;
-
-                    if (response.StatusCode != HttpStatusCode.OK && 
-                        response.StatusCode != HttpStatusCode.InternalServerError)
-                    {
-                        node.Fault($"Vault: Unexpected HTTP response status [{(int) response.StatusCode}={response.StatusCode}]");
-                        return;
-                    }
-
-                    if (!response.Content.Headers.ContentType.MediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase))
-                    {
-                        node.Fault($"Vault: Unexpected content type [{response.Content.Headers.ContentType.MediaType}]");
-                        return;
-                    }
-                }
-                catch (Exception e)
-                {
-                    node.Fault($"Vault: {NeonHelper.ExceptionError(e)}");
-                }
             }
         }
     }

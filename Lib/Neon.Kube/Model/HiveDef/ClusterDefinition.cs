@@ -29,7 +29,7 @@ using Neon.Net;
 
 // $todo(jeff.lill): 
 //
-// [HiveDefinition.Validate()] should accept a parameter that enables a call to the
+// [ClusterDefinition.Validate()] should accept a parameter that enables a call to the
 // headend services so that the Docker, Consul, Vault, and other hive host software
 // versions can be validated.
 
@@ -686,6 +686,114 @@ namespace Neon.Kube
             // Compute the hash.
 
             this.Hash = MD5.Create().ComputeHashBase64(NeonHelper.JsonSerialize(clone));
+        }
+
+        /// <summary>
+        /// Filters the hive swarm nodes by applying the zero or more Docker Swarm style constraints.
+        /// </summary>
+        /// <param name="constraints">The constraints.</param>
+        /// <returns>The set of swarm nodes that satisfy <b>all</b> of the constraints.</returns>
+        /// <remarks>
+        /// <note>
+        /// All of the swarm nodes will be returned if the parameter is <c>null</c> or empty.
+        /// </note>
+        /// <para>
+        /// Constraint expressions must take the form of <b>LABEL==VALUE</b> or <b>LABEL!=VALUE</b>.
+        /// This method will do a case insensitive comparision the node label with the
+        /// value specified.
+        /// </para>
+        /// <para>
+        /// Properties may be custom label names, neonHIVE label names prefixed with <b>io.neonhive.</b>,
+        /// or <b>node</b> to indicate the node name.  Label name lookup is case insenstive.
+        /// </para>
+        /// </remarks>
+        public IEnumerable<NodeDefinition> FilterSwarmNodes(IEnumerable<string> constraints)
+        {
+            var filtered = this.SortedSwarm.ToList();
+
+            if (constraints == null || constraints.FirstOrDefault() == null)
+            {
+                return filtered;
+            }
+
+            var labelDictionary = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var node in filtered)
+            {
+                var labels = new Dictionary<string, string>();
+
+                labels.Add("node", node.Name);
+
+                foreach (var label in node.Labels.Standard)
+                {
+                    labels.Add(label.Key, label.Value.ToString());
+                }
+
+                foreach (var label in node.Labels.Custom)
+                {
+                    labels.Add(label.Key, label.Value.ToString());
+                }
+
+                labelDictionary.Add(node.Name, labels);
+            }
+
+            foreach (var constraint in constraints)
+            {
+                if (string.IsNullOrWhiteSpace(constraint))
+                {
+                    continue;
+                }
+
+                var matches = new List<NodeDefinition>();
+
+                foreach (var worker in filtered)
+                {
+                    var pos      = constraint.IndexOf("==");
+                    var equality = true;
+
+                    if (pos < 0)
+                    {
+                        pos = constraint.IndexOf("!=");
+
+                        if (pos < 0)
+                        {
+                            throw new ClusterDefinitionException($"Illegal constraint [{constraint}].  One of [==] or [!=] must be present.");
+                        }
+
+                        equality = false;
+                    }
+
+                    if (pos == 0)
+                    {
+                        throw new ClusterDefinitionException($"Illegal constraint [{constraint}].  No label is specified.");
+                    }
+
+                    string  label = constraint.Substring(0, pos);
+                    string  value = constraint.Substring(pos + 2);
+                    string  nodeValue;
+
+                    if (!labelDictionary[worker.Name].TryGetValue(label, out nodeValue))
+                    {
+                        nodeValue = string.Empty;
+                    }
+
+                    var equals = nodeValue.Equals(value, StringComparison.OrdinalIgnoreCase);
+
+                    if (equality == equals)
+                    {
+                        matches.Add(worker);
+                    }
+                }
+
+                filtered = matches;
+
+                if (filtered.Count == 0)
+                {
+                    return filtered;
+                }
+            }
+
+            return filtered;
         }
     }
 }

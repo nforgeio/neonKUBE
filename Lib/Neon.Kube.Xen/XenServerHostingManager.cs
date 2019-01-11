@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    XenServerHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -115,15 +115,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition hiveDefinition)
         {
-            // Identify the OSD Bluestore block device for OSD nodes.
-
-            if (hive.Definition.HiveFS.Enabled)
-            {
-                foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
-                {
-                    node.Labels.CephOSDDevice = "/dev/xvdb";
-                }
-            }
         }
 
         /// <inheritdoc/>
@@ -378,25 +369,11 @@ namespace Neon.Kube
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create virtual machine");
 
-                // We need to create a raw drive if the node hosts a Ceph OSD.
-
-                var extraDrives = new List<XenVirtualDrive>();
-
-                if (node.Metadata.Labels.CephOSD)
-                {
-                    extraDrives.Add(
-                        new XenVirtualDrive()
-                        {
-                            Size = node.Metadata.GetCephOSDDriveSize(hive.Definition)
-                        });
-                }
-
                 var vm = xenHost.Machine.Create(vmName, hive.Definition.Hosting.XenServer.TemplateName,
                     processors:                 processors,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  diskBytes,
                     snapshot:                   hive.Definition.Hosting.XenServer.Snapshot,
-                    extraDrives:                extraDrives,
                     primaryStorageRepository:   hive.Definition.Hosting.XenServer.StorageRepository,
                     extraStorageRespository:    hive.Definition.Hosting.XenServer.OsdStorageRepository);
 
