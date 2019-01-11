@@ -20,7 +20,7 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a hive dashboard.
+    /// Describes a cluster dashboard.
     /// </summary>
     public class HiveDashboard
     {
@@ -74,11 +74,11 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the dashboard.  Any warning/errors will be returned as a string list.
         /// </summary>
-        /// <param name="hiveDefinition">The current hive definition,</param>
+        /// <param name="clusterDefinition">The current hive definition,</param>
         /// <returns>The list of warnings (if any).</returns>
-        public List<string> Validate(ClusterDefinition hiveDefinition)
+        public List<string> Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentException>(hiveDefinition != null);
+            Covenant.Requires<ArgumentException>(clusterDefinition != null);
 
             var warnings = new List<string>();
 

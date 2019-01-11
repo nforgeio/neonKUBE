@@ -171,7 +171,7 @@ namespace Neon.Kube
 
         // Path to the transient file on the Linux box whose presence indicates
         // that the server is still rebooting.
-        private readonly string RebootStatusPath = $"{HiveHostFolders.Tmpfs}/rebooting";
+        private readonly string RebootStatusPath = $"{ClusterHostFolders.Tmpfs}/rebooting";
 
         private object          syncLock   = new object();
         private bool            isDisposed = false;
@@ -486,7 +486,7 @@ namespace Neon.Kube
         /// <summary>
         /// The PATH to use on the remote server when executing commands in the
         /// session or <c>null</c>/empty to run commands without a path.  This
-        /// defaults to the standard Linux path and <see cref="HiveHostFolders.Tools"/>.
+        /// defaults to the standard Linux path and <see cref="ClusterHostFolders.Tools"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -494,7 +494,7 @@ namespace Neon.Kube
         /// multiple directories as required.
         /// </note>
         /// </remarks>
-        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{HiveHostFolders.Tools}";
+        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{ClusterHostFolders.Tools}";
 
         /// <summary>
         /// Returns the username used to log into the remote node.
@@ -677,7 +677,7 @@ namespace Neon.Kube
 
             try
             {
-                SudoCommand($"mkdir -p {HiveHostFolders.Tmpfs} && touch {RebootStatusPath}");
+                SudoCommand($"mkdir -p {ClusterHostFolders.Tmpfs} && touch {RebootStatusPath}");
                 LogLine("*** REBOOT");
                 SudoCommand("reboot", RunOptions.Defaults | RunOptions.Shutdown);
                 LogLine("*** REBOOT submitted");
@@ -861,11 +861,11 @@ namespace Neon.Kube
             }
             catch (SshAuthenticationException e)
             {
-                throw new HiveException("Access Denied: Invalid credentials.", e);
+                throw new ClusterException("Access Denied: Invalid credentials.", e);
             }
             catch (Exception e)
             {
-                throw new HiveException($"Unable to connect to the hive within [{timeout}].", e);
+                throw new ClusterException($"Unable to connect to the hive within [{timeout}].", e);
             }
         }
 
@@ -978,7 +978,7 @@ namespace Neon.Kube
 
                 if (credentials == null || credentials == SshCredentials.None)
                 {
-                    throw new HiveException("Cannot establish a SSH connection because no credentials are available.");
+                    throw new ClusterException("Cannot establish a SSH connection because no credentials are available.");
                 }
 
                 // We're going to retry connecting up to 10 times.
@@ -1040,7 +1040,7 @@ namespace Neon.Kube
 
                 if (credentials == null || credentials == SshCredentials.None)
                 {
-                    throw new HiveException("Cannot establish a SSH connection because no credentials are available.");
+                    throw new ClusterException("Cannot establish a SSH connection because no credentials are available.");
                 }
 
                 if (sshClient != null)
@@ -1242,22 +1242,22 @@ namespace Neon.Kube
             // SudoCommand/RunCommand methods because those methods depend on the 
             // existence of this folder.
 
-            var result = sshClient.RunCommand($"sudo mkdir -p {HiveHostFolders.Exec}");
+            var result = sshClient.RunCommand($"sudo mkdir -p {ClusterHostFolders.Exec}");
 
             if (result.ExitStatus != 0)
             {
-                Log($"Cannot create folder [{HiveHostFolders.Exec}]\n");
+                Log($"Cannot create folder [{ClusterHostFolders.Exec}]\n");
                 Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
                 Log(result.Error);
                 Log("END-ERROR:\n");
                 throw new IOException(result.Error);
             }
 
-            result = sshClient.RunCommand($"sudo chmod 777 {HiveHostFolders.Exec}");        // $todo(jeff.lill): Is this a potential security problem?
+            result = sshClient.RunCommand($"sudo chmod 777 {ClusterHostFolders.Exec}");        // $todo(jeff.lill): Is this a potential security problem?
                                                                                             //                   SCP uploads fail for 770
             if (result.ExitStatus != 0)
             {
-                Log($"Cannot chmod folder [{HiveHostFolders.Exec}]\n");
+                Log($"Cannot chmod folder [{ClusterHostFolders.Exec}]\n");
                 Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
                 Log(result.Error);
                 Log("END-ERROR:\n");
@@ -1266,38 +1266,38 @@ namespace Neon.Kube
 
             // Create the folders.
 
-            SudoCommand($"mkdir -p {HiveHostFolders.Archive}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {HiveHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {ClusterHostFolders.Archive}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {HiveHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {ClusterHostFolders.Bin}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.Config}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 755 {HiveHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 755 {ClusterHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {HiveHostFolders.Exec}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Is this a potential security problem?
+            SudoCommand($"mkdir -p {ClusterHostFolders.Exec}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {ClusterHostFolders.Exec}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Is this a potential security problem?
                                                                                             //                   SCP uploads fail for 770
-            SudoCommand($"mkdir -p {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {HiveHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {ClusterHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {HiveHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {ClusterHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {HiveHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {ClusterHostFolders.Setup}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {HiveHostFolders.Source}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.Source}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {ClusterHostFolders.Source}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.State}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {HiveHostFolders.State}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.State}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {ClusterHostFolders.State}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {HiveHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {ClusterHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {HiveHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {ClusterHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {ClusterHostFolders.Tools}", RunOptions.LogOnErrorOnly);
 
             // $hack(jeff.lill):
             //
@@ -1332,7 +1332,7 @@ namespace Neon.Kube
 
             if (response.ExitCode != 0)
             {
-                throw new HiveException(response.ErrorSummary);
+                throw new ClusterException(response.ErrorSummary);
             }
         }
 
@@ -1368,14 +1368,14 @@ namespace Neon.Kube
 
                 if (response.ExitCode != 0)
                 {
-                    throw new HiveException(response.ErrorSummary);
+                    throw new ClusterException(response.ErrorSummary);
                 }
 
                 response = SudoCommand("chmod", "444", downloadPath);
 
                 if (response.ExitCode != 0)
                 {
-                    throw new HiveException(response.ErrorSummary);
+                    throw new ClusterException(response.ErrorSummary);
                 }
 
                 SafeDownload(downloadPath, output);
@@ -1869,7 +1869,7 @@ namespace Neon.Kube
 
                 // Upload the ZIP file to a temporary folder.
 
-                var bundleFolder = $"{HiveHostFolders.Exec}/{Guid.NewGuid().ToString("D")}";
+                var bundleFolder = $"{ClusterHostFolders.Exec}/{Guid.NewGuid().ToString("D")}";
                 var zipPath      = LinuxPath.Combine(bundleFolder, "__bundle.zip");
 
                 SudoCommand($"mkdir -p", RunOptions.LogOnErrorOnly, bundleFolder);
@@ -2098,7 +2098,7 @@ namespace Neon.Kube
 
             // Create the command folder.
 
-            var execFolder = $"{HiveHostFolders.Exec}/cmd";
+            var execFolder = $"{ClusterHostFolders.Exec}/cmd";
             var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("D"));
 
             SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));
@@ -2958,7 +2958,7 @@ echo $? > {cmdFolder}/exit
         /// </para>
         /// <para>
         /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="HiveHostFolders.State"/><b>/ACTION-ID</b>.
+        /// on the node at <see cref="ClusterHostFolders.State"/><b>/ACTION-ID</b>.
         /// To ensure idempotency, this method first checks for the existance of
         /// this file and returns immediately without invoking the action if it is 
         /// present.
@@ -2970,7 +2970,7 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId));
             Covenant.Requires<ArgumentNullException>(action != null);
 
-            var stateFolder = HiveHostFolders.State;
+            var stateFolder = ClusterHostFolders.State;
             var slashPos    = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
@@ -3111,7 +3111,7 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="address">The target IP address.</param>
         /// <returns>The network interface name.</returns>
-        /// <exception cref="HiveException">Thrown if the interface was not found.</exception>
+        /// <exception cref="ClusterException">Thrown if the interface was not found.</exception>
         /// <remarks>
         /// <para>
         /// In the olden days, network devices were assigned names like <b>eth0</b>,
@@ -3171,7 +3171,7 @@ echo $? > {cmdFolder}/exit
                 }
             }
 
-            throw new HiveException($"Cannot find network interface for [address={address}].");
+            throw new ClusterException($"Cannot find network interface for [address={address}].");
         }
 
         /// <summary>
@@ -3192,7 +3192,7 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
 
-            if (HiveHelper.IsDockerPublicRegistry(registry))
+            if (ClusterHelper.IsDockerPublicRegistry(registry))
             {
                 return true;
             }
@@ -3207,7 +3207,7 @@ echo $? > {cmdFolder}/exit
 
                     bundle.AddFile("password.txt", password);
                 }
-                else if (HiveHelper.IsDockerPublicRegistry(registry))
+                else if (ClusterHelper.IsDockerPublicRegistry(registry))
                 {
                     // Logging out of the Docker public registry is equivalent to 
                     // setting a NULL username.
@@ -3255,7 +3255,7 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
 
-            if (HiveHelper.IsDockerPublicRegistry(registry))
+            if (ClusterHelper.IsDockerPublicRegistry(registry))
             {
                 return true;
             }

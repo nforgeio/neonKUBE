@@ -158,8 +158,8 @@ TCPKeepAlive yes
         /// of the server within the hive.
         /// </summary>
         /// <param name="node">The server to be updated.</param>
-        /// <param name="hiveDefinition">The hive definition.</param>
-        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition)
+        /// <param name="clusterDefinition">The hive definition.</param>
+        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             node.Status = "environment variables";
 
@@ -185,9 +185,9 @@ TCPKeepAlive yes
                     {
                         if (line.StartsWith("PATH="))
                         {
-                            if (!line.Contains(HiveHostFolders.Tools))
+                            if (!line.Contains(ClusterHostFolders.Tools))
                             {
-                                sb.AppendLine(line + $":{HiveHostFolders.Tools}");
+                                sb.AppendLine(line + $":{ClusterHostFolders.Tools}");
                             }
                             else
                             {
@@ -204,14 +204,14 @@ TCPKeepAlive yes
 
             // Add the global neonHIVE related environment variables. 
 
-            sb.AppendLine($"NEON_HIVE_PROVISIONER={hiveDefinition.Provisioner}");
-            sb.AppendLine($"NEON_HIVE={hiveDefinition.Name}");
-            sb.AppendLine($"NEON_DATACENTER={hiveDefinition.Datacenter.ToLowerInvariant()}");
-            sb.AppendLine($"NEON_ENVIRONMENT={hiveDefinition.Environment.ToString().ToLowerInvariant()}");
+            sb.AppendLine($"NEON_HIVE_PROVISIONER={clusterDefinition.Provisioner}");
+            sb.AppendLine($"NEON_HIVE={clusterDefinition.Name}");
+            sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
+            sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
 
-            if (hiveDefinition.Hosting != null)
+            if (clusterDefinition.Hosting != null)
             {
-                sb.AppendLine($"NEON_HOSTING={hiveDefinition.Hosting.Environment.ToMemberString().ToLowerInvariant()}");
+                sb.AppendLine($"NEON_HOSTING={clusterDefinition.Hosting.Environment.ToMemberString().ToLowerInvariant()}");
             }
 
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
@@ -226,23 +226,23 @@ TCPKeepAlive yes
 
             var sbNameservers = new StringBuilder();
 
-            foreach (var nameServer in hiveDefinition.Network.Nameservers)
+            foreach (var nameServer in clusterDefinition.Network.Nameservers)
             {
                 sbNameservers.AppendWithSeparator(nameServer, ",");
             }
 
             sb.AppendLine($"NEON_UPSTREAM_DNS=\"{sbNameservers}\"");
-            sb.AppendLine($"NEON_ARCHIVE_FOLDER={HiveHostFolders.Archive}");
-            sb.AppendLine($"NEON_BIN_FOLDER={HiveHostFolders.Bin}");
-            sb.AppendLine($"NEON_CONFIG_FOLDER={HiveHostFolders.Config}");
-            sb.AppendLine($"NEON_EXEC_FOLDER={HiveHostFolders.Exec}");
-            sb.AppendLine($"NEON_SCRIPTS_FOLDER={HiveHostFolders.Scripts}");
-            sb.AppendLine($"NEON_SECRETS_FOLDER={HiveHostFolders.Secrets}");
-            sb.AppendLine($"NEON_SETUP_FOLDER={HiveHostFolders.Setup}");
-            sb.AppendLine($"NEON_SOURCE_FOLDER={HiveHostFolders.Source}");
-            sb.AppendLine($"NEON_STATE_FOLDER={HiveHostFolders.State}");
-            sb.AppendLine($"NEON_TMPFS_FOLDER={HiveHostFolders.Tmpfs}");
-            sb.AppendLine($"NEON_TOOLS_FOLDER={HiveHostFolders.Tools}");
+            sb.AppendLine($"NEON_ARCHIVE_FOLDER={ClusterHostFolders.Archive}");
+            sb.AppendLine($"NEON_BIN_FOLDER={ClusterHostFolders.Bin}");
+            sb.AppendLine($"NEON_CONFIG_FOLDER={ClusterHostFolders.Config}");
+            sb.AppendLine($"NEON_EXEC_FOLDER={ClusterHostFolders.Exec}");
+            sb.AppendLine($"NEON_SCRIPTS_FOLDER={ClusterHostFolders.Scripts}");
+            sb.AppendLine($"NEON_SECRETS_FOLDER={ClusterHostFolders.Secrets}");
+            sb.AppendLine($"NEON_SETUP_FOLDER={ClusterHostFolders.Setup}");
+            sb.AppendLine($"NEON_SOURCE_FOLDER={ClusterHostFolders.Source}");
+            sb.AppendLine($"NEON_STATE_FOLDER={ClusterHostFolders.State}");
+            sb.AppendLine($"NEON_TMPFS_FOLDER={ClusterHostFolders.Tmpfs}");
+            sb.AppendLine($"NEON_TOOLS_FOLDER={ClusterHostFolders.Tools}");
 
             // Upload the new environment to the server.
 
@@ -254,11 +254,11 @@ TCPKeepAlive yes
         /// for a neonHIVE host node.
         /// </summary>
         /// <param name="node">The target hive node.</param>
-        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <param name="clusterDefinition">The hive definition.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition hiveDefinition, bool shutdown = false)
+        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, bool shutdown = false)
         {
-            if (node.FileExists($"{HiveHostFolders.State}/setup/prepared"))
+            if (node.FileExists($"{ClusterHostFolders.State}/setup/prepared"))
             {
                 return;     // Already prepared
             }
@@ -271,7 +271,7 @@ TCPKeepAlive yes
             //-----------------------------------------------------------------
             // Package manager configuration.
 
-            if (!hiveDefinition.NodeOptions.AllowPackageManagerIPv6)
+            if (!clusterDefinition.NodeOptions.AllowPackageManagerIPv6)
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
                 // with the package mirrors, since IPv6 often doesn't work.
@@ -282,19 +282,19 @@ TCPKeepAlive yes
 
             // Configure [apt] to retry.
 
-            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{hiveDefinition.NodeOptions.PackageManagerRetries}\";");
+            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{clusterDefinition.NodeOptions.PackageManagerRetries}\";");
             node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries");
 
             //-----------------------------------------------------------------
             // Other configuration.
 
             ConfigureOpenSSH(node);
-            node.UploadConfigFiles(hiveDefinition);
-            node.UploadResources(hiveDefinition);
+            node.UploadConfigFiles(clusterDefinition);
+            node.UploadResources(clusterDefinition);
 
-            if (hiveDefinition != null)
+            if (clusterDefinition != null)
             {
-                ConfigureEnvironmentVariables(node, hiveDefinition);
+                ConfigureEnvironmentVariables(node, clusterDefinition);
             }
 
             node.SudoCommand("safe-apt-get update");
@@ -316,7 +316,7 @@ TCPKeepAlive yes
             // based drive array or something.  I'm going to defer this to later and
             // concentrate on commodity hardware and cloud deployments for now. 
 
-            CommonSteps.ConfigureEnvironmentVariables(node, hiveDefinition);
+            CommonSteps.ConfigureEnvironmentVariables(node, clusterDefinition);
 
             node.Status = "run: setup-disk.sh";
             node.SudoCommand("setup-disk.sh");
@@ -329,7 +329,7 @@ TCPKeepAlive yes
 
             // Indicate that the node has been fully prepared.
 
-            node.SudoCommand($"touch {HiveHostFolders.State}/setup/prepared");
+            node.SudoCommand($"touch {ClusterHostFolders.State}/setup/prepared");
 
             // Shutdown the node if requested.
 

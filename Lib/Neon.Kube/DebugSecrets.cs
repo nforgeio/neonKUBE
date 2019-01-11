@@ -20,14 +20,14 @@ namespace Neon.Kube
 {
     /// <summary>
     /// Used to emulate Docker service secrets when debugging an application using 
-    /// <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/>.
+    /// <see cref="ClusterHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/>.
     /// </summary>
     /// <remarks>
     /// <para>
     /// Add simple text secrets to the collection using <see cref="Add(string, string)"/>.
     /// </para>
     /// <para>
-    /// You can also create temporary hive Vault and Consul credentials using
+    /// You can also create temporary cluster Vault and Consul credentials using
     /// <see cref="VaultAppRole(string, string)"/> and <see cref="ConsulToken(string, string[])"/>.
     /// Temporary credentials have a lifespan of 1 day by default, but this can be
     /// changed by setting <see cref="CredentialTTL"/>.
@@ -57,7 +57,7 @@ namespace Neon.Kube
         // Implementation
 
         private List<CredentialRequest> credentialRequests = new List<CredentialRequest>();
-        private HiveLogin               hiveLogin;
+        private ClusterLogin               hiveLogin;
 
         /// <summary>
         /// Default constructor.

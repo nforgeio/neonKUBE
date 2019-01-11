@@ -60,12 +60,12 @@ namespace Neon.Kube
         /// Validates the DNS endpoint.  Any warning/errors will be appended to <paramref name="warnings"/>.
         /// </summary>
         /// <param name="warnings">Any warnings will be appended here.</param>
-        /// <param name="hiveDefinition">The current hive definition,</param>
+        /// <param name="clusterDefinition">The current hive definition,</param>
         /// <param name="nodeGroups">The hive node groups.</param>
         /// <param name="entryHostname">The parent <see cref="DnsEntry"/>'s hostname.</param>
-        public void Validate(List<string> warnings, ClusterDefinition hiveDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups, string entryHostname)
+        public void Validate(List<string> warnings, ClusterDefinition clusterDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups, string entryHostname)
         {
-            Covenant.Requires<ArgumentException>(hiveDefinition != null);
+            Covenant.Requires<ArgumentException>(clusterDefinition != null);
             Covenant.Requires<ArgumentException>(nodeGroups != null);
 
             if (string.IsNullOrEmpty(Target))

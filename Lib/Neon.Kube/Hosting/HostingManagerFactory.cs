@@ -70,11 +70,11 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(ClusterProxy hive, string logFolder = null)
+        public HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
         {
             CheckInitialized();
 
-            return Loader.GetManager(hive, logFolder);
+            return Loader.GetManager(cluster, logFolder);
         }
 
         /// <inheritdoc/>
@@ -86,21 +86,21 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void Validate(ClusterDefinition hiveDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
             CheckInitialized();
 
-            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            var hive    = new ClusterProxy(hiveDefinition);
-            var manager = GetManager(hive);
+            var cluster = new ClusterProxy(clusterDefinition);
+            var manager = GetManager(cluster);
 
             if (manager == null)
             {
-                throw new HiveException($"Cannot locate a [{nameof(IHostingManager)}] implementation for the [{hiveDefinition.Hosting.Environment}] hosting environment.");
+                throw new ClusterException($"Cannot locate a [{nameof(IHostingManager)}] implementation for the [{clusterDefinition.Hosting.Environment}] hosting environment.");
             }
 
-            manager.Validate(hiveDefinition);
+            manager.Validate(clusterDefinition);
         }
     }
 }

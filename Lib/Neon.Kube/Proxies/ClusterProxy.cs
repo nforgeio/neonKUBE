@@ -38,9 +38,9 @@ namespace Neon.Kube
         private bool                                                                useBootstrap;
 
         /// <summary>
-        /// Constructs a hive proxy from a hive login.
+        /// Constructs a cluster proxy from a cluster login.
         /// </summary>
-        /// <param name="hiveLogin">The hive login.</param>
+        /// <param name="hiveLogin">The cluster login.</param>
         /// <param name="nodeProxyCreator">
         /// The optional application supplied function that creates a node proxy
         /// given the node name, public address or FQDN, private address, and
@@ -58,17 +58,17 @@ namespace Neon.Kube
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
-        /// nodes managed by the hive proxy.  This defaults to <see cref="RunOptions.None"/>.
+        /// nodes managed by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         /// <remarks>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
-        /// the hive definition giving the application the chance to create the management
+        /// the cluster definition giving the application the chance to create the management
         /// proxy using the node's SSH credentials and also to specify logging.  A default
         /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
         /// argument is passed.
         /// </remarks>
         public ClusterProxy(
-            HiveLogin hiveLogin,
+            ClusterLogin hiveLogin,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
             bool                                                            appendLog         = false,
             bool                                                            useBootstrap      = false,
@@ -82,13 +82,13 @@ namespace Neon.Kube
 
             // This ensures that the local machine is initialized properly for the login.
 
-            HiveHelper.InitLogin(hiveLogin);
+            ClusterHelper.InitLogin(hiveLogin);
         }
 
         /// <summary>
-        /// Constructs a hive proxy from a hive definition.
+        /// Constructs a cluster proxy from a cluster definition.
         /// </summary>
-        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeProxyCreator">
         /// The application supplied function that creates a management proxy
         /// given the node name, public address or FQDN, private address, and
@@ -106,30 +106,30 @@ namespace Neon.Kube
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
-        /// nodes managed by the hive proxy.  This defaults to <see cref="RunOptions.None"/>.
+        /// nodes managed by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         /// <remarks>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
-        /// the hive definition giving the application the chance to create the management
+        /// the cluster definition giving the application the chance to create the management
         /// proxy using the node's SSH credentials and also to specify logging.  A default
         /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
         /// argument is passed.
         /// </remarks>
         public ClusterProxy(
-            ClusterDefinition hiveDefinition,
+            ClusterDefinition clusterDefinition,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator = null,
             bool                                                            appendLog = false,
             bool                                                            useBootstrap      = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
         {
-            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             if (nodeProxyCreator == null)
             {
                 nodeProxyCreator =
                     (name, publicAddress, privateAddress, append) =>
                     {
-                        var login = HiveHelper.HiveLogin;
+                        var login = ClusterHelper.HiveLogin;
 
                         if (login != null)
                         {
@@ -139,12 +139,12 @@ namespace Neon.Kube
                         {
                             // Note that the proxy returned won't actually work because we're not 
                             // passing valid SSH credentials.  This is useful for situations where
-                            // we need a hive proxy for global things (like managing a hosting
-                            // environment) where we won't need access to specific hive nodes.
+                            // we need a cluster proxy for global things (like managing a hosting
+                            // environment) where we won't need access to specific cluster nodes.
 
                             // $todo(jeff.lill):
                             //
-                            // In the future, I expect that some hive services (like [neon-hive-manager])
+                            // In the future, I expect that some cluster services (like [neon-cluster-manager])
                             // may need to connect to cluster nodes.  For this to work, we'd need to have
                             // some way to retrieve the SSH (and perhaps other credentials) from Vault
                             // and set them somewhere in the [NeonKube] class (perhaps as the current
@@ -157,13 +157,12 @@ namespace Neon.Kube
                     };
             }
 
-            this.Definition        = hiveDefinition;
-            this.HiveLogin         = new HiveLogin();
+            this.Definition        = clusterDefinition;
+            this.HiveLogin         = new ClusterLogin();
             this.useBootstrap      = useBootstrap;
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendLog;
-            this.Headend           = new HeadendClient();
 
             CreateNodes();
         }
@@ -184,14 +183,12 @@ namespace Neon.Kube
         {
             if (disposing)
             {
-                Headend.Dispose();
-
                 GC.SuppressFinalize(this);
             }
         }
 
         /// <summary>
-        /// Returns the hive name.
+        /// Returns the cluster name.
         /// </summary>
         public string Name
         {
@@ -204,24 +201,24 @@ namespace Neon.Kube
         public IHostingManager HostingManager { get; set; }
 
         /// <summary>
-        /// Returns the hive login information.
+        /// Returns the cluster login information.
         /// </summary>
-        public HiveLogin HiveLogin { get; set; }
+        public ClusterLogin HiveLogin { get; set; }
 
         /// <summary>
         /// Indicates that any <see cref="SshProxy{TMetadata}"/> instances belonging
-        /// to this hive proxy should use public address/DNS names for SSH connections
-        /// rather than their private hive address.  This defaults to <c>false</c>
+        /// to this cluster proxy should use public address/DNS names for SSH connections
+        /// rather than their private cluster address.  This defaults to <c>false</c>
         /// and must be modified before establising a node connection to have any effect.
         /// </summary>
         /// <remarks>
         /// <para>
         /// When this is <c>false</c>, connections will be established using node
         /// private addresses.  This implies that the current client has direct
-        /// access to the hive LAN via a direct connection or a VPN.
+        /// access to the cluster LAN via a direct connection or a VPN.
         /// </para>
         /// <para>
-        /// Setting this to <c>true</c> is usually limited to hive setup scenarios
+        /// Setting this to <c>true</c> is usually limited to cluster setup scenarios
         /// before the VPN is configured.  Exactly which public addresses and ports will
         /// be used when this is <c>true</c> is determined by the <see cref="HostingManager"/> 
         /// implementation for the current environment.
@@ -230,35 +227,30 @@ namespace Neon.Kube
         public bool UseNodePublicAddress { get; set; } = false;
 
         /// <summary>
-        /// Returns the hive definition.
+        /// Returns the cluster definition.
         /// </summary>
         public ClusterDefinition Definition { get; private set; }
 
         /// <summary>
-        /// Returns the read-only list of hive node proxies.
+        /// Returns the read-only list of cluster node proxies.
         /// </summary>
         public IReadOnlyList<SshProxy<NodeDefinition>> Nodes { get; private set; }
 
         /// <summary>
-        /// Returns the first hive manager node as sorted by name.
+        /// Returns the first cluster manager node as sorted by name.
         /// </summary>
         public SshProxy<NodeDefinition> FirstManager { get; private set; }
-
-        /// <summary>
-        /// Provides access to neonHIVE headend services.
-        /// </summary>
-        public HeadendClient Headend { get; private set; }
 
         /// <summary>
         /// Specifies the <see cref="RunOptions"/> to use when executing commands that 
         /// include secrets.  This defaults to <see cref="RunOptions.Redact"/> for best 
         /// security but may be changed to just <see cref="RunOptions.None"/> when debugging
-        /// hive setup.
+        /// cluster setup.
         /// </summary>
         public RunOptions SecureRunOptions { get; set; } = RunOptions.Redact | RunOptions.FaultOnError;
 
         /// <summary>
-        /// Enumerates the hive manager node proxies sorted in ascending order by name.
+        /// Enumerates the cluster manager node proxies sorted in ascending order by name.
         /// </summary>
         public IEnumerable<SshProxy<NodeDefinition>> Managers
         {
@@ -266,7 +258,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Enumerates the hive worker node proxies sorted in ascending order by name.
+        /// Enumerates the cluster worker node proxies sorted in ascending order by name.
         /// </summary>
         public IEnumerable<SshProxy<NodeDefinition>> Workers
         {
@@ -276,12 +268,12 @@ namespace Neon.Kube
         /// <summary>
         /// Ensures that the current login has root privileges.
         /// </summary>
-        /// <exception cref="HiveException">Thrown if the current login doesn't have root privileges</exception>
+        /// <exception cref="ClusterException">Thrown if the current login doesn't have root privileges</exception>
         public void EnsureRootPrivileges()
         {
             if (!HiveLogin.IsRoot)
             {
-                throw new HiveException("Access Denied: Login doesn't have root privileges.");
+                throw new ClusterException("Access Denied: Login doesn't have root privileges.");
             }
         }
 
@@ -313,14 +305,14 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="nodeName">The node name.</param>
         /// <returns>The node proxy instance.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if the name node is not present in the hive.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown if the name node is not present in the cluster.</exception>
         public SshProxy<NodeDefinition> GetNode(string nodeName)
         {
             var node = Nodes.SingleOrDefault(n => string.Compare(n.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
 
             if (node == null)
             {
-                throw new KeyNotFoundException($"The node [{nodeName}] is not present in the hive.");
+                throw new KeyNotFoundException($"The node [{nodeName}] is not present in the cluster.");
             }
 
             return node;
@@ -341,7 +333,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="failureMode">Specifies what should happen when there are no reachable managers.</param>
         /// <returns>The reachable manager node or <c>null</c>.</returns>
-        /// <exception cref="HiveException">
+        /// <exception cref="ClusterException">
         /// Thrown if no managers are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
@@ -365,13 +357,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Selects a hive node from the set of nodes that match a predicate that is 
+        /// Selects a cluster node from the set of nodes that match a predicate that is 
         /// reachable via the network because it answers a ping.
         /// </summary>
         /// <param name="predicate">Predicate used to select the candidate nodes.</param>
         /// <param name="failureMode">Specifies what should happen when there are no reachable managers.</param>
         /// <returns>The reachable node or <c>null</c>.</returns>
-        /// <exception cref="HiveException">
+        /// <exception cref="ClusterException">
         /// Thrown if no nodes matching the predicate are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
@@ -395,7 +387,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Performs hive configuration steps.
+        /// Performs cluster configuration steps.
         /// </summary>
         /// <param name="steps">The configuration steps.</param>
         public void Configure(ConfigStepList steps)
@@ -409,9 +401,9 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns steps that upload a text file to a set of hive nodes.
+        /// Returns steps that upload a text file to a set of cluster nodes.
         /// </summary>
-        /// <param name="nodes">The hive nodes to receive the upload.</param>
+        /// <param name="nodes">The cluster nodes to receive the upload.</param>
         /// <param name="path">The target path on the Linux node.</param>
         /// <param name="text">The input text.</param>
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
@@ -433,9 +425,9 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns steps that upload a text file to a hive node.
+        /// Returns steps that upload a text file to a cluster node.
         /// </summary>
-        /// <param name="node">The hive node to receive the upload.</param>
+        /// <param name="node">The cluster node to receive the upload.</param>
         /// <param name="path">The target path on the Linux node.</param>
         /// <param name="text">The input text.</param>
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
@@ -450,7 +442,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Writes a message to the logs associated with all hive nodes.
+        /// Writes a message to the logs associated with all cluster nodes.
         /// </summary>
         /// <param name="message">Optionally specifies the log message.</param>
         public void LogLine(string message = null)
@@ -462,10 +454,10 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the current time (UTC) for the hive by fetching the 
-        /// time from one of the hive managers.
+        /// Returns the current time (UTC) for the cluster by fetching the 
+        /// time from one of the cluster managers.
         /// </summary>
-        /// <returns>The hive's current <see cref="DateTime"/> (UTC).</returns>
+        /// <returns>The cluster's current <see cref="DateTime"/> (UTC).</returns>
         public DateTime GetTimeUtc()
         {
             var manager = GetReachableManager();

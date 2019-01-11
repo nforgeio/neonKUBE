@@ -151,7 +151,7 @@ namespace NeonCli
         ///     Starts the service.
         ///     </item>
         ///     <item>
-        ///     Uploads the generated script to each hive manager to [<see cref="HiveHostFolders.Scripts"/>/<paramref name="serviceName"/>.sh].
+        ///     Uploads the generated script to each hive manager to [<see cref="ClusterHostFolders.Scripts"/>/<paramref name="serviceName"/>.sh].
         ///     </item>
         /// </list>
         /// </remarks>
@@ -172,7 +172,7 @@ namespace NeonCli
 
             // Upload the script to each of the manager nodes and set permissions.
 
-            var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{serviceName}.sh");
+            var scriptPath = LinuxPath.Combine(ClusterHostFolders.Scripts, $"{serviceName}.sh");
 
             foreach (var manager in hive.Managers)
             {
@@ -230,7 +230,7 @@ namespace NeonCli
         ///     Starts the service.
         ///     </item>
         ///     <item>
-        ///     Uploads the generated script to each hive manager to [<see cref="HiveHostFolders.Scripts"/>/<paramref name="serviceName"/>.sh].
+        ///     Uploads the generated script to each hive manager to [<see cref="ClusterHostFolders.Scripts"/>/<paramref name="serviceName"/>.sh].
         ///     </item>
         /// </list>
         /// </remarks>
@@ -249,7 +249,7 @@ namespace NeonCli
             // Add steps to upload the script to the managers and then call the script 
             // to create the service on the first manager.
 
-            var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{serviceName}.sh");
+            var scriptPath = LinuxPath.Combine(ClusterHostFolders.Scripts, $"{serviceName}.sh");
 
             steps.Add(hive.GetFileUploadSteps(hive.Managers, scriptPath, script, permissions: "740"));
             steps.Add(CommandStep.CreateIdempotentDocker(hive.FirstManager.Name, $"setup/{serviceName}", scriptPath));
@@ -287,7 +287,7 @@ namespace NeonCli
         ///     Starts the container.
         ///     </item>
         ///     <item>
-        ///     Uploads the generated script to the node to [<see cref="HiveHostFolders.Scripts"/>/<paramref name="containerName"/>.sh].
+        ///     Uploads the generated script to the node to [<see cref="ClusterHostFolders.Scripts"/>/<paramref name="containerName"/>.sh].
         ///     </item>
         /// </list>
         /// </remarks>
@@ -307,7 +307,7 @@ namespace NeonCli
 
             // Upload the script to the target node and set permissions.
 
-            var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{containerName}.sh");
+            var scriptPath = LinuxPath.Combine(ClusterHostFolders.Scripts, $"{containerName}.sh");
 
             node.UploadText(scriptPath, script);
             node.SudoCommand($"chmod 740 {scriptPath}");
@@ -355,7 +355,7 @@ namespace NeonCli
         ///     Starts the service.
         ///     </item>
         ///     <item>
-        ///     Uploads the generated script to each hive manager to [<see cref="HiveHostFolders.Scripts"/>/<paramref name="containerName"/>.sh].
+        ///     Uploads the generated script to each hive manager to [<see cref="ClusterHostFolders.Scripts"/>/<paramref name="containerName"/>.sh].
         ///     </item>
         /// </list>
         /// </remarks>
@@ -374,7 +374,7 @@ namespace NeonCli
             // Add steps to upload the script to the managers and then call the script 
             // to create the container on the target node.
 
-            var scriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{containerName}.sh");
+            var scriptPath = LinuxPath.Combine(ClusterHostFolders.Scripts, $"{containerName}.sh");
 
             steps.Add(hive.GetFileUploadSteps(node, scriptPath, script, permissions: "740"));
             steps.Add(CommandStep.CreateIdempotentDocker(node.Name, $"setup/{containerName}", scriptPath));

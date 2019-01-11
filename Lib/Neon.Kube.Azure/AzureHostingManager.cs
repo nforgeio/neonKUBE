@@ -460,11 +460,11 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(ClusterDefinition hiveDefinition)
+        public override void Validate(ClusterDefinition clusterDefinition)
         {
             // Ensure that the VM sizes specified have minimum capabilities.
 
-            foreach (var node in hiveDefinition.Nodes)
+            foreach (var node in clusterDefinition.Nodes)
             {
                 var vmCaps = AzureVmCapabilities.Get(node.Azure.VmSize);
 
@@ -481,16 +481,16 @@ namespace Neon.Kube
                 {
                     case NodeRole.Manager:
 
-                        minCores  = HiveConst.MinManagerCores;
-                        minRamMiB = HiveConst.MinManagerRamMiB;
-                        minNics   = HiveConst.MinManagerNics;
+                        minCores  = ClusterConst.MinManagerCores;
+                        minRamMiB = ClusterConst.MinManagerRamMiB;
+                        minNics   = ClusterConst.MinManagerNics;
                         break;
 
                     case NodeRole.Worker:
 
-                        minCores  = HiveConst.MinWorkerCores;
-                        minRamMiB = HiveConst.MinWorkerRamMiB;
-                        minNics   = HiveConst.MinWorkerNics;
+                        minCores  = ClusterConst.MinWorkerCores;
+                        minRamMiB = ClusterConst.MinWorkerRamMiB;
+                        minNics   = ClusterConst.MinWorkerNics;
                         break;
 
                     default:
@@ -1109,10 +1109,10 @@ namespace Neon.Kube
 
                 var lbManagerCreator = 
                     lbDefManager
-                        .DefineLoadBalancingRule($"neon-unused-tcp-{HiveHostPorts.ReservedUnused}")
+                        .DefineLoadBalancingRule($"neon-unused-tcp-{ClusterHostPorts.ReservedUnused}")
                             .WithProtocol(TransportProtocol.Tcp)
                             .FromFrontend(feConfigName)
-                            .FromFrontendPort(HiveHostPorts.ReservedUnused)
+                            .FromFrontendPort(ClusterHostPorts.ReservedUnused)
                             .ToBackend(bePoolName)
                             .WithProbe(probeName)
                             .WithIdleTimeoutInMinutes(5)
@@ -1212,10 +1212,10 @@ namespace Neon.Kube
 
                     lbNodeCreator = 
                         lbDefNode
-                            .DefineLoadBalancingRule($"neon-unused-tcp-{HiveHostPorts.ReservedUnused}")
+                            .DefineLoadBalancingRule($"neon-unused-tcp-{ClusterHostPorts.ReservedUnused}")
                                 .WithProtocol(TransportProtocol.Tcp)
                                 .FromFrontend(feConfigName)
-                                .FromFrontendPort(HiveHostPorts.ReservedUnused)
+                                .FromFrontendPort(ClusterHostPorts.ReservedUnused)
                                 .ToBackend(bePoolName)
                                 .WithProbe(probeName)
                                 .WithIdleTimeoutInMinutes(5)
@@ -1247,7 +1247,7 @@ namespace Neon.Kube
                     // and HAProxy handles internal hive fail-over.
 
                     .DefineTcpProbe(probeName)
-                        .WithPort(HiveHostPorts.ProxyPublicHttp)
+                        .WithPort(ClusterHostPorts.ProxyPublicHttp)
                         .WithIntervalInSeconds(5)
                         .WithNumberOfProbes(2)
                         .Attach()

@@ -194,7 +194,7 @@ use a random password if [--machine-password] isn't explicitly set.
             // that don't actually require elevated permissions.  We may wish to relax this
             // in the future.
 
-            if (!HiveHelper.InToolContainer)
+            if (!ClusterHelper.InToolContainer)
             {
                 if (NeonHelper.IsWindows)
                 {
@@ -216,16 +216,16 @@ use a random password if [--machine-password] isn't explicitly set.
             // Configure the encrypted user-specific application data folder and initialize
             // the subfolders.
 
-            HiveRootFolder  = HiveHelper.GetHiveUserFolder();
-            HiveLoginFolder = HiveHelper.GetLoginFolder();
-            HiveSetupFolder = HiveHelper.GetVmTemplatesFolder();
-            HiveTempFolder  = HiveHelper.GetTempFolder();
-            CurrentHivePath = HiveHelper.CurrentPath;
+            HiveRootFolder  = ClusterHelper.GetHiveUserFolder();
+            HiveLoginFolder = ClusterHelper.GetLoginFolder();
+            HiveSetupFolder = ClusterHelper.GetVmTemplatesFolder();
+            HiveTempFolder  = ClusterHelper.GetTempFolder();
+            CurrentHivePath = ClusterHelper.CurrentPath;
 
             // We're going to special case the temp folder and locate this within the [/dev/shm] 
             // tmpfs based RAM drive if we're running in the tool container.
 
-            HiveTempFolder  = HiveHelper.InToolContainer ? "/dev/shm/temp" : HiveTempFolder;
+            HiveTempFolder  = ClusterHelper.InToolContainer ? "/dev/shm/temp" : HiveTempFolder;
 
             Directory.CreateDirectory(HiveLoginFolder);
             Directory.CreateDirectory(HiveTempFolder);
@@ -395,7 +395,7 @@ use a random password if [--machine-password] isn't explicitly set.
 
                 if (!string.IsNullOrEmpty(LogPath))
                 {
-                    if (HiveHelper.InToolContainer)
+                    if (ClusterHelper.InToolContainer)
                     {
                         // We hardcode logging to [/log] inside [neon-cli] containers.
 
@@ -413,11 +413,11 @@ use a random password if [--machine-password] isn't explicitly set.
 
                 using (shim = new DockerShim(CommandLine))
                 {
-                    var secretsRoot = HiveHelper.GetHiveUserFolder(ignoreNeonToolContainerVar: true);
+                    var secretsRoot = ClusterHelper.GetHiveUserFolder(ignoreNeonToolContainerVar: true);
 
                     HiveLogin = GetHiveLogin();
 
-                    if (!HiveHelper.InToolContainer)
+                    if (!ClusterHelper.InToolContainer)
                     {
                         // Give the command a chance to modify the shimmed command line and also
                         // verify that the command can be run within Docker.
@@ -525,7 +525,7 @@ use a random password if [--machine-password] isn't explicitly set.
 
                             var imageTag = Program.Version;
 
-                            if (ThisAssembly.Git.Branch != HiveConst.GitProdBranch)
+                            if (ThisAssembly.Git.Branch != ClusterConst.GitProdBranch)
                             {
                                 imageTag = $"{ThisAssembly.Git.Branch}-{Program.Version}";
                             }
@@ -565,7 +565,7 @@ $@"*** ERROR: Cannot list Docker images.
                             // Use the [nhive] Docker Hub registry for PROD releases and [nhivedev]
                             // for all other branches.
 
-                            var sourceRegistry = IsProd ? HiveConst.NeonProdRegistry : HiveConst.NeonDevRegistry;
+                            var sourceRegistry = IsProd ? ClusterConst.NeonProdRegistry : ClusterConst.NeonDevRegistry;
 
                             // The Docker image list output should look something like this:
                             //
@@ -904,14 +904,14 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <remarks>
         /// <para>
         /// If <see cref="DockerImageReg"/> is empty and <paramref name="image"/> specifies the 
-        /// <see cref="HiveConst.NeonProdRegistry"/> and the Git branch used to build <b>neon-cli</b>
-        /// is not <b>PROD</b>, then the image registry will be set to <see cref="HiveConst.NeonDevRegistry"/>.
+        /// <see cref="ClusterConst.NeonProdRegistry"/> and the Git branch used to build <b>neon-cli</b>
+        /// is not <b>PROD</b>, then the image registry will be set to <see cref="ClusterConst.NeonDevRegistry"/>.
         /// This ensures that non-production <b>neon-cli </b> builds will use the development Docker
         /// images by default.
         /// </para>
         /// <para>
         /// If <see cref="DockerImageReg"/> is not empty  and <paramref name="image"/> specifies the 
-        /// <see cref="HiveConst.NeonProdRegistry"/> then <see cref="DockerImageReg"/> will
+        /// <see cref="ClusterConst.NeonProdRegistry"/> then <see cref="DockerImageReg"/> will
         /// replace the registry in the image.
         /// </para>
         /// <para>
@@ -944,7 +944,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 registry = image.Substring(0, p);
             }
 
-            if (!string.IsNullOrEmpty(registry) && registry == HiveConst.NeonProdRegistry)
+            if (!string.IsNullOrEmpty(registry) && registry == ClusterConst.NeonProdRegistry)
             {
                 var imageWithoutRegistry = image.Substring(registry.Length);
 
@@ -954,7 +954,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 }
                 else if (!IsProd)
                 {
-                    image = HiveConst.NeonDevRegistry + imageWithoutRegistry;
+                    image = ClusterConst.NeonDevRegistry + imageWithoutRegistry;
                 }
             }
 
@@ -1122,9 +1122,9 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 shim = null;
             }
 
-            if (HiveHelper.IsConnected)
+            if (ClusterHelper.IsConnected)
             {
-                HiveHelper.CloseHive();
+                ClusterHelper.CloseHive();
             }
 
             Environment.Exit(exitCode);
@@ -1238,13 +1238,13 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// </summary>
         /// <param name="isRequired">Optionally ensures that a current login is required (defaults to <c>false</c>).</param>
         /// <returns>The current hive login or <c>null</c>.</returns>
-        public static HiveLogin GetHiveLogin(bool isRequired = false)
+        public static ClusterLogin GetHiveLogin(bool isRequired = false)
         {
-            HiveLogin hiveLogin;
+            ClusterLogin hiveLogin;
 
             try
             {
-                hiveLogin = HiveHelper.GetLogin(!isRequired, Program.Version);
+                hiveLogin = ClusterHelper.GetLogin(!isRequired, Program.Version);
             }
             catch (VersionException e)
             {
@@ -1265,7 +1265,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// Uses <see cref="HiveHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> to 
+        /// Uses <see cref="ClusterHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> to 
         /// ensure that there's a currently logged-in hive and that the VPN connection
         /// is established if required.
         /// </summary>
@@ -1277,10 +1277,10 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// created by the <b>neon hive prepare</b> command that generates a login that
         /// has been initialized enough to allow setup to connect to the hive via a VPN
         /// if necessary, has the host root account credentials, and also includes the
-        /// hive definition.  Partially intializated logins will have <see cref="HiveLogin.SetupPending"/>
+        /// hive definition.  Partially intializated logins will have <see cref="ClusterLogin.SetupPending"/>
         /// set to <c>true</c>.
         /// </remarks>
-        public static HiveLogin ConnectHive(bool allowPreparedOnly = false)
+        public static ClusterLogin ConnectHive(bool allowPreparedOnly = false)
         {
             var hiveLogin = Program.GetHiveLogin(isRequired: true);
 
@@ -1313,7 +1313,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <summary>
         /// Returns the hive login information for the currently logged in hive or <c>null</c>.
         /// </summary>
-        public static HiveLogin HiveLogin { get; set; }
+        public static ClusterLogin HiveLogin { get; set; }
 
         /// <summary>
         /// Returns the log folder path or a <c>null</c> or empty string 
@@ -1389,8 +1389,8 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
             var proxy = new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
 
-            proxy.RemotePath += $":{HiveHostFolders.Setup}";
-            proxy.RemotePath += $":{HiveHostFolders.Tools}";
+            proxy.RemotePath += $":{ClusterHostFolders.Setup}";
+            proxy.RemotePath += $":{ClusterHostFolders.Tools}";
 
             return proxy;
         }
@@ -1440,7 +1440,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(HiveLogin hive, string pemKey)
+        public static string ConvertPUBtoPPK(ClusterLogin hive, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {
@@ -1568,7 +1568,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 }
             }
 
-            if (!HiveHelper.InToolContainer)
+            if (!ClusterHelper.InToolContainer)
             {
                 if (NeonHelper.IsWindows)
                 {

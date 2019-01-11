@@ -78,7 +78,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(ClusterDefinition hiveDefinition)
+        public override void Validate(ClusterDefinition clusterDefinition)
         {
         }
 

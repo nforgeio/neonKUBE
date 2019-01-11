@@ -50,7 +50,7 @@ namespace Neon.Kube
         /// will be ignored.
         /// </note>
         /// </summary>
-        /// <exception cref="HiveException">Thrown if multiple managers implement support for the same hosting environment.</exception>
+        /// <exception cref="ClusterException">Thrown if multiple managers implement support for the same hosting environment.</exception>
         public static void Initialize()
         {
             lock (syncLock)
@@ -112,7 +112,7 @@ namespace Neon.Kube
                             {
                                 if (environmentToHostingManager.TryGetValue(providerAttribute.Environment, out var existingProviderType))
                                 {
-                                    throw new HiveException($"Hosting provider types [{existingProviderType.FullName}] and [{type.FullName}] cannot both implement the [{providerAttribute.Environment}] hosting environment.");
+                                    throw new ClusterException($"Hosting provider types [{existingProviderType.FullName}] and [{type.FullName}] cannot both implement the [{providerAttribute.Environment}] hosting environment.");
                                 }
                             }
 

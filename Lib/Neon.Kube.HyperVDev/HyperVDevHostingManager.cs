@@ -119,7 +119,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(ClusterDefinition hiveDefinition)
+        public override void Validate(ClusterDefinition clusterDefinition)
         {
         }
 
@@ -321,9 +321,9 @@ namespace Neon.Kube
             var driveTemplateUri  = new Uri(hive.Definition.Hosting.LocalHyperV.HostVhdxUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
-            driveTemplatePath = Path.Combine(HiveHelper.GetVmTemplatesFolder(), driveTemplateName);
+            driveTemplatePath = Path.Combine(ClusterHelper.GetVmTemplatesFolder(), driveTemplateName);
 
-            var driveTemplateInfoPath  = Path.Combine(HiveHelper.GetVmTemplatesFolder(), driveTemplateName + ".info");
+            var driveTemplateInfoPath  = Path.Combine(ClusterHelper.GetVmTemplatesFolder(), driveTemplateName + ".info");
             var driveTemplateIsCurrent = true;
             var driveTemplateInfo      = (DriveTemplateInfo)null;
 

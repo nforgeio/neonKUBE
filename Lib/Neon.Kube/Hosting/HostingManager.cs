@@ -55,12 +55,12 @@ namespace Neon.Kube
         public abstract void Dispose(bool disposing);
 
         /// <summary>
-        /// The initial host username to use when creating and/or configuring hive nodes.
+        /// The initial host username to use when creating and/or configuring cluster nodes.
         /// </summary>
         public string HostUsername { get; set; }
 
         /// <summary>
-        /// The initial host password to use when creating and/or configuring hive nodes.
+        /// The initial host password to use when creating and/or configuring cluster nodes.
         /// </summary>
         public string HostPassword { get; set; }
 
@@ -89,7 +89,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public abstract void Validate(ClusterDefinition hiveDefinition);
+        public abstract void Validate(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
         public abstract bool Provision(bool force);

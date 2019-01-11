@@ -23,7 +23,7 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes hive definition errors.
+    /// Describes cluster definition errors.
     /// </summary>
     public class ClusterDefinitionException : Exception
     {

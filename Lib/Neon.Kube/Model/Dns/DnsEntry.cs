@@ -51,12 +51,12 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the DNS entry.  Any warning/errors will be returned as a string list.
         /// </summary>
-        /// <param name="hiveDefinition">The current hive definition,</param>
+        /// <param name="clusterDefinition">The current hive definition,</param>
         /// <param name="nodeGroups">The hive node groups.</param>
         /// <returns>The list of warnings (if any).</returns>
-        public List<string> Validate(ClusterDefinition hiveDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups)
+        public List<string> Validate(ClusterDefinition clusterDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups)
         {
-            Covenant.Requires<ArgumentException>(hiveDefinition != null);
+            Covenant.Requires<ArgumentException>(clusterDefinition != null);
             Covenant.Requires<ArgumentException>(nodeGroups != null);
 
             var warnings = new List<string>();
@@ -68,7 +68,7 @@ namespace Neon.Kube
 
             foreach (var endpoint in Endpoints)
             {
-                endpoint.Validate(warnings, hiveDefinition, nodeGroups, Hostname);
+                endpoint.Validate(warnings, clusterDefinition, nodeGroups, Hostname);
             }
 
             return warnings;

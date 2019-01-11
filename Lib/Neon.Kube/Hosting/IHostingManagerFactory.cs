@@ -36,16 +36,16 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the <see cref="HostingManager"/> implementation for a specific environment.
         /// </summary>
-        /// <param name="cluster">The hive being managed.</param>
+        /// <param name="cluster">The cluster being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
         /// <returns>
         /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
-        /// could be located for the specified hive environment.
+        /// could be located for the specified cluster environment.
         /// </returns>
-        /// <exception cref="HiveException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
+        /// <exception cref="ClusterException">Thrown if the multiple managers implement support for the same hosting environment.</exception>
         HostingManager GetManager(ClusterProxy cluster, string logFolder = null);
 
         /// <summary>
