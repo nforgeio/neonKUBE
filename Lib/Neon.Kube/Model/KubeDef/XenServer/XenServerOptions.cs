@@ -89,8 +89,8 @@ namespace Neon.Kube
         /// like 30 virtual machines have been created as snapshots from the same template.
         /// </para>
         /// <para>
-        /// We figure that it's best to default to safe setting for production hives and
-        /// then allow operators to override this when provisioning temporary test hives 
+        /// We figure that it's best to default to safe setting for production clusters and
+        /// then allow operators to override this when provisioning temporary test clusters 
         /// or when provisioning on a storage repository that doesn't have these limitations.
         /// </para>
         /// <note>

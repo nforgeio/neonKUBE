@@ -222,7 +222,7 @@ namespace Neon.Kube
         public IReadOnlyList<SshProxy<NodeDefinition>> Nodes { get; private set; }
 
         /// <summary>
-        /// Returns the first cluster manager node as sorted by name.
+        /// Returns the first cluster master node as sorted by name.
         /// </summary>
         public SshProxy<NodeDefinition> FirstManager { get; private set; }
 
@@ -235,11 +235,11 @@ namespace Neon.Kube
         public RunOptions SecureRunOptions { get; set; } = RunOptions.Redact | RunOptions.FaultOnError;
 
         /// <summary>
-        /// Enumerates the cluster manager node proxies sorted in ascending order by name.
+        /// Enumerates the cluster master node proxies sorted in ascending order by name.
         /// </summary>
         public IEnumerable<SshProxy<NodeDefinition>> Managers
         {
-            get { return Nodes.Where(n => n.Metadata.IsManager).OrderBy(n => n.Name); }
+            get { return Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name); }
         }
 
         /// <summary>
@@ -282,7 +282,7 @@ namespace Neon.Kube
             }
 
             this.Nodes        = nodes;
-            this.FirstManager = Nodes.Where(n => n.Metadata.IsManager).OrderBy(n => n.Name).First();
+            this.FirstManager = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
         }
 
         /// <summary>
@@ -314,22 +314,22 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns a manager node that is reachable via the network because it answers a ping.
+        /// Returns a master node that is reachable via the network because it answers a ping.
         /// </summary>
-        /// <param name="failureMode">Specifies what should happen when there are no reachable managers.</param>
-        /// <returns>The reachable manager node or <c>null</c>.</returns>
+        /// <param name="failureMode">Specifies what should happen when there are no reachable masters.</param>
+        /// <returns>The reachable master node or <c>null</c>.</returns>
         /// <exception cref="KubeException">
         /// Thrown if no managers are reachable and <paramref name="failureMode"/> 
         /// is passed as <see cref="ReachableHostMode.Throw"/>.
         /// </exception>
-        public SshProxy<NodeDefinition> GetReachableManager(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
+        public SshProxy<NodeDefinition> GetReachableMaster(ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
-            var managerAddresses = Nodes
-                .Where(n => n.Metadata.IsManager)
+            var masterAddresses = Nodes
+                .Where(n => n.Metadata.IsMaster)
                 .Select(n => n.PrivateAddress.ToString())
                 .ToList();
 
-            var reachableHost = NetHelper.GetReachableHost(managerAddresses, failureMode);
+            var reachableHost = NetHelper.GetReachableHost(masterAddresses, failureMode);
 
             if (reachableHost == null)
             {
@@ -445,9 +445,9 @@ namespace Neon.Kube
         /// <returns>The cluster's current <see cref="DateTime"/> (UTC).</returns>
         public DateTime GetTimeUtc()
         {
-            var manager = GetReachableManager();
+            var master = GetReachableMaster();
 
-            return manager.GetTimeUtc();
+            return master.GetTimeUtc();
         }
     }
 }

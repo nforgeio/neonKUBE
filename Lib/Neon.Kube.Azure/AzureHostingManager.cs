@@ -86,7 +86,7 @@ namespace Neon.Kube
         //         Note that the load balancer IS NOT configured to direct traffic to pets.
         //
         //      7. It is possible to assign a public IP address to each cluster node.  This can
-        //         help eliminate NAT port exhaustion in the load balancer for large hives making
+        //         help eliminate NAT port exhaustion in the load balancer for large clusters making
         //         a lot of outbound requests.  Note though that inbound traffic will still 
         //         route through the load balancers.
         //
@@ -271,7 +271,7 @@ namespace Neon.Kube
             /// </summary>
             public bool IsManager
             {
-                get { return Node.Metadata.IsManager; }
+                get { return Node.Metadata.IsMaster; }
             }
 
             /// <summary>
@@ -479,11 +479,11 @@ namespace Neon.Kube
 
                 switch (node.Role)
                 {
-                    case NodeRole.Manager:
+                    case NodeRole.Master:
 
-                        minCores  = KubeConst.MinManagerCores;
-                        minRamMiB = KubeConst.MinManagerRamMiB;
-                        minNics   = KubeConst.MinManagerNics;
+                        minCores  = KubeConst.MinMasterCores;
+                        minRamMiB = KubeConst.MinMasterRamMiB;
+                        minNics   = KubeConst.MinMasterNics;
                         break;
 
                     case NodeRole.Worker:
@@ -696,7 +696,7 @@ namespace Neon.Kube
 
             nextAddress = NetHelper.AddressIncrement(vpnServerSubnet.Address, 4);
 
-            foreach (var node in cluster.Definition.Nodes.Where(n => n.IsManager).OrderBy(n => n.Name))
+            foreach (var node in cluster.Definition.Nodes.Where(n => n.IsMaster).OrderBy(n => n.Name))
             {
                 node.VpnPoolAddress = nextAddress.ToString();
                 nextAddress         = NetHelper.AddressIncrement(nextAddress);
@@ -773,7 +773,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Create a public address for the cluster load balancers.
 
-            if (azureOptions.StaticHiveAddress)
+            if (azureOptions.StaticClusterAddress)
             {
                 pipLbManager = azure.PublicIPAddresses
                     .Define(pipLbManagerName)
@@ -1477,7 +1477,7 @@ iface eth1 inet dhcp
                         manager.SudoCommand("systemctl restart networking");
                     }
                 },
-                node => node.Metadata.IsManager);
+                node => node.Metadata.IsMaster);
         }
 
         /// <inheritdoc/>

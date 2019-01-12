@@ -27,7 +27,7 @@ echo "**********************************************" 1>&2
 
 # Load the hive configuration and setup utilities.
 
-. $<load-hive-conf>
+. $<load-cluster-conf>
 . setup-utility.sh
 
 # Ensure that setup is idempotent.
@@ -155,7 +155,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/update-time
 #
 #       --norestart - Don't restart NTP
 
-. $<load-hive-conf-quiet>
+. $<load-cluster-conf-quiet>
 
 restart=true
 

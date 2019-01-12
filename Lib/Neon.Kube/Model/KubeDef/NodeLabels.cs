@@ -104,18 +104,18 @@ namespace Neon.Kube
 
         /// <summary>
         /// Reserved label name that identifies the frontend port to be used to connect
-        /// to a manager's VPN server (if it's hosting a VPN server).
+        /// to a master's VPN server (if it's hosting a VPN server).
         /// </summary>
         public const string LabelVpnFrontendPort = KubeDefinition.ReservedLabelPrefix + ".node.vpn_frontend_port";
 
         /// <summary>
-        /// Reserved label name that identifies a manager node's VPN pool address 
+        /// Reserved label name that identifies a master node's VPN pool address 
         /// (if it's hosting a VPN server).
         /// </summary>
         public const string LabelVpnPoolAddress = KubeDefinition.ReservedLabelPrefix + ".node.vpn_pool_address";
 
         /// <summary>
-        /// Reserved label name that identifies a manager node's VPN address pool subnet 
+        /// Reserved label name that identifies a master node's VPN address pool subnet 
         /// (if it's hosting a VPN server).
         /// </summary>
         public const string LabelVpnPoolSubnet = KubeDefinition.ReservedLabelPrefix + ".node.vpn_pool_subnet";
@@ -182,7 +182,7 @@ namespace Neon.Kube
         /// <summary>
         /// <b>io.neonkube.storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
         /// on the node itself or is mounted as a remote file system or block device.  This defaults
-        /// to <c>true</c> for on-premise hives and is computed for cloud deployments.
+        /// to <c>true</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageLocal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(true)]
@@ -191,7 +191,7 @@ namespace Neon.Kube
         /// <summary>
         /// <b>io.neonkube.storage.ssd</b> [<c>bool</c>]: Indicates that the storage is backed
         /// by SSDs as opposed to rotating hard drive.  This defaults to <c>false</c> for 
-        /// on-premise hives and is computed for cloud deployments.
+        /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageSSD", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
@@ -200,7 +200,7 @@ namespace Neon.Kube
         /// <summary>
         /// <b>io.neonkube.storage.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
         /// may be implemented locally using RAID1+ or remotely using network or cloud-based file systems.
-        /// This defaults to <c>false</c> for on-premise hives and is computed for cloud deployments.
+        /// This defaults to <c>false</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageRedundant", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
@@ -358,7 +358,7 @@ namespace Neon.Kube
         /// <item>
         ///     <term><b>Multiple Racks:</b></term>
         ///     <description>
-        ///     For hives deployed to multiple racks, each with their own network
+        ///     For clusters deployed to multiple racks, each with their own network
         ///     connection, the fault domain will typically be set at the rack
         ///     level, such that the loss of a rack or its network connectivity can
         ///     be tolerated.
@@ -374,7 +374,7 @@ namespace Neon.Kube
         ///     domain at the pod or floor level.
         ///     </para>
         ///     <para>
-        ///     For hives that span physical datacenters, you could potentially map
+        ///     For clusters that span physical datacenters, you could potentially map
         ///     each datacenter to an fault domain.
         ///     </para>
         ///     </description>

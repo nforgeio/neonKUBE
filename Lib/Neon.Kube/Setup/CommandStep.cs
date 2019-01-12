@@ -68,7 +68,7 @@ namespace Neon.Kube
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
         /// image pull fails for some reason).  Using this will be more reliable than
-        /// executing the command directly, especially on large hives.
+        /// executing the command directly, especially on large clusters.
         /// </para>
         /// <note>
         /// You'll need to passes the full Docker command, including the leading
@@ -110,7 +110,7 @@ namespace Neon.Kube
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
         /// image pull fails for some reason).  Using this will be more reliable than
-        /// executing the command directly, especially on large hives.
+        /// executing the command directly, especially on large clusters.
         /// </para>
         /// <note>
         /// You'll need to passes the full Docker command, including the leading

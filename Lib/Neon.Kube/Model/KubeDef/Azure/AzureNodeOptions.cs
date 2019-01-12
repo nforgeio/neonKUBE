@@ -45,7 +45,7 @@ namespace Neon.Kube
         /// as the lowest cost option.
         /// </para>
         /// <note>
-        /// You should really consider upgrading production hives to one of the SSD based storage types.
+        /// You should really consider upgrading production clusters to one of the SSD based storage types.
         /// </note>
         /// </summary>
         /// <remarks>
@@ -86,7 +86,7 @@ namespace Neon.Kube
         /// This is not recommended for cluster nodes.
         /// </para>
         /// <para>
-        /// For most hives, you'll wish to provision one or more drives per node.
+        /// For most clusters, you'll wish to provision one or more drives per node.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "HardDriveCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

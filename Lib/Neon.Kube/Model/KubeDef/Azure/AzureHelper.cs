@@ -31,7 +31,7 @@ namespace Neon.Kube
         /// <summary>
         /// The maximum number of nodes currently allowed in a cluster deployed to Azure.
         /// </summary>
-        public const int MaxHiveNodes = 100;
+        public const int MaxClusterNodes = 100;
 
         /// <summary>
         /// The maximum number of hosted load balanced TCP/UDP endpoints allowed  in a cluster deployed to Azure.

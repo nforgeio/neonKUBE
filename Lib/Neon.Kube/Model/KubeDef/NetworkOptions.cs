@@ -30,17 +30,17 @@ namespace Neon.Kube
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonHIVEs can be deployed in two basic environments, cloud or on-premise.  Cloud providers include
+    /// neonKUBEs can be deployed in two basic environments, cloud or on-premise.  Cloud providers include
     /// <see cref="HostingEnvironments.Aws"/>, <see cref="HostingEnvironments.Azure"/>, and <see cref="HostingEnvironments.Google"/>
     /// and on-premise providers include <see cref="HostingEnvironments.HyperVDev"/>, <see cref="HostingEnvironments.Machine"/> and
     /// <see cref="HostingEnvironments.XenServer"/>.  cluster network options are interpreted somewhat differently
     /// depending on whether the cluster is being provisioned to the cloud or to on-premise hardware.
     /// </para>
     /// <para>
-    /// Both cloud and on-premise hives are provisioned with two standard overlay networks: <b>neon-public</b> and <b>neon-private</b>.
+    /// Both cloud and on-premise clusters are provisioned with two standard overlay networks: <b>neon-public</b> and <b>neon-private</b>.
     /// These networks are used to as the service backend networks for the <b>neon-proxy-public</b> and <b>neon-proxy-private</b> TCP/HTTP
     /// network proxies used to forward external in internal traffic from Docker ingress/mesh networks to services.  Both of these
-    /// networks are assigned reasonable default subnets for standalone hives, but you'll need to take care to avoid conflicts
+    /// networks are assigned reasonable default subnets for standalone clusters, but you'll need to take care to avoid conflicts
     /// when deploying more than one cluster on a network.
     /// </para>
     /// <para>
@@ -81,7 +81,7 @@ namespace Neon.Kube
     ///     </para>
     ///     <note>
     ///     This subnet is internal to the cluster so you don't need to worry about conflicting
-    ///     with other hives or network services.
+    ///     with other clusters or network services.
     ///     </note>
     ///     </description>
     /// </item>
@@ -94,7 +94,7 @@ namespace Neon.Kube
     ///     </para>
     ///     <note>
     ///     This subnet is internal to the cluster so you don't need to worry about conflicting
-    ///     with other hives or network services.
+    ///     with other clusters or network services.
     ///     </note>
     ///     </description>
     /// </item>
@@ -140,7 +140,7 @@ namespace Neon.Kube
     ///     </para>
     ///     <note>
     ///     This subnet is internal to the cluster so you don't need to worry about conflicting
-    ///     with other hives or network services.
+    ///     with other clusters or network services.
     ///     </note>
     ///     </description>
     /// </item>
@@ -153,7 +153,7 @@ namespace Neon.Kube
     ///     </para>
     ///     <note>
     ///     This subnet is internal to the cluster so you don't need to worry about conflicting
-    ///     with other hives or network services.
+    ///     with other clusters or network services.
     ///     </note>
     ///     </description>
     /// </item>
@@ -189,7 +189,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <note>
         /// You must take care that this subnet does not conflict with any other subnets for this
-        /// cluster or any other hives that may be deployed to the same network.
+        /// cluster or any other clusters that may be deployed to the same network.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PublicSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -206,7 +206,7 @@ namespace Neon.Kube
         /// The advantage of enabling is is that any container will be able to connect to the default network
         /// and access swarm mode services.  The downside is that this makes it possible for a bad guy who
         /// gains root access to a single node could potentially deploy a malicious container that could also
-        /// join the network.  With this disabled, the bad guy would need to gain access to one of the manager
+        /// join the network.  With this disabled, the bad guy would need to gain access to one of the master
         /// nodes to deploy a malicious service.
         /// </para>
         /// <para>
@@ -223,7 +223,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <note>
         /// You must take care that this subnet does not conflict with any other subnets for this
-        /// cluster or any other hives that may be deployed to the same network.
+        /// cluster or any other clusters that may be deployed to the same network.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PrivateSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -240,7 +240,7 @@ namespace Neon.Kube
         /// The advantage of enabling is is that any container will be able to connect to the default network
         /// and access swarm mode services.  The downside is that this makes it possible for a bad guy who
         /// gains root access to a single node could potentially deploy a malicious container that could also
-        /// join the network.  With this disabled, the bad guy would need to gain access to one of the manager
+        /// join the network.  With this disabled, the bad guy would need to gain access to one of the master
         /// nodes to deploy a malicious service.
         /// </para>
         /// <para>
@@ -257,7 +257,7 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <para>
-        /// neonHIVEs configure the Consul servers running on the manager nodes to handle the DNS requests
+        /// neonKUBEs configure the Consul servers running on the manager nodes to handle the DNS requests
         /// from the cluster host nodes and containers by default.  This enables the registration of services
         /// with Consul that will be resolved to specific IP addresses.  This is used by the <b>proxy-manager</b>
         /// to support stateful services deployed as multiple containers and may also be used in other future
@@ -292,7 +292,7 @@ namespace Neon.Kube
         /// to the manager nodes.
         /// </para>
         /// <para>
-        /// This needs to be explicitly defined for on-premise hives that also
+        /// This needs to be explicitly defined for on-premise clusters that also
         /// deploy VPN servers.  In this case, you'll need to specify the public IP
         /// address or FQDN of your cluster router that has forwarding rules for
         /// the inbound VPN traffic.
@@ -334,7 +334,7 @@ namespace Neon.Kube
         /// <note>
         /// IMPORTANT: You should take care to ensure that this subnet does not conflict
         /// with subnets assigned to your company or home networks and if you ever intend
-        /// to deploy multiple hives and link them via VPNs, you must ensure that
+        /// to deploy multiple clusters and link them via VPNs, you must ensure that
         /// each cluster is assigned a unique address space.
         /// </note>
         /// <para>
@@ -349,7 +349,7 @@ namespace Neon.Kube
         ///     <see cref="CloudVNetSubnet"/>: The cloud address space is split in half and the 
         ///     first half will be used as the overall address space for the virtual network to
         ///     be created for the cluster.  The VNET address space will be split into equal
-        ///     sized subnets to be assigned to manager node NICs as well as NICs for all nodes.
+        ///     sized subnets to be assigned to master node NICs as well as NICs for all nodes.
         ///     </description>
         /// </item>
         /// <item>
@@ -363,14 +363,14 @@ namespace Neon.Kube
         ///     <term><b>10.168.2.0/23</b></term>
         ///     <description>
         ///     The second half of <see cref="CloudVNetSubnet"/> will be assigned to the NICs 
-        ///     for manager nodes.
+        ///     for master nodes.
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>10.168.4.0/22</b></term>
         ///     <description>
         ///     <see cref="VpnPoolSubnet"/>: The second half of the cloud address space is 
-        ///     reserved for the OpenVPN tunnels with the OpenVPN tunnel on each cluster manager
+        ///     reserved for the OpenVPN tunnels with the OpenVPN tunnel on each cluster master
         ///     being assigned a <b>/25</b> subnet from this address space.
         ///     </description>
         /// </item>
@@ -440,13 +440,13 @@ namespace Neon.Kube
         /// provisioning in a cloud environment.
         /// </note>
         /// <note>
-        /// For on-premise hives, the statically assigned IP addresses assigned 
+        /// For on-premise clusters, the statically assigned IP addresses assigned 
         /// to the nodes must reside within the this subnet.  The network gateway
         /// will be assumed to be the second address in this subnet and the broadcast
         /// address will assumed to be the last address.
         /// </note>
         /// <note>
-        /// For hives hosted by cloud providers, the <b>neon-cli</b> will split this
+        /// For clusters hosted by cloud providers, the <b>neon-cli</b> will split this
         /// into three subnets: <see cref="NodesSubnet"/>, <see cref="CloudVpnSubnet"/> and 
         /// <see cref="VpnPoolSubnet"/> and will automatically assign IP addresses to the 
         /// virtual machines.
@@ -460,7 +460,7 @@ namespace Neon.Kube
         /// <para>
         /// The cluster VPN client return <b>/22</b> subnet.  This where OpenVPN servers will 
         /// run and also acts as the pool of addresses that will be assigned to connecting VPN clients.
-        /// This will be further split into <b>/25</b> subnets assigned to each manager/OpenVPN
+        /// This will be further split into <b>/25</b> subnets assigned to each master/OpenVPN
         /// server.
         /// </para>
         /// <note>
@@ -468,9 +468,9 @@ namespace Neon.Kube
         /// computed automatically by the <b>neon-cli</b> when provisioning in a cloud environment.
         /// </note>
         /// <note>
-        /// For on-premise hives this will default to <b>10.169.0.0/22</b> which will work
-        /// for many hives.  You may need to adjust this to avoid conflicts with your
-        /// local network or if you intend to deploy multiple hives on the same network.
+        /// For on-premise clusters this will default to <b>10.169.0.0/22</b> which will work
+        /// for many clusters.  You may need to adjust this to avoid conflicts with your
+        /// local network or if you intend to deploy multiple clusters on the same network.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VpnPoolSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -619,7 +619,7 @@ namespace Neon.Kube
                     throw new KubeDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] prefix length is not valid.  Only [/21] subnets are currently supported.");
                 }
 
-                // Compute [NodeSubnet] by splitting [HiveSubnet] in quarters and taking the
+                // Compute [NodeSubnet] by splitting [NodesSubnet] in quarters and taking the
                 // first quarter.
 
                 NetworkCidr nodesSubnetCidr;

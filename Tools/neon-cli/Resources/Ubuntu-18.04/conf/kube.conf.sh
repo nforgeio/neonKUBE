@@ -82,7 +82,7 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${NEON_
 #       ${managernode[name]}
 #       ${managernode[address]}
 
-export NEON_MANAGER_COUNT=$<nodes.manager.count>
+export NEON_MASTER_COUNT=$<nodes.manager.count>
 
 $<nodes.managers>
 #------------------------------------------------------------------------------
@@ -126,11 +126,11 @@ if $summary ; then
     echo "NEON_TMPFS_FOLDER                  = ${NEON_TMPFS_FOLDER}" 1>&2
     echo "NEON_TOOLS_FOLDER                  = ${NEON_TOOLS_FOLDER}" 1>&2
     echo 1>&2
-    echo "NEON_MANAGER_COUNT                 = ${NEON_MANAGER_COUNT}" 1>&2
+    echo "NEON_MASTER_COUNT                  = ${NEON_MASTER_COUNT}" 1>&2
 $<nodes.manager.summary>
-    echo "NEON_MANAGER_NAMES                 = ${NEON_MANAGER_NAMES[@]}" 1>&2
-    echo "NEON_MANAGER_ADDRESSES             = ${NEON_MANAGER_ADDRESSES[@]}" 1>&2
-    echo "NEON_MANAGER_PEERS                 = ${NEON_MANAGER_PEERS[@]}" 1>&2
+    echo "NEON_MASTER_NAMES                  = ${NEON_MASTER_NAMES[@]}" 1>&2
+    echo "NEON_MASTER_ADDRESSES              = ${NEON_MASTER_ADDRESSES[@]}" 1>&2
+    echo "NEON_MASTER_PEERS                  = ${NEON_MASTER_PEERS[@]}" 1>&2
     echo 1>&2
     echo "NEON_NTP_MANAGER_SOURCES           = ${NEON_NTP_MANAGER_SOURCES}" 1>&2
     echo "NEON_NTP_WORKER_SOURCES            = ${NEON_NTP_WORKER_SOURCES}" 1>&2
@@ -158,7 +158,7 @@ fi
 
 function getmanager
 {
-    eval MANAGE_NODE=$NEON_MANAGER_$1
+    eval MANAGE_NODE=$NEON_MASTER_$1
 }
 
 #<<<END-FUNCTIONS

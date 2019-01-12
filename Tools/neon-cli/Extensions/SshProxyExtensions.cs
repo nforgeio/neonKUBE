@@ -134,10 +134,10 @@ namespace NeonCli
             Covenant.Requires<ArgumentNullException>(preprocessReader != null);
             Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
-            // Generate the manager node variables in sorted order.  The variable 
+            // Generate the master node variables in sorted order.  The variable 
             // names will be formatted as:
             //
-            //      NEON_MANAGER_#
+            //      NEON_MASTER_#
             //
             // where [#] is the zero-based index of the node.  This is compatible
             // with the [getmanager] function included the script.
@@ -145,17 +145,17 @@ namespace NeonCli
             // Each variable defines an associative array with [name] and [address]
             // properties.
             //
-            // Then generate the NEON_MANAGER_NAMES and NEON_MANAGER_ADDRESSES arrays.
+            // Then generate the NEON_MASTER_NAMES and NEON_MASTER_ADDRESSES arrays.
             //
             // NOTE: We need to use Linux-style line endings.
 
-            var sbManagers = new StringBuilder();
-            var sbManagerNamesArray = new StringBuilder();
-            var sbManagerAddressesArray = new StringBuilder();
+            var sbMasters                  = new StringBuilder();
+            var sbManagerNamesArray         = new StringBuilder();
+            var sbManagerAddressesArray     = new StringBuilder();
             var sbPeerManagerAddressesArray = new StringBuilder();
-            var sbManagerNodesSummary = new StringBuilder();
-            var index = 0;
-            var managerNameWidth = 0;
+            var sbManagerNodesSummary       = new StringBuilder();
+            var index                       = 0;
+            var managerNameWidth            = 0;
 
             sbManagerNamesArray.Append("(");
             sbManagerAddressesArray.Append("(");
@@ -163,9 +163,9 @@ namespace NeonCli
 
             foreach (var manager in kubeDefinition.SortedManagers)
             {
-                sbManagers.Append($"declare -x -A NEON_MANAGER_{index}\n");
-                sbManagers.Append($"NEON_MANAGER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
-                sbManagers.Append("\n");
+                sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
+                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
+                sbMasters.Append("\n");
                 index++;
 
                 sbManagerNamesArray.Append($" \"{manager.Name}\"");
@@ -197,7 +197,7 @@ namespace NeonCli
 
                 if (sbManagerNodesSummary.Length == 0)
                 {
-                    sbManagerNodesSummary.Append($"    echo \"NEON_MANAGER_NODES                 = {nameField}: {manager.PrivateAddress}\" 1>&2\n");
+                    sbManagerNodesSummary.Append($"    echo \"NEON_MASTER_NODES                 = {nameField}: {manager.PrivateAddress}\" 1>&2\n");
                 }
                 else
                 {
@@ -207,24 +207,24 @@ namespace NeonCli
 
             foreach (var manager in kubeDefinition.SortedManagers)
             {
-                sbManagers.Append($"declare -x -A NEON_MANAGER_{index}\n");
-                sbManagers.Append($"NEON_MANAGER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
+                sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
+                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
                 index++;
             }
 
-            sbManagers.Append("\n");
-            sbManagers.Append($"declare -x NEON_MANAGER_NAMES={sbManagerNamesArray}\n");
-            sbManagers.Append($"declare -x NEON_MANAGER_ADDRESSES={sbManagerAddressesArray}\n");
+            sbMasters.Append("\n");
+            sbMasters.Append($"declare -x NEON_MASTER_NAMES={sbManagerNamesArray}\n");
+            sbMasters.Append($"declare -x NEON_MASTER_ADDRESSES={sbManagerAddressesArray}\n");
 
-            sbManagers.Append("\n");
+            sbMasters.Append("\n");
 
-            if (kubeDefinition.Managers.Count() > 1)
+            if (kubeDefinition.Masters.Count() > 1)
             {
-                sbManagers.Append($"declare -x NEON_MANAGER_PEERS={sbPeerManagerAddressesArray}\n");
+                sbMasters.Append($"declare -x NEON_MASTER_PEERS={sbPeerManagerAddressesArray}\n");
             }
             else
             {
-                sbManagers.Append("export NEON_MANAGER_PEERS=\"\"\n");
+                sbMasters.Append("export NEON_MASTER_PEERS=\"\"\n");
             }
 
             // Generate the manager and worker NTP time sources.
@@ -287,7 +287,7 @@ namespace NeonCli
 
             var nameservers = string.Empty;
 
-            if (nodeDefinition.Role == NodeRole.Manager)
+            if (nodeDefinition.Role == NodeRole.Master)
             {
                 for (int i = 0; i < kubeDefinition.Network.Nameservers.Length; i++)
                 {
@@ -334,8 +334,8 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.folders.tmpfs", KubeHostFolders.Tmpfs);
             SetBashVariable(preprocessReader, "neon.folders.tools", KubeHostFolders.Tools);
 
-            SetBashVariable(preprocessReader, "nodes.manager.count", kubeDefinition.Managers.Count());
-            preprocessReader.Set("nodes.managers", sbManagers);
+            SetBashVariable(preprocessReader, "nodes.manager.count", kubeDefinition.Masters.Count());
+            preprocessReader.Set("nodes.managers", sbMasters);
             preprocessReader.Set("nodes.manager.summary", sbManagerNodesSummary);
 
             SetBashVariable(preprocessReader, "ntp.manager.sources", managerTimeSources);

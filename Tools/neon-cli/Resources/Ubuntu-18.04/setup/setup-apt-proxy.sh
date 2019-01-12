@@ -24,7 +24,7 @@ echo "**********************************************" 1>&2
 
 # Load the hive configuration and setup utilities.
 
-. $<load-hive-conf>
+. $<load-cluster-conf>
 . setup-utility.sh
 
 # Install the [apt-cacher-ng] service on manager nodes.

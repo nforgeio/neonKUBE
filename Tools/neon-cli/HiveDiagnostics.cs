@@ -40,7 +40,7 @@ namespace NeonCli
         public static void CheckManager(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentException>(node.Metadata.IsManager);
+            Covenant.Requires<ArgumentException>(node.Metadata.IsMaster);
             Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             if (!node.IsFaulted)

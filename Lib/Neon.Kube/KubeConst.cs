@@ -70,14 +70,14 @@ namespace Neon.Kube
         public const string DefaulVmTemplatePassword = "sysadmin0000";
 
         /// <summary>
-        /// The maximum number of cluster manager nodes.
+        /// The maximum number of cluster master nodes.
         /// </summary>
-        public const int MaxManagers = 5;
+        public const int MaxMasters = 5;
 
         /// <summary>
-        /// The minimum number of cores required by manager nodes.
+        /// The minimum number of cores required by master nodes.
         /// </summary>
-        public const int MinManagerCores = 2;
+        public const int MinMasterCores = 2;
 
         /// <summary>
         /// The minimum number of cores required by worker nodes.
@@ -85,19 +85,19 @@ namespace Neon.Kube
         public const int MinWorkerCores = 2;
 
         /// <summary>
-        /// The minimum RAM (MiB) required for manager nodes.
+        /// The minimum RAM (MiB) required for master nodes.
         /// </summary>
-        public const int MinManagerRamMiB = 4000;
+        public const int MinMasterRamMiB = 4096;
 
         /// <summary>
         /// The minimum RAM (MiB) required for worker nodes.
         /// </summary>
-        public const int MinWorkerRamMiB = 4000;
+        public const int MinWorkerRamMiB = 4096;
 
         /// <summary>
-        /// The minimum required network interface cards for manager nodes.
+        /// The minimum required network interface cards for master nodes.
         /// </summary>
-        public const int MinManagerNics = 2;
+        public const int MinMasterNics = 2;
 
         /// <summary>
         /// The minimum required network interface cards for worker nodes.

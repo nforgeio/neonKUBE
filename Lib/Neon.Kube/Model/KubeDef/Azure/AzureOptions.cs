@@ -97,11 +97,11 @@ namespace Neon.Kube
         /// DOMAINLABEL.AZURE-REGION.cloudapp.azure.com
         /// </para>
         /// <para>
-        /// For example, a public IP address with the <b>myhive</b> deployed to the
+        /// For example, a public IP address with the <b>mycluster</b> deployed to the
         /// Azure <b>westus</b> region would have this DNS name:
         /// </para>
         /// <para>
-        /// myhive.westus.cloudapp.azure.com
+        /// mycluster.westus.cloudapp.azure.com
         /// </para>
         /// <para>
         /// Labels can be up to 80 characters in length and may include letters, digits,
@@ -124,9 +124,9 @@ namespace Neon.Kube
         /// referenced via a DNS CNAME record and the address may change from time-to-time.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "StaticHiveAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "StaticClusterAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
-        public bool StaticHiveAddress { get; set; } = false;
+        public bool StaticClusterAddress { get; set; } = false;
 
         /// <summary>
         /// <note>
@@ -177,7 +177,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// neonHIVEs reserves some ports on the public Azure load balancer.
+        /// neonHIVE reserves some ports on the public Azure load balancer.
         /// The cluster will reserve  <b>5 + node_count</b> ports beginning 
         /// at this port number which defaults to <b>37100</b>.  The first five
         /// ports will be used to direct OpenVPN client traffic to the VPN
@@ -219,7 +219,7 @@ namespace Neon.Kube
         /// with a value in the range of <b>2</b>...<b>20</b>.
         /// </para>
         /// <note>
-        /// Larger hives should increase this value to avoid losing significant capacity
+        /// Larger clusters should increase this value to avoid losing significant capacity
         /// as Azure updates its underlying infrastructure in an update domain requiring
         /// VM shutdown and restarts.  A value of <b>2</b> indicates that one half of the
         /// cluster servers may be restarted during an update domain upgrade.  A value
@@ -252,7 +252,7 @@ namespace Neon.Kube
         [YamlIgnore]
         public int LastVpnFrontendPort
         {
-            get { return FirstVpnFrontendPort + KubeConst.MaxManagers - 1; }
+            get { return FirstVpnFrontendPort + KubeConst.MaxMasters - 1; }
         }
 
         /// <summary>
@@ -274,7 +274,7 @@ namespace Neon.Kube
         [YamlIgnore]
         public int LastSshFrontendPort
         {
-            get { return FirstSshFrontendPort + AzureHelper.MaxHiveNodes - 1; }
+            get { return FirstSshFrontendPort + AzureHelper.MaxClusterNodes - 1; }
         }
 
         /// <summary>
@@ -367,14 +367,14 @@ namespace Neon.Kube
 
             // Check Azure cluster limits.
 
-            if (kubeDefinition.Managers.Count() > KubeConst.MaxManagers)
+            if (kubeDefinition.Masters.Count() > KubeConst.MaxMasters)
             {
-                throw new KubeDefinitionException($"cluster manager count [{kubeDefinition.Managers.Count()}] exceeds the [{KubeConst.MaxManagers}] limit for neonHIVEs.");
+                throw new KubeDefinitionException($"cluster manager count [{kubeDefinition.Masters.Count()}] exceeds the [{KubeConst.MaxMasters}] limit for clusters.");
             }
 
-            if (kubeDefinition.Nodes.Count() > AzureHelper.MaxHiveNodes)
+            if (kubeDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)
             {
-                throw new KubeDefinitionException($"cluster node count [{kubeDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxHiveNodes}] limit for neonHIVEs deployed to Azure.");
+                throw new KubeDefinitionException($"cluster node count [{kubeDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for clusters deployed to Azure.");
             }
         }
     }

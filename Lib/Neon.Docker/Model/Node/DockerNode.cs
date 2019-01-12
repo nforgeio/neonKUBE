@@ -89,7 +89,7 @@ namespace Neon.Docker
         public DateTimeOffset UpdatedAt { get; private set; }
 
         /// <summary>
-        /// Returns the node role (currently one of <b>"manager"</b> or <b>"worker"</b>).
+        /// Returns the node role (currently one of <b>"master"</b> or <b>"worker"</b>).
         /// </summary>
         public string Role { get; private set; }
 
@@ -144,7 +144,7 @@ namespace Neon.Docker
         public string Addr { get; private set; }
 
         /// <summary>
-        /// Returns management status for manager nodes.
+        /// Returns management status for Swarm manager nodes.
         /// </summary>
         public DockerNodeManagerStatus ManagerStatus { get; private set; }
     }

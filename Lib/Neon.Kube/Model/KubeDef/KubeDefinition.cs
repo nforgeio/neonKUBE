@@ -275,7 +275,7 @@ namespace Neon.Kube
         /// <para>
         /// The cluster managers will be configured to synchronize their time with these
         /// time sources and the worker nodes will be configured to synchronize their time
-        /// with the manager nodes.
+        /// with the master nodes.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "TimeSources", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -292,7 +292,7 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies host node options.
         /// </summary>
-        [JsonProperty(PropertyName = "HiveNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "NodeOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public KubeNodeOptions NodeOptions { get; set; } = new KubeNodeOptions();
 
@@ -346,13 +346,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Enumerates the cluster manager node definitions.
+        /// Enumerates the cluster master node definitions.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> Managers
+        public IEnumerable<NodeDefinition> Masters
         {
-            get { return Nodes.Where(n => n.IsManager); }
+            get { return Nodes.Where(n => n.IsMaster); }
         }
 
         /// <summary>
@@ -362,7 +362,7 @@ namespace Neon.Kube
         [YamlIgnore]
         public IEnumerable<NodeDefinition> SortedManagers
         {
-            get { return Managers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
+            get { return Masters.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
         }
 
         /// <summary>
@@ -511,19 +511,19 @@ namespace Neon.Kube
                 throw new KubeDefinitionException($"The [{nameof(KubeDefinition)}.{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            var managementNodeCount = Managers.Count();
+            var managementNodeCount = Masters.Count();
 
             if (managementNodeCount == 0)
             {
-                throw new KubeDefinitionException("Hives must have at least one management node.");
+                throw new KubeDefinitionException("Clusters must have at least one management node.");
             }
             else if (managementNodeCount > 5)
             {
-                throw new KubeDefinitionException("Hives may not have more than [5] management nodes.");
+                throw new KubeDefinitionException("Clusters may not have more than [5] management nodes.");
             }
             else if (!NeonHelper.IsOdd(managementNodeCount))
             {
-                throw new KubeDefinitionException("Hives must have an odd number of management nodes: [1, 3, or 5]");
+                throw new KubeDefinitionException("Clusters must have an odd number of management nodes: [1, 3, or 5]");
             }
 
             // Ensure that each node has a valid unique or NULL IP address.

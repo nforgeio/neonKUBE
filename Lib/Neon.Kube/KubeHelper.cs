@@ -172,7 +172,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage neonHIVEs.  Each known cluster will have a JSON file named
+        /// to deploy and manage neonKUBEs.  Each known cluster will have a JSON file named
         /// <b><i>hive-name</i>.json</b> holding the serialized <see cref="Kube.KubeContext"/> 
         /// information for the cluster.
         /// </para>
@@ -199,7 +199,7 @@ namespace Neon.Kube
         /// <returns>The folder path.</returns>
         /// <remarks>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage neonHIVEs.  The client will use this to store temporary files that may
+        /// to deploy and manage neonKUBEs.  The client will use this to store temporary files that may
         /// include sensitive information because these folders are encrypted on disk.
         /// </remarks>
         public static string TempFolder

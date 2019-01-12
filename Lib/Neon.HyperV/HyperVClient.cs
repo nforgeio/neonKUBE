@@ -604,7 +604,7 @@ namespace Neon.HyperV
             // be configured to use the wi-fi adapter.  The only workaround for this is
             // probably for the user to modify the virtual switch.
             //
-            // This last issue is really just another indication that neonHIVEs aren't 
+            // This last issue is really just another indication that neonKUBEs aren't 
             // really portable in the sense that you can't expect to relocate a cluster 
             // from one network environment to another (that's why we bought the portable 
             // routers for motel use). So we'll consider this as by design.

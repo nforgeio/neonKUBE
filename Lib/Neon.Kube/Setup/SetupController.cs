@@ -541,7 +541,7 @@ namespace Neon.Kube
                             // $todo(jeff.lill):
                             //
                             // We're going to report global step exceptions as if they
-                            // happened on the first manager node because there's no
+                            // happened on the first master node because there's no
                             // other place to log this in the current design.
                             //
                             // I suppose we could create a [global.log] file or something
@@ -552,7 +552,7 @@ namespace Neon.Kube
                             if (typeof(NodeMetadata) == typeof(NodeDefinition))
                             {
                                 var firstManager = nodes
-                                    .Where(n => (n.Metadata as NodeDefinition).IsManager)
+                                    .Where(n => (n.Metadata as NodeDefinition).IsMaster)
                                     .OrderBy(n => n.Name)
                                     .First();
 
@@ -782,12 +782,12 @@ namespace Neon.Kube
 
                     if (nodes.First().Metadata != null)
                     {
-                        if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsManager))
+                        if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsMaster))
                         {
                             sbDisplay.AppendLine();
                             sbDisplay.AppendLine(" Managers:");
 
-                            foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsManager))
+                            foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsMaster))
                             {
                                 sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                             }

@@ -30,7 +30,7 @@ namespace Neon.Kube
     /// </note>
     /// <note>
     /// Changing any of these will likely break [neon-cli] interactions
-    /// with existing hives that use the previous folder path.  Be
+    /// with existing clusters that use the previous folder path.  Be
     /// ver sure you know what you're doing when you make changes.
     /// </note>
     /// </remarks>

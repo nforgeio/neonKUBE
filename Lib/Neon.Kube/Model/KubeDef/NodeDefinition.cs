@@ -95,7 +95,7 @@ namespace Neon.Kube
         /// <summary>
         /// The node's public IP address or DNS name.  This will be generally initialized
         /// to <c>null</c> before provisioning a cluster.  This will be initialized while
-        /// by the <b>neon-cli</b> tool for manager nodes when provisioning in a cloud provider.
+        /// by the <b>neon-cli</b> tool for master nodes when provisioning in a cloud provider.
         /// </summary>
         [JsonProperty(PropertyName = "PublicAddress", Required = Required.Default)]
         [DefaultValue(null)]
@@ -130,11 +130,11 @@ namespace Neon.Kube
         /// to standardize on a single management node concept.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "IsManager", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "IsMaster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
-        public bool IsManager
+        public bool IsMaster
         {
-            get { return Role.Equals(NodeRole.Manager, StringComparison.InvariantCultureIgnoreCase); }
+            get { return Role.Equals(NodeRole.Master, StringComparison.InvariantCultureIgnoreCase); }
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace Neon.Kube
         [YamlIgnore]
         public bool InSwarm
         {
-            get { return IsManager || IsWorker; }
+            get { return IsMaster || IsWorker; }
         }
 
         /// <summary>
@@ -181,21 +181,21 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Specifies the frontend port to be used to reach the OpenVPN server from outside
-        /// the cluster.  This defaults to <see cref="NetworkPorts.OpenVPN"/> for the first manager
+        /// the cluster.  This defaults to <see cref="NetworkPorts.OpenVPN"/> for the first master
         /// node (sorted by name), (<see cref="NetworkPorts.OpenVPN"/> + 1), for the second
-        /// manager node an so on for subsequent managers.  This defaults to <b>0</b> for workers.
+        /// master node an so on for subsequent managers.  This defaults to <b>0</b> for workers.
         /// </para>
         /// <para>
         /// For cloud deployments, this will be initialized by the <b>neon-cli</b> during
-        /// cluster setup such that each manager node will be assigned a unique port with
+        /// cluster setup such that each master node will be assigned a unique port with
         /// a traffic manager rule that forwards external traffic from <see cref="VpnFrontendPort"/>
-        /// to the <see cref="NetworkPorts.OpenVPN"/> port on the manager.
+        /// to the <see cref="NetworkPorts.OpenVPN"/> port on the master.
         /// </para>
         /// <para>
         /// For on-premise deployments, you should assign a unique <see cref="VpnFrontendPort"/>
-        /// to each manager node and then manually configure your router with port forwarding 
+        /// to each master node and then manually configure your router with port forwarding 
         /// rules that forward TCP traffic from the external port to <see cref="NetworkPorts.OpenVPN"/>
-        /// for each manager.
+        /// for each master.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "VpnFrontendPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -203,7 +203,7 @@ namespace Neon.Kube
         public int VpnFrontendPort { get; set; } = 0;
 
         /// <summary>
-        /// Set by the <b>neon-cli</b> to the private IP address for a manager node to
+        /// Set by the <b>neon-cli</b> to the private IP address for a master node to
         /// be used when routing return traffic from other cluster nodes back to a
         /// connected VPN client.  This is only set when provisioning a cluster VPN.  
         /// </summary>
@@ -214,11 +214,11 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Specifies the subnet defining the block of addresses assigned to the OpenVPN server
-        /// running on this manager node for the OpenVPN server's use as well as for the pool of
+        /// running on this master node for the OpenVPN server's use as well as for the pool of
         /// addresses that will be assigned to connecting VPN clients.
         /// </para>
         /// <para>
-        /// This will be calculated automatically during cluster setup by manager nodes if the
+        /// This will be calculated automatically during cluster setup by master nodes if the
         /// cluster VPN is enabled.
         /// </para>
         /// </summary>
@@ -234,7 +234,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Identifies the hypervisor instance where this node is to be provisioned for Hyper-V
-        /// or XenServer based hives.  This name must map to the name of one of the <see cref="HostingOptions.VmHosts"/>
+        /// or XenServer based clusters.  This name must map to the name of one of the <see cref="HostingOptions.VmHosts"/>
         /// when set.
         /// </summary>
         [JsonProperty(PropertyName = "VmHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

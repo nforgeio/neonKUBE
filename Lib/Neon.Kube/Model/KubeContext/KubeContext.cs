@@ -41,7 +41,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public string HiveName
+        public string ClusterName
         {
             get { return Definition?.Name; }
         }
@@ -57,7 +57,7 @@ namespace Neon.Kube
             {
                 if (Definition != null && Username != null)
                 {
-                    return $"{Username}@{HiveName}";
+                    return $"{Username}@{ClusterName}";
                 }
                 else
                 {
@@ -161,20 +161,20 @@ namespace Neon.Kube
         /// The SSH RSA private key fingerprint used to secure the cluster servers.  This is an 
         /// MD5 hash encoded as hex bytes separated by colons.
         /// </summary>
-        [JsonProperty(PropertyName = "SshHiveHostKeyFingerprint")]
-        public string SshHiveHostKeyFingerprint { get; set; }
+        [JsonProperty(PropertyName = "SshClusterHostKeyFingerprint")]
+        public string SshClusterHostKeyFingerprint { get; set; }
 
         /// <summary>
         /// The SSH RSA private key used to secure the cluster servers.
         /// </summary>
-        [JsonProperty(PropertyName = "SshHiveHostPrivateKey")]
-        public string SshHiveHostPrivateKey { get; set; }
+        [JsonProperty(PropertyName = "SshClusterHostPrivateKey")]
+        public string SshClusterHostPrivateKey { get; set; }
 
         /// <summary>
         /// The SSH RSA private key used to secure the cluster servers.
         /// </summary>
-        [JsonProperty(PropertyName = "SshHiveHostPublicKey")]
-        public string SshHiveHostPublicKey { get; set; }
+        [JsonProperty(PropertyName = "SshClusterHostPublicKey")]
+        public string SshClusterHostPublicKey { get; set; }
 
         /// <summary>
         /// The Docker manager node swarm join key.
@@ -224,10 +224,10 @@ namespace Neon.Kube
         /// </summary>
         public void ClearRootSecrets()
         {
-            IsRoot                = false;
-            SwarmManagerToken     = null;
-            SwarmWorkerToken      = null;
-            SshHiveHostPrivateKey = null;
+            IsRoot                   = false;
+            SwarmManagerToken        = null;
+            SwarmWorkerToken         = null;
+            SshClusterHostPrivateKey = null;
 
             // Clear the provider specific information because it
             // contains hosting credentials.

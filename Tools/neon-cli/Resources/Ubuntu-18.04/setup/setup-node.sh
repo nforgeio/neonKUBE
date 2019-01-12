@@ -30,7 +30,7 @@ echo "**********************************************" 1>&2
 
 # Load the hive configuration and setup utilities.
 
-. $<load-hive-conf>
+. $<load-cluster-conf>
 . setup-utility.sh
 
 # Verify that the node has been prepared.
@@ -1124,9 +1124,9 @@ setuid=pdns
 # write-pid=yes
 
 #################################
-# WARNING: Be sure to comment these out for production hives.
+# WARNING: Be sure to comment these out for production clusters.
 #
-# Debugging related settings.  Be sure to comment these out for production hives.
+# Debugging related settings.  Be sure to comment these out for production clusters.
 #
 # loglevel      Amount of logging. Higher is more. Do not set below 3
 # quiet         Suppress logging of questions and answers
