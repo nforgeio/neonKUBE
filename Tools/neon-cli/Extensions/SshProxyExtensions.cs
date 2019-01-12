@@ -129,7 +129,7 @@ namespace NeonCli
         /// <param name="preprocessReader">The reader.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeDefinition">The target node definition.</param>
-        private static void SetHiveVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
+        private static void SetHiveVariables(PreprocessReader preprocessReader, KubeDefinition clusterDefinition, NodeDefinition nodeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(preprocessReader != null);
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
@@ -267,21 +267,6 @@ namespace NeonCli
                 managerTimeSources = "\"pool.ntp.org\"";
             }
 
-            // Generate the Docker daemon command line options.
-
-            var sbDockerOptions = new StringBuilder();
-
-            if (Program.ServiceManager == ServiceManager.Systemd)
-            {
-                sbDockerOptions.AppendWithSeparator($"-H unix:///var/run/docker.sock");
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-
-            preprocessReader.Set("docker.options", sbDockerOptions);
-
             // Format the network upstream nameservers as semicolon separated
             // to be compatible with the PowerDNS Recursor [forward-zones-recurse]
             // configuration setting.
@@ -329,25 +314,25 @@ namespace NeonCli
 
             // Set the variables.
 
-            preprocessReader.Set("load-cluster-conf", ClusterHostFolders.Config + "/cluster.conf.sh --echo-summary");
-            preprocessReader.Set("load-cluster-conf-quiet", ClusterHostFolders.Config + "/cluster.conf.sh");
+            preprocessReader.Set("load-cluster-conf", KubeHostFolders.Config + "/cluster.conf.sh --echo-summary");
+            preprocessReader.Set("load-cluster-conf-quiet", KubeHostFolders.Config + "/cluster.conf.sh");
 
             SetBashVariable(preprocessReader, "cluster.provisioner", clusterDefinition.Provisioner);
             SetBashVariable(preprocessReader, "cluster.rootuser", Program.MachineUsername);
 
             SetBashVariable(preprocessReader, "node.driveprefix", clusterDefinition.DrivePrefix);
 
-            SetBashVariable(preprocessReader, "neon.folders.archive", ClusterHostFolders.Archive);
-            SetBashVariable(preprocessReader, "neon.folders.bin", ClusterHostFolders.Bin);
-            SetBashVariable(preprocessReader, "neon.folders.exec", ClusterHostFolders.Exec);
-            SetBashVariable(preprocessReader, "neon.folders.config", ClusterHostFolders.Config);
-            SetBashVariable(preprocessReader, "neon.folders.scripts", ClusterHostFolders.Scripts);
-            SetBashVariable(preprocessReader, "neon.folders.secrets", ClusterHostFolders.Secrets);
-            SetBashVariable(preprocessReader, "neon.folders.setup", ClusterHostFolders.Setup);
-            SetBashVariable(preprocessReader, "neon.folders.source", ClusterHostFolders.Source);
-            SetBashVariable(preprocessReader, "neon.folders.state", ClusterHostFolders.State);
-            SetBashVariable(preprocessReader, "neon.folders.tmpfs", ClusterHostFolders.Tmpfs);
-            SetBashVariable(preprocessReader, "neon.folders.tools", ClusterHostFolders.Tools);
+            SetBashVariable(preprocessReader, "neon.folders.archive", KubeHostFolders.Archive);
+            SetBashVariable(preprocessReader, "neon.folders.bin", KubeHostFolders.Bin);
+            SetBashVariable(preprocessReader, "neon.folders.exec", KubeHostFolders.Exec);
+            SetBashVariable(preprocessReader, "neon.folders.config", KubeHostFolders.Config);
+            SetBashVariable(preprocessReader, "neon.folders.scripts", KubeHostFolders.Scripts);
+            SetBashVariable(preprocessReader, "neon.folders.secrets", KubeHostFolders.Secrets);
+            SetBashVariable(preprocessReader, "neon.folders.setup", KubeHostFolders.Setup);
+            SetBashVariable(preprocessReader, "neon.folders.source", KubeHostFolders.Source);
+            SetBashVariable(preprocessReader, "neon.folders.state", KubeHostFolders.State);
+            SetBashVariable(preprocessReader, "neon.folders.tmpfs", KubeHostFolders.Tmpfs);
+            SetBashVariable(preprocessReader, "neon.folders.tools", KubeHostFolders.Tools);
 
             SetBashVariable(preprocessReader, "nodes.manager.count", clusterDefinition.Managers.Count());
             preprocessReader.Set("nodes.managers", sbManagers);
@@ -355,8 +340,6 @@ namespace NeonCli
 
             SetBashVariable(preprocessReader, "ntp.manager.sources", managerTimeSources);
             NewMethod(preprocessReader, workerTimeSources);
-
-            SetBashVariable(preprocessReader, "log.enabled", clusterDefinition.Log.Enabled);
 
             //-----------------------------------------------------------------
             // Configure the variables for the [setup-disk.sh] script.
@@ -419,7 +402,7 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
         /// <param name="file">The resource file.</param>
         /// <param name="targetPath">The target path on the remote server.</param>
-        private static void UploadFile<TMetadata>(this SshProxy<TMetadata> node, ClusterDefinition clusterDefinition, ResourceFiles.File file, string targetPath)
+        private static void UploadFile<TMetadata>(this SshProxy<TMetadata> node, KubeDefinition clusterDefinition, ResourceFiles.File file, string targetPath)
             where TMetadata : class
         {
             using (var input = file.ToStream())
@@ -473,15 +456,15 @@ namespace NeonCli
         /// <typeparam name="Metadata">The node metadata type.</typeparam>
         /// <param name="node">The remote node.</param>
         /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
-        public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, ClusterDefinition clusterDefinition = null)
+        public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, KubeDefinition clusterDefinition = null)
             where Metadata : class
         {
             Covenant.Requires<ArgumentNullException>(node != null);
 
             // Clear the contents of the configuration folder.
 
-            node.Status = $"clear: {ClusterHostFolders.Config}";
-            node.SudoCommand($"rm -rf {ClusterHostFolders.Config}/*.*");
+            node.Status = $"clear: {KubeHostFolders.Config}";
+            node.SudoCommand($"rm -rf {KubeHostFolders.Config}/*.*");
 
             // Upload the files.
 
@@ -489,13 +472,13 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("conf").Files())
             {
-                node.UploadFile(clusterDefinition, file, $"{ClusterHostFolders.Config}/{file.Name}");
+                node.UploadFile(clusterDefinition, file, $"{KubeHostFolders.Config}/{file.Name}");
             }
 
             // Secure the files and make the scripts executable.
 
-            node.SudoCommand($"chmod 644 {ClusterHostFolders.Config}/*.*");
-            node.SudoCommand($"chmod 744 {ClusterHostFolders.Config}/*.sh");
+            node.SudoCommand($"chmod 644 {KubeHostFolders.Config}/*.*");
+            node.SudoCommand($"chmod 744 {KubeHostFolders.Config}/*.sh");
 
             node.Status = "copied";
         }
@@ -506,7 +489,7 @@ namespace NeonCli
         /// <typeparam name="TMetadata">The server's metadata type.</typeparam>
         /// <param name="server">The remote server.</param>
         /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
-        public static void UploadResources<TMetadata>(this SshProxy<TMetadata> server, ClusterDefinition clusterDefinition = null)
+        public static void UploadResources<TMetadata>(this SshProxy<TMetadata> server, KubeDefinition clusterDefinition = null)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(server != null);
@@ -514,8 +497,8 @@ namespace NeonCli
             //-----------------------------------------------------------------
             // Upload resource files to the setup folder.
 
-            server.Status = $"clear: {ClusterHostFolders.Setup}";
-            server.SudoCommand($"rm -rf {ClusterHostFolders.Setup}/*.*");
+            server.Status = $"clear: {KubeHostFolders.Setup}";
+            server.SudoCommand($"rm -rf {KubeHostFolders.Setup}/*.*");
 
             // Upload the setup files.
 
@@ -523,12 +506,12 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("setup").Files())
             {
-                server.UploadFile(clusterDefinition, file, $"{ClusterHostFolders.Setup}/{file.Name}");
+                server.UploadFile(clusterDefinition, file, $"{KubeHostFolders.Setup}/{file.Name}");
             }
 
             // Make the setup scripts executable.
 
-            server.SudoCommand($"chmod 744 {ClusterHostFolders.Setup}/*");
+            server.SudoCommand($"chmod 744 {KubeHostFolders.Setup}/*");
 
             // Uncomment this if/when we have to upload source files.
 
@@ -569,8 +552,8 @@ namespace NeonCli
             //-----------------------------------------------------------------
             // Upload files to the tools folder.
 
-            server.Status = $"clear: {ClusterHostFolders.Tools}";
-            server.SudoCommand($"rm -rf {ClusterHostFolders.Tools}/*.*");
+            server.Status = $"clear: {KubeHostFolders.Tools}";
+            server.SudoCommand($"rm -rf {KubeHostFolders.Tools}/*.*");
 
             // Upload the tool files.  Note that we're going to strip out the [.sh] 
             // file type to make these easier to run.
@@ -579,12 +562,12 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
             {
-                server.UploadFile(clusterDefinition, file, $"{ClusterHostFolders.Tools}/{file.Name.Replace(".sh", string.Empty)}");
+                server.UploadFile(clusterDefinition, file, $"{KubeHostFolders.Tools}/{file.Name.Replace(".sh", string.Empty)}");
             }
 
             // Make the scripts executable.
 
-            server.SudoCommand($"chmod 744 {ClusterHostFolders.Tools}/*");
+            server.SudoCommand($"chmod 744 {KubeHostFolders.Tools}/*");
         }
     }
 }

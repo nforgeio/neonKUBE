@@ -109,77 +109,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Web", "Lib\Neon.Web\Ne
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Devops", "Devops", "{E853860E-86DE-407E-95BB-4C5E1CEAFC39}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A7E3360B-CCAA-449B-9BCE-B56BAF0C3CA0}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\test\env.ps1 = Devops\test\env.ps1
-		Devops\test\README.md = Devops\test\README.md
-		Devops\test\secrets.yaml = Devops\test\secrets.yaml
-		Devops\test\setup-all.ps1 = Devops\test\setup-all.ps1
-		Devops\test\setup-core-services.ps1 = Devops\test\setup-core-services.ps1
-		Devops\test\setup-hive.ps1 = Devops\test\setup-hive.ps1
-		Devops\test\setup-registry.ps1 = Devops\test\setup-registry.ps1
-		Devops\test\setup-registry.yaml = Devops\test\setup-registry.yaml
-		Devops\test\vars.yaml = Devops\test\vars.yaml
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hives", "hives", "{F035D81E-A73A-40D6-82EE-98C63FDFCE04}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-azure", "home-azure", "{F8E42BB5-2D02-4038-B59B-D14D2BD5C1E6}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\test\hives\home-azure\hive.json = Devops\test\hives\home-azure\hive.json
-		Devops\test\hives\home-azure\secrets.yaml = Devops\test\hives\home-azure\secrets.yaml
-		Devops\test\hives\home-azure\vars.yaml = Devops\test\hives\home-azure\vars.yaml
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-bare", "home-bare", "{7FD9A60B-8F2B-4ECB-A850-34005D11104A}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\test\hives\home-bare\hive.json = Devops\test\hives\home-bare\hive.json
-		Devops\test\hives\home-bare\secrets.yaml = Devops\test\hives\home-bare\secrets.yaml
-		Devops\test\hives\home-bare\vars.yaml = Devops\test\hives\home-bare\vars.yaml
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-large", "home-large", "{1FCA8640-5CCE-4CD5-9B0A-B03DCDA57F46}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\test\hives\home-large\hive.json = Devops\test\hives\home-large\hive.json
-		Devops\test\hives\home-large\secrets.yaml = Devops\test\hives\home-large\secrets.yaml
-		Devops\test\hives\home-large\vars.yaml = Devops\test\hives\home-large\vars.yaml
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small", "home-small", "{CDCCEE29-B726-4AA1-BB06-F44156BE1E7E}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\test\hives\home-small\hive.json = Devops\test\hives\home-small\hive.json
-		Devops\test\hives\home-small\secrets.yaml = Devops\test\hives\home-small\secrets.yaml
-		Devops\test\hives\home-small\vars.yaml = Devops\test\hives\home-small\vars.yaml
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-xen", "home-xen", "{A4590FB6-213E-4C56-B771-F11C8D1D2868}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\test\hives\home-xen\hive.json = Devops\test\hives\home-xen\hive.json
-		Devops\test\hives\home-xen\secrets.yaml = Devops\test\hives\home-xen\secrets.yaml
-		Devops\test\hives\home-xen\vars.yaml = Devops\test\hives\home-xen\vars.yaml
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "uuid-gen", "Tools\uuid-gen\uuid-gen.csproj", "{12E8C084-88B8-47A9-82AD-038C206089AA}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "roles", "roles", "{B8775523-0D60-486A-8E74-92E2438B3005}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "registry", "registry", "{D6048465-8895-480F-9EDE-0B2F9360803E}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\test\roles\registry\main.yaml = Devops\test\roles\registry\main.yaml
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Kube", "Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj", "{167C080E-3F81-4EB7-93BD-1D8671B51835}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Common", "Test\Test.Neon.Common\Test.Neon.Common.csproj", "{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Releases", "Releases", "{2BCF066C-588B-44A5-AF35-527E96C7B7B5}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small2", "home-small2", "{18973726-A5D3-4706-8658-9ED658C631CE}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\test\hives\home-small2\hive.json = Devops\test\hives\home-small2\hive.json
-		Devops\test\hives\home-small2\secrets.yaml = Devops\test\hives\home-small2\secrets.yaml
-		Devops\test\hives\home-small2\vars.yaml = Devops\test\hives\home-small2\vars.yaml
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Aws", "Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj", "{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B}"
 EndProject
@@ -200,14 +136,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.HyperV", "Lib\Neon.HyperV\Neon.HyperV.csproj", "{2E9E803A-1422-42E7-8472-4E15EDFC7002}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xen", "Lib\Neon.Xen\Neon.Xen.csproj", "{1A6C061D-83FD-4B53-8E96-80A1546C8F4B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt-jeff", "wrt-jeff", "{7B918008-009F-49F4-BE01-9130E635634B}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\test\hives\wrt-jeff\hive.json = Devops\test\hives\wrt-jeff\hive.json
-		Devops\test\hives\wrt-jeff\secrets.yaml = Devops\test\hives\wrt-jeff\secrets.yaml
-		Devops\test\hives\wrt-jeff\secrets2.yaml = Devops\test\hives\wrt-jeff\secrets2.yaml
-		Devops\test\hives\wrt-jeff\vars.yaml = Devops\test\hives\wrt-jeff\vars.yaml
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -598,19 +526,9 @@ Global
 		{7AB3C81C-8F25-4F42-B992-947ACDF34056} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 		{856207D6-F230-47A3-BF50-3D0451FEC3ED} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
-		{A7E3360B-CCAA-449B-9BCE-B56BAF0C3CA0} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
-		{F035D81E-A73A-40D6-82EE-98C63FDFCE04} = {A7E3360B-CCAA-449B-9BCE-B56BAF0C3CA0}
-		{F8E42BB5-2D02-4038-B59B-D14D2BD5C1E6} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
-		{7FD9A60B-8F2B-4ECB-A850-34005D11104A} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
-		{1FCA8640-5CCE-4CD5-9B0A-B03DCDA57F46} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
-		{CDCCEE29-B726-4AA1-BB06-F44156BE1E7E} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
-		{A4590FB6-213E-4C56-B771-F11C8D1D2868} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
 		{12E8C084-88B8-47A9-82AD-038C206089AA} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
-		{B8775523-0D60-486A-8E74-92E2438B3005} = {A7E3360B-CCAA-449B-9BCE-B56BAF0C3CA0}
-		{D6048465-8895-480F-9EDE-0B2F9360803E} = {B8775523-0D60-486A-8E74-92E2438B3005}
 		{167C080E-3F81-4EB7-93BD-1D8671B51835} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
-		{18973726-A5D3-4706-8658-9ED658C631CE} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
 		{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{CD08B37A-614C-4DEB-9805-ADBD77DA3F8E} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{8315C918-4C26-435C-AC32-47A87CB2792E} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
@@ -621,7 +539,6 @@ Global
 		{08B7000C-F261-4543-B611-5710D12263DB} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{2E9E803A-1422-42E7-8472-4E15EDFC7002} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{1A6C061D-83FD-4B53-8E96-80A1546C8F4B} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
-		{7B918008-009F-49F4-BE01-9130E635634B} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

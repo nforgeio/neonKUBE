@@ -30,7 +30,7 @@ namespace Neon.Xen
     /// <remarks>
     /// <para>
     /// Ideally, we'd use the XenServer .NET API but at this time (Jan 2018),
-    /// the API is not compatible with .NET Core which neonHIVE <b>neon-cli</b>
+    /// the API is not compatible with .NET Core which neonKUBE <b>neon-cli</b>
     /// requires because it needs to run on Windows, OSX, and perhaps some day
     /// within the Ubuntu based tool container.
     /// </para>

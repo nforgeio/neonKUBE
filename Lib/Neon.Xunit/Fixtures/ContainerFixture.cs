@@ -25,7 +25,7 @@ namespace Neon.Xunit
     /// <b>IMPORTANT:</b> The Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
     /// support parallel test execution because fixtures may impact global machine state
     /// like starting a Couchbase Docker container, modifying the local DNS <b>hosts</b>
-    /// file or managing a Docker Swarm or neonHIVE.
+    /// file or managing a Docker Swarm or neonKUBE.
     /// </para>
     /// <para>
     /// You should explicitly disable parallel execution in all test assemblies that

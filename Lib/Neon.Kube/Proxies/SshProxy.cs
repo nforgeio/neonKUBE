@@ -171,7 +171,7 @@ namespace Neon.Kube
 
         // Path to the transient file on the Linux box whose presence indicates
         // that the server is still rebooting.
-        private readonly string RebootStatusPath = $"{ClusterHostFolders.Tmpfs}/rebooting";
+        private readonly string RebootStatusPath = $"{KubeHostFolders.Tmpfs}/rebooting";
 
         private object          syncLock   = new object();
         private bool            isDisposed = false;
@@ -432,9 +432,9 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The associated <see cref="ClusterProxy"/> or <c>null</c>.
+        /// The associated <see cref="KubeProxy"/> or <c>null</c>.
         /// </summary>
-        public ClusterProxy Hive { get; internal set; }
+        public KubeProxy Hive { get; internal set; }
 
         /// <summary>
         /// Returns the display name for the server.
@@ -486,7 +486,7 @@ namespace Neon.Kube
         /// <summary>
         /// The PATH to use on the remote server when executing commands in the
         /// session or <c>null</c>/empty to run commands without a path.  This
-        /// defaults to the standard Linux path and <see cref="ClusterHostFolders.Tools"/>.
+        /// defaults to the standard Linux path and <see cref="KubeHostFolders.Tools"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -494,7 +494,7 @@ namespace Neon.Kube
         /// multiple directories as required.
         /// </note>
         /// </remarks>
-        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{ClusterHostFolders.Tools}";
+        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{KubeHostFolders.Tools}";
 
         /// <summary>
         /// Returns the username used to log into the remote node.
@@ -677,7 +677,7 @@ namespace Neon.Kube
 
             try
             {
-                SudoCommand($"mkdir -p {ClusterHostFolders.Tmpfs} && touch {RebootStatusPath}");
+                SudoCommand($"mkdir -p {KubeHostFolders.Tmpfs} && touch {RebootStatusPath}");
                 LogLine("*** REBOOT");
                 SudoCommand("reboot", RunOptions.Defaults | RunOptions.Shutdown);
                 LogLine("*** REBOOT submitted");
@@ -861,11 +861,11 @@ namespace Neon.Kube
             }
             catch (SshAuthenticationException e)
             {
-                throw new ClusterException("Access Denied: Invalid credentials.", e);
+                throw new KubeException("Access Denied: Invalid credentials.", e);
             }
             catch (Exception e)
             {
-                throw new ClusterException($"Unable to connect to the cluster within [{timeout}].", e);
+                throw new KubeException($"Unable to connect to the cluster within [{timeout}].", e);
             }
         }
 
@@ -978,7 +978,7 @@ namespace Neon.Kube
 
                 if (credentials == null || credentials == SshCredentials.None)
                 {
-                    throw new ClusterException("Cannot establish a SSH connection because no credentials are available.");
+                    throw new KubeException("Cannot establish a SSH connection because no credentials are available.");
                 }
 
                 // We're going to retry connecting up to 10 times.
@@ -1040,7 +1040,7 @@ namespace Neon.Kube
 
                 if (credentials == null || credentials == SshCredentials.None)
                 {
-                    throw new ClusterException("Cannot establish a SSH connection because no credentials are available.");
+                    throw new KubeException("Cannot establish a SSH connection because no credentials are available.");
                 }
 
                 if (sshClient != null)
@@ -1242,22 +1242,22 @@ namespace Neon.Kube
             // SudoCommand/RunCommand methods because those methods depend on the 
             // existence of this folder.
 
-            var result = sshClient.RunCommand($"sudo mkdir -p {ClusterHostFolders.Exec}");
+            var result = sshClient.RunCommand($"sudo mkdir -p {KubeHostFolders.Exec}");
 
             if (result.ExitStatus != 0)
             {
-                Log($"Cannot create folder [{ClusterHostFolders.Exec}]\n");
+                Log($"Cannot create folder [{KubeHostFolders.Exec}]\n");
                 Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
                 Log(result.Error);
                 Log("END-ERROR:\n");
                 throw new IOException(result.Error);
             }
 
-            result = sshClient.RunCommand($"sudo chmod 777 {ClusterHostFolders.Exec}");        // $todo(jeff.lill): Is this a potential security problem?
+            result = sshClient.RunCommand($"sudo chmod 777 {KubeHostFolders.Exec}");        // $todo(jeff.lill): Is this a potential security problem?
                                                                                             //                   SCP uploads fail for 770
             if (result.ExitStatus != 0)
             {
-                Log($"Cannot chmod folder [{ClusterHostFolders.Exec}]\n");
+                Log($"Cannot chmod folder [{KubeHostFolders.Exec}]\n");
                 Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
                 Log(result.Error);
                 Log("END-ERROR:\n");
@@ -1266,38 +1266,38 @@ namespace Neon.Kube
 
             // Create the folders.
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.Archive}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {ClusterHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Archive}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.Bin}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {ClusterHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.Config}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 755 {ClusterHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 755 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.Exec}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {ClusterHostFolders.Exec}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Is this a potential security problem?
+            SudoCommand($"mkdir -p {KubeHostFolders.Exec}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {KubeHostFolders.Exec}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Is this a potential security problem?
                                                                                             //                   SCP uploads fail for 770
-            SudoCommand($"mkdir -p {ClusterHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {ClusterHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {ClusterHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {ClusterHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.Source}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {ClusterHostFolders.Source}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Source}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Source}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.State}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {ClusterHostFolders.State}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {ClusterHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {ClusterHostFolders.Tools}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {ClusterHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Tools}", RunOptions.LogOnErrorOnly);
 
             // $hack(jeff.lill):
             //
@@ -1332,7 +1332,7 @@ namespace Neon.Kube
 
             if (response.ExitCode != 0)
             {
-                throw new ClusterException(response.ErrorSummary);
+                throw new KubeException(response.ErrorSummary);
             }
         }
 
@@ -1368,14 +1368,14 @@ namespace Neon.Kube
 
                 if (response.ExitCode != 0)
                 {
-                    throw new ClusterException(response.ErrorSummary);
+                    throw new KubeException(response.ErrorSummary);
                 }
 
                 response = SudoCommand("chmod", "444", downloadPath);
 
                 if (response.ExitCode != 0)
                 {
-                    throw new ClusterException(response.ErrorSummary);
+                    throw new KubeException(response.ErrorSummary);
                 }
 
                 SafeDownload(downloadPath, output);
@@ -1869,7 +1869,7 @@ namespace Neon.Kube
 
                 // Upload the ZIP file to a temporary folder.
 
-                var bundleFolder = $"{ClusterHostFolders.Exec}/{Guid.NewGuid().ToString("D")}";
+                var bundleFolder = $"{KubeHostFolders.Exec}/{Guid.NewGuid().ToString("D")}";
                 var zipPath      = LinuxPath.Combine(bundleFolder, "__bundle.zip");
 
                 SudoCommand($"mkdir -p", RunOptions.LogOnErrorOnly, bundleFolder);
@@ -2098,7 +2098,7 @@ namespace Neon.Kube
 
             // Create the command folder.
 
-            var execFolder = $"{ClusterHostFolders.Exec}/cmd";
+            var execFolder = $"{KubeHostFolders.Exec}/cmd";
             var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("D"));
 
             SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));
@@ -2453,7 +2453,7 @@ echo $? > {cmdFolder}/exit
         /// command, try uploading and executing a <see cref="CommandBundle"/> instead.
         /// </note>
         /// <para>
-        /// This method is intended for situations where one or more files need to be uploaded to a neonHIVE host node 
+        /// This method is intended for situations where one or more files need to be uploaded to a neonKUBE host node 
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
@@ -2702,7 +2702,7 @@ echo $? > {cmdFolder}/exit
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
         /// <para>
-        /// This method is intended for situations where one or more files need to be uploaded to a neonHIVE host node 
+        /// This method is intended for situations where one or more files need to be uploaded to a neonKUBE host node 
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
@@ -2958,7 +2958,7 @@ echo $? > {cmdFolder}/exit
         /// </para>
         /// <para>
         /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="ClusterHostFolders.State"/><b>/ACTION-ID</b>.
+        /// on the node at <see cref="KubeHostFolders.State"/><b>/ACTION-ID</b>.
         /// To ensure idempotency, this method first checks for the existance of
         /// this file and returns immediately without invoking the action if it is 
         /// present.
@@ -2970,7 +2970,7 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId));
             Covenant.Requires<ArgumentNullException>(action != null);
 
-            var stateFolder = ClusterHostFolders.State;
+            var stateFolder = KubeHostFolders.State;
             var slashPos    = actionId.LastIndexOf('/');
 
             if (slashPos != -1)
@@ -3111,7 +3111,7 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="address">The target IP address.</param>
         /// <returns>The network interface name.</returns>
-        /// <exception cref="ClusterException">Thrown if the interface was not found.</exception>
+        /// <exception cref="KubeException">Thrown if the interface was not found.</exception>
         /// <remarks>
         /// <para>
         /// In the olden days, network devices were assigned names like <b>eth0</b>,
@@ -3171,7 +3171,7 @@ echo $? > {cmdFolder}/exit
                 }
             }
 
-            throw new ClusterException($"Cannot find network interface for [address={address}].");
+            throw new KubeException($"Cannot find network interface for [address={address}].");
         }
 
         /// <summary>
@@ -3190,9 +3190,9 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public bool RegistryLogin(string registry, string username = null, string password = null)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentException>(KubeDefinition.DnsHostRegex.IsMatch(registry));
 
-            if (ClusterHelper.IsDockerPublicRegistry(registry))
+            if (KubeHelper.IsDockerPublicRegistry(registry))
             {
                 return true;
             }
@@ -3207,7 +3207,7 @@ echo $? > {cmdFolder}/exit
 
                     bundle.AddFile("password.txt", password);
                 }
-                else if (ClusterHelper.IsDockerPublicRegistry(registry))
+                else if (KubeHelper.IsDockerPublicRegistry(registry))
                 {
                     // Logging out of the Docker public registry is equivalent to 
                     // setting a NULL username.
@@ -3253,9 +3253,9 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public bool RegistryLogout(string registry)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentException>(KubeDefinition.DnsHostRegex.IsMatch(registry));
 
-            if (ClusterHelper.IsDockerPublicRegistry(registry))
+            if (KubeHelper.IsDockerPublicRegistry(registry))
             {
                 return true;
             }
@@ -3293,7 +3293,7 @@ echo $? > {cmdFolder}/exit
         public void WaitForDnsHost(string hostname, TimeSpan timeout = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
-            Covenant.Requires<ArgumentNullException>(ClusterDefinition.DnsHostRegex.IsMatch(hostname));
+            Covenant.Requires<ArgumentNullException>(KubeDefinition.DnsHostRegex.IsMatch(hostname));
 
             if (timeout <= TimeSpan.Zero)
             {

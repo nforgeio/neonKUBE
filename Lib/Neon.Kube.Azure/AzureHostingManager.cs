@@ -31,7 +31,7 @@ namespace Neon.Kube
     /// The current implementation is focused on creating a hive reachable from the
     /// external Internet via a load balancer or application gateway.  All Azure assets
     /// will be created within a specified resource group by appending a suffix to the
-    /// neonHIVE's name.
+    /// neonKUBE's name.
     /// </para>
     /// </remarks>
     [HostingProvider(HostingEnvironments.Azure)]
@@ -81,7 +81,7 @@ namespace Neon.Kube
         //      6. Application service traffic.  This is the website, webapi, and TCP traffic
         //         to your application services.  This traffic will be load balanced to every
         //         worker node, mapping the frontend port to an internal one.  Typically,
-        //         the PUBLIC neonHIVE proxy will be configured to receive the inbound traffic
+        //         the PUBLIC neonKUBE proxy will be configured to receive the inbound traffic
         //         on the Docker ingress network and forward it on to your Docker services.
         //         Note that the load balancer IS NOT configured to direct traffic to pets.
         //
@@ -288,7 +288,7 @@ namespace Neon.Kube
 
         private const string managerLeafDomainPrefix = "vpn-";
 
-        private ClusterProxy                       hive;
+        private KubeProxy                       hive;
         private HostingOptions                  hostOptions;
         private NetworkOptions                  networkOptions;
         private AzureOptions                    azureOptions;
@@ -330,7 +330,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AzureHostingManager(ClusterProxy hive, string logFolder = null)
+        public AzureHostingManager(KubeProxy hive, string logFolder = null)
         {
             this.hive             = hive;
             this.hiveName         = hive.Definition.Name;
@@ -460,7 +460,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(ClusterDefinition clusterDefinition)
+        public override void Validate(KubeDefinition clusterDefinition)
         {
             // Ensure that the VM sizes specified have minimum capabilities.
 
@@ -470,7 +470,7 @@ namespace Neon.Kube
 
                 if (vmCaps == null)
                 {
-                    throw new ClusterDefinitionException($"Not Implemented: Node [{node.Name}] uses the [{node.Azure.VmSize}] Azure VM size which is not currently defined.  Please submit an issue.");
+                    throw new KubeDefinitionException($"Not Implemented: Node [{node.Name}] uses the [{node.Azure.VmSize}] Azure VM size which is not currently defined.  Please submit an issue.");
                 }
 
                 int minCores;
@@ -481,16 +481,16 @@ namespace Neon.Kube
                 {
                     case NodeRole.Manager:
 
-                        minCores  = ClusterConst.MinManagerCores;
-                        minRamMiB = ClusterConst.MinManagerRamMiB;
-                        minNics   = ClusterConst.MinManagerNics;
+                        minCores  = KubeConst.MinManagerCores;
+                        minRamMiB = KubeConst.MinManagerRamMiB;
+                        minNics   = KubeConst.MinManagerNics;
                         break;
 
                     case NodeRole.Worker:
 
-                        minCores  = ClusterConst.MinWorkerCores;
-                        minRamMiB = ClusterConst.MinWorkerRamMiB;
-                        minNics   = ClusterConst.MinWorkerNics;
+                        minCores  = KubeConst.MinWorkerCores;
+                        minRamMiB = KubeConst.MinWorkerRamMiB;
+                        minNics   = KubeConst.MinWorkerNics;
                         break;
 
                     default:
@@ -500,17 +500,17 @@ namespace Neon.Kube
 
                 if (vmCaps.CoreCount < minCores)
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [CORES={vmCaps.CoreCount}] which is too small.  At least [{minCores}] cores are required for [{node.Role}] nodes.");
+                    throw new KubeDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [CORES={vmCaps.CoreCount}] which is too small.  At least [{minCores}] cores are required for [{node.Role}] nodes.");
                 }
 
                 if (vmCaps.RamMiB < minRamMiB)
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [RAM={vmCaps.RamMiB} MiB] which is too small.  At least [{minRamMiB} MiB] RAM is required for [{node.Role}] nodes.");
+                    throw new KubeDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [RAM={vmCaps.RamMiB} MiB] which is too small.  At least [{minRamMiB} MiB] RAM is required for [{node.Role}] nodes.");
                 }
 
                 if (vmCaps.MaxNics < minNics)
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [MaxNics={vmCaps.MaxNics}] which is too small.  At least [{minNics}] network interfaces are required for [{node.Role}] nodes.");
+                    throw new KubeDefinitionException($"Node [{node.Name}] specifies Azure [VM={node.Azure.VmSize}] with [MaxNics={vmCaps.MaxNics}] which is too small.  At least [{minNics}] network interfaces are required for [{node.Role}] nodes.");
                 }
             }
         }
@@ -646,12 +646,12 @@ namespace Neon.Kube
 
                 if (!subnet.Contains(nodeAddress))
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which is not within the [{subnet}] subnet assigned to the hive.");
+                    throw new KubeDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which is not within the [{subnet}] subnet assigned to the hive.");
                 }
 
                 if (allocatedAddresses.Contains(nodeAddress.ToString()))
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which conflicts with reserved Azure addresses (the first 4 and last addresses in the [{subnet}] subnet) or with another node.");
+                    throw new KubeDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which conflicts with reserved Azure addresses (the first 4 and last addresses in the [{subnet}] subnet) or with another node.");
                 }
 
                 allocatedAddresses.Add(nodeAddress.ToString());
@@ -672,7 +672,7 @@ namespace Neon.Kube
                 {
                     if (NetHelper.AddressEquals(nextAddress, lastAddress))
                     {
-                        throw new ClusterDefinitionException($"Cannot fit [{hive.Definition.Nodes.Count()}] nodes into the [{subnet}] subnet on Azure.  You need to expand the subnet.");
+                        throw new KubeDefinitionException($"Cannot fit [{hive.Definition.Nodes.Count()}] nodes into the [{subnet}] subnet on Azure.  You need to expand the subnet.");
                     }
 
                     if (!allocatedAddresses.Contains(nextAddress.ToString()))
@@ -1109,10 +1109,10 @@ namespace Neon.Kube
 
                 var lbManagerCreator = 
                     lbDefManager
-                        .DefineLoadBalancingRule($"neon-unused-tcp-{ClusterHostPorts.ReservedUnused}")
+                        .DefineLoadBalancingRule($"neon-unused-tcp-{KubeHostPorts.ReservedUnused}")
                             .WithProtocol(TransportProtocol.Tcp)
                             .FromFrontend(feConfigName)
-                            .FromFrontendPort(ClusterHostPorts.ReservedUnused)
+                            .FromFrontendPort(KubeHostPorts.ReservedUnused)
                             .ToBackend(bePoolName)
                             .WithProbe(probeName)
                             .WithIdleTimeoutInMinutes(5)
@@ -1212,10 +1212,10 @@ namespace Neon.Kube
 
                     lbNodeCreator = 
                         lbDefNode
-                            .DefineLoadBalancingRule($"neon-unused-tcp-{ClusterHostPorts.ReservedUnused}")
+                            .DefineLoadBalancingRule($"neon-unused-tcp-{KubeHostPorts.ReservedUnused}")
                                 .WithProtocol(TransportProtocol.Tcp)
                                 .FromFrontend(feConfigName)
-                                .FromFrontendPort(ClusterHostPorts.ReservedUnused)
+                                .FromFrontendPort(KubeHostPorts.ReservedUnused)
                                 .ToBackend(bePoolName)
                                 .WithProbe(probeName)
                                 .WithIdleTimeoutInMinutes(5)
@@ -1247,7 +1247,7 @@ namespace Neon.Kube
                     // and HAProxy handles internal hive fail-over.
 
                     .DefineTcpProbe(probeName)
-                        .WithPort(ClusterHostPorts.ProxyPublicHttp)
+                        .WithPort(KubeHostPorts.ReservedUnused)     // $todo(jeff.lill): This port isn't going to work
                         .WithIntervalInSeconds(5)
                         .WithNumberOfProbes(2)
                         .Attach()

@@ -63,7 +63,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                hive;
+        private KubeProxy                hive;
         private string                      logFolder;
         private List<XenClient>             xenHosts;
         private SetupController<XenClient>  controller;
@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public XenServerHostingManager(ClusterProxy hive, string logFolder = null)
+        public XenServerHostingManager(KubeProxy hive, string logFolder = null)
         {
             this.hive                = hive;
             this.hive.HostingManager = this;
@@ -113,7 +113,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(ClusterDefinition clusterDefinition)
+        public override void Validate(KubeDefinition clusterDefinition)
         {
         }
 

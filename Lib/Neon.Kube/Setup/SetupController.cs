@@ -855,7 +855,7 @@ namespace Neon.Kube
         {
             if (error)
             {
-                throw new ClusterException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
+                throw new KubeException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
             }
         }
     }

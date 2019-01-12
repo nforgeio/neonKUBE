@@ -37,7 +37,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="clusterDefinition">The hive definition.</param>
-        public static void CheckManager(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckManager(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsManager);
@@ -53,11 +53,6 @@ namespace NeonCli
                 CheckDocker(node, clusterDefinition);
             }
 
-            if (!node.IsFaulted)
-            {
-                CheckConsul(node, clusterDefinition);
-            }
-
             node.Status = "healthy";
         }
 
@@ -66,7 +61,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The server node.</param>
         /// <param name="clusterDefinition">The hive definition.</param>
-        public static void CheckWorkersOrPet(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckWorkersOrPet(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsWorker);
@@ -82,55 +77,7 @@ namespace NeonCli
                 CheckDocker(node, clusterDefinition);
             }
 
-            if (!node.IsFaulted)
-            {
-                CheckConsul(node, clusterDefinition);
-            }
-
             node.Status = "healthy";
-        }
-
-        /// <summary>
-        /// Verifies the hive log service health.
-        /// </summary>
-        /// <param name="hive">The hive proxy.</param>
-        public static void CheckLogServices(ClusterProxy hive)
-        {
-            if (!hive.Definition.Log.Enabled)
-            {
-                return;
-            }
-
-            CheckLogEsDataService(hive);
-            CheckLogCollectorService(hive);
-            CheckLogKibanaService(hive);
-        }
-
-        /// <summary>
-        /// Verifies the log collector service health.
-        /// </summary>
-        /// <param name="hive">The hive proxy.</param>
-        private static void CheckLogCollectorService(ClusterProxy hive)
-        {
-            // $todo(jeff.lill): Implement this.
-        }
-
-        /// <summary>
-        /// Verifies the log Elasticsearch hive health.
-        /// </summary>
-        /// <param name="hive">The hive proxy.</param>
-        private static void CheckLogEsDataService(ClusterProxy hive)
-        {
-            // $todo(jeff.lill): Implement this.
-        }
-
-        /// <summary>
-        /// Verifies the log Kibana service health.
-        /// </summary>
-        /// <param name="hive">The hive proxy.</param>
-        private static void CheckLogKibanaService(ClusterProxy hive)
-        {
-            // $todo(jeff.lill): Implement this.
         }
 
         /// <summary>
@@ -138,7 +85,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="clusterDefinition">The hive definition.</param>
-        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
@@ -230,7 +177,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="clusterDefinition">The hive definition.</param>
-        private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
@@ -309,7 +256,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target hive node.</param>
         /// <param name="clusterDefinition">The hive definition.</param>
-        private static void CheckDocker(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckDocker(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
         {
             node.Status = "checking: docker";
 
@@ -320,38 +267,6 @@ namespace NeonCli
             if (response.ExitCode != 0)
             {
                 node.Fault($"Docker: {response.AllText}");
-            }
-        }
-
-        /// <summary>
-        /// Verifies Consul health.
-        /// </summary>
-        /// <param name="node">The manager node.</param>
-        /// <param name="clusterDefinition">The hive definition.</param>
-        private static void CheckConsul(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
-        {
-            node.Status = "checking: consul";
-
-            // Verify that the daemon is running.
-
-            switch (Program.ServiceManager)
-            {
-                case ServiceManager.Systemd:
-
-                    {
-                        var output = node.SudoCommand("systemctl status consul", RunOptions.LogOutput).OutputText;
-
-                        if (!output.Contains("Active: active (running)"))
-                        {
-                            node.Fault($"Consul deamon is not running.");
-                            return;
-                        }
-                    }
-                    break;
-
-                default:
-
-                    throw new NotImplementedException();
             }
         }
     }

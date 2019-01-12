@@ -17,7 +17,7 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Used internally by neonHIVE as a potentially temporary
+    /// <b>INTERNAL USE ONLY:</b> Used internally by neonKUBE as a potentially temporary
     /// hack required by <see cref="SetupController{NodeMetadata}"/> to display XenServer
     /// provisioning status.  This may be removed at some point in the future.
     /// </summary>

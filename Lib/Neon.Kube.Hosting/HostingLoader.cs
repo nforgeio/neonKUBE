@@ -41,8 +41,8 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Loads the known hive hosting manager assemblies so they'll be available
-        /// to <see cref="HostingManagerFactory.GetManager(ClusterProxy, string)"/>, 
-        /// and <see cref="HostingManager.Validate(ClusterDefinition)"/> when
+        /// to <see cref="HostingManagerFactory.GetManager(KubeProxy, string)"/>, 
+        /// and <see cref="HostingManager.Validate(KubeDefinition)"/> when
         /// they are called.
         /// </para>
         /// <note>
@@ -50,7 +50,7 @@ namespace Neon.Kube
         /// will be ignored.
         /// </note>
         /// </summary>
-        /// <exception cref="ClusterException">Thrown if multiple managers implement support for the same hosting environment.</exception>
+        /// <exception cref="KubeException">Thrown if multiple managers implement support for the same hosting environment.</exception>
         public static void Initialize()
         {
             lock (syncLock)
@@ -112,7 +112,7 @@ namespace Neon.Kube
                             {
                                 if (environmentToHostingManager.TryGetValue(providerAttribute.Environment, out var existingProviderType))
                                 {
-                                    throw new ClusterException($"Hosting provider types [{existingProviderType.FullName}] and [{type.FullName}] cannot both implement the [{providerAttribute.Environment}] hosting environment.");
+                                    throw new KubeException($"Hosting provider types [{existingProviderType.FullName}] and [{type.FullName}] cannot both implement the [{providerAttribute.Environment}] hosting environment.");
                                 }
                             }
 
@@ -167,7 +167,7 @@ namespace Neon.Kube
         /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
         /// could be located for the specified hive environment.
         /// </returns>
-        public HostingManager GetManager(ClusterProxy hive, string logFolder = null)
+        public HostingManager GetManager(KubeProxy hive, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");

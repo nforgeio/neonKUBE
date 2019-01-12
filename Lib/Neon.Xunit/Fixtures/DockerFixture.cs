@@ -32,7 +32,7 @@ namespace Neon.Xunit
     /// <b>IMPORTANT:</b> The Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
     /// support parallel test execution because fixtures may impact global machine state
     /// like starting a Couchbase Docker container, modifying the local DNS <b>hosts</b>
-    /// file or managing a Docker Swarm or neonHIVE.
+    /// file or managing a Docker Swarm or neonKUBE.
     /// </para>
     /// <para>
     /// You should explicitly disable parallel execution in all test assemblies that
@@ -572,7 +572,7 @@ namespace Neon.Xunit
         /// This method is defined as <c>virtual</c> so that derived classes
         /// can modify how Docker is called.  For example, the <c>HiveFixture</c>
         /// class implemented in another assembly will override this to run
-        /// the <b>docker</b> within a neonHIVE using <b>neon-cli</b>.
+        /// the <b>docker</b> within a neonKUBE using <b>neon-cli</b>.
         /// </note>
         /// </remarks>
         public virtual ExecuteResult DockerExecute(params object[] args)
@@ -597,7 +597,7 @@ namespace Neon.Xunit
         /// This method is defined as <c>virtual</c> so that derived classes
         /// can modify how Docker is called.  For example, the <c>HiveFixture</c>
         /// class implemented in another assembly will override this to run
-        /// the <b>docker</b> within a neonHIVE using <b>neon-cli</b>.
+        /// the <b>docker</b> within a neonKUBE using <b>neon-cli</b>.
         /// </note>
         /// </remarks>
         public virtual ExecuteResult DockerExecute(string argString)
@@ -846,7 +846,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm services.
         /// </summary>
-        /// <param name="includeSystem">Optionally include core built-in neonHIVE services whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonKUBE services whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ServiceInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<ServiceInfo> ListServices(bool includeSystem = false)
@@ -871,7 +871,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonHIVE services.
+                        continue;   // Ignore built-in neonKUBE services.
                     }
 
                     services.Add(
@@ -1016,9 +1016,9 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all deployed services.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove core neonHIVE services as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonKUBE services as well.</param>
         /// <remarks>
-        /// By default, this method will not remove core neonHIVE services
+        /// By default, this method will not remove core neonKUBE services
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1092,7 +1092,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current Docker containers.
         /// </summary>
-        /// <param name="includeSystem">Optionally include core built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonKUBE containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ContainerInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<ContainerInfo> ListContainers(bool includeSystem = false)
@@ -1116,7 +1116,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonHIVE containers.
+                        continue;   // Ignore built-in neonKUBE containers.
                     }
 
                     containers.Add(
@@ -1163,9 +1163,9 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all running containers.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove core neonHIVE containers as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonKUBE containers as well.</param>
         /// <remarks>
-        /// By default, this method will not remove core neonHIVE containers
+        /// By default, this method will not remove core neonKUBE containers
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1286,7 +1286,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm stacks.
         /// </summary>
-        /// <param name="includeSystem">Optionally include core built-in neonHIVE stacks whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonKUBE stacks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="StackInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<StackInfo> ListStacks(bool includeSystem = false)
@@ -1310,7 +1310,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonHIVE stacks.
+                        continue;   // Ignore built-in neonKUBE stacks.
                     }
 
                     stacks.Add(
@@ -1354,9 +1354,9 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all deployed stacks.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove core neonHIVE stacks as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonKUBE stacks as well.</param>
         /// <remarks>
-        /// By default, this method will not remove core neonHIVE stacks
+        /// By default, this method will not remove core neonKUBE stacks
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1441,7 +1441,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm secrets.
         /// </summary>
-        /// <param name="includeSystem">Optionally include core built-in neonHIVE secrets whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonKUBE secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="SecretInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<SecretInfo> ListSecrets(bool includeSystem = false)
@@ -1465,7 +1465,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonHIVE secrets.
+                        continue;   // Ignore built-in neonKUBE secrets.
                     }
 
                     secrets.Add(
@@ -1505,9 +1505,9 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all swarm secrets.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove core neonHIVE secrets as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonKUBE secrets as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonHIVE neonHIVE secrets
+        /// By default, this method will not remove neonKUBE neonKUBE secrets
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1592,7 +1592,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm configs.
         /// </summary>
-        /// <param name="includeSystem">Optionally include core built-in neonHIVE configs whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonKUBE configs whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ConfigInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<ConfigInfo> ListConfigs(bool includeSystem = false)
@@ -1616,7 +1616,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonHIVE configs.
+                        continue;   // Ignore built-in neonKUBE configs.
                     }
 
                     configs.Add(
@@ -1656,9 +1656,9 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all swarm configs.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove core neonHIVE configs as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonKUBE configs as well.</param>
         /// <remarks>
-        /// By default, this method will not remove core neonHIVE configs
+        /// By default, this method will not remove core neonKUBE configs
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1705,7 +1705,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm networks.
         /// </summary>
-        /// <param name="includeSystem">Optionally include core built-in neonHIVE networks whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include core built-in neonKUBE networks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="NetworkInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <remarks>
@@ -1741,7 +1741,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonHIVE networks.
+                        continue;   // Ignore built-in neonKUBE networks.
                     }
 
                     networks.Add(
@@ -1794,9 +1794,9 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all swarm networks.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove core neonHIVE networks as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonKUBE networks as well.</param>
         /// <remarks>
-        /// By default, this method will not remove core neonHIVE networks
+        /// By default, this method will not remove core neonKUBE networks
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
@@ -1821,9 +1821,9 @@ namespace Neon.Xunit
         /// <summary>
         /// Removes all hive volumes.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove core neonHIVE volumes as well.</param>
+        /// <param name="removeSystem">Optionally remove core neonKUBE volumes as well.</param>
         /// <remarks>
-        /// By default, this method will not remove core neonHIVE volumes
+        /// By default, this method will not remove core neonKUBE volumes
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>

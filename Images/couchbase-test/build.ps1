@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the neonHIVE Couchbase base images.
+# Builds the neonKUBE Couchbase base images.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 

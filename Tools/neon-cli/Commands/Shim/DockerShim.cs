@@ -42,7 +42,7 @@ namespace NeonCli
 
             this.CommandLine = commandLine;
 
-            // We're going to the shim folder within the root [neonhive] folder within
+            // We're going to locate the shim folder within the root [neonkube] folder within
             // the user's home directory.  The root directory is encrypted for Windows and is
             // hopefully encrypted for Linux and OSX.  Encryption is advisable because we may
             // map be passing confidential information into the container.
@@ -50,14 +50,14 @@ namespace NeonCli
             // Note that we're also generating a unique folder name so that multiple commands
             // may be running in parallel.
 
-            ShimExternalFolder = Path.Combine(Program.HiveTempFolder, $"shim-{Guid.NewGuid().ToString("D")}");
+            ShimExternalFolder = Path.Combine(KubeHelper.TempFolder, $"shim-{Guid.NewGuid().ToString("D")}");
 
             Directory.CreateDirectory(ShimExternalFolder);
 
             // Write the original command line to a special shim file so the [neon-cli]
             // in the container can display the command line the operator specified.
 
-            File.WriteAllText(Path.Combine(ShimExternalFolder, "__shim.org"), Program.SafeCommandLine);
+            File.WriteAllText(Path.Combine(ShimExternalFolder, "__shim.org"), Program.CommandLine.ToString());
         }
 
         /// <summary>

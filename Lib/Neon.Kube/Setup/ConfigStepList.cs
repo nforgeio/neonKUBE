@@ -18,7 +18,7 @@ namespace Neon.Kube
 {
     /// <summary>
     /// Implements a list of <see cref="ConfigStep"/>s to be performed
-    /// on a neonHIVE.
+    /// on a neonKUBE.
     /// </summary>
     public class ConfigStepList : List<ConfigStep>
     {

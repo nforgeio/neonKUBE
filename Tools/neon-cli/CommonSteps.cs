@@ -159,7 +159,7 @@ TCPKeepAlive yes
         /// </summary>
         /// <param name="node">The server to be updated.</param>
         /// <param name="clusterDefinition">The hive definition.</param>
-        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
         {
             node.Status = "environment variables";
 
@@ -185,9 +185,9 @@ TCPKeepAlive yes
                     {
                         if (line.StartsWith("PATH="))
                         {
-                            if (!line.Contains(ClusterHostFolders.Tools))
+                            if (!line.Contains(KubeHostFolders.Tools))
                             {
-                                sb.AppendLine(line + $":{ClusterHostFolders.Tools}");
+                                sb.AppendLine(line + $":{KubeHostFolders.Tools}");
                             }
                             else
                             {
@@ -202,7 +202,7 @@ TCPKeepAlive yes
                 }
             }
 
-            // Add the global neonHIVE related environment variables. 
+            // Add the global neonKUBE related environment variables. 
 
             sb.AppendLine($"NEON_HIVE_PROVISIONER={clusterDefinition.Provisioner}");
             sb.AppendLine($"NEON_HIVE={clusterDefinition.Name}");
@@ -232,17 +232,17 @@ TCPKeepAlive yes
             }
 
             sb.AppendLine($"NEON_UPSTREAM_DNS=\"{sbNameservers}\"");
-            sb.AppendLine($"NEON_ARCHIVE_FOLDER={ClusterHostFolders.Archive}");
-            sb.AppendLine($"NEON_BIN_FOLDER={ClusterHostFolders.Bin}");
-            sb.AppendLine($"NEON_CONFIG_FOLDER={ClusterHostFolders.Config}");
-            sb.AppendLine($"NEON_EXEC_FOLDER={ClusterHostFolders.Exec}");
-            sb.AppendLine($"NEON_SCRIPTS_FOLDER={ClusterHostFolders.Scripts}");
-            sb.AppendLine($"NEON_SECRETS_FOLDER={ClusterHostFolders.Secrets}");
-            sb.AppendLine($"NEON_SETUP_FOLDER={ClusterHostFolders.Setup}");
-            sb.AppendLine($"NEON_SOURCE_FOLDER={ClusterHostFolders.Source}");
-            sb.AppendLine($"NEON_STATE_FOLDER={ClusterHostFolders.State}");
-            sb.AppendLine($"NEON_TMPFS_FOLDER={ClusterHostFolders.Tmpfs}");
-            sb.AppendLine($"NEON_TOOLS_FOLDER={ClusterHostFolders.Tools}");
+            sb.AppendLine($"NEON_ARCHIVE_FOLDER={KubeHostFolders.Archive}");
+            sb.AppendLine($"NEON_BIN_FOLDER={KubeHostFolders.Bin}");
+            sb.AppendLine($"NEON_CONFIG_FOLDER={KubeHostFolders.Config}");
+            sb.AppendLine($"NEON_EXEC_FOLDER={KubeHostFolders.Exec}");
+            sb.AppendLine($"NEON_SCRIPTS_FOLDER={KubeHostFolders.Scripts}");
+            sb.AppendLine($"NEON_SECRETS_FOLDER={KubeHostFolders.Secrets}");
+            sb.AppendLine($"NEON_SETUP_FOLDER={KubeHostFolders.Setup}");
+            sb.AppendLine($"NEON_SOURCE_FOLDER={KubeHostFolders.Source}");
+            sb.AppendLine($"NEON_STATE_FOLDER={KubeHostFolders.State}");
+            sb.AppendLine($"NEON_TMPFS_FOLDER={KubeHostFolders.Tmpfs}");
+            sb.AppendLine($"NEON_TOOLS_FOLDER={KubeHostFolders.Tools}");
 
             // Upload the new environment to the server.
 
@@ -251,14 +251,14 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Initializes a near virgin server with the basic capabilities required
-        /// for a neonHIVE host node.
+        /// for a neonKUBE host node.
         /// </summary>
         /// <param name="node">The target hive node.</param>
         /// <param name="clusterDefinition">The hive definition.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, bool shutdown = false)
+        public static void PrepareNode(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition, bool shutdown = false)
         {
-            if (node.FileExists($"{ClusterHostFolders.State}/setup/prepared"))
+            if (node.FileExists($"{KubeHostFolders.State}/setup/prepared"))
             {
                 return;     // Already prepared
             }
@@ -329,7 +329,7 @@ TCPKeepAlive yes
 
             // Indicate that the node has been fully prepared.
 
-            node.SudoCommand($"touch {ClusterHostFolders.State}/setup/prepared");
+            node.SudoCommand($"touch {KubeHostFolders.State}/setup/prepared");
 
             // Shutdown the node if requested.
 

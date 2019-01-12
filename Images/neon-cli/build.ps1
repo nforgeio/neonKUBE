@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the neonHIVE [neon-cli] image.
+# Builds the neonKUBE [neon-cli] image.
 #
 # Usage: powershell -file build.ps1 [-latest]
 #

@@ -38,7 +38,7 @@ namespace NeonCli
         /// <summary>
         /// Use this argument to specify the target image in a <b>docker service create ...</b>
         /// or <b>docker run ...</b> command that will eventually be passed to one of 
-        /// <see cref="StartService(ClusterProxy, string, string, IBashCommandFormatter, RunOptions)"/> or 
+        /// <see cref="StartService(KubeProxy, string, string, IBashCommandFormatter, RunOptions)"/> or 
         /// <see cref="StartContainer(SshProxy{NodeDefinition}, string, string, RunOptions, IBashCommandFormatter[])"/> so
         /// those methods can generate a more useful script that includes a parameter
         /// so that images and services can be easily upgraded.
@@ -51,7 +51,7 @@ namespace NeonCli
         public const string ParamSectionMarker = "# === GENERATED SCRIPT SECTION: DO NOT MODIFY ===";
 
         /// <summary>
-        /// Generates the script used to start a neonHIVE related service or container.
+        /// Generates the script used to start a neonKUBE related service or container.
         /// </summary>
         /// <param name="serviceName">Identifies the service.</param>
         /// <param name="pullImage">Indicates whether the image should be pulled before executing the commands.</param>
@@ -119,7 +119,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Starts a neonHIVE related Docker service and also uploads a script to the 
+        /// Starts a neonKUBE related Docker service and also uploads a script to the 
         /// hive managers to make it easy to restart the service manually or for hive
         /// updates.
         /// </summary>
@@ -151,11 +151,11 @@ namespace NeonCli
         ///     Starts the service.
         ///     </item>
         ///     <item>
-        ///     Uploads the generated script to each hive manager to [<see cref="ClusterHostFolders.Scripts"/>/<paramref name="serviceName"/>.sh].
+        ///     Uploads the generated script to each hive manager to [<see cref="KubeHostFolders.Scripts"/>/<paramref name="serviceName"/>.sh].
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void StartService(ClusterProxy hive, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void StartService(KubeProxy hive, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(serviceName));
@@ -172,7 +172,7 @@ namespace NeonCli
 
             // Upload the script to each of the manager nodes and set permissions.
 
-            var scriptPath = LinuxPath.Combine(ClusterHostFolders.Scripts, $"{serviceName}.sh");
+            var scriptPath = LinuxPath.Combine(KubeHostFolders.Scripts, $"{serviceName}.sh");
 
             foreach (var manager in hive.Managers)
             {
@@ -197,7 +197,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Appends the steps required to start a neonHIVE related Docker service and upload
+        /// Appends the steps required to start a neonKUBE related Docker service and upload
         /// a script to the hive managers to make it easy to restart the service manually or 
         /// for hive updates.
         /// </summary>
@@ -230,11 +230,11 @@ namespace NeonCli
         ///     Starts the service.
         ///     </item>
         ///     <item>
-        ///     Uploads the generated script to each hive manager to [<see cref="ClusterHostFolders.Scripts"/>/<paramref name="serviceName"/>.sh].
+        ///     Uploads the generated script to each hive manager to [<see cref="KubeHostFolders.Scripts"/>/<paramref name="serviceName"/>.sh].
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void AddServiceStartSteps(ClusterProxy hive, ConfigStepList steps, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void AddServiceStartSteps(KubeProxy hive, ConfigStepList steps, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(steps != null);
@@ -249,14 +249,14 @@ namespace NeonCli
             // Add steps to upload the script to the managers and then call the script 
             // to create the service on the first manager.
 
-            var scriptPath = LinuxPath.Combine(ClusterHostFolders.Scripts, $"{serviceName}.sh");
+            var scriptPath = LinuxPath.Combine(KubeHostFolders.Scripts, $"{serviceName}.sh");
 
             steps.Add(hive.GetFileUploadSteps(hive.Managers, scriptPath, script, permissions: "740"));
             steps.Add(CommandStep.CreateIdempotentDocker(hive.FirstManager.Name, $"setup/{serviceName}", scriptPath));
         }
 
         /// <summary>
-        /// Starts a neonHIVE related Docker container on a node and also uploads a script 
+        /// Starts a neonKUBE related Docker container on a node and also uploads a script 
         /// to make it easy to restart the container manually or for hive updates.
         /// </summary>
         /// <param name="node">The target hive node.</param>
@@ -287,7 +287,7 @@ namespace NeonCli
         ///     Starts the container.
         ///     </item>
         ///     <item>
-        ///     Uploads the generated script to the node to [<see cref="ClusterHostFolders.Scripts"/>/<paramref name="containerName"/>.sh].
+        ///     Uploads the generated script to the node to [<see cref="KubeHostFolders.Scripts"/>/<paramref name="containerName"/>.sh].
         ///     </item>
         /// </list>
         /// </remarks>
@@ -307,7 +307,7 @@ namespace NeonCli
 
             // Upload the script to the target node and set permissions.
 
-            var scriptPath = LinuxPath.Combine(ClusterHostFolders.Scripts, $"{containerName}.sh");
+            var scriptPath = LinuxPath.Combine(KubeHostFolders.Scripts, $"{containerName}.sh");
 
             node.UploadText(scriptPath, script);
             node.SudoCommand($"chmod 740 {scriptPath}");
@@ -320,7 +320,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Appends the steps required to start a neonHIVE related Docker container and upload
+        /// Appends the steps required to start a neonKUBE related Docker container and upload
         /// a script to the hive managers to make it easy to restart the service manually or 
         /// for hive updates.
         /// </summary>
@@ -355,11 +355,11 @@ namespace NeonCli
         ///     Starts the service.
         ///     </item>
         ///     <item>
-        ///     Uploads the generated script to each hive manager to [<see cref="ClusterHostFolders.Scripts"/>/<paramref name="containerName"/>.sh].
+        ///     Uploads the generated script to each hive manager to [<see cref="KubeHostFolders.Scripts"/>/<paramref name="containerName"/>.sh].
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void AddContainerStartSteps(ClusterProxy hive, ConfigStepList steps, SshProxy<NodeDefinition> node, string containerName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void AddContainerStartSteps(KubeProxy hive, ConfigStepList steps, SshProxy<NodeDefinition> node, string containerName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
             Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentNullException>(steps != null);
@@ -374,7 +374,7 @@ namespace NeonCli
             // Add steps to upload the script to the managers and then call the script 
             // to create the container on the target node.
 
-            var scriptPath = LinuxPath.Combine(ClusterHostFolders.Scripts, $"{containerName}.sh");
+            var scriptPath = LinuxPath.Combine(KubeHostFolders.Scripts, $"{containerName}.sh");
 
             steps.Add(hive.GetFileUploadSteps(node, scriptPath, script, permissions: "740"));
             steps.Add(CommandStep.CreateIdempotentDocker(node.Name, $"setup/{containerName}", scriptPath));

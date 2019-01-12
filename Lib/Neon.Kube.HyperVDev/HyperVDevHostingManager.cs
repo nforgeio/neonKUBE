@@ -79,9 +79,9 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members.
 
-        private const string defaultSwitchName = "neonHIVE";
+        private const string defaultSwitchName = "neonKUBE";
 
-        private ClusterProxy                       hive;
+        private KubeProxy                       hive;
         private SetupController<NodeDefinition> controller;
         private bool                            forceVmOverwrite;
         private string                          driveTemplatePath;
@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVDevHostingManager(ClusterProxy hive, string logFolder = null)
+        public HyperVDevHostingManager(KubeProxy hive, string logFolder = null)
         {
             hive.HostingManager = this;
 
@@ -119,7 +119,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(ClusterDefinition clusterDefinition)
+        public override void Validate(KubeDefinition clusterDefinition)
         {
         }
 
@@ -162,7 +162,7 @@ namespace Neon.Kube
 
                 if (node.Labels.ComputeRamMB == 0)
                 {
-                    node.Labels.ComputeRamMB = (int)(ClusterDefinition.ValidateSize(hive.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
+                    node.Labels.ComputeRamMB = (int)(KubeDefinition.ValidateSize(hive.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
                 }
 
                 if (node.Labels.StorageCapacityGB == 0)
@@ -321,9 +321,9 @@ namespace Neon.Kube
             var driveTemplateUri  = new Uri(hive.Definition.Hosting.LocalHyperV.HostVhdxUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
-            driveTemplatePath = Path.Combine(ClusterHelper.GetVmTemplatesFolder(), driveTemplateName);
+            driveTemplatePath = Path.Combine(KubeHelper.GetVmTemplatesFolder(), driveTemplateName);
 
-            var driveTemplateInfoPath  = Path.Combine(ClusterHelper.GetVmTemplatesFolder(), driveTemplateName + ".info");
+            var driveTemplateInfoPath  = Path.Combine(KubeHelper.GetVmTemplatesFolder(), driveTemplateName + ".info");
             var driveTemplateIsCurrent = true;
             var driveTemplateInfo      = (DriveTemplateInfo)null;
 
@@ -445,7 +445,7 @@ namespace Neon.Kube
 
             using (var hyperv = new HyperVClient())
             {
-                // We're going to create the [neonHIVE] external switch if there
+                // We're going to create the [neonKUBE] external switch if there
                 // isn't already an external switch.
 
                 controller.SetOperationStatus("Scanning network adapters");

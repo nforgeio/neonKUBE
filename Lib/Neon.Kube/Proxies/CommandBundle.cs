@@ -24,7 +24,7 @@ namespace Neon.Kube
     /// <para>
     /// This class is intended for use with the <see cref="SshProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/>
     /// and  <see cref="SshProxy{TMetadata}.SudoCommand(CommandBundle, RunOptions)"/> methods for situations where
-    /// one or more files need to be uploaded to a neonHIVE host node and be used when a command is executed.
+    /// one or more files need to be uploaded to a neonKUBE host node and be used when a command is executed.
     /// </para>
     /// <para>
     /// A good example of this is performing a <b>docker stack</b> command on the cluster.  In this case, we need to

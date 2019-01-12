@@ -61,33 +61,8 @@
     <None Include="aspnet\README.md" />
     <None Include="aspnet\resolv.conf.head.sh" />
     <None Include="dotnet\resolv.conf.head.sh" />
-    <Content Include="kong\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="kong\build.ps1" />
-    <None Include="kong\docker-entrypoint.sh" />
-    <None Include="kong\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="kong\publish.ps1" />
-    <None Include="kong\README.md" />
     <None Include="neon-cli\conf\ssh_config.conf" />
     <Content Include="neon-cli\modules\docker_stack.py" />
-    <Content Include="neon-hive-manager\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="elasticsearch\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="elasticsearch\build.ps1" />
-    <None Include="elasticsearch\config\elasticsearch.yml.sh" />
-    <None Include="elasticsearch\config\log4j2.properties" />
-    <None Include="elasticsearch\docker-entrypoint.sh" />
-    <None Include="elasticsearch\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="elasticsearch\publish.ps1" />
-    <None Include="elasticsearch\README.md" />
     <Content Include="golang\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -113,19 +88,6 @@
     <None Include="neon-cli\modules\neon_docker_service.sh" />
     <None Include="neon-cli\modules\neon_docker_login.sh" />
     <None Include="neon-cli\modules\neon_traffic_manager.sh" />
-    <None Include="neon-hive-manager\build.ps1" />
-    <None Include="neon-hive-manager\docker-entrypoint.sh" />
-    <None Include="neon-hive-manager\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-hive-manager\publish.ps1" />
-    <None Include="neon-hive-manager\README.md" />
-    <Content Include="neon-dns\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="neon-dns-mon\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="couchbase-test\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -133,81 +95,8 @@
     <None Include="couchbase-test\entrypoint.sh" />
     <None Include="couchbase-test\publish.ps1" />
     <None Include="couchbase-test\README.md" />
-    <None Include="neon-dns-mon\build.ps1" />
-    <None Include="neon-dns-mon\docker-entrypoint.sh" />
-    <None Include="neon-dns-mon\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-dns-mon\publish.ps1" />
-    <None Include="neon-dns-mon\README.md" />
-    <None Include="neon-dns\build.ps1" />
-    <None Include="neon-dns\docker-entrypoint.sh" />
-    <None Include="neon-dns\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-dns\publish.ps1" />
-    <None Include="neon-dns\README.md" />
-    <None Include="neon-log-collector\geoip\MaxMind.readme" />
-    <Content Include="neon-proxy-cache\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-proxy-cache\scripts\vadm.sh" />
-    <None Include="neon-proxy-cache\scripts\vhist.sh" />
-    <None Include="neon-proxy-cache\scripts\vlog.sh" />
-    <None Include="neon-proxy-cache\scripts\vncsa.sh" />
-    <None Include="neon-proxy-cache\scripts\vstat.sh" />
-    <None Include="neon-proxy-cache\scripts\vtest.sh" />
-    <None Include="neon-proxy-cache\scripts\vtop.sh" />
-    <None Include="varnish\BUILD.md" />
-    <None Include="neon-proxy-cache\build.ps1" />
-    <None Include="neon-proxy-cache\docker-entrypoint.sh" />
-    <None Include="neon-proxy-cache\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-proxy-cache\publish.ps1" />
-    <None Include="neon-proxy-cache\README.md" />
-    <None Include="neon-hivemq\rabbitmq-entrypoint.sh" />
-    <None Include="neon-hivemq\set-cluster-name.sh" />
-    <Content Include="neon-secret-retriever\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-secret-retriever\build.ps1" />
-    <None Include="neon-secret-retriever\docker-entrypoint.sh" />
-    <None Include="neon-secret-retriever\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-secret-retriever\publish.ps1" />
-    <None Include="neon-secret-retriever\README.md" />
-    <Content Include="neon-hivemq\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-hivemq\build.ps1" />
-    <None Include="neon-hivemq\docker-entrypoint.sh" />
-    <None Include="neon-hivemq\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-hivemq\publish.ps1" />
-    <None Include="neon-hivemq\README.md" />
-    <Content Include="rabbitmq-test\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="rabbitmq-test\build.ps1" />
-    <None Include="rabbitmq-test\docker-entrypoint.sh" />
-    <None Include="rabbitmq-test\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="rabbitmq-test\publish.ps1" />
-    <None Include="rabbitmq-test\rabbitmq-entrypoint.sh" />
-    <None Include="rabbitmq-test\README.md" />
     <None Include="test\docker-entrypoint.sh" />
     <None Include="test\Dockerfile" />
-    <Content Include="_artifacts\README.txt" />
-    <Content Include="haproxy\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="metricbeat\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="alpine\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -217,31 +106,6 @@
     </None>
     <None Include="alpine\publish.ps1" />
     <None Include="alpine\README.md" />
-    <None Include="metricbeat\build.ps1" />
-    <None Include="metricbeat\config\metricbeat.yml.sh" />
-    <None Include="metricbeat\docker-entrypoint.sh" />
-    <None Include="metricbeat\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="metricbeat\publish.ps1" />
-    <None Include="metricbeat\README.md" />
-    <None Include="neon-log-collector\plugin\filter_neon-docker.rb" />
-    <None Include="neon-log-collector\plugin\filter_neon-proxy-geoip.rb" />
-    <None Include="neon-log-collector\plugin\filter_neon-proxy.rb" />
-    <None Include="neon-log-collector\plugin\filter_neon-systemd.rb" />
-    <None Include="neon-log-collector\plugin\neon-common.rb" />
-    <None Include="neon-log-collector\logstash-template.json.sh" />
-    <Content Include="neon-registry-cache\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-registry-cache\build.ps1" />
-    <None Include="neon-registry-cache\docker-entrypoint.sh" />
-    <None Include="neon-registry-cache\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-registry-cache\publish.ps1" />
-    <None Include="neon-registry-cache\README.md" />
-    <None Include="neon-registry-cache\config\registry.yml.sh" />
     <Content Include="neon-cli\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -252,28 +116,6 @@
     </None>
     <None Include="neon-cli\publish.ps1" />
     <None Include="neon-cli\README.md" />
-    <Content Include="neon-registry\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-registry\build.ps1" />
-    <None Include="neon-registry\config\registry.yml.sh" />
-    <None Include="neon-registry\docker-entrypoint.sh" />
-    <None Include="neon-registry\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-registry\publish.ps1" />
-    <None Include="neon-registry\README.md" />
-    <Content Include="vegomatic\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="vegomatic\build.ps1" />
-    <None Include="vegomatic\docker-entrypoint.sh" />
-    <None Include="vegomatic\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="vegomatic\publish.ps1" />
-    <None Include="vegomatic\README.md" />
-    <None Include="td-agent\Dockerfile" />
     <Content Include="ubuntu-16.04-dotnet\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -302,33 +144,9 @@
     </None>
     <None Include="ubuntu-16.04-dotnet\publish.ps1" />
     <None Include="ubuntu-16.04-dotnet\README.md" />
-    <Content Include="varnish\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="varnish-builder\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="varnish-builder\build.ps1" />
-    <None Include="varnish-builder\docker-entrypoint.sh" />
-    <None Include="varnish-builder\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="varnish-builder\publish.ps1" />
-    <None Include="varnish-builder\README.md" />
-    <None Include="varnish\build.ps1" />
-    <None Include="varnish\docker-entrypoint.sh" />
-    <None Include="varnish\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="varnish\publish.ps1" />
-    <None Include="varnish\README.md" />
     <None Include="_common\log-debug.sh" />
     <None Include="_common\log-critical.sh" />
     <None Include="_common\log-info.sh" />
-    <None Include="_artifacts\consul_0.7.1_linux_amd64.zip" />
-    <None Include="_artifacts\consul_latest_linux_amd64.zip" />
-    <None Include="_artifacts\vault_0.6.2_linux_amd64.zip" />
-    <None Include="_artifacts\vault_current_linux_amd64.zip" />
     <Content Include="dotnet\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -338,116 +156,13 @@
     </None>
     <None Include="dotnet\publish.ps1" />
     <None Include="dotnet\README.md" />
-    <Content Include="neon-proxy-manager\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="_common\log-error.sh" />
-    <None Include="neon-proxy-manager\build.ps1" />
-    <None Include="neon-proxy-manager\docker-entrypoint.sh" />
-    <None Include="neon-proxy-manager\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-proxy-manager\publish.ps1" />
-    <None Include="neon-proxy-manager\README.md" />
-    <None Include="neon-proxy\README.md" />
-    <None Include="haproxy\build.ps1" />
-    <None Include="haproxy\docker-entrypoint.sh" />
-    <None Include="haproxy\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="haproxy\publish.ps1" />
-    <None Include="haproxy\README.md" />
     <None Include="includes.ps1" />
-    <None Include="kibana\kibana.yml.sh" />
-    <None Include="kibana\README.md" />
-    <None Include="neon-proxy-vault\README.md" />
     <None Include="_common\log-index.sh" />
     <None Include="_common\log-serror.sh" />
     <None Include="_common\log-sinfo.sh" />
     <None Include="_common\log-warn.sh" />
-    <None Include="_common\neonhive.sh" />
-    <Content Include="neon-proxy\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-proxy\build.ps1" />
-    <None Include="neon-proxy\docker-entrypoint.sh" />
-    <None Include="neon-proxy\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-proxy\publish.ps1" />
-    <Content Include="node\program.js" />
-    <Content Include="td-agent\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="node\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="neon-proxy-vault\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-proxy-vault\build.ps1" />
-    <None Include="neon-proxy-vault\docker-entrypoint.sh" />
-    <None Include="neon-proxy-vault\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-proxy-vault\publish.ps1" />
-    <None Include="node\build.ps1" />
-    <None Include="node\docker-entrypoint.sh" />
-    <None Include="node\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="node\publish.ps1" />
-    <None Include="node\README.md" />
     <None Include="publish.ps1" />
-    <Content Include="neon-log-host\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="neon-log-collector\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-log-collector\build.ps1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-log-collector\docker-entrypoint.sh" />
-    <None Include="neon-log-collector\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-log-collector\publish.ps1" />
-    <None Include="neon-log-collector\td-agent.conf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-log-collector\README.md" />
-    <None Include="neon-log-host\build.ps1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-log-host\docker-entrypoint.sh" />
-    <None Include="neon-log-host\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-log-host\publish.ps1" />
-    <Content Include="neon-log-host\td-agent.conf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-log-host\README.md" />
-    <None Include="td-agent\build.ps1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Content Include="td-agent\td-agent.conf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="td-agent\publish.ps1" />
-    <None Include="td-agent\README.md" />
-    <Content Include="kibana\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="kibana\publish.ps1" />
-    <None Include="kibana\build.ps1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="kibana\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="kibana\docker-entrypoint.sh" />
     <Content Include="ubuntu-16.04\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

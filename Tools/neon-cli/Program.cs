@@ -35,25 +35,11 @@ namespace NeonCli
         private static DockerShim shim;     // $hack(jeff.lill): Exit() uses this to ensure that shim folders are deleted.
 
         /// <summary>
-        /// The actual program version.  This may be different from <see cref="Version"/>
+        /// The actual program version.  This may be different from <see cref="System.Version"/>
         /// if the <b>--version=VERSION</b> option was specified to force a specific
         /// version.
         /// </summary>
-        public const string ActualVersion  = "18.12.0-alpha.7";
-
-        /// <summary>
-        /// Returns the <b>neon-cli</b> version.  This may be different from <see cref="ActualVersion"/>
-        /// if the <b>--version=VERSION</b> option was specified to force a specific
-        /// </summary>
-        public static string Version { get; private set; } = ActualVersion;
-
-        /// <summary>
-        /// The minimum <b>neon-cli</b> version capable of managing a hive created
-        /// or updated by the current version of the tool.  This is persisted to the
-        /// hive.  <b>neon-cli</b> checks this to ensure that it is capable of
-        /// managing a hive or if it is too old.
-        /// </summary>
-        public const string MinimumVersion = "18.12.0-alpha.7";
+        public const string Version = "18.12.0-alpha.7";
     
         /// <summary>
         /// CURL command common options.
@@ -67,7 +53,7 @@ namespace NeonCli
         public static void Main(string[] args)
         {
             string usage = $@"
-Neon Hive Configuration Tool: neon [v{Program.Version}]
+Neon Kubernetes Tool: neon [v{Program.Version}]
 {Build.Copyright}
 
 USAGE:
@@ -78,108 +64,17 @@ COMMAND SUMMARY:
 
     neon help               COMMAND
 
-    neon ansible exec       ARGS
-    neon ansible galaxy     ARGS
-    neon ansible play       ARGS
-    neon ansible vault      ARGS
-    neon couchbase          CMD...
-    neon certificate|cert   CMD...
-    neon consul             ARGS
-    neon create cypher
-    neon create password    [--length=#]
-    neon create uuid
-    neon dashboard|dash     DASHBOARD
-    neon docker             -- CMD [ARGS]
-    neon download           SOURCE TARGET [NODE]
-    neon exec               BASH-CMD
-    neon file               create|decrypt|edit|encrypt|view PATH PASSWORD-NAME
-    neon folder             FOLDER
-    neon hive dns           ARGS
-    neon hive example
-    neon hive get           VALUE-EXPR
-    neon hive info
-    neon hive node          ARGS
-    neon hive prepare       [HIVE-DEF]
-    neon hive registry      ARGS
-    neon hive queue         CMD...
-    neon hive set           SETTING=VALUE
-    neon hive setup         [HIVE-DEF]
-    neon hive verify        [HIVE-DEF]
-    neon hive update        ARGS
-    neon login              [--no-vpn] USER@HIVE
-    neon login clean
-    neon login export       USER@HIVE
-    neon login import       PATH
-    neon login list
-    neon login ls
-    neon login remove       USER@HIVE
-    neon login rm           USER@HIVE
-    neon login status
-    neon reboot             NODE...
-    neon registry           CMD...
-    neon run                -- CMD...
-    neon scp                [NODE]
-    neon ssh                [NODE]
-    neon traffic            CMD...
-    neon validate           HIVE-DEF
     neon version            [-n] [-git]
-    neon upload             SOURCE TARGET [NODE...]
-    neon vault              ARGS
-    neon zip create         SOURCE ARCHIVE
-    neon zip extract        ARCHIVE FOLDER
 
 ARGUMENTS:
-
-    ARGS                - Command pass-thru arguments.
-    BASH-CMD            - Bash command.
-    HIVE                - Names the hive to be selected for subsequent
-                          operations.
-    CMD...              - Subcommand and arguments.
-    DASHBOARD           - Identifies a hive dashboard
-    FOLDER              - Identifies a neonHIVE folder
-    HIVE-DEF            - Path to a hive definition file.  This is
-                          optional for some commands when logged in.
-    LOGIN-PATH          - Path to a hive login file including the hive
-                          definition and user credentials.
-    NODE                - Identifies a hive node by name.
-    VALUE-EXPR          - A hive value expression.  See the command for
-                          more details.
-    SERVER1...          - IP addresses or FQDNs of target servers
-    SOURCE              - Path to a source file.
-    TARGET              - Path to a destination file.
-    USER                - Hive user name.
 
 OPTIONS:
 
     --help                              - Display help
-    --debug                             - Set debug mode
-    --image-reg=REGISTRY                - Overrides the default Docker Hub 
-                                          registry (""nhive"" or ""nhivedev"")
-                                          for images when deploying or updating a hive
-                                          (usually for development/testing purposes)
-    --image-tag=TAG                     - Replaces any [:latest] Docker image
-                                          tags when deploying or updating a hive
-                                          (usually for development/testing purposes)
-    --log-folder=LOG-FOLDER             - Optional log folder path
-    -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
-                                          configured in parallel [default=5]
-    --machine-password=PASSWORD         - Overrides default initial machine
-                                          password: sysadmin0000
-    --machine-username=USERNAME         - Overrides default initial machine
-                                          username: sysadmin
-    --noterminal                        - Disables the shimmed interactive terminal
-    --node=NODE                         - Some commands may be directed at
-                                          specific node(s)
     -q, --quiet                         - Disables operation progress
     --shim                              - Run the command in Docker if possible
-    --version=VERSION                   - Overrides the neon-cli version
-    -w=SECONDS, --wait=SECONDS          - Seconds to delay for hive
-                                          stablization (defaults to 60s).
-
-NOTE:
-
-Virtual machines provisioned to cloud environments like Azure and AWS will
-use a random password if [--machine-password] isn't explicitly set.
+    -w=SECONDS, --wait=SECONDS          - Seconds to delay for hive stablization 
+                                          (defaults to 60s).
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -194,7 +89,7 @@ use a random password if [--machine-password] isn't explicitly set.
             // that don't actually require elevated permissions.  We may wish to relax this
             // in the future.
 
-            if (!ClusterHelper.InToolContainer)
+            if (!KubeHelper.InToolContainer)
             {
                 if (NeonHelper.IsWindows)
                 {
@@ -212,23 +107,6 @@ use a random password if [--machine-password] isn't explicitly set.
                     throw new NotImplementedException("$todo(jeff.lill): Implement OSX elevated permissions check.");
                 }
             }
-
-            // Configure the encrypted user-specific application data folder and initialize
-            // the subfolders.
-
-            HiveRootFolder  = ClusterHelper.GetHiveUserFolder();
-            HiveLoginFolder = ClusterHelper.GetLoginFolder();
-            HiveSetupFolder = ClusterHelper.GetVmTemplatesFolder();
-            HiveTempFolder  = ClusterHelper.GetTempFolder();
-            CurrentHivePath = ClusterHelper.CurrentPath;
-
-            // We're going to special case the temp folder and locate this within the [/dev/shm] 
-            // tmpfs based RAM drive if we're running in the tool container.
-
-            HiveTempFolder  = ClusterHelper.InToolContainer ? "/dev/shm/temp" : HiveTempFolder;
-
-            Directory.CreateDirectory(HiveLoginFolder);
-            Directory.CreateDirectory(HiveTempFolder);
 
             // Ensure that all of the hive hosting manager implementations are loaded.
 
@@ -278,81 +156,10 @@ use a random password if [--machine-password] isn't explicitly set.
                     Program.Exit(0);
                 }
 
-                // $todo(jeff.lill): Implement new commands
-
                 var commands = new List<ICommand>()
                 {
-#if TODO
-                    new AnsibleCommand(),
-                    new CouchbaseCommand(),
-                    new CertificateCommand(),
-                    new ConsulCommand(),
-                    new CreateCommand(),
-                    new CreateCypherCommand(),
-                    new CreatePasswordCommand(),
-                    new CreateUuidCommand(),
-                    new DashboardCommand(),
-                    new DockerCommand(),
-                    new DownloadCommand(),
-                    new ExecCommand(),
-                    new FileCommand(),
-                    new FolderCommand(),
-                    new HiveCommand(),
-                    new HiveDnsCommand(),
-                    new HiveExampleCommand(),
-                    new HiveGetCommand(),
-                    new HiveInfoCommand(),
-                    new HiveNodeCommand(),
-                    new HivePrepareCommand(),
-                    new HiveRegistryCommand(),
-                    new HiveSetCommand(),
-                    new HiveSetupCommand(),
-                    new HiveUpdateCommand(),
-                    new HiveVerifyCommand(),
-                    new LoginCommand(),
-                    new LoginCleanCommand(),
-                    new LoginExportCommand(),
-                    new LoginImportCommand(),
-                    new LoginListCommand(),
-                    new LoginRemoveCommand(),
-                    new LoginStatusCommand(),
-                    new LogoutCommand(),
-                    new HiveMQCommand(),
-                    new RebootCommand(),
-                    new RegistryCommand(),
-                    new RunCommand(),
-                    new ScpCommand(),
-                    new SshCommand(),
-                    new TrafficCommand(),
-                    new UploadCommand(),
-                    new VaultCommand(),
-                    new VersionCommand(),
-                    new VpnCommand(),
-                    new ZipCommand()
-#endif
+                    new VersionCommand()
                 };
-
-                // Parse the [--version=VERSION] option.
-
-                Version = LeftCommandLine.GetOption("--version", ActualVersion);
-
-                var dashPos   = Version.IndexOf('-');
-                var versionOK = true;
-
-                if (dashPos != -1)
-                {
-                    versionOK = System.Version.TryParse(Version.Substring(0, dashPos), out var version);
-                }
-                else
-                {
-                    versionOK = System.Version.TryParse(Version, out var version);
-                }
-
-                if (!versionOK)
-                {
-                    Console.Error.WriteLine($"*** ERROR: [{Version}] is not a valid program version.");
-                    Program.Exit(1);
-                }
 
                 // Short-circuit the help command.
 
@@ -395,7 +202,7 @@ use a random password if [--machine-password] isn't explicitly set.
 
                 if (!string.IsNullOrEmpty(LogPath))
                 {
-                    if (ClusterHelper.InToolContainer)
+                    if (KubeHelper.InToolContainer)
                     {
                         // We hardcode logging to [/log] inside [neon-cli] containers.
 
@@ -413,11 +220,12 @@ use a random password if [--machine-password] isn't explicitly set.
 
                 using (shim = new DockerShim(CommandLine))
                 {
-                    var secretsRoot = ClusterHelper.GetHiveUserFolder(ignoreNeonToolContainerVar: true);
+                    var secretsRoot = KubeHelper.GetNeonKubeUserFolder(ignoreNeonToolContainerVar: true);
 
-                    HiveLogin = GetHiveLogin();
+                    // $todo(jeff.lill): Implement this?
+                    // HiveLogin = GetHiveLogin();
 
-                    if (!ClusterHelper.InToolContainer)
+                    if (!KubeHelper.InToolContainer)
                     {
                         // Give the command a chance to modify the shimmed command line and also
                         // verify that the command can be run within Docker.
@@ -426,11 +234,12 @@ use a random password if [--machine-password] isn't explicitly set.
 
                         if (shimInfo.EnsureConnection)
                         {
-                            if (HiveLogin == null)
-                            {
-                                Console.Error.WriteLine(Program.MustLoginMessage);
-                                Program.Exit(1);
-                            }
+                            // $todo(jeff.lill): Implement this?
+                            //if (HiveLogin == null)
+                            //{
+                            //    Console.Error.WriteLine(Program.MustLoginMessage);
+                            //    Program.Exit(1);
+                            //}
                         }
 
                         // $note(jeff.lill):
@@ -471,15 +280,15 @@ use a random password if [--machine-password] isn't explicitly set.
                             // Run the [nhive/neon-cli] Docker image, passing the modified command line 
                             // arguments and mounting the following read/write volumes:
                             //
-                            //      /neonhive       - the root folder for this workstation's hive logins
+                            //      /neonkube       - the root folder for this workstation's hive logins
                             //      /shim           - the generated shim files
                             //      /log            - the logging folder (if logging is enabled)
                             //
                             // See: https://github.com/jefflill/NeonForge/issues/266
 
-                            var secretsMount = $"--mount type=bind,source=\"{secretsRoot}\",target=/neonhive";
-                            var shimMount = $"--mount type=bind,source=\"{shim.ShimExternalFolder}\",target=/shim";
-                            var options = shim.Terminal ? "-it" : "-i";
+                            var secretsMount = $"--mount type=bind,source=\"{secretsRoot}\",target=/neonkube";
+                            var shimMount    = $"--mount type=bind,source=\"{shim.ShimExternalFolder}\",target=/shim";
+                            var options      = shim.Terminal ? "-it" : "-i";
 
                             if (LeftCommandLine.HasOption("--noterminal"))
                             {
@@ -525,7 +334,7 @@ use a random password if [--machine-password] isn't explicitly set.
 
                             var imageTag = Program.Version;
 
-                            if (ThisAssembly.Git.Branch != ClusterConst.GitProdBranch)
+                            if (ThisAssembly.Git.Branch != KubeConst.GitProdBranch)
                             {
                                 imageTag = $"{ThisAssembly.Git.Branch}-{Program.Version}";
                             }
@@ -565,7 +374,7 @@ $@"*** ERROR: Cannot list Docker images.
                             // Use the [nhive] Docker Hub registry for PROD releases and [nhivedev]
                             // for all other branches.
 
-                            var sourceRegistry = IsProd ? ClusterConst.NeonProdRegistry : ClusterConst.NeonDevRegistry;
+                            var sourceRegistry = IsProd ? KubeConst.NeonProdRegistry : KubeConst.NeonDevRegistry;
 
                             // The Docker image list output should look something like this:
                             //
@@ -792,7 +601,8 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
                 // Load the current hive if there is one.
 
-                HiveLogin = GetHiveLogin();
+                // $todo(jeff.lill): Implement this?
+                //HiveLogin = GetHiveLogin();
 
                 // Run the command.
 
@@ -865,7 +675,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
         /// <summary>
         /// Optionally set to the registry to be used to override any explicit or implicit <b>nhive</b>
-        /// or <b>nhivedev</b> organizations specified when deploying or updating a neonHIVE.
+        /// or <b>nhivedev</b> organizations specified when deploying or updating a neonKUBE.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -877,7 +687,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
         /// <summary>
         /// Optionally set to the tag to be used to override any explicit or implicit <b>:latest</b>
-        /// image tags specified when deploying or updating a neonHIVE.
+        /// image tags specified when deploying or updating a neonKUBE.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -904,14 +714,14 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <remarks>
         /// <para>
         /// If <see cref="DockerImageReg"/> is empty and <paramref name="image"/> specifies the 
-        /// <see cref="ClusterConst.NeonProdRegistry"/> and the Git branch used to build <b>neon-cli</b>
-        /// is not <b>PROD</b>, then the image registry will be set to <see cref="ClusterConst.NeonDevRegistry"/>.
+        /// <see cref="KubeConst.NeonProdRegistry"/> and the Git branch used to build <b>neon-cli</b>
+        /// is not <b>PROD</b>, then the image registry will be set to <see cref="KubeConst.NeonDevRegistry"/>.
         /// This ensures that non-production <b>neon-cli </b> builds will use the development Docker
         /// images by default.
         /// </para>
         /// <para>
         /// If <see cref="DockerImageReg"/> is not empty  and <paramref name="image"/> specifies the 
-        /// <see cref="ClusterConst.NeonProdRegistry"/> then <see cref="DockerImageReg"/> will
+        /// <see cref="KubeConst.NeonProdRegistry"/> then <see cref="DockerImageReg"/> will
         /// replace the registry in the image.
         /// </para>
         /// <para>
@@ -944,7 +754,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 registry = image.Substring(0, p);
             }
 
-            if (!string.IsNullOrEmpty(registry) && registry == ClusterConst.NeonProdRegistry)
+            if (!string.IsNullOrEmpty(registry) && registry == KubeConst.NeonProdRegistry)
             {
                 var imageWithoutRegistry = image.Substring(registry.Length);
 
@@ -954,7 +764,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 }
                 else if (!IsProd)
                 {
-                    image = ClusterConst.NeonDevRegistry + imageWithoutRegistry;
+                    image = KubeConst.NeonDevRegistry + imageWithoutRegistry;
                 }
             }
 
@@ -1113,18 +923,13 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 //
                 // Calling Exit() short circuits the using statement above so we're
                 // going to dispose the shim here instead (if there is one).  I had
-                // accumulated almost 38K shim folders over the past siz months or so.
+                // accumulated almost 38K shim folders over the past six months or so.
                 // This should help prevent that.
                 //
                 //      https://github.com/jefflill/NeonForge/issues/394
 
                 shim.Dispose();
                 shim = null;
-            }
-
-            if (ClusterHelper.IsConnected)
-            {
-                ClusterHelper.CloseHive();
             }
 
             Environment.Exit(exitCode);
@@ -1142,178 +947,27 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         public static CommandLine LeftCommandLine { get; private set; }
 
         /// <summary>
-        /// Returns the command line as a string with sensitive information like a password
-        /// are redacted.  This is suitable for using as a <see cref="SetupController{NodeMetadata}"/>'s
-        /// operation summary.
-        /// </summary>
-        public static string SafeCommandLine
-        {
-            get
-            {
-                // Special case the situation when the tool is running in a Docker container
-                // and a special file is present with the original command line presented
-                // to the shim.
-
-                if (File.Exists("__shim.org"))
-                {
-                    return File.ReadAllText("__shim.org").Trim();
-                }
-
-                // Obscure the [--machine-password=xxxx] option.
-
-                var sb = new StringBuilder();
-
-                foreach (var item in CommandLine.Items)
-                {
-                    if (item.StartsWith("--machine-password"))
-                    {
-                        sb.AppendWithSeparator("--machine-password=[REDACTED]");
-                    }
-                    else
-                    {
-                        sb.AppendWithSeparator(item);
-                    }
-                }
-
-                return sb.ToString();
-            }
-        }
-
-        /// <summary>
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
         /// source code branch.
         /// </summary>
         public static bool IsProd => ThisAssembly.Git.Branch.Equals("prod", StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Returns the folder where <b>neon-cli</b> persists local state.  This
-        /// folder and all subfolders are encrypted when supported by the current
-        /// operating system.
+        /// Returns the folder where local Kubernetes configuration state is persisted.
         /// </summary>
-        public static string HiveRootFolder { get; private set; }
-
-        /// <summary>
-        /// Returns the folder where <b>neon-cli</b> persists hive login information.
-        /// </summary>
-        public static string HiveLoginFolder { get; private set; }
-
-        /// <summary>
-        /// Returns the path to the file where the name of the current hive is saved.
-        /// </summary>
-        public static string CurrentHivePath { get; private set; }
-
-        /// <summary>
-        /// Returns the path to the (hopefully) encrypted or tmpfs based temporary folder.
-        /// </summary>
-        public static string HiveTempFolder { get; private set; }
-
-        /// <summary>
-        /// Returns the path to the hive setup folder.
-        /// </summary>
-        public static string HiveSetupFolder { get; private set; }
-
-        /// <summary>
-        /// Returns the path to the hive temp folder.
-        /// </summary>
-        public static string HiveTemppFolder { get; private set; }
-
-        /// <summary>
-        /// Returns the path to the login information for the named hive.
-        /// </summary>
-        /// <param name="username">The operator's user name.</param>
-        /// <param name="hiveName">The hive name.</param>
-        /// <returns>The path to the hive's credentials file.</returns>
-        public static string GetHiveLoginPath(string username, string hiveName)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-
-            return Path.Combine(HiveLoginFolder, $"{username}@{hiveName}.login.json");
-        }
-
-        /// <summary>
-        /// Returns the hive login information for the currently logged in hive.
-        /// The method also ensures that the current <b>neon-cli</b> satisfies the
-        /// hive's  minimum version requirement when logged in.
-        /// </summary>
-        /// <param name="isRequired">Optionally ensures that a current login is required (defaults to <c>false</c>).</param>
-        /// <returns>The current hive login or <c>null</c>.</returns>
-        public static ClusterLogin GetHiveLogin(bool isRequired = false)
-        {
-            ClusterLogin hiveLogin;
-
-            try
-            {
-                hiveLogin = ClusterHelper.GetLogin(!isRequired, Program.Version);
-            }
-            catch (VersionException e)
-            {
-                Console.Error.WriteLine($"*** ERROR: {e.Message}");
-                Program.Exit(1);
-                return null;
-            }
-
-            if (isRequired && hiveLogin == null)
-            {
-                Console.Error.WriteLine(Program.MustLoginMessage);
-                Program.Exit(1);
-            }
-
-            Program.HiveLogin = hiveLogin;
-
-            return hiveLogin;
-        }
-
-        /// <summary>
-        /// Uses <see cref="ClusterHelper.OpenHiveRemote(DebugSecrets, DebugConfigs, string, bool)"/> to 
-        /// ensure that there's a currently logged-in hive and that the VPN connection
-        /// is established if required.
-        /// </summary>
-        /// <param name="allowPreparedOnly">Optionally allows partially initialized hive logins (defaults to <c>false</c>).</param>
-        /// <returns>The current hive login or <c>null</c>.</returns>
-        /// <remarks>
-        /// Nearly all commands required a fully initialized hive login.  The only exception
-        /// at this time it the <b>neon hive setup</b> command which can accept a login
-        /// created by the <b>neon hive prepare</b> command that generates a login that
-        /// has been initialized enough to allow setup to connect to the hive via a VPN
-        /// if necessary, has the host root account credentials, and also includes the
-        /// hive definition.  Partially intializated logins will have <see cref="ClusterLogin.SetupPending"/>
-        /// set to <c>true</c>.
-        /// </remarks>
-        public static ClusterLogin ConnectHive(bool allowPreparedOnly = false)
-        {
-            var hiveLogin = Program.GetHiveLogin(isRequired: true);
-
-            if (hiveLogin.SetupPending && !allowPreparedOnly)
-            {
-                throw new Exception($"Hive login [{hiveLogin.LoginName}] does not reference a fully configured hive.  Use the [neon hive setup...] command to complete hive configuration.");
-            }
-
-            // $todo(jeff.lill): IMPLEMENT THIS
-
-#if TODO
-            HiveHelper.OpenHiveRemote(loginPath: HiveHelper.GetLoginPath(HiveConst.RootUser, Program.HiveLogin.HiveName));
-#endif
-
-            return hiveLogin;
-        }
+        public static string KubeRootFolder { get; private set; }
 
         /// <summary>
         /// Returns the username used to secure the hive nodes before they are setup.  This
-        /// defaults to <b>sysadmin</b> which is used for the neonHIVE machine templates.
+        /// defaults to <b>sysadmin</b> which is used for the neonKUBE machine templates.
         /// </summary>
         public static string MachineUsername { get; set; }
 
         /// <summary>
         /// The password used to secure the hive nodes before they are setup.  This defaults
-        /// to <b>sysadmin0000</b> which is used for the neonHIVE machine templates.
+        /// to <b>sysadmin0000</b> which is used for the neonKUBE machine templates.
         /// </summary>
         public static string MachinePassword { get; set; }
-
-        /// <summary>
-        /// Returns the hive login information for the currently logged in hive or <c>null</c>.
-        /// </summary>
-        public static ClusterLogin HiveLogin { get; set; }
 
         /// <summary>
         /// Returns the log folder path or a <c>null</c> or empty string 
@@ -1353,7 +1007,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
         /// or <c>false</c> to replace any existing log file with a new one.
         /// </param>
-        /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the sewrver.</typeparam>
+        /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the server.</typeparam>
         /// <returns>The <see cref="SshProxy{TMetadata}"/>.</returns>
         public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress, bool append)
             where TMetadata : class
@@ -1375,9 +1029,9 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 sshCredentials = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword);
             }
-            else if (Program.HiveLogin != null)
+            else if (KubeHelper.KubeContext != null)
             {
-                sshCredentials = Program.HiveLogin.GetSshCredentials();
+                sshCredentials = KubeHelper.KubeContext.GetSshCredentials();
             }
             else
             {
@@ -1389,8 +1043,8 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
             var proxy = new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
 
-            proxy.RemotePath += $":{ClusterHostFolders.Setup}";
-            proxy.RemotePath += $":{ClusterHostFolders.Tools}";
+            proxy.RemotePath += $":{KubeHostFolders.Setup}";
+            proxy.RemotePath += $":{KubeHostFolders.Tools}";
 
             return proxy;
         }
@@ -1399,11 +1053,6 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// Returns the folder holding the Linux resource files for the target operating system.
         /// </summary>
         public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("CoreOS");
-
-        /// <summary>
-        /// Identifies the service manager present on the target Linux distribution.
-        /// </summary>
-        public static ServiceManager ServiceManager => ServiceManager.Systemd;
 
         /// <summary>
         /// Presents the user with a yes/no question and waits for a response.
@@ -1440,7 +1089,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(ClusterLogin hive, string pemKey)
+        public static string ConvertPUBtoPPK(KubeContext hive, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {
@@ -1448,8 +1097,8 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             }
 
             var programPath = "winscp.com";
-            var pemKeyPath  = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
-            var ppkKeyPath  = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
+            var pemKeyPath  = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("D"));
+            var ppkKeyPath  = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("D"));
 
             try
             {
@@ -1568,7 +1217,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 }
             }
 
-            if (!ClusterHelper.InToolContainer)
+            if (!KubeHelper.InToolContainer)
             {
                 if (NeonHelper.IsWindows)
                 {
