@@ -38,7 +38,7 @@ namespace Couchbase
         //
         //      1. A document is inserted with an IRetryPolicy with ReplicateTo > 0.
         //
-        //      2. The document makes it to one hive node but is not replicated
+        //      2. The document makes it to one cluster node but is not replicated
         //         in time to the other nodes before the operation times out.
         //
         //      3. Operation timeouts are considered transient, so the policy

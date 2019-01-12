@@ -4,7 +4,7 @@
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # This base image deploys a simple container/or service used
-# for neonKUBE unit tests.
+# for cluster unit tests.
 #
 # ARGUMENTS:
 #

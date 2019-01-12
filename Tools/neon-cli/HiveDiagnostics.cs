@@ -23,58 +23,58 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Net;
 
-// $todo(jeff.lill): Verify that there are no unexpected nodes in the hive.
+// $todo(jeff.lill): Verify that there are no unexpected nodes in the cluster.
 
 namespace NeonCli
 {
     /// <summary>
-    /// Methods to verify that hive nodes are configured and functioning properly.
+    /// Methods to verify that cluster nodes are configured and functioning properly.
     /// </summary>
     public static class HiveDiagnostics
     {
         /// <summary>
-        /// Verifies that a hive manager node is healthy.
+        /// Verifies that a cluster manager node is healthy.
         /// </summary>
         /// <param name="node">The manager node.</param>
-        /// <param name="clusterDefinition">The hive definition.</param>
-        public static void CheckManager(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
+        /// <param name="kubeDefinition">The cluster definition.</param>
+        public static void CheckManager(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsManager);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             if (!node.IsFaulted)
             {
-                CheckManagerNtp(node, clusterDefinition);
+                CheckManagerNtp(node, kubeDefinition);
             }
 
             if (!node.IsFaulted)
             {
-                CheckDocker(node, clusterDefinition);
+                CheckDocker(node, kubeDefinition);
             }
 
             node.Status = "healthy";
         }
 
         /// <summary>
-        /// Verifies that a hive worker or pet node is healthy.
+        /// Verifies that a cluster worker node is healthy.
         /// </summary>
         /// <param name="node">The server node.</param>
-        /// <param name="clusterDefinition">The hive definition.</param>
-        public static void CheckWorkersOrPet(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
+        /// <param name="kubeDefinition">The cluster definition.</param>
+        public static void CheckWorkers(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsWorker);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             if (!node.IsFaulted)
             {
-                CheckWorkerNtp(node, clusterDefinition);
+                CheckWorkerNtp(node, kubeDefinition);
             }
 
             if (!node.IsFaulted)
             {
-                CheckDocker(node, clusterDefinition);
+                CheckDocker(node, kubeDefinition);
             }
 
             node.Status = "healthy";
@@ -84,8 +84,8 @@ namespace NeonCli
         /// Verifies that a manager node's NTP health.
         /// </summary>
         /// <param name="node">The manager node.</param>
-        /// <param name="clusterDefinition">The hive definition.</param>
-        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
+        /// <param name="kubeDefinition">The cluster definition.</param>
+        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
@@ -176,8 +176,8 @@ namespace NeonCli
         /// Verifies that a worker node's NTP health.
         /// </summary>
         /// <param name="node">The manager node.</param>
-        /// <param name="clusterDefinition">The hive definition.</param>
-        private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
+        /// <param name="kubeDefinition">The cluster definition.</param>
+        private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
@@ -204,7 +204,7 @@ namespace NeonCli
             {
                 var output = node.SudoCommand("/usr/bin/ntpq -pw", RunOptions.LogOutput).OutputText;
 
-                foreach (var manager in clusterDefinition.SortedManagers)
+                foreach (var manager in kubeDefinition.SortedManagers)
                 {
                     // We're going to check the for presence of the manager's IP address
                     // or its name, the latter because [ntpq] appears to attempt a reverse
@@ -254,9 +254,9 @@ namespace NeonCli
         /// <summary>
         /// Verifies Docker health.
         /// </summary>
-        /// <param name="node">The target hive node.</param>
-        /// <param name="clusterDefinition">The hive definition.</param>
-        private static void CheckDocker(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
+        /// <param name="node">The target cluster node.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
+        private static void CheckDocker(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition)
         {
             node.Status = "checking: docker";
 

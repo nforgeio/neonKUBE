@@ -19,7 +19,7 @@ using Renci.SshNet;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the paths of important directories on neonKUBE 
+    /// Enumerates the paths of important directories on cluster 
     /// host servers.
     /// </summary>
     /// <remarks>
@@ -37,17 +37,17 @@ namespace Neon.Kube
     public static class KubeHostFolders
     {
         /// <summary>
-        /// Path to the neonKUBE archive directory.
+        /// Path to the cluster archive directory.
         /// </summary>
         public const string Archive = "${HOME}/.archive";
 
         /// <summary>
-        /// Path to the neonKUBE executable files directory.
+        /// Path to the cluster executable files directory.
         /// </summary>
         public const string Bin = "/lib/neon/bin";
 
         /// <summary>
-        /// Path to the neonKUBE configuration directory.
+        /// Path to the cluster configuration directory.
         /// </summary>
         public const string Config = "/etc/neon";
 
@@ -59,38 +59,38 @@ namespace Neon.Kube
         public const string Exec = "${HOME}/.exec";
 
         /// <summary>
-        /// Path to the neonKUBE management scripts directory.
+        /// Path to the cluster management scripts directory.
         /// </summary>
         public const string Scripts = "/lib/neon/scripts";
 
         /// <summary>
-        /// Path to the neonKUBE secrets directory.
+        /// Path to the cluster secrets directory.
         /// </summary>
         public const string Secrets = "${HOME}/.secrets";
 
         /// <summary>
-        /// Path to the neonKUBE setup scripts directory.
+        /// Path to the cluster setup scripts directory.
         /// </summary>
         public const string Setup = "/lib/neon/setup";
 
         /// <summary>
-        /// Path to the neonKUBE source code directory.
+        /// Path to the cluster source code directory.
         /// </summary>
         public const string Source = "/lib/neon/src";
 
         /// <summary>
-        /// Path to the neonKUBE setup state directory.
+        /// Path to the cluster setup state directory.
         /// </summary>
         public const string State = "/var/local/neon";
 
         /// <summary>
         /// Root folder on the local tmpfs (shared memory) folder where 
-        /// neonKUBE will persist misc temporary files.
+        /// cluster will persist misc temporary files.
         /// </summary>
         public const string Tmpfs = "/dev/shm/neon";
 
         /// <summary>
-        /// Path to the neonKUBE tools directory.
+        /// Path to the cluster tools directory.
         /// </summary>
         public const string Tools = "/lib/neon/tools";
     }

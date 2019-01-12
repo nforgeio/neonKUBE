@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    DockerNodeManagerStatus.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ namespace Neon.Docker
         public dynamic Inner { get; private set; }
 
         /// <summary>
-        /// Indicates whether the parent node is currently the hive leader.
+        /// Indicates whether the parent node is currently the swarm leader.
         /// </summary>
         public bool Leader { get; private set; }
 

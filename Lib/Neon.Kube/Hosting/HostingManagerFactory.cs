@@ -66,7 +66,7 @@ namespace Neon.Kube
         /// </summary>
         private void CheckInitialized()
         {
-            Covenant.Assert(Loader != null, $"[{nameof(Loader)}] is not initialized.  You must call [HostingLoader.Initialize()] in the [Neon.Hive.Hosting] assembly first.");
+            Covenant.Assert(Loader != null, $"[{nameof(Loader)}] is not initialized.  You must call [HostingLoader.Initialize()] in the [Neon.Kube.Hosting] assembly first.");
         }
 
         /// <inheritdoc/>
@@ -86,21 +86,21 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
             CheckInitialized();
 
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
-            var cluster = new KubeProxy(clusterDefinition);
+            var cluster = new KubeProxy(kubeDefinition);
             var manager = GetManager(cluster);
 
             if (manager == null)
             {
-                throw new KubeException($"Cannot locate a [{nameof(IHostingManager)}] implementation for the [{clusterDefinition.Hosting.Environment}] hosting environment.");
+                throw new KubeException($"Cannot locate a [{nameof(IHostingManager)}] implementation for the [{kubeDefinition.Hosting.Environment}] hosting environment.");
             }
 
-            manager.Validate(clusterDefinition);
+            manager.Validate(kubeDefinition);
         }
     }
 }

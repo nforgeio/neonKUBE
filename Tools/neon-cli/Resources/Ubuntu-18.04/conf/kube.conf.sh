@@ -1,6 +1,6 @@
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         hive.conf.sh
+# FILE:         kube.conf.sh
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 # REQUIRES:     
@@ -11,14 +11,14 @@
 # NOTE: Variables formatted like $<name> will be expanded by [neon-cli]
 #       using a [PreprocessReader].
 #
-# This script defines the current configuration of the neonKUBE as is
+# This script defines the current configuration of the cluster as is
 # currently known to this node.  [neon-cli] generates this during initial
 # hive deployment and may modify it as the hive is reconfigured.
 #
 # This script also loads and exports environment variables from [/etc/environment]
 # so they will be available to scripts invoked remotely by [neon-cli].
 #
-# Usage: hive.conf.sh [ --echo-summary ]
+# Usage: kube.conf.sh [ --echo-summary ]
 
 if [ "${1-none}" == "--echo-summary" ] ; then
     summary=true
@@ -93,27 +93,6 @@ $<nodes.managers>
 export NEON_NTP_MANAGER_SOURCES=( $<ntp.manager.sources> )
 export NEON_NTP_WORKER_SOURCES=( $<ntp.worker.sources> )
 
-# Consul settings
-
-export NEON_CONSUL_VERSION=$<consul.version>
-export NEON_CONSUL_OPTIONS=$<consul.options>
-export NEON_CONSUL_ADDRESS=$<consul.address>
-export NEON_CONSUL_FULLADDRESS=$<consul.fulladdress>
-export NEON_CONSUL_HOSTNAME=$<consul.hostname>
-export NEON_CONSUL_PORT=$<consul.port>
-export NEON_CONSUL_TLS=$<consul.tls>
-
-# Vault settings
-
-export NEON_VAULT_VERSION=$<vault.version>
-export NEON_VAULT_DOWNLOAD=$<vault.download>
-export NEON_VAULT_HOSTNAME=$<vault.hostname>
-export NEON_VAULT_PORT=$<vault.port>
-export NEON_VAULT_CONSUL_PATH=$<vault.consulpath>
-export NEON_VAULT_MAXIMUM_LEASE=$<vault.maximumlease>
-export NEON_VAULT_DEFAULT_LEASE=$<vault.defaultlease>
-export NEON_VAULT_DASHBOARD=$<vault.dashboard>
-
 # Log settings
 
 export NEON_LOG_ENABLED=$<log.enabled>
@@ -155,26 +134,6 @@ $<nodes.manager.summary>
     echo 1>&2
     echo "NEON_NTP_MANAGER_SOURCES           = ${NEON_NTP_MANAGER_SOURCES}" 1>&2
     echo "NEON_NTP_WORKER_SOURCES            = ${NEON_NTP_WORKER_SOURCES}" 1>&2
-    echo 1>&2
-    echo "NEON_CONSUL_VERSION                = ${NEON_CONSUL_VERSION}" 1>&2
-    echo "NEON_CONSUL_OPTIONS                = ${NEON_CONSUL_OPTIONS}" 1>&2
-    echo "NEON_CONSUL_ADDRESS                = ${NEON_CONSUL_ADDRESS}" 1>&2
-    echo "NEON_CONSUL_FULLADDRESS            = ${NEON_CONSUL_FULLADDRESS}" 1>&2
-    echo "NEON_CONSUL_HOSTNAME               = ${NEON_CONSUL_HOSTNAME}" 1>&2
-    echo "NEON_CONSUL_PORT                   = ${NEON_CONSUL_PORT}" 1>&2
-    echo "NEON_CONSUL_TLS                    = ${NEON_CONSUL_TLS}" 1>&2
-    echo 1>&2 
-    echo "NEON_VAULT_VERSION                 = ${NEON_VAULT_VERSION}" 1>&2
-    echo "NEON_VAULT_DOWNLOAD                = ${NEON_VAULT_DOWNLOAD}" 1>&2
-    echo "NEON_VAULT_DIRECT_ADDRESS          = ${VAULT_DIRECT_ADDR}" 1>&2
-    echo "NEON_VAULT_HOSTNAME                = ${NEON_VAULT_HOSTNAME}" 1>&2
-    echo "NEON_VAULT_PORT                    = ${NEON_VAULT_PORT}" 1>&2
-    echo "NEON_VAULT_CONSUL_PATH             = ${NEON_VAULT_CONSUL_PATH}" 1>&2
-    echo "NEON_VAULT_MAXIMUM_LEASE           = ${NEON_VAULT_MAXIMUM_LEASE}" 1>&2
-    echo "NEON_VAULT_DEFAULT_LEASE           = ${NEON_VAULT_DEFAULT_LEASE}" 1>&2
-    echo "NEON_VAULT_DASHBOARD               = ${NEON_VAULT_DASHBOARD}" 1>&2
-    echo 1>&2
-    echo "NEON_LOG_ENABLED                   = ${NEON_LOG_ENABLED}" 1>&2
     echo 1>&2
     echo "PATH                               = ${PATH}" 1>&2
 fi

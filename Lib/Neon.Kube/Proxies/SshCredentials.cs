@@ -91,7 +91,7 @@ namespace Neon.Kube
             {
                 if (authenticationMethod == null)
                 {
-                    throw new KubeException("Hive SSH credentials are not available.");
+                    throw new KubeException("cluster SSH credentials are not available.");
                 }
 
                 return authenticationMethod;

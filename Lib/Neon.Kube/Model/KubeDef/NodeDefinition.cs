@@ -116,9 +116,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// Management nodes are reponsible for managing service discovery and coordinating 
-        /// container deployment across the cluster.  Neon uses <b>Consul</b> (https://www.consul.io/) 
-        /// for service discovery and <b>Docker Swarm</b> (https://docs.docker.com/swarm/) for
-        /// container orchestration.  These services will be deployed to management nodes.
+        /// container deployment across the cluster.
         /// </para>
         /// <para>
         /// An odd number of management nodes must be deployed in a cluster (to help prevent
@@ -290,9 +288,9 @@ namespace Neon.Kube
         /// Returns the maximum number processors to allocate for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <returns>The number of cores.</returns>
-        public int GetVmProcessors(KubeDefinition clusterDefinition)
+        public int GetVmProcessors(KubeDefinition kubeDefinition)
         {
             if (VmProcessors != 0)
             {
@@ -300,7 +298,7 @@ namespace Neon.Kube
             }
             else
             {
-                return clusterDefinition.Hosting.VmProcessors;
+                return kubeDefinition.Hosting.VmProcessors;
             }
         }
 
@@ -308,9 +306,9 @@ namespace Neon.Kube
         /// Returns the maximum number of bytes of memory allocate to for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetVmMemory(KubeDefinition clusterDefinition)
+        public long GetVmMemory(KubeDefinition kubeDefinition)
         {
             if (!string.IsNullOrEmpty(VmMemory))
             {
@@ -318,7 +316,7 @@ namespace Neon.Kube
             }
             else
             {
-                return KubeDefinition.ValidateSize(clusterDefinition.Hosting.VmMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMemory));
+                return KubeDefinition.ValidateSize(kubeDefinition.Hosting.VmMemory, kubeDefinition.Hosting.GetType(), nameof(kubeDefinition.Hosting.VmMemory));
             }
         }
 
@@ -326,23 +324,23 @@ namespace Neon.Kube
         /// Returns the minimum number of bytes of memory allocate to for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetVmMinimumMemory(KubeDefinition clusterDefinition)
+        public long GetVmMinimumMemory(KubeDefinition kubeDefinition)
         {
             if (!string.IsNullOrEmpty(VmMinimumMemory))
             {
                 return KubeDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             }
-            else if (!string.IsNullOrEmpty(clusterDefinition.Hosting.VmMinimumMemory))
+            else if (!string.IsNullOrEmpty(kubeDefinition.Hosting.VmMinimumMemory))
             {
-                return KubeDefinition.ValidateSize(clusterDefinition.Hosting.VmMinimumMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMinimumMemory));
+                return KubeDefinition.ValidateSize(kubeDefinition.Hosting.VmMinimumMemory, kubeDefinition.Hosting.GetType(), nameof(kubeDefinition.Hosting.VmMinimumMemory));
             }
             else
             {
                 // Return [VmMemory] otherwise.
 
-                return GetVmMemory(clusterDefinition);
+                return GetVmMemory(kubeDefinition);
             }
         }
 
@@ -350,9 +348,9 @@ namespace Neon.Kube
         /// Returns the maximum number of bytes to disk allocate to for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetVmDisk(KubeDefinition clusterDefinition)
+        public long GetVmDisk(KubeDefinition kubeDefinition)
         {
             if (!string.IsNullOrEmpty(VmDisk))
             {
@@ -360,7 +358,7 @@ namespace Neon.Kube
             }
             else
             {
-                return KubeDefinition.ValidateSize(clusterDefinition.Hosting.VmDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmDisk));
+                return KubeDefinition.ValidateSize(kubeDefinition.Hosting.VmDisk, kubeDefinition.Hosting.GetType(), nameof(kubeDefinition.Hosting.VmDisk));
             }
         }
 
@@ -375,12 +373,12 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the node definition.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             if (Name == null)
             {
@@ -402,7 +400,7 @@ namespace Neon.Kube
                 throw new KubeDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [node-] are reserved.");
             }
 
-            if (clusterDefinition.Hosting.IsOnPremiseProvider)
+            if (kubeDefinition.Hosting.IsOnPremiseProvider)
             {
                 if (string.IsNullOrEmpty(PrivateAddress))
                 {
@@ -417,16 +415,16 @@ namespace Neon.Kube
 
             if (Azure != null)
             {
-                Azure.Validate(clusterDefinition, this.Name);
+                Azure.Validate(kubeDefinition, this.Name);
             }
 
-            if (clusterDefinition.Hosting.IsRemoteHypervisorProvider)
+            if (kubeDefinition.Hosting.IsRemoteHypervisorProvider)
             {
                 if (string.IsNullOrEmpty(VmHost))
                 {
                     throw new KubeDefinitionException($"Node [{Name}] does not specify a hypervisor [{nameof(NodeDefinition)}.{nameof(NodeDefinition.VmHost)}].");
                 }
-                else if (clusterDefinition.Hosting.VmHosts.FirstOrDefault(h => h.Name.Equals(VmHost, StringComparison.InvariantCultureIgnoreCase)) == null)
+                else if (kubeDefinition.Hosting.VmHosts.FirstOrDefault(h => h.Name.Equals(VmHost, StringComparison.InvariantCultureIgnoreCase)) == null)
                 {
                     throw new KubeDefinitionException($"Node [{Name}] references hypervisor [{VmHost}] which is defined in [{nameof(HostingOptions)}={nameof(HostingOptions.VmHosts)}].");
                 }

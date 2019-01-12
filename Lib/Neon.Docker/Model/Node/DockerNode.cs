@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    DockerNode.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ using Neon.Common;
 namespace Neon.Docker
 {
     /// <summary>
-    /// Describes a Docker hive node.
+    /// Describes a cluster node.
     /// </summary>
     public class DockerNode
     {

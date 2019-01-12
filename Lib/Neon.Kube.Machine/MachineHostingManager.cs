@@ -32,7 +32,7 @@ using Neon.Time;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Manages hive provisioning directly on bare metal or virtual machines.
+    /// Manages cluster provisioning directly on bare metal or virtual machines.
     /// </summary>
     [HostingProvider(HostingEnvironments.Machine)]
     public partial class MachineHostingManager : HostingManager
@@ -52,22 +52,22 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private KubeProxy                       hive;
+        private KubeProxy                       cluster;
         private SetupController<NodeDefinition> controller;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="hive">The hive being managed.</param>
+        /// <param name="cluster">The cluster being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public MachineHostingManager(KubeProxy hive, string logFolder = null)
+        public MachineHostingManager(KubeProxy cluster, string logFolder = null)
         {
-            hive.HostingManager = this;
+            cluster.HostingManager = this;
 
-            this.hive = hive;
+            this.cluster = cluster;
         }
 
         /// <inheritdoc/>
@@ -86,7 +86,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(KubeDefinition clusterDefinition)
+        public override void Validate(KubeDefinition kubeDefinition)
         {
         }
 
@@ -95,7 +95,7 @@ namespace Neon.Kube
         {
             // Perform the provisioning operations.
 
-            controller = new SetupController<NodeDefinition>($"Provisioning [{hive.Definition.Name}] hive", hive.Nodes)
+            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
@@ -115,7 +115,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: hive.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>
@@ -132,7 +132,7 @@ namespace Neon.Kube
         public override List<HostedEndpoint> GetPublicEndpoints()
         {
             // Note that public endpoints have to be managed manually for
-            // on-premise hive deployments so we're going to return an 
+            // on-premise cluster deployments so we're going to return an 
             // empty list.
 
             return new List<HostedEndpoint>();
@@ -145,7 +145,7 @@ namespace Neon.Kube
         public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
         {
             // Note that public endpoints have to be managed manually for
-            // on-premise hive deployments.
+            // on-premise cluster deployments.
         }
 
         /// <inheritdoc/>

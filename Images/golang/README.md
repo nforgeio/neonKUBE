@@ -6,7 +6,7 @@ GOLANG images are tagged with the language release version plus the image build 
 
 This image is intended for developing GOLANG based applications:
 
-* Ubuntu-16.04 based image with GOLANG installed
+* Ubuntu-18.04 based image with GOLANG installed
 * Assumes that GOLANG source code is mapped in at `/src` where `PROJECT` is the go project name.
 * Container sets the current directory to `/src/PROJECT` before running the command.
 * Simply pass `go` commands, like:

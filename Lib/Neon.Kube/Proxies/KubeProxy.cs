@@ -19,7 +19,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.Docker;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
@@ -28,7 +27,7 @@ using Neon.Time;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Remotely manages a neonKUBE.
+    /// Remotely manages a cluster.
     /// </summary>
     public class KubeProxy : IDisposable
     {
@@ -84,7 +83,7 @@ namespace Neon.Kube
         /// <summary>
         /// Constructs a cluster proxy from a cluster definition.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <param name="nodeProxyCreator">
         /// The application supplied function that creates a management proxy
         /// given the node name, public address or FQDN, private address, and
@@ -112,13 +111,13 @@ namespace Neon.Kube
         /// argument is passed.
         /// </remarks>
         public KubeProxy(
-            KubeDefinition clusterDefinition,
+            KubeDefinition kubeDefinition,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator = null,
             bool                                                            appendLog = false,
             bool                                                            useBootstrap      = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             if (nodeProxyCreator == null)
             {
@@ -138,22 +137,12 @@ namespace Neon.Kube
                             // we need a cluster proxy for global things (like managing a hosting
                             // environment) where we won't need access to specific cluster nodes.
 
-                            // $todo(jeff.lill):
-                            //
-                            // In the future, I expect that some cluster services (like [neon-cluster-manager])
-                            // may need to connect to cluster nodes.  For this to work, we'd need to have
-                            // some way to retrieve the SSH (and perhaps other credentials) from Vault
-                            // and set them somewhere in the [NeonKube] class (perhaps as the current
-                            // login).
-                            //
-                            // This note is repeated in: HiveLogin.cs
-
                             return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, SshCredentials.None);
                         }
                     };
             }
 
-            this.Definition        = clusterDefinition;
+            this.Definition        = kubeDefinition;
             this.HiveLogin         = new KubeContext();
             this.useBootstrap      = useBootstrap;
             this.defaultRunOptions = defaultRunOptions;
@@ -286,7 +275,7 @@ namespace Neon.Kube
             {
                 var node = nodeProxyCreator(nodeDefinition.Name, nodeDefinition.PublicAddress, IPAddress.Parse(nodeDefinition.PrivateAddress ?? "0.0.0.0"), appendLog);
 
-                node.Hive              = this;
+                node.Kube              = this;
                 node.DefaultRunOptions = defaultRunOptions;
                 node.Metadata          = nodeDefinition;
                 nodes.Add(node);

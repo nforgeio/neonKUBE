@@ -24,9 +24,9 @@ using Neon.Cryptography;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Holds information about currently logged in hive.  This is persisted
+    /// Holds information about currently logged in cluster.  This is persisted
     /// as JSON to the <b>.current</b> file in the folder where the operator's 
-    /// hive login files are stored.
+    /// cluster login files are stored.
     /// </summary>
     public class CurrentKubeContext
     {
@@ -34,7 +34,7 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
-        /// Reads the current hive login information from the file system.
+        /// Reads the current cluster login information from the file system.
         /// </summary>
         /// <returns>The current login information or <c>null</c> if the operator is not logged in.</returns>
         public static CurrentKubeContext Load()
@@ -85,27 +85,7 @@ namespace Neon.Kube
         public string Login { get; set; }
 
         /// <summary>
-        /// Indicates that the communication with the hive should be made via the
-        /// hive VPN vs. direct local communication.  This defaults to <c>false</c>.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Operators will always use the VPN to connect to cloud environments such as
-        /// Azure and AWS.
-        /// </para>
-        /// <para>
-        /// On-premise hives are somewhat more complex.  VPN deployment is optional for
-        /// on-premise deployments and for on-premise deployments with VPN, operators will need 
-        /// to be able choose whether to connect via the VPN when they're outside the hive
-        /// network or communicate directly when they are on-premise.
-        /// </para>
-        /// </remarks>
-        [JsonProperty(PropertyName = "UseVpn", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool ViaVpn { get; set; }
-
-        /// <summary>
-        /// Persists the instance as the currently logged in hive.
+        /// Persists the instance as the currently logged in cluster.
         /// </summary>
         public void Save()
         {

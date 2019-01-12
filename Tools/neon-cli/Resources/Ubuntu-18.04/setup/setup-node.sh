@@ -66,7 +66,7 @@ safe-apt-get install -yq jq aptitude gdebi-core mmv ca-certificates
 # NOTE: This assumes that the hostname was originally configured 
 #       configured to be "ubuntu" as described in:
 #
-#       [Ubuntu-16.04 neonKUBE Template.docx]
+#       [Ubuntu-18.04 cluster Template.docx]
 
 hostname ${NEON_NODE_NAME}
 echo ${NEON_NODE_NAME} > /etc/hostname
@@ -266,7 +266,7 @@ net.ipv4.tcp_tw_reuse = 1
 net.ipv4.ip_forward=1
 
 ###################################################################
-# neonKUBE settings
+# cluster settings
 
 # Explicitly set the maximum number of file descriptors for the
 # entire system.  This looks like it defaults to [398327] for
@@ -314,7 +314,7 @@ update-grub
 
 if ! ${NEON_NODE_SWAP} ; then
 
-    if ! grep neonKUBE /etc/sysctl.conf ; then
+    if ! grep cluster /etc/sysctl.conf ; then
 
         cat <<EOF >> /etc/sysctl.conf
 
@@ -587,7 +587,7 @@ EOF
 
 cat <<EOF > /etc/powerdns/recursor.conf
 ###############################################################################
-# neonKUBE custom PowerDNS Recursor Server configuration.
+# cluster custom PowerDNS Recursor Server configuration.
 
 #################################
 # Allow requests only from well-known Internet private subnets as well as
@@ -1314,7 +1314,7 @@ cat <<EOF > /etc/cron.d/neon-host-maintenance
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
-# Daily neonKUBE related host maintenance scheduled for 9:15pm system time (UTC)
+# Daily cluster related host maintenance scheduled for 9:15pm system time (UTC)
 # or the middle of the night Pacific time.
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin

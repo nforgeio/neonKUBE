@@ -19,7 +19,7 @@ using Neon.Xen;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Manages hive provisioning on the XenServer hypervisor.
+    /// Manages cluster provisioning on the XenServer hypervisor.
     /// </summary>
     [HostingProvider(HostingEnvironments.XenServer)]
     public partial class XenServerHostingManager : HostingManager
@@ -63,7 +63,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private KubeProxy                hive;
+        private KubeProxy                   cluster;
         private string                      logFolder;
         private List<XenClient>             xenHosts;
         private SetupController<XenClient>  controller;
@@ -72,17 +72,17 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="hive">The hive being managed.</param>
+        /// <param name="cluster">The cluster being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public XenServerHostingManager(KubeProxy hive, string logFolder = null)
+        public XenServerHostingManager(KubeProxy cluster, string logFolder = null)
         {
-            this.hive                = hive;
-            this.hive.HostingManager = this;
+            this.cluster                = cluster;
+            this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
-            this.maxVmNameWidth         = hive.Definition.Nodes.Max(n => n.Name.Length) + hive.Definition.Hosting.GetVmNamePrefix(hive.Definition).Length;
+            this.maxVmNameWidth         = cluster.Definition.Nodes.Max(n => n.Name.Length) + cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition).Length;
         }
 
         /// <inheritdoc/>
@@ -113,7 +113,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(KubeDefinition clusterDefinition)
+        public override void Validate(KubeDefinition kubeDefinition)
         {
         }
 
@@ -127,7 +127,7 @@ namespace Neon.Kube
             // when there are pet nodes.
             //
             // Perhaps it would make more sense to replace this with a
-            // [neon hive remove] command.
+            // [neon cluster remove] command.
             //
             //      https://github.com/jefflill/NeonForge/issues/156
 
@@ -141,7 +141,7 @@ namespace Neon.Kube
             // Update the node labels with the actual capabilities of the 
             // virtual machines being provisioned.
 
-            foreach (var node in hive.Definition.Nodes)
+            foreach (var node in cluster.Definition.Nodes)
             {
                 if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
                 {
@@ -150,17 +150,17 @@ namespace Neon.Kube
 
                 if (node.Labels.ComputeCores == 0)
                 {
-                    node.Labels.ComputeCores = node.GetVmProcessors(hive.Definition);
+                    node.Labels.ComputeCores = node.GetVmProcessors(cluster.Definition);
                 }
 
                 if (node.Labels.ComputeRamMB == 0)
                 {
-                    node.Labels.ComputeRamMB = (int)(node.GetVmMemory(hive.Definition) / NeonHelper.Mega);
+                    node.Labels.ComputeRamMB = (int)(node.GetVmMemory(cluster.Definition) / NeonHelper.Mega);
                 }
 
                 if (node.Labels.StorageCapacityGB == 0)
                 {
-                    node.Labels.StorageCapacityGB = (int)(node.GetVmDisk(hive.Definition) / NeonHelper.Giga);
+                    node.Labels.StorageCapacityGB = (int)(node.GetVmDisk(cluster.Definition) / NeonHelper.Giga);
                 }
             }
 
@@ -171,12 +171,12 @@ namespace Neon.Kube
 
             xenHosts = new List<XenClient>();
 
-            foreach (var host in hive.Definition.Hosting.VmHosts)
+            foreach (var host in cluster.Definition.Hosting.VmHosts)
             {
                 var hostAddress  = host.Address;
                 var hostname     = host.Name;
-                var hostUsername = host.Username ?? hive.Definition.Hosting.VmHostUsername;
-                var hostPassword = host.Password ?? hive.Definition.Hosting.VmHostPassword;
+                var hostUsername = host.Username ?? cluster.Definition.Hosting.VmHostUsername;
+                var hostPassword = host.Password ?? cluster.Definition.Hosting.VmHostPassword;
 
                 if (string.IsNullOrEmpty(hostname))
                 {
@@ -190,10 +190,10 @@ namespace Neon.Kube
             }
 
             // We're going to provision the XenServer hosts in parallel to
-            // speed up hive setup.  This works because each XenServer
+            // speed up cluster setup.  This works because each XenServer
             // is essentially independent from the others.
 
-            controller = new SetupController<XenClient>($"Provisioning [{hive.Definition.Name}] hive", sshProxies)
+            controller = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", sshProxies)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
@@ -233,7 +233,7 @@ namespace Neon.Kube
                     }
                 });
 
-            controller.AddStep("hive folders", (node, stepDelay) => node.CreateHiveHostFolders());
+            controller.AddStep("node folders", (node, stepDelay) => node.CreateHostFolders());
             controller.AddStep("verify readiness", (node, stepDelay) => VerifyReady(node));
             controller.AddStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
             controller.AddStep("provision virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
@@ -255,16 +255,16 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the list of <see cref="NodeDefinition"/> instances describing which hive
+        /// Returns the list of <see cref="NodeDefinition"/> instances describing which cluster
         /// nodes are to be hosted by a specific XenServer.
         /// </summary>
         /// <param name="xenHost">The target XenServer.</param>
         /// <returns>The list of nodes to be hosted on the XenServer.</returns>
         private List<SshProxy<NodeDefinition>> GetHostedNodes(XenClient xenHost)
         {
-            var nodeDefinitions = hive.Definition.NodeDefinitions.Values;
+            var nodeDefinitions = cluster.Definition.NodeDefinitions.Values;
 
-            return hive.Nodes.Where(n => n.Metadata.VmHost.Equals(xenHost.Name, StringComparison.InvariantCultureIgnoreCase))
+            return cluster.Nodes.Where(n => n.Metadata.VmHost.Equals(xenHost.Name, StringComparison.InvariantCultureIgnoreCase))
                 .OrderBy(n => n.Name, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
         }
@@ -276,11 +276,11 @@ namespace Neon.Kube
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(SshProxy<NodeDefinition> node)
         {
-            return $"{hive.Definition.Hosting.GetVmNamePrefix(hive.Definition)}{node.Name}";
+            return $"{cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition)}{node.Name}";
         }
 
         /// <summary>
-        /// Verify that the XenServer is ready to provision the hive virtual machines.
+        /// Verify that the XenServer is ready to provision the cluster virtual machines.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private void VerifyReady(SshProxy<XenClient> xenSshProxy)
@@ -321,21 +321,21 @@ namespace Neon.Kube
         private void CheckVmTemplate(SshProxy<XenClient> xenSshProxy)
         {
             var xenHost      = xenSshProxy.Metadata;
-            var templateName = hive.Definition.Hosting.XenServer.TemplateName;
+            var templateName = cluster.Definition.Hosting.XenServer.TemplateName;
 
             xenSshProxy.Status = "check template";
 
             if (xenHost.Template.Find(templateName) == null)
             {
                 xenSshProxy.Status = "download vm template (slow)";
-                xenHost.Template.Install(hive.Definition.Hosting.XenServer.HostXvaUri, templateName, hive.Definition.Hosting.XenServer.StorageRepository);
+                xenHost.Template.Install(cluster.Definition.Hosting.XenServer.HostXvaUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
             }
         }
 
         /// <summary>
         /// Formats a nice docker node machine status message.
         /// </summary>
-        /// <param name="vmName">The name of the virtual machine used to host the hive node.</param>
+        /// <param name="vmName">The name of the virtual machine used to host the cluster node.</param>
         /// <param name="message">The status message.</param>
         /// <returns>The formatted status message.</returns>
         private string FormatVmStatus(string vmName, string message)
@@ -363,19 +363,19 @@ namespace Neon.Kube
             foreach (var node in GetHostedNodes(xenHost))
             {
                 var vmName      = GetVmName(node);
-                var processors  = node.Metadata.GetVmProcessors(hive.Definition);
-                var memoryBytes = node.Metadata.GetVmMemory(hive.Definition);
-                var diskBytes   = node.Metadata.GetVmDisk(hive.Definition);
+                var processors  = node.Metadata.GetVmProcessors(cluster.Definition);
+                var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
+                var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create virtual machine");
 
-                var vm = xenHost.Machine.Create(vmName, hive.Definition.Hosting.XenServer.TemplateName,
+                var vm = xenHost.Machine.Create(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
                     processors:                 processors,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  diskBytes,
-                    snapshot:                   hive.Definition.Hosting.XenServer.Snapshot,
-                    primaryStorageRepository:   hive.Definition.Hosting.XenServer.StorageRepository,
-                    extraStorageRespository:    hive.Definition.Hosting.XenServer.OsdStorageRepository);
+                    snapshot:                   cluster.Definition.Hosting.XenServer.Snapshot,
+                    primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository,
+                    extraStorageRespository:    cluster.Definition.Hosting.XenServer.OsdStorageRepository);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "start virtual machine");
 
@@ -417,9 +417,9 @@ namespace Neon.Kube
                 // address and extend the primary partition and file system to fill
                 // the drive and then reboot.
 
-                var subnet    = NetworkCidr.Parse(hive.Definition.Network.PremiseSubnet);
-                var gateway   = hive.Definition.Network.Gateway;
-                var broadcast = hive.Definition.Network.Broadcast;
+                var subnet    = NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet);
+                var gateway   = cluster.Definition.Network.Gateway;
+                var broadcast = cluster.Definition.Network.Broadcast;
 
                 // We're going to temporarily set the node to the current VM address
                 // so we can connect via SSH.
@@ -430,7 +430,7 @@ namespace Neon.Kube
                 {
                     node.PrivateAddress = IPAddress.Parse(address);
 
-                    using (var nodeProxy = hive.GetNode(node.Name))
+                    using (var nodeProxy = cluster.GetNode(node.Name))
                     {
                         xenSshProxy.Status = FormatVmStatus(vmName, "connect");
                         nodeProxy.WaitForBoot();
@@ -464,16 +464,16 @@ broadcast {broadcast}
 
                         // Temporarily configure the public Google DNS servers as
                         // the name servers so DNS will work after we reboot with
-                        // the static IP.  Note that hive setup will eventually
-                        // configure the name servers specified in the hive
+                        // the static IP.  Note that cluster setup will eventually
+                        // configure the name servers specified in the cluster
                         // definition.
 
                         // $todo(jeff.lill):
                         //
                         // Is there a good reason why we're not just configuring the
-                        // DNS servers from the hive definition here???
+                        // DNS servers from the cluster definition here???
                         //
-                        // Using the Google DNS seems like it could break some hive
+                        // Using the Google DNS seems like it could break some cluster
                         // network configurations (e.g. for hives that don't have
                         // access to the public Internet).  Totally private hives
                         // aren't really a supported scenario right now though because
@@ -525,13 +525,13 @@ nameserver 8.8.4.4
             // We need to do this so subsequent prepare steps will be
             // able to connect to the nodes via the correct addresses.
 
-            hive.CreateNodes();
+            cluster.CreateNodes();
         }
 
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: hive.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>
@@ -548,7 +548,7 @@ nameserver 8.8.4.4
         public override List<HostedEndpoint> GetPublicEndpoints()
         {
             // Note that public endpoints have to be managed manually for
-            // on-premise hive deployments so we're going to return an 
+            // on-premise cluster deployments so we're going to return an 
             // empty list.
 
             return new List<HostedEndpoint>();
@@ -561,7 +561,7 @@ nameserver 8.8.4.4
         public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
         {
             // Note that public endpoints have to be managed manually for
-            // on-premise hive deployments.
+            // on-premise cluster deployments.
         }
     }
 }

@@ -75,7 +75,7 @@ EOF
 
 	# Note that $<node.driveprefix> will be replaced with something
 	# like [sd] or [xvd].  This comes from the hosting manager used to
-	# provision the hive.
+	# provision the cluster.
 
     for DEVICE in $<node.driveprefix>a $<node.driveprefix>b $<node.driveprefix>c $<node.driveprefix>d $<node.driveprefix>e $<node.driveprefix>f $<node.driveprefix>g $<node.driveprefix>h $<node.driveprefix>i $<node.driveprefix>j
     do

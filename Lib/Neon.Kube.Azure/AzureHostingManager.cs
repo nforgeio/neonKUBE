@@ -24,14 +24,14 @@ using AzureEnvironment = Microsoft.Azure.Management.ResourceManager.Fluent.Azure
 namespace Neon.Kube
 {
     /// <summary>
-    /// Manages hive provisioning on Microsoft Azure.
+    /// Manages cluster provisioning on Microsoft Azure.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The current implementation is focused on creating a hive reachable from the
+    /// The current implementation is focused on creating a cluster reachable from the
     /// external Internet via a load balancer or application gateway.  All Azure assets
     /// will be created within a specified resource group by appending a suffix to the
-    /// neonKUBE's name.
+    /// cluster's name.
     /// </para>
     /// </remarks>
     [HostingProvider(HostingEnvironments.Azure)]
@@ -39,21 +39,21 @@ namespace Neon.Kube
     {
         // IMPLEMENTATION NOTE:
         // --------------------
-        // The hive is deployed behind an Azure load balancer which is configured to forward
-        // TCP traffic on specified frontend ports to an internal port on any hive node.
+        // The cluster is deployed behind an Azure load balancer which is configured to forward
+        // TCP traffic on specified frontend ports to an internal port on any cluster node.
         // neonHIVEs will encounter three types of network traffic:
         //
-        //      1. We provision the hive in two available sets: one for the manager nodes
+        //      1. We provision the cluster in two available sets: one for the manager nodes
         //         and the other for the workers and pets.  This is required because we need to
         //         tightly control the Azure update and fault domains for the managers so we'll
         //         always have a quorum.  Putting managers together with a lot of workers will 
         //         make t pretty likely that a quorum of managers might fall into the same update
         //         domain and be taken out at the same time.
         //
-        //      2. We provision the hive with two load balancers, one for the managers and
+        //      2. We provision the cluster with two load balancers, one for the managers and
         //         the other for the workers/pets.  This is required because a single Azure load
         //         balancer is unable to server traffic for VMs in different availability sets.
-        //         Each load balancer is assigned a public IP address.  Once the hive is 
+        //         Each load balancer is assigned a public IP address.  Once the cluster is 
         //         configured, the manager load balancer only handles VPN traffic and the 
         //         worker/pets load balancer handles application traffic.
         //
@@ -70,9 +70,9 @@ namespace Neon.Kube
         //         The [neon] tool assigns these ports, starting by default at port [37105] (after 
         //         the VPN NAT ports) to each node sorted in ascending order by node type (managers
         //         first)  and then node name.   These load balancer mappings will be deleted once
-        //         the hive has been fully provisioned.
+        //         the cluster has been fully provisioned.
         //
-        //      5. VPN traffic: neonHIVEs deploy an internal VPN, with the hive manager
+        //      5. VPN traffic: neonHIVEs deploy an internal VPN, with the cluster manager
         //         nodes running OpenVPN running and listening on it's standard port (1194).
         //         The Azure load balancer will be configured to NAT TCP connections from 
         //         reserved frontend ports starting at [37100] by default to internal port 1194 
@@ -81,11 +81,11 @@ namespace Neon.Kube
         //      6. Application service traffic.  This is the website, webapi, and TCP traffic
         //         to your application services.  This traffic will be load balanced to every
         //         worker node, mapping the frontend port to an internal one.  Typically,
-        //         the PUBLIC neonKUBE proxy will be configured to receive the inbound traffic
+        //         the PUBLIC cluster proxy will be configured to receive the inbound traffic
         //         on the Docker ingress network and forward it on to your Docker services.
         //         Note that the load balancer IS NOT configured to direct traffic to pets.
         //
-        //      7. It is possible to assign a public IP address to each hive node.  This can
+        //      7. It is possible to assign a public IP address to each cluster node.  This can
         //         help eliminate NAT port exhaustion in the load balancer for large hives making
         //         a lot of outbound requests.  Note though that inbound traffic will still 
         //         route through the load balancers.
@@ -185,7 +185,7 @@ namespace Neon.Kube
         // Instance members
 
         /// <summary>
-        /// Relates hive node information with Azure VM information.
+        /// Relates cluster node information with Azure VM information.
         /// </summary>
         private class AzureNode
         {
@@ -233,17 +233,17 @@ namespace Neon.Kube
 
             /// <summary>
             /// The public FQDN or IP address (as a string) to be used to connect to the
-            /// node via SSH while provisioning the hive.  This will be set to the
-            /// FQDN of <see cref="PublicAddress"/> if the hive nodes are being
-            /// provisioned with addresses or else the FQDN address of the hive 
+            /// node via SSH while provisioning the cluster.  This will be set to the
+            /// FQDN of <see cref="PublicAddress"/> if the cluster nodes are being
+            /// provisioned with addresses or else the FQDN address of the cluster 
             /// manager or worker/pet load balancer.
             /// </summary>
             public string PublicSshAddress { get; set; }
 
             /// <summary>
             /// The SSH port to be used to connect to the node via SSH while provisioning
-            /// the hive.  This will be the standard <see cref="NetworkPorts.SSH"/> if the 
-            /// hive nodes are being provisioned with addresses or else a temporary NAT port
+            /// the cluster.  This will be the standard <see cref="NetworkPorts.SSH"/> if the 
+            /// cluster nodes are being provisioned with addresses or else a temporary NAT port
             /// configured on the appropriate load balancer.
             /// </summary>
             public int PublicSshPort { get; set; } = NetworkPorts.SSH;
@@ -288,7 +288,7 @@ namespace Neon.Kube
 
         private const string managerLeafDomainPrefix = "vpn-";
 
-        private KubeProxy                       hive;
+        private KubeProxy                       cluster;
         private HostingOptions                  hostOptions;
         private NetworkOptions                  networkOptions;
         private AzureOptions                    azureOptions;
@@ -325,21 +325,21 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="hive">The hive being managed.</param>
+        /// <param name="kube">The cluster being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AzureHostingManager(KubeProxy hive, string logFolder = null)
+        public AzureHostingManager(KubeProxy kube, string logFolder = null)
         {
-            this.hive             = hive;
-            this.hiveName         = hive.Definition.Name;
-            this.hostOptions      = hive.Definition.Hosting;
-            this.networkOptions   = hive.Definition.Network;
+            this.cluster             = kube;
+            this.hiveName         = kube.Definition.Name;
+            this.hostOptions      = kube.Definition.Hosting;
+            this.networkOptions   = kube.Definition.Network;
             this.azureOptions     = hostOptions.Azure;
             this.resourceGroup    = azureOptions.ResourceGroup;
 
-            // Generate the Azure asset names for the hive.
+            // Generate the Azure asset names for the cluster.
 
             this.pipLbManagerName = $"{hiveName}-pip-lb-manager";
             this.pipLbNodeName    = $"{hiveName}-pip-lb-node";
@@ -357,16 +357,16 @@ namespace Neon.Kube
             this.bePoolName       = "backend";
             this.probeName        = "probe";
 
-            // Associate the hosting manager and hive.
+            // Associate the hosting manager and cluster.
 
-            hive.HostingManager = this;
+            kube.HostingManager = this;
 
             // Initialize the node mapping dictionary and also ensure
             // that each node has Azure node options.
 
             this.nodeDictionary = new Dictionary<string, AzureNode>();
 
-            foreach (var node in hive.Nodes)
+            foreach (var node in kube.Nodes)
             {
                 nodeDictionary.Add(node.Name, new AzureNode(node));
 
@@ -460,11 +460,11 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(KubeDefinition clusterDefinition)
+        public override void Validate(KubeDefinition kubeDefinition)
         {
             // Ensure that the VM sizes specified have minimum capabilities.
 
-            foreach (var node in clusterDefinition.Nodes)
+            foreach (var node in kubeDefinition.Nodes)
             {
                 var vmCaps = AzureVmCapabilities.Get(node.Azure.VmSize);
 
@@ -521,7 +521,7 @@ namespace Neon.Kube
             // Update the node labels with the actual capabilities of the 
             // virtual machines being provisioned.
 
-            foreach (var node in hive.Definition.Nodes)
+            foreach (var node in cluster.Definition.Nodes)
             {
                 var vmCaps = AzureVmCapabilities.Get(node.Azure.VmSize);
 
@@ -551,7 +551,7 @@ namespace Neon.Kube
 
             AzureConnect();
 
-            // Assign IP addresses and frontend NAT ports for the hive nodes
+            // Assign IP addresses and frontend NAT ports for the cluster nodes
             // (including the pets).
 
             AssignVmAddresses();
@@ -559,20 +559,20 @@ namespace Neon.Kube
 
             var nextSshPort = azureOptions.FirstSshFrontendPort;
 
-            foreach (var node in hive.Managers.OrderBy(n => n.Name))
+            foreach (var node in cluster.Managers.OrderBy(n => n.Name))
             {
                 node.SshPort = nextSshPort++;
             }
 
-            foreach (var node in hive.Workers.OrderBy(n => n.Name))
+            foreach (var node in cluster.Workers.OrderBy(n => n.Name))
             {
                 node.SshPort = nextSshPort++;
             }
 
             // Perform the provisioning operations.
 
-            var operation  = $"Provisioning [{hive.Definition.Name}] on Azure [{azureOptions.Region}/{resourceGroup}]";
-            var controller = new SetupController<NodeDefinition>(operation, hive.Nodes)
+            var operation  = $"Provisioning [{cluster.Definition.Name}] on Azure [{azureOptions.Region}/{resourceGroup}]";
+            var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
                 ShowNodeStatus = false,
@@ -587,7 +587,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("load balancers", () => CreateLoadbalancers(tempSsh: true));
             controller.AddGlobalStep("network interfaces", () => CreateNics());
             controller.AddGlobalStep("virtual machines", () => CreateVMs());
-            controller.AddDelayStep($"hive stabilize ({this.WaitSeconds}s)", TimeSpan.FromSeconds(this.WaitSeconds), "stabilize");
+            controller.AddDelayStep($"cluster stabilize ({this.WaitSeconds}s)", TimeSpan.FromSeconds(this.WaitSeconds), "stabilize");
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -613,7 +613,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Assigns IP addresses from the hive subnet to the virtual machines and/or 
+        /// Assigns IP addresses from the cluster subnet to the virtual machines and/or 
         /// verifies that already assigned addresses are valid.
         /// </summary>
         private void AssignVmAddresses()
@@ -640,13 +640,13 @@ namespace Neon.Kube
 
             // Verify and reserve IP addresses for node definitions that specify explicit IP addresses.
 
-            foreach (var node in hive.Definition.Nodes.Where(n => !string.IsNullOrEmpty(n.PrivateAddress)))
+            foreach (var node in cluster.Definition.Nodes.Where(n => !string.IsNullOrEmpty(n.PrivateAddress)))
             {
                 var nodeAddress = IPAddress.Parse(node.PrivateAddress);
 
                 if (!subnet.Contains(nodeAddress))
                 {
-                    throw new KubeDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which is not within the [{subnet}] subnet assigned to the hive.");
+                    throw new KubeDefinitionException($"Node [{node.Name}] reserves IP address [{node.PrivateAddress}] which is not within the [{subnet}] subnet assigned to the cluster.");
                 }
 
                 if (allocatedAddresses.Contains(nodeAddress.ToString()))
@@ -662,7 +662,7 @@ namespace Neon.Kube
             var nextAddress = subnet.Address;
             var lastAddress = NetHelper.AddressIncrement(subnet.Mask, (int)subnet.AddressCount - 1);
 
-            foreach (var node in hive.Definition.Nodes
+            foreach (var node in cluster.Definition.Nodes
                 .Where(n => string.IsNullOrEmpty(n.PrivateAddress))
                 .OrderBy(n => n.Name))
             {
@@ -672,7 +672,7 @@ namespace Neon.Kube
                 {
                     if (NetHelper.AddressEquals(nextAddress, lastAddress))
                     {
-                        throw new KubeDefinitionException($"Cannot fit [{hive.Definition.Nodes.Count()}] nodes into the [{subnet}] subnet on Azure.  You need to expand the subnet.");
+                        throw new KubeDefinitionException($"Cannot fit [{cluster.Definition.Nodes.Count()}] nodes into the [{subnet}] subnet on Azure.  You need to expand the subnet.");
                     }
 
                     if (!allocatedAddresses.Contains(nextAddress.ToString()))
@@ -684,7 +684,7 @@ namespace Neon.Kube
                 }
 
                 node.PrivateAddress                    = nextAddress.ToString();
-                hive.GetNode(node.Name).PrivateAddress = nextAddress;   // We need to update this too.
+                cluster.GetNode(node.Name).PrivateAddress = nextAddress;   // We need to update this too.
 
                 nextAddress  = NetHelper.AddressIncrement(nextAddress);
             }
@@ -696,7 +696,7 @@ namespace Neon.Kube
 
             nextAddress = NetHelper.AddressIncrement(vpnServerSubnet.Address, 4);
 
-            foreach (var node in hive.Definition.Nodes.Where(n => n.IsManager).OrderBy(n => n.Name))
+            foreach (var node in cluster.Definition.Nodes.Where(n => n.IsManager).OrderBy(n => n.Name))
             {
                 node.VpnPoolAddress = nextAddress.ToString();
                 nextAddress         = NetHelper.AddressIncrement(nextAddress);
@@ -713,7 +713,7 @@ namespace Neon.Kube
 
             var nextVpnFrontendPort = azureOptions.FirstVpnFrontendPort;
 
-            foreach (var manager in hive.Managers.OrderBy(n => n.Name))
+            foreach (var manager in cluster.Managers.OrderBy(n => n.Name))
             {
                 manager.Metadata.VpnFrontendPort = nextVpnFrontendPort++;
             }
@@ -771,7 +771,7 @@ namespace Neon.Kube
         private void CreatePublicAddresses()
         {
             //-----------------------------------------------------------------
-            // Create a public address for the hive load balancers.
+            // Create a public address for the cluster load balancers.
 
             if (azureOptions.StaticHiveAddress)
             {
@@ -810,14 +810,14 @@ namespace Neon.Kube
                         .Create();
             }
 
-            hive.Definition.Network.ManagerPublicAddress = pipLbManager.Fqdn;
-            hive.Definition.Network.NodePublicAddress    = pipLbNode.Fqdn;
+            cluster.Definition.Network.ManagerPublicAddress = pipLbManager.Fqdn;
+            cluster.Definition.Network.NodePublicAddress    = pipLbNode.Fqdn;
 
             //-----------------------------------------------------------------
             // Create dynamic public addresses for individual node VMs if requested.
             //
             // Note that we're going to use the combination of the node name
-            // and the hive's domain label label so each node will be unique
+            // and the cluster's domain label label so each node will be unique
             // within an Azure region.
 
             var publicNamePrefix = $"{hiveName}-pip-vm-";
@@ -863,7 +863,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the hive availability set.
+        /// Creates the cluster availability set.
         /// </summary>
         private void CreateAvailabilitySets()
         {
@@ -887,10 +887,10 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the hive's network security groups.
+        /// Creates the cluster's network security groups.
         /// </summary>
         /// <param name="updateNetworks">Optionally specifies which sets of load balancer and network security rules to be modified.</param>
-        /// <param name="endpoints">Optional public hive endpoints.</param>
+        /// <param name="endpoints">Optional public cluster endpoints.</param>
         /// <param name="tempSsh">Optionally indicates  whether temporary rules should enable SSH traffic.</param>
         private void CreateNetworkSecurityGroups(NetworkUpdateSets updateNetworks = NetworkUpdateSets.All, List<HostedEndpoint> endpoints = null, bool tempSsh = false)
         {
@@ -926,7 +926,7 @@ namespace Neon.Kube
                 if (tempSsh)
                 {
                     // Temporarily allow inbound traffic to port SSH.  We'll delete this
-                    // rule after the hive has been provisioned.
+                    // rule after the cluster has been provisioned.
 
                     priority = 4000;
 
@@ -969,7 +969,7 @@ namespace Neon.Kube
                         .WithRegion(azureOptions.Region)
                         .WithExistingResourceGroup(resourceGroup);
 
-                // Allow inbound traffic for each of the public hive endpoints.
+                // Allow inbound traffic for each of the public cluster endpoints.
 
                 priority = 3000;
 
@@ -1001,7 +1001,7 @@ namespace Neon.Kube
                         .Attach();
 
                 // Temporarily allow inbound traffic to port SSH.  We'll delete this
-                // rule after the hive has been provisioned.
+                // rule after the cluster has been provisioned.
 
                 priority = 4000;
 
@@ -1080,20 +1080,20 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the hive load balancer.
+        /// Creates the cluster load balancer.
         /// </summary>
         /// <param name="updateNetworks">Optionally specifies which sets of load balancer and network security rules to be modified.</param>
-        /// <param name="endpoints">Optional public hive endpoints.</param>
+        /// <param name="endpoints">Optional public cluster endpoints.</param>
         /// <param name="tempSsh">Optionally indicates whether temporary SSH forwarding rules should be included.</param>
         /// <remarks>
         /// <note>
-        /// Temporary SSH port forwarding rules are never created if the hive is configured
-        /// to provision public IP addresses for each hive node.
+        /// Temporary SSH port forwarding rules are never created if the cluster is configured
+        /// to provision public IP addresses for each cluster node.
         /// </note>
         /// </remarks>
         private void CreateLoadbalancers(NetworkUpdateSets updateNetworks = NetworkUpdateSets.All, List<HostedEndpoint> endpoints = null, bool tempSsh = false)
         {
-            tempSsh   = tempSsh && !hive.Definition.Hosting.Azure.PublicNodeAddresses;
+            tempSsh   = tempSsh && !cluster.Definition.Hosting.Azure.PublicNodeAddresses;
             endpoints = endpoints ?? new List<HostedEndpoint>();
 
             if ((updateNetworks & NetworkUpdateSets.Manager) != 0)
@@ -1164,7 +1164,7 @@ namespace Neon.Kube
                 {
                     // We need to fetch the worker/pet load balancer's public IP address
                     // if we don't already have it (e.g. when we're not in the process
-                    // of configuring the hive).
+                    // of configuring the cluster).
 
                     pipLbNode = azure.PublicIPAddresses.GetByResourceGroup(resourceGroup, pipLbNodeName);
                 }
@@ -1175,7 +1175,7 @@ namespace Neon.Kube
                             .WithRegion(azureOptions.Region)
                             .WithExistingResourceGroup(resourceGroup);
 
-                // Add a load balancing rule for each public hive endpoint.
+                // Add a load balancing rule for each public cluster endpoint.
 
                 IWithLBRuleOrNatOrCreate lbNodeCreator = null;
 
@@ -1244,7 +1244,7 @@ namespace Neon.Kube
                         .Attach()
 
                     // We only need one probe because the Docker ingress network
-                    // and HAProxy handles internal hive fail-over.
+                    // and HAProxy handles internal cluster fail-over.
 
                     .DefineTcpProbe(probeName)
                         .WithPort(KubeHostPorts.ReservedUnused)     // $todo(jeff.lill): This port isn't going to work
@@ -1357,7 +1357,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the hive virtual machines.
+        /// Creates the cluster virtual machines.
         /// </summary>
         private void CreateVMs()
         {
@@ -1506,7 +1506,7 @@ iface eth1 inet dhcp
                     // Reset the node SSH ports to the default since we'll be able to
                     // access the nodes directly now via the VPN.
 
-                    foreach (var node in hive.Nodes)
+                    foreach (var node in cluster.Nodes)
                     {
                         node.SshPort = NetworkPorts.SSH;
                     }

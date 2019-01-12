@@ -29,9 +29,9 @@ namespace Neon.Kube
 {
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> This interface describes a low-level class implementations
-    /// that are registered by the <b>Neon.Hive.Hosting</b> class library with 
+    /// that are registered by the <b>Neon.Kube.Hosting</b> class library with 
     /// <see cref="HostingManager"/> to provide a way to access the various hosting
-    /// implementations without having to bake this into the <b>Neon.Hive</b> assembly.
+    /// implementations without having to bake this into the <b>Neon.Kube</b> assembly.
     /// </summary>
     public interface IHostingLoader
     {

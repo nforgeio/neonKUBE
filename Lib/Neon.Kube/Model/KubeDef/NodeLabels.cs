@@ -26,7 +26,7 @@ using Neon.Diagnostics;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes the standard neonKUBE and custom labels to be assigned to 
+    /// Describes the standard cluster and custom labels to be assigned to 
     /// a Docker node.
     /// </summary>
     /// <remarks>
@@ -37,7 +37,7 @@ namespace Neon.Kube
     /// </para>
     /// <para>
     /// By convention, label names should use a reverse domain name form using a
-    /// DNS domain you control.  For example, neonKUBE related labels are prefixed
+    /// DNS domain you control.  For example, cluster related labels are prefixed
     /// with <b>"io.neonkube."</b>.  You should follow this convention for any
     /// custom labels you define.
     /// </para>
@@ -54,7 +54,7 @@ namespace Neon.Kube
     /// since Docker supports double quoting, but there it is.
     /// </note>
     /// <para>
-    /// This class exposes several built-in neonKUBE properties.  You can use
+    /// This class exposes several built-in cluster properties.  You can use
     /// the <see cref="Custom"/> dictionary to add your own labels.
     /// </para>
     /// </remarks>
@@ -432,7 +432,7 @@ namespace Neon.Kube
         // Implementation
 
         /// <summary>
-        /// Enumerates the neonKUBE standard Docker labels and values.
+        /// Enumerates the cluster standard Docker labels and values.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -443,8 +443,6 @@ namespace Neon.Kube
                 // WARNING: 
                 //
                 // This method will need to be updated whenever new standard labels are added or changed.
-                // The [nhive/neon-hive-manager] and [nhive/neon-proxy-manager] service images will also 
-                // need to be rebuilt.
 
                 var list = new List<KeyValuePair<string, object>>(20);
 
@@ -513,8 +511,6 @@ namespace Neon.Kube
             // WARNING: 
             //
             // This method will need to be updated whenever new standard labels are added or changed.
-            // The [nhive/neon-hive-manager] and [nhive/neon-proxy-manager] service images will also 
-            // need to be rebuilt.
 
             foreach (var label in labels)
             {
@@ -606,8 +602,6 @@ namespace Neon.Kube
             // WARNING: 
             //
             // This method will need to be updated whenever new standard labels are added or changed.
-            // The [nhive/neon-hive-manager] and [nhive/neon-proxy-manager] service images will also 
-            // need to be rebuilt.
 
             target.StorageCapacityGB    = this.StorageCapacityGB;
             target.StorageLocal         = this.StorageLocal;
@@ -633,12 +627,12 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the node labels.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             // Verify that custom node label names satisfy the 
             // following criteria:

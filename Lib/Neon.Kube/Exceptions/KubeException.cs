@@ -21,7 +21,7 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a neonKUBE related related error.
+    /// Describes a cluster related related error.
     /// </summary>
     public class KubeException : Exception
     {

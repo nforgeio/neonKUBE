@@ -26,7 +26,7 @@ namespace NeonCli
         /// <summary>
         /// Verifies that the node has the correct operating system installed.
         /// </summary>
-        /// <param name="node">The target hive node.</param>
+        /// <param name="node">The target cluster node.</param>
         public static void VerifyOS(SshProxy<NodeDefinition> node)
         {
             node.Status = "check: OS";
@@ -155,11 +155,11 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Configures the global environment variables that describe the configuration 
-        /// of the server within the hive.
+        /// of the server within the cluster.
         /// </summary>
         /// <param name="node">The server to be updated.</param>
-        /// <param name="clusterDefinition">The hive definition.</param>
-        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition)
+        /// <param name="kubeDefinition">The cluster definition.</param>
+        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition)
         {
             node.Status = "environment variables";
 
@@ -202,16 +202,16 @@ TCPKeepAlive yes
                 }
             }
 
-            // Add the global neonKUBE related environment variables. 
+            // Add the global cluster related environment variables. 
 
-            sb.AppendLine($"NEON_HIVE_PROVISIONER={clusterDefinition.Provisioner}");
-            sb.AppendLine($"NEON_HIVE={clusterDefinition.Name}");
-            sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
-            sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
+            sb.AppendLine($"NEON_HIVE_PROVISIONER={kubeDefinition.Provisioner}");
+            sb.AppendLine($"NEON_HIVE={kubeDefinition.Name}");
+            sb.AppendLine($"NEON_DATACENTER={kubeDefinition.Datacenter.ToLowerInvariant()}");
+            sb.AppendLine($"NEON_ENVIRONMENT={kubeDefinition.Environment.ToString().ToLowerInvariant()}");
 
-            if (clusterDefinition.Hosting != null)
+            if (kubeDefinition.Hosting != null)
             {
-                sb.AppendLine($"NEON_HOSTING={clusterDefinition.Hosting.Environment.ToMemberString().ToLowerInvariant()}");
+                sb.AppendLine($"NEON_HOSTING={kubeDefinition.Hosting.Environment.ToMemberString().ToLowerInvariant()}");
             }
 
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
@@ -226,7 +226,7 @@ TCPKeepAlive yes
 
             var sbNameservers = new StringBuilder();
 
-            foreach (var nameServer in clusterDefinition.Network.Nameservers)
+            foreach (var nameServer in kubeDefinition.Network.Nameservers)
             {
                 sbNameservers.AppendWithSeparator(nameServer, ",");
             }
@@ -251,12 +251,12 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Initializes a near virgin server with the basic capabilities required
-        /// for a neonKUBE host node.
+        /// for a cluster host node.
         /// </summary>
-        /// <param name="node">The target hive node.</param>
-        /// <param name="clusterDefinition">The hive definition.</param>
+        /// <param name="node">The target cluster node.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(SshProxy<NodeDefinition> node, KubeDefinition clusterDefinition, bool shutdown = false)
+        public static void PrepareNode(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition, bool shutdown = false)
         {
             if (node.FileExists($"{KubeHostFolders.State}/setup/prepared"))
             {
@@ -264,14 +264,14 @@ TCPKeepAlive yes
             }
 
             //-----------------------------------------------------------------
-            // Ensure that the hive host folders exist.
+            // Ensure that the cluster host folders exist.
 
-            node.CreateHiveHostFolders();
+            node.CreateHostFolders();
 
             //-----------------------------------------------------------------
             // Package manager configuration.
 
-            if (!clusterDefinition.NodeOptions.AllowPackageManagerIPv6)
+            if (!kubeDefinition.NodeOptions.AllowPackageManagerIPv6)
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
                 // with the package mirrors, since IPv6 often doesn't work.
@@ -282,19 +282,19 @@ TCPKeepAlive yes
 
             // Configure [apt] to retry.
 
-            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{clusterDefinition.NodeOptions.PackageManagerRetries}\";");
+            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{kubeDefinition.NodeOptions.PackageManagerRetries}\";");
             node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries");
 
             //-----------------------------------------------------------------
             // Other configuration.
 
             ConfigureOpenSSH(node);
-            node.UploadConfigFiles(clusterDefinition);
-            node.UploadResources(clusterDefinition);
+            node.UploadConfigFiles(kubeDefinition);
+            node.UploadResources(kubeDefinition);
 
-            if (clusterDefinition != null)
+            if (kubeDefinition != null)
             {
-                ConfigureEnvironmentVariables(node, clusterDefinition);
+                ConfigureEnvironmentVariables(node, kubeDefinition);
             }
 
             node.SudoCommand("safe-apt-get update");
@@ -307,7 +307,7 @@ TCPKeepAlive yes
                     node.Reboot(wait: true);
                 });
 
-            // We need to upload the hive configuration and initialize drives attached 
+            // We need to upload the cluster configuration and initialize drives attached 
             // to the node.  We're going to assume that these are not already initialized.
 
             // $todo(jeff.lill): 
@@ -316,7 +316,7 @@ TCPKeepAlive yes
             // based drive array or something.  I'm going to defer this to later and
             // concentrate on commodity hardware and cloud deployments for now. 
 
-            CommonSteps.ConfigureEnvironmentVariables(node, clusterDefinition);
+            CommonSteps.ConfigureEnvironmentVariables(node, kubeDefinition);
 
             node.Status = "run: setup-disk.sh";
             node.SudoCommand("setup-disk.sh");

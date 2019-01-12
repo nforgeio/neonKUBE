@@ -10,7 +10,7 @@
 #       using a [PreprocessReader].
 #
 # This script handles the configuration of a near-virgin Ubuntu 14.04 server 
-# install into one suitable for deploying a neonKUBE cluster to.  This
+# install into one suitable for deploying a cluster cluster to.  This
 # script requires that:
 #
 #       * OpenSSH was installed

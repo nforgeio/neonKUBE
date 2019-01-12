@@ -41,7 +41,7 @@ namespace Neon.Kube
         /// beginning.  This defaults to <c>false</c>.
         /// </para>
         /// <note>
-        /// This is intended for use by neonKUBE developers.
+        /// This is intended for use by cluster developers.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Debug", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -69,9 +69,9 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
             if (StepStaggerSeconds < 0)
             {

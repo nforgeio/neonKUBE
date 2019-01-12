@@ -31,7 +31,7 @@ using Neon.Time;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Manages hive provisioning on Amazon Web Services.
+    /// Manages cluster provisioning on Amazon Web Services.
     /// </summary>
     [HostingProvider(HostingEnvironments.Aws)]
     public class AwsHostingManager : HostingManager
@@ -51,21 +51,21 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private KubeProxy hive;
+        private KubeProxy cluster;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="hive">The hive being managed.</param>
+        /// <param name="cluster">The cluster being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AwsHostingManager(KubeProxy hive, string logFolder = null)
+        public AwsHostingManager(KubeProxy cluster, string logFolder = null)
         {
-            hive.HostingManager = this;
+            cluster.HostingManager = this;
 
-            this.hive = hive;
+            this.cluster = cluster;
         }
 
         /// <inheritdoc/>
@@ -78,7 +78,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(KubeDefinition clusterDefinition)
+        public override void Validate(KubeDefinition kubeDefinition)
         {
         }
 
@@ -91,7 +91,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: hive.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>

@@ -214,13 +214,13 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the prefix to be used when provisioning virtual machines in hypervisor environments.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <returns>The prefix.</returns>
-        public string GetVmNamePrefix(KubeDefinition clusterDefinition)
+        public string GetVmNamePrefix(KubeDefinition kubeDefinition)
         {
             if (VmNamePrefix == null)
             {
-                return $"{clusterDefinition.Name}-".ToLowerInvariant();
+                return $"{kubeDefinition.Name}-".ToLowerInvariant();
             }
             else if (string.IsNullOrWhiteSpace(VmNamePrefix))
             {
@@ -309,12 +309,12 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             switch (Environment)
             {
@@ -325,7 +325,7 @@ namespace Neon.Kube
                         throw new KubeDefinitionException($"[{nameof(HostingOptions)}.{nameof(Aws)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
-                    Aws.Validate(clusterDefinition);
+                    Aws.Validate(kubeDefinition);
                     break;
 
                 case HostingEnvironments.Azure:
@@ -335,7 +335,7 @@ namespace Neon.Kube
                         throw new KubeDefinitionException($"[{nameof(HostingOptions)}.{nameof(Azure)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
-                    Azure.Validate(clusterDefinition);
+                    Azure.Validate(kubeDefinition);
                     break;
 
                 case HostingEnvironments.Google:
@@ -345,35 +345,35 @@ namespace Neon.Kube
                         throw new KubeDefinitionException($"[{nameof(HostingOptions)}.{nameof(Google)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
-                    Google.Validate(clusterDefinition);
+                    Google.Validate(kubeDefinition);
                     break;
 
                 case HostingEnvironments.HyperV:
 
                     HyperV = HyperV ?? new HyperVOptions();
 
-                    HyperV.Validate(clusterDefinition);
+                    HyperV.Validate(kubeDefinition);
                     break;
 
                 case HostingEnvironments.HyperVDev:
 
                     LocalHyperV = LocalHyperV ?? new LocalHyperVOptions();
 
-                    LocalHyperV.Validate(clusterDefinition);
+                    LocalHyperV.Validate(kubeDefinition);
                     break;
 
                 case HostingEnvironments.Machine:
 
                     Machine = Machine ?? new MachineOptions();
 
-                    Machine.Validate(clusterDefinition);
+                    Machine.Validate(kubeDefinition);
                     break;
 
                 case HostingEnvironments.XenServer:
 
                     XenServer = XenServer ?? new XenServerOptions();
 
-                    XenServer.Validate(clusterDefinition);
+                    XenServer.Validate(kubeDefinition);
                     break;
 
                 default:
@@ -393,16 +393,16 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the Hypervisor related options.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <param name="remoteHypervisors">
         /// Indicates that we're going to be deploying to remote hypervisor
         /// host machines as opposed to the local workstation.
         /// </param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        internal void ValidateHypervisor(KubeDefinition clusterDefinition, bool remoteHypervisors)
+        internal void ValidateHypervisor(KubeDefinition kubeDefinition, bool remoteHypervisors)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             if (VmProcessors <= 0)
             {
@@ -423,7 +423,7 @@ namespace Neon.Kube
             var hostNameSet    = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             var hostAddressSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var vmHost in clusterDefinition.Hosting.VmHosts)
+            foreach (var vmHost in kubeDefinition.Hosting.VmHosts)
             {
                 if (hostNameSet.Contains(vmHost.Name))
                 {
@@ -445,17 +445,17 @@ namespace Neon.Kube
 
             if (remoteHypervisors)
             {
-                if (clusterDefinition.Hosting.VmHosts.Count == 0)
+                if (kubeDefinition.Hosting.VmHosts.Count == 0)
                 {
                     throw new KubeDefinitionException($"At least one host XenServer must be specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
                 }
 
                 foreach (var vmHost in VmHosts)
                 {
-                    vmHost.Validate(clusterDefinition);
+                    vmHost.Validate(kubeDefinition);
                 }
 
-                foreach (var node in clusterDefinition.NodeDefinitions.Values)
+                foreach (var node in kubeDefinition.NodeDefinitions.Values)
                 {
                     if (string.IsNullOrEmpty(node.VmHost))
                     {

@@ -27,8 +27,8 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// This tool is used to configure the nodes of a Neon Docker Swarm hive.
-    /// See <b>$/Doc/Ubuntu-16.04 Hive Deploy.docx</b> for more information.
+    /// This tool is used to configure the nodes of a cluster.
+    /// See <b>$/Doc/Ubuntu-18.04 cluster Deploy.docx</b> for more information.
     /// </summary>
     public static class Program
     {
@@ -73,7 +73,7 @@ OPTIONS:
     --help                              - Display help
     -q, --quiet                         - Disables operation progress
     --shim                              - Run the command in Docker if possible
-    -w=SECONDS, --wait=SECONDS          - Seconds to delay for hive stablization 
+    -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster stablization 
                                           (defaults to 60s).
 ";
             // Disable any logging that might be performed by library classes.
@@ -108,7 +108,7 @@ OPTIONS:
                 }
             }
 
-            // Ensure that all of the hive hosting manager implementations are loaded.
+            // Ensure that all of the cluster hosting manager implementations are loaded.
 
             new HostingManagerFactory(() => HostingLoader.Initialize());
 
@@ -125,7 +125,7 @@ OPTIONS:
                 {
                     cmdLine.DefineOption("--machine-username");
                     cmdLine.DefineOption("--machine-password");
-                    cmdLine.DefineOption("-os").Default = "ubuntu-16.04";
+                    cmdLine.DefineOption("-os").Default = "Ubuntu-18.04";
                     cmdLine.DefineOption("-q", "--quiet");
                     cmdLine.DefineOption("-m", "--max-parallel").Default = "5";
                     cmdLine.DefineOption("-w", "--wait").Default = "60";
@@ -280,7 +280,7 @@ OPTIONS:
                             // Run the [nhive/neon-cli] Docker image, passing the modified command line 
                             // arguments and mounting the following read/write volumes:
                             //
-                            //      /neonkube       - the root folder for this workstation's hive logins
+                            //      /neonkube       - the root folder for this workstation's cluster logins
                             //      /shim           - the generated shim files
                             //      /log            - the logging folder (if logging is enabled)
                             //
@@ -599,7 +599,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                     }
                 }
 
-                // Load the current hive if there is one.
+                // Load the current cluster if there is one.
 
                 // $todo(jeff.lill): Implement this?
                 //HiveLogin = GetHiveLogin();
@@ -611,8 +611,8 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                     if (string.IsNullOrWhiteSpace(MachineUsername) || string.IsNullOrEmpty(MachinePassword))
                     {
                         Console.WriteLine();
-                        Console.WriteLine("    Enter hive SSH credentials:");
-                        Console.WriteLine("    ---------------------------");
+                        Console.WriteLine("    Enter cluster SSH credentials:");
+                        Console.WriteLine("    -------------------------------");
                     }
 
                     while (string.IsNullOrWhiteSpace(MachineUsername))
@@ -630,7 +630,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 {
                     // $hack(jeff.lill):
                     //
-                    // Only the [neon hive prepare ...] command recognizes the [--machine-username] and
+                    // Only the [neon cluster prepare ...] command recognizes the [--machine-username] and
                     // [--machine-password] options.  These can cause problems for other commands
                     // so we're going to set both to NULL here.
                     //
@@ -664,9 +664,9 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// Message written then a user is not logged into a hive.
+        /// Message written then a user is not logged into a cluster.
         /// </summary>
-        public const string MustLoginMessage = "*** ERROR: You must first log into a hive.";
+        public const string MustLoginMessage = "*** ERROR: You must first log into a cluster.";
 
         /// <summary>
         /// Returns the Git source code branch.
@@ -675,7 +675,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
         /// <summary>
         /// Optionally set to the registry to be used to override any explicit or implicit <b>nhive</b>
-        /// or <b>nhivedev</b> organizations specified when deploying or updating a neonKUBE.
+        /// or <b>nhivedev</b> organizations specified when deploying or updating a cluster.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -687,7 +687,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
         /// <summary>
         /// Optionally set to the tag to be used to override any explicit or implicit <b>:latest</b>
-        /// image tags specified when deploying or updating a neonKUBE.
+        /// image tags specified when deploying or updating a cluster.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -698,7 +698,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// </para>
         /// <para>
         /// This will direct <b>neon-cli</b> to use images built from the branch rather than the default
-        /// production images without needing to modify hive configuration files.  All the developer
+        /// production images without needing to modify cluster configuration files.  All the developer
         /// needs to do is ensure that all of the required images were built from that branch first and
         /// then published to Docker Hub.
         /// </para>
@@ -958,14 +958,14 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         public static string KubeRootFolder { get; private set; }
 
         /// <summary>
-        /// Returns the username used to secure the hive nodes before they are setup.  This
-        /// defaults to <b>sysadmin</b> which is used for the neonKUBE machine templates.
+        /// Returns the username used to secure the cluster nodes before they are setup.  This
+        /// defaults to <b>sysadmin</b> which is used for the cluster machine templates.
         /// </summary>
         public static string MachineUsername { get; set; }
 
         /// <summary>
-        /// The password used to secure the hive nodes before they are setup.  This defaults
-        /// to <b>sysadmin0000</b> which is used for the neonKUBE machine templates.
+        /// The password used to secure the cluster nodes before they are setup.  This defaults
+        /// to <b>sysadmin0000</b> which is used for the cluster machine templates.
         /// </summary>
         public static string MachinePassword { get; set; }
 
@@ -981,7 +981,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         public static int MaxParallel { get; set; }
 
         /// <summary>
-        /// The seconds to wait for hive stablization.
+        /// The seconds to wait for cluster stablization.
         /// </summary>
         public static double WaitSeconds { get; set; }
 
@@ -1084,12 +1084,12 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// Uses WinSCP to convert an OpenSSH PEM formatted key to the PPK format
         /// required by PuTTY/WinSCP.  This works only on Windows.
         /// </summary>
-        /// <param name="hive">The related hive login information.</param>
+        /// <param name="kube">The related cluster login information.</param>
         /// <param name="pemKey">The OpenSSH PEM key.</param>
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(KubeContext hive, string pemKey)
+        public static string ConvertPUBtoPPK(KubeContext kube, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {
@@ -1104,7 +1104,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 File.WriteAllText(pemKeyPath, pemKey);
 
-                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{hive.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{kube.Definition.Name} Key"" /output=""{ppkKeyPath}""");
 
                 if (result.ExitCode != 0)
                 {

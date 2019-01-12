@@ -162,7 +162,7 @@ namespace Neon.Xen
                 //
                 // where <template-name> identifies the template and "0" indicates the disk number.
                 //
-                // NOTE: This assumes that neonKUBE VM templates have only a single disk, which
+                // NOTE: This assumes that cluster VM templates have only a single disk, which
                 //       will probably always be the case since we only add disks after the VMs
                 //       are created.
 

@@ -27,17 +27,17 @@ namespace Neon.Kube
     /// <summary>
     /// <para>
     /// Holds the <b>sensitive</b> information required to remotely manage an operating
-    /// neonHIVE using the <b>neon-cli</b>.
+    /// cluster using the <b>neon-cli</b>.
     /// </para>
     /// <note>
     /// <b>WARNING:</b> The information serialized by this class must be carefully protected
-    /// because it can be used to assume control over a hive.
+    /// because it can be used to assume control over a cluster.
     /// </note>
     /// </summary>
     public class KubeContext
     {
         /// <summary>
-        /// Returns the hive name.
+        /// Returns the cluster name.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -67,7 +67,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The optional file system path where the hive login is persisted.  This is
+        /// The optional file system path where the cluster login is persisted.  This is
         /// used by the <see cref="Save"/> method.
         /// </summary>
         [JsonIgnore]
@@ -75,13 +75,13 @@ namespace Neon.Kube
         public string Path { get; set; }
 
         /// <summary>
-        /// The operator's username associated with these hive secrets.
+        /// The operator's username associated with these cluster secrets.
         /// </summary>
         [JsonProperty(PropertyName = "Username", Required = Required.Always)]
         public string Username { get; set; }
 
         /// <summary>
-        /// Specifies whether communication with the hive should be made via
+        /// Specifies whether communication with the cluster should be made via
         /// the VPN or directly (the default).
         /// </summary>
         [JsonIgnore]
@@ -89,29 +89,29 @@ namespace Neon.Kube
         public bool ViaVpn { get; set; }
 
         /// <summary>
-        /// The hive definition.
+        /// The cluster definition.
         /// </summary>
         [JsonProperty(PropertyName = "Definition", Required = Required.Always)]
         public KubeDefinition Definition { get; set; }
 
         /// <summary>
         /// Indicates that the credentials are not fully initialized.  This will be <c>true</c> when
-        /// a hive has been prepared but has not yet been fully setup.  This defaults to <c>true</c>
-        /// and will be set to <c>false</c> after the hive has been fully configured.
+        /// a cluster has been prepared but has not yet been fully setup.  This defaults to <c>true</c>
+        /// and will be set to <c>false</c> after the cluster has been fully configured.
         /// </summary>
         [JsonProperty(PropertyName = "SetupPending", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(true)]
         public bool SetupPending { get; set; } = true;
 
         /// <summary>
-        /// Indicates that the login has hive root capabilities (e.g. managing the cloud infrastructure and other user logins).
+        /// Indicates that the login has cluster root capabilities (e.g. managing the cloud infrastructure and other user logins).
         /// </summary>
         [JsonProperty(PropertyName = "IsRoot", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
         public bool IsRoot { get; set; }
 
         /// <summary>
-        /// Indicates whether a strong host SSH password was generated for the hive.
+        /// Indicates whether a strong host SSH password was generated for the cluster.
         /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "HasStrongSshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -119,14 +119,14 @@ namespace Neon.Kube
         public bool HasStrongSshPassword { get; set; }
 
         /// <summary>
-        /// The root SSH username for the hive nodes.
+        /// The root SSH username for the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string SshUsername { get; set; }
 
         /// <summary>
-        /// The root SSH password password for the hive nodes.
+        /// The root SSH password password for the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -134,14 +134,14 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// The temporary root SSH password password for the hive nodes used while
-        /// provisoning the hive.  This will be replaced by <see cref="SshPassword"/>
-        /// once hive setup has completed.
+        /// The temporary root SSH password password for the cluster nodes used while
+        /// provisoning the cluster.  This will be replaced by <see cref="SshPassword"/>
+        /// once cluster setup has completed.
         /// </para>
         /// <note>
-        /// This property can be useful for debugging hive provisioning or setup
+        /// This property can be useful for debugging cluster provisioning or setup
         /// problems before the final <see cref="SshPassword"/> password is
-        /// configured for all hive hosts (just before setup completed).
+        /// configured for all cluster hosts (just before setup completed).
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "SshProvisionPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -149,7 +149,7 @@ namespace Neon.Kube
         public string SshProvisionPassword { get; set; }
 
         /// <summary>
-        /// The public and private parts of the SSH client key when the hive is
+        /// The public and private parts of the SSH client key when the cluster is
         /// configured to authenticate clients via public keys or <c>null</c> when
         /// username/password authentication is enabled.
         /// </summary>
@@ -158,20 +158,20 @@ namespace Neon.Kube
         public SshClientKey SshClientKey { get; set; }
 
         /// <summary>
-        /// The SSH RSA private key fingerprint used to secure the hive servers.  This is an 
+        /// The SSH RSA private key fingerprint used to secure the cluster servers.  This is an 
         /// MD5 hash encoded as hex bytes separated by colons.
         /// </summary>
         [JsonProperty(PropertyName = "SshHiveHostKeyFingerprint")]
         public string SshHiveHostKeyFingerprint { get; set; }
 
         /// <summary>
-        /// The SSH RSA private key used to secure the hive servers.
+        /// The SSH RSA private key used to secure the cluster servers.
         /// </summary>
         [JsonProperty(PropertyName = "SshHiveHostPrivateKey")]
         public string SshHiveHostPrivateKey { get; set; }
 
         /// <summary>
-        /// The SSH RSA private key used to secure the hive servers.
+        /// The SSH RSA private key used to secure the cluster servers.
         /// </summary>
         [JsonProperty(PropertyName = "SshHiveHostPublicKey")]
         public string SshHiveHostPublicKey { get; set; }
@@ -199,7 +199,7 @@ namespace Neon.Kube
         internal bool InitMachine { get; set; }
 
         /// <summary>
-        /// Returns the <see cref="SshCredentials"/> for the hive that can be used
+        /// Returns the <see cref="SshCredentials"/> for the cluster that can be used
         /// by <see cref="SshProxy{TMetadata}"/> and the <b>SSH.NET</b> Nuget package.
         /// </summary>
         /// <returns></returns>
@@ -215,16 +215,6 @@ namespace Neon.Kube
             }
             else
             {
-                // $todo(jeff.lill):
-                //
-                // In the future, I expect that some hive services (like [neon-hive-manager])
-                // may need to connect to cluster nodes.  For this to work, we'd need to have
-                // some way to retrieve the SSH (and perhaps other credentials) from Vault
-                // and set them somewhere in the [NeonHive] class (perhaps as the current
-                // login).
-                //
-                // This note is repeated in: HiveProxy.cs
-
                 return SshCredentials.None;
             }
         }
@@ -255,7 +245,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Persists the hive login information as JSON to the file system at <see cref="Path"/>.
+        /// Persists the cluster login information as JSON to the file system at <see cref="Path"/>.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown is <see cref="Path"/> is not set.</exception>
         public void Save()

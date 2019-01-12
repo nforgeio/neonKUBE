@@ -29,12 +29,12 @@ namespace Neon.Kube
     public static class AzureHelper
     {
         /// <summary>
-        /// The maximum number of nodes currently allowed in a neonKUBE deployed to Azure.
+        /// The maximum number of nodes currently allowed in a cluster deployed to Azure.
         /// </summary>
         public const int MaxHiveNodes = 100;
 
         /// <summary>
-        /// The maximum number of hosted load balanced TCP/UDP endpoints allowed  in a neonKUBE deployed to Azure.
+        /// The maximum number of hosted load balanced TCP/UDP endpoints allowed  in a cluster deployed to Azure.
         /// This is an Azure limit.
         /// </summary>
         public const int MaxHostedEndpoints = 150;

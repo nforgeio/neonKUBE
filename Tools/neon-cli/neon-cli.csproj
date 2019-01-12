@@ -56,7 +56,6 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube.Machine\Neon.Kube.Machine.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Docker\Neon.Docker.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Xen\Neon.Kube.Xen.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
   </ItemGroup>
@@ -68,7 +67,7 @@
     <None Update="Resources\Ubuntu-18.04\archive\setup-disk.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\conf\hive.conf.sh">
+    <None Update="Resources\Ubuntu-18.04\conf\kube.conf.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\conf\cluster.conf.sh.txt">
@@ -83,13 +82,7 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-apt-ready.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\setup\setup-consul-proxy.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-consul-proxy.sh.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-18.04\setup\setup-consul-server.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-consul-server.sh.txt">
@@ -149,13 +142,7 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-utility.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\setup\setup-vault-client.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-vault-client.sh.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-18.04\setup\setup-vault-server.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-vault-server.sh.txt">

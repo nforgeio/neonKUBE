@@ -17,7 +17,7 @@ namespace Neon.Kube
     /// </summary>
     public class HyperVOptions
     {
-        private const string defaultHostVhdxUri      = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.vhdx";
+        private const string defaultHostVhdxUri      = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx";
         internal const string defaultVmMinimumMemory = "2GB";
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// URI to the zipped VHDX image with the base Docker host operating system.  This defaults to
-        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.vhdx</b>
+        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx</b>
         /// which is the latest supported Ubuntu 16.04 image.
         /// </para>
         /// <note>
@@ -50,14 +50,14 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
-            if (!clusterDefinition.Network.StaticIP)
+            if (!kubeDefinition.Network.StaticIP)
             {
                 throw new KubeDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to Hyper-V.");
             }
@@ -67,8 +67,8 @@ namespace Neon.Kube
                 throw new KubeDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
             }
 
-            clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
-            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: false);  // Hypervisor options must be valid.
+            kubeDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
+            kubeDefinition.Hosting.ValidateHypervisor(kubeDefinition, remoteHypervisors: false);  // Hypervisor options must be valid.
         }
     }
 }

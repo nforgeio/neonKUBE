@@ -27,16 +27,10 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 
-// $todo(jeff.lill): 
-//
-// [ClusterDefinition.Validate()] should accept a parameter that enables a call to the
-// headend services so that the Docker, Consul, Vault, and other cluster host software
-// versions can be validated.
-
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a neonKUBE.
+    /// Describes a cluster.
     /// </summary>
     public class KubeDefinition
     {
@@ -61,7 +55,7 @@ namespace Neon.Kube
         public static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9_]))*$", RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// The prefix reserved for neonKUBE related Docker daemon, image, and container labels.
+        /// The prefix reserved for cluster related Docker daemon, image, and container labels.
         /// </summary>
         public const string ReservedLabelPrefix = "io.neonkube";
 
@@ -124,16 +118,16 @@ namespace Neon.Kube
                 {
                     using (var preprocessReader = new PreprocessReader(stringReader))
                     {
-                        var clusterDefinition = NeonHelper.JsonDeserialize<KubeDefinition>(preprocessReader.ReadToEnd(), strict: strict);
+                        var kubeDefinition = NeonHelper.JsonDeserialize<KubeDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
-                        if (clusterDefinition == null)
+                        if (kubeDefinition == null)
                         {
                             throw new ArgumentException($"Invalid cluster definition in [{path}].");
                         }
 
                         // Populate the [node.Name] properties from the dictionary name.
 
-                        foreach (var item in clusterDefinition.NodeDefinitions)
+                        foreach (var item in kubeDefinition.NodeDefinitions)
                         {
                             var node = item.Value;
 
@@ -147,38 +141,10 @@ namespace Neon.Kube
                             }
                         }
 
-                        clusterDefinition.Validate();
+                        kubeDefinition.Validate();
 
-                        return clusterDefinition;
+                        return kubeDefinition;
                     }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Verifies that the string passed is a valid 16-byte Base64 encoded encryption
-        /// key or <c>null</c> or empty.
-        /// </summary>
-        /// <param name="key">The key to be tested.</param>
-        /// <exception cref="ArgumentException">Thrown if the key is not valid.</exception>
-        internal static void VerifyEncryptionKey(string key)
-        {
-            if (!string.IsNullOrEmpty(key))
-            {
-                byte[] keyBytes;
-
-                try
-                {
-                    keyBytes = Convert.FromBase64String(key);
-                }
-                catch
-                {
-                    throw new ArgumentException($"Invalid Consul key [{key}].  Malformed Base64 string.");
-                }
-
-                if (keyBytes.Length != 16)
-                {
-                    throw new ArgumentException($"Invalid Consul key [{key}].  Key must contain 16 bytes.");
                 }
             }
         }
@@ -676,7 +642,7 @@ namespace Neon.Kube
         /// value specified.
         /// </para>
         /// <para>
-        /// Properties may be custom label names, neonKUBE label names prefixed with <b>io.neonkube.</b>,
+        /// Properties may be custom label names, cluster label names prefixed with <b>io.neonkube.</b>,
         /// or <b>node</b> to indicate the node name.  Label name lookup is case insenstive.
         /// </para>
         /// </remarks>

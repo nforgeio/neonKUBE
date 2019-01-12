@@ -50,7 +50,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
-    <ProjectReference Include="..\Neon.Docker\Neon.Docker.csproj" />
   </ItemGroup>
 
   <ItemGroup>

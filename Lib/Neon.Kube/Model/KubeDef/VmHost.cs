@@ -66,10 +66,10 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the options.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        internal void Validate(KubeDefinition clusterDefinition)
+        internal void Validate(KubeDefinition kubeDefinition)
         {
             if (string.IsNullOrEmpty(Name))
             {
@@ -81,12 +81,12 @@ namespace Neon.Kube
                 throw new KubeDefinitionException($"[{nameof(VmHost)}.{nameof(Address)}] is required when specifying a hypervisor host.");
             }
 
-            if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(clusterDefinition.Hosting.VmHostUsername))
+            if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(kubeDefinition.Hosting.VmHostUsername))
             {
                 throw new KubeDefinitionException($"[{nameof(VmHost)}.{nameof(Username)}] is required when specifying a hypervisor host and no default username is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHostUsername)}].");
             }
 
-            if (string.IsNullOrEmpty(Password) && string.IsNullOrEmpty(clusterDefinition.Hosting.VmHostPassword))
+            if (string.IsNullOrEmpty(Password) && string.IsNullOrEmpty(kubeDefinition.Hosting.VmHostPassword))
             {
                 throw new KubeDefinitionException($"[{nameof(VmHost)}.{nameof(Password)}] is required when specifying a hypervisor host and no default password is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHostPassword)}].");
             }

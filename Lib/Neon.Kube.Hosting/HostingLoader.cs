@@ -40,7 +40,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Loads the known hive hosting manager assemblies so they'll be available
+        /// Loads the known cluster hosting manager assemblies so they'll be available
         /// to <see cref="HostingManagerFactory.GetManager(KubeProxy, string)"/>, 
         /// and <see cref="HostingManager.Validate(KubeDefinition)"/> when
         /// they are called.
@@ -158,26 +158,26 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the <see cref="HostingManager"/> for a specific environment.
         /// </summary>
-        /// <param name="hive">The hive being managed.</param>
+        /// <param name="cluster">The cluster being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
         /// <returns>
         /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
-        /// could be located for the specified hive environment.
+        /// could be located for the specified cluster environment.
         /// </returns>
-        public HostingManager GetManager(KubeProxy hive, string logFolder = null)
+        public HostingManager GetManager(KubeProxy cluster, string logFolder = null)
         {
-            Covenant.Requires<ArgumentNullException>(hive != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null);
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
-            if (!environmentToHostingManager.TryGetValue(hive.Definition.Hosting.Environment, out var managerType))
+            if (!environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))
             {
                 return null;
             }
 
-            return (HostingManager)Activator.CreateInstance(managerType, hive, logFolder);
+            return (HostingManager)Activator.CreateInstance(managerType, cluster, logFolder);
         }
     }
 }

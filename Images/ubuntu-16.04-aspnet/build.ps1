@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds a neonKUBE Ubuntu image with the specified .NET Core packages.
+# Builds a cluster Ubuntu image with the specified .NET Core packages.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
@@ -16,7 +16,7 @@ param
 
 "   "
 "======================================="
-"* UBUNTU-16.04-ASPNET " + $tag
+"* Ubuntu-18.04-ASPNET " + $tag
 "======================================="
 
 $organization = DockerOrg

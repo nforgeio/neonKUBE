@@ -14,7 +14,7 @@
 
 ARG         ORGANIZATION
 ARG         BRANCH
-FROM        ${ORGANIZATION}/ubuntu-16.04-dotnet:${BRANCH}-2.1
+FROM        ${ORGANIZATION}/Ubuntu-18.04-dotnet:${BRANCH}-2.1
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

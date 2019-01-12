@@ -27,7 +27,7 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a network endpoint to be exposed by a neonKUBE deployed to
+    /// Describes a network endpoint to be exposed by a cluster deployed to
     /// hosting providers such as AWS, Azure, or Google by platform load platform
     /// load balancers.
     /// </summary>
@@ -39,14 +39,14 @@ namespace Neon.Kube
     /// </note>
     /// <para>
     /// A hosted endpoint controls which external network traffic is routed into
-    /// a neonKUBE by specifying the external network port where the traffic is
-    /// received and the internal hive port where the traffic will be routed.
+    /// a cluster by specifying the external network port where the traffic is
+    /// received and the internal cluster port where the traffic will be routed.
     /// This also specifies whether the traffic is to be treated as TCP or UDP.
     /// </para>
     /// <para>
     /// This is typically used to route external TCP or UDP traffic to the
-    /// hive's public traffic manager via the Docker ingress network during
-    /// hive setup, by configuring a load balancer to balance traffic across
+    /// cluster's public traffic manager via the Docker ingress network during
+    /// cluster setup, by configuring a load balancer to balance traffic across
     /// all Docker nodes.  The ingress network will take care of forwarding traffic
     /// to the public traffic manager instances which will handle SSL termination
     /// (if required) and then forward traffic onto the target Docker service.
@@ -68,7 +68,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="protocol">Specifies the protocol.</param>
         /// <param name="externalPort">Specifies the external network port.</param>
-        /// <param name="internalPort">Specifies the internal hive network port.</param>
+        /// <param name="internalPort">Specifies the internal cluster network port.</param>
         public HostedEndpoint(HostedEndpointProtocol protocol, int externalPort, int internalPort)
         {
             this.Protocol     = protocol;
@@ -84,13 +84,13 @@ namespace Neon.Kube
         public HostedEndpointProtocol Protocol { get; set; } = HostedEndpointProtocol.Tcp;
 
         /// <summary>
-        /// Specifies the external network port from which traffic is to be routed into the hive.
+        /// Specifies the external network port from which traffic is to be routed into the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "FrontendPort", Required = Required.Always)]
         public int FrontendPort { get; set; }
 
         /// <summary>
-        /// Specifies the internal hive port where the traffic is to be routed.
+        /// Specifies the internal cluster port where the traffic is to be routed.
         /// </summary>
         [JsonProperty(PropertyName = "BackendPort", Required = Required.Always)]
         public int BackendPort { get; set; }
@@ -134,7 +134,7 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The hive definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
         public void Validate(KubeDefinition kubeDefinition)

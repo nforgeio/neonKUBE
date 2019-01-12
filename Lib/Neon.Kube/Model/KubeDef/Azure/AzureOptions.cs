@@ -281,21 +281,21 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
-            foreach (var ch in clusterDefinition.Name)
+            foreach (var ch in kubeDefinition.Name)
             {
                 if (char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
                 {
                     continue;
                 }
 
-                throw new KubeDefinitionException($"Hive name [{clusterDefinition.Name}] is not valid for Azure deployment.  Only letters, digits, dashes, or underscores are allowed.");
+                throw new KubeDefinitionException($"cluster name [{kubeDefinition.Name}] is not valid for Azure deployment.  Only letters, digits, dashes, or underscores are allowed.");
             }
 
             if (string.IsNullOrEmpty(SubscriptionId))
@@ -332,7 +332,7 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(ResourceGroup))
             {
-                ResourceGroup = clusterDefinition.Name;
+                ResourceGroup = kubeDefinition.Name;
             }
 
             if (ResourceGroup.Length > 64)
@@ -362,19 +362,19 @@ namespace Neon.Kube
 
             if (Environment != null)
             {
-                Environment.Validate(clusterDefinition);
+                Environment.Validate(kubeDefinition);
             }
 
             // Check Azure cluster limits.
 
-            if (clusterDefinition.Managers.Count() > KubeConst.MaxManagers)
+            if (kubeDefinition.Managers.Count() > KubeConst.MaxManagers)
             {
-                throw new KubeDefinitionException($"Hive manager count [{clusterDefinition.Managers.Count()}] exceeds the [{KubeConst.MaxManagers}] limit for neonHIVEs.");
+                throw new KubeDefinitionException($"cluster manager count [{kubeDefinition.Managers.Count()}] exceeds the [{KubeConst.MaxManagers}] limit for neonHIVEs.");
             }
 
-            if (clusterDefinition.Nodes.Count() > AzureHelper.MaxHiveNodes)
+            if (kubeDefinition.Nodes.Count() > AzureHelper.MaxHiveNodes)
             {
-                throw new KubeDefinitionException($"Hive node count [{clusterDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxHiveNodes}] limit for neonHIVEs deployed to Azure.");
+                throw new KubeDefinitionException($"cluster node count [{kubeDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxHiveNodes}] limit for neonHIVEs deployed to Azure.");
             }
         }
     }

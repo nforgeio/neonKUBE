@@ -15,17 +15,17 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Important neonKUBE constants.
+    /// Important cluster constants.
     /// </summary>
     public static class KubeConst
     {
         /// <summary>
-        /// Identifies the production neonKUBE public Docker registry.
+        /// Identifies the production cluster public Docker registry.
         /// </summary>
         public const string NeonProdRegistry = "nhive";
 
         /// <summary>
-        /// Identifies the development neonKUBE public Docker registry.
+        /// Identifies the development cluster public Docker registry.
         /// </summary>
         public const string NeonDevRegistry = "nhivedev";
 
@@ -70,7 +70,7 @@ namespace Neon.Kube
         public const string DefaulVmTemplatePassword = "sysadmin0000";
 
         /// <summary>
-        /// The maximum number of neonKUBE manager nodes.
+        /// The maximum number of cluster manager nodes.
         /// </summary>
         public const int MaxManagers = 5;
 

@@ -434,7 +434,7 @@ namespace Neon.Kube
         /// <summary>
         /// The associated <see cref="KubeProxy"/> or <c>null</c>.
         /// </summary>
-        public KubeProxy Hive { get; internal set; }
+        public KubeProxy Kube { get; internal set; }
 
         /// <summary>
         /// Returns the display name for the server.
@@ -801,14 +801,14 @@ namespace Neon.Kube
             var isPrivate = true;
             var port      = SshPort;
 
-            if (Hive?.HostingManager != null)
+            if (Kube?.HostingManager != null)
             {
-                var ep = Hive.HostingManager.GetSshEndpoint(this.Name);
+                var ep = Kube.HostingManager.GetSshEndpoint(this.Name);
 
                 address = ep.Address;
                 port    = ep.Port;
             }
-            else if (Hive != null && Hive.UseNodePublicAddress)
+            else if (Kube != null && Kube.UseNodePublicAddress)
             {
                 address   = PublicAddress;
                 isPrivate = false;
@@ -1229,7 +1229,7 @@ namespace Neon.Kube
         /// Ensures that the configuration and setup folders required for a Neon host
         /// node exist and have the appropriate permissions.
         /// </summary>
-        public void CreateHiveHostFolders()
+        public void CreateHostFolders()
         {
             Status = "prepare: host folders";
 
@@ -2453,7 +2453,7 @@ echo $? > {cmdFolder}/exit
         /// command, try uploading and executing a <see cref="CommandBundle"/> instead.
         /// </note>
         /// <para>
-        /// This method is intended for situations where one or more files need to be uploaded to a neonKUBE host node 
+        /// This method is intended for situations where one or more files need to be uploaded to a cluster host node 
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
@@ -2702,7 +2702,7 @@ echo $? > {cmdFolder}/exit
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
         /// <para>
-        /// This method is intended for situations where one or more files need to be uploaded to a neonKUBE host node 
+        /// This method is intended for situations where one or more files need to be uploaded to a cluster host node 
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
@@ -3381,110 +3381,6 @@ echo $? > {cmdFolder}/exit
             pos += pattern.Length;
 
             var posEnd = response.OutputText.IndexOf('\n', pos);
-
-            if (posEnd == -1)
-            {
-                posEnd = response.OutputText.Length;
-            }
-
-            var version = response.OutputText.Substring(pos, posEnd - pos).Trim();
-
-            return SemanticVersion.Parse(version);
-        }
-
-        /// <summary>
-        /// Returns the version of HashiCorp Consul installed on the node.
-        /// </summary>
-        /// <returns>The Consul version or <c>null</c> if Consul is not installed.</returns>
-        /// <param name="faultIfNotInstalled">
-        /// Optionally signal a node fault if the compontent is 
-        /// not installed.
-        /// </param>
-        public SemanticVersion GetConsulVersion(bool faultIfNotInstalled = false)
-        {
-            // We're going execute this command:
-            //
-            //      consul version
-            //
-            // to obtain the version information.  This will return something like:
-            //
-            //      Consul v1.1.0
-
-            var response = SudoCommand("consul version", RunOptions.None);
-
-            if (response.ExitCode != 0)
-            {
-                return null;
-            }
-
-            var pattern = "Consul v";
-            var pos     = response.OutputText.IndexOf(pattern);
-
-            if (pos == -1)
-            {
-                if (faultIfNotInstalled)
-                {
-                    Fault("CONSUL is not installed");
-                }
-
-                return null;
-            }
-
-            pos += pattern.Length;
-
-            var posEnd = response.OutputText.IndexOf('\n', pos);
-
-            if (posEnd == -1)
-            {
-                posEnd = response.OutputText.Length;
-            }
-
-            var version = response.OutputText.Substring(pos, posEnd - pos).Trim();
-
-            return SemanticVersion.Parse(version);
-        }
-
-        /// <summary>
-        /// Returns the version of HashiCorp Vault installed on the node.
-        /// </summary>
-        /// <param name="faultIfNotInstalled">
-        /// Optionally signal a node fault if the compontent is 
-        /// not installed.
-        /// </param>
-        /// <returns>The Vault version or <c>null</c> if Vault is not installed.</returns>
-        public SemanticVersion GetVaultVersion(bool faultIfNotInstalled = false)
-        {
-            // We're going execute this command:
-            //
-            //      vault version
-            //
-            // to obtain the version information.  This will return something like:
-            //
-            //      Vault v0.10.1 ('756fdc4587350daf1c65b93647b2cc31a6f119cd')
-
-            var response = SudoCommand("vault version", RunOptions.None);
-
-            if (response.ExitCode != 0)
-            {
-                return null;
-            }
-
-            var pattern = "Vault v";
-            var pos     = response.OutputText.IndexOf(pattern);
-
-            if (pos == -1)
-            {
-                if (faultIfNotInstalled)
-                {
-                    Fault("VAULT is not installed");
-                }
-
-                return null;
-            }
-
-            pos += pattern.Length;
-
-            var posEnd = response.OutputText.IndexOf(' ', pos);
 
             if (posEnd == -1)
             {

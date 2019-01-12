@@ -26,14 +26,14 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes the network options for a neonKUBE.
+    /// Describes the network options for a cluster.
     /// </summary>
     /// <remarks>
     /// <para>
     /// neonHIVEs can be deployed in two basic environments, cloud or on-premise.  Cloud providers include
     /// <see cref="HostingEnvironments.Aws"/>, <see cref="HostingEnvironments.Azure"/>, and <see cref="HostingEnvironments.Google"/>
     /// and on-premise providers include <see cref="HostingEnvironments.HyperVDev"/>, <see cref="HostingEnvironments.Machine"/> and
-    /// <see cref="HostingEnvironments.XenServer"/>.  Hive network options are interpreted somewhat differently
+    /// <see cref="HostingEnvironments.XenServer"/>.  cluster network options are interpreted somewhat differently
     /// depending on whether the cluster is being provisioned to the cloud or to on-premise hardware.
     /// </para>
     /// <para>
@@ -59,7 +59,7 @@ namespace Neon.Kube
     /// <item>
     ///     <term><see cref="NodesSubnet"/></term>
     ///     <description>
-    ///     This subnet describes where the neonKUBE Docker host node IP addresses will be located.  This may
+    ///     This subnet describes where the cluster Docker host node IP addresses will be located.  This may
     ///     be any valid subnet for on-premise deployments but will typically a <b>/24</b> or larger.  This
     ///     is determined automatically for cloud environments.
     ///     </description>
@@ -80,7 +80,7 @@ namespace Neon.Kube
     ///     addresses to be assigned to Docker services on the public network.
     ///     </para>
     ///     <note>
-    ///     This subnet is internal to the neonKUBE so you don't need to worry about conflicting
+    ///     This subnet is internal to the cluster so you don't need to worry about conflicting
     ///     with other hives or network services.
     ///     </note>
     ///     </description>
@@ -93,7 +93,7 @@ namespace Neon.Kube
     ///     addresses to be assigned to Docker services on the private network.
     ///     </para>
     ///     <note>
-    ///     This subnet is internal to the neonKUBE so you don't need to worry about conflicting
+    ///     This subnet is internal to the cluster so you don't need to worry about conflicting
     ///     with other hives or network services.
     ///     </note>
     ///     </description>
@@ -124,7 +124,7 @@ namespace Neon.Kube
     ///     This defaults to <b>10.168.0.0/21</b> and specifies where all cloud NIC and VPN client
     ///     addresses will be provisioned.  <see cref="CloudSubnet"/> will be automatically
     ///     split into <see cref="NodesSubnet"/> and <see cref="VpnPoolSubnet"/> and other internal
-    ///     subnets when the neonKUBE is provisioned. 
+    ///     subnets when the cluster is provisioned. 
     ///     </para>
     ///     <para>
     ///     This must be a <b>/21</b> subnet.
@@ -139,7 +139,7 @@ namespace Neon.Kube
     ///     addresses to be assigned to Docker services on the public network.
     ///     </para>
     ///     <note>
-    ///     This subnet is internal to the neonKUBE so you don't need to worry about conflicting
+    ///     This subnet is internal to the cluster so you don't need to worry about conflicting
     ///     with other hives or network services.
     ///     </note>
     ///     </description>
@@ -152,7 +152,7 @@ namespace Neon.Kube
     ///     addresses to be assigned to Docker services on the private network.
     ///     </para>
     ///     <note>
-    ///     This subnet is internal to the neonKUBE so you don't need to worry about conflicting
+    ///     This subnet is internal to the cluster so you don't need to worry about conflicting
     ///     with other hives or network services.
     ///     </note>
     ///     </description>
@@ -264,7 +264,7 @@ namespace Neon.Kube
         /// scenarios.
         /// </para>
         /// <para>
-        /// neonKUBE Consul DNS servers answer requests for names with the <b>cluster</b> top-level domain.
+        /// cluster Consul DNS servers answer requests for names with the <b>cluster</b> top-level domain.
         /// Other requests will be handled recursively by forwarding the request to one of the IP addresses
         /// specified here.
         /// </para>
@@ -408,7 +408,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// The cloud VPN server <b>/23</b> subnet.  Hive managers will have a NIC attached to this subnet 
+        /// The cloud VPN server <b>/23</b> subnet.  cluster managers will have a NIC attached to this subnet 
         /// in addition to one attached to <see cref="NodesSubnet"/>.  These will be reponsible for forwarding
         /// return traffic from the nodes in the <see cref="NodesSubnet"/> back to the VPN clients.
         /// </para>
@@ -552,12 +552,12 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             var subnets = new List<SubnetDefinition>();
 
@@ -600,7 +600,7 @@ namespace Neon.Kube
                 throw new KubeDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsRecursorPackageUri)}={PdnsRecursorPackageUri}] is not a valid URI.");
             }
 
-            if (clusterDefinition.Hosting.IsCloudProvider)
+            if (kubeDefinition.Hosting.IsCloudProvider)
             {
                 // Verify [CloudSubnet].
 
@@ -632,9 +632,9 @@ namespace Neon.Kube
                 // Ensure that the node subnet is big enough to allocate an
                 // IP address for each node.
 
-                if (clusterDefinition.Nodes.Count() > nodesSubnetCidr.AddressCount - 4)
+                if (kubeDefinition.Nodes.Count() > nodesSubnetCidr.AddressCount - 4)
                 {
-                    throw new KubeDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] subnet not large enough for the [{clusterDefinition.Nodes.Count()}] node addresses.");
+                    throw new KubeDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] subnet not large enough for the [{kubeDefinition.Nodes.Count()}] node addresses.");
                 }
             }
             else

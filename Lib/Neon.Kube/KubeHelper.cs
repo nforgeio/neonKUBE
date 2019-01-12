@@ -25,7 +25,6 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
-using Neon.Docker;
 using Neon.Net;
 
 // $todo(jeff.lill): 
@@ -36,7 +35,7 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// neonKUBE related utilties.
+    /// cluster related utilties.
     /// </summary>
     public static partial class KubeHelper
     {
@@ -273,7 +272,7 @@ namespace Neon.Kube
         /// Returns the path to the current user's cluster virtual machine templates
         /// folder, creating the directory if it doesn't already exist.
         /// </summary>
-        /// <returns>The path to the neonKUBE setup folder.</returns>
+        /// <returns>The path to the cluster setup folder.</returns>
         public static string GetVmTemplatesFolder()
         {
             var path = Path.Combine(GetNeonKubeUserFolder(), "vm-templates");
@@ -321,14 +320,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Verifies that a hive is connected.
+        /// Verifies that a cluster is connected.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown when a hive is not connected.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when a cluster is not connected.</exception>
         private static void VerifyConnected()
         {
             if (!IsConnected)
             {
-                throw new InvalidOperationException("Hive is not connected.");
+                throw new InvalidOperationException("cluster is not connected.");
             }
         }
 

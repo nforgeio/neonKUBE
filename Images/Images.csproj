@@ -174,7 +174,6 @@
     </None>
     <None Include="ubuntu-16.04\publish.ps1" />
     <None Include="ubuntu-16.04\README.md" />
-    <None Include="_common\vault-auth.sh" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

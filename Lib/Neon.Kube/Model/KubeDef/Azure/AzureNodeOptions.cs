@@ -83,7 +83,7 @@ namespace Neon.Kube
         /// <para>
         /// This may be set to <b>0</b> which specifies that the node will store its data on 
         /// the local ephemeral (temporary) drive belonging to the Azure virtual machine.
-        /// This is not recommended for neonKUBE nodes.
+        /// This is not recommended for cluster nodes.
         /// </para>
         /// <para>
         /// For most hives, you'll wish to provision one or more drives per node.
@@ -131,34 +131,34 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <param name="nodeName">The associated node name.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition clusterDefinition, string nodeName)
+        public void Validate(KubeDefinition kubeDefinition, string nodeName)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             var caps = AzureVmCapabilities.Get(VmSize);
 
             if (!caps.LoadBalancing)
             {
-                throw new KubeDefinitionException($"Hive node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support load balancing and cannot be used for a neonKUBE.");
+                throw new KubeDefinitionException($"cluster node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support load balancing and cannot be used for a cluster.");
             }
 
             if (!caps.SupportsDataStorageType(StorageType))
             {
-                throw new KubeDefinitionException($"Hive node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support [{StorageType}] managed data drives.");
+                throw new KubeDefinitionException($"cluster node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support [{StorageType}] managed data drives.");
             }
 
             if (HardDriveCount > 1)
             {
-                throw new KubeDefinitionException($"Hive node [{nodeName}] configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only zero or one managed drive is currently supported.");
+                throw new KubeDefinitionException($"cluster node [{nodeName}] configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only zero or one managed drive is currently supported.");
             }
 
             if (caps.MaxDataDrives < HardDriveCount)
             {
-                throw new KubeDefinitionException($"Hive node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.MaxDataDrives}] drives are allowed.");
+                throw new KubeDefinitionException($"cluster node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.MaxDataDrives}] drives are allowed.");
             }
 
             AzureHelper.GetDiskSizeGB(StorageType, HardDriveSizeGB);

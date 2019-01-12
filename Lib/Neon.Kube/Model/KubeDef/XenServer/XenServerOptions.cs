@@ -18,8 +18,8 @@ namespace Neon.Kube
     /// </summary>
     public class XenServerOptions
     {
-        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.xva";
-        private const string defaultTemplate          = "neon-ubuntu-16.04-template";
+        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.xva";
+        private const string defaultTemplate          = "neon-Ubuntu-18.04-template";
         private const string defaultStorageRepository = "Local storage";
         private const bool   defaultSnapshot          = false;
 
@@ -33,7 +33,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// URI to the XenServer XVA image to use as a template for creating the virtual machines.  This defaults to
-        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.xva</b>
+        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.xva</b>
         /// which is the latest supported Ubuntu 16.04 image.
         /// </para>
         /// <note>
@@ -51,7 +51,7 @@ namespace Neon.Kube
         public string HostXvaUri { get; set; } = defaultHostXvaUri;
 
         /// <summary>
-        /// Names the XenServer template to be used when creating neonKUBE nodes.  This defaults
+        /// Names the XenServer template to be used when creating cluster nodes.  This defaults
         /// to <b>ubuntu-template</b>.
         /// </summary>
         [JsonProperty(PropertyName = "TemplateName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -109,19 +109,19 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
 
             HostXvaUri           = HostXvaUri ?? defaultHostXvaUri;
             TemplateName         = TemplateName ?? defaultTemplate;
             StorageRepository    = StorageRepository ?? defaultStorageRepository;
             OsdStorageRepository = OsdStorageRepository ?? defaultStorageRepository;
 
-            if (!clusterDefinition.Network.StaticIP)
+            if (!kubeDefinition.Network.StaticIP)
             {
                 throw new KubeDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to XenServer.");
             }
@@ -141,8 +141,8 @@ namespace Neon.Kube
                 OsdStorageRepository = StorageRepository;
             }
 
-            clusterDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
-            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: true);     // Hypervisor options must be valid.
+            kubeDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
+            kubeDefinition.Hosting.ValidateHypervisor(kubeDefinition, remoteHypervisors: true);     // Hypervisor options must be valid.
         }
     }
 }

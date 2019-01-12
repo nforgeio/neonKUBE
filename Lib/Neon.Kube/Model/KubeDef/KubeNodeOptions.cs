@@ -37,7 +37,7 @@ namespace Neon.Kube
         private const int           defaultPackageManagerRetries   = 5;
 
         /// <summary>
-        /// Hive hosts are configured with a random root account password.
+        /// cluster hosts are configured with a random root account password.
         /// This defaults to <b>20</b> characters.  The minumum non-zero length
         /// is <b>8</b>.  Specify <b>0</b> to leave the root password unchanged.
         /// </summary>
@@ -66,10 +66,10 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeDefinition">The cluster definition.</param>
         /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition clusterDefinition)
+        public void Validate(KubeDefinition kubeDefinition)
         {
             if (PasswordLength > 0 && PasswordLength < 8)
             {

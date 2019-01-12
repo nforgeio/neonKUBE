@@ -256,14 +256,12 @@ namespace NeonCli
                             new Folder("conf",
                                 files: new List<File>()
                                 {
-                                    new File("hive.conf.sh", hasVariables: true),
+                                    new File("kube.conf.sh", hasVariables: true),
                                 }),
                             new Folder("setup",
                                 files: new List<File>()
                                 {
                                     new File("setup-apt-proxy.sh", hasVariables: true),
-                                    new File("setup-consul-proxy.sh", hasVariables: true),
-                                    new File("setup-consul-server.sh", hasVariables: true),
                                     new File("setup-disk.sh", hasVariables: true),
                                     new File("setup-docker.sh", hasVariables: true),
                                     new File("setup-environment.sh", hasVariables: true),
@@ -273,8 +271,6 @@ namespace NeonCli
                                     new File("setup-prep-node.sh", hasVariables: true),
                                     new File("setup-ssd.sh", hasVariables: true),
                                     new File("setup-utility.sh", hasVariables: true),
-                                    new File("setup-vault-server.sh", hasVariables: true),
-                                    new File("setup-vault-client.sh", hasVariables: true)
                                 }),
                             new Folder("tools",
                                 files: new List<File>()

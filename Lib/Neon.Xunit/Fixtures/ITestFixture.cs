@@ -38,9 +38,9 @@ namespace Neon.Xunit
     /// Starting a Docker service such that REST endpoints can be tested.
     /// </item>
     /// <item>
-    /// Initializing a neonKUBE and then configuring it with certificates,
+    /// Initializing a cluster and then configuring it with certificates,
     /// routes, services etc. and then performing tests against the
-    /// actual hive.
+    /// actual swarm.
     /// </item>
     /// </list>
     /// <para>

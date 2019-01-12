@@ -817,7 +817,7 @@ namespace Neon.Kube
                 }
                 else if (typeof(NodeMetadata).Implements<IXenClient>())
                 {
-                    // Provisioning hive nodes on XenServer hosts.
+                    // Provisioning cluster nodes on XenServer hosts.
 
                     sbDisplay.AppendLine();
                     sbDisplay.AppendLine(" Xen Servers:");
