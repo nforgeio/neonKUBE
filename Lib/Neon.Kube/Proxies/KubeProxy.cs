@@ -67,7 +67,7 @@ namespace Neon.Kube
         /// argument is passed.
         /// </remarks>
         public KubeProxy(
-            KubeContext hiveLogin,
+            KubeConfig hiveLogin,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
             bool                                                            appendLog         = false,
             bool                                                            useBootstrap      = false,
@@ -143,7 +143,7 @@ namespace Neon.Kube
             }
 
             this.Definition        = kubeDefinition;
-            this.HiveLogin         = new KubeContext();
+            this.HiveLogin         = new KubeConfig();
             this.useBootstrap      = useBootstrap;
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
@@ -188,7 +188,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster login information.
         /// </summary>
-        public KubeContext HiveLogin { get; set; }
+        public KubeConfig HiveLogin { get; set; }
 
         /// <summary>
         /// Indicates that any <see cref="SshProxy{TMetadata}"/> instances belonging

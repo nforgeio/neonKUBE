@@ -1089,7 +1089,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(KubeContext kube, string pemKey)
+        public static string ConvertPUBtoPPK(KubeConfig kube, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {

@@ -27,11 +27,6 @@ using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Net;
 
-// $todo(jeff.lill): 
-//
-// This class being static doesn't support dependency injection.  
-// I'm not sure it's worth changing this now.
-
 namespace Neon.Kube
 {
     /// <summary>
@@ -98,8 +93,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder holding the user specific cluster files such
-        /// as cluster logins, Ansible passwords, etc.
+        /// Returns the path the folder holding the user specific cluster files.
         /// </summary>
         /// <param name="ignoreNeonToolContainerVar">
         /// Optionally ignore the presence of a <b>NEON_TOOL_CONTAINER</b> environment 
@@ -122,7 +116,7 @@ namespace Neon.Kube
 
             if (NeonHelper.IsWindows)
             {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "neonFORGE", "neonkube");
+                var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
 
                 Directory.CreateDirectory(path);
 
@@ -140,7 +134,7 @@ namespace Neon.Kube
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
             {
-                return Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonforge", "neonkube");
+                return Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonkube");
             }
             else
             {
@@ -173,7 +167,7 @@ namespace Neon.Kube
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
         /// to deploy and manage neonKUBEs.  Each known cluster will have a JSON file named
-        /// <b><i>hive-name</i>.json</b> holding the serialized <see cref="Kube.KubeContext"/> 
+        /// <b><i>hive-name</i>.json</b> holding the serialized <see cref="Kube.KubeConfig"/> 
         /// information for the cluster.
         /// </para>
         /// <para>
@@ -288,9 +282,9 @@ namespace Neon.Kube
         public static bool IsConnected { get; private set; } = false;
 
         /// <summary>
-        /// Returns the <see cref="Kube.KubeContext"/> for the opened cluster. 
+        /// Returns the <see cref="Kube.KubeConfig"/> for the opened cluster. 
         /// </summary>
-        public static KubeContext KubeContext { get; private set; } = null;
+        public static KubeConfig KubeContext { get; private set; } = null;
 
         /// <summary>
         /// Returns the <see cref="Kube.KubeProxy"/> for the opened cluster.
