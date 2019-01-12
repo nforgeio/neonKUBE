@@ -131,34 +131,34 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeName">The associated node name.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition, string nodeName)
+        public void Validate(ClusterDefinition clusterDefinition, string nodeName)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             var caps = AzureVmCapabilities.Get(VmSize);
 
             if (!caps.LoadBalancing)
             {
-                throw new KubeDefinitionException($"cluster node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support load balancing and cannot be used for a cluster.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support load balancing and cannot be used for a cluster.");
             }
 
             if (!caps.SupportsDataStorageType(StorageType))
             {
-                throw new KubeDefinitionException($"cluster node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support [{StorageType}] managed data drives.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(VmSize)}={VmSize}] which does not support [{StorageType}] managed data drives.");
             }
 
             if (HardDriveCount > 1)
             {
-                throw new KubeDefinitionException($"cluster node [{nodeName}] configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only zero or one managed drive is currently supported.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only zero or one managed drive is currently supported.");
             }
 
             if (caps.MaxDataDrives < HardDriveCount)
             {
-                throw new KubeDefinitionException($"cluster node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.MaxDataDrives}] drives are allowed.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.MaxDataDrives}] drives are allowed.");
             }
 
             AzureHelper.GetDiskSizeGB(StorageType, HardDriveSizeGB);

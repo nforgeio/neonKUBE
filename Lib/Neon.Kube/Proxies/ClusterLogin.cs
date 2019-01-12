@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeLogin.cs
+// FILE:	    ClusterLogin.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -27,7 +27,7 @@ namespace Neon.Kube
     /// <summary>
     /// Holds the information required to log into or manage a Kubernetes cluster.
     /// </summary>
-    public class KubeLogin
+    public class ClusterLogin
     {
         /// <summary>
         /// Internal constructor.
@@ -37,12 +37,12 @@ namespace Neon.Kube
         /// <param name="cluster">The information required to connect to the cluster.</param>
         /// <param name="sshCredentials">The credentials required to perform SSH/SCP operations on the cluster nodes.</param>
         /// <param name="definition">The cluster definition.</param>
-        internal KubeLogin(
+        internal ClusterLogin(
             string              contextName = null,
             string              apiVersion = null,
             KubeConfigCluster   cluster = null,
             SshCredentials      sshCredentials = null,
-            KubeDefinition      definition = null
+            ClusterDefinition   definition = null
         )
         {
             this.ContextName    = contextName;
@@ -76,7 +76,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster definition.
         /// </summary>
-        public KubeDefinition Definition { get; private set; }
+        public ClusterDefinition Definition { get; private set; }
 
         /// <summary>
         /// Returns the <see cref="SshCredentials"/> for the hive that can be used

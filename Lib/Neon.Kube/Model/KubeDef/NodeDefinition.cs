@@ -288,9 +288,9 @@ namespace Neon.Kube
         /// Returns the maximum number processors to allocate for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The number of cores.</returns>
-        public int GetVmProcessors(KubeDefinition kubeDefinition)
+        public int GetVmProcessors(ClusterDefinition clusterDefinition)
         {
             if (VmProcessors != 0)
             {
@@ -298,7 +298,7 @@ namespace Neon.Kube
             }
             else
             {
-                return kubeDefinition.Hosting.VmProcessors;
+                return clusterDefinition.Hosting.VmProcessors;
             }
         }
 
@@ -306,17 +306,17 @@ namespace Neon.Kube
         /// Returns the maximum number of bytes of memory allocate to for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetVmMemory(KubeDefinition kubeDefinition)
+        public long GetVmMemory(ClusterDefinition clusterDefinition)
         {
             if (!string.IsNullOrEmpty(VmMemory))
             {
-                return KubeDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
+                return ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
             }
             else
             {
-                return KubeDefinition.ValidateSize(kubeDefinition.Hosting.VmMemory, kubeDefinition.Hosting.GetType(), nameof(kubeDefinition.Hosting.VmMemory));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMemory));
             }
         }
 
@@ -324,23 +324,23 @@ namespace Neon.Kube
         /// Returns the minimum number of bytes of memory allocate to for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetVmMinimumMemory(KubeDefinition kubeDefinition)
+        public long GetVmMinimumMemory(ClusterDefinition clusterDefinition)
         {
             if (!string.IsNullOrEmpty(VmMinimumMemory))
             {
-                return KubeDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+                return ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             }
-            else if (!string.IsNullOrEmpty(kubeDefinition.Hosting.VmMinimumMemory))
+            else if (!string.IsNullOrEmpty(clusterDefinition.Hosting.VmMinimumMemory))
             {
-                return KubeDefinition.ValidateSize(kubeDefinition.Hosting.VmMinimumMemory, kubeDefinition.Hosting.GetType(), nameof(kubeDefinition.Hosting.VmMinimumMemory));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmMinimumMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMinimumMemory));
             }
             else
             {
                 // Return [VmMemory] otherwise.
 
-                return GetVmMemory(kubeDefinition);
+                return GetVmMemory(clusterDefinition);
             }
         }
 
@@ -348,17 +348,17 @@ namespace Neon.Kube
         /// Returns the maximum number of bytes to disk allocate to for this node when
         /// hosted on a hypervisor.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        public long GetVmDisk(KubeDefinition kubeDefinition)
+        public long GetVmDisk(ClusterDefinition clusterDefinition)
         {
             if (!string.IsNullOrEmpty(VmDisk))
             {
-                return KubeDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
+                return ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
             }
             else
             {
-                return KubeDefinition.ValidateSize(kubeDefinition.Hosting.VmDisk, kubeDefinition.Hosting.GetType(), nameof(kubeDefinition.Hosting.VmDisk));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmDisk));
             }
         }
 
@@ -373,76 +373,76 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the node definition.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             if (Name == null)
             {
-                throw new KubeDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}] property is required.");
             }
 
-            if (!KubeDefinition.IsValidName(Name))
+            if (!ClusterDefinition.IsValidName(Name))
             {
-                throw new KubeDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             if (name == "localhost")
             {
-                throw new KubeDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
             }
 
             if (Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new KubeDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [node-] are reserved.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [node-] are reserved.");
             }
 
-            if (kubeDefinition.Hosting.IsOnPremiseProvider)
+            if (clusterDefinition.Hosting.IsOnPremiseProvider)
             {
                 if (string.IsNullOrEmpty(PrivateAddress))
                 {
-                    throw new KubeDefinitionException($"Node [{Name}] requires [{nameof(PrivateAddress)}] when hosting in an on-premise facility.");
+                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(PrivateAddress)}] when hosting in an on-premise facility.");
                 }
 
                 if (!IPAddress.TryParse(PrivateAddress, out var nodeAddress))
                 {
-                    throw new KubeDefinitionException($"Node [{Name}] has invalid IP address [{PrivateAddress}].");
+                    throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{PrivateAddress}].");
                 }
             }
 
             if (Azure != null)
             {
-                Azure.Validate(kubeDefinition, this.Name);
+                Azure.Validate(clusterDefinition, this.Name);
             }
 
-            if (kubeDefinition.Hosting.IsRemoteHypervisorProvider)
+            if (clusterDefinition.Hosting.IsRemoteHypervisorProvider)
             {
                 if (string.IsNullOrEmpty(VmHost))
                 {
-                    throw new KubeDefinitionException($"Node [{Name}] does not specify a hypervisor [{nameof(NodeDefinition)}.{nameof(NodeDefinition.VmHost)}].");
+                    throw new ClusterDefinitionException($"Node [{Name}] does not specify a hypervisor [{nameof(NodeDefinition)}.{nameof(NodeDefinition.VmHost)}].");
                 }
-                else if (kubeDefinition.Hosting.VmHosts.FirstOrDefault(h => h.Name.Equals(VmHost, StringComparison.InvariantCultureIgnoreCase)) == null)
+                else if (clusterDefinition.Hosting.VmHosts.FirstOrDefault(h => h.Name.Equals(VmHost, StringComparison.InvariantCultureIgnoreCase)) == null)
                 {
-                    throw new KubeDefinitionException($"Node [{Name}] references hypervisor [{VmHost}] which is defined in [{nameof(HostingOptions)}={nameof(HostingOptions.VmHosts)}].");
+                    throw new ClusterDefinitionException($"Node [{Name}] references hypervisor [{VmHost}] which is defined in [{nameof(HostingOptions)}={nameof(HostingOptions.VmHosts)}].");
                 }
             }
 
             if (VmMemory != null)
             {
-                KubeDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
+                ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
             }
 
             if (VmMinimumMemory != null)
             {
-                KubeDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+                ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             }
 
             if (VmDisk != null)
             {
-                KubeDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
+                ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
             }
         }
     }

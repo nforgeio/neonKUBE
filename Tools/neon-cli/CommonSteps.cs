@@ -158,8 +158,8 @@ TCPKeepAlive yes
         /// of the server within the cluster.
         /// </summary>
         /// <param name="node">The server to be updated.</param>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition)
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             node.Status = "environment variables";
 
@@ -204,14 +204,14 @@ TCPKeepAlive yes
 
             // Add the global cluster related environment variables. 
 
-            sb.AppendLine($"NEON_HIVE_PROVISIONER={kubeDefinition.Provisioner}");
-            sb.AppendLine($"NEON_HIVE={kubeDefinition.Name}");
-            sb.AppendLine($"NEON_DATACENTER={kubeDefinition.Datacenter.ToLowerInvariant()}");
-            sb.AppendLine($"NEON_ENVIRONMENT={kubeDefinition.Environment.ToString().ToLowerInvariant()}");
+            sb.AppendLine($"NEON_HIVE_PROVISIONER={clusterDefinition.Provisioner}");
+            sb.AppendLine($"NEON_HIVE={clusterDefinition.Name}");
+            sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
+            sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
 
-            if (kubeDefinition.Hosting != null)
+            if (clusterDefinition.Hosting != null)
             {
-                sb.AppendLine($"NEON_HOSTING={kubeDefinition.Hosting.Environment.ToMemberString().ToLowerInvariant()}");
+                sb.AppendLine($"NEON_HOSTING={clusterDefinition.Hosting.Environment.ToMemberString().ToLowerInvariant()}");
             }
 
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
@@ -226,7 +226,7 @@ TCPKeepAlive yes
 
             var sbNameservers = new StringBuilder();
 
-            foreach (var nameServer in kubeDefinition.Network.Nameservers)
+            foreach (var nameServer in clusterDefinition.Network.Nameservers)
             {
                 sbNameservers.AppendWithSeparator(nameServer, ",");
             }
@@ -254,9 +254,9 @@ TCPKeepAlive yes
         /// for a cluster host node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(SshProxy<NodeDefinition> node, KubeDefinition kubeDefinition, bool shutdown = false)
+        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, bool shutdown = false)
         {
             if (node.FileExists($"{KubeHostFolders.State}/setup/prepared"))
             {
@@ -271,7 +271,7 @@ TCPKeepAlive yes
             //-----------------------------------------------------------------
             // Package manager configuration.
 
-            if (!kubeDefinition.NodeOptions.AllowPackageManagerIPv6)
+            if (!clusterDefinition.NodeOptions.AllowPackageManagerIPv6)
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
                 // with the package mirrors, since IPv6 often doesn't work.
@@ -282,19 +282,19 @@ TCPKeepAlive yes
 
             // Configure [apt] to retry.
 
-            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{kubeDefinition.NodeOptions.PackageManagerRetries}\";");
+            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{clusterDefinition.NodeOptions.PackageManagerRetries}\";");
             node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries");
 
             //-----------------------------------------------------------------
             // Other configuration.
 
             ConfigureOpenSSH(node);
-            node.UploadConfigFiles(kubeDefinition);
-            node.UploadResources(kubeDefinition);
+            node.UploadConfigFiles(clusterDefinition);
+            node.UploadResources(clusterDefinition);
 
-            if (kubeDefinition != null)
+            if (clusterDefinition != null)
             {
-                ConfigureEnvironmentVariables(node, kubeDefinition);
+                ConfigureEnvironmentVariables(node, clusterDefinition);
             }
 
             node.SudoCommand("safe-apt-get update");
@@ -316,7 +316,7 @@ TCPKeepAlive yes
             // based drive array or something.  I'm going to defer this to later and
             // concentrate on commodity hardware and cloud deployments for now. 
 
-            CommonSteps.ConfigureEnvironmentVariables(node, kubeDefinition);
+            CommonSteps.ConfigureEnvironmentVariables(node, clusterDefinition);
 
             node.Status = "run: setup-disk.sh";
             node.SudoCommand("setup-disk.sh");

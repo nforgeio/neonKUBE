@@ -214,13 +214,13 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the prefix to be used when provisioning virtual machines in hypervisor environments.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The prefix.</returns>
-        public string GetVmNamePrefix(KubeDefinition kubeDefinition)
+        public string GetVmNamePrefix(ClusterDefinition clusterDefinition)
         {
             if (VmNamePrefix == null)
             {
-                return $"{kubeDefinition.Name}-".ToLowerInvariant();
+                return $"{clusterDefinition.Name}-".ToLowerInvariant();
             }
             else if (string.IsNullOrWhiteSpace(VmNamePrefix))
             {
@@ -309,12 +309,12 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             switch (Environment)
             {
@@ -322,58 +322,58 @@ namespace Neon.Kube
 
                     if (Aws == null)
                     {
-                        throw new KubeDefinitionException($"[{nameof(HostingOptions)}.{nameof(Aws)}] must be initialized when cloud provider is [{Environment}].");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Aws)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
-                    Aws.Validate(kubeDefinition);
+                    Aws.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironments.Azure:
 
                     if (Azure == null)
                     {
-                        throw new KubeDefinitionException($"[{nameof(HostingOptions)}.{nameof(Azure)}] must be initialized when cloud provider is [{Environment}].");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Azure)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
-                    Azure.Validate(kubeDefinition);
+                    Azure.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironments.Google:
 
                     if (Google == null)
                     {
-                        throw new KubeDefinitionException($"[{nameof(HostingOptions)}.{nameof(Google)}] must be initialized when cloud provider is [{Environment}].");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Google)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
-                    Google.Validate(kubeDefinition);
+                    Google.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironments.HyperV:
 
                     HyperV = HyperV ?? new HyperVOptions();
 
-                    HyperV.Validate(kubeDefinition);
+                    HyperV.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironments.HyperVDev:
 
                     LocalHyperV = LocalHyperV ?? new LocalHyperVOptions();
 
-                    LocalHyperV.Validate(kubeDefinition);
+                    LocalHyperV.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironments.Machine:
 
                     Machine = Machine ?? new MachineOptions();
 
-                    Machine.Validate(kubeDefinition);
+                    Machine.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironments.XenServer:
 
                     XenServer = XenServer ?? new XenServerOptions();
 
-                    XenServer.Validate(kubeDefinition);
+                    XenServer.Validate(clusterDefinition);
                     break;
 
                 default:
@@ -383,9 +383,9 @@ namespace Neon.Kube
 
             if (!string.IsNullOrWhiteSpace(VmNamePrefix))
             {
-                if (!KubeDefinition.IsValidName(VmNamePrefix))
+                if (!ClusterDefinition.IsValidName(VmNamePrefix))
                 {
-                    throw new KubeDefinitionException($"[{nameof(HostingOptions)}.{nameof(VmNamePrefix)}={VmNamePrefix}] must include only letters, digits, underscores, or periods.");
+                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(VmNamePrefix)}={VmNamePrefix}] must include only letters, digits, underscores, or periods.");
                 }
             }
         }
@@ -393,20 +393,20 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the Hypervisor related options.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="remoteHypervisors">
         /// Indicates that we're going to be deploying to remote hypervisor
         /// host machines as opposed to the local workstation.
         /// </param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        internal void ValidateHypervisor(KubeDefinition kubeDefinition, bool remoteHypervisors)
+        internal void ValidateHypervisor(ClusterDefinition clusterDefinition, bool remoteHypervisors)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             if (VmProcessors <= 0)
             {
-                throw new KubeDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(VmProcessors)}={VmProcessors}] must be positive.");
+                throw new ClusterDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(VmProcessors)}={VmProcessors}] must be positive.");
             }
 
             VmMemory        = VmMemory ?? DefaultVmMemory;
@@ -414,27 +414,27 @@ namespace Neon.Kube
             VmDisk          = VmDisk ?? DefaultVmMinimumMemory;
             VmHosts         = VmHosts ?? new List<VmHost>();
 
-            KubeDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
-            KubeDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
-            KubeDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
+            ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
+            ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+            ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
 
             // Verify that the hypervisor host machines have unique names and addresses.
 
             var hostNameSet    = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             var hostAddressSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var vmHost in kubeDefinition.Hosting.VmHosts)
+            foreach (var vmHost in clusterDefinition.Hosting.VmHosts)
             {
                 if (hostNameSet.Contains(vmHost.Name))
                 {
-                    throw new KubeDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Name}] name.");
+                    throw new ClusterDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Name}] name.");
                 }
 
                 hostNameSet.Add(vmHost.Name);
 
                 if (hostAddressSet.Contains(vmHost.Address))
                 {
-                    throw new KubeDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Address}] address.");
+                    throw new ClusterDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Address}] address.");
                 }
 
                 hostAddressSet.Add(vmHost.Address);
@@ -445,26 +445,26 @@ namespace Neon.Kube
 
             if (remoteHypervisors)
             {
-                if (kubeDefinition.Hosting.VmHosts.Count == 0)
+                if (clusterDefinition.Hosting.VmHosts.Count == 0)
                 {
-                    throw new KubeDefinitionException($"At least one host XenServer must be specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
+                    throw new ClusterDefinitionException($"At least one host XenServer must be specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
                 }
 
                 foreach (var vmHost in VmHosts)
                 {
-                    vmHost.Validate(kubeDefinition);
+                    vmHost.Validate(clusterDefinition);
                 }
 
-                foreach (var node in kubeDefinition.NodeDefinitions.Values)
+                foreach (var node in clusterDefinition.NodeDefinitions.Values)
                 {
                     if (string.IsNullOrEmpty(node.VmHost))
                     {
-                        throw new KubeDefinitionException($"Node [{node.Name}] does not specify a host hypervisor with [{nameof(NodeDefinition.VmHost)}].");
+                        throw new ClusterDefinitionException($"Node [{node.Name}] does not specify a host hypervisor with [{nameof(NodeDefinition.VmHost)}].");
                     }
 
                     if (!hostNameSet.Contains(node.VmHost))
                     {
-                        throw new KubeDefinitionException($"Node [{node.Name}] has [{nameof(VmHost)}={node.VmHost}] which specifies a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
+                        throw new ClusterDefinitionException($"Node [{node.Name}] has [{nameof(VmHost)}={node.VmHost}] which specifies a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
                     }
                 }
             }

@@ -89,7 +89,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public abstract void Validate(KubeDefinition kubeDefinition);
+        public abstract void Validate(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
         public abstract bool Provision(bool force);

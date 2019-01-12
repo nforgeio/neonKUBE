@@ -46,25 +46,20 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
-
-            if (!kubeDefinition.Network.StaticIP)
-            {
-                throw new KubeDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to Hyper-V.");
-            }
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             if (string.IsNullOrEmpty(HostVhdxUri) || !Uri.TryCreate(HostVhdxUri, UriKind.Absolute, out Uri uri))
             {
-                throw new KubeDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
+                throw new ClusterDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
             }
 
-            kubeDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
-            kubeDefinition.Hosting.ValidateHypervisor(kubeDefinition, remoteHypervisors: false);    // Hypervisor options must be valid.
+            clusterDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
+            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: false);    // Hypervisor options must be valid.
         }
     }
 }

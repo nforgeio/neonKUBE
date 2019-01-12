@@ -81,7 +81,7 @@ namespace Neon.Kube
 
         private const string defaultSwitchName = "cluster";
 
-        private KubeProxy                       cluster;
+        private ClusterProxy                       cluster;
         private SetupController<NodeDefinition> controller;
         private bool                            forceVmOverwrite;
         private string                          driveTemplatePath;
@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVDevHostingManager(KubeProxy cluster, string logFolder = null)
+        public HyperVDevHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             cluster.HostingManager = this;
 
@@ -119,7 +119,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(KubeDefinition kubeDefinition)
+        public override void Validate(ClusterDefinition clusterDefinition)
         {
         }
 
@@ -162,7 +162,7 @@ namespace Neon.Kube
 
                 if (node.Labels.ComputeRamMB == 0)
                 {
-                    node.Labels.ComputeRamMB = (int)(KubeDefinition.ValidateSize(cluster.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
+                    node.Labels.ComputeRamMB = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
                 }
 
                 if (node.Labels.StorageCapacityGB == 0)

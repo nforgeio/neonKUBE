@@ -38,7 +38,7 @@ namespace NeonCli
         /// <summary>
         /// Use this argument to specify the target image in a <b>docker service create ...</b>
         /// or <b>docker run ...</b> command that will eventually be passed to one of 
-        /// <see cref="StartService(KubeProxy, string, string, IBashCommandFormatter, RunOptions)"/> or 
+        /// <see cref="StartService(ClusterProxy, string, string, IBashCommandFormatter, RunOptions)"/> or 
         /// <see cref="StartContainer(SshProxy{NodeDefinition}, string, string, RunOptions, IBashCommandFormatter[])"/> so
         /// those methods can generate a more useful script that includes a parameter
         /// so that images and services can be easily upgraded.
@@ -123,7 +123,7 @@ namespace NeonCli
         /// cluster managers to make it easy to restart the service manually or for 
         /// cluster updates.
         /// </summary>
-        /// <param name="kube">The target cluster.</param>
+        /// <param name="cluster">The target cluster.</param>
         /// <param name="serviceName">Identifies the service.</param>
         /// <param name="image">The Docker image to be used by the service.</param>
         /// <param name="command">The <c>docker service create ...</c> command.</param>
@@ -155,14 +155,14 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void StartService(KubeProxy kube, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void StartService(ClusterProxy cluster, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
-            Covenant.Requires<ArgumentNullException>(kube != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(serviceName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(image));
             Covenant.Requires<ArgumentNullException>(command != null);
 
-            var firstManager = kube.FirstManager;
+            var firstManager = cluster.FirstManager;
 
             firstManager.Status = $"start: {serviceName}";
 
@@ -174,7 +174,7 @@ namespace NeonCli
 
             var scriptPath = LinuxPath.Combine(KubeHostFolders.Scripts, $"{serviceName}.sh");
 
-            foreach (var manager in kube.Managers)
+            foreach (var manager in cluster.Managers)
             {
                 manager.UploadText(scriptPath, script);
                 manager.SudoCommand($"chmod 740 {scriptPath}");
@@ -201,7 +201,7 @@ namespace NeonCli
         /// a script to the cluster managers to make it easy to restart the service manually or 
         /// for cluster updates.
         /// </summary>
-        /// <param name="kube">The target cluster.</param>
+        /// <param name="cluster">The target cluster.</param>
         /// <param name="steps">The target step list.</param>
         /// <param name="serviceName">Identifies the service.</param>
         /// <param name="image">The Docker image to be used by the service.</param>
@@ -234,9 +234,9 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void AddServiceStartSteps(KubeProxy kube, ConfigStepList steps, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void AddServiceStartSteps(ClusterProxy cluster, ConfigStepList steps, string serviceName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
-            Covenant.Requires<ArgumentNullException>(kube != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null);
             Covenant.Requires<ArgumentNullException>(steps != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(serviceName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(image));
@@ -251,8 +251,8 @@ namespace NeonCli
 
             var scriptPath = LinuxPath.Combine(KubeHostFolders.Scripts, $"{serviceName}.sh");
 
-            steps.Add(kube.GetFileUploadSteps(kube.Managers, scriptPath, script, permissions: "740"));
-            steps.Add(CommandStep.CreateIdempotentDocker(kube.FirstManager.Name, $"setup/{serviceName}", scriptPath));
+            steps.Add(cluster.GetFileUploadSteps(cluster.Managers, scriptPath, script, permissions: "740"));
+            steps.Add(CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, $"setup/{serviceName}", scriptPath));
         }
 
         /// <summary>
@@ -324,7 +324,7 @@ namespace NeonCli
         /// a script to the cluster managers to make it easy to restart the service manually or 
         /// for cluster updates.
         /// </summary>
-        /// <param name="kube">The target cluster.</param>
+        /// <param name="cluster">The target cluster.</param>
         /// <param name="steps">The target step list.</param>
         /// <param name="node">The target cluster node.</param>
         /// <param name="containerName">Identifies the service.</param>
@@ -359,9 +359,9 @@ namespace NeonCli
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void AddContainerStartSteps(KubeProxy kube, ConfigStepList steps, SshProxy<NodeDefinition> node, string containerName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
+        public static void AddContainerStartSteps(ClusterProxy cluster, ConfigStepList steps, SshProxy<NodeDefinition> node, string containerName, string image, IBashCommandFormatter command, RunOptions runOptions = RunOptions.FaultOnError)
         {
-            Covenant.Requires<ArgumentNullException>(kube != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null);
             Covenant.Requires<ArgumentNullException>(steps != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(containerName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(image));
@@ -376,7 +376,7 @@ namespace NeonCli
 
             var scriptPath = LinuxPath.Combine(KubeHostFolders.Scripts, $"{containerName}.sh");
 
-            steps.Add(kube.GetFileUploadSteps(node, scriptPath, script, permissions: "740"));
+            steps.Add(cluster.GetFileUploadSteps(node, scriptPath, script, permissions: "740"));
             steps.Add(CommandStep.CreateIdempotentDocker(node.Name, $"setup/{containerName}", scriptPath));
         }
     }

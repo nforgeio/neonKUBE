@@ -109,31 +109,26 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             HostXvaUri           = HostXvaUri ?? defaultHostXvaUri;
             TemplateName         = TemplateName ?? defaultTemplate;
             StorageRepository    = StorageRepository ?? defaultStorageRepository;
             OsdStorageRepository = OsdStorageRepository ?? defaultStorageRepository;
 
-            if (!kubeDefinition.Network.StaticIP)
-            {
-                throw new KubeDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to XenServer.");
-            }
-
             if (string.IsNullOrEmpty(HostXvaUri) || !Uri.TryCreate(HostXvaUri, UriKind.Absolute, out Uri uri))
             {
-                throw new KubeDefinitionException($"[{nameof(XenServerOptions)}.{nameof(HostXvaUri)}] is required when deploying to XenServer.");
+                throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(HostXvaUri)}] is required when deploying to XenServer.");
             }
 
             if (string.IsNullOrEmpty(StorageRepository))
             {
-                throw new KubeDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
+                throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
             }
 
             if (string.IsNullOrEmpty(OsdStorageRepository))
@@ -141,8 +136,8 @@ namespace Neon.Kube
                 OsdStorageRepository = StorageRepository;
             }
 
-            kubeDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
-            kubeDefinition.Hosting.ValidateHypervisor(kubeDefinition, remoteHypervisors: true);     // Hypervisor options must be valid.
+            clusterDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
+            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: true);     // Hypervisor options must be valid.
         }
     }
 }

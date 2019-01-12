@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeProxy.cs
+// FILE:	    ClusterProxy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -29,7 +29,7 @@ namespace Neon.Kube
     /// <summary>
     /// Used to remotely manage a cluster via SSH/SCP.
     /// </summary>
-    public class KubeProxy : IDisposable
+    public class ClusterProxy : IDisposable
     {
         private RunOptions                                                          defaultRunOptions;
         private Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>>     nodeProxyCreator;
@@ -57,8 +57,8 @@ namespace Neon.Kube
         /// creator that doesn't initialize SSH credentials and logging is used if <c>null</c>
         /// is passed.
         /// </remarks>
-        public KubeProxy(
-            KubeLogin kubeLogin,
+        public ClusterProxy(
+            ClusterLogin kubeLogin,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
             bool                                                            appendLog         = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
@@ -73,7 +73,7 @@ namespace Neon.Kube
         /// <summary>
         /// Constructs a cluster proxy from a cluster definition.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeProxyCreator">
         /// The application supplied function that creates a management proxy
         /// given the node name, public address or FQDN, private address, and
@@ -92,13 +92,13 @@ namespace Neon.Kube
         /// creator that doesn't initialize SSH credentials and logging is used if <c>null</c>
         /// is passed.
         /// </remarks>
-        public KubeProxy(
-            KubeDefinition kubeDefinition,
+        public ClusterProxy(
+            ClusterDefinition clusterDefinition,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator = null,
             bool                                                            appendLog = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             if (nodeProxyCreator == null)
             {
@@ -123,8 +123,8 @@ namespace Neon.Kube
                     };
             }
 
-            this.Definition        = kubeDefinition;
-            this.KubeLogin         = new KubeLogin();
+            this.Definition        = clusterDefinition;
+            this.KubeLogin         = new ClusterLogin();
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendLog;
@@ -168,7 +168,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster login information.
         /// </summary>
-        public KubeLogin KubeLogin { get; set; }
+        public ClusterLogin KubeLogin { get; set; }
 
         /// <summary>
         /// Indicates that any <see cref="SshProxy{TMetadata}"/> instances belonging
@@ -194,7 +194,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster definition.
         /// </summary>
-        public KubeDefinition Definition { get; private set; }
+        public ClusterDefinition Definition { get; private set; }
 
         /// <summary>
         /// Returns the read-only list of cluster node proxies.

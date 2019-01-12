@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeDefinitionException.cs
+// FILE:	    ClusterDefinitionException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -23,14 +23,14 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes cluster definition errors.
+    /// Signals cluster definition errors.
     /// </summary>
-    public class KubeDefinitionException : Exception
+    public class ClusterDefinitionException : Exception
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeDefinitionException()
+        public ClusterDefinitionException()
         {
         }
 
@@ -38,7 +38,7 @@ namespace Neon.Kube
         /// Consstructs an instance with a message.
         /// </summary>
         /// <param name="message">The message.</param>
-        public KubeDefinitionException(string message)
+        public ClusterDefinitionException(string message)
             : base(message)
         {
         }

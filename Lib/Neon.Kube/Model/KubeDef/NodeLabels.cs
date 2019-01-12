@@ -80,45 +80,45 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name that identifies the datacenter.
         /// </summary>
-        public const string LabelDatacenter = KubeDefinition.ReservedLabelPrefix + ".cluster.datacenter";
+        public const string LabelDatacenter = ClusterDefinition.ReservedLabelPrefix + ".cluster.datacenter";
 
         /// <summary>
         /// Reserved label name that identifies the cluster environment.
         /// </summary>
-        public const string LabelEnvironment = KubeDefinition.ReservedLabelPrefix + ".cluster.environment";
+        public const string LabelEnvironment = ClusterDefinition.ReservedLabelPrefix + ".cluster.environment";
 
         /// <summary>
         /// Reserved label name that identifies the node's public IP address or FQDN.
         /// </summary>
-        public const string LabelPublicAddress = KubeDefinition.ReservedLabelPrefix + ".node.public_address";
+        public const string LabelPublicAddress = ClusterDefinition.ReservedLabelPrefix + ".node.public_address";
 
         /// <summary>
         /// Reserved label name that identifies the node's private IP address.
         /// </summary>
-        public const string LabelPrivateAddress = KubeDefinition.ReservedLabelPrefix + ".node.private_address";
+        public const string LabelPrivateAddress = ClusterDefinition.ReservedLabelPrefix + ".node.private_address";
 
         /// <summary>
         /// Reserved label name that identifies the node role.
         /// </summary>
-        public const string LabelRole = KubeDefinition.ReservedLabelPrefix + ".node.role";
+        public const string LabelRole = ClusterDefinition.ReservedLabelPrefix + ".node.role";
 
         /// <summary>
         /// Reserved label name that identifies the frontend port to be used to connect
         /// to a master's VPN server (if it's hosting a VPN server).
         /// </summary>
-        public const string LabelVpnFrontendPort = KubeDefinition.ReservedLabelPrefix + ".node.vpn_frontend_port";
+        public const string LabelVpnFrontendPort = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_frontend_port";
 
         /// <summary>
         /// Reserved label name that identifies a master node's VPN pool address 
         /// (if it's hosting a VPN server).
         /// </summary>
-        public const string LabelVpnPoolAddress = KubeDefinition.ReservedLabelPrefix + ".node.vpn_pool_address";
+        public const string LabelVpnPoolAddress = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_pool_address";
 
         /// <summary>
         /// Reserved label name that identifies a master node's VPN address pool subnet 
         /// (if it's hosting a VPN server).
         /// </summary>
-        public const string LabelVpnPoolSubnet = KubeDefinition.ReservedLabelPrefix + ".node.vpn_pool_subnet";
+        public const string LabelVpnPoolSubnet = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_pool_subnet";
 
         //---------------------------------------------------------------------
         // Azure hosting related labels.
@@ -126,22 +126,22 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name that identifies the node's Azure VM size.
         /// </summary>
-        public const string LabelAzureVmSize = KubeDefinition.ReservedLabelPrefix + ".azure.vm_size";
+        public const string LabelAzureVmSize = ClusterDefinition.ReservedLabelPrefix + ".azure.vm_size";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached storage type.
         /// </summary>
-        public const string LabelAzureStorageType = KubeDefinition.ReservedLabelPrefix + ".azure.storage_type";
+        public const string LabelAzureStorageType = ClusterDefinition.ReservedLabelPrefix + ".azure.storage_type";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive count.
         /// </summary>
-        public const string LabelAzureDriveCount = KubeDefinition.ReservedLabelPrefix + ".azure.drive_count";
+        public const string LabelAzureDriveCount = ClusterDefinition.ReservedLabelPrefix + ".azure.drive_count";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive size in GB.
         /// </summary>
-        public const string LabelAzureDriveSizeGB = KubeDefinition.ReservedLabelPrefix + ".azure.drive_size_gb";
+        public const string LabelAzureDriveSizeGB = ClusterDefinition.ReservedLabelPrefix + ".azure.drive_size_gb";
 
         //---------------------------------------------------------------------
         // Define the node storage related labels.
@@ -149,27 +149,27 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="StorageCapacityGB"/>.
         /// </summary>
-        public const string LabelStorageCapacityGB = KubeDefinition.ReservedLabelPrefix + ".storage.capacity_gb";
+        public const string LabelStorageCapacityGB = ClusterDefinition.ReservedLabelPrefix + ".storage.capacity_gb";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageLocal"/>.
         /// </summary>
-        public const string LabelStorageLocal = KubeDefinition.ReservedLabelPrefix + ".storage.local";
+        public const string LabelStorageLocal = ClusterDefinition.ReservedLabelPrefix + ".storage.local";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageSSD"/>.
         /// </summary>
-        public const string LabelStorageSSD = KubeDefinition.ReservedLabelPrefix + ".storage.ssd";
+        public const string LabelStorageSSD = ClusterDefinition.ReservedLabelPrefix + ".storage.ssd";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageRedundant"/>.
         /// </summary>
-        public const string LabelStorageRedundant = KubeDefinition.ReservedLabelPrefix + ".storage.redundant";
+        public const string LabelStorageRedundant = ClusterDefinition.ReservedLabelPrefix + ".storage.redundant";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageEphemeral"/>.
         /// </summary>
-        public const string LabelStorageEphemeral = KubeDefinition.ReservedLabelPrefix + ".storage.ephemral";
+        public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + ".storage.ephemral";
 
         /// <summary>
         /// <b>io.neonkube.storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
@@ -221,17 +221,17 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="ComputeCores"/>.
         /// </summary>
-        public const string LabelComputeCores = KubeDefinition.ReservedLabelPrefix + ".compute.cores";
+        public const string LabelComputeCores = ClusterDefinition.ReservedLabelPrefix + ".compute.cores";
 
         /// <summary>
         /// Reserved label name for <see cref="ComputeRamMB"/>.
         /// </summary>
-        public const string LabelComputeRamMB = KubeDefinition.ReservedLabelPrefix + ".compute.ram_mb";
+        public const string LabelComputeRamMB = ClusterDefinition.ReservedLabelPrefix + ".compute.ram_mb";
 
         /// <summary>
         /// Reserved label name for <see cref="ComputeSwap"/>.
         /// </summary>
-        public const string LabelComputeSwap = KubeDefinition.ReservedLabelPrefix + ".compute.swap";
+        public const string LabelComputeSwap = ClusterDefinition.ReservedLabelPrefix + ".compute.swap";
 
         /// <summary>
         /// <b>io.neonkube.compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
@@ -267,22 +267,22 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
-        public const string LabelPhysicalLocation = KubeDefinition.ReservedLabelPrefix + ".physical.location";
+        public const string LabelPhysicalLocation = ClusterDefinition.ReservedLabelPrefix + ".physical.location";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalMachine"/>.
         /// </summary>
-        public const string LabelPhysicalMachine = KubeDefinition.ReservedLabelPrefix + ".physical.machine";
+        public const string LabelPhysicalMachine = ClusterDefinition.ReservedLabelPrefix + ".physical.machine";
 
         /// <summary>
         /// Reserved label name for <see cref="PhysicalFaultDomain"/>.
         /// </summary>
-        public const string LabelPhysicalFaultDomain = KubeDefinition.ReservedLabelPrefix + ".physical.faultdomain";
+        public const string LabelPhysicalFaultDomain = ClusterDefinition.ReservedLabelPrefix + ".physical.faultdomain";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
-        public const string LabelPhysicalPower = KubeDefinition.ReservedLabelPrefix + ".physical.power";
+        public const string LabelPhysicalPower = ClusterDefinition.ReservedLabelPrefix + ".physical.power";
 
         /// <summary>
         /// <b>io.neonkube.physical.location</b> [<c>string</c>]: A free format string describing the
@@ -627,12 +627,12 @@ namespace Neon.Kube
         /// <summary>
         /// Validates the node labels.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             // Verify that custom node label names satisfy the 
             // following criteria:
@@ -647,23 +647,23 @@ namespace Neon.Kube
             {
                 if (item.Key.Length == 0)
                 {
-                    throw new KubeDefinitionException($"Custom node label for value [{item.Value}] has no label name.");
+                    throw new ClusterDefinitionException($"Custom node label for value [{item.Value}] has no label name.");
                 }
                 else if (item.Key.Contains(".."))
                 {
-                    throw new KubeDefinitionException($"Custom node name [{item.Key}] has consecutive dots.");
+                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] has consecutive dots.");
                 }
                 else if (item.Key.Contains("--"))
                 {
-                    throw new KubeDefinitionException($"Custom node name [{item.Key}] has consecutive dashes.");
+                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] has consecutive dashes.");
                 }
                 else if (!char.IsLetterOrDigit(item.Key.First()))
                 {
-                    throw new KubeDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
+                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
                 }
                 else if (!char.IsLetterOrDigit(item.Key.Last()))
                 {
-                    throw new KubeDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
+                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
                 }
 
                 foreach (var ch in item.Key)
@@ -673,14 +673,14 @@ namespace Neon.Kube
                         continue;
                     }
 
-                    throw new KubeDefinitionException($"Custom node name [{item.Key}] has an illegal character.  Only letters, digits, dash and dots are allowed.");
+                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] has an illegal character.  Only letters, digits, dash and dots are allowed.");
                 }
 
                 foreach (var ch in item.Value.ToString())
                 {
                     if (char.IsWhiteSpace(ch))
                     {
-                        throw new KubeDefinitionException($"Whitespace in the value of [{item.Key}={item.Value}] is not allowed.");
+                        throw new ClusterDefinitionException($"Whitespace in the value of [{item.Key}={item.Value}] is not allowed.");
                     }
                 }
             }

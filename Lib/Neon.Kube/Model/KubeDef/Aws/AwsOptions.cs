@@ -39,12 +39,12 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
         }
     }

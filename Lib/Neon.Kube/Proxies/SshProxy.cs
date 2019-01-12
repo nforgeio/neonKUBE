@@ -432,9 +432,9 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The associated <see cref="KubeProxy"/> or <c>null</c>.
+        /// The associated <see cref="ClusterProxy"/> or <c>null</c>.
         /// </summary>
-        public KubeProxy Kube { get; internal set; }
+        public ClusterProxy Kube { get; internal set; }
 
         /// <summary>
         /// Returns the display name for the server.
@@ -3190,7 +3190,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public bool RegistryLogin(string registry, string username = null, string password = null)
         {
-            Covenant.Requires<ArgumentException>(KubeDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
 
             if (KubeHelper.IsDockerPublicRegistry(registry))
             {
@@ -3253,7 +3253,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public bool RegistryLogout(string registry)
         {
-            Covenant.Requires<ArgumentException>(KubeDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
 
             if (KubeHelper.IsDockerPublicRegistry(registry))
             {
@@ -3293,7 +3293,7 @@ echo $? > {cmdFolder}/exit
         public void WaitForDnsHost(string hostname, TimeSpan timeout = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
-            Covenant.Requires<ArgumentNullException>(KubeDefinition.DnsHostRegex.IsMatch(hostname));
+            Covenant.Requires<ArgumentNullException>(ClusterDefinition.DnsHostRegex.IsMatch(hostname));
 
             if (timeout <= TimeSpan.Zero)
             {

@@ -52,7 +52,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private KubeProxy                       cluster;
+        private ClusterProxy                       cluster;
         private SetupController<NodeDefinition> controller;
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public MachineHostingManager(KubeProxy cluster, string logFolder = null)
+        public MachineHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             cluster.HostingManager = this;
 
@@ -86,7 +86,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void Validate(KubeDefinition kubeDefinition)
+        public override void Validate(ClusterDefinition clusterDefinition)
         {
         }
 

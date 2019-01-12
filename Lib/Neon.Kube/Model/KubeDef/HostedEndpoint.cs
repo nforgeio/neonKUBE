@@ -134,19 +134,19 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
             if (!NetHelper.IsValidPort(FrontendPort))
             {
-                throw new KubeDefinitionException($"[{nameof(HostedEndpoint)}.{nameof(FrontendPort)}] value [{FrontendPort}] is outside the range of a valid network port.");
+                throw new ClusterDefinitionException($"[{nameof(HostedEndpoint)}.{nameof(FrontendPort)}] value [{FrontendPort}] is outside the range of a valid network port.");
             }
 
             if (!NetHelper.IsValidPort(FrontendPort))
             {
-                throw new KubeDefinitionException($"[{nameof(HostedEndpoint)}.{nameof(BackendPort)}] value [{BackendPort}] is outside the range of a valid network port.");
+                throw new ClusterDefinitionException($"[{nameof(HostedEndpoint)}.{nameof(BackendPort)}] value [{BackendPort}] is outside the range of a valid network port.");
             }
         }
     }

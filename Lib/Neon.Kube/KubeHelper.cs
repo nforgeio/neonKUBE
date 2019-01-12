@@ -341,14 +341,14 @@ namespace Neon.Kube
         public static bool IsConnected { get; private set; } = false;
 
         /// <summary>
-        /// Returns the <see cref="Kube.KubeLogin"/> for the current cluster. 
+        /// Returns the <see cref="Kube.ClusterLogin"/> for the current cluster. 
         /// </summary>
-        public static KubeLogin KubeLogin { get; private set; } = null;
+        public static ClusterLogin KubeLogin { get; private set; } = null;
 
         /// <summary>
-        /// Returns the <see cref="Kube.KubeProxy"/> for the opened cluster.
+        /// Returns the <see cref="Kube.ClusterProxy"/> for the opened cluster.
         /// </summary>
-        public static KubeProxy KubeProxy { get; private set; } = null;
+        public static ClusterProxy KubeProxy { get; private set; } = null;
 
         /// <summary>
         /// Looks for a certificate with a friendly name.

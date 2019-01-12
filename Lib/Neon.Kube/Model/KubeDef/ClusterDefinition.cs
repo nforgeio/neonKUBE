@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeDefinition.cs
+// FILE:	    ClusterDefinition.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -30,9 +30,9 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a cluster.
+    /// Describes a Kubernetes cluster.
     /// </summary>
-    public class KubeDefinition
+    public class ClusterDefinition
     {
         //---------------------------------------------------------------------
         // Static members
@@ -63,15 +63,15 @@ namespace Neon.Kube
         /// Parses a cluster definition from JSON text.
         /// </summary>
         /// <param name="json">The JSON text.</param>
-        /// <param name="strict">Optionally require that all input properties map to <see cref="KubeDefinition"/> properties.</param>
-        /// <returns>The parsed <see cref="KubeDefinition"/>.</returns>
+        /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
+        /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
         /// <remarks>
         /// <note>
         /// The source is first preprocessed using <see cref="PreprocessReader"/>
         /// and then is parsed as JSON.
         /// </note>
         /// </remarks>
-        public static KubeDefinition FromJson(string json, bool strict = false)
+        public static ClusterDefinition FromJson(string json, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(json != null);
 
@@ -79,7 +79,7 @@ namespace Neon.Kube
             {
                 using (var preprocessReader = new PreprocessReader(stringReader))
                 {
-                    return NeonHelper.JsonDeserialize<KubeDefinition>(preprocessReader.ReadToEnd(), strict: strict);
+                    return NeonHelper.JsonDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
                 }
             }
         }
@@ -88,7 +88,7 @@ namespace Neon.Kube
         /// Parses and validates a cluster definition file.
         /// </summary>
         /// <param name="path">The file path.</param>
-        /// <param name="strict">Optionally require that all input properties map to <see cref="KubeDefinition"/> properties.</param>
+        /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         public static void ValidateFile(string path, bool strict = false)
         {
@@ -99,8 +99,8 @@ namespace Neon.Kube
         /// Parses a cluster definition from a file.
         /// </summary>
         /// <param name="path">The file path.</param>
-        /// <param name="strict">Optionally require that all input properties map to <see cref="KubeDefinition"/> properties.</param>
-        /// <returns>The parsed <see cref="KubeDefinition"/>.</returns>
+        /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
+        /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         /// <remarks>
         /// <note>
@@ -108,7 +108,7 @@ namespace Neon.Kube
         /// and then is parsed as JSON.
         /// </note>
         /// </remarks>
-        public static KubeDefinition FromFile(string path, bool strict = false)
+        public static ClusterDefinition FromFile(string path, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(path != null);
 
@@ -118,16 +118,16 @@ namespace Neon.Kube
                 {
                     using (var preprocessReader = new PreprocessReader(stringReader))
                     {
-                        var kubeDefinition = NeonHelper.JsonDeserialize<KubeDefinition>(preprocessReader.ReadToEnd(), strict: strict);
+                        var clusterDefinition = NeonHelper.JsonDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
-                        if (kubeDefinition == null)
+                        if (clusterDefinition == null)
                         {
                             throw new ArgumentException($"Invalid cluster definition in [{path}].");
                         }
 
                         // Populate the [node.Name] properties from the dictionary name.
 
-                        foreach (var item in kubeDefinition.NodeDefinitions)
+                        foreach (var item in clusterDefinition.NodeDefinitions)
                         {
                             var node = item.Value;
 
@@ -141,9 +141,9 @@ namespace Neon.Kube
                             }
                         }
 
-                        kubeDefinition.Validate();
+                        clusterDefinition.Validate();
 
-                        return kubeDefinition;
+                        return clusterDefinition;
                     }
                 }
             }
@@ -167,17 +167,17 @@ namespace Neon.Kube
         /// <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
         /// <param name="propertyName">The size property name (used for error reporting).</param>
         /// <returns>The size converted into a <c>long</c>.</returns>
-        /// <exception cref="KubeDefinitionException">Thrown if the size is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the size is not valid.</exception>
         public static long ValidateSize(string sizeValue, Type optionsType, string propertyName)
         {
             if (string.IsNullOrEmpty(sizeValue))
             {
-                throw new KubeDefinitionException($"[{optionsType.Name}.{propertyName}] cannot be NULL or empty.");
+                throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}] cannot be NULL or empty.");
             }
 
             if (!NeonHelper.TryParseCount(sizeValue, out var size))
             {
-                throw new KubeDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] cannot be parsed.");
+                throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] cannot be parsed.");
             }
 
             return (long)size;
@@ -189,7 +189,7 @@ namespace Neon.Kube
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeDefinition()
+        public ClusterDefinition()
         {
         }
 
@@ -219,7 +219,7 @@ namespace Neon.Kube
         /// <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
         /// </para>
         /// <para>
-        /// This may be different though for some hosting environment.
+        /// This may be different though for some hosting environments.
         /// XenServer for example, uses the <b>xvd</b> prefix and attaches
         /// drives as <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
         /// </para>
@@ -294,7 +294,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "NodeOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public KubeNodeOptions NodeOptions { get; set; } = new KubeNodeOptions();
+        public NodeOptions NodeOptions { get; set; } = new NodeOptions();
 
         /// <summary>
         /// Describes the cluster's network configuration.
@@ -411,42 +411,42 @@ namespace Neon.Kube
         /// are unique.  This method is intended to be called from hosting options classes
         /// like <see cref="MachineOptions"/> which require specified node IP addresses.
         /// </summary>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
         public void ValidatePrivateNodeAddresses()
         {
             var ipAddressToNode = new Dictionary<IPAddress, NodeDefinition>();
 
-            if (string.IsNullOrEmpty(Network.NodesSubnet))
+            if (string.IsNullOrEmpty(Network.NodeSubnet))
             {
-                throw new KubeDefinitionException($"The [{nameof(KubeDefinition)}.{nameof(KubeDefinition.Network)}.{nameof(NetworkOptions.NodesSubnet)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.NodeSubnet)}] property is required.");
             }
 
-            if (!NetworkCidr.TryParse(Network.NodesSubnet, out var nodesSubnet))
+            if (!NetworkCidr.TryParse(Network.NodeSubnet, out var nodesSubnet))
             {
-                throw new KubeDefinitionException($"The [{nameof(KubeDefinition)}.{nameof(KubeDefinition.Network)}.{nameof(NetworkOptions.NodesSubnet)}={Network.NodesSubnet}] property is not valid.");
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.NodeSubnet)}={Network.NodeSubnet}] property is not valid.");
             }
 
             foreach (var node in SortedNodes.OrderBy(n => n.Name))
             {
                 if (string.IsNullOrEmpty(node.PrivateAddress))
                 {
-                    throw new KubeDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
                 }
 
                 if (!IPAddress.TryParse(node.PrivateAddress, out var address))
                 {
-                    throw new KubeDefinitionException($"Node [{node.Name}] has invalid private IP address [{node.PrivateAddress}].");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] has invalid private IP address [{node.PrivateAddress}].");
                 }
 
                 if (address == IPAddress.Any)
                 {
-                    throw new KubeDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
                 }
 
                 if (ipAddressToNode.TryGetValue(address, out var conflictingNode))
                 {
-                    throw new KubeDefinitionException($"Nodes [{conflictingNode.Name}] and [{node.Name}] have the same IP address [{address}].");
+                    throw new ClusterDefinitionException($"Nodes [{conflictingNode.Name}] and [{node.Name}] have the same IP address [{address}].");
                 }
 
                 ipAddressToNode.Add(address, node);
@@ -457,7 +457,7 @@ namespace Neon.Kube
         /// Validates the cluster definition and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
         public void Validate()
         {
@@ -465,7 +465,7 @@ namespace Neon.Kube
             DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
-            NodeOptions = NodeOptions ?? new KubeNodeOptions();
+            NodeOptions = NodeOptions ?? new NodeOptions();
             Network     = Network ?? new NetworkOptions();
 
             Setup.Validate(this);
@@ -483,7 +483,7 @@ namespace Neon.Kube
 
             if (NodeDefinitions == null || NodeDefinitions.Count == 0)
             {
-                throw new KubeDefinitionException("At least one cluster node must be defined.");
+                throw new ClusterDefinitionException("At least one cluster node must be defined.");
             }
 
             foreach (var node in NodeDefinitions.Values)
@@ -493,47 +493,46 @@ namespace Neon.Kube
 
             if (Name == null)
             {
-                throw new KubeDefinitionException($"The [{nameof(KubeDefinition)}.{nameof(Name)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}] property is required.");
             }
 
             if (!IsValidName(Name))
             {
-                throw new KubeDefinitionException($"The [{nameof(KubeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             if (Datacenter == null)
             {
-                throw new KubeDefinitionException($"The [{nameof(KubeDefinition)}.{nameof(Datacenter)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Datacenter)}] property is required.");
             }
 
             if (!IsValidName(Datacenter))
             {
-                throw new KubeDefinitionException($"The [{nameof(KubeDefinition)}.{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             var managementNodeCount = Masters.Count();
 
             if (managementNodeCount == 0)
             {
-                throw new KubeDefinitionException("Clusters must have at least one management node.");
+                throw new ClusterDefinitionException("Clusters must have at least one management node.");
             }
             else if (managementNodeCount > 5)
             {
-                throw new KubeDefinitionException("Clusters may not have more than [5] management nodes.");
+                throw new ClusterDefinitionException("Clusters may not have more than [5] management nodes.");
             }
             else if (!NeonHelper.IsOdd(managementNodeCount))
             {
-                throw new KubeDefinitionException("Clusters must have an odd number of management nodes: [1, 3, or 5]");
+                throw new ClusterDefinitionException("Clusters must have an odd number of management nodes: [1, 3, or 5]");
             }
 
             // Ensure that each node has a valid unique or NULL IP address.
 
-            NetworkCidr nodesSubnet   = null;
-            NetworkCidr vpnPoolSubnet = null;
+            NetworkCidr nodesSubnet = null;
 
-            if (Network.NodesSubnet != null)
+            if (Network.NodeSubnet != null)
             {
-                nodesSubnet = NetworkCidr.Parse(Network.NodesSubnet);
+                nodesSubnet = NetworkCidr.Parse(Network.NodeSubnet);
             }
 
             var addressToNode = new Dictionary<string, NodeDefinition>();
@@ -546,7 +545,7 @@ namespace Neon.Kube
 
                     if (addressToNode.TryGetValue(node.PrivateAddress, out conflictNode))
                     {
-                        throw new KubeDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.PrivateAddress}] that conflicts with node [name={conflictNode.Name}].");
+                        throw new ClusterDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.PrivateAddress}] that conflicts with node [name={conflictNode.Name}].");
                     }
                 }
             }
@@ -557,22 +556,17 @@ namespace Neon.Kube
                 {
                     if (!IPAddress.TryParse(node.PrivateAddress, out var address))
                     {
-                        throw new KubeDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.PrivateAddress}].");
-                    }
-
-                    if (vpnPoolSubnet != null && vpnPoolSubnet.Contains(address))
-                    {
-                        throw new KubeDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] within the hosting [{nameof(Network.VpnPoolSubnet)}={Network.VpnPoolSubnet}].");
+                        throw new ClusterDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.PrivateAddress}].");
                     }
 
                     if (nodesSubnet != null && !nodesSubnet.Contains(address))
                     {
-                        throw new KubeDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] that is not within the hosting [{nameof(Network.NodesSubnet)}={Network.NodesSubnet}].");
+                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] that is not within the hosting [{nameof(Network.NodeSubnet)}={Network.NodeSubnet}].");
                     }
                 }
                 else if (!Hosting.IsCloudProvider)
                 {
-                    throw new KubeDefinitionException($"Node [name={node.Name}] is not assigned a private IP address.  This is required when deploying to a [{nameof(Environment)}={Environment}] hosting environment.");
+                    throw new ClusterDefinitionException($"Node [name={node.Name}] is not assigned a private IP address.  This is required when deploying to a [{nameof(Environment)}={Environment}] hosting environment.");
                 }
             }
         }
@@ -598,7 +592,7 @@ namespace Neon.Kube
             // and then clear it's Hash property as well as any hosting
             // provider details.
 
-            var clone = NeonHelper.JsonClone<KubeDefinition>(this);
+            var clone = NeonHelper.JsonClone<ClusterDefinition>(this);
 
             clone.Hash = null;
 
@@ -696,7 +690,7 @@ namespace Neon.Kube
 
                         if (pos < 0)
                         {
-                            throw new KubeDefinitionException($"Illegal constraint [{constraint}].  One of [==] or [!=] must be present.");
+                            throw new ClusterDefinitionException($"Illegal constraint [{constraint}].  One of [==] or [!=] must be present.");
                         }
 
                         equality = false;
@@ -704,7 +698,7 @@ namespace Neon.Kube
 
                     if (pos == 0)
                     {
-                        throw new KubeDefinitionException($"Illegal constraint [{constraint}].  No label is specified.");
+                        throw new ClusterDefinitionException($"Illegal constraint [{constraint}].  No label is specified.");
                     }
 
                     string  label = constraint.Substring(0, pos);

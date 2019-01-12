@@ -69,13 +69,13 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
-        public void Validate(KubeDefinition kubeDefinition)
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        public void Validate(ClusterDefinition clusterDefinition)
         {
             if (StepStaggerSeconds < 0)
             {
-                throw new KubeDefinitionException($"[{nameof(SetupOptions)}.{nameof(StepStaggerSeconds)}={StepStaggerSeconds}] cannot be negative.");
+                throw new ClusterDefinitionException($"[{nameof(SetupOptions)}.{nameof(StepStaggerSeconds)}={StepStaggerSeconds}] cannot be negative.");
             }
         }
     }

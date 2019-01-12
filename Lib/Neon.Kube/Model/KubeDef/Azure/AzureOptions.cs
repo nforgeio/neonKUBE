@@ -281,80 +281,80 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            foreach (var ch in kubeDefinition.Name)
+            foreach (var ch in clusterDefinition.Name)
             {
                 if (char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
                 {
                     continue;
                 }
 
-                throw new KubeDefinitionException($"cluster name [{kubeDefinition.Name}] is not valid for Azure deployment.  Only letters, digits, dashes, or underscores are allowed.");
+                throw new ClusterDefinitionException($"cluster name [{clusterDefinition.Name}] is not valid for Azure deployment.  Only letters, digits, dashes, or underscores are allowed.");
             }
 
             if (string.IsNullOrEmpty(SubscriptionId))
             {
-                throw new KubeDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(TenantId))
             {
-                throw new KubeDefinitionException($"Azure hosting [{nameof(TenantId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(ApplicationId))
             {
-                throw new KubeDefinitionException($"Azure hosting [{nameof(ApplicationId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ApplicationId)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Password))
             {
-                throw new KubeDefinitionException($"Azure hosting [{nameof(Password)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(Password)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
             {
-                throw new KubeDefinitionException($"Azure hosting [{nameof(Region)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(Region)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(DomainLabel))
             {
-                throw new KubeDefinitionException($"Azure hosting [{nameof(DomainLabel)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(DomainLabel)}] property cannot be empty.");
             }
 
             // Verify [ResourceGroup].
 
             if (string.IsNullOrEmpty(ResourceGroup))
             {
-                ResourceGroup = kubeDefinition.Name;
+                ResourceGroup = clusterDefinition.Name;
             }
 
             if (ResourceGroup.Length > 64)
             {
-                throw new KubeDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be longer than 64 characters.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be longer than 64 characters.");
             }
 
             if (!char.IsLetter(ResourceGroup.First()))
             {
-                throw new KubeDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must begin with a letter.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must begin with a letter.");
             }
 
             if (ResourceGroup.Last() == '_' || ResourceGroup.Last() == '-')
             {
-                throw new KubeDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must not end with a dash or underscore.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must not end with a dash or underscore.");
             }
 
             foreach (var ch in ResourceGroup)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
-                    throw new KubeDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must include only letters, digits, dashes or underscores.");
+                    throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must include only letters, digits, dashes or underscores.");
                 }
             }
 
@@ -362,19 +362,19 @@ namespace Neon.Kube
 
             if (Environment != null)
             {
-                Environment.Validate(kubeDefinition);
+                Environment.Validate(clusterDefinition);
             }
 
             // Check Azure cluster limits.
 
-            if (kubeDefinition.Masters.Count() > KubeConst.MaxMasters)
+            if (clusterDefinition.Masters.Count() > KubeConst.MaxMasters)
             {
-                throw new KubeDefinitionException($"cluster manager count [{kubeDefinition.Masters.Count()}] exceeds the [{KubeConst.MaxMasters}] limit for clusters.");
+                throw new ClusterDefinitionException($"cluster manager count [{clusterDefinition.Masters.Count()}] exceeds the [{KubeConst.MaxMasters}] limit for clusters.");
             }
 
-            if (kubeDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)
+            if (clusterDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)
             {
-                throw new KubeDefinitionException($"cluster node count [{kubeDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for clusters deployed to Azure.");
+                throw new ClusterDefinitionException($"cluster node count [{clusterDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for clusters deployed to Azure.");
             }
         }
     }

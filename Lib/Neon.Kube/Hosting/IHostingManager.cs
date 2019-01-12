@@ -41,9 +41,9 @@ namespace Neon.Kube
         /// Verifies that a cluster is valid for the hosting manager, customizing 
         /// properties as required.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if any problems were detected.</exception>
-        void Validate(KubeDefinition kubeDefinition);
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
+        void Validate(ClusterDefinition clusterDefinition);
 
         /// <summary>
         /// Creates and initializes the cluster resources such as the virtual machines,

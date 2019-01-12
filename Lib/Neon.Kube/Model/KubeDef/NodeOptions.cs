@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeNodeOptions.cs
+// FILE:	    NodeOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,11 +28,9 @@ namespace Neon.Kube
     /// <summary>
     /// Describes cluster host node options.
     /// </summary>
-    public class KubeNodeOptions
+    public class NodeOptions
     {
         private const int           defaultPasswordLength          = 20;
-        private const bool          defaultPasswordAuth            = true;
-        private const bool          defaultEnableVolumeNetshare    = true;
         private const bool          defaultAllowPackageManagerIPv6 = false;
         private const int           defaultPackageManagerRetries   = 5;
 
@@ -66,14 +64,14 @@ namespace Neon.Kube
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="kubeDefinition">The cluster definition.</param>
-        /// <exception cref="KubeDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(KubeDefinition kubeDefinition)
+        public void Validate(ClusterDefinition clusterDefinition)
         {
             if (PasswordLength > 0 && PasswordLength < 8)
             {
-                throw new KubeDefinitionException($"[{nameof(KubeNodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
+                throw new ClusterDefinitionException($"[{nameof(NodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
             }
         }
     }

@@ -127,12 +127,12 @@ namespace NeonCli
         /// Sets cluster definition related variables for a <see cref="PreprocessReader"/>.
         /// </summary>
         /// <param name="preprocessReader">The reader.</param>
-        /// <param name="kubeDefinition">The cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeDefinition">The target node definition.</param>
-        private static void SetHiveVariables(PreprocessReader preprocessReader, KubeDefinition kubeDefinition, NodeDefinition nodeDefinition)
+        private static void SetHiveVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(preprocessReader != null);
-            Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             // Generate the master node variables in sorted order.  The variable 
             // names will be formatted as:
@@ -161,7 +161,7 @@ namespace NeonCli
             sbManagerAddressesArray.Append("(");
             sbPeerManagerAddressesArray.Append("(");
 
-            foreach (var manager in kubeDefinition.SortedManagers)
+            foreach (var manager in clusterDefinition.SortedManagers)
             {
                 sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
                 sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
@@ -183,7 +183,7 @@ namespace NeonCli
             sbManagerAddressesArray.Append(" )");
             sbPeerManagerAddressesArray.Append(" )");
 
-            foreach (var manager in kubeDefinition.SortedManagers)
+            foreach (var manager in clusterDefinition.SortedManagers)
             {
                 var nameField = manager.Name;
 
@@ -205,7 +205,7 @@ namespace NeonCli
                 }
             }
 
-            foreach (var manager in kubeDefinition.SortedManagers)
+            foreach (var manager in clusterDefinition.SortedManagers)
             {
                 sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
                 sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
@@ -218,7 +218,7 @@ namespace NeonCli
 
             sbMasters.Append("\n");
 
-            if (kubeDefinition.Masters.Count() > 1)
+            if (clusterDefinition.Masters.Count() > 1)
             {
                 sbMasters.Append($"declare -x NEON_MASTER_PEERS={sbPeerManagerAddressesArray}\n");
             }
@@ -232,9 +232,9 @@ namespace NeonCli
             var managerTimeSources = string.Empty;
             var workerTimeSources = string.Empty;
 
-            if (kubeDefinition.TimeSources != null)
+            if (clusterDefinition.TimeSources != null)
             {
-                foreach (var source in kubeDefinition.TimeSources)
+                foreach (var source in clusterDefinition.TimeSources)
                 {
                     if (string.IsNullOrWhiteSpace(source))
                     {
@@ -250,7 +250,7 @@ namespace NeonCli
                 }
             }
 
-            foreach (var manager in kubeDefinition.SortedManagers)
+            foreach (var manager in clusterDefinition.SortedManagers)
             {
                 if (workerTimeSources.Length > 0)
                 {
@@ -275,33 +275,33 @@ namespace NeonCli
             // servers and workers/pets will recurse to the managers so they can
             // dynamically pickup cluster DNS changes.
 
-            if (kubeDefinition.Network?.Nameservers == null)
+            if (clusterDefinition.Network?.Nameservers == null)
             {
                 // $hack(jeff.lill): 
                 //
                 // [Network] will be null if we're just preparing servers, not doing full setup
                 // so we'll set this to the defaults to avoid null references below.
 
-                kubeDefinition.Network = new NetworkOptions();
+                clusterDefinition.Network = new NetworkOptions();
             }
 
             var nameservers = string.Empty;
 
             if (nodeDefinition.Role == NodeRole.Master)
             {
-                for (int i = 0; i < kubeDefinition.Network.Nameservers.Length; i++)
+                for (int i = 0; i < clusterDefinition.Network.Nameservers.Length; i++)
                 {
                     if (i > 0)
                     {
                         nameservers += ";";
                     }
 
-                    nameservers += kubeDefinition.Network.Nameservers[i].Trim();
+                    nameservers += clusterDefinition.Network.Nameservers[i].Trim();
                 }
             }
             else
             {
-                foreach (var manager in kubeDefinition.SortedManagers)
+                foreach (var manager in clusterDefinition.SortedManagers)
                 {
                     if (nameservers.Length > 0)
                     {
@@ -317,10 +317,10 @@ namespace NeonCli
             preprocessReader.Set("load-cluster-conf", KubeHostFolders.Config + "/cluster.conf.sh --echo-summary");
             preprocessReader.Set("load-cluster-conf-quiet", KubeHostFolders.Config + "/cluster.conf.sh");
 
-            SetBashVariable(preprocessReader, "cluster.provisioner", kubeDefinition.Provisioner);
+            SetBashVariable(preprocessReader, "cluster.provisioner", clusterDefinition.Provisioner);
             SetBashVariable(preprocessReader, "cluster.rootuser", Program.MachineUsername);
 
-            SetBashVariable(preprocessReader, "node.driveprefix", kubeDefinition.DrivePrefix);
+            SetBashVariable(preprocessReader, "node.driveprefix", clusterDefinition.DrivePrefix);
 
             SetBashVariable(preprocessReader, "neon.folders.archive", KubeHostFolders.Archive);
             SetBashVariable(preprocessReader, "neon.folders.bin", KubeHostFolders.Bin);
@@ -334,7 +334,7 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.folders.tmpfs", KubeHostFolders.Tmpfs);
             SetBashVariable(preprocessReader, "neon.folders.tools", KubeHostFolders.Tools);
 
-            SetBashVariable(preprocessReader, "nodes.manager.count", kubeDefinition.Masters.Count());
+            SetBashVariable(preprocessReader, "nodes.manager.count", clusterDefinition.Masters.Count());
             preprocessReader.Set("nodes.managers", sbMasters);
             preprocessReader.Set("nodes.manager.summary", sbManagerNodesSummary);
 
@@ -344,7 +344,7 @@ namespace NeonCli
             //-----------------------------------------------------------------
             // Configure the variables for the [setup-disk.sh] script.
 
-            switch (kubeDefinition.Hosting.Environment)
+            switch (clusterDefinition.Hosting.Environment)
             {
                 case HostingEnvironments.Aws:
 
@@ -385,7 +385,7 @@ namespace NeonCli
 
                 default:
 
-                    throw new NotImplementedException($"The [{kubeDefinition.Hosting.Environment}] hosting environment is not implemented.");
+                    throw new NotImplementedException($"The [{clusterDefinition.Hosting.Environment}] hosting environment is not implemented.");
             }
         }
 
@@ -399,10 +399,10 @@ namespace NeonCli
         /// </summary>
         /// <typeparam name="TMetadata">The node metadata type.</typeparam>
         /// <param name="node">The remote node.</param>
-        /// <param name="kubeDefinition">The cluster definition or <c>null</c>.</param>
+        /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
         /// <param name="file">The resource file.</param>
         /// <param name="targetPath">The target path on the remote server.</param>
-        private static void UploadFile<TMetadata>(this SshProxy<TMetadata> node, KubeDefinition kubeDefinition, ResourceFiles.File file, string targetPath)
+        private static void UploadFile<TMetadata>(this SshProxy<TMetadata> node, ClusterDefinition clusterDefinition, ResourceFiles.File file, string targetPath)
             where TMetadata : class
         {
             using (var input = file.ToStream())
@@ -426,9 +426,9 @@ namespace NeonCli
                                     StripComments   = false
                                 };
 
-                            if (kubeDefinition != null)
+                            if (clusterDefinition != null)
                             {
-                                SetHiveVariables(preprocessReader, kubeDefinition, node.Metadata as NodeDefinition);
+                                SetHiveVariables(preprocessReader, clusterDefinition, node.Metadata as NodeDefinition);
                             }
 
                             foreach (var line in preprocessReader.Lines())
@@ -455,8 +455,8 @@ namespace NeonCli
         /// </summary>
         /// <typeparam name="Metadata">The node metadata type.</typeparam>
         /// <param name="node">The remote node.</param>
-        /// <param name="kubeDefinition">The cluster definition or <c>null</c>.</param>
-        public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, KubeDefinition kubeDefinition = null)
+        /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
+        public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, ClusterDefinition clusterDefinition = null)
             where Metadata : class
         {
             Covenant.Requires<ArgumentNullException>(node != null);
@@ -472,7 +472,7 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("conf").Files())
             {
-                node.UploadFile(kubeDefinition, file, $"{KubeHostFolders.Config}/{file.Name}");
+                node.UploadFile(clusterDefinition, file, $"{KubeHostFolders.Config}/{file.Name}");
             }
 
             // Secure the files and make the scripts executable.
@@ -488,8 +488,8 @@ namespace NeonCli
         /// </summary>
         /// <typeparam name="TMetadata">The server's metadata type.</typeparam>
         /// <param name="server">The remote server.</param>
-        /// <param name="kubeDefinition">The cluster definition or <c>null</c>.</param>
-        public static void UploadResources<TMetadata>(this SshProxy<TMetadata> server, KubeDefinition kubeDefinition = null)
+        /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
+        public static void UploadResources<TMetadata>(this SshProxy<TMetadata> server, ClusterDefinition clusterDefinition = null)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(server != null);
@@ -506,7 +506,7 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("setup").Files())
             {
-                server.UploadFile(kubeDefinition, file, $"{KubeHostFolders.Setup}/{file.Name}");
+                server.UploadFile(clusterDefinition, file, $"{KubeHostFolders.Setup}/{file.Name}");
             }
 
             // Make the setup scripts executable.
@@ -562,7 +562,7 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
             {
-                server.UploadFile(kubeDefinition, file, $"{KubeHostFolders.Tools}/{file.Name.Replace(".sh", string.Empty)}");
+                server.UploadFile(clusterDefinition, file, $"{KubeHostFolders.Tools}/{file.Name.Replace(".sh", string.Empty)}");
             }
 
             // Make the scripts executable.
