@@ -30,7 +30,7 @@ namespace Neon.Kube
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonKUBEs can be deployed in two basic environments, cloud or on-premise.  Cloud providers include
+    /// clusters can be deployed in two basic environments, cloud or on-premise.  Cloud providers include
     /// <see cref="HostingEnvironments.Aws"/>, <see cref="HostingEnvironments.Azure"/>, and <see cref="HostingEnvironments.Google"/>
     /// and on-premise providers include <see cref="HostingEnvironments.HyperVDev"/>, <see cref="HostingEnvironments.Machine"/> and
     /// <see cref="HostingEnvironments.XenServer"/>.  cluster network options are interpreted somewhat differently
@@ -257,7 +257,7 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <para>
-        /// neonKUBEs configure the Consul servers running on the manager nodes to handle the DNS requests
+        /// clusters configure the Consul servers running on the manager nodes to handle the DNS requests
         /// from the cluster host nodes and containers by default.  This enables the registration of services
         /// with Consul that will be resolved to specific IP addresses.  This is used by the <b>proxy-manager</b>
         /// to support stateful services deployed as multiple containers and may also be used in other future

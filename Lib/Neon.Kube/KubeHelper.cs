@@ -134,7 +134,65 @@ namespace Neon.Kube
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
             {
-                return Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonkube");
+                var path = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonkube");
+
+                Directory.CreateDirectory(path);
+
+                return path;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Returns the path the folder holding the user specific Kubernetes configuration files.
+        /// </summary>
+        /// <param name="ignoreNeonToolContainerVar">
+        /// Optionally ignore the presence of a <b>NEON_TOOL_CONTAINER</b> environment 
+        /// variable.  Defaults to <c>false</c>.
+        /// </param>
+        /// <returns>The folder path.</returns>
+        /// <remarks>
+        /// The actual path return depends on the presence of the <b>NEON_TOOL_CONTAINER</b>
+        /// environment variable.  <b>NEON_TOOL_CONTAINER=1</b> then we're running in a 
+        /// shimmed Docker container and we'll expect the cluster login information to be mounted
+        /// at <b>/$HOME/.kube</b>.  Otherwise, we'll return a suitable path within the 
+        /// current user's home directory.
+        /// </remarks>
+        public static string GetKubeUserFolder(bool ignoreNeonToolContainerVar = false)
+        {
+            if (!ignoreNeonToolContainerVar && InToolContainer)
+            {
+                return $"/{Environment.GetEnvironmentVariable("HOME")}/.kube";
+            }
+
+            if (NeonHelper.IsWindows)
+            {
+                var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
+
+                Directory.CreateDirectory(path);
+
+                try
+                {
+                    EncryptFile(path);
+                }
+                catch
+                {
+                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
+                    // file systems).  The secrets won't be encrypted for these situations.
+                }
+
+                return path;
+            }
+            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+            {
+                var path = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".kube");
+
+                Directory.CreateDirectory(path);
+
+                return path;
             }
             else
             {
@@ -159,27 +217,28 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder containing login information for the known logins, creating
+        /// Returns the path the folder containing cluster definition files, creating
         /// the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage neonKUBEs.  Each known cluster will have a JSON file named
-        /// <b><i>hive-name</i>.json</b> holding the serialized <see cref="Kube.KubeConfig"/> 
-        /// information for the cluster.
+        /// to deploy and manage clusters.  Each known cluster will have a JSON file named
+        /// <b><i>cluster-name</i>.json</b> holding the serialized <see cref="Kube.KubeConfig"/> 
+        /// information for the cluster, where <i>cluster-name</i> maps to a cluster name
+        /// within the <c>kubeconfig</c> file.
         /// </para>
         /// <para>
         /// The <b>.current</b> file (if present) specifies the name of the cluster to be considered
         /// to be currently logged in.
         /// </para>
         /// </remarks>
-        public static string LoginFolder
+        public static string ClustersFolder
         {
             get
             {
-                var path = Path.Combine(GetNeonKubeUserFolder(), "logins");
+                var path = Path.Combine(GetNeonKubeUserFolder(), "clusters");
 
                 Directory.CreateDirectory(path);
 
@@ -193,7 +252,7 @@ namespace Neon.Kube
         /// <returns>The folder path.</returns>
         /// <remarks>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage neonKUBEs.  The client will use this to store temporary files that may
+        /// to deploy and manage clusters.  The client will use this to store temporary files that may
         /// include sensitive information because these folders are encrypted on disk.
         /// </remarks>
         public static string TempFolder
@@ -245,7 +304,7 @@ namespace Neon.Kube
         /// </summary>
         public static string CurrentPath
         {
-            get { return Path.Combine(LoginFolder, ".current"); }
+            get { return Path.Combine(ClustersFolder, ".current"); }
         }
 
         /// <summary>
@@ -259,7 +318,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(LoginFolder, $"{username}@{hiveName}.login.json");
+            return Path.Combine(ClustersFolder, $"{username}@{hiveName}.login.json");
         }
 
         /// <summary>
@@ -282,9 +341,9 @@ namespace Neon.Kube
         public static bool IsConnected { get; private set; } = false;
 
         /// <summary>
-        /// Returns the <see cref="Kube.KubeConfig"/> for the opened cluster. 
+        /// Returns the <see cref="Kube.KubeLogin"/> for the current cluster. 
         /// </summary>
-        public static KubeConfig KubeContext { get; private set; } = null;
+        public static KubeLogin KubeLogin { get; private set; } = null;
 
         /// <summary>
         /// Returns the <see cref="Kube.KubeProxy"/> for the opened cluster.

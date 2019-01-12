@@ -1873,7 +1873,7 @@ namespace Neon.Kube
         public bool IsDeprecated { get; private set; }
 
         /// <summary>
-        /// Returns <c>true</c> if this VM size is not supported by neonKUBEs.
+        /// Returns <c>true</c> if this VM size is not supported by clusters.
         /// </summary>
         public bool NotSupported { get; private set; } = false;
 

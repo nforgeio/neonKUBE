@@ -1029,9 +1029,9 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 sshCredentials = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword);
             }
-            else if (KubeHelper.KubeContext != null)
+            else if (KubeHelper.KubeLogin != null)
             {
-                sshCredentials = KubeHelper.KubeContext.GetSshCredentials();
+                sshCredentials = KubeHelper.KubeLogin.GetSshCredentials();
             }
             else
             {
@@ -1084,12 +1084,12 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// Uses WinSCP to convert an OpenSSH PEM formatted key to the PPK format
         /// required by PuTTY/WinSCP.  This works only on Windows.
         /// </summary>
-        /// <param name="kube">The related cluster login information.</param>
+        /// <param name="kubeLogin">The related cluster login information.</param>
         /// <param name="pemKey">The OpenSSH PEM key.</param>
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(KubeConfig kube, string pemKey)
+        public static string ConvertPUBtoPPK(KubeLogin kubeLogin, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {
@@ -1104,7 +1104,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 File.WriteAllText(pemKeyPath, pemKey);
 
-                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{kube.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{kubeLogin.Definition.Name} Key"" /output=""{ppkKeyPath}""");
 
                 if (result.ExitCode != 0)
                 {

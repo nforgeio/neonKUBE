@@ -27,33 +27,24 @@ using Neon.Time;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Remotely manages a cluster.
+    /// Used to remotely manage a cluster via SSH/SCP.
     /// </summary>
     public class KubeProxy : IDisposable
     {
         private RunOptions                                                          defaultRunOptions;
         private Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>>     nodeProxyCreator;
         private bool                                                                appendLog;
-        private bool                                                                useBootstrap;
 
         /// <summary>
         /// Constructs a cluster proxy from a cluster login.
         /// </summary>
-        /// <param name="hiveLogin">The cluster login.</param>
+        /// <param name="kubeLogin">The cluster login.</param>
         /// <param name="nodeProxyCreator">
         /// The optional application supplied function that creates a node proxy
         /// given the node name, public address or FQDN, private address, and
         /// the node definition.
         /// </param>
         /// <param name="appendLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
-        /// <param name="useBootstrap">
-        /// Optionally specifies that the instance should use the HiveMQ client
-        /// should directly eference to the HiveMQ cluster nodes for broadcasting
-        /// proxy update messages rather than routing traffic through the <b>private</b>
-        /// traffic manager.  This is used internally to resolve chicken-and-the-egg
-        /// dilemmas for the traffic manager and proxy implementations that rely on
-        /// HiveMQ messaging.
-        /// </param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
@@ -63,21 +54,20 @@ namespace Neon.Kube
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
         /// the cluster definition giving the application the chance to create the management
         /// proxy using the node's SSH credentials and also to specify logging.  A default
-        /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
-        /// argument is passed.
+        /// creator that doesn't initialize SSH credentials and logging is used if <c>null</c>
+        /// is passed.
         /// </remarks>
         public KubeProxy(
-            KubeConfig hiveLogin,
+            KubeLogin kubeLogin,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
             bool                                                            appendLog         = false,
-            bool                                                            useBootstrap      = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
 
-            : this(hiveLogin.Definition, nodeProxyCreator, appendLog: appendLog, useBootstrap: useBootstrap, defaultRunOptions: defaultRunOptions)
+            : this(kubeLogin.Definition, nodeProxyCreator, appendLog: appendLog, defaultRunOptions: defaultRunOptions)
         {
-            Covenant.Requires<ArgumentNullException>(hiveLogin != null);
+            Covenant.Requires<ArgumentNullException>(kubeLogin != null);
 
-            this.HiveLogin = hiveLogin;
+            this.KubeLogin = kubeLogin;
         }
 
         /// <summary>
@@ -90,14 +80,6 @@ namespace Neon.Kube
         /// the node definition.
         /// </param>
         /// <param name="appendLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
-        /// <param name="useBootstrap">
-        /// Optionally specifies that the instance should use the HiveMQ client
-        /// should directly eference to the HiveMQ cluster nodes for broadcasting
-        /// proxy update messages rather than routing traffic through the <b>private</b>
-        /// traffic manager.  This is used internally to resolve chicken-and-the-egg
-        /// dilemmas for the traffic manager and proxy implementations that rely on
-        /// HiveMQ messaging.
-        /// </param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
@@ -107,14 +89,13 @@ namespace Neon.Kube
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
         /// the cluster definition giving the application the chance to create the management
         /// proxy using the node's SSH credentials and also to specify logging.  A default
-        /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
-        /// argument is passed.
+        /// creator that doesn't initialize SSH credentials and logging is used if <c>null</c>
+        /// is passed.
         /// </remarks>
         public KubeProxy(
             KubeDefinition kubeDefinition,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator = null,
             bool                                                            appendLog = false,
-            bool                                                            useBootstrap      = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(kubeDefinition != null);
@@ -124,7 +105,7 @@ namespace Neon.Kube
                 nodeProxyCreator =
                     (name, publicAddress, privateAddress, append) =>
                     {
-                        var login = KubeHelper.KubeContext;
+                        var login = KubeHelper.KubeLogin;
 
                         if (login != null)
                         {
@@ -143,8 +124,7 @@ namespace Neon.Kube
             }
 
             this.Definition        = kubeDefinition;
-            this.HiveLogin         = new KubeConfig();
-            this.useBootstrap      = useBootstrap;
+            this.KubeLogin         = new KubeLogin();
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendLog;
@@ -188,7 +168,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster login information.
         /// </summary>
-        public KubeConfig HiveLogin { get; set; }
+        public KubeLogin KubeLogin { get; set; }
 
         /// <summary>
         /// Indicates that any <see cref="SshProxy{TMetadata}"/> instances belonging
@@ -248,18 +228,6 @@ namespace Neon.Kube
         public IEnumerable<SshProxy<NodeDefinition>> Workers
         {
             get { return Nodes.Where(n => n.Metadata.IsWorker).OrderBy(n => n.Name); }
-        }
-
-        /// <summary>
-        /// Ensures that the current login has root privileges.
-        /// </summary>
-        /// <exception cref="KubeException">Thrown if the current login doesn't have root privileges</exception>
-        public void EnsureRootPrivileges()
-        {
-            if (!HiveLogin.IsRoot)
-            {
-                throw new KubeException("Access Denied: Login doesn't have root privileges.");
-            }
         }
 
         /// <summary>
