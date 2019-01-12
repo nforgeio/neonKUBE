@@ -25,7 +25,7 @@ using Neon.Cryptography;
 namespace Neon.Common
 {
     /// <summary>
-    /// Used to persist database and other credentials as a Docker service secret.
+    /// Used to persist credentials.
     /// </summary>
     /// <remarks>
     /// <para>

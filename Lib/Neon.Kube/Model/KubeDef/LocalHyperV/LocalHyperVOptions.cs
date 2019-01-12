@@ -28,7 +28,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// URI to the zipped VHDX image with the base Docker host operating system.  This defaults to
+        /// URI to the zipped VHDX image with the base cluster host operating system.  This defaults to
         /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx</b>
         /// which is the latest supported Ubuntu 16.04 image.
         /// </para>

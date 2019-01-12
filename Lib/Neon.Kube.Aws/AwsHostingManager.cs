@@ -105,20 +105,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override List<HostedEndpoint> GetPublicEndpoints()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public override bool CanUpdatePublicEndpoints => true;
-
-        /// <inheritdoc/>
-        public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
-        {
-        }
-
-        /// <inheritdoc/>
         public override string DrivePrefix
         {
             get { return "sd"; }

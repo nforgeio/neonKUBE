@@ -72,20 +72,6 @@ namespace Neon.Kube
         /// The IP addresses of the upstream DNS nameservers to be used by the cluster.  This defaults to the 
         /// Google Public DNS servers: <b>[ "8.8.8.8", "8.8.4.4" ]</b> when the property is <c>null</c> or empty.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// clusters configure the Consul servers running on the manager nodes to handle the DNS requests
-        /// from the cluster host nodes and containers by default.  This enables the registration of services
-        /// with Consul that will be resolved to specific IP addresses.  This is used by the <b>proxy-manager</b>
-        /// to support stateful services deployed as multiple containers and may also be used in other future
-        /// scenarios.
-        /// </para>
-        /// <para>
-        /// cluster Consul DNS servers answer requests for names with the <b>cluster</b> top-level domain.
-        /// Other requests will be handled recursively by forwarding the request to one of the IP addresses
-        /// specified here.
-        /// </para>
-        /// </remarks>
         [JsonProperty(PropertyName = "Nameservers", Required = Required.Default)]
         [DefaultValue(null)]
         public string[] Nameservers { get; set; } = null;

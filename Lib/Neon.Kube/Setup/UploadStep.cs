@@ -20,7 +20,7 @@ namespace Neon.Kube
         /// <summary>
         /// Uploads text to a file.
         /// </summary>
-        /// <param name="nodeName">The Docker node name.</param>
+        /// <param name="nodeName">The node name.</param>
         /// <param name="path">The path on the node for uploaded file.</param>
         /// <param name="text">The text to be uploaded.</param>
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
@@ -43,9 +43,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// Constructs a configuration step that executes a command under <b>sudo</b>
-        /// on a specific Docker node.
+        /// on a specific cluster node.
         /// </summary>
-        /// <param name="nodeName">The Docker node name.</param>
+        /// <param name="nodeName">The node name.</param>
         /// <param name="path">The path on the node for uploaded file.</param>
         /// <param name="text">The text to be uploaded.</param>
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>

@@ -62,7 +62,7 @@ namespace Neon.Docker
 
             if (source.ManagerStatus != null)
             {
-                this.ManagerStatus = new DockerNodeManagerStatus(source.ManagerStatus);
+                this.MasterStatus = new DockerNodeManagerStatus(source.ManagerStatus);
             }
         }
 
@@ -144,8 +144,8 @@ namespace Neon.Docker
         public string Addr { get; private set; }
 
         /// <summary>
-        /// Returns management status for Swarm manager nodes.
+        /// Returns management status for cluster master nodes.
         /// </summary>
-        public DockerNodeManagerStatus ManagerStatus { get; private set; }
+        public DockerNodeManagerStatus MasterStatus { get; private set; }
     }
 }

@@ -26,7 +26,7 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a Neon Docker host node.
+    /// Describes a cluster host node.
     /// </summary>
     public class NodeDefinition
     {
@@ -34,15 +34,9 @@ namespace Neon.Kube
         // Static methods
 
         /// <summary>
-        /// The Ansible group name regex validator.  Group names must start with a letter
-        /// and then can be followed by zero or more letters, digits, or underscores.
+        /// Parses a <see cref="NodeDefinition"/> from Kubernetes node labels.
         /// </summary>
-        private static readonly Regex groupNameRegex = new Regex(@"^[a-z][a-z0-9\-_]*$", RegexOptions.IgnoreCase);
-
-        /// <summary>
-        /// Parses a <see cref="NodeDefinition"/> from Docker node labels.
-        /// </summary>
-        /// <param name="labels">The Docker labels.</param>
+        /// <param name="labels">The node labels.</param>
         /// <returns>The parsed <see cref="NodeDefinition"/>.</returns>
         public static NodeDefinition ParseFromLabels(Dictionary<string, string> labels)
         {
@@ -116,7 +110,7 @@ namespace Neon.Kube
         /// <remarks>
         /// <para>
         /// Management nodes are reponsible for managing service discovery and coordinating 
-        /// container deployment across the cluster.
+        /// pod deployment across the cluster.
         /// </para>
         /// <para>
         /// An odd number of management nodes must be deployed in a cluster (to help prevent
@@ -140,27 +134,11 @@ namespace Neon.Kube
         /// <summary>
         /// Returns <c>true</c> for worker nodes.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Worker nodes are part of the Docker Swarm but do not perform any Swarm
-        /// management activties.
-        /// </para>
-        /// </remarks>
         [JsonIgnore]
         [YamlIgnore]
         public bool IsWorker
         {
             get { return Role.Equals(NodeRole.Worker, StringComparison.InvariantCultureIgnoreCase); }
-        }
-
-        /// <summary>
-        /// Returns <c>true</c> for nodes that are members of the Docker Swarm.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool InSwarm
-        {
-            get { return IsMaster || IsWorker; }
         }
 
         /// <summary>
@@ -171,60 +149,12 @@ namespace Neon.Kube
         public string Role { get; set; } = NodeRole.Worker;
 
         /// <summary>
-        /// Specifies the Docker labels to be assigned to the host node.  These can provide
+        /// Specifies the labels to be assigned to the host node.  These can provide
         /// detailed information such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
         /// for more information.
         /// </summary>
         [JsonProperty(PropertyName = "Labels")]
         public NodeLabels Labels { get; set; }
-
-        /// <summary>
-        /// <para>
-        /// Specifies the frontend port to be used to reach the OpenVPN server from outside
-        /// the cluster.  This defaults to <see cref="NetworkPorts.OpenVPN"/> for the first master
-        /// node (sorted by name), (<see cref="NetworkPorts.OpenVPN"/> + 1), for the second
-        /// master node an so on for subsequent managers.  This defaults to <b>0</b> for workers.
-        /// </para>
-        /// <para>
-        /// For cloud deployments, this will be initialized by the <b>neon-cli</b> during
-        /// cluster setup such that each master node will be assigned a unique port with
-        /// a traffic manager rule that forwards external traffic from <see cref="VpnFrontendPort"/>
-        /// to the <see cref="NetworkPorts.OpenVPN"/> port on the master.
-        /// </para>
-        /// <para>
-        /// For on-premise deployments, you should assign a unique <see cref="VpnFrontendPort"/>
-        /// to each master node and then manually configure your router with port forwarding 
-        /// rules that forward TCP traffic from the external port to <see cref="NetworkPorts.OpenVPN"/>
-        /// for each master.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "VpnFrontendPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(0)]
-        public int VpnFrontendPort { get; set; } = 0;
-
-        /// <summary>
-        /// Set by the <b>neon-cli</b> to the private IP address for a master node to
-        /// be used when routing return traffic from other cluster nodes back to a
-        /// connected VPN client.  This is only set when provisioning a cluster VPN.  
-        /// </summary>
-        [JsonProperty(PropertyName = "VpnPoolAddress", Required = Required.Default)]
-        [DefaultValue(null)]
-        public string VpnPoolAddress { get; set; }
-
-        /// <summary>
-        /// <para>
-        /// Specifies the subnet defining the block of addresses assigned to the OpenVPN server
-        /// running on this master node for the OpenVPN server's use as well as for the pool of
-        /// addresses that will be assigned to connecting VPN clients.
-        /// </para>
-        /// <para>
-        /// This will be calculated automatically during cluster setup by master nodes if the
-        /// cluster VPN is enabled.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "VpnPoolSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string VpnPoolSubnet { get; set; }
 
         /// <summary>
         /// Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.

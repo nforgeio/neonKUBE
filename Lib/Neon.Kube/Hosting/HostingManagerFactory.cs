@@ -70,7 +70,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
+        public HostingManager GetMaster(ClusterProxy cluster, string logFolder = null)
         {
             CheckInitialized();
 
@@ -93,14 +93,14 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             var cluster = new ClusterProxy(clusterDefinition);
-            var manager = GetManager(cluster);
+            var master = GetMaster(cluster);
 
-            if (manager == null)
+            if (master == null)
             {
                 throw new KubeException($"Cannot locate a [{nameof(IHostingManager)}] implementation for the [{clusterDefinition.Hosting.Environment}] hosting environment.");
             }
 
-            manager.Validate(clusterDefinition);
+            master.Validate(clusterDefinition);
         }
     }
 }

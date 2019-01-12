@@ -150,77 +150,77 @@ namespace NeonCli
             // NOTE: We need to use Linux-style line endings.
 
             var sbMasters                  = new StringBuilder();
-            var sbManagerNamesArray         = new StringBuilder();
-            var sbManagerAddressesArray     = new StringBuilder();
-            var sbPeerManagerAddressesArray = new StringBuilder();
-            var sbManagerNodesSummary       = new StringBuilder();
-            var index                       = 0;
-            var managerNameWidth            = 0;
+            var sbMasterNamesArray         = new StringBuilder();
+            var sbMasterAddressesArray     = new StringBuilder();
+            var sbPeerMasterAddressesArray = new StringBuilder();
+            var sbMasterNodesSummary       = new StringBuilder();
+            var index                      = 0;
+            var masterNameWidth           = 0;
 
-            sbManagerNamesArray.Append("(");
-            sbManagerAddressesArray.Append("(");
-            sbPeerManagerAddressesArray.Append("(");
+            sbMasterNamesArray.Append("(");
+            sbMasterAddressesArray.Append("(");
+            sbPeerMasterAddressesArray.Append("(");
 
-            foreach (var manager in clusterDefinition.SortedManagers)
+            foreach (var master in clusterDefinition.SortedMasters)
             {
                 sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
-                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
+                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{master.Name}\" [\"address\"]=\"{master.PrivateAddress}\" )\n");
                 sbMasters.Append("\n");
                 index++;
 
-                sbManagerNamesArray.Append($" \"{manager.Name}\"");
-                sbManagerAddressesArray.Append($" \"{manager.PrivateAddress}\"");
+                sbMasterNamesArray.Append($" \"{master.Name}\"");
+                sbMasterAddressesArray.Append($" \"{master.PrivateAddress}\"");
 
-                if (manager != nodeDefinition)
+                if (master != nodeDefinition)
                 {
-                    sbPeerManagerAddressesArray.Append($" \"{manager.PrivateAddress}\"");
+                    sbPeerMasterAddressesArray.Append($" \"{master.PrivateAddress}\"");
                 }
 
-                managerNameWidth = Math.Max(manager.Name.Length, managerNameWidth);
+                masterNameWidth = Math.Max(master.Name.Length, masterNameWidth);
             }
 
-            sbManagerNamesArray.Append(" )");
-            sbManagerAddressesArray.Append(" )");
-            sbPeerManagerAddressesArray.Append(" )");
+            sbMasterNamesArray.Append(" )");
+            sbMasterAddressesArray.Append(" )");
+            sbPeerMasterAddressesArray.Append(" )");
 
-            foreach (var manager in clusterDefinition.SortedManagers)
+            foreach (var master in clusterDefinition.SortedMasters)
             {
-                var nameField = manager.Name;
+                var nameField = master.Name;
 
-                if (nameField.Length < managerNameWidth)
+                if (nameField.Length < masterNameWidth)
                 {
-                    nameField += new string(' ', managerNameWidth - nameField.Length);
+                    nameField += new string(' ', masterNameWidth - nameField.Length);
                 }
 
                 // The blanks below are just enough so that the "=" sign lines up
                 // with the summary output from [cluster.conf.sh].
 
-                if (sbManagerNodesSummary.Length == 0)
+                if (sbMasterNodesSummary.Length == 0)
                 {
-                    sbManagerNodesSummary.Append($"    echo \"NEON_MASTER_NODES                 = {nameField}: {manager.PrivateAddress}\" 1>&2\n");
+                    sbMasterNodesSummary.Append($"    echo \"NEON_MASTER_NODES                 = {nameField}: {master.PrivateAddress}\" 1>&2\n");
                 }
                 else
                 {
-                    sbManagerNodesSummary.Append($"    echo \"                                     {nameField}: {manager.PrivateAddress}\" 1>&2\n");
+                    sbMasterNodesSummary.Append($"    echo \"                                     {nameField}: {master.PrivateAddress}\" 1>&2\n");
                 }
             }
 
-            foreach (var manager in clusterDefinition.SortedManagers)
+            foreach (var master in clusterDefinition.SortedMasters)
             {
                 sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
-                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{manager.Name}\" [\"address\"]=\"{manager.PrivateAddress}\" )\n");
+                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{master.Name}\" [\"address\"]=\"{master.PrivateAddress}\" )\n");
                 index++;
             }
 
             sbMasters.Append("\n");
-            sbMasters.Append($"declare -x NEON_MASTER_NAMES={sbManagerNamesArray}\n");
-            sbMasters.Append($"declare -x NEON_MASTER_ADDRESSES={sbManagerAddressesArray}\n");
+            sbMasters.Append($"declare -x NEON_MASTER_NAMES={sbMasterNamesArray}\n");
+            sbMasters.Append($"declare -x NEON_MASTER_ADDRESSES={sbMasterAddressesArray}\n");
 
             sbMasters.Append("\n");
 
             if (clusterDefinition.Masters.Count() > 1)
             {
-                sbMasters.Append($"declare -x NEON_MASTER_PEERS={sbPeerManagerAddressesArray}\n");
+                sbMasters.Append($"declare -x NEON_MASTER_PEERS={sbPeerMasterAddressesArray}\n");
             }
             else
             {
@@ -229,7 +229,7 @@ namespace NeonCli
 
             // Generate the manager and worker NTP time sources.
 
-            var managerTimeSources = string.Empty;
+            var masterTimeSources = string.Empty;
             var workerTimeSources = string.Empty;
 
             if (clusterDefinition.TimeSources != null)
@@ -241,30 +241,30 @@ namespace NeonCli
                         continue;
                     }
 
-                    if (managerTimeSources.Length > 0)
+                    if (masterTimeSources.Length > 0)
                     {
-                        managerTimeSources += " ";
+                        masterTimeSources += " ";
                     }
 
-                    managerTimeSources += $"\"{source}\"";
+                    masterTimeSources += $"\"{source}\"";
                 }
             }
 
-            foreach (var manager in clusterDefinition.SortedManagers)
+            foreach (var master in clusterDefinition.SortedMasters)
             {
                 if (workerTimeSources.Length > 0)
                 {
                     workerTimeSources += " ";
                 }
 
-                workerTimeSources += $"\"{manager.PrivateAddress}\"";
+                workerTimeSources += $"\"{master.PrivateAddress}\"";
             }
 
-            if (string.IsNullOrWhiteSpace(managerTimeSources))
+            if (string.IsNullOrWhiteSpace(masterTimeSources))
             {
                 // Default to reasonable public time sources.
 
-                managerTimeSources = "\"pool.ntp.org\"";
+                masterTimeSources = "\"pool.ntp.org\"";
             }
 
             // Format the network upstream nameservers as semicolon separated
@@ -301,14 +301,14 @@ namespace NeonCli
             }
             else
             {
-                foreach (var manager in clusterDefinition.SortedManagers)
+                foreach (var master in clusterDefinition.SortedMasters)
                 {
                     if (nameservers.Length > 0)
                     {
                         nameservers += ";";
                     }
 
-                    nameservers += manager.PrivateAddress;
+                    nameservers += master.PrivateAddress;
                 }
             }
 
@@ -334,11 +334,11 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.folders.tmpfs", KubeHostFolders.Tmpfs);
             SetBashVariable(preprocessReader, "neon.folders.tools", KubeHostFolders.Tools);
 
-            SetBashVariable(preprocessReader, "nodes.manager.count", clusterDefinition.Masters.Count());
+            SetBashVariable(preprocessReader, "nodes.master.count", clusterDefinition.Masters.Count());
             preprocessReader.Set("nodes.managers", sbMasters);
-            preprocessReader.Set("nodes.manager.summary", sbManagerNodesSummary);
+            preprocessReader.Set("nodes.manager.summary", sbMasterNodesSummary);
 
-            SetBashVariable(preprocessReader, "ntp.manager.sources", managerTimeSources);
+            SetBashVariable(preprocessReader, "ntp.master.sources", masterTimeSources);
             NewMethod(preprocessReader, workerTimeSources);
 
             //-----------------------------------------------------------------

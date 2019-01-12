@@ -176,25 +176,6 @@ namespace Neon.Kube
         public bool PublicNodeAddresses { get; set; } = false;
 
         /// <summary>
-        /// <para>
-        /// neonHIVE reserves some ports on the public Azure load balancer.
-        /// The cluster will reserve  <b>5 + node_count</b> ports beginning 
-        /// at this port number which defaults to <b>37100</b>.  The first five
-        /// ports will be used to direct OpenVPN client traffic to the VPN
-        /// servers, and the remaining ports may be used to NAT SSH traffic
-        /// to specific cluster nodes.
-        /// </para>
-        /// <para>
-        /// This port range should work for most cluster deployments, but you
-        /// may need to modify this if you need to expose services that expose
-        /// one or more conflicting ports. 
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "FirstReservedPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(37100)]
-        public int FirstReservedPort { get; set; } = 37100;
-
-        /// <summary>
         /// Specifies the target Azure environment.  This defaults to the 
         /// normal public Azure cloud.  See <see cref="AzureCloudEnvironment"/>
         /// for other possibilities.
@@ -230,52 +211,6 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "UpdateDomains", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(5)]
         public int UpdateDomains { get; set; } = 5;
-
-        /// <summary>
-        /// The first manager load balancer frontend port reserved for OpenVPN connections to individual manager nodes
-        /// in the cluster.  External port numbers in the range of <see cref="FirstVpnFrontendPort"/>...<see cref="LastVpnFrontendPort"/>
-        /// inclusive are reserved for this.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public int FirstVpnFrontendPort
-        {
-            get { return FirstReservedPort; }
-        }
-
-        /// <summary>
-        /// The last manager load balancer frontend port reserved for OpenVPN connections to individual manager nodes
-        /// in the cluster.  External port numbers in the range of <see cref="FirstVpnFrontendPort"/>...<see cref="LastVpnFrontendPort"/>
-        /// inclusive are reserved for this.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public int LastVpnFrontendPort
-        {
-            get { return FirstVpnFrontendPort + KubeConst.MaxMasters - 1; }
-        }
-
-        /// <summary>
-        /// The first load balancer frontend port reserved for SSH connections to individual nodes in the cluster.
-        /// External port numbers in the range of <see cref="FirstSshFrontendPort"/>...<see cref="LastSshFrontendPort"/>
-        /// inclusive are reserved for this.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public int FirstSshFrontendPort
-        {
-            get { return LastVpnFrontendPort + 1; }
-        }
-
-        /// <summary>
-        /// The last load balancer frontend port reserved for SSH connections to individual nodes in the cluster.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public int LastSshFrontendPort
-        {
-            get { return FirstSshFrontendPort + AzureHelper.MaxClusterNodes - 1; }
-        }
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -369,7 +304,7 @@ namespace Neon.Kube
 
             if (clusterDefinition.Masters.Count() > KubeConst.MaxMasters)
             {
-                throw new ClusterDefinitionException($"cluster manager count [{clusterDefinition.Masters.Count()}] exceeds the [{KubeConst.MaxMasters}] limit for clusters.");
+                throw new ClusterDefinitionException($"cluster master count [{clusterDefinition.Masters.Count()}] exceeds the [{KubeConst.MaxMasters}] limit for clusters.");
             }
 
             if (clusterDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)

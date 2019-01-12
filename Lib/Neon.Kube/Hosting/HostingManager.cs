@@ -104,15 +104,6 @@ namespace Neon.Kube
         public abstract void AddPostVpnSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
-        public abstract List<HostedEndpoint> GetPublicEndpoints();
-
-        /// <inheritdoc/>
-        public abstract bool CanUpdatePublicEndpoints { get; }
-
-        /// <inheritdoc/>
-        public abstract void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);
-
-        /// <inheritdoc/>
         public abstract string DrivePrefix { get; }
 
         /// <inheritdoc/>

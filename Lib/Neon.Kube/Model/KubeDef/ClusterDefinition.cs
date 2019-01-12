@@ -55,9 +55,9 @@ namespace Neon.Kube
         public static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9_]))*$", RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// The prefix reserved for cluster related Docker daemon, image, and container labels.
+        /// The prefix reserved for neonKUBE related daemon, image, and pod labels.
         /// </summary>
-        public const string ReservedLabelPrefix = "io.neonkube";
+        public const string ReservedLabelPrefix = "io.neonkube/";
 
         /// <summary>
         /// Parses a cluster definition from JSON text.
@@ -304,26 +304,10 @@ namespace Neon.Kube
         public NetworkOptions Network { get; set; } = new NetworkOptions();
 
         /// <summary>
-        /// Describes the Docker host nodes in the cluster.
+        /// Describes the host nodes in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
         public Dictionary<string, NodeDefinition> NodeDefinitions { get; set; } = new Dictionary<string, NodeDefinition>(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary>
-        /// <para>
-        /// Set to the MD5 hash (encoded as base64) of the cluster definition for scenarios
-        /// where its necessary to quickly determine whether two definitions are the same.
-        /// This is computed by calling <see cref="ComputeHash()"/>
-        /// </para>
-        /// <note>
-        /// The computed hash does not include the hosting provider details because these
-        /// typically include hosting related secrets and so they are not persisted to
-        /// the cluster Consul service.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "Hash", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(null)]
-        public string Hash { get; set; }
 
         /// <summary>
         /// Enumerates all cluster node definitions.
@@ -356,11 +340,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Enumerates the cluster manager node definitions sorted in ascending order by name.
+        /// Enumerates the cluster master node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedManagers
+        public IEnumerable<NodeDefinition> SortedMasters
         {
             get { return Masters.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
         }
@@ -383,27 +367,6 @@ namespace Neon.Kube
         public IEnumerable<NodeDefinition> SortedWorkers
         {
             get { return Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
-        }
-
-        /// <summary>
-        /// Enumerates the cluster swarm node definitions (the managers and workers).
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public IEnumerable<NodeDefinition> Swarm
-        {
-            get { return Nodes.Where(n => n.InSwarm); }
-        }
-
-        /// <summary>
-        /// Enumerates the cluster swarm node definitions (the managers and workers)
-        /// sorted in ascending order by name.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedSwarm
-        {
-            get { return Swarm.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
         }
 
         /// <summary>
@@ -572,7 +535,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Adds a docker node to the cluster.
+        /// Adds a node to the cluster.
         /// </summary>
         /// <param name="node">The new node.</param>
         public void AddNode(NodeDefinition node)
@@ -581,152 +544,6 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentException>(NeonHelper.DoesNotThrow(() => node.Validate(this)));
 
             NodeDefinitions.Add(node.Name, node);
-        }
-
-        /// <summary>
-        /// Computes the <see cref="Hash"/> property value.
-        /// </summary>
-        public void ComputeHash()
-        {
-            // We're going to create a deep clone of the current instance
-            // and then clear it's Hash property as well as any hosting
-            // provider details.
-
-            var clone = NeonHelper.JsonClone<ClusterDefinition>(this);
-
-            clone.Hash = null;
-
-            // Don't include any hosting related secrets in the clone.
-
-            clone.Hosting?.ClearSecrets();
-
-            // We need to ensure that JSON.NET serializes the nodes in a consistent
-            // order (e.g. ascending order by name) so we'll compute the same hash
-            // for two definitions with different orderings.
-            //
-            // We'll accomplish this by rebuilding the cloned node definitions in
-            // ascending order.
-
-            var nodes = clone.NodeDefinitions;
-
-            clone.NodeDefinitions = new Dictionary<string, NodeDefinition>();
-
-            foreach (var nodeName in nodes.Keys.OrderBy(n => n))
-            {
-                clone.NodeDefinitions.Add(nodeName, nodes[nodeName]);
-            }
-
-            // Compute the hash.
-
-            this.Hash = MD5.Create().ComputeHashBase64(NeonHelper.JsonSerialize(clone));
-        }
-
-        /// <summary>
-        /// Filters the cluster swarm nodes by applying the zero or more Docker Swarm style constraints.
-        /// </summary>
-        /// <param name="constraints">The constraints.</param>
-        /// <returns>The set of swarm nodes that satisfy <b>all</b> of the constraints.</returns>
-        /// <remarks>
-        /// <note>
-        /// All of the swarm nodes will be returned if the parameter is <c>null</c> or empty.
-        /// </note>
-        /// <para>
-        /// Constraint expressions must take the form of <b>LABEL==VALUE</b> or <b>LABEL!=VALUE</b>.
-        /// This method will do a case insensitive comparision the node label with the
-        /// value specified.
-        /// </para>
-        /// <para>
-        /// Properties may be custom label names, cluster label names prefixed with <b>io.neonkube.</b>,
-        /// or <b>node</b> to indicate the node name.  Label name lookup is case insenstive.
-        /// </para>
-        /// </remarks>
-        public IEnumerable<NodeDefinition> FilterSwarmNodes(IEnumerable<string> constraints)
-        {
-            var filtered = this.SortedSwarm.ToList();
-
-            if (constraints == null || constraints.FirstOrDefault() == null)
-            {
-                return filtered;
-            }
-
-            var labelDictionary = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var node in filtered)
-            {
-                var labels = new Dictionary<string, string>();
-
-                labels.Add("node", node.Name);
-
-                foreach (var label in node.Labels.Standard)
-                {
-                    labels.Add(label.Key, label.Value.ToString());
-                }
-
-                foreach (var label in node.Labels.Custom)
-                {
-                    labels.Add(label.Key, label.Value.ToString());
-                }
-
-                labelDictionary.Add(node.Name, labels);
-            }
-
-            foreach (var constraint in constraints)
-            {
-                if (string.IsNullOrWhiteSpace(constraint))
-                {
-                    continue;
-                }
-
-                var matches = new List<NodeDefinition>();
-
-                foreach (var worker in filtered)
-                {
-                    var pos      = constraint.IndexOf("==");
-                    var equality = true;
-
-                    if (pos < 0)
-                    {
-                        pos = constraint.IndexOf("!=");
-
-                        if (pos < 0)
-                        {
-                            throw new ClusterDefinitionException($"Illegal constraint [{constraint}].  One of [==] or [!=] must be present.");
-                        }
-
-                        equality = false;
-                    }
-
-                    if (pos == 0)
-                    {
-                        throw new ClusterDefinitionException($"Illegal constraint [{constraint}].  No label is specified.");
-                    }
-
-                    string  label = constraint.Substring(0, pos);
-                    string  value = constraint.Substring(pos + 2);
-                    string  nodeValue;
-
-                    if (!labelDictionary[worker.Name].TryGetValue(label, out nodeValue))
-                    {
-                        nodeValue = string.Empty;
-                    }
-
-                    var equals = nodeValue.Equals(value, StringComparison.OrdinalIgnoreCase);
-
-                    if (equality == equals)
-                    {
-                        matches.Add(worker);
-                    }
-                }
-
-                filtered = matches;
-
-                if (filtered.Count == 0)
-                {
-                    return filtered;
-                }
-            }
-
-            return filtered;
         }
     }
 }

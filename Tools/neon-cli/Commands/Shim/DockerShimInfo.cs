@@ -29,9 +29,8 @@ namespace NeonCli
         /// </summary>
         /// <param name="shimability">Indicates whether a command can or must be shimmed.</param>
         /// <param name="ensureConnection">
-        /// Indicates that the command requires a cluster login and VPN connection
-        /// (if enabled) before the command is executed in a <b>neon-cli</b>
-        /// container.  This defaults to <c>false</c>.
+        /// Indicates that the command requires a cluster login before the command is 
+        /// executed in a <b>neon-cli</b> container.  This defaults to <c>false</c>.
         /// </param>
         public DockerShimInfo(DockerShimability shimability, bool ensureConnection = false)
         {
@@ -45,9 +44,8 @@ namespace NeonCli
         public DockerShimability Shimability { get; set; }
 
         /// <summary>
-        /// Indicates that the command requires a cluster login and VPN connection
-        /// (if enabled) before the command is executed in a <b>neon-cli</b>
-        /// container.
+        /// Indicates that the command requires a cluster login before 
+        /// the command is executed in a <b>neon-cli</b> container.
         /// </summary>
         public bool EnsureConnection { get; set; }
     }

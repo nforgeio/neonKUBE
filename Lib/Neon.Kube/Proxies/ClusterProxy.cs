@@ -171,27 +171,6 @@ namespace Neon.Kube
         public ClusterLogin KubeLogin { get; set; }
 
         /// <summary>
-        /// Indicates that any <see cref="SshProxy{TMetadata}"/> instances belonging
-        /// to this cluster proxy should use public address/DNS names for SSH connections
-        /// rather than their private cluster address.  This defaults to <c>false</c>
-        /// and must be modified before establising a node connection to have any effect.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// When this is <c>false</c>, connections will be established using node
-        /// private addresses.  This implies that the current client has direct
-        /// access to the cluster LAN via a direct connection or a VPN.
-        /// </para>
-        /// <para>
-        /// Setting this to <c>true</c> is usually limited to cluster setup scenarios
-        /// before the VPN is configured.  Exactly which public addresses and ports will
-        /// be used when this is <c>true</c> is determined by the <see cref="HostingManager"/> 
-        /// implementation for the current environment.
-        /// </para>
-        /// </remarks>
-        public bool UseNodePublicAddress { get; set; } = false;
-
-        /// <summary>
         /// Returns the cluster definition.
         /// </summary>
         public ClusterDefinition Definition { get; private set; }

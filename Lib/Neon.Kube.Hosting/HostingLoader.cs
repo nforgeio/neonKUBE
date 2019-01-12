@@ -41,7 +41,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Loads the known cluster hosting manager assemblies so they'll be available
-        /// to <see cref="HostingManagerFactory.GetManager(ClusterProxy, string)"/>, 
+        /// to <see cref="HostingManagerFactory.GetMaster(ClusterProxy, string)"/>, 
         /// and <see cref="HostingManager.Validate(ClusterDefinition)"/> when
         /// they are called.
         /// </para>

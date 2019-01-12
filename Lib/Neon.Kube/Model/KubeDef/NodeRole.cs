@@ -9,7 +9,7 @@ using System.Runtime.Serialization;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the roles a Docker node can assume.
+    /// Enumerates the roles a cluster node can assume.
     /// </summary>
     public static class NodeRole
     {

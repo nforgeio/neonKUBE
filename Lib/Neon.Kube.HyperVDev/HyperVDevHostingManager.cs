@@ -220,26 +220,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override List<HostedEndpoint> GetPublicEndpoints()
-        {
-            // Note that public endpoints have to be managed manually for
-            // on-premise cluster deployments so we're going to return an 
-            // empty list.
-
-            return new List<HostedEndpoint>();
-        }
-
-        /// <inheritdoc/>
-        public override bool CanUpdatePublicEndpoints => false;
-
-        /// <inheritdoc/>
-        public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
-        {
-            // Note that public endpoints have to be managed manually for
-            // on-premise cluster deployments.
-        }
-
-        /// <inheritdoc/>
         public override string DrivePrefix
         {
             get { return "sd"; }

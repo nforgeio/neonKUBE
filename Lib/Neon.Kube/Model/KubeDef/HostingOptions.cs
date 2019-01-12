@@ -112,7 +112,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "VmHosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<VmHost> VmHosts = new List<VmHost>();
+        public List<HypervisorHost> VmHosts = new List<HypervisorHost>();
 
         /// <summary>
         /// <para>
@@ -412,7 +412,7 @@ namespace Neon.Kube
             VmMemory        = VmMemory ?? DefaultVmMemory;
             VmMinimumMemory = VmMinimumMemory ?? VmMemory;
             VmDisk          = VmDisk ?? DefaultVmMinimumMemory;
-            VmHosts         = VmHosts ?? new List<VmHost>();
+            VmHosts         = VmHosts ?? new List<HypervisorHost>();
 
             ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
             ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
@@ -464,7 +464,7 @@ namespace Neon.Kube
 
                     if (!hostNameSet.Contains(node.VmHost))
                     {
-                        throw new ClusterDefinitionException($"Node [{node.Name}] has [{nameof(VmHost)}={node.VmHost}] which specifies a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
+                        throw new ClusterDefinitionException($"Node [{node.Name}] has [{nameof(HypervisorHost)}={node.VmHost}] which specifies a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
                     }
                 }
             }

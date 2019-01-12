@@ -78,30 +78,6 @@ namespace Neon.Kube
         void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
-        /// Adds any necessary post-VPN steps to the step controller.
-        /// </summary>
-        /// <param name="controller">The target setup controller.</param>
-        void AddPostVpnSteps(SetupController<NodeDefinition> controller);
-
-        /// <summary>
-        /// Returns the endpoints currently exposed to the public for the deployment.
-        /// </summary>
-        /// <returns>The list of <see cref="HostedEndpoint"/> instances.</returns>
-        List<HostedEndpoint> GetPublicEndpoints();
-
-        /// <summary>
-        /// Returns <c>true</c> if the cluster hosting manager is able to update the deployment's load balancer and security rules.
-        /// </summary>
-        bool CanUpdatePublicEndpoints { get; }
-
-        /// <summary>
-        /// Updates the deployment's load balancer and security rules to allow traffic 
-        /// for the specified endpoints into the cluster.
-        /// </summary>
-        /// <param name="endpoints">The endpoints.</param>
-        void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);
-
-        /// <summary>
         /// <para>
         /// Returns the prefix for block devices that will be attached to
         /// the host machines.  For many hosting environments this will be

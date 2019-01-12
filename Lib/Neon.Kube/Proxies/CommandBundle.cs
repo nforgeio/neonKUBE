@@ -27,10 +27,6 @@ namespace Neon.Kube
     /// one or more files need to be uploaded to a cluster host node and be used when a command is executed.
     /// </para>
     /// <para>
-    /// A good example of this is performing a <b>docker stack</b> command on the cluster.  In this case, we need to
-    /// upload the DAB file along with any files it references and then we we'll want to execute the Docker client.
-    /// </para>
-    /// <para>
     /// To use this class, construct an instance passing the command and arguments to be executed.  The command be 
     /// an absolute reference to an executable in folders such as <b>/bin</b> or <b>/usr/local/bin</b>, an executable
     /// somewhere on the current PATH, or relative to the files unpacked from the bundle.  The current working directory

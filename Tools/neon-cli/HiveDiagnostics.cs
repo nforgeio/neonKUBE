@@ -33,11 +33,11 @@ namespace NeonCli
     public static class HiveDiagnostics
     {
         /// <summary>
-        /// Verifies that a cluster manager node is healthy.
+        /// Verifies that a cluster master node is healthy.
         /// </summary>
-        /// <param name="node">The manager node.</param>
+        /// <param name="node">The master node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckManager(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckMaster(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsMaster);
@@ -45,12 +45,7 @@ namespace NeonCli
 
             if (!node.IsFaulted)
             {
-                CheckManagerNtp(node, clusterDefinition);
-            }
-
-            if (!node.IsFaulted)
-            {
-                CheckDocker(node, clusterDefinition);
+                CheckMasterNtp(node, clusterDefinition);
             }
 
             node.Status = "healthy";
@@ -72,20 +67,15 @@ namespace NeonCli
                 CheckWorkerNtp(node, clusterDefinition);
             }
 
-            if (!node.IsFaulted)
-            {
-                CheckDocker(node, clusterDefinition);
-            }
-
             node.Status = "healthy";
         }
 
         /// <summary>
-        /// Verifies that a manager node's NTP health.
+        /// Verifies that a master node's NTP health.
         /// </summary>
-        /// <param name="node">The manager node.</param>
+        /// <param name="node">The master node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckMasterNtp(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             // We're going to use [ntpq -pw] to query the configured time sources.
             // We should get something back that looks like
@@ -97,7 +87,7 @@ namespace NeonCli
             //      + 173.44.32.10    18.26.4.105      2 u  200  256  377   96.981 - 0.623   3.284
             //      + pacific.latt.ne 44.24.199.34     3 u  243  256  377   41.457 - 8.929   8.497
             //
-            // For manager nodes, we're simply going to verify that we have at least one external 
+            // For master nodes, we're simply going to verify that we have at least one external 
             // time source answering.
 
             node.Status = "checking: NTP";
@@ -175,7 +165,7 @@ namespace NeonCli
         /// <summary>
         /// Verifies that a worker node's NTP health.
         /// </summary>
-        /// <param name="node">The manager node.</param>
+        /// <param name="node">The worker node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
         private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
@@ -204,16 +194,16 @@ namespace NeonCli
             {
                 var output = node.SudoCommand("/usr/bin/ntpq -pw", RunOptions.LogOutput).OutputText;
 
-                foreach (var manager in clusterDefinition.SortedManagers)
+                foreach (var master in clusterDefinition.SortedMasters)
                 {
                     // We're going to check the for presence of the manager's IP address
                     // or its name, the latter because [ntpq] appears to attempt a reverse
                     // IP address lookup which will resolve into one of the DNS names defined
                     // in the local [/etc/hosts] file.
 
-                    if (!output.Contains(manager.PrivateAddress.ToString()) && !output.Contains(manager.Name.ToLower()))
+                    if (!output.Contains(master.PrivateAddress.ToString()) && !output.Contains(master.Name.ToLower()))
                     {
-                        fault = $"NTP: Manager [{manager.Name}/{manager.PrivateAddress}] is not answering.";
+                        fault = $"NTP: Manager [{master.Name}/{master.PrivateAddress}] is not answering.";
 
                         Thread.Sleep(retryDelay);
                         continue;
@@ -248,25 +238,6 @@ namespace NeonCli
                 }
 
                 node.Fault(fault);
-            }
-        }
-
-        /// <summary>
-        /// Verifies Docker health.
-        /// </summary>
-        /// <param name="node">The target cluster node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckDocker(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
-        {
-            node.Status = "checking: docker";
-
-            // This is a super simple ping to verify that Docker appears to be running.
-
-            var response = node.SudoCommand("docker info");
-
-            if (response.ExitCode != 0)
-            {
-                node.Fault($"Docker: {response.AllText}");
             }
         }
     }

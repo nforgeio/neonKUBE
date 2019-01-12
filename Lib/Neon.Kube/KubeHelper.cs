@@ -383,20 +383,5 @@ namespace Neon.Kube
                 throw new InvalidOperationException("cluster is not connected.");
             }
         }
-
-        /// <summary>
-        /// Determines whether a hostname refers to the Docker public registry.
-        /// </summary>
-        /// <param name="hostname">The hostname being tested.</param>
-        /// <returns>><c>true</c> for the public registry.</returns>
-        public static bool IsDockerPublicRegistry(string hostname)
-        {
-            if (hostname == null)
-            {
-                return false;
-            }
-
-            return hostname.Equals(KubeConst.DockerPublicRegistry, StringComparison.InvariantCultureIgnoreCase);
-        }
     }
 }

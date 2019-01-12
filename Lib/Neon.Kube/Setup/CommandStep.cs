@@ -17,7 +17,7 @@ using Neon.Common;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Runs a Linux command on a Docker host, optionally uploading some command related files first.
+    /// Runs a Linux command on a node, optionally uploading some command related files first.
     /// Commands are executed with root privileges.
     /// </summary>
     public class CommandStep : ConfigStep
@@ -27,9 +27,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// Creates a configuration step that executes a command under <b>sudo</b>
-        /// on a specific Docker node.
+        /// on a specific node.
         /// </summary>
-        /// <param name="nodeName">The Docker node name.</param>
+        /// <param name="nodeName">The node name.</param>
         /// <param name="command">The Linux command.</param>
         /// <param name="args">The command arguments.</param>
         public static CommandStep CreateSudo(string nodeName, string command, params object[] args)
@@ -42,9 +42,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// Creates an idempotent configuration step that executes a command under <b>sudo</b>
-        /// on a specific Docker node.
+        /// on a specific node.
         /// </summary>
-        /// <param name="nodeName">The Docker node name.</param>
+        /// <param name="nodeName">The node name.</param>
         /// <param name="operationName">The idempotent operation name.</param>
         /// <param name="command">The Linux command.</param>
         /// <param name="args">The command arguments.</param>
@@ -57,103 +57,18 @@ namespace Neon.Kube
             };
         }
 
-        /// <summary>
-        /// Creates a configuration step that executes a Docker command under <b>sudo</b>
-        /// on a specific Docker node while attempting to handle transient errors.
-        /// </summary>
-        /// <param name="nodeName">The Docker node name.</param>
-        /// <param name="command">The Linux command.</param>
-        /// <param name="args">The command arguments.</param>
-        /// <remarks>
-        /// <para>
-        /// This method attempts to retry transient Docker client errors (e.g. when an
-        /// image pull fails for some reason).  Using this will be more reliable than
-        /// executing the command directly, especially on large clusters.
-        /// </para>
-        /// <note>
-        /// You'll need to passes the full Docker command, including the leading
-        /// <b>docker</b> client program name.
-        /// </note>
-        /// <para>
-        /// The <paramref name="args"/> parameter optionally specifies an array of
-        /// command argument objects.  With a few exceptions, these arguments will 
-        /// be passed to the command by rendering the object into a <c>string</c>
-        /// by calling its <see cref="Object.ToString()"/> method.  <c>null</c>
-        /// and empty string arguments will be ignored and <see cref="IEnumerable{strring}"/>
-        /// arguments will be expanded.
-        /// </para>
-        /// <para>
-        /// <c>bool</c> and <c>double</c> arguments get special treatment.  <c>bool</c>
-        /// values will be rendered as <c>true</c> or <c>false</c> and <c>double</c>
-        /// arguments will be rendered using <c>double.ToString("#.0")</c>.  If you
-        /// need something different, you can convert your arguments to strings first.
-        /// </para>
-        /// </remarks>
-        public static CommandStep CreateDocker(string nodeName, string command, params object[] args)
-        {
-            return new CommandStep(nodeName, command, args)
-            {
-                Sudo     = true,
-                isDocker = true
-            };
-        }
-
-        /// <summary>
-        /// Creates an idempotent configuration step that executes a Docker command under <b>sudo</b>
-        /// on a specific Docker node while attempting to handle transient errors.
-        /// </summary>
-        /// <param name="nodeName">The Docker node name.</param>
-        /// <param name="operationName">The idempotent operation name.</param>
-        /// <param name="command">The Linux command.</param>
-        /// <param name="args">The command arguments.</param>
-        /// <remarks>
-        /// <para>
-        /// This method attempts to retry transient Docker client errors (e.g. when an
-        /// image pull fails for some reason).  Using this will be more reliable than
-        /// executing the command directly, especially on large clusters.
-        /// </para>
-        /// <note>
-        /// You'll need to passes the full Docker command, including the leading
-        /// <b>docker</b> client program name.
-        /// </note>
-        /// <para>
-        /// The <paramref name="args"/> parameter optionally specifies an array of
-        /// command argument objects.  With a few exceptions, these arguments will 
-        /// be passed to the command by rendering the object into a <c>string</c>
-        /// by calling its <see cref="Object.ToString()"/> method.  <c>null</c>
-        /// and empty string arguments will be ignored and <see cref="IEnumerable{strring}"/>
-        /// arguments will be expanded.
-        /// </para>
-        /// <para>
-        /// <c>bool</c> and <c>double</c> arguments get special treatment.  <c>bool</c>
-        /// values will be rendered as <c>true</c> or <c>false</c> and <c>double</c>
-        /// arguments will be rendered using <c>double.ToString("#.0")</c>.  If you
-        /// need something different, you can convert your arguments to strings first.
-        /// </para>
-        /// </remarks>
-        public static CommandStep CreateIdempotentDocker(string nodeName, string operationName, string command, params object[] args)
-        {
-            return new CommandStep(nodeName, command, args)
-            {
-                Sudo          = true,
-                isDocker      = true,
-                operationName = operationName
-            };
-        }
-
         //---------------------------------------------------------------------
         // Instance members
 
         private string          nodeName;
         private CommandBundle   commandBundle;
-        private bool            isDocker;
         private string          operationName;
 
         /// <summary>
         /// Constructs a configuration step that executes a command under <b>sudo</b>
-        /// on a specific Docker node.
+        /// on a specific cluster node.
         /// </summary>
-        /// <param name="nodeName">The Docker node name.</param>
+        /// <param name="nodeName">The node name.</param>
         /// <param name="command">The Linux command.</param>
         /// <param name="args">The command arguments.</param>
         /// <remarks>
@@ -272,11 +187,7 @@ namespace Neon.Kube
                 // We can execute the command directly if we're
                 // not uploading any files.
 
-                if (isDocker)
-                {
-                    node.DockerCommand(commandBundle.Command, commandBundle.Args);
-                }
-                else if (Sudo)
+                if (Sudo)
                 {
                     node.SudoCommand(commandBundle.Command, commandBundle.Args);
                 }
@@ -287,11 +198,7 @@ namespace Neon.Kube
             }
             else
             {
-                if (isDocker)
-                {
-                    throw new NotImplementedException();
-                }
-                else if (Sudo)
+                if (Sudo)
                 {
                     node.SudoCommand(commandBundle);
                 }

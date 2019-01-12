@@ -24,8 +24,7 @@ namespace Neon.Kube
         private TimeSpan    delay;
 
         /// <summary>
-        /// Constructs a configuration step that ensures that a Docker volume has
-        /// been created on a specific Docker node.
+        /// Constructs a configuration step that pauses setup for a period of time.
         /// </summary>
         /// <param name="delay">The amount of time to pause.</param>
         public PauseStep(TimeSpan delay)

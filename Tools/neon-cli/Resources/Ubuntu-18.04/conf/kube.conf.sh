@@ -82,7 +82,7 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${NEON_
 #       ${managernode[name]}
 #       ${managernode[address]}
 
-export NEON_MASTER_COUNT=$<nodes.manager.count>
+export NEON_MASTER_COUNT=$<nodes.master.count>
 
 $<nodes.managers>
 #------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ $<nodes.managers>
 
 # NTP time sources to be configured on manager and worker nodes.
 
-export NEON_NTP_MANAGER_SOURCES=( $<ntp.manager.sources> )
+export NEON_NTP_MANAGER_SOURCES=( $<ntp.master.sources> )
 export NEON_NTP_WORKER_SOURCES=( $<ntp.worker.sources> )
 
 # Log settings

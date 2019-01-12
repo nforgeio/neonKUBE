@@ -27,22 +27,22 @@ namespace Neon.Kube
 {
     /// <summary>
     /// Describes the standard cluster and custom labels to be assigned to 
-    /// a Docker node.
+    /// a cluster node.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Labels are name/value properties that can be assigned to the Docker daemon
-    /// managing each host node.  These labels can be used by Swarm as container
-    /// scheduling criteria.
+    /// Labels are name/value properties that can be assigned to the cluster
+    /// nodes for pod scheduling and other purposes.
     /// </para>
     /// <para>
     /// By convention, label names should use a reverse domain name form using a
     /// DNS domain you control.  For example, cluster related labels are prefixed
-    /// with <b>"io.neonkube."</b>.  You should follow this convention for any
+    /// with <b>"io.neonkube/..."</b>.  You should follow this convention for any
     /// custom labels you define.
     /// </para>
     /// <note>
-    /// Docker reserves the use of labels without dots for itself.
+    /// You may specify labels without a domain prefix if you're not concerned
+    /// about potential conflicts.
     /// </note>
     /// <para>
     /// Label names must begin and end with a letter or digit and may include
@@ -50,8 +50,7 @@ namespace Neon.Kube
     /// consecutively.
     /// </para>
     /// <note>
-    /// Whitespace is not allowed in label values.  This was a bit of a surprise
-    /// since Docker supports double quoting, but there it is.
+    /// Whitespace is not allowed in label values.
     /// </note>
     /// <para>
     /// This class exposes several built-in cluster properties.  You can use
@@ -101,24 +100,6 @@ namespace Neon.Kube
         /// Reserved label name that identifies the node role.
         /// </summary>
         public const string LabelRole = ClusterDefinition.ReservedLabelPrefix + ".node.role";
-
-        /// <summary>
-        /// Reserved label name that identifies the frontend port to be used to connect
-        /// to a master's VPN server (if it's hosting a VPN server).
-        /// </summary>
-        public const string LabelVpnFrontendPort = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_frontend_port";
-
-        /// <summary>
-        /// Reserved label name that identifies a master node's VPN pool address 
-        /// (if it's hosting a VPN server).
-        /// </summary>
-        public const string LabelVpnPoolAddress = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_pool_address";
-
-        /// <summary>
-        /// Reserved label name that identifies a master node's VPN address pool subnet 
-        /// (if it's hosting a VPN server).
-        /// </summary>
-        public const string LabelVpnPoolSubnet = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_pool_subnet";
 
         //---------------------------------------------------------------------
         // Azure hosting related labels.
@@ -172,7 +153,7 @@ namespace Neon.Kube
         public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + ".storage.ephemral";
 
         /// <summary>
-        /// <b>io.neonkube.storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
+        /// <b>io.neonkube/storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
         /// storage capacity in gigabytes.
         /// </summary>
         [JsonProperty(PropertyName = "StorageCapacityGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -180,7 +161,7 @@ namespace Neon.Kube
         public int StorageCapacityGB { get; set; } = 0;
 
         /// <summary>
-        /// <b>io.neonkube.storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
+        /// <b>io.neonkube/storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
         /// on the node itself or is mounted as a remote file system or block device.  This defaults
         /// to <c>true</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
@@ -189,7 +170,7 @@ namespace Neon.Kube
         public bool StorageLocal { get; set; } = true;
 
         /// <summary>
-        /// <b>io.neonkube.storage.ssd</b> [<c>bool</c>]: Indicates that the storage is backed
+        /// <b>io.neonkube/storage.ssd</b> [<c>bool</c>]: Indicates that the storage is backed
         /// by SSDs as opposed to rotating hard drive.  This defaults to <c>false</c> for 
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
@@ -198,7 +179,7 @@ namespace Neon.Kube
         public bool StorageSSD { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.storage.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
+        /// <b>io.neonkube/storage.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
         /// may be implemented locally using RAID1+ or remotely using network or cloud-based file systems.
         /// This defaults to <c>false</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
@@ -207,7 +188,7 @@ namespace Neon.Kube
         public bool StorageRedundant { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.storage.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
+        /// <b>io.neonkube/storage.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
         /// All data will be lost when the host is restarted.  This defaults to <c>false</c> for 
         /// on-premise clusthivesers and is computed for cloud deployments.
         /// </summary>
@@ -234,7 +215,7 @@ namespace Neon.Kube
         public const string LabelComputeSwap = ClusterDefinition.ReservedLabelPrefix + ".compute.swap";
 
         /// <summary>
-        /// <b>io.neonkube.compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
+        /// <b>io.neonkube/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
         /// This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
@@ -243,7 +224,7 @@ namespace Neon.Kube
         public int ComputeCores { get; set; } = 0;
 
         /// <summary>
-        /// <b>io.neonkube.compute.ram_mb</b> [<c>int</c>]: Specifies the available RAM in
+        /// <b>io.neonkube/compute.ram_mb</b> [<c>int</c>]: Specifies the available RAM in
         /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
@@ -252,7 +233,7 @@ namespace Neon.Kube
         public int ComputeRamMB { get; set; } = 0;
 
         /// <summary>
-        /// <b>io.neonkube.compute.swap</b> [<c>bool</c>]: Specifies whether the node operating system may
+        /// <b>io.neonkube/compute.swap</b> [<c>bool</c>]: Specifies whether the node operating system may
         /// swap RAM to the file system.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeSwap", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -285,7 +266,7 @@ namespace Neon.Kube
         public const string LabelPhysicalPower = ClusterDefinition.ReservedLabelPrefix + ".physical.power";
 
         /// <summary>
-        /// <b>io.neonkube.physical.location</b> [<c>string</c>]: A free format string describing the
+        /// <b>io.neonkube/physical.location</b> [<c>string</c>]: A free format string describing the
         /// physical location of the server.  This defaults to the 
         /// <b>empty string</b>.
         /// </summary>
@@ -307,7 +288,7 @@ namespace Neon.Kube
         public string PhysicalLocation { get; set; } = string.Empty;
 
         /// <summary>
-        /// <b>io.neonkube.physical.model</b> [<c>string</c>]: A free format string describing the
+        /// <b>io.neonkube/physical.model</b> [<c>string</c>]: A free format string describing the
         /// physical server computer model (e.g. <b>Dell-PowerEdge-R220</b>).  This defaults to the <b>empty string</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PhysicalMachine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -315,7 +296,7 @@ namespace Neon.Kube
         public string PhysicalMachine { get; set; } = string.Empty;
 
         /// <summary>
-        /// <b>io.neonkube.physical.faultdomain</b> [<c>string</c>]: A free format string 
+        /// <b>io.neonkube/physical.faultdomain</b> [<c>string</c>]: A free format string 
         /// grouping the host by the possibility of underlying hardware or software failures.
         /// This defaults to the <b>empty string</b>.
         /// </summary>
@@ -390,7 +371,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// <b>io.neonkube.physical.power</b> [<c>string</c>]: Describes host the physical power
+        /// <b>io.neonkube/physical.power</b> [<c>string</c>]: Describes host the physical power
         /// to the server may be controlled.  This defaults to the <b>empty string</b>.
         /// </summary>
         /// <remarks>
@@ -418,11 +399,7 @@ namespace Neon.Kube
         /// Use this property to define custom host node labels.
         /// </para>
         /// <note>
-        /// The <b>io.neonkube.</b> label prefix is reserved.
-        /// </note>
-        /// <note>
-        /// Labels names will be converted to lowercase when the Docker daemon is started
-        /// on the host node.
+        /// The <b>io.neonkube/</b> label prefix is reserved.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Custom")]
@@ -432,7 +409,7 @@ namespace Neon.Kube
         // Implementation
 
         /// <summary>
-        /// Enumerates the cluster standard Docker labels and values.
+        /// Enumerates the node labels.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -451,9 +428,6 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPublicAddress,           node.PublicAddress));
                 list.Add(new KeyValuePair<string, object>(LabelPrivateAddress,          node.PrivateAddress));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                    node.Role));
-                list.Add(new KeyValuePair<string, object>(LabelVpnFrontendPort,         node.VpnFrontendPort));
-                list.Add(new KeyValuePair<string, object>(LabelVpnPoolAddress,          node.VpnPoolAddress));
-                list.Add(new KeyValuePair<string, object>(LabelVpnPoolSubnet,           node.VpnPoolSubnet));
 
                 if (node.Azure != null)
                 {
@@ -519,9 +493,6 @@ namespace Neon.Kube
                     case LabelPublicAddress:    node.PublicAddress = label.Value; break;
                     case LabelPrivateAddress:   node.PrivateAddress = label.Value; break;
                     case LabelRole:             node.Role = label.Value; break;
-                    case LabelVpnFrontendPort:  ParseCheck(label, () => { node.VpnFrontendPort = int.Parse(label.Value); }); break;
-                    case LabelVpnPoolAddress:   node.VpnPoolAddress = label.Value; break;
-                    case LabelVpnPoolSubnet:    node.VpnPoolSubnet = label.Value; break;
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:
