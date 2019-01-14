@@ -101,9 +101,6 @@ namespace Neon.Kube
         public abstract void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
-        public abstract void AddPostVpnSteps(SetupController<NodeDefinition> controller);
-
-        /// <inheritdoc/>
         public abstract string DrivePrefix { get; }
 
         /// <inheritdoc/>

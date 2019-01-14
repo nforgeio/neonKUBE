@@ -39,7 +39,7 @@ namespace NeonCli
         /// if the <b>--version=VERSION</b> option was specified to force a specific
         /// version.
         /// </summary>
-        public const string Version = "18.12.0-alpha.7";
+        public const string Version = "7.19.1.0-alpha-0";
     
         /// <summary>
         /// CURL command common options.
@@ -63,10 +63,14 @@ USAGE:
 COMMAND SUMMARY:
 
     neon help               COMMAND
-
+    neon hive prepare       [CLUSTER-DEF]
+    neon hive verify        [CLUSTER-DEF]
     neon version            [-n] [-git]
 
 ARGUMENTS:
+
+    CLUSTER-DEF         - Path to a cluster definition file.  This is
+                          optional for some commands when logged in.
 
 OPTIONS:
 
@@ -75,6 +79,14 @@ OPTIONS:
     --shim                              - Run the command in Docker if possible
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster stablization 
                                           (defaults to 60s).
+    --log-folder=LOG-FOLDER             - Optional log folder path
+    -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
+                                          configured in parallel [default=5]
+    --machine-password=PASSWORD         - Overrides default initial machine
+                                          password: sysadmin0000
+    --machine-username=USERNAME         - Overrides default initial machine
+                                          username: sysadmin
+    --noterminal                        - Disables the shimmed interactive terminal
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -158,6 +170,9 @@ OPTIONS:
 
                 var commands = new List<ICommand>()
                 {
+                    new ClusterCommand(),
+                    new ClusterPrepareCommand(),
+                    new ClusterVerifyCommand(),
                     new VersionCommand()
                 };
 
@@ -1029,9 +1044,9 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 sshCredentials = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword);
             }
-            else if (KubeHelper.KubeLogin != null)
+            else if (KubeHelper.ClusterLogin != null)
             {
-                sshCredentials = KubeHelper.KubeLogin.GetSshCredentials();
+                sshCredentials = KubeHelper.ClusterLogin.GetSshCredentials();
             }
             else
             {

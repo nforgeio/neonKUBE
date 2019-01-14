@@ -51,7 +51,11 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy cluster;
+        private ClusterProxy                    cluster;
+        private SetupController<NodeDefinition> controller;
+        private string                          driveTemplatePath;
+        private string                          vmDriveFolder;
+        private string                          switchName;
 
         /// <summary>
         /// Constructor.
@@ -96,11 +100,6 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
-        {
-        }
-
-        /// <inheritdoc/>
-        public override void AddPostVpnSteps(SetupController<NodeDefinition> controller)
         {
         }
 

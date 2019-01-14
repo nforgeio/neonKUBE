@@ -100,11 +100,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void AddPostVpnSteps(SetupController<NodeDefinition> controller)
-        {
-        }
-
-        /// <inheritdoc/>
         public override string DrivePrefix
         {
             get { return "sd"; }

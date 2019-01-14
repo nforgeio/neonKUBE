@@ -105,7 +105,7 @@ namespace Neon.Kube
                 nodeProxyCreator =
                     (name, publicAddress, privateAddress, append) =>
                     {
-                        var login = KubeHelper.KubeLogin;
+                        var login = KubeHelper.ClusterLogin;
 
                         if (login != null)
                         {

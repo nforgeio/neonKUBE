@@ -79,11 +79,10 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members.
 
-        private const string defaultSwitchName = "cluster";
+        private const string defaultSwitchName = "external";
 
-        private ClusterProxy                       cluster;
+        private ClusterProxy                    cluster;
         private SetupController<NodeDefinition> controller;
-        private bool                            forceVmOverwrite;
         private string                          driveTemplatePath;
         private string                          vmDriveFolder;
         private string                          switchName;
@@ -126,18 +125,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override bool Provision(bool force)
         {
-            // $todo(jeff.lill):
-            //
-            // I'm not entirely sure that the [force] option makes sense for 
-            // production clusters and especially when there are pet nodes.
-            //
-            // Perhaps it would make more sense to replace this with a
-            // [neon cluster remove] command.
-            //
-            //      https://github.com/jefflill/NeonForge/issues/156
-
-            this.forceVmOverwrite  = force;
-
             if (IsProvisionNOP)
             {
                 // There's nothing to do here.
@@ -171,8 +158,8 @@ namespace Neon.Kube
                 }
             }
 
-            // If a public address isn't explicitly specified, we'll assume that the
-            // tool is running inside the network and we can access the private address.
+            // If a public address isn't explicitly specified, we'll assume that we're
+            // running inside the network and we can access the private address.
 
             foreach (var node in cluster.Definition.Nodes)
             {
@@ -211,11 +198,6 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
-        {
-        }
-
-        /// <inheritdoc/>
-        public override void AddPostVpnSteps(SetupController<NodeDefinition> controller)
         {
         }
 
@@ -291,8 +273,7 @@ namespace Neon.Kube
             // the download file.  The reason for this is that I want to avoid the
             // situation where the user has provisioned some nodes with one version
             // of the template and then goes on later to provision new nodes with
-            // an updated template.  The [neon cluster setup --remove-templates] 
-            // option is provided to delete any cached templates.
+            // an updated template.
             //
             // This should only be an issue for people using the default "latest"
             // drive template.  Production clusters should reference a specific
@@ -337,7 +318,12 @@ namespace Neon.Kube
                 Task.Run(
                     async () =>
                     {
-                        using (var client = new HttpClient())
+                        var httpHandler = new HttpClientHandler()
+                        {
+                            AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+                        };
+
+                        using (var client = new HttpClient(httpHandler, disposeHandler: true))
                         {
                             // Download the file.
 
@@ -461,57 +447,20 @@ namespace Neon.Kube
 
                     if (isClusterVM)
                     {
-                        if (forceVmOverwrite)
+                        // We're going to report errors when one or more machines already exist.
+
+                        if (conflicts.Length > 0)
                         {
-                            if (machine.State != VirtualMachineState.Off)
-                            {
-                                cluster.GetNode(nodeName).Status = "stop virtual machine";
-                                hyperv.StopVM(machine.Name);
-                                cluster.GetNode(nodeName).Status = string.Empty;
-                            }
-
-                            // The named machine already exists.  For force mode, we're going to stop and
-                            // reuse the machine but replace the hard drive file as long as the file name
-                            // matches what we're expecting for the machine.  We'll delete the VM if
-                            // the names don't match and recreate it below.
-                            //
-                            // The reason for doing this is to avoid generating new MAC addresses
-                            // every time we reprovision a VM.  This could help prevent the router/DHCP
-                            // server from running out of IP addresses for the subnet.
-
-                            var drives = hyperv.GetVMDrives(machine.Name);
-
-                            if (drives.Count != 1 || !drives.First().Equals(drivePath, StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                // Remove the machine and recreate it below.
-
-                                cluster.GetNode(nodeName).Status = "delete virtual machine";
-                                hyperv.RemoveVM(machine.Name);
-                                cluster.GetNode(nodeName).Status = string.Empty;
-                            }
-                            else
-                            {
-                                continue;
-                            }
+                            conflicts += ", ";
                         }
-                        else
-                        {
-                            // We're going to report errors when one or more machines already exist and 
-                            // [--force] was not specified.
 
-                            if (conflicts.Length > 0)
-                            {
-                                conflicts += ", ";
-                            }
-
-                            conflicts += nodeName;
-                        }
+                        conflicts += nodeName;
                     }
                 }
 
                 if (!string.IsNullOrEmpty(conflicts))
                 {
-                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exist and cannot be automatically replaced unless you specify [--force].");
+                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exist.");
                 }
 
                 controller.SetOperationStatus();
@@ -532,7 +481,7 @@ namespace Neon.Kube
             //
             // It appears that it is possible to inject an IP address, but
             // I wasn't able to get this to work (perhaps Windows Server is
-            // required.  Here's a link discussing this:
+            // required).  Here's a link discussing this:
             //
             //  http://www.itprotoday.com/virtualization/modify-ip-configuration-vm-hyper-v-host
             //
@@ -545,70 +494,44 @@ namespace Neon.Kube
             {
                 var vmName = GetVmName(node.Metadata);
 
-                // Extract the template file contents to the virtual machine's
+                // Copy the VHDX template file to the virtual machine's
                 // virtual hard drive file.
 
-                var drivePath = Path.Combine(vmDriveFolder, $"{vmName}-[0].vhdx");
+                var drivePath = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
 
-                using (var zip = new ZipFile(driveTemplatePath))
+                node.Status = $"create disk";
+
+                // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
+
+                var updateInterval = TimeSpan.FromSeconds(2);
+                var stopwatch      = new Stopwatch();
+
+                stopwatch.Start();
+
+                using (var input = new FileStream(driveTemplatePath, FileMode.Open, FileAccess.Read))
                 {
-                    if (zip.Count != 1)
+                    using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
                     {
-                        throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes more than one file.");
-                    }
+                        var buffer = new byte[64 * 1024];
+                        int cb;
 
-                    ZipEntry entry = null;
-
-                    foreach (ZipEntry item in zip)
-                    {
-                        entry = item;
-                        break;
-                    }
-
-                    if (!entry.IsFile)
-                    {
-                        throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes entry [{entry.Name}] that is not a file.");
-                    }
-
-                    if (!entry.Name.EndsWith(".vhdx", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes a file that's not named like [*.vhdx].");
-                    }
-
-                    node.Status = $"create disk";
-
-                    // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
-
-                    var updateInterval = TimeSpan.FromSeconds(2);
-                    var stopwatch      = new Stopwatch();
-
-                    stopwatch.Start();
-
-                    using (var input = zip.GetInputStream(entry))
-                    {
-                        using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
+                        while (true)
                         {
-                            var buffer = new byte[64 * 1024];
-                            int cb;
+                            cb = input.Read(buffer, 0, buffer.Length);
 
-                            while (true)
+                            if (cb == 0)
                             {
-                                cb = input.Read(buffer, 0, buffer.Length);
+                                break;
+                            }
 
-                                if (cb == 0)
-                                {
-                                    break;
-                                }
+                            output.Write(buffer, 0, cb);
 
-                                output.Write(buffer, 0, cb);
+                            var percentComplete = (int)(((double)output.Length / (double)input.Length) * 100.0);
 
-                                var percentComplete = (int)(((double)output.Length / (double)entry.Size) * 100.0);
-
-                                if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
-                                {
-                                    node.Status = $"[{percentComplete}%] create disk";
-                                    stopwatch.Restart();
-                                }
+                            if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
+                            {
+                                node.Status = $"[{percentComplete}%] create disk";
+                                stopwatch.Restart();
                             }
                         }
                     }

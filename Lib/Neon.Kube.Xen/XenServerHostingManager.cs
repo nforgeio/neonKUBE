@@ -538,10 +538,5 @@ nameserver 8.8.4.4
         public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
         {
         }
-
-        /// <inheritdoc/>
-        public override void AddPostVpnSteps(SetupController<NodeDefinition> controller)
-        {
-        }
     }
 }

@@ -1273,9 +1273,6 @@ namespace Neon.Kube
             SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 755 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Exec}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {KubeHostFolders.Exec}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Is this a potential security problem?
-                                                                                            //                   SCP uploads fail for 770
             SudoCommand($"mkdir -p {KubeHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
 
@@ -1299,7 +1296,7 @@ namespace Neon.Kube
 
             // $hack(jeff.lill):
             //
-            // All of a sudden I find that I need these folders too.
+            // All of a sudden, I find that I need these folders too.
 
             SudoCommand("mkdir -p /home/root", RunOptions.LogOnErrorOnly);
             SudoCommand("chown root:root /home/root", RunOptions.LogOnErrorOnly);

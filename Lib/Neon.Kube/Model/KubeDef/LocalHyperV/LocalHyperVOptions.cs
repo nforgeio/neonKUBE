@@ -17,7 +17,7 @@ namespace Neon.Kube
     /// </summary>
     public class LocalHyperVOptions
     {
-        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx";
+        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/kube/kube-ubuntu-18.04.latest.vhdx";
 
         /// <summary>
         /// Default constructor.

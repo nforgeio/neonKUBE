@@ -37,12 +37,12 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private const string        defaultDatacenter = "DATACENTER";
-        private const string        defaultProvisioner = "unknown";
-        private readonly string[]   defaultTimeSources = new string[] { "pool.ntp.org" };
-        private const string        defaultDrivePrefix = "sd";
+        private const string        defaultDatacenter         = "DATACENTER";
+        private const string        defaultProvisioner        = "unknown";
+        private readonly string[]   defaultTimeSources        = new string[] { "pool.ntp.org" };
+        private const string        defaultDrivePrefix        = "sd";
         private const int           defaultStepStaggerSeconds = 5;
-        private const bool          defaultAllowUnitTesting = false;
+        private const bool          defaultAllowUnitTesting   = false;
 
         /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.
@@ -281,6 +281,32 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "TimeSources", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string[] TimeSources { get; set; } = null;
+
+        /// <summary>
+        /// Optionally specifies one or more APT proxy/cache servers the hive will use to install
+        /// and update Linux packages.  These are HTTP URLs including the port (generally 
+        /// <see cref="NetworkPorts.AppCacherNg"/> = 3142) of a  <b>apt-cacher-ng</b> or other proxy
+        /// server.  Multiple URLs may be specified by separating them with spaces.  This defaults to
+        /// <c>null</c> which will configure the hive manager nodes as the package proxies.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A package cache will greatly reduce the Internet network traffic required to deploy a
+        /// hive, especially for large hives.
+        /// </para>
+        /// <note>
+        /// The hive nodes are configured to failover to different proxies or to hit the 
+        /// default Linux distribution package mirror directly if any or all of the caches
+        /// specified are unavailable.
+        /// </note>
+        /// <note>
+        /// The package caches will be tried in the order they are listed.  This essentially
+        /// makes the first cache primary, with the others as backups.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "PackageProxy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string PackageProxy { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies setup process related options.

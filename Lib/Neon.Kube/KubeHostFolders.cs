@@ -44,12 +44,12 @@ namespace Neon.Kube
         /// <summary>
         /// Path to the cluster executable files directory.
         /// </summary>
-        public const string Bin = "/lib/neon/bin";
+        public const string Bin = "/lib/kube/bin";
 
         /// <summary>
         /// Path to the cluster configuration directory.
         /// </summary>
-        public const string Config = "/etc/neon";
+        public const string Config = "/etc/kube";
 
         /// <summary>
         /// The folder where cluster tools can upload, unpack, and then
@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// <summary>
         /// Path to the cluster management scripts directory.
         /// </summary>
-        public const string Scripts = "/lib/neon/scripts";
+        public const string Scripts = "/lib/kube/scripts";
 
         /// <summary>
         /// Path to the cluster secrets directory.
@@ -71,27 +71,27 @@ namespace Neon.Kube
         /// <summary>
         /// Path to the cluster setup scripts directory.
         /// </summary>
-        public const string Setup = "/lib/neon/setup";
+        public const string Setup = "/lib/kube/setup";
 
         /// <summary>
         /// Path to the cluster source code directory.
         /// </summary>
-        public const string Source = "/lib/neon/src";
+        public const string Source = "/lib/kube/src";
 
         /// <summary>
         /// Path to the cluster setup state directory.
         /// </summary>
-        public const string State = "/var/local/neon";
+        public const string State = "/var/local/kube";
 
         /// <summary>
         /// Root folder on the local tmpfs (shared memory) folder where 
         /// cluster will persist misc temporary files.
         /// </summary>
-        public const string Tmpfs = "/dev/shm/neon";
+        public const string Tmpfs = "/dev/shm/kube";
 
         /// <summary>
         /// Path to the cluster tools directory.
         /// </summary>
-        public const string Tools = "/lib/neon/tools";
+        public const string Tools = "/lib/kube/tools";
     }
 }
