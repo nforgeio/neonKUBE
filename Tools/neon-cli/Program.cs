@@ -1104,7 +1104,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(ClusterLogin kubeLogin, string pemKey)
+        public static string ConvertPUBtoPPK(KubeContextExtensions kubeLogin, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {
@@ -1119,7 +1119,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 File.WriteAllText(pemKeyPath, pemKey);
 
-                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{kubeLogin.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                var result = NeonHelper.ExecuteCapture(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{kubeLogin.ClusterDefinition.Name} Key"" /output=""{ppkKeyPath}""");
 
                 if (result.ExitCode != 0)
                 {

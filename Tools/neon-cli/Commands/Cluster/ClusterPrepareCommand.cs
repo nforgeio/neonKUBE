@@ -191,7 +191,7 @@ Server Requirements:
 
             cluster = new ClusterProxy(clusterDefinition, Program.CreateNodeProxy<NodeDefinition>, appendLog: false, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
-            if (KubeContext.Exists(cluster.Definition.Name))
+            if (KubeHelper.KubeConfig.GetContext(cluster.Definition.Name) != null)
             {
                 Console.Error.WriteLine($"*** ERROR: A context named [{cluster.Definition.Name}] already exists.");
                 Program.Exit(1);
@@ -386,12 +386,12 @@ Server Requirements:
 
             // Write the hive login file.
 
-            var hiveLoginPath = Program.GetHiveLoginPath(HiveConst.RootUser, hive.Definition.Name);
+            var hiveLoginPath = Program.GetHiveLoginPath(HiveConst.RootUser, cluster.Definition.Name);
             var hiveLogin     = new HiveLogin()
             {
                 Path                 = hiveLoginPath,
-                Username             = HiveConst.RootUser,
-                Definition           = hive.Definition,
+                Username             = KubeConst.RootUser,
+                Definition           = cluster.Definition,
                 SshUsername          = Program.MachineUsername,
                 SshPassword          = Program.MachinePassword,
                 SshProvisionPassword = Program.MachinePassword,

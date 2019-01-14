@@ -56,5 +56,12 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "user", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string User { get; set; }
+
+        /// <summary>
+        /// Specifies neonKUBE related extensions associated with the context.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public KubeContextExtensions Extensions { get; set; }
     }
 }

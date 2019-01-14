@@ -46,6 +46,6 @@ namespace Neon.Kube
         /// The context properties.
         /// </summary>
         [JsonProperty(PropertyName = "context", Required = Required.Always)]
-        public KubeConfigContextProperties Context { get; set; }
+        public KubeConfigContextProperties Properties { get; set; }
     }
 }

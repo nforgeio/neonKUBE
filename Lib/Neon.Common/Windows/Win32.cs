@@ -28,10 +28,19 @@ namespace Neon.Windows
         /// <summary>
         /// Returns the total installed physical RAM as kilobytes.
         /// </summary>
-        /// <param name="TotalMemoryInKilobytes"></param>
-        /// <returns></returns>
+        /// <param name="TotalMemoryInKilobytes">Returns as the physical RAM as KiB.</param>
+        /// <returns><c>true</c> on success.</returns>
         [DllImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool GetPhysicallyInstalledSystemMemory(out long TotalMemoryInKilobytes);
+
+        /// <summary>
+        /// Has Windows encrypt a file or folder at rest.
+        /// </summary>
+        /// <param name="path">The file or folder path.</param>
+        /// <returns><c>true</c> on success.</returns>
+        [DllImport("advapi32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool EncryptFile(string path);
     }
 }

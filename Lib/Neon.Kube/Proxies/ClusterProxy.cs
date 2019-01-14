@@ -58,12 +58,12 @@ namespace Neon.Kube
         /// is passed.
         /// </remarks>
         public ClusterProxy(
-            ClusterLogin kubeLogin,
+            KubeContextExtensions kubeLogin,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
             bool                                                            appendLog         = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
 
-            : this(kubeLogin.Definition, nodeProxyCreator, appendLog: appendLog, defaultRunOptions: defaultRunOptions)
+            : this(kubeLogin.ClusterDefinition, nodeProxyCreator, appendLog: appendLog, defaultRunOptions: defaultRunOptions)
         {
             Covenant.Requires<ArgumentNullException>(kubeLogin != null);
 
@@ -105,11 +105,11 @@ namespace Neon.Kube
                 nodeProxyCreator =
                     (name, publicAddress, privateAddress, append) =>
                     {
-                        var login = KubeHelper.ClusterLogin;
+                        var context = KubeHelper.KubeContext;
 
-                        if (login != null)
+                        if (context != null && context.Properties.Extensions != null)
                         {
-                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, login.GetSshCredentials());
+                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, context.Properties.Extensions.SshCredentials);
                         }
                         else
                         {
@@ -124,7 +124,7 @@ namespace Neon.Kube
             }
 
             this.Definition        = clusterDefinition;
-            this.KubeLogin         = new ClusterLogin();
+            this.KubeLogin         = new KubeContextExtensions();
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendLog;
@@ -168,7 +168,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster login information.
         /// </summary>
-        public ClusterLogin KubeLogin { get; set; }
+        public KubeContextExtensions KubeLogin { get; set; }
 
         /// <summary>
         /// Returns the cluster definition.

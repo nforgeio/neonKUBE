@@ -26,6 +26,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Windows;
 
 namespace Neon.Kube
 {
@@ -34,23 +35,8 @@ namespace Neon.Kube
     /// </summary>
     public static partial class KubeHelper
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Low-level Windows APIs.
-        /// </summary>
-        private static class Windows
-        {
-            [DllImport("advapi32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
-            [return: MarshalAs(UnmanagedType.Bool)]
-            public static extern bool EncryptFile(string filename);
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
-        private static INeonLogger  log = LogManager.Default.GetLogger(typeof(KubeHelper));
+        private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
+        private static KubeConfig           cachedKubeConfig;
 
         /// <summary>
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
@@ -75,7 +61,7 @@ namespace Neon.Kube
         {
             try
             {
-                return Windows.EncryptFile(path);
+                return Win32.EncryptFile(path);
             }
             catch
             {
@@ -217,6 +203,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns the path to the Kubernetes configuration file.
+        /// </summary>
+        public static string KubeConfigPath => Path.Combine(KubeHelper.GetKubeUserFolder(), "config");
+
+        /// <summary>
         /// Returns the path the folder containing cluster definition files, creating
         /// the folder if it doesn't already exist.
         /// </summary>
@@ -341,9 +332,32 @@ namespace Neon.Kube
         public static bool IsConnected { get; private set; } = false;
 
         /// <summary>
+        /// Returns the user's <see cref="KubeConfig"/>.
+        /// </summary>
+        public static KubeConfig KubeConfig
+        {
+            get
+            {
+                if (cachedKubeConfig != null)
+                {
+                    return cachedKubeConfig;
+                }
+
+                var configPath = KubeConfigPath;
+
+                if (File.Exists(configPath))
+                {
+                    return cachedKubeConfig = NeonHelper.YamlDeserialize<KubeConfig>(File.ReadAllText(configPath));
+                }
+
+                return cachedKubeConfig = new KubeConfig();
+            }
+        }
+
+        /// <summary>
         /// Returns the <see cref="KubeContext"/> for the connected cluster (or <c>null</c>).
         /// </summary>
-        public static KubeContext KubeContext { get; private set; } = null;
+        public static KubeConfigContext KubeContext => KubeConfig.GetContext(KubeConfig.CurrentContext);
 
         /// <summary>
         /// Returns the <see cref="Kube.ClusterProxy"/> for the connected cluster (or <c>null</c>).

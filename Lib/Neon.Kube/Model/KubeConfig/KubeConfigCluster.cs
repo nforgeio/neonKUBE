@@ -46,6 +46,6 @@ namespace Neon.Kube
         /// The cluster properties.
         /// </summary>
         [JsonProperty(PropertyName = "cluster", Required = Required.Always)]
-        public KubeConfigClusterProperties Cluster { get; set; }
+        public KubeConfigClusterProperties Properties { get; set; }
     }
 }

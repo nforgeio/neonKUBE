@@ -46,6 +46,6 @@ namespace Neon.Kube
         /// The user properties.
         /// </summary>
         [JsonProperty(PropertyName = "user", Required = Required.Always)]
-        public KubeConfigUserProperties User { get; set; }
+        public KubeConfigUserProperties Properties { get; set; }
     }
 }
