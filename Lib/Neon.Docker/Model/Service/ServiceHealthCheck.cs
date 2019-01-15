@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Specifies the health test to be performed.
         /// </summary>
         [JsonProperty(PropertyName = "Test", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Test")]
         [DefaultValue(null)]
         public List<string> Test { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Time to wait between health checks (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Interval", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Interval")]
         [DefaultValue(null)]
         public long? Interval { get; set; }
 
@@ -37,6 +40,7 @@ namespace Neon.Docker
         /// Time to wait before considering a health check to have hung (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Timeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Timeout")]
         [DefaultValue(null)]
         public long? Timeout { get; set; }
 
@@ -45,6 +49,7 @@ namespace Neon.Docker
         /// to be unhealhy.
         /// </summary>
         [JsonProperty(PropertyName = "Retries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Retries")]
         [DefaultValue(null)]
         public long? Retries { get; set; }
 
@@ -53,6 +58,7 @@ namespace Neon.Docker
         /// health check failures.
         /// </summary>
         [JsonProperty(PropertyName = "StartPeriod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "StartPeriod")]
         [DefaultValue(null)]
         public long? StartPeriod { get; set; }
 

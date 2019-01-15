@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Maximum number of tasks to be rolled back in parallel during an rollback interation.
         /// </summary>
         [JsonProperty(PropertyName = "Parallelism", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Parallelism")]
         [DefaultValue(null)]
         public long? Parallelism { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Time between rollback iterations (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Delay", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Delay")]
         [DefaultValue(null)]
         public long? Delay { get; set; }
 
@@ -37,6 +40,7 @@ namespace Neon.Docker
         /// Action to take if an rolled back task fails to run or stops running during the rollback.
         /// </summary>
         [JsonProperty(PropertyName = "FailureAction", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "FailureAction")]
         [DefaultValue(null)]
         public ServiceRollbackFailureAction? FailureAction { get; set; }
 
@@ -44,6 +48,7 @@ namespace Neon.Docker
         /// Time to monitor rolled back tasks for failure (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Monitor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Monitor")]
         [DefaultValue(null)]
         public long? Monitor { get; set; }
 
@@ -52,6 +57,7 @@ namespace Neon.Docker
         /// action is invoked, specified as a floating point number between 0 and 1.
         /// </summary>
         [JsonProperty(PropertyName = "MaxFailureRatio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "MaxFailureRatio")]
         [DefaultValue(null)]
         public double? MaxFailureRatio { get; set; }
 
@@ -59,6 +65,7 @@ namespace Neon.Docker
         /// Specifies the order in which the running task is stopped and the rolledback task is started.
         /// </summary>
         [JsonProperty(PropertyName = "Order", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Order")]
         [DefaultValue(null)]
         public ServiceRollbackOrder? Order { get; set; }
 

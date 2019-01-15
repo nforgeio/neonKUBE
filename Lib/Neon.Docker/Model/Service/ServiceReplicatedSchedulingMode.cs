@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// The number of service replicas (tasks/containers).
         /// </summary>
         [JsonProperty(PropertyName = "Replicas", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Replicas")]
         [DefaultValue(0)]
         public int Replicas { get; set; }
 

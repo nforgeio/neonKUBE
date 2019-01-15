@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 
@@ -39,24 +40,28 @@ namespace Neon.Couchbase.SyncGateway
         /// The database name.
         /// </summary>
         [JsonProperty(PropertyName = "Name")]
+        [YamlMember(Alias = "Name")]
         public string Name { get; set; }
 
         /// <summary>
         /// The database server REST URI including the port (typically 8091).
         /// </summary>
         [JsonProperty(PropertyName = "Server")]
+        [YamlMember(Alias = "Server")]
         public string Server { get; set; }
 
         /// <summary>
         /// The data bucket name.
         /// </summary>
         [JsonProperty(PropertyName = "Bucket")]
+        [YamlMember(Alias = "Bucket")]
         public string Bucket { get; set; }
 
         /// <summary>
         /// The Javascript <b>sync</b> function code.
         /// </summary>
         [JsonProperty(PropertyName = "Sync")]
+        [YamlMember(Alias = "Sync")]
         public string Sync { get; set; }
     }
 }

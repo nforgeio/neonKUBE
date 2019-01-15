@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -24,6 +25,7 @@ namespace Neon.Docker
         /// Path to the target file within the container.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Name")]
         [DefaultValue(null)]
         public string Name { get; set; }
 
@@ -31,6 +33,7 @@ namespace Neon.Docker
         /// Identifies the user that owns the file.
         /// </summary>
         [JsonProperty(PropertyName = "UID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "UID")]
         [DefaultValue(null)]
         public string UID { get; set; }
 
@@ -38,6 +41,7 @@ namespace Neon.Docker
         /// Identifies the group that owns the file.
         /// </summary>
         [JsonProperty(PropertyName = "GID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "GID")]
         [DefaultValue(null)]
         public string GID { get; set; }
 
@@ -51,6 +55,7 @@ namespace Neon.Docker
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Mode")]
         [DefaultValue(1777)]
         public int Mode { get; set; }
 

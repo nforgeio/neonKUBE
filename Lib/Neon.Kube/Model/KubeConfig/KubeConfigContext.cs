@@ -40,12 +40,14 @@ namespace Neon.Kube
         /// The local nickname for the context.
         /// </summary>
         [JsonProperty(PropertyName = "name", Required = Required.Always)]
+        [YamlMember(Alias = "name")]
         public string Name { get; set; }
 
         /// <summary>
         /// The context properties.
         /// </summary>
         [JsonProperty(PropertyName = "context", Required = Required.Always)]
+        [YamlMember(Alias = "context")]
         public KubeConfigContextProperties Properties { get; set; }
     }
 }

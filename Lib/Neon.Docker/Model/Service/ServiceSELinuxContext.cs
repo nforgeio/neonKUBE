@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Disable SELinux.
         /// </summary>
         [JsonProperty(PropertyName = "Disable", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Disable")]
         [DefaultValue(false)]
         public bool Disable { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// SELinux user label.
         /// </summary>
         [JsonProperty(PropertyName = "User", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "User")]
         [DefaultValue(null)]
         public string User { get; set; }
 
@@ -37,6 +40,7 @@ namespace Neon.Docker
         /// SELinux role label.
         /// </summary>
         [JsonProperty(PropertyName = "Role", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Role")]
         [DefaultValue(null)]
         public string Role { get; set; }
 
@@ -44,6 +48,7 @@ namespace Neon.Docker
         /// SELinux type label.
         /// </summary>
         [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Type")]
         [DefaultValue(null)]
         public string Type { get; set; }
 
@@ -51,6 +56,7 @@ namespace Neon.Docker
         /// SELinux level label.
         /// </summary>
         [JsonProperty(PropertyName = "Level", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Level")]
         [DefaultValue(null)]
         public string Level { get; set; }
 

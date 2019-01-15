@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -45,6 +46,7 @@ namespace Neon.Kube
         /// <see cref="HostingEnvironments.XenServer"/>.  This is required for those environments.
         /// </summary>
         [JsonProperty(PropertyName = "PremiseSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "PremiseSubnet")]
         [DefaultValue(null)]
         public string PremiseSubnet { get; set; }
 
@@ -65,6 +67,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "NodesSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "NodesSubnet")]
         [DefaultValue(null)]
         public string NodeSubnet { get; set; }
 
@@ -73,6 +76,7 @@ namespace Neon.Kube
         /// Google Public DNS servers: <b>[ "8.8.8.8", "8.8.4.4" ]</b> when the property is <c>null</c> or empty.
         /// </summary>
         [JsonProperty(PropertyName = "Nameservers", Required = Required.Default)]
+        [YamlMember(Alias = "Nameservers")]
         [DefaultValue(null)]
         public string[] Nameservers { get; set; } = null;
 
@@ -83,6 +87,7 @@ namespace Neon.Kube
         /// environments.
         /// </summary>
         [JsonProperty(PropertyName = "Gateway", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Gateway")]
         [DefaultValue(null)]
         public string Gateway { get; set; } = null;
 
@@ -92,6 +97,7 @@ namespace Neon.Kube
         /// be set to <b>10.0.0.255</b>.  This is ignored for cloud hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "Broadcast", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Broadcast")]
         [DefaultValue(null)]
         public string Broadcast { get; set; } = null;
 

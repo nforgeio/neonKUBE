@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -24,6 +25,7 @@ namespace Neon.Docker
         /// Specifies the attached network ID.
         /// </summary>
         [JsonProperty(PropertyName = "NetworkID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "NetworkID")]
         [DefaultValue(null)]
         public string NetworkID { get; set; }
 
@@ -31,6 +33,7 @@ namespace Neon.Docker
         /// Specifies assigned IP address.
         /// </summary>
         [JsonProperty(PropertyName = "Addr", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Addr")]
         [DefaultValue(null)]
         public string Addr { get; set; }
 

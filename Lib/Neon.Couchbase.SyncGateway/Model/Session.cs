@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 
@@ -39,18 +40,21 @@ namespace Neon.Couchbase.SyncGateway
         /// The HTTP cookie name to be used for session handling.
         /// </summary>
         [JsonProperty(PropertyName = "Cookie")]
+        [YamlMember(Alias = "Cookie")]
         public string Cookie { get; set; }
 
         /// <summary>
         /// The session expiration time (local server time).
         /// </summary>
         [JsonProperty(PropertyName = "Expires")]
+        [YamlMember(Alias = "Expires")]
         public DateTime Expires { get; set; }
 
         /// <summary>
         /// The session ID.
         /// </summary>
         [JsonProperty(PropertyName = "Id")]
+        [YamlMember(Alias = "Id")]
         public string Id { get; set; }
     }
 }

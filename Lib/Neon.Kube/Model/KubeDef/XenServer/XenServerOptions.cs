@@ -10,6 +10,7 @@ using System.Diagnostics.Contracts;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
@@ -47,6 +48,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "HostXvaUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "HostXvaUri")]
         [DefaultValue(defaultHostXvaUri)]
         public string HostXvaUri { get; set; } = defaultHostXvaUri;
 
@@ -55,6 +57,7 @@ namespace Neon.Kube
         /// to <b>ubuntu-template</b>.
         /// </summary>
         [JsonProperty(PropertyName = "TemplateName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "TemplateName")]
         [DefaultValue(defaultTemplate)]
         public string TemplateName { get; set; } = defaultTemplate;
 
@@ -64,6 +67,7 @@ namespace Neon.Kube
         /// <b>Local storage</b>.
         /// </summary>
         [JsonProperty(PropertyName = "StorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "StorageRepository")]
         [DefaultValue(defaultStorageRepository)]
         public string StorageRepository { get; set; } = defaultStorageRepository;
 
@@ -72,6 +76,7 @@ namespace Neon.Kube
         /// drives created for the cluster.  This defaults to <b>Local storage</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OsdStorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "OsdStorageRepository")]
         [DefaultValue(defaultStorageRepository)]
         public string OsdStorageRepository { get; set; } = defaultStorageRepository;
 
@@ -102,6 +107,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Snapshot", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Snapshot")]
         [DefaultValue(defaultSnapshot)]
         public bool Snapshot { get; set; } = defaultSnapshot;
 
@@ -136,8 +142,8 @@ namespace Neon.Kube
                 OsdStorageRepository = StorageRepository;
             }
 
-            clusterDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
-            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: true);     // Hypervisor options must be valid.
+            clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
+            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: true);   // Hypervisor options must be valid.
         }
     }
 }

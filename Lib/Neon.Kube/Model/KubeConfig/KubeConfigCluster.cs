@@ -40,12 +40,14 @@ namespace Neon.Kube
         /// The local nickname for the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "name", Required = Required.Always)]
+        [YamlMember(Alias = "name")]
         public string Name { get; set; }
 
         /// <summary>
         /// The cluster properties.
         /// </summary>
         [JsonProperty(PropertyName = "cluster", Required = Required.Always)]
+        [YamlMember(Alias = "cluster")]
         public KubeConfigClusterProperties Properties { get; set; }
     }
 }

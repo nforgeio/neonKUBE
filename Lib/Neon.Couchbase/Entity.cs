@@ -8,6 +8,7 @@ using System.ComponentModel;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 
@@ -34,6 +35,7 @@ namespace Neon.Data
 
         /// <inheritdoc/>
         [JsonProperty(PropertyName = "__EntityType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "__EntityType")]
         [DefaultValue(null)]
         public string __EntityType { get; set; }
 

@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Specifies where the mount will appear within the service containers. 
         /// </summary>
         [JsonProperty(PropertyName = "Target", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Target")]
         [DefaultValue(null)]
         public string Target { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Specifies the external mount source
         /// </summary>
         [JsonProperty(PropertyName = "Source", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Source")]
         [DefaultValue(null)]
         public string Source { get; set; }
 
@@ -37,6 +40,7 @@ namespace Neon.Docker
         /// The mount type.
         /// </summary>
         [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Type")]
         [DefaultValue(default(ServiceMountType))]
         public ServiceMountType Type { get; set; }
 
@@ -44,6 +48,7 @@ namespace Neon.Docker
         /// Specifies whether the mount is to be read-only within the service containers.
         /// </summary>
         [JsonProperty(PropertyName = "ReadOnly", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "ReadOnly")]
         [DefaultValue(false)]
         public bool ReadOnly { get; set; }
 
@@ -51,6 +56,7 @@ namespace Neon.Docker
         /// Specifies the mount consistency.
         /// </summary>
         [JsonProperty(PropertyName = "Consistency", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Consistency")]
         [DefaultValue(default(ServiceMountConsistency))]
         public ServiceMountConsistency Consistency { get; set; }
 
@@ -58,6 +64,7 @@ namespace Neon.Docker
         /// Specifies the bind propagation mode.
         /// </summary>
         [JsonProperty(PropertyName = "BindOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "BindOptions")]
         [DefaultValue(null)]
         public ServiceBindOptions BindOptions { get; set; }
 
@@ -65,6 +72,7 @@ namespace Neon.Docker
         /// Optionally specifies volume mount configuration options.
         /// </summary>
         [JsonProperty(PropertyName = "VolumeOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "VolumeOptions")]
         [DefaultValue(null)]
         public ServiceVolumeOptions VolumeOptions { get; set; }
 
@@ -72,6 +80,7 @@ namespace Neon.Docker
         /// Optionally specifies Tempfs mount configuration options.
         /// </summary>
         [JsonProperty(PropertyName = "TmpfsOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "TmpfsOptions")]
         [DefaultValue(null)]
         public ServiceTmpfsOptions TmpfsOptions { get; set; }
 

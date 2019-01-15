@@ -9,6 +9,7 @@ using System.Diagnostics.Contracts;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
@@ -39,6 +40,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "HostVhdxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "HostVhdxUri")]
         [DefaultValue(defaultHostVhdxUri)]
         public string HostVhdxUri { get; set; } = defaultHostVhdxUri;
 
@@ -58,8 +60,8 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
             }
 
-            clusterDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
-            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: false);    // Hypervisor options must be valid.
+            clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
+            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: false);  // Hypervisor options must be valid.
         }
     }
 }

@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// <b>Windows Only:</b> Windows container credential specification.
         /// </summary>
         [JsonProperty(PropertyName = "CredentialSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "CredentialSpec")]
         [DefaultValue(null)]
         public ServiceCredentialSpec CredentialSpec { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// SELinux labels for the container.
         /// </summary>
         [JsonProperty(PropertyName = "SELinuxContext", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "SELinuxContext")]
         [DefaultValue(null)]
         public ServiceSELinuxContext SELinuxContext { get; set; }
 

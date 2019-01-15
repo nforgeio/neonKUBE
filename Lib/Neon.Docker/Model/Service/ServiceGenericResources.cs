@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Named setting for a resource.
         /// </summary>
         [JsonProperty(PropertyName = "NamedResourceSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "NamedResourceSpec")]
         [DefaultValue(null)]
         public ServiceNamedResourceSpec NamedResourceSpec { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Discrete setting for a resource.
         /// </summary>
         [JsonProperty(PropertyName = "DiscreteResourceSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "DiscreteResourceSpec")]
         [DefaultValue(null)]
         public ServiceDiscreteResourceSpec DiscreteResourceSpec { get; set; }
 

@@ -29,6 +29,7 @@ namespace Neon.Docker
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Image", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Image")]
         [DefaultValue(null)]
         public string Image { get; set; }
 
@@ -68,6 +69,7 @@ namespace Neon.Docker
         /// The container labels formatted as <b>LABEL=VALUE</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Labels")]
         [DefaultValue(null)]
         public Dictionary<string, string> Labels { get; set; }
 
@@ -75,6 +77,7 @@ namespace Neon.Docker
         /// The command to be run in the image.
         /// </summary>
         [JsonProperty(PropertyName = "Command", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Command")]
         [DefaultValue(null)]
         public List<string> Command { get; set; }
 
@@ -82,6 +85,7 @@ namespace Neon.Docker
         /// Arguments to the command.
         /// </summary>
         [JsonProperty(PropertyName = "Args", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Args")]
         [DefaultValue(null)]
         public List<string> Args { get; set; }
 
@@ -89,6 +93,7 @@ namespace Neon.Docker
         /// Hostname for the container.
         /// </summary>
         [JsonProperty(PropertyName = "Hostname", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Hostname")]
         [DefaultValue(null)]
         public string Hostname { get; set; }
 
@@ -97,6 +102,7 @@ namespace Neon.Docker
         /// to pass environment variables from the Docker host.
         /// </summary>
         [JsonProperty(PropertyName = "Env", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Env")]
         [DefaultValue(null)]
         public List<string> Env { get; set; }
 
@@ -104,6 +110,7 @@ namespace Neon.Docker
         /// The container working directory where commands will run.
         /// </summary>
         [JsonProperty(PropertyName = "Dir", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Dir")]
         [DefaultValue(null)]
         public string Dir { get; set; }
 
@@ -111,6 +118,7 @@ namespace Neon.Docker
         /// The user within the container.
         /// </summary>
         [JsonProperty(PropertyName = "User", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "User")]
         [DefaultValue(null)]
         public string User { get; set; }
 
@@ -118,6 +126,7 @@ namespace Neon.Docker
         /// The list of additional groups that the command will run as.
         /// </summary>
         [JsonProperty(PropertyName = "Groups", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Groups")]
         [DefaultValue(null)]
         public List<string> Groups { get; set; }
 
@@ -125,6 +134,7 @@ namespace Neon.Docker
         /// Security options for the container.
         /// </summary>
         [JsonProperty(PropertyName = "Privileges", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Privileges")]
         [DefaultValue(null)]
         public ServicePrivileges Privileges { get; set;}
 
@@ -132,6 +142,7 @@ namespace Neon.Docker
         /// Optionally create a pseudo TTY.
         /// </summary>
         [JsonProperty(PropertyName = "TTY", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "TTY")]
         [DefaultValue(false)]
         public bool TTY { get; set; }
 
@@ -139,6 +150,7 @@ namespace Neon.Docker
         /// Open STDIN.
         /// </summary>
         [JsonProperty(PropertyName = "OpenStdin", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "OpenStdin")]
         [DefaultValue(false)]
         public bool OpenStdin { get; set; }
 
@@ -146,6 +158,7 @@ namespace Neon.Docker
         /// Optionally mount the service container file system as read-only.
         /// </summary>
         [JsonProperty(PropertyName = "ReadOnly", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "ReadOnly")]
         [DefaultValue(false)]
         public bool ReadOnly { get; set; }
 
@@ -153,6 +166,7 @@ namespace Neon.Docker
         /// Specifies file system mounts to be added to the service containers.
         /// </summary>
         [JsonProperty(PropertyName = "Mounts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Mounts")]
         [DefaultValue(null)]
         public List<ServiceMount> Mounts { get; set; }
 
@@ -160,6 +174,7 @@ namespace Neon.Docker
         /// Signal to be used to gracefully stop the service containers.
         /// </summary>
         [JsonProperty(PropertyName = "StopSignal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "StopSignal")]
         [DefaultValue(null)]
         public string StopSignal { get; set; }
 
@@ -168,6 +183,7 @@ namespace Neon.Docker
         /// forcefully (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "StopGracePeriod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "StopGracePeriod")]
         [DefaultValue(0)]
         public long StopGracePeriod { get; set; }
 
@@ -175,6 +191,7 @@ namespace Neon.Docker
         /// Specifies how service container health check are to be performed.
         /// </summary>
         [JsonProperty(PropertyName = "HealthCheck", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "HealthCheck")]
         [DefaultValue(null)]
         public ServiceHealthCheck HealthCheck { get; set; }
 
@@ -188,6 +205,7 @@ namespace Neon.Docker
         /// </example>
         /// </summary>
         [JsonProperty(PropertyName = "Hosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Hosts")]
         [DefaultValue(null)]
         public List<string> Hosts { get; set; }
 
@@ -195,6 +213,7 @@ namespace Neon.Docker
         /// DNS resolver configuration.
         /// </summary>
         [JsonProperty(PropertyName = "DNSConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "DNSConfig")]
         [DefaultValue(null)]
         public ServiceDnsConfig DNSConfig { get; set; }
 
@@ -202,6 +221,7 @@ namespace Neon.Docker
         /// Specifies the secrets to be exposed to the service containers.
         /// </summary>
         [JsonProperty(PropertyName = "Secrets", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Secrets")]
         [DefaultValue(null)]
         public List<ServiceSecret> Secrets { get; set; }
 
@@ -209,6 +229,7 @@ namespace Neon.Docker
         /// Specifies the configs to be exposed to the service containers.
         /// </summary>
         [JsonProperty(PropertyName = "Configs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Configs")]
         [DefaultValue(null)]
         public List<ServiceConfig> Configs { get; set; }
 
@@ -217,6 +238,7 @@ namespace Neon.Docker
         /// for the service containers.
         /// </summary>
         [JsonProperty(PropertyName = "Isolation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Isolation")]
         [DefaultValue(default(ServiceIsolationMode))]
         public ServiceIsolationMode Isolation { get; set; }
 

@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Target network ID.
         /// </summary>
         [JsonProperty(PropertyName = "Target", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Target")]
         [DefaultValue(null)]
         public string Target { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Network aliases (network IDs).
         /// </summary>
         [JsonProperty(PropertyName = "Aliases", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Aliases")]
         [DefaultValue(null)]
         public List<string> Aliases { get; set; }
 

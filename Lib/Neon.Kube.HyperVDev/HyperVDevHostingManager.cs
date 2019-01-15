@@ -23,6 +23,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -52,6 +53,7 @@ namespace Neon.Kube
             /// The downloaded file ETAG.
             /// </summary>
             [JsonProperty(PropertyName = "ETag", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "ETag")]
             [DefaultValue(null)]
             public string ETag { get; set; }
 
@@ -60,6 +62,7 @@ namespace Neon.Kube
             /// the complete file was downloaded.
             /// </summary>
             [JsonProperty(PropertyName = "Length", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "Length")]
             [DefaultValue(-1)]
             public long Length { get; set; }
         }
@@ -279,7 +282,7 @@ namespace Neon.Kube
             // drive template.  Production clusters should reference a specific
             // drive template.
 
-            var driveTemplateUri  = new Uri(cluster.Definition.Hosting.LocalHyperV.HostVhdxUri);
+            var driveTemplateUri  = new Uri(cluster.Definition.Hosting.HyperVDev.HostVhdxUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(KubeHelper.GetVmTemplatesFolder(), driveTemplateName);
@@ -313,7 +316,7 @@ namespace Neon.Kube
 
             if (!driveTemplateIsCurrent)
             {
-                controller.SetOperationStatus($"Download Template VHDX: [{cluster.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
+                controller.SetOperationStatus($"Download Template VHDX: [{cluster.Definition.Hosting.HyperVDev.HostVhdxUri}]");
 
                 Task.Run(
                     async () =>
@@ -327,7 +330,7 @@ namespace Neon.Kube
                         {
                             // Download the file.
 
-                            var response = await client.GetAsync(cluster.Definition.Hosting.LocalHyperV.HostVhdxUri, HttpCompletionOption.ResponseHeadersRead);
+                            var response = await client.GetAsync(cluster.Definition.Hosting.HyperVDev.HostVhdxUri, HttpCompletionOption.ResponseHeadersRead);
 
                             response.EnsureSuccessStatusCode();
 
@@ -357,11 +360,11 @@ namespace Neon.Kube
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{cluster.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
+                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{cluster.Definition.Hosting.HyperVDev.HostVhdxUri}]");
                                             }
                                             else
                                             {
-                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{cluster.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
+                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{cluster.Definition.Hosting.HyperVDev.HostVhdxUri}]");
                                             }
                                         }
                                     }

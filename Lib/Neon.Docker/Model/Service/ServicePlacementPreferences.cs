@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Spread swarm orchestrator options.
         /// </summary>
         [JsonProperty(PropertyName = "Spread", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Spread")]
         [DefaultValue(null)]
         public List<ServicePlacementSpreadSettings> Spread { get; set; }
 

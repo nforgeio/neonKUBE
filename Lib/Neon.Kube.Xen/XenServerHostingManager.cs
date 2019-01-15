@@ -11,6 +11,7 @@ using System.Net;
 using System.Threading;
 
 using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -36,6 +37,7 @@ namespace Neon.Kube
             /// The downloaded file ETAG.
             /// </summary>
             [JsonProperty(PropertyName = "ETag", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "ETag")]
             [DefaultValue(null)]
             public string ETag { get; set; }
 
@@ -44,6 +46,7 @@ namespace Neon.Kube
             /// the complete file was downloaded.
             /// </summary>
             [JsonProperty(PropertyName = "Length", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "Length")]
             [DefaultValue(-1)]
             public long Length { get; set; }
         }
@@ -63,7 +66,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                   cluster;
+        private ClusterProxy                cluster;
         private string                      logFolder;
         private List<XenClient>             xenHosts;
         private SetupController<XenClient>  controller;

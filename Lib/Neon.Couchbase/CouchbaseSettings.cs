@@ -52,6 +52,7 @@ namespace Neon.Data
         /// problems if any single node is down.
         /// </remarks>
         [JsonProperty(PropertyName = "Servers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Servers")]
         [DefaultValue(null)]
         public List<Uri> Servers { get; set; } = new List<Uri>();
 
@@ -59,6 +60,7 @@ namespace Neon.Data
         /// Optionally specifies the name of the target Couchbase bucket.
         /// </summary>
         [JsonProperty(PropertyName = "Bucket", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Bucket")]
         [DefaultValue(null)]
         public string Bucket { get; set; }
 
@@ -66,6 +68,7 @@ namespace Neon.Data
         /// Maximum time (milliseconds) to wait to establish a server connection (defaults to <b>10 seconds</b>).
         /// </summary>
         [JsonProperty(PropertyName = "ConnectTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ConnectTimeout")]
         [DefaultValue(10000)]
         public int ConnectTimeout { get; set; } = 10000;
 
@@ -73,6 +76,7 @@ namespace Neon.Data
         /// Maximum time (milliseconds) to wait to transmit a server request (defaults to <b>10 seconds</b>).
         /// </summary>
         [JsonProperty(PropertyName = "SendTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "SendTimeout")]
         [DefaultValue(10000)]
         public int SendTimeout { get; set; } = 10000;
 
@@ -80,6 +84,7 @@ namespace Neon.Data
         /// Maximum time (milliseconds) to wait for an operation to complete (defaults to <b>10 seconds</b>).
         /// </summary>
         [JsonProperty(PropertyName = "OperationTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "OperationTimeout")]
         [DefaultValue(10000)]
         public int OperationTimeout { get; set; } = 10000;
 
@@ -87,6 +92,7 @@ namespace Neon.Data
         /// Maximum time (milliseconds) to wait for a non-view query to complete (defaults to 75 seconds).
         /// </summary>
         [JsonProperty(PropertyName = "QueryRequestTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "QueryRequestTimeout")]
         [DefaultValue(75000)]
         public int QueryRequestTimeout { get; set; } = 75000;
 
@@ -94,6 +100,7 @@ namespace Neon.Data
         /// Maximum time (milliseconds) to wait for a view query to complete (defaults to 75 seconds).
         /// </summary>
         [JsonProperty(PropertyName = "ViewRequestTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ViewRequestTimeout")]
         [DefaultValue(75000)]
         public int ViewRequestTimeout { get; set; } = 75000;
 
@@ -101,6 +108,7 @@ namespace Neon.Data
         /// Maximum number of pooled connections to a server bucket (defaults to <b>5</b>).
         /// </summary>
         [JsonProperty(PropertyName = "MaxPoolConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "MaxPoolConnections")]
         [DefaultValue(5)]
         public int MaxPoolConnections { get; set; } = 5;
 
@@ -108,6 +116,7 @@ namespace Neon.Data
         /// Minimum number of pooled connections to a server bucket (defaults to <b>2</b>).
         /// </summary>
         [JsonProperty(PropertyName = "MinPoolConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "MinPoolConnections")]
         [DefaultValue(2)]
         public int MinPoolConnections { get; set; } = 2;
 
@@ -117,6 +126,7 @@ namespace Neon.Data
         /// matter.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "UseEnhancedDurability", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "UseEnhancedDurability")]
         [DefaultValue(false)]
         public bool UseEnhancedDurability { get; set; } = false;
 

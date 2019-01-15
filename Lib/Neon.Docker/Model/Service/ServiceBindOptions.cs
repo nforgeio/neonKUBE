@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Named setting for a resource.
         /// </summary>
         [JsonProperty(PropertyName = "Propagation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Propagation")]
         [DefaultValue(default(ServiceMountBindPropagation))]
         public ServiceMountBindPropagation Propagation { get; set; }
 

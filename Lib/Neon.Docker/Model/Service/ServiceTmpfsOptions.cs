@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Specifies the <b>tmpfs</b> size in bytes.
         /// </summary>
         [JsonProperty(PropertyName = "SizeBytes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "SizeBytes")]
         [DefaultValue(null)]
         public long? SizeBytes { get; set; } = 0;
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Specifies the <b>tmpfs</b> file permission mode encoded as an integer.
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Mode")]
         [DefaultValue(1023)]    // 1777 Linux octal file mode converted to decimal
         public int Mode { get; set; }
 

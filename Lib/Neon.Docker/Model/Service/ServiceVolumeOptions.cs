@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Enables populating the volume with data from the container target.
         /// </summary>
         [JsonProperty(PropertyName = "NoCopy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "NoCopy")]
         [DefaultValue(false)]
         public bool NoCopy { get; set; } = false;
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Volume driver labels.
         /// </summary>
         [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Labels")]
         [DefaultValue(null)]
         public Dictionary<string, string> Labels { get; set; }
 
@@ -37,6 +40,7 @@ namespace Neon.Docker
         /// Optionally specifies volume driver and options.
         /// </summary>
         [JsonProperty(PropertyName = "DriverConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "DriverConfig")]
         [DefaultValue(null)]
         public ServiceVolumeDriverConfig DriverConfig { get; set; }
 

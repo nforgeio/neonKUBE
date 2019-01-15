@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Specifies the condition under which a service container should be restarted.
         /// </summary>
         [JsonProperty(PropertyName = "Condition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Condition")]
         [DefaultValue(default(ServiceRestartCondition))]
         public ServiceRestartCondition Condition { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Deplay between restart attempts (nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Delay", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Delay")]
         [DefaultValue(null)]
         public long? Delay { get; set; }
 
@@ -37,6 +40,7 @@ namespace Neon.Docker
         /// Specifies the maximum number of container restart attempts before giving up.
         /// </summary>
         [JsonProperty(PropertyName = "MaxAttempts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "MaxAttempts")]
         [DefaultValue(null)]
         public long? MaxAttempts { get; set; }
 
@@ -45,6 +49,7 @@ namespace Neon.Docker
         /// enavluated (nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Window", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Window")]
         [DefaultValue(null)]
         public long? Window { get; set; }
 

@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Service constraints formatted as <b>CONSTRAINT==VALUE</b> or <b>CONSTRAINT!=VALUE</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Constraints", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Constraints")]
         [DefaultValue(null)]
         public List<string> Constraints { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Service placement preferences.
         /// </summary>
         [JsonProperty(PropertyName = "Preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Preferences")]
         [DefaultValue(null)]
         public ServicePlacementPreferences Preferences { get; set; }
 
@@ -38,6 +41,7 @@ namespace Neon.Docker
         /// when there is no constraints.
         /// </summary>
         [JsonProperty(PropertyName = "Platforms", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Platforms")]
         [DefaultValue(null)]
         public List<ServicePlatform> Platforms { get; set; }
 

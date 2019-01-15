@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// The port name.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Name")]
         [DefaultValue(null)]
         public string Name { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Specifies the port protocol.
         /// </summary>
         [JsonProperty(PropertyName = "Protocol", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Protocol")]
         [DefaultValue(default(ServicePortProtocol))]
         public ServicePortProtocol Protocol { get; set; }
 
@@ -38,6 +41,7 @@ namespace Neon.Docker
         /// will be forwarded within the service containers.
         /// </summary>
         [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "TargetPort")]
         [DefaultValue(null)]
         public int TargetPort { get; set; }
 
@@ -46,6 +50,7 @@ namespace Neon.Docker
         /// external network.
         /// </summary>
         [JsonProperty(PropertyName = "PublishedPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "PublishedPort")]
         [DefaultValue(null)]
         public int PublishedPort { get; set; }
 
@@ -53,6 +58,7 @@ namespace Neon.Docker
         /// Specifies the port mode.
         /// </summary>
         [JsonProperty(PropertyName = "PublishMode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "PublishMode")]
         [DefaultValue(default(ServicePortMode))]
         public ServicePortMode PublishMode { get; set; }
 

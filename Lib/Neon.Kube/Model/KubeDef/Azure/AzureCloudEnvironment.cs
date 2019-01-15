@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
@@ -85,6 +86,7 @@ namespace Neon.Kube
         /// Identifies the Azure environment.  This defaults to <see cref="AzureCloudEnvironments.GlobalCloud"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Name")]
         [DefaultValue(AzureCloudEnvironments.GlobalCloud)]
         public AzureCloudEnvironments Name { get; set; } = AzureCloudEnvironments.GlobalCloud;
 
@@ -92,24 +94,28 @@ namespace Neon.Kube
         /// Environment authentication endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "AuthenticationEndpoint", Required = Required.AllowNull)]
+        [YamlMember(Alias = "AuthenticationEndpoint")]
         public string AuthenticationEndpoint { get; set; }
 
         /// <summary>
         /// Environment resource manager endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "ResourceManagerEndpoint", Required = Required.AllowNull)]
+        [YamlMember(Alias = "ResourceManagerEndpoint")]
         public string ResourceManagerEndpoint { get; set; }
 
         /// <summary>
         /// Environment graph endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "GraphEndpoint", Required = Required.AllowNull)]
+        [YamlMember(Alias = "GraphEndpoint")]
         public string GraphEndpoint { get; set; }
 
         /// <summary>
         /// Environment management endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "ManagementEnpoint", Required = Required.AllowNull)]
+        [YamlMember(Alias = "ManagementEnpoint")]
         public string ManagementEnpoint { get; set; }
 
         /// <summary>

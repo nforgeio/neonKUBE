@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// The Docker secret ID.
         /// </summary>
         [JsonProperty(PropertyName = "ConfigID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "ConfigID")]
         [DefaultValue(null)]
         public string ConfigID { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// The secret name.
         /// </summary>
         [JsonProperty(PropertyName = "ConfigName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "ConfigName")]
         [DefaultValue(null)]
         public string ConfigName { get; set; }
 
@@ -37,6 +40,7 @@ namespace Neon.Docker
         /// Secret file information.
         /// </summary>
         [JsonProperty(PropertyName = "File", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "File")]
         [DefaultValue(null)]
         public ServiceFile File { get; set; }
 

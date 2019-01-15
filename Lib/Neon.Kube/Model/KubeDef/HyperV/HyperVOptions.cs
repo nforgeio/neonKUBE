@@ -9,6 +9,7 @@ using System.Diagnostics.Contracts;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
@@ -17,8 +18,7 @@ namespace Neon.Kube
     /// </summary>
     public class HyperVOptions
     {
-        private const string defaultHostVhdxUri      = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx";
-        internal const string defaultVmMinimumMemory = "2GB";
+        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx";
 
         /// <summary>
         /// Default constructor.
@@ -43,6 +43,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "HostVhdxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "HostVhdxUri")]
         [DefaultValue(defaultHostVhdxUri)]
         public string HostVhdxUri { get; set; } = defaultHostVhdxUri;
 

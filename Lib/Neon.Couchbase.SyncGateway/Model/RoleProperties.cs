@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 
@@ -39,12 +40,14 @@ namespace Neon.Couchbase.SyncGateway
         /// The role name within the database.
         /// </summary>
         [JsonProperty(PropertyName = "Name")]
+        [YamlMember(Alias = "Name")]
         public string Name { get; set; }
 
         /// <summary>
         /// Lists the channels explicitly made accessable to members of the role.
         /// </summary>
         [JsonProperty(PropertyName = "AdminChannels")]
+        [YamlMember(Alias = "AdminChannels")]
         public List<string> AdminChannels { get; set; } = new List<string>();
 
         /// <summary>
@@ -53,6 +56,7 @@ namespace Neon.Couchbase.SyncGateway
         /// special access by the Sync Gateway sync function.
         /// </summary>
         [JsonProperty(PropertyName = "AllChannels")]
+        [YamlMember(Alias = "AllChannels")]
         public List<string> AllChannels { get; set; } = new List<string>();
     }
 }

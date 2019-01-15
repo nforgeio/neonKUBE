@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Label descriptor, such as: engine.labels.az
         /// </summary>
         [JsonProperty(PropertyName = "SpreadDescriptor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "SpreadDescriptor")]
         [DefaultValue(null)]
         public string SpreadDescriptor { get; set; }
 

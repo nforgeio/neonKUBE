@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -24,6 +25,7 @@ namespace Neon.Docker
         /// Update index for the service when the <see cref="ServiceDetails"/> snapshot was taken.
         /// </summary>
         [JsonProperty(PropertyName = "Index", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Index")]
         [DefaultValue(0)]
         public long Index { get; set; }
 

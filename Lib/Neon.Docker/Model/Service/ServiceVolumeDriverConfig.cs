@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Name of the volume driver.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Name")]
         [DefaultValue(null)]
         public string Name { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Volume driver options.
         /// </summary>
         [JsonProperty(PropertyName = "Options", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Options")]
         [DefaultValue(null)]
         public Dictionary<string, string> Options { get; set; }
 

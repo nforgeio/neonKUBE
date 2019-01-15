@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Identifies the setting.
         /// </summary>
         [JsonProperty(PropertyName = "Kind", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Kind")]
         [DefaultValue(null)]
         public string Kind { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// The setting value <c>long</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Value")]
         [DefaultValue(null)]
         public long Value { get; set; }
 

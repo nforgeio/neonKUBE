@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Specifies the service endpoint mode and ports to be exposed.
         /// </summary>
         [JsonProperty(PropertyName = "Spec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Spec")]
         [DefaultValue(null)]
         public ServiceEndpointSpec Spec { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Details the network ports actually exposed by the service tasks.
         /// </summary>
         [JsonProperty(PropertyName = "Ports", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Ports")]
         [DefaultValue(null)]
         public List<ServiceEndpointPortConfig> Ports { get; set; }
 
@@ -38,6 +41,7 @@ namespace Neon.Docker
         /// attached networks.
         /// </summary>
         [JsonProperty(PropertyName = "VirtualIPs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "VirtualIPs")]
         [DefaultValue(null)]
         public List<ServiceVirtualIP> VirtualIPs { get; set; }
 

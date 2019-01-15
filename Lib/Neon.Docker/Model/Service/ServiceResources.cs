@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Specifies resource limits for service containers.
         /// </summary>
         [JsonProperty(PropertyName = "Limits", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Limits")]
         [DefaultValue(null)]
         public ServiceResourceSettings Limits { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Specifies resource reservations for service containers.
         /// </summary>
         [JsonProperty(PropertyName = "Reservations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Reservations")]
         [DefaultValue(null)]
         public ServiceResourceSettings Reservations { get; set; }
 

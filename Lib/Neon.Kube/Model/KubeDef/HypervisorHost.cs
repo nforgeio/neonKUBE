@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
@@ -37,6 +38,7 @@ namespace Neon.Kube
         /// to specify where a cluster node is to be provisioned.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Name")]
         [DefaultValue(null)]
         public string Name { get; set; }
 
@@ -44,6 +46,7 @@ namespace Neon.Kube
         /// The IP address or FQDN of the hypervisor machine.
         /// </summary>
         [JsonProperty(PropertyName = "Address", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Address")]
         [DefaultValue(null)]
         public string Address { get; set; }
 
@@ -52,6 +55,7 @@ namespace Neon.Kube
         /// overrides <see cref="HostingOptions.VmHostUsername"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Username")]
         [DefaultValue(null)]
         public string Username { get; set; }
 
@@ -60,6 +64,7 @@ namespace Neon.Kube
         /// overrides <see cref="HostingOptions.VmHostPassword"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Password")]
         [DefaultValue(null)]
         public string Password { get; set; }
 
