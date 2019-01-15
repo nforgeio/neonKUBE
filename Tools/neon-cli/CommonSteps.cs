@@ -220,8 +220,7 @@ TCPKeepAlive yes
             {
                 sb.AppendLine($"NEON_NODE_ROLE={node.Metadata.Role}");
                 sb.AppendLine($"NEON_NODE_IP={node.Metadata.PrivateAddress}");
-                sb.AppendLine($"NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}");
-                sb.AppendLine($"NEON_NODE_SWAP={node.Metadata.Labels.ComputeSwap.ToString().ToLowerInvariant()}");
+                sb.AppendLine($"NEON_NODE_HDD={node.Metadata.Labels.StorageHDD.ToString().ToLowerInvariant()}");
             }
 
             var sbNameservers = new StringBuilder();
@@ -239,7 +238,6 @@ TCPKeepAlive yes
             sb.AppendLine($"NEON_SCRIPTS_FOLDER={KubeHostFolders.Scripts}");
             sb.AppendLine($"NEON_SECRETS_FOLDER={KubeHostFolders.Secrets}");
             sb.AppendLine($"NEON_SETUP_FOLDER={KubeHostFolders.Setup}");
-            sb.AppendLine($"NEON_SOURCE_FOLDER={KubeHostFolders.Source}");
             sb.AppendLine($"NEON_STATE_FOLDER={KubeHostFolders.State}");
             sb.AppendLine($"NEON_TMPFS_FOLDER={KubeHostFolders.Tmpfs}");
             sb.AppendLine($"NEON_TOOLS_FOLDER={KubeHostFolders.Tools}");

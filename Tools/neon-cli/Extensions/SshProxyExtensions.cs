@@ -318,7 +318,6 @@ namespace NeonCli
             preprocessReader.Set("load-cluster-conf-quiet", KubeHostFolders.Config + "/cluster.conf.sh");
 
             SetBashVariable(preprocessReader, "cluster.provisioner", clusterDefinition.Provisioner);
-            SetBashVariable(preprocessReader, "cluster.rootuser", Program.MachineUsername);
 
             SetBashVariable(preprocessReader, "node.driveprefix", clusterDefinition.DrivePrefix);
 
@@ -329,7 +328,6 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.folders.scripts", KubeHostFolders.Scripts);
             SetBashVariable(preprocessReader, "neon.folders.secrets", KubeHostFolders.Secrets);
             SetBashVariable(preprocessReader, "neon.folders.setup", KubeHostFolders.Setup);
-            SetBashVariable(preprocessReader, "neon.folders.source", KubeHostFolders.Source);
             SetBashVariable(preprocessReader, "neon.folders.state", KubeHostFolders.State);
             SetBashVariable(preprocessReader, "neon.folders.tmpfs", KubeHostFolders.Tmpfs);
             SetBashVariable(preprocessReader, "neon.folders.tools", KubeHostFolders.Tools);

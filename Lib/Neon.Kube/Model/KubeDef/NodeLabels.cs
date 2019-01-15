@@ -138,9 +138,9 @@ namespace Neon.Kube
         public const string LabelStorageLocal = ClusterDefinition.ReservedLabelPrefix + ".storage.local";
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageSSD"/>.
+        /// Reserved label name for <see cref="StorageHDD"/>.
         /// </summary>
-        public const string LabelStorageSSD = ClusterDefinition.ReservedLabelPrefix + ".storage.ssd";
+        public const string LabelStorageHDD = ClusterDefinition.ReservedLabelPrefix + ".storage.hdd";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageRedundant"/>.
@@ -172,14 +172,14 @@ namespace Neon.Kube
         public bool StorageLocal { get; set; } = true;
 
         /// <summary>
-        /// <b>io.neonkube/storage.ssd</b> [<c>bool</c>]: Indicates that the storage is backed
-        /// by SSDs as opposed to rotating hard drive.  This defaults to <c>false</c> for 
+        /// <b>io.neonkube/storage.hdd</b> [<c>bool</c>]: Indicates that the storage is backed
+        /// by a spinning drive as opposed to a SSD.  This defaults to <c>false</c> for 
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
-        [JsonProperty(PropertyName = "StorageSSD", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageSSD")]
+        [JsonProperty(PropertyName = "StorageHDD", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "StorageHDD")]
         [DefaultValue(false)]
-        public bool StorageSSD { get; set; } = false;
+        public bool StorageHDD { get; set; } = false;
 
         /// <summary>
         /// <b>io.neonkube/storage.redundant</b> [<c>bool</c>]: Indicates that the storage is redundant.  This
@@ -215,11 +215,6 @@ namespace Neon.Kube
         public const string LabelComputeRamMB = ClusterDefinition.ReservedLabelPrefix + ".compute.ram_mb";
 
         /// <summary>
-        /// Reserved label name for <see cref="ComputeSwap"/>.
-        /// </summary>
-        public const string LabelComputeSwap = ClusterDefinition.ReservedLabelPrefix + ".compute.swap";
-
-        /// <summary>
         /// <b>io.neonkube/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
         /// This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
@@ -238,15 +233,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "ComputeRamMB")]
         [DefaultValue(0)]
         public int ComputeRamMB { get; set; } = 0;
-
-        /// <summary>
-        /// <b>io.neonkube/compute.swap</b> [<c>bool</c>]: Specifies whether the node operating system may
-        /// swap RAM to the file system.  This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "ComputeSwap", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ComputeSwap")]
-        [DefaultValue(false)]
-        public bool ComputeSwap { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Define physical host labels.
@@ -454,13 +440,12 @@ namespace Neon.Kube
 
                 list.Add(new KeyValuePair<string, object>(LabelStorageCapacityGB,       StorageCapacityGB));
                 list.Add(new KeyValuePair<string, object>(LabelStorageLocal,            StorageLocal));
-                list.Add(new KeyValuePair<string, object>(LabelStorageSSD,              StorageSSD));
+                list.Add(new KeyValuePair<string, object>(LabelStorageHDD,              StorageHDD));
                 list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,        StorageRedundant));
                 list.Add(new KeyValuePair<string, object>(LabelStorageEphemeral,        StorageEphemeral));
 
                 list.Add(new KeyValuePair<string, object>(LabelComputeCores,            ComputeCores));
                 list.Add(new KeyValuePair<string, object>(LabelComputeRamMB,            ComputeRamMB));
-                list.Add(new KeyValuePair<string, object>(LabelComputeSwap,             ComputeSwap));
 
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalLocation,        PhysicalLocation));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,         PhysicalMachine));
@@ -528,13 +513,12 @@ namespace Neon.Kube
 
                     case LabelStorageCapacityGB:        ParseCheck(label, () => { node.Labels.StorageCapacityGB = int.Parse(label.Value); }); break;
                     case LabelStorageLocal:             node.Labels.StorageLocal = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageSSD:               node.Labels.StorageSSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageHDD:               node.Labels.StorageHDD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelStorageRedundant:         node.Labels.StorageRedundant = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelStorageEphemeral:         node.Labels.StorageEphemeral = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
                     case LabelComputeCores:             ParseCheck(label, () => { node.Labels.ComputeCores = int.Parse(label.Value); }); break;
                     case LabelComputeRamMB:             ParseCheck(label, () => { node.Labels.ComputeRamMB = int.Parse(label.Value); }); break;
-                    case LabelComputeSwap:              node.Labels.ComputeSwap = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
                     case LabelPhysicalLocation:         node.Labels.PhysicalLocation = label.Value; break;
                     case LabelPhysicalMachine:          node.Labels.PhysicalMachine = label.Value;  break;
@@ -589,13 +573,12 @@ namespace Neon.Kube
 
             target.StorageCapacityGB    = this.StorageCapacityGB;
             target.StorageLocal         = this.StorageLocal;
-            target.StorageSSD           = this.StorageSSD;
+            target.StorageHDD           = this.StorageHDD;
             target.StorageRedundant     = this.StorageRedundant;
             target.StorageEphemeral     = this.StorageEphemeral;
 
             target.ComputeCores         = this.ComputeCores;
             target.ComputeRamMB         = this.ComputeRamMB;
-            target.ComputeSwap          = this.ComputeSwap;
 
             target.PhysicalLocation     = this.PhysicalLocation;
             target.PhysicalMachine      = this.PhysicalMachine;

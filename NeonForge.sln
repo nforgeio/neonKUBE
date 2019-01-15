@@ -136,6 +136,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.HyperV", "Lib\Neon.Hyp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xen", "Lib\Neon.Xen\Neon.Xen.csproj", "{1A6C061D-83FD-4B53-8E96-80A1546C8F4B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home", "home", "{E4CB108C-A8C4-4B30-A07E-44D56027B98B}"
+	ProjectSection(SolutionItems) = preProject
+		Devops\home\large.cluster.yaml = Devops\home\large.cluster.yaml
+		Devops\home\small.cluster.yaml = Devops\home\small.cluster.yaml
+		Devops\home\tiny.cluster.yaml = Devops\home\tiny.cluster.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
@@ -538,6 +545,7 @@ Global
 		{08B7000C-F261-4543-B611-5710D12263DB} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{2E9E803A-1422-42E7-8472-4E15EDFC7002} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{1A6C061D-83FD-4B53-8E96-80A1546C8F4B} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
+		{E4CB108C-A8C4-4B30-A07E-44D56027B98B} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

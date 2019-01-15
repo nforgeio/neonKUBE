@@ -328,8 +328,8 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies host node options.
         /// </summary>
-        [JsonProperty(PropertyName = "NodeOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "NodeOptions")]
+        [JsonProperty(PropertyName = "Node", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Node")]
         [DefaultValue(null)]
         public NodeOptions NodeOptions { get; set; } = new NodeOptions();
 

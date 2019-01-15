@@ -1282,9 +1282,6 @@ namespace Neon.Kube
             SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Source}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Source}", RunOptions.LogOnErrorOnly);
-
             SudoCommand($"mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
 

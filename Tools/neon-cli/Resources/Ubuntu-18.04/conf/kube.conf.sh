@@ -110,7 +110,7 @@ if $summary ; then
     echo "NEON_NODE_ROLE                     = ${NEON_NODE_ROLE}" 1>&2
     echo "NEON_NODE_FS                       = ${NEON_NODE_FS}" 1>&2
     echo "NEON_NODE_IP                       = ${NEON_NODE_IP}" 1>&2
-    echo "NEON_NODE_SSD                      = ${NEON_NODE_SSD}" 1>&2
+    echo "NEON_NODE_HDD                      = ${NEON_NODE_HDD}" 1>&2
     echo "NEON_NODE_SWAP                     = ${NEON_NODE_SWAP}" 1>&2
     echo "NEON_UPSTREAM_DNS                  = ${NEON_UPSTREAM_DNS}" 1>&2
     echo "NEON_APT_PROXY                     = ${NEON_APT_PROXY}" 1>&2

@@ -39,7 +39,7 @@ echo "**********************************************" 1>&2
 
 startsetup ssd
 
-if ${NEON_NODE_SSD} ; then
+if ! ${NEON_NODE_HDD} ; then
 
     echo "*** BEGIN: Tuning for SSD" 1>&2
 
