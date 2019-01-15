@@ -507,7 +507,7 @@ namespace Neon.Kube
                 // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
 
                 var updateInterval = TimeSpan.FromSeconds(2);
-                var stopwatch      = new Stopwatch();
+                var stopwatch = new Stopwatch();
 
                 stopwatch.Start();
 
@@ -550,10 +550,10 @@ namespace Neon.Kube
 
                 // Create the virtual machine if it doesn't already exist.
 
-                var processors     = node.Metadata.GetVmProcessors(cluster.Definition);
-                var memoryBytes    = node.Metadata.GetVmMemory(cluster.Definition);
+                var processors = node.Metadata.GetVmProcessors(cluster.Definition);
+                var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
                 var minMemoryBytes = node.Metadata.GetVmMinimumMemory(cluster.Definition);
-                var diskBytes      = node.Metadata.GetVmDisk(cluster.Definition);
+                var diskBytes = node.Metadata.GetVmDisk(cluster.Definition);
 
                 node.Status = $"create virtual machine";
                 hyperv.AddVM(
@@ -575,12 +575,9 @@ namespace Neon.Kube
 
                 node.Status = $"fetch ip address";
 
-                var adapters  = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
-                var adapter   = adapters.FirstOrDefault();
-                var address   = adapter.Addresses.First();
-                var subnet    = NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet);
-                var gateway   = cluster.Definition.Network.Gateway;
-                var broadcast = cluster.Definition.Network.Broadcast;
+                var adapters = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
+                var adapter = adapters.FirstOrDefault();
+                var address = adapter.Addresses.First();
 
                 if (adapter == null)
                 {
@@ -590,7 +587,7 @@ namespace Neon.Kube
                 // We're going to temporarily set the node to the current VM address
                 // so we can connect via SSH.
 
-                var savedNodeAddress = node.PrivateAddress;
+                var nodePrivateAddress = node.PrivateAddress;
 
                 try
                 {
@@ -605,55 +602,19 @@ namespace Neon.Kube
 
                         nodeProxy.CreateHostFolders();
 
-                        // Replace the [/etc/network/interfaces] file to configure the static
-                        // IP and then reboot to reinitialize networking subsystem.
+                        // Configure the node's network stack to the static IP address
+                        // and upstream nameservers.
+
+                        node.Status = $"network config [IP={node.PrivateAddress}]";
 
                         var primaryInterface = node.GetNetworkInterface(address);
 
-                        node.Status = $"set static ip [{savedNodeAddress}]";
-
-                        var interfacesText =
-$@"# This file describes the network interfaces available on your system
-# and how to activate them. For more information, see interfaces(5).
-
-source /etc/network/interfaces.d/*
-
-# The loopback network interface
-auto lo
-iface lo inet loopback
-
-# The primary network interface
-auto {primaryInterface}
-iface {primaryInterface} inet static
-address {savedNodeAddress}
-netmask {subnet.Mask}
-gateway {gateway}
-broadcast {broadcast}
-";
-                        nodeProxy.UploadText("/etc/network/interfaces", interfacesText);
-
-                        // Temporarily configure the public Google DNS servers as
-                        // the name servers so DNS will work after we reboot with
-                        // the static IP.  Note that cluster setup will eventually
-                        // configure the name servers specified in the cluster
-                        // definition.
-
-                        // $todo(jeff.lill):
-                        //
-                        // Is there a good reason why we're not just configuring the
-                        // DNS servers from the cluster definition here???
-                        //
-                        // Using the Google DNS seems like it could break some cluster
-                        // network configurations (e.g. for clusters that don't have
-                        // access to the public Internet).  Totally private clusters
-                        // aren't really a supported scenario right now though because
-                        // we assume we can use [apt-get]... to pull down packages.
-
-                        var resolvBaseText =
-$@"nameserver 8.8.8.8
-nameserver 8.8.4.4
-";
-                        nodeProxy.UploadText("/etc/resolvconf/resolv.conf.d/base", resolvBaseText);
+                        node.ConfigureNetwork(
+                            primaryInterface,
+                            nodePrivateAddress,
+                            IPAddress.Parse(cluster.Definition.Network.Gateway),
+                            NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet),
+                            cluster.Definition.Network.Nameservers.Select(ns => IPAddress.Parse(ns)));
 
                         // Extend the primary partition and file system to fill 
                         // the virtual the drive. 
@@ -668,8 +629,8 @@ nameserver 8.8.4.4
                         // to delay for a few seconds before performing the operations.
 
                         Thread.Sleep(TimeSpan.FromSeconds(5));
-                        nodeProxy.SudoCommand("growpart /dev/sda 1");
-                        nodeProxy.SudoCommand("resize2fs /dev/sda1");
+                        nodeProxy.SudoCommand("growpart /dev/sda 2");
+                        nodeProxy.SudoCommand("resize2fs /dev/sda2");
 
                         // Reboot to pick up the changes.
 
@@ -681,7 +642,7 @@ nameserver 8.8.4.4
                 {
                     // Restore the node's IP address.
 
-                    node.PrivateAddress = savedNodeAddress;
+                    node.PrivateAddress = nodePrivateAddress;
                 }
             }
         }

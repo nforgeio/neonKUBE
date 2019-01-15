@@ -537,7 +537,7 @@ namespace Neon.HyperV
                             Name = rawSwitch.Name
                         };
 
-                    switch (rawSwitch.SwitchType)
+                    switch (rawSwitch.SwitchType.Value)
                     {
                         case "Internal":
 

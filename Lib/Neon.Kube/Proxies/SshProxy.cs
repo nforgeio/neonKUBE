@@ -284,7 +284,9 @@ namespace Neon.Kube
         {
             var sshProxy = new SshProxy<TMetadata>(Name, PublicAddress, PrivateAddress, credentials)
             {
-                Metadata = this.Metadata
+                Metadata  = this.Metadata,
+                OsName    = this.OsName,
+                OsVersion = this.OsVersion
             };
 
             var connectionInfo = GetConnectionInfo();
@@ -294,6 +296,26 @@ namespace Neon.Kube
 
             return sshProxy;
         }
+
+        /// <summary>
+        /// <para>
+        /// Returns the name of the remote operating system (e.g. "Ubuntu").
+        /// </para>
+        /// <note>
+        /// This is only valid after a connection has been established.
+        /// </note>
+        /// </summary>
+        public string OsName { get; private set; }
+
+        /// <summary>
+        /// <para>
+        /// Returns the version of the remote operating system (e.g. "18.04.1").
+        /// </para>
+        /// <note>
+        /// This is only valid after a connection has been established.
+        /// </note>
+        /// </summary>
+        public Version OsVersion { get; private set; }
 
         /// <summary>
         /// Performs an action on a new thread, killing the thread if it hasn't
@@ -958,6 +980,66 @@ namespace Neon.Kube
             }
 
             Status = "online";
+
+            // Determine the remote operating name and version by examining the
+            // [/etc/os-release] file.  This should look something like:
+            //
+            //    NAME="Ubuntu"
+            //    VERSION="18.04.1 LTS (Bionic Beaver)"
+            //    ID=ubuntu
+            //    ID_LIKE=debian
+            //    PRETTY_NAME="Ubuntu 18.04.1 LTS"
+            //    VERSION_ID="18.04"
+            //    HOME_URL="https://www.ubuntu.com/"
+            //    SUPPORT_URL="https://help.ubuntu.com/"
+            //    BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+            //    PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+            //    VERSION_CODENAME=bionic
+            //    UBUNTU_CODENAME=bionic
+
+            var osRelease = DownloadText("/etc/os-release");
+
+            using (var reader = new StringReader(osRelease))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    var split = line.Split(new char[] { '=' }, 2);
+
+                    if (split.Length < 2)
+                    {
+                        continue;
+                    }
+
+                    var name  = split[0];
+                    var value = split[1];
+
+                    switch (name)
+                    {
+                        case "NAME":
+
+                            OsName = value.Replace("\"", string.Empty);
+                            break;
+
+                        case "VERSION":
+
+                            var version = value.Replace("\"", string.Empty);
+                            var pSpace  = version.IndexOf(' ');
+
+                            if (pSpace != -1)
+                            {
+                                version = version.Substring(0, pSpace);
+                            }
+
+                            OsVersion = new Version(version);
+                            break;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -3001,6 +3083,158 @@ echo $? > {cmdFolder}/exit
             var epochSeconds = long.Parse(response.OutputText.Trim());
 
             return NeonHelper.UnixEpoch + TimeSpan.FromSeconds(epochSeconds);
+        }
+
+        /// <summary>
+        /// Configures a network interface's IP address, mask, nameservers, etc.
+        /// </summary>
+        /// <param name="networkInterface">Identifies the network interface.</param>
+        /// <param name="address">The IPv4 address.</param>
+        /// <param name="gateway">The IPv4 default gateway.</param>
+        /// <param name="subnet">The subnet.</param>
+        /// <param name="nameservers">The optional list of IPv4 nameservers.</param>
+        /// <remarks>
+        /// <note>
+        /// This method <b>doesn't</b> immediately apply the changes because
+        /// that would break the SSH connection.  You'll typically need to
+        /// reboot the remote machine to accomplish this.
+        /// </note>
+        /// </remarks>
+        public void ConfigureNetwork(
+            string networkInterface,
+            IPAddress address,
+            IPAddress gateway,
+            NetworkCidr subnet,
+            IEnumerable<IPAddress> nameservers)
+        {
+            switch (OsName.ToLowerInvariant())
+            {
+                case "ubuntu":
+
+                    if (OsVersion.Major == 16)
+                    {
+                        ConfigureNetwork_Ubuntu1604(networkInterface, address, gateway, subnet, nameservers);
+                    }
+                    else if (OsVersion.Major >= 18)
+                    {
+                        // We'll assume for now that all versions of Ubuntu after 18.04 work
+                        // the same way (until something changes).
+
+                        ConfigureNetwork_Ubuntu1804(networkInterface, address, gateway, subnet, nameservers);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException($"Cannot configure the network for [{OsName} {OsVersion}]");
+                    }
+
+                    break;
+
+                default:
+
+                    throw new NotSupportedException($"Cannot configure the network for [{OsName} {OsVersion}]");
+            }
+        }
+
+        /// <summary>
+        /// Configures a network interface's IP address, mask, nameservers, etc.
+        /// for an Ubuntu 16.04 machine.
+        /// </summary>
+        /// <param name="networkInterface">Identifies the network interface.</param>
+        /// <param name="address">The IPv4 address.</param>
+        /// <param name="gateway">The IPv4 default gateway.</param>
+        /// <param name="subnet">The subnet.</param>
+        /// <param name="nameservers">The optional list of IPv4 nameservers.</param>
+        /// <remarks>
+        /// <note>
+        /// This method <b>doesn't</b> immediately apply the changes because
+        /// that would break the SSH connection.  You'll typically need to
+        /// reboot the remote machine to accomplish this.
+        /// </note>
+        /// </remarks>
+        private void ConfigureNetwork_Ubuntu1604(
+            string                  networkInterface,
+            IPAddress               address,
+            IPAddress               gateway,
+            NetworkCidr             subnet,
+            IEnumerable<IPAddress>  nameservers)
+        {
+            var interfacesText =
+$@"# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto {networkInterface}
+iface {networkInterface} inet static
+address {address}
+netmask {subnet.Mask}
+gateway {gateway}
+broadcast {subnet.LastAddress}
+";
+            UploadText("/etc/network/interfaces", interfacesText);
+
+            var sbResolveBaseText = new StringBuilder();
+
+            foreach (var nameserver in nameservers)
+            {
+                sbResolveBaseText.AppendLine($"nameserver {nameserver}");
+            }
+
+            UploadText("/etc/resolvconf/resolv.conf.d/base", sbResolveBaseText.ToString());
+        }
+
+        /// <summary>
+        /// Configures a network interface's IP address, mask, nameservers, etc.
+        /// for an Ubuntu 18.04 machine.
+        /// </summary>
+        /// <param name="networkInterface">Identifies the network interface.</param>
+        /// <param name="address">The IPv4 address.</param>
+        /// <param name="gateway">The IPv4 default gateway.</param>
+        /// <param name="subnet">The subnet.</param>
+        /// <param name="nameservers">The optional list of IPv4 nameservers.</param>
+        /// <remarks>
+        /// <note>
+        /// This method <b>doesn't</b> immediately apply the changes because
+        /// that would break the SSH connection.  You'll typically need to
+        /// reboot the remote machine to accomplish this.
+        /// </note>
+        /// </remarks>
+        private void ConfigureNetwork_Ubuntu1804(
+            string networkInterface,
+            IPAddress address,
+            IPAddress gateway,
+            NetworkCidr subnet,
+            IEnumerable<IPAddress> nameservers = null)
+        {
+            var sbNameservers = new StringBuilder();
+
+            foreach (var nameserver in nameservers)
+            {
+                sbNameservers.AppendWithSeparator(nameserver.ToString(), ",");
+            }
+
+            var cloudInitYaml =
+$@"# This file is generated from information provided by
+# the datasource.  Changes to it will not persist across an instance.
+# To disable cloud-init's network configuration capabilities, write a file
+# /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg with the following:
+# network: {{config: disabled}}
+network:
+    ethernets:
+        {networkInterface}:
+            addresses: [{address}/{subnet.PrefixLength}]
+            gateway4: {gateway}
+            nameservers:
+              addresses: [{sbNameservers}]
+            dhcp4: no
+    version: 2
+";
+            UploadText("/etc/netplan/50-cloud-init.yaml", cloudInitYaml);
         }
 
         /// <inheritdoc/>

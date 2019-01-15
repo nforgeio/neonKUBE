@@ -92,16 +92,6 @@ namespace Neon.Kube
         public string Gateway { get; set; } = null;
 
         /// <summary>
-        /// Specifies the default network broadcast address to be configured for hosts.  This defaults to the last
-        /// address in the <see cref="PremiseSubnet"/>.  For example, for the <b>10.0.0.0/24</b> subnet, this will 
-        /// be set to <b>10.0.0.255</b>.  This is ignored for cloud hosting environments.
-        /// </summary>
-        [JsonProperty(PropertyName = "Broadcast", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Broadcast", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string Broadcast { get; set; } = null;
-
-        /// <summary>
         /// Used for checking subnet conflicts below.
         /// </summary>
         private class SubnetDefinition
@@ -179,26 +169,6 @@ namespace Neon.Kube
             if (!premiseCidr.Contains(gateway))
             {
                 throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodeSubnet)}={NodeSubnet}] subnet.");
-            }
-
-            // Verify [Broadcast]
-
-            if (string.IsNullOrEmpty(Broadcast))
-            {
-                // Default to the first valid address of the cluster nodes subnet 
-                // if this isn't already set.
-
-                Broadcast = premiseCidr.LastAddress.ToString();
-            }
-
-            if (!IPAddress.TryParse(Broadcast, out var broadcast) || broadcast.AddressFamily != AddressFamily.InterNetwork)
-            {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] is not a valid IPv4 address.");
-            }
-
-            if (!premiseCidr.Contains(broadcast))
-            {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodeSubnet)}={NodeSubnet}] subnet.");
             }
 
             // Verify [NodeSubnet].
