@@ -124,7 +124,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Google", "Lib\Neo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.HyperV", "Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj", "{803A4763-4B6E-42AF-ADBB-61227369B5AE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.HyperVDev", "Lib\Neon.Kube.HyperVDev\Neon.Kube.HyperVDev.csproj", "{8B2B63BA-AC1F-4F34-AE1A-ED4C08642E82}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.HyperVLocal", "Lib\Neon.Kube.HyperVLocal\Neon.Kube.HyperVLocal.csproj", "{8B2B63BA-AC1F-4F34-AE1A-ED4C08642E82}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Machine", "Lib\Neon.Kube.Machine\Neon.Kube.Machine.csproj", "{FC110EBB-25E9-49AC-9D21-DBD956090ED1}"
 EndProject

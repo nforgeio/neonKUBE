@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -38,6 +39,42 @@ namespace Neon.Common
             }
         }
 
+        /// <summary>
+        /// Customizes <c>enum</c> type conversions to/from strings recognizing
+        /// <c>[EnumMember]</c> attributes when present.
+        /// </summary>
+        private class YamlEnumTypeConverter : IYamlTypeConverter
+        {
+            /// <inheritdoc/>
+            public bool Accepts(Type type)
+            {
+                return type.IsEnum;
+            }
+
+            /// <inheritdoc/>
+            public object ReadYaml(IParser parser, Type type)
+            {
+                var scaler = parser.Current as Scalar;
+
+                parser.MoveNext();
+
+                if (TryParseEnum(type, scaler.Value, out var output))
+                {
+                    return output;
+                }
+                else
+                {
+                    throw new InvalidDataException($"Cannot parse enumeration: {type.FullName}={scaler.Value}");
+                }
+            }
+
+            /// <inheritdoc/>
+            public void WriteYaml(IEmitter emitter, object value, Type type)
+            {
+                emitter.Emit(new Scalar(null, NeonHelper.EnumToString(type, value)));
+            }
+        }
+
         //---------------------------------------------------------------------
         // Implementation
 
@@ -46,6 +83,28 @@ namespace Neon.Common
                 () =>
                 {
                     return new SerializerBuilder()
+
+                        // Note that we need to emit default values because it appears
+                        // that YamlDotNet does not recognize the [DefaultValue] attributes
+                        // and instead won't emit anything for zero values.  This means
+                        // that without this, zero integers, doubles, null strings or
+                        // enums with 0 values won't be emitted by default.
+                        //
+                        // Issues:
+                        //
+                        //      https://github.com/aaubry/YamlDotNet/issues/251
+                        //      https://github.com/aaubry/YamlDotNet/issues/298
+
+                        .EmitDefaults()
+
+                        // We also need a custom type converter that honors [EnumMember]
+                        // attributes on enumeration values.
+                        //
+                        //      https://www.cyotek.com/blog/using-custom-type-converters-with-csharp-and-yamldotnet-part-1
+                        //      https://www.cyotek.com/blog/using-custom-type-converters-with-csharp-and-yamldotnet-part-2
+
+                        .WithTypeConverter(new YamlEnumTypeConverter())
+
                         .WithNamingConvention(new LowercaseYamlNamingConvention())
                         .Build();
                 });
@@ -55,6 +114,7 @@ namespace Neon.Common
                 () =>
                 {
                     return new DeserializerBuilder()
+                        .WithTypeConverter(new YamlEnumTypeConverter())
                         .WithNamingConvention(new LowercaseYamlNamingConvention())
                         .Build();
                 });
@@ -64,6 +124,7 @@ namespace Neon.Common
                 () =>
                 {
                     return new DeserializerBuilder()
+                        .WithTypeConverter(new YamlEnumTypeConverter())
                         .WithNamingConvention(new LowercaseYamlNamingConvention())
                         .IgnoreUnmatchedProperties()
                         .Build();

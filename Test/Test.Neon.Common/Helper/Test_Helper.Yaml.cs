@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Runtime.Serialization;
 
 using Neon.Common;
 using Neon.Xunit;
@@ -17,10 +18,22 @@ namespace TestCommon
 {
     public partial class Test_Helper
     {
+        public enum YamlGender
+        {
+            Unknown = 0,
+
+            [EnumMember(Value = "gender-female")]
+            Female,
+
+            [EnumMember(Value = "gender-male")]
+            Male,
+        }
+
         public class YamlPerson
         {
             public string Name { get; set; }
             public int Age { get; set; }
+            public YamlGender Gender { get; set; }
         }
 
         [Fact]
@@ -31,7 +44,8 @@ namespace TestCommon
                 new YamlPerson()
                 {
                     Name = "Jeff",
-                    Age  = 56
+                    Age  = 56,
+                    Gender = YamlGender.Unknown
                 };
 
             // Verify that the property names were converted to lowercase.
@@ -40,6 +54,7 @@ namespace TestCommon
 
             Assert.Contains("name: Jeff", yaml);
             Assert.Contains("age: 56", yaml);
+            Assert.Contains("gender: Unknown", yaml);
 
             // Verify that we can deserialize.
 
@@ -47,6 +62,36 @@ namespace TestCommon
 
             Assert.Equal("Jeff", after.Name);
             Assert.Equal(56, after.Age);
+            Assert.Equal(YamlGender.Unknown, after.Gender);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void YamlEnumMember()
+        {
+            // Verify that we recognize [EnumMember] attributes.
+
+            var before =
+                new YamlPerson()
+                {
+                    Name = "Jeff",
+                    Age = 56,
+                    Gender = YamlGender.Male
+                };
+
+            var yaml = NeonHelper.YamlSerialize(before);
+
+            Assert.Contains("name: Jeff", yaml);
+            Assert.Contains("age: 56", yaml);
+            Assert.Contains("gender: gender-male", yaml);
+
+            // Verify that we can deserialize.
+
+            var after = NeonHelper.YamlDeserialize<YamlPerson>(yaml);
+
+            Assert.Equal("Jeff", after.Name);
+            Assert.Equal(56, after.Age);
+            Assert.Equal(YamlGender.Male, after.Gender);
         }
 
         [Fact]
