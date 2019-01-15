@@ -3,10 +3,9 @@ Datacenter: woodinville
 Environment: development
 TimeSources:
 - pool.ntp.org
-DebugMode: true
 AllowUnitTesting: true
 Hosting:
-  Environment: local-hyper-v
+  Environment: hyper-v-local
   VmDriveFolder: D:\\VM
 NetworK:
   PremiseSubnet: 10.0.0.0/16

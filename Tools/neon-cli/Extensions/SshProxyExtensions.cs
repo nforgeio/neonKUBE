@@ -367,7 +367,7 @@ namespace NeonCli
                     throw new NotImplementedException("$todo(jeff.lill)");
 
                 case HostingEnvironments.HyperV:
-                case HostingEnvironments.HyperVDev:
+                case HostingEnvironments.HyperVLocal:
                 case HostingEnvironments.Machine:
                 case HostingEnvironments.Unknown:
                 case HostingEnvironments.XenServer:

@@ -47,7 +47,7 @@ namespace Neon.Kube
         /// The context properties.
         /// </summary>
         [JsonProperty(PropertyName = "context", Required = Required.Always)]
-        [YamlMember(Alias = "context, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "context", ApplyNamingConventions = false)]
         public KubeConfigContextProperties Properties { get; set; }
     }
 }

@@ -38,7 +38,7 @@ namespace Neon.Kube
     /// Manages cluster provisioning on the local workstation using Microsoft Hyper-V virtual machines.
     /// This is typically used for development and test purposes.
     /// </summary>
-    [HostingProvider(HostingEnvironments.HyperVDev)]
+    [HostingProvider(HostingEnvironments.HyperVLocal)]
     public class HyperVDevHostingManager : HostingManager
     {
         //---------------------------------------------------------------------

@@ -42,7 +42,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the subnet for entire host network for on-premise environments like
-        /// <see cref="HostingEnvironments.Machine"/>, <see cref="HostingEnvironments.HyperVDev"/> and
+        /// <see cref="HostingEnvironments.Machine"/>, <see cref="HostingEnvironments.HyperVLocal"/> and
         /// <see cref="HostingEnvironments.XenServer"/>.  This is required for those environments.
         /// </summary>
         [JsonProperty(PropertyName = "PremiseSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

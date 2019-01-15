@@ -210,7 +210,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
-        /// <see cref="HostingEnvironments.HyperV"/>, <see cref="HostingEnvironments.HyperVDev"/>,
+        /// <see cref="HostingEnvironments.HyperV"/>, <see cref="HostingEnvironments.HyperVLocal"/>,
         /// and <see cref="HostingEnvironments.XenServer"/> environments.
         /// </para>
         /// <para>
@@ -261,7 +261,7 @@ namespace Neon.Kube
                 switch (Environment)
                 {
                     case HostingEnvironments.HyperV:
-                    case HostingEnvironments.HyperVDev:
+                    case HostingEnvironments.HyperVLocal:
                     case HostingEnvironments.Machine:
                     case HostingEnvironments.XenServer:
 
@@ -310,7 +310,7 @@ namespace Neon.Kube
                     case HostingEnvironments.Aws:
                     case HostingEnvironments.Azure:
                     case HostingEnvironments.Google:
-                    case HostingEnvironments.HyperVDev:
+                    case HostingEnvironments.HyperVLocal:
                     case HostingEnvironments.Machine:
 
                         return false;
@@ -372,7 +372,7 @@ namespace Neon.Kube
                     HyperV.Validate(clusterDefinition);
                     break;
 
-                case HostingEnvironments.HyperVDev:
+                case HostingEnvironments.HyperVLocal:
 
                     HyperVDev = HyperVDev ?? new LocalHyperVOptions();
 

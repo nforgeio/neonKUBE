@@ -47,7 +47,7 @@ namespace Neon.Couchbase.SyncGateway
         /// The database server REST URI including the port (typically 8091).
         /// </summary>
         [JsonProperty(PropertyName = "Server")]
-        [YamlMember(Alias = "Server, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "Server", ApplyNamingConventions = false)]
         public string Server { get; set; }
 
         /// <summary>

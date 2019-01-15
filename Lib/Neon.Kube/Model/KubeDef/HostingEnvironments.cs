@@ -50,8 +50,8 @@ namespace Neon.Kube
         /// Microsoft Hyper-V hypervisor running on the local workstation
         /// (typically for development or test purposes).
         /// </summary>
-        [EnumMember(Value = "local-hyper-v")]
-        HyperVDev,
+        [EnumMember(Value = "hyper-v-local")]
+        HyperVLocal,
 
         /// <summary>
         /// Citrix XenServer hypervisor running on remote servers (typically

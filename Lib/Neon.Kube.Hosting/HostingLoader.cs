@@ -143,7 +143,7 @@ namespace Neon.Kube
                     return true;
 
                 case HostingEnvironments.HyperV:
-                case HostingEnvironments.HyperVDev:
+                case HostingEnvironments.HyperVLocal:
                 case HostingEnvironments.Machine:
                 case HostingEnvironments.XenServer:
 
