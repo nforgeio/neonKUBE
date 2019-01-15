@@ -31,9 +31,20 @@ namespace Neon.Kube
     /// </summary>
     public class NodeOptions
     {
+        private const OsUpgrade     defaultUpgrade                 = OsUpgrade.Full;
         private const int           defaultPasswordLength          = 20;
         private const bool          defaultAllowPackageManagerIPv6 = false;
         private const int           defaultPackageManagerRetries   = 5;
+
+        /// <summary>
+        /// Specifies whether the host node operating system should be upgraded
+        /// during hive preparation.  This defaults to <see cref="OsUpgrade.Full"/>
+        /// to pick up most criticial updates.
+        /// </summary>
+        [JsonProperty(PropertyName = "Upgrade", Required = Required.Default)]
+        [YamlMember(Alias = "Upgrade", ApplyNamingConventions = false)]
+        [DefaultValue(defaultUpgrade)]
+        public OsUpgrade Upgrade { get; set; } = defaultUpgrade;
 
         /// <summary>
         /// cluster hosts are configured with a random root account password.

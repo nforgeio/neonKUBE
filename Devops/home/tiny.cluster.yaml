@@ -5,14 +5,13 @@ TimeSources:
 - pool.ntp.org
 AllowUnitTesting: true
 Hosting:
-  Environment: hyper-v-local
+  Environment: hyperv-local
   VmDriveFolder: D:\\VM
-NetworK:
+Network:
   PremiseSubnet: 10.0.0.0/16
   NodesSubnet: 10.0.0.0/16
 Node:
    Upgrade: none
-   SshAuth: tls
    PasswordLength: 20
 Nodes:
    master-0:

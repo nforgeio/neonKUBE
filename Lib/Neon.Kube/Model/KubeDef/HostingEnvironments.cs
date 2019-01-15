@@ -43,14 +43,14 @@ namespace Neon.Kube
         /// Microsoft Hyper-V hypervisor running on remote servers
         /// (typically for production purposes).
         /// </summary>
-        [EnumMember(Value = "hyper-v")]
+        [EnumMember(Value = "hyperv")]
         HyperV,
 
         /// <summary>
         /// Microsoft Hyper-V hypervisor running on the local workstation
         /// (typically for development or test purposes).
         /// </summary>
-        [EnumMember(Value = "hyper-v-local")]
+        [EnumMember(Value = "hyperv-local")]
         HyperVLocal,
 
         /// <summary>
