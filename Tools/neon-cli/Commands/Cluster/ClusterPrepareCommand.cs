@@ -337,7 +337,7 @@ Server Requirements:
             // and configure OpenVPN on the manager nodes so that cluster setup will be
             // able to reach the nodes on all ports.
 
-            // Write the operation begin marker to all hive node logs.
+            // Write the operation begin marker to all cluster node logs.
 
             cluster.LogLine(logBeginMarker);
 
@@ -376,7 +376,7 @@ Server Requirements:
             
             if (!controller.Run())
             {
-                // Write the operation end/failed marker to all hive node logs.
+                // Write the operation end/failed marker to all cluster node logs.
 
                 cluster.LogLine(logFailedMarker);
 
@@ -384,60 +384,25 @@ Server Requirements:
                 Program.Exit(1);
             }
 
-            // Write the hive login file.
+            // Write the cluster context and extension.
 
-            var hiveLoginPath = Program.GetHiveLoginPath(HiveConst.RootUser, cluster.Definition.Name);
-            var hiveLogin     = new HiveLogin()
-            {
-                Path                 = hiveLoginPath,
-                Username             = KubeConst.RootUser,
-                Definition           = cluster.Definition,
-                SshUsername          = Program.MachineUsername,
-                SshPassword          = Program.MachinePassword,
-                SshProvisionPassword = Program.MachinePassword,
-                SetupPending         = true
-            };
+            // $todo(jeff.lill): Implement this.
 
-            // Write the operation end marker to all hive node logs.
+            //var hiveLoginPath = Program.GetHiveLoginPath(KubeHelper.RootUser, cluster.Definition.Name);
+            //var hiveLogin     = new HiveLogin()
+            //{
+            //    Path                 = hiveLoginPath,
+            //    Username             = KubeHelper.RootUser,
+            //    Definition           = cluster.Definition,
+            //    SshUsername          = Program.MachineUsername,
+            //    SshPassword          = Program.MachinePassword,
+            //    SshProvisionPassword = Program.MachinePassword,
+            //    SetupPending         = true
+            //};
+
+            // Write the operation end marker to all cluster node logs.
 
             cluster.LogLine(logEndMarker);
-        }
-
-        /// <summary>
-        /// Initializes the VPN certificate authority as well as the server and root user's certificates and keys.
-        /// </summary>
-        private void CreateVpnCredentials()
-        {
-            // This is a bit tricky: We're going to invoke the [neon vpn ca ...] command to
-            // initialize the hive's certificate authority files.  This command must be
-            // run in the [neon-cli] container so we need to detect whether we're already
-            // running in the tool container and do the right thing.
-            //
-            // Note that the we can't pass the original hive definition file to the command
-            // because the command will shim into a [neon-cli] container and any environment
-            // variable references within the definition won't be able to be resolved because
-            // the environment variables aren't mapped into the container.
-            //
-            // The solution is to persist a temporary copy of the loaded hive definition 
-            // that has already resolved environment variables to the neonFORGE temp folder
-            // and pass that.  The user's neonFORGE folder is encrypted in place so doing this
-            // will be as safe as storing hive logins there.
-
-            string tempCaFolder;
-            string tempDefPath;
-
-            if (KubeHelper.InToolContainer)
-            {
-                tempCaFolder = "/shim/ca";
-            }
-            else
-            {
-                tempCaFolder = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("D"));
-            }
-
-            tempDefPath = Path.Combine(KubeHelper.TempFolder, $"{Guid.NewGuid().ToString("D").ToLowerInvariant()}.def.json");
-
-            File.WriteAllText(tempDefPath, NeonHelper.JsonSerialize(cluster.Definition, Formatting.Indented));
         }
 
         /// <inheritdoc/>

@@ -22,7 +22,7 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>hive</b> command.
+    /// Implements the <b>cluster</b> command.
     /// </summary>
     public class ClusterCommand : CommandBase
     {
@@ -31,14 +31,14 @@ Performs basic cluster provisioning and management.
 
 USAGE:
 
-    neon hive prepare       - Prepares environment for hive setup
-    neon hive verify        - Verifies a hive definition
+    neon cluster prepare    - Prepares environment for cluster setup
+    neon cluster verify     - Verifies a cluster definition
 ";
 
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "hive" }; }
+            get { return new string[] { "cluster" }; }
         }
 
         /// <inheritdoc/>

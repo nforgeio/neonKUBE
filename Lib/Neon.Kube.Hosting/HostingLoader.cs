@@ -28,7 +28,7 @@ using Neon.Time;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Hive hosting utilities.
+    /// Cluster hosting utilities.
     /// </summary>
     public class HostingLoader : IHostingLoader
     {

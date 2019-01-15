@@ -190,7 +190,7 @@ namespace Neon.Kube
         /// <summary>
         /// <b>io.neonkube/storage.redundant</b> [<c>bool</c>]: Indicates that the storage is ephemeral.
         /// All data will be lost when the host is restarted.  This defaults to <c>false</c> for 
-        /// on-premise clusthivesers and is computed for cloud deployments.
+        /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageEphemeral", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]

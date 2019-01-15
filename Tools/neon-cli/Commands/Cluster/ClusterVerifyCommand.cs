@@ -22,26 +22,26 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>hive verify</b> command.
+    /// Implements the <b>cluster verify</b> command.
     /// </summary>
     public class ClusterVerifyCommand : CommandBase
     {
         private const string usage = @"
-Verifies a hive definition file.
+Verifies a cluster definition file.
 
 USAGE:
 
-    neon hive verify HIVE-DEF
+    neon cluster verify CLUSTER-DEF
 
 ARGUMENTS:
 
-    HIVE-DEF    - Path to the hive definition file.
+    CLUSTER-DEF     - Path to the cluster definition file.
 ";
 
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "hive", "verify" }; }
+            get { return new string[] { "cluster", "verify" }; }
         }
 
         /// <inheritdoc/>
@@ -55,16 +55,16 @@ ARGUMENTS:
         {
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: HIVE-DEF is required.");
+                Console.Error.WriteLine("*** ERROR: CLUSTER-DEF is required.");
                 Program.Exit(1);
             }
 
-            // Parse and validate the hive definition.
+            // Parse and validate the cluster definition.
 
             ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
 
             Console.WriteLine("");
-            Console.WriteLine("*** The hive definition is OK.");
+            Console.WriteLine("*** The cluster definition is OK.");
         }
 
         /// <inheritdoc/>

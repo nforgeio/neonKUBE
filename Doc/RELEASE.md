@@ -1,4 +1,4 @@
-# neonHIVE Release Process:
+# neonKUBE Release Process:
 
 ## Prepare
 
@@ -12,9 +12,9 @@
 
 5. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-6. Deploy a test hive.
+6. Deploy a test cluster.
 
-7. Run all unit tests against the test hive and fix any bugs until all tests pass.
+7. Run all unit tests against the test cluster and fix any bugs until all tests pass.
 
 ## Release 
 
@@ -35,9 +35,9 @@
 
 8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-9. Upgrade an older hive and verify by running Hive unit tests.
+9. Upgrade an older cluster and verify by running cluster unit tests.
 
-10. Deploy a fresh hive and verify by running the hive unit tests.
+10. Deploy a fresh cluster and verify by running the cluster unit tests.
 
 11. Fix any important issues and commit the changes.
 

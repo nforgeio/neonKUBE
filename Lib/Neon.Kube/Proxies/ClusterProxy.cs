@@ -58,7 +58,7 @@ namespace Neon.Kube
         /// is passed.
         /// </remarks>
         public ClusterProxy(
-            KubeContextExtensions kubeLogin,
+            KubeContextExtension kubeLogin,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
             bool                                                            appendLog         = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
@@ -124,7 +124,7 @@ namespace Neon.Kube
             }
 
             this.Definition        = clusterDefinition;
-            this.KubeLogin         = new KubeContextExtensions();
+            this.KubeLogin         = new KubeContextExtension();
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendLog;
@@ -168,7 +168,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the cluster login information.
         /// </summary>
-        public KubeContextExtensions KubeLogin { get; set; }
+        public KubeContextExtension KubeLogin { get; set; }
 
         /// <summary>
         /// Returns the cluster definition.

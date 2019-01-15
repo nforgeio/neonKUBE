@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeContextExtensions.cs
+// FILE:	    KubeContextExtension.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -31,12 +31,12 @@ namespace Neon.Kube
     /// <b><i>NAME</i>.context.yaml</b>, where <i>NAME</i> identifies the 
     /// associated Kubernetes context.
     /// </summary>
-    public class KubeContextExtensions
+    public class KubeContextExtension
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeContextExtensions()
+        public KubeContextExtension()
         {
         }
 
@@ -45,7 +45,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="sshCredentials">Optional node SSH credentials.</param>
         /// <param name="clusterDefintion">Optional cluster definition.</param>
-        internal KubeContextExtensions(
+        internal KubeContextExtension(
             SshCredentials      sshCredentials = null,
             ClusterDefinition   clusterDefintion = null)
         {

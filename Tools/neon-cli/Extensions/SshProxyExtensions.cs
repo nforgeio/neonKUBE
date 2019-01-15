@@ -129,7 +129,7 @@ namespace NeonCli
         /// <param name="preprocessReader">The reader.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="nodeDefinition">The target node definition.</param>
-        private static void SetHiveVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
+        private static void SetClusterVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
         {
             Covenant.Requires<ArgumentNullException>(preprocessReader != null);
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
@@ -428,7 +428,7 @@ namespace NeonCli
 
                             if (clusterDefinition != null)
                             {
-                                SetHiveVariables(preprocessReader, clusterDefinition, node.Metadata as NodeDefinition);
+                                SetClusterVariables(preprocessReader, clusterDefinition, node.Metadata as NodeDefinition);
                             }
 
                             foreach (var line in preprocessReader.Lines())
@@ -512,42 +512,6 @@ namespace NeonCli
             // Make the setup scripts executable.
 
             server.SudoCommand($"chmod 744 {KubeHostFolders.Setup}/*");
-
-            // Uncomment this if/when we have to upload source files.
-
-#if FALSE
-            //-----------------------------------------------------------------
-            // Upload resource files to the source folder.  Note that we're going
-            // to convert to Linux style line endings and we're going to convert
-            // leading spaces into TABs (4 spaces == 1 TAB).
-
-            // $hack(jeff.lill):
-            //
-            // This is hardcoded to assume that the source consists of a single level
-            // folder with the source files.  If the folders nest eny further, we'll 
-            // need to implement a recursive method to handle this properly.
-            //
-            // This code also assumes that the folder and file names do not include
-            // any spaces.
-
-            server.Status = $"clear: {HiveHostFolders.Source}";
-            server.SudoCommand($"rm -rf {HiveHostFolders.Source}/*.*");
-
-            // Upload the source files.
-
-            server.Status = "upload: source files";
-
-            foreach (var folder in Program.LinuxFolder.GetFolder("source").Folders())
-            {
-                foreach (var file in folder.Files())
-                {
-                    var targetPath = $"{HiveHostFolders.Source}/{folder.Name}/{file.Name}";
-
-                    server.UploadText(targetPath, file.Contents, tabStop: -4);
-                    server.SudoCommand("chmod 664", targetPath);
-                }
-            }
-#endif
 
             //-----------------------------------------------------------------
             // Upload files to the tools folder.

@@ -64,11 +64,11 @@ namespace Neon.Kube
 
                     if (File.Exists(extensionPath))
                     {
-                        context.Properties.Extensions = NeonHelper.YamlDeserialize<KubeContextExtensions>(File.ReadAllText(extensionPath));
+                        context.Properties.Extensions = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(extensionPath));
                     }
                     else
                     {
-                        context.Properties.Extensions = new KubeContextExtensions();
+                        context.Properties.Extensions = new KubeContextExtension();
                     }
                 }
                 
@@ -134,6 +134,26 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "contexts", Required = Required.Always)]
         [YamlMember(Alias = "contexts")]
         public List<KubeConfigContext> Contexts { get; set; } = new List<KubeConfigContext>();
+
+        /// <summary>
+        /// Returns the current context or <c>null</c>.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public KubeConfigContext Context
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(CurrentContext))
+                {
+                    return null;
+                }
+                else
+                {
+                    return GetContext(CurrentContext);
+                }
+            }
+        }
 
         /// <summary>
         /// The optional dictionary of preferences.
@@ -299,6 +319,19 @@ namespace Neon.Kube
             if (!noSave)
             {
                 Save();
+
+                // We need to remove the extension file too (if one exists).
+
+                var extensionPath = Path.Combine(KubeHelper.ClustersFolder, $"{context.Name}.context.yaml");
+
+                try
+                {
+                    File.Delete(extensionPath);
+                }
+                catch (IOException)
+                {
+                    // Intentially ignoring this.
+                }
             }
         }
 

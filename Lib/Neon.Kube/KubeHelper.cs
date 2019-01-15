@@ -35,6 +35,11 @@ namespace Neon.Kube
     /// </summary>
     public static partial class KubeHelper
     {
+        /// <summary>
+        /// The root Kubernetes context username for provisioned clusters. 
+        /// </summary>
+        public const string RootUser = "root";
+
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static KubeConfig           cachedKubeConfig;
 
@@ -259,60 +264,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the root folder containing the installed Ansible role files.
-        /// </summary>
-        /// <returns>The folder path.</returns>
-        public static string AnsibleRolesFolder
-        {
-            get
-            {
-                var path = Path.Combine(GetNeonKubeUserFolder(), "ansible", "roles");
-
-                Directory.CreateDirectory(path);
-
-                return path;
-            }
-        }
-
-        /// <summary>
-        /// Returns the path to the root folder containing the Ansible Vault password files.
-        /// </summary>
-        /// <returns>The folder path.</returns>
-        public static string AnsiblePasswordsFolder
-        {
-            get
-            {
-                var path = Path.Combine(GetNeonKubeUserFolder(), "ansible", "passwords");
-
-                Directory.CreateDirectory(path);
-
-                return path;
-            }
-        }
-
-        /// <summary>
-        /// Returns the path to the file indicating which cluster is currently logged in.
-        /// </summary>
-        public static string CurrentPath
-        {
-            get { return Path.Combine(ClustersFolder, ".current"); }
-        }
-
-        /// <summary>
-        /// Returns the path to the login information for the named cluster.
-        /// </summary>
-        /// <param name="username">The operator's user name.</param>
-        /// <param name="hiveName">The cluster name.</param>
-        /// <returns>The path to the cluster's credentials file.</returns>
-        public static string GetLoginPath(string username, string hiveName)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-
-            return Path.Combine(ClustersFolder, $"{username}@{hiveName}.login.json");
-        }
-
-        /// <summary>
         /// Returns the path to the current user's cluster virtual machine templates
         /// folder, creating the directory if it doesn't already exist.
         /// </summary>
@@ -332,7 +283,7 @@ namespace Neon.Kube
         public static bool IsConnected { get; private set; } = false;
 
         /// <summary>
-        /// Returns the user's <see cref="KubeConfig"/>.
+        /// Returns the user's current <see cref="KubeConfig"/>.
         /// </summary>
         public static KubeConfig KubeConfig
         {

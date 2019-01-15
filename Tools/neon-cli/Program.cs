@@ -63,8 +63,8 @@ USAGE:
 COMMAND SUMMARY:
 
     neon help               COMMAND
-    neon hive prepare       [CLUSTER-DEF]
-    neon hive verify        [CLUSTER-DEF]
+    neon cluster prepare    [CLUSTER-DEF]
+    neon cluster verify     [CLUSTER-DEF]
     neon version            [-n] [-git]
 
 ARGUMENTS:
@@ -1044,9 +1044,9 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 sshCredentials = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword);
             }
-            else if (KubeHelper.ClusterLogin != null)
+            else if (KubeHelper.KubeContext != null)
             {
-                sshCredentials = KubeHelper.ClusterLogin.GetSshCredentials();
+                sshCredentials = KubeHelper.KubeContext.Properties.Extensions.SshCredentials;
             }
             else
             {
@@ -1104,7 +1104,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(KubeContextExtensions kubeLogin, string pemKey)
+        public static string ConvertPUBtoPPK(KubeContextExtension kubeLogin, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {

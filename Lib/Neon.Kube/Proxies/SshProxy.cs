@@ -93,7 +93,7 @@ namespace Neon.Kube
             // the past because we were only using SshProxy to establish single connections
             // to any given server.
             //
-            // This changed with thre [HiveFixture] implementation that attempts to
+            // This changed with the [HiveFixture] implementation that attempts to
             // parallelize cluster reset operations for better test execution performance.
             //
             // The symptom is that we see:
@@ -2256,7 +2256,7 @@ echo $? > {cmdFolder}/exit
                     Command        = command,
                     ExitCode       = 1,
                     ProxyIsFaulted = true,
-                    ErrorText      = "** Hive node is faulted **"
+                    ErrorText      = "** Cluster node is faulted **"
                 };
             }
 

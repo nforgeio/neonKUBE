@@ -283,19 +283,19 @@ namespace Neon.Kube
         public string[] TimeSources { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies one or more APT proxy/cache servers the hive will use to install
+        /// Optionally specifies one or more APT proxy/cache servers the cluster will use to install
         /// and update Linux packages.  These are HTTP URLs including the port (generally 
         /// <see cref="NetworkPorts.AppCacherNg"/> = 3142) of a  <b>apt-cacher-ng</b> or other proxy
         /// server.  Multiple URLs may be specified by separating them with spaces.  This defaults to
-        /// <c>null</c> which will configure the hive manager nodes as the package proxies.
+        /// <c>null</c>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// A package cache will greatly reduce the Internet network traffic required to deploy a
-        /// hive, especially for large hives.
+        /// cluster, especially for large clusters.
         /// </para>
         /// <note>
-        /// The hive nodes are configured to failover to different proxies or to hit the 
+        /// The cluster nodes are configured to failover to different proxies or to hit the 
         /// default Linux distribution package mirror directly if any or all of the caches
         /// specified are unavailable.
         /// </note>

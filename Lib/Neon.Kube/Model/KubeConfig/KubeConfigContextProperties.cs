@@ -62,6 +62,6 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public KubeContextExtensions Extensions { get; set; }
+        public KubeContextExtension Extensions { get; set; }
     }
 }
