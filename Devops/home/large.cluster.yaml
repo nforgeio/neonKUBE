@@ -1,0 +1,21 @@
+Name: home-tiny
+Datacenter: woodinville
+Environment: development
+TimeSources:
+- pool.ntp.org
+DebugMode: true
+AllowUnitTesting: true
+Hosting:
+  Environment: local-hyper-v
+  VmDriveFolder: D:\\VM
+NetworK:
+  PremiseSubnet: 10.0.0.0/16
+  NodesSubnet: 10.0.0.0/16
+Node:
+   Upgrade: none
+   SshAuth: tls
+   PasswordLength: 20
+Nodes:
+   master-0:
+     Role: master
+     PrivateAddress: 10.0.0.30
