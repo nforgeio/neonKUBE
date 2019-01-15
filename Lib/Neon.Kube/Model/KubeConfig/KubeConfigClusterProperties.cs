@@ -40,14 +40,14 @@ namespace Neon.Kube
         /// Fully qualified URL to the cluster's API server.
         /// </summary>
         [JsonProperty(PropertyName = "server", Required = Required.Always)]
-        [YamlMember(Alias = "server")]
+        [YamlMember(Alias = "server", ApplyNamingConventions = false)]
         public string Server { get; set; }
 
         /// <summary>
         /// Optional path to the cluster certificate authority file.
         /// </summary>
         [JsonProperty(PropertyName = "certificate-authority", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "certificate-authority")]
+        [YamlMember(Alias = "certificate-authority", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CertificateAuthority { get; set; }
 
@@ -55,7 +55,7 @@ namespace Neon.Kube
         /// Optionally disables TLS verification of the server.
         /// </summary>
         [JsonProperty(PropertyName = "insecure-skip-tls-verify", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "insecure-skip-tls-verify")]
+        [YamlMember(Alias = "insecure-skip-tls-verify", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool InsecureSkipTlsVerify { get; set; } = false;
     }

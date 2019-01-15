@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Specifies resource limits for service containers.
         /// </summary>
         [JsonProperty(PropertyName = "Limits", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Limits")]
+        [YamlMember(Alias = "Limits", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceResourceSettings Limits { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Specifies resource reservations for service containers.
         /// </summary>
         [JsonProperty(PropertyName = "Reservations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Reservations")]
+        [YamlMember(Alias = "Reservations", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceResourceSettings Reservations { get; set; }
 

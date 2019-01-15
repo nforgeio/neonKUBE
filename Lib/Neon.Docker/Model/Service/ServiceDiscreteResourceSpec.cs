@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Identifies the setting.
         /// </summary>
         [JsonProperty(PropertyName = "Kind", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Kind")]
+        [YamlMember(Alias = "Kind", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Kind { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// The setting value <c>long</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Value")]
+        [YamlMember(Alias = "Value", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long Value { get; set; }
 

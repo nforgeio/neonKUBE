@@ -157,7 +157,7 @@ namespace Neon.Kube
         /// storage capacity in gigabytes.
         /// </summary>
         [JsonProperty(PropertyName = "StorageCapacityGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageCapacityGB")]
+        [YamlMember(Alias = "StorageCapacityGB", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int StorageCapacityGB { get; set; } = 0;
 
@@ -167,7 +167,7 @@ namespace Neon.Kube
         /// to <c>true</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageLocal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageLocal")]
+        [YamlMember(Alias = "StorageLocal", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public bool StorageLocal { get; set; } = true;
 
@@ -177,7 +177,7 @@ namespace Neon.Kube
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageHDD", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageHDD")]
+        [YamlMember(Alias = "StorageHDD", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool StorageHDD { get; set; } = false;
 
@@ -187,7 +187,7 @@ namespace Neon.Kube
         /// This defaults to <c>false</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageRedundant", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageRedundant")]
+        [YamlMember(Alias = "StorageRedundant", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool StorageRedundant { get; set; } = false;
 
@@ -197,7 +197,7 @@ namespace Neon.Kube
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageEphemeral", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageEphemeral")]
+        [YamlMember(Alias = "StorageEphemeral", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool StorageEphemeral { get; set; } = false;
 
@@ -220,7 +220,7 @@ namespace Neon.Kube
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeCores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "ComputeCores")]
+        [YamlMember(Alias = "ComputeCores", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int ComputeCores { get; set; } = 0;
 
@@ -230,7 +230,7 @@ namespace Neon.Kube
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeRamMB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "ComputeRamMB")]
+        [YamlMember(Alias = "ComputeRamMB", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int ComputeRamMB { get; set; } = 0;
 
@@ -278,7 +278,7 @@ namespace Neon.Kube
         /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "PhysicalLocation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "PhysicalLocation")]
+        [YamlMember(Alias = "PhysicalLocation", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalLocation { get; set; } = string.Empty;
 
@@ -287,7 +287,7 @@ namespace Neon.Kube
         /// physical server computer model (e.g. <b>Dell-PowerEdge-R220</b>).  This defaults to the <b>empty string</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PhysicalMachine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "PhysicalMachine")]
+        [YamlMember(Alias = "PhysicalMachine", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalMachine { get; set; } = string.Empty;
 
@@ -359,7 +359,7 @@ namespace Neon.Kube
         /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "PhysicalFaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "PhysicalFaultDomain")]
+        [YamlMember(Alias = "PhysicalFaultDomain", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalFaultDomain
         {
@@ -381,7 +381,7 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PhysicalPower", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "PhysicalPower")]
+        [YamlMember(Alias = "PhysicalPower", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalPower { get; set; } = string.Empty;
 
@@ -401,7 +401,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Custom")]
-        [YamlMember(Alias = "Custom")]
+        [YamlMember(Alias = "Custom", ApplyNamingConventions = false)]
         public Dictionary<string, object> Custom { get; set; } = new Dictionary<string, object>();
 
         //---------------------------------------------------------------------

@@ -37,7 +37,7 @@ namespace Neon.Kube
         /// Specifies the Azure virtual machine size.  This defaults to <see cref="AzureVmSizes.Standard_DS3_v2"/>.
         /// </summary>
         [JsonProperty(PropertyName = "VmSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmSize")]
+        [YamlMember(Alias = "VmSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultVmSize)]
         public AzureVmSizes VmSize { get; set; } = defaultVmSize;
 
@@ -64,7 +64,7 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "StorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "StorageType")]
+        [YamlMember(Alias = "StorageType", ApplyNamingConventions = false)]
         [DefaultValue(defaultStorageType)]
         public AzureStorageTypes StorageType { get; set; } = defaultStorageType;
 
@@ -93,7 +93,7 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "HardDriveCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HardDriveCount")]
+        [YamlMember(Alias = "HardDriveCount", ApplyNamingConventions = false)]
         [DefaultValue(1)]
         public int HardDriveCount { get; set; } = 1;
 
@@ -128,7 +128,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "HardDriveSizeGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HardDriveSizeGB")]
+        [YamlMember(Alias = "HardDriveSizeGB", ApplyNamingConventions = false)]
         [DefaultValue(128)]
         public int HardDriveSizeGB { get; set; } = 64;
 

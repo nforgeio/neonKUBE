@@ -40,7 +40,7 @@ namespace Neon.Kube
         /// Azure account subscription ID obtained from the Azure portal.
         /// </summary>
         [JsonProperty(PropertyName = "SubscriptionId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SubscriptionId")]
+        [YamlMember(Alias = "SubscriptionId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string SubscriptionId { get; set; }
 
@@ -48,7 +48,7 @@ namespace Neon.Kube
         /// Tenant ID generated when creating the neon tool's Azure service principal.
         /// </summary>
         [JsonProperty(PropertyName = "TenantId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "TenantId")]
+        [YamlMember(Alias = "TenantId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string TenantId { get; set; }
 
@@ -56,7 +56,7 @@ namespace Neon.Kube
         /// Application ID generated when creating the neon tool's Azure service principal. 
         /// </summary>
         [JsonProperty(PropertyName = "ApplicationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ApplicationId")]
+        [YamlMember(Alias = "ApplicationId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ApplicationId { get; set; }
 
@@ -64,7 +64,7 @@ namespace Neon.Kube
         /// Password generated when creating the neon tool's Azure service principal.
         /// </summary>
         [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Password")]
+        [YamlMember(Alias = "Password", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Password { get; set; }
 
@@ -73,7 +73,7 @@ namespace Neon.Kube
         /// to the clusterv name but can be customized as required.
         /// </summary>
         [JsonProperty(PropertyName = "ResourceGroup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ResourceGroup")]
+        [YamlMember(Alias = "ResourceGroup", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ResourceGroup { get; set; }
 
@@ -81,7 +81,7 @@ namespace Neon.Kube
         /// Identifies the target Azure region (e.g. <b>westus</b>).
         /// </summary>
         [JsonProperty(PropertyName = "Region", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Region")]
+        [YamlMember(Alias = "Region", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Region { get; set; }
 
@@ -115,7 +115,7 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "DomainLabel", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "DomainLabel")]
+        [YamlMember(Alias = "DomainLabel", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string DomainLabel { get; set; }
 
@@ -132,7 +132,7 @@ namespace Neon.Kube
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "StaticClusterAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "StaticClusterAddress")]
+        [YamlMember(Alias = "StaticClusterAddress", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool StaticClusterAddress { get; set; } = false;
 
@@ -180,7 +180,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PublicNodeAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PublicNodeAddresses")]
+        [YamlMember(Alias = "PublicNodeAddresses", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool PublicNodeAddresses { get; set; } = false;
 
@@ -190,7 +190,7 @@ namespace Neon.Kube
         /// for other possibilities.
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Environment")]
+        [YamlMember(Alias = "Environment", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AzureCloudEnvironment Environment { get; set; } = null;
 
@@ -200,7 +200,7 @@ namespace Neon.Kube
         /// without making sure that your subscription supports the increase (most won't).
         /// </summary>
         [JsonProperty(PropertyName = "FaultDomains", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "FaultDomains")]
+        [YamlMember(Alias = "FaultDomains", ApplyNamingConventions = false)]
         [DefaultValue(2)]
         public int FaultDomains { get; set; } = 2;
 
@@ -220,7 +220,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "UpdateDomains", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "UpdateDomains")]
+        [YamlMember(Alias = "UpdateDomains", ApplyNamingConventions = false)]
         [DefaultValue(5)]
         public int UpdateDomains { get; set; } = 5;
 

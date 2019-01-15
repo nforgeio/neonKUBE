@@ -35,7 +35,7 @@ namespace Neon.Data
 
         /// <inheritdoc/>
         [JsonProperty(PropertyName = "__EntityType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "__EntityType")]
+        [YamlMember(Alias = "__EntityType", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string __EntityType { get; set; }
 

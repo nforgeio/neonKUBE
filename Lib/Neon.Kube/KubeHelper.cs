@@ -308,7 +308,20 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the <see cref="KubeContext"/> for the connected cluster (or <c>null</c>).
         /// </summary>
-        public static KubeConfigContext KubeContext => KubeConfig.GetContext(KubeConfig.CurrentContext);
+        public static KubeConfigContext KubeContext
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(KubeConfig.CurrentContext))
+                {
+                    return null;
+                }
+                else
+                {
+                    return KubeConfig.GetContext(KubeConfig.CurrentContext);
+                }
+            }
+        }
 
         /// <summary>
         /// Returns the <see cref="Kube.ClusterProxy"/> for the connected cluster (or <c>null</c>).

@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Disable SELinux.
         /// </summary>
         [JsonProperty(PropertyName = "Disable", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Disable")]
+        [YamlMember(Alias = "Disable", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool Disable { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// SELinux user label.
         /// </summary>
         [JsonProperty(PropertyName = "User", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "User")]
+        [YamlMember(Alias = "User", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string User { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// SELinux role label.
         /// </summary>
         [JsonProperty(PropertyName = "Role", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Role")]
+        [YamlMember(Alias = "Role", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Role { get; set; }
 
@@ -48,7 +48,7 @@ namespace Neon.Docker
         /// SELinux type label.
         /// </summary>
         [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Type")]
+        [YamlMember(Alias = "Type", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Type { get; set; }
 
@@ -56,7 +56,7 @@ namespace Neon.Docker
         /// SELinux level label.
         /// </summary>
         [JsonProperty(PropertyName = "Level", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Level")]
+        [YamlMember(Alias = "Level", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Level { get; set; }
 

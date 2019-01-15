@@ -38,7 +38,7 @@ namespace Neon.Kube
         /// to specify where a cluster node is to be provisioned.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Name")]
+        [YamlMember(Alias = "Name", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Name { get; set; }
 
@@ -46,7 +46,7 @@ namespace Neon.Kube
         /// The IP address or FQDN of the hypervisor machine.
         /// </summary>
         [JsonProperty(PropertyName = "Address", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Address")]
+        [YamlMember(Alias = "Address", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Address { get; set; }
 
@@ -55,7 +55,7 @@ namespace Neon.Kube
         /// overrides <see cref="HostingOptions.VmHostUsername"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Username")]
+        [YamlMember(Alias = "Username", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Username { get; set; }
 
@@ -64,7 +64,7 @@ namespace Neon.Kube
         /// overrides <see cref="HostingOptions.VmHostPassword"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Password")]
+        [YamlMember(Alias = "Password", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Password { get; set; }
 

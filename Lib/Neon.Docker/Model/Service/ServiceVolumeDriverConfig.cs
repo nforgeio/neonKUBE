@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Name of the volume driver.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Name")]
+        [YamlMember(Alias = "Name", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Name { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Volume driver options.
         /// </summary>
         [JsonProperty(PropertyName = "Options", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Options")]
+        [YamlMember(Alias = "Options", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, string> Options { get; set; }
 

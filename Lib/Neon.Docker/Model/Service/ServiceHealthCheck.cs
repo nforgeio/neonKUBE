@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Specifies the health test to be performed.
         /// </summary>
         [JsonProperty(PropertyName = "Test", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Test")]
+        [YamlMember(Alias = "Test", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> Test { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Time to wait between health checks (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Interval", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Interval")]
+        [YamlMember(Alias = "Interval", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? Interval { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// Time to wait before considering a health check to have hung (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Timeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Timeout")]
+        [YamlMember(Alias = "Timeout", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? Timeout { get; set; }
 
@@ -49,7 +49,7 @@ namespace Neon.Docker
         /// to be unhealhy.
         /// </summary>
         [JsonProperty(PropertyName = "Retries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Retries")]
+        [YamlMember(Alias = "Retries", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? Retries { get; set; }
 
@@ -58,7 +58,7 @@ namespace Neon.Docker
         /// health check failures.
         /// </summary>
         [JsonProperty(PropertyName = "StartPeriod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "StartPeriod")]
+        [YamlMember(Alias = "StartPeriod", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? StartPeriod { get; set; }
 

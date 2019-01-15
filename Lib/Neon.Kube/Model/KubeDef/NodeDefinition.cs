@@ -68,7 +68,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Name")]
+        [YamlMember(Alias = "Name", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Name
         {
@@ -93,7 +93,7 @@ namespace Neon.Kube
         /// by the <b>neon-cli</b> tool for master nodes when provisioning in a cloud provider.
         /// </summary>
         [JsonProperty(PropertyName = "PublicAddress", Required = Required.Default)]
-        [YamlMember(Alias = "PublicAddress")]
+        [YamlMember(Alias = "PublicAddress", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PublicAddress { get; set; } = null;
 
@@ -103,7 +103,7 @@ namespace Neon.Kube
         /// been added to the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "PrivateAddress", Required = Required.Default)]
-        [YamlMember(Alias = "PrivateAddress")]
+        [YamlMember(Alias = "PrivateAddress", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PrivateAddress { get; set; } = null;
 
@@ -148,7 +148,7 @@ namespace Neon.Kube
         /// Returns the node's <see cref="NodeRole"/>.  This defaults to <see cref="NodeRole.Worker"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Role", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Role")]
+        [YamlMember(Alias = "Role", ApplyNamingConventions = false)]
         [DefaultValue(NodeRole.Worker)]
         public string Role { get; set; } = NodeRole.Worker;
 
@@ -158,7 +158,7 @@ namespace Neon.Kube
         /// for more information.
         /// </summary>
         [JsonProperty(PropertyName = "Labels")]
-        [YamlMember(Alias = "Labels")]
+        [YamlMember(Alias = "Labels", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public NodeLabels Labels { get; set; }
 
@@ -166,7 +166,7 @@ namespace Neon.Kube
         /// Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.
         /// </summary>
         [JsonProperty(PropertyName = "Azure")]
-        [YamlMember(Alias = "Azure")]
+        [YamlMember(Alias = "Azure", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AzureNodeOptions Azure { get; set; }
 
@@ -176,7 +176,7 @@ namespace Neon.Kube
         /// when set.
         /// </summary>
         [JsonProperty(PropertyName = "VmHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmHost")]
+        [YamlMember(Alias = "VmHost", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string VmHost { get; set; } = null;
 
@@ -185,7 +185,7 @@ namespace Neon.Kube
         /// defaults to the value specified by <see cref="HostingOptions.VmProcessors"/>.
         /// </summary>
         [JsonProperty(PropertyName = "VmProcessors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmProcessors")]
+        [YamlMember(Alias = "VmProcessors", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int VmProcessors { get; set; } = 0;
 
@@ -196,7 +196,7 @@ namespace Neon.Kube
         /// <see cref="HostingOptions.VmMemory"/>.
         /// </summary>
         [JsonProperty(PropertyName = "VmMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmMemory")]
+        [YamlMember(Alias = "VmMemory", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string VmMemory { get; set; } = null;
 
@@ -213,7 +213,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmMinimumMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmMinimumMemory")]
+        [YamlMember(Alias = "VmMinimumMemory", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string VmMinimumMemory { get; set; } = null;
 
@@ -223,7 +223,7 @@ namespace Neon.Kube
         /// to the value specified by <see cref="HostingOptions.VmDisk"/>.
         /// </summary>
         [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmDisk")]
+        [YamlMember(Alias = "VmDisk", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string VmDisk { get; set; } = null;
 

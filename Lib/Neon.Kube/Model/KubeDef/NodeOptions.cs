@@ -41,7 +41,7 @@ namespace Neon.Kube
         /// is <b>8</b>.  Specify <b>0</b> to leave the root password unchanged.
         /// </summary>
         [JsonProperty(PropertyName = "PasswordLength", Required = Required.Default)]
-        [YamlMember(Alias = "PasswordLength")]
+        [YamlMember(Alias = "PasswordLength", ApplyNamingConventions = false)]
         [DefaultValue(defaultPasswordLength)]
         public int PasswordLength { get; set; } = defaultPasswordLength;
 
@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// to IPv4.
         /// </summary>
         [JsonProperty(PropertyName = "AllowPackageManagerIPv6", Required = Required.Default)]
-        [YamlMember(Alias = "AllowPackageManagerIPv6")]
+        [YamlMember(Alias = "AllowPackageManagerIPv6", ApplyNamingConventions = false)]
         [DefaultValue(defaultAllowPackageManagerIPv6)]
         public bool AllowPackageManagerIPv6 { get; set; } = defaultAllowPackageManagerIPv6;
 
@@ -60,7 +60,7 @@ namespace Neon.Kube
         /// failed index or package downloads.  This defaults to <b>5</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PackageManagerRetries", Required = Required.Default)]
-        [YamlMember(Alias = "PackageManagerRetries")]
+        [YamlMember(Alias = "PackageManagerRetries", ApplyNamingConventions = false)]
         [DefaultValue(defaultPackageManagerRetries)]
         public int PackageManagerRetries { get; set; } = defaultPackageManagerRetries;
 

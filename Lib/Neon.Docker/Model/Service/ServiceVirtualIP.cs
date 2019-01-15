@@ -25,7 +25,7 @@ namespace Neon.Docker
         /// Specifies the attached network ID.
         /// </summary>
         [JsonProperty(PropertyName = "NetworkID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "NetworkID")]
+        [YamlMember(Alias = "NetworkID", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string NetworkID { get; set; }
 
@@ -33,7 +33,7 @@ namespace Neon.Docker
         /// Specifies assigned IP address.
         /// </summary>
         [JsonProperty(PropertyName = "Addr", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Addr")]
+        [YamlMember(Alias = "Addr", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Addr { get; set; }
 

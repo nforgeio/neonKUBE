@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// CPU utilization expressed as billionths of a CPU.
         /// </summary>
         [JsonProperty(PropertyName = "NanoCPUs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "NanoCPUs")]
+        [YamlMember(Alias = "NanoCPUs", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? NanoCPUs { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Memory utilization as bytes.
         /// </summary>
         [JsonProperty(PropertyName = "MemoryBytes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "MemoryBytes")]
+        [YamlMember(Alias = "MemoryBytes", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? MemoryBytes { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// User-defined generic resource settings.
         /// </summary>
         [JsonProperty(PropertyName = "GenericResources", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "GenericResources")]
+        [YamlMember(Alias = "GenericResources", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<ServiceGenericResources> GenericResources { get; set; }
 

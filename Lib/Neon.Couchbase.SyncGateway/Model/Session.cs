@@ -40,21 +40,21 @@ namespace Neon.Couchbase.SyncGateway
         /// The HTTP cookie name to be used for session handling.
         /// </summary>
         [JsonProperty(PropertyName = "Cookie")]
-        [YamlMember(Alias = "Cookie")]
+        [YamlMember(Alias = "Cookie", ApplyNamingConventions = false)]
         public string Cookie { get; set; }
 
         /// <summary>
         /// The session expiration time (local server time).
         /// </summary>
         [JsonProperty(PropertyName = "Expires")]
-        [YamlMember(Alias = "Expires")]
+        [YamlMember(Alias = "Expires", ApplyNamingConventions = false)]
         public DateTime Expires { get; set; }
 
         /// <summary>
         /// The session ID.
         /// </summary>
         [JsonProperty(PropertyName = "Id")]
-        [YamlMember(Alias = "Id")]
+        [YamlMember(Alias = "Id", ApplyNamingConventions = false)]
         public string Id { get; set; }
     }
 }

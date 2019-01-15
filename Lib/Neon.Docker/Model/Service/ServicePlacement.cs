@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Service constraints formatted as <b>CONSTRAINT==VALUE</b> or <b>CONSTRAINT!=VALUE</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Constraints", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Constraints")]
+        [YamlMember(Alias = "Constraints", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> Constraints { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Service placement preferences.
         /// </summary>
         [JsonProperty(PropertyName = "Preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Preferences")]
+        [YamlMember(Alias = "Preferences", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServicePlacementPreferences Preferences { get; set; }
 
@@ -41,7 +41,7 @@ namespace Neon.Docker
         /// when there is no constraints.
         /// </summary>
         [JsonProperty(PropertyName = "Platforms", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Platforms")]
+        [YamlMember(Alias = "Platforms", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<ServicePlatform> Platforms { get; set; }
 

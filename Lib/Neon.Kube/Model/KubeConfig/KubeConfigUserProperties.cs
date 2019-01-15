@@ -40,7 +40,7 @@ namespace Neon.Kube
         /// The optional authentication token (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "token", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "token")]
+        [YamlMember(Alias = "token", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Token { get; set; }
 
@@ -48,7 +48,7 @@ namespace Neon.Kube
         /// The optional path to the client certificate (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "client-certificate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "client-certificate")]
+        [YamlMember(Alias = "client-certificate", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ClientCertificate { get; set; }
 
@@ -56,7 +56,7 @@ namespace Neon.Kube
         /// The optional path to the client key (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "client-key", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "client-key")]
+        [YamlMember(Alias = "client-key", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ClientKey { get; set; }
 
@@ -64,7 +64,7 @@ namespace Neon.Kube
         /// The optional username (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "username")]
+        [YamlMember(Alias = "username", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Username { get; set; }
 
@@ -72,7 +72,7 @@ namespace Neon.Kube
         /// The optional password (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "password")]
+        [YamlMember(Alias = "password", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Password { get; set; }
     }

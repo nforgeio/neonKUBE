@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// The Docker secret ID.
         /// </summary>
         [JsonProperty(PropertyName = "SecretID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "SecretID")]
+        [YamlMember(Alias = "SecretID", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string SecretID { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// The secret name.
         /// </summary>
         [JsonProperty(PropertyName = "SecretName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "SecretName")]
+        [YamlMember(Alias = "SecretName", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string SecretName { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// Secret file information.
         /// </summary>
         [JsonProperty(PropertyName = "File", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "File")]
+        [YamlMember(Alias = "File", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceFile File { get; set; }
 

@@ -40,14 +40,14 @@ namespace Neon.Couchbase.SyncGateway
         /// The role name within the database.
         /// </summary>
         [JsonProperty(PropertyName = "Name")]
-        [YamlMember(Alias = "Name")]
+        [YamlMember(Alias = "Name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
         /// Lists the channels explicitly made accessable to members of the role.
         /// </summary>
         [JsonProperty(PropertyName = "AdminChannels")]
-        [YamlMember(Alias = "AdminChannels")]
+        [YamlMember(Alias = "AdminChannels", ApplyNamingConventions = false)]
         public List<string> AdminChannels { get; set; } = new List<string>();
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Neon.Couchbase.SyncGateway
         /// special access by the Sync Gateway sync function.
         /// </summary>
         [JsonProperty(PropertyName = "AllChannels")]
-        [YamlMember(Alias = "AllChannels")]
+        [YamlMember(Alias = "AllChannels", ApplyNamingConventions = false)]
         public List<string> AllChannels { get; set; } = new List<string>();
     }
 }

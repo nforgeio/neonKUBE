@@ -26,7 +26,7 @@ namespace Neon.Docker
         /// Indicates the saervice updating state.
         /// </summary>
         [JsonProperty(PropertyName = "State", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "State")]
+        [YamlMember(Alias = "State", ApplyNamingConventions = false)]
         [DefaultValue(default(ServiceUpdateState))]
         public ServiceUpdateState State { get; set; }
 
@@ -34,7 +34,7 @@ namespace Neon.Docker
         /// Indicates when the service update was started.
         /// </summary>
         [JsonProperty(PropertyName = "StartedAt", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "StartedAt")]
+        [YamlMember(Alias = "StartedAt", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string StartedAt { get; set; }
 
@@ -52,7 +52,7 @@ namespace Neon.Docker
         /// Indicates when the service update was completed.
         /// </summary>
         [JsonProperty(PropertyName = "CompletedAt", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "CompletedAt")]
+        [YamlMember(Alias = "CompletedAt", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CompletedAt { get; set; }
 
@@ -70,7 +70,7 @@ namespace Neon.Docker
         /// A textual message describing the update.
         /// </summary>
         [JsonProperty(PropertyName = "Message", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Message")]
+        [YamlMember(Alias = "Message", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Message { get; set; }
 

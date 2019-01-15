@@ -40,14 +40,14 @@ namespace Neon.Kube
         /// The local nickname for the user.
         /// </summary>
         [JsonProperty(PropertyName = "name", Required = Required.Always)]
-        [YamlMember(Alias = "name")]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
         /// The user properties.
         /// </summary>
         [JsonProperty(PropertyName = "user", Required = Required.Always)]
-        [YamlMember(Alias = "user")]
+        [YamlMember(Alias = "user", ApplyNamingConventions = false)]
         public KubeConfigUserProperties Properties { get; set; }
     }
 }

@@ -52,7 +52,7 @@ namespace Neon.Kube
         /// Identifies the cloud or other hosting platform.  This defaults to <see cref="HostingEnvironments.Machine"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Environment")]
+        [YamlMember(Alias = "Environment", ApplyNamingConventions = false)]
         [DefaultValue(HostingEnvironments.Machine)]
         public HostingEnvironments Environment { get; set; } = HostingEnvironments.Machine;
 
@@ -60,7 +60,7 @@ namespace Neon.Kube
         /// Specifies the Amazon Web Services hosting settings.
         /// </summary>
         [JsonProperty(PropertyName = "Aws", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Aws")]
+        [YamlMember(Alias = "Aws", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AwsOptions Aws { get; set; } = null;
 
@@ -68,7 +68,7 @@ namespace Neon.Kube
         /// Specifies the Microsoft Azure hosting settings.
         /// </summary>
         [JsonProperty(PropertyName = "Azure", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Azure")]
+        [YamlMember(Alias = "Azure", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AzureOptions Azure { get; set; } = null;
 
@@ -76,7 +76,7 @@ namespace Neon.Kube
         /// Specifies the Google Cloud Platform hosting settings.
         /// </summary>
         [JsonProperty(PropertyName = "Google", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Google")]
+        [YamlMember(Alias = "Google", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public GoogleOptions Google { get; set; } = null;
 
@@ -85,7 +85,7 @@ namespace Neon.Kube
         /// This is typically used for production.
         /// </summary>
         [JsonProperty(PropertyName = "HyperV", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HyperV")]
+        [YamlMember(Alias = "HyperV", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public HyperVOptions HyperV { get; set; } = null;
 
@@ -95,7 +95,7 @@ namespace Neon.Kube
         /// test purposes.
         /// </summary>
         [JsonProperty(PropertyName = "HyperVDev", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HyperVDev")]
+        [YamlMember(Alias = "HyperVDev", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public LocalHyperVOptions HyperVDev { get; set; } = null;
 
@@ -103,7 +103,7 @@ namespace Neon.Kube
         /// Specifies the hosting settings when hosting directly on bare metal or virtual machines.
         /// </summary>
         [JsonProperty(PropertyName = "Machine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Machine")]
+        [YamlMember(Alias = "Machine", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public MachineOptions Machine { get; set; } = null;
 
@@ -111,7 +111,7 @@ namespace Neon.Kube
         /// Specifies the hosting settings when hosting on Citrix XenServer or the XCP-ng hypervisors.
         /// </summary>
         [JsonProperty(PropertyName = "XenServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "XenServer")]
+        [YamlMember(Alias = "XenServer", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public XenServerOptions XenServer { get; set; } = null;
 
@@ -119,7 +119,7 @@ namespace Neon.Kube
         /// Optionally identifies the target Hyper-V or XenServer hypervisor machines.
         /// </summary>
         [JsonProperty(PropertyName = "VmHosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmHosts")]
+        [YamlMember(Alias = "VmHosts", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<HypervisorHost> VmHosts { get; set; } = new List<HypervisorHost>();
 
@@ -133,7 +133,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmHostUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmHostUsername")]
+        [YamlMember(Alias = "VmHostUsername", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string VmHostUsername { get; set; }
 
@@ -142,7 +142,7 @@ namespace Neon.Kube
         /// This may be overridden for specific hypervisor machines within <see cref="VmHosts"/> items.  This defaults to <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "VmHostPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmHostPassword")]
+        [YamlMember(Alias = "VmHostPassword", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string VmHostPassword { get; set; }
 
@@ -150,7 +150,7 @@ namespace Neon.Kube
         /// The default number of virtual processors to assign to each cluster virtual machine.
         /// </summary>
         [JsonProperty(PropertyName = "VmProcessors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmProcessors")]
+        [YamlMember(Alias = "VmProcessors", ApplyNamingConventions = false)]
         [DefaultValue(4)]
         public int VmProcessors { get; set; } = 4;
 
@@ -160,7 +160,7 @@ namespace Neon.Kube
         /// This defaults to <b>4GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmMemory")]
+        [YamlMember(Alias = "VmMemory", ApplyNamingConventions = false)]
         [DefaultValue(DefaultVmMemory)]
         public string VmMemory { get; set; } = DefaultVmMemory;
 
@@ -177,7 +177,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmMinimumMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmMinimumMemory")]
+        [YamlMember(Alias = "VmMinimumMemory", ApplyNamingConventions = false)]
         [DefaultValue(DefaultVmMinimumMemory)]
         public string VmMinimumMemory { get; set; } = DefaultVmMinimumMemory;
 
@@ -187,7 +187,7 @@ namespace Neon.Kube
         /// or <b>1TB</b>.  This defaults to <b>64GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmDisk")]
+        [YamlMember(Alias = "VmDisk", ApplyNamingConventions = false)]
         [DefaultValue(DefaultVmDisk)]
         public string VmDisk { get; set; } = DefaultVmDisk;
 
@@ -203,7 +203,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmDriveFolder", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmDriveFolder")]
+        [YamlMember(Alias = "VmDriveFolder", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string VmDriveFolder { get; set; } = null;
 
@@ -224,7 +224,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmNamePrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmNamePrefix")]
+        [YamlMember(Alias = "VmNamePrefix", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string VmNamePrefix { get; set; }  = null;
 

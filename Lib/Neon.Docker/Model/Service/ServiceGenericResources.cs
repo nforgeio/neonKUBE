@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Named setting for a resource.
         /// </summary>
         [JsonProperty(PropertyName = "NamedResourceSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "NamedResourceSpec")]
+        [YamlMember(Alias = "NamedResourceSpec", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceNamedResourceSpec NamedResourceSpec { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Discrete setting for a resource.
         /// </summary>
         [JsonProperty(PropertyName = "DiscreteResourceSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "DiscreteResourceSpec")]
+        [YamlMember(Alias = "DiscreteResourceSpec", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceDiscreteResourceSpec DiscreteResourceSpec { get; set; }
 

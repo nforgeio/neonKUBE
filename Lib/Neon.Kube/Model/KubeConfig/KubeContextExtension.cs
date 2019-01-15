@@ -58,7 +58,7 @@ namespace Neon.Kube
         /// on the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "sshCredentials", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "sshCredentials")]
+        [YamlMember(Alias = "sshCredentials", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public SshCredentials SshCredentials { get; private set; }
 
@@ -66,7 +66,7 @@ namespace Neon.Kube
         /// Returns the cluster definition.
         /// </summary>
         [JsonProperty(PropertyName = "clusterDefinition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "clusterDefinition")]
+        [YamlMember(Alias = "clusterDefinition", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ClusterDefinition ClusterDefinition { get; private set; }
     }

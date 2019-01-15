@@ -94,7 +94,7 @@ namespace Neon.Kube
         /// The name of the current context or <c>null</c> when there is no current context.
         /// </summary>
         [JsonProperty(PropertyName = "current-context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "current-context")]
+        [YamlMember(Alias = "current-context", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CurrentContext { get; set; }
 
@@ -102,7 +102,7 @@ namespace Neon.Kube
         /// The cluster API server protocol version (defaults to <b>v1</b>).
         /// </summary>
         [JsonProperty(PropertyName = "apiVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "apiVersion")]
+        [YamlMember(Alias = "apiVersion", ApplyNamingConventions = false)]
         [DefaultValue("v1")]
         public string ApiVersion { get; set; } = "v1";
 
@@ -110,7 +110,7 @@ namespace Neon.Kube
         /// Identifies the document type: <b>Config</b>.
         /// </summary>
         [JsonProperty(PropertyName = "kind", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "kind")]
+        [YamlMember(Alias = "kind", ApplyNamingConventions = false)]
         [DefaultValue("Config")]
         public string Kind { get; set; } = "Config";
 
@@ -118,21 +118,21 @@ namespace Neon.Kube
         /// The list of cluster configurations.
         /// </summary>
         [JsonProperty(PropertyName = "clusters", Required = Required.Always)]
-        [YamlMember(Alias = "clusters")]
+        [YamlMember(Alias = "clusters", ApplyNamingConventions = false)]
         public List<KubeConfigCluster> Clusters { get; set; } = new List<KubeConfigCluster>();
 
         /// <summary>
         /// The list of user configurations.
         /// </summary>
         [JsonProperty(PropertyName = "users", Required = Required.Always)]
-        [YamlMember(Alias = "users")]
+        [YamlMember(Alias = "users", ApplyNamingConventions = false)]
         public List<KubeConfigUser> Users { get; set; } = new List<KubeConfigUser>();
 
         /// <summary>
         /// The list of config contexts.
         /// </summary>
         [JsonProperty(PropertyName = "contexts", Required = Required.Always)]
-        [YamlMember(Alias = "contexts")]
+        [YamlMember(Alias = "contexts", ApplyNamingConventions = false)]
         public List<KubeConfigContext> Contexts { get; set; } = new List<KubeConfigContext>();
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace Neon.Kube
         /// The optional dictionary of preferences.
         /// </summary>
         [JsonProperty(PropertyName = "preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "preferences")]
+        [YamlMember(Alias = "preferences", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, string> Preferences { get; set; } = null;
 

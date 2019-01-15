@@ -60,32 +60,32 @@ namespace Neon.Kube
         public const string ReservedLabelPrefix = "io.neonkube/";
 
         /// <summary>
-        /// Parses a cluster definition from JSON text.
+        /// Parses a cluster definition from YAML text.
         /// </summary>
-        /// <param name="json">The JSON text.</param>
+        /// <param name="yaml">The JSON text.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
         /// <remarks>
         /// <note>
         /// The source is first preprocessed using <see cref="PreprocessReader"/>
-        /// and then is parsed as JSON.
+        /// and then is parsed as YAML.
         /// </note>
         /// </remarks>
-        public static ClusterDefinition FromJson(string json, bool strict = false)
+        public static ClusterDefinition FromYaml(string yaml, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(json != null);
+            Covenant.Requires<ArgumentNullException>(yaml != null);
 
-            using (var stringReader = new StringReader(json))
+            using (var stringReader = new StringReader(yaml))
             {
                 using (var preprocessReader = new PreprocessReader(stringReader))
                 {
-                    return NeonHelper.JsonDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
+                    return NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
                 }
             }
         }
 
         /// <summary>
-        /// Parses and validates a cluster definition file.
+        /// Parses and validates a YAML cluster definition file.
         /// </summary>
         /// <param name="path">The file path.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
@@ -96,7 +96,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Parses a cluster definition from a file.
+        /// Parses a YAML cluster definition from a file.
         /// </summary>
         /// <param name="path">The file path.</param>
         /// <param name="strict">Optionally require that all input properties map to <see cref="ClusterDefinition"/> properties.</param>
@@ -118,7 +118,7 @@ namespace Neon.Kube
                 {
                     using (var preprocessReader = new PreprocessReader(stringReader))
                     {
-                        var clusterDefinition = NeonHelper.JsonDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
+                        var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
                         if (clusterDefinition == null)
                         {
@@ -202,14 +202,14 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Name", Required = Required.Always)]
-        [YamlMember(Alias = "Name")]
+        [YamlMember(Alias = "Name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
         /// Identifies the tool/version used to provision the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Provisioner", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Provisioner")]
+        [YamlMember(Alias = "Provisioner", ApplyNamingConventions = false)]
         [DefaultValue(defaultProvisioner)]
         public string Provisioner { get; set; } = defaultProvisioner;
 
@@ -230,7 +230,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "DrivePrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "DrivePrefix")]
+        [YamlMember(Alias = "DrivePrefix", ApplyNamingConventions = false)]
         [DefaultValue(defaultDrivePrefix)]
         public string DrivePrefix { get; set; } = defaultDrivePrefix;
 
@@ -239,7 +239,7 @@ namespace Neon.Kube
         /// default for safety.
         /// </summary>
         [JsonProperty(PropertyName = "AllowUnitTesting", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "AllowUnitTesting")]
+        [YamlMember(Alias = "AllowUnitTesting", ApplyNamingConventions = false)]
         [DefaultValue(defaultAllowUnitTesting)]
         public bool AllowUnitTesting { get; set; } = defaultAllowUnitTesting;
 
@@ -248,7 +248,7 @@ namespace Neon.Kube
         /// <c>null</c> which indicates that the cluster will be hosted on private servers.
         /// </summary>
         [JsonProperty(PropertyName = "Hosting", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Hosting")]
+        [YamlMember(Alias = "Hosting", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public HostingOptions Hosting { get; set; } = null;
 
@@ -261,7 +261,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Datacenter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Datacenter")]
+        [YamlMember(Alias = "Datacenter", ApplyNamingConventions = false)]
         [DefaultValue(defaultDatacenter)]
         public string Datacenter { get; set; } = defaultDatacenter;
 
@@ -269,7 +269,7 @@ namespace Neon.Kube
         /// Indicates how the cluster is being used.
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Environment")]
+        [YamlMember(Alias = "Environment", ApplyNamingConventions = false)]
         [JsonConverter(typeof(StringEnumConverter))]
         [DefaultValue(EnvironmentType.Other)]
         public EnvironmentType Environment { get; set; } = EnvironmentType.Other;
@@ -286,7 +286,7 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "TimeSources", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "TimeSources")]
+        [YamlMember(Alias = "TimeSources", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string[] TimeSources { get; set; } = null;
 
@@ -313,7 +313,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PackageProxy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PackageProxy")]
+        [YamlMember(Alias = "PackageProxy", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PackageProxy { get; set; } = null;
 
@@ -321,7 +321,7 @@ namespace Neon.Kube
         /// Optionally specifies setup process related options.
         /// </summary>
         [JsonProperty(PropertyName = "Setup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Setup")]
+        [YamlMember(Alias = "Setup", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public SetupOptions Setup { get; set; } = null;
 
@@ -329,7 +329,7 @@ namespace Neon.Kube
         /// Specifies host node options.
         /// </summary>
         [JsonProperty(PropertyName = "Node", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Node")]
+        [YamlMember(Alias = "Node", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public NodeOptions NodeOptions { get; set; } = new NodeOptions();
 
@@ -337,7 +337,7 @@ namespace Neon.Kube
         /// Describes the cluster's network configuration.
         /// </summary>
         [JsonProperty(PropertyName = "Network", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Network")]
+        [YamlMember(Alias = "Network", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public NetworkOptions Network { get; set; } = new NetworkOptions();
 
@@ -345,7 +345,7 @@ namespace Neon.Kube
         /// Describes the host nodes in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
-        [YamlMember(Alias = "Nodes")]
+        [YamlMember(Alias = "Nodes", ApplyNamingConventions = false)]
         public Dictionary<string, NodeDefinition> NodeDefinitions { get; set; } = new Dictionary<string, NodeDefinition>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>

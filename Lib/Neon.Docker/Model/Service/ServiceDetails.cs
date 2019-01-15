@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// The service ID.
         /// </summary>
         [JsonProperty(PropertyName = "ID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "ID")]
+        [YamlMember(Alias = "ID", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ID { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// Service update version information.
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Version")]
+        [YamlMember(Alias = "Version", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceVersion Version { get; set; }
 
@@ -48,7 +48,7 @@ namespace Neon.Docker
         /// Time when the service was created (as a string).
         /// </summary>
         [JsonProperty(PropertyName = "CreatedAt", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "CreatedAt")]
+        [YamlMember(Alias = "CreatedAt", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CreatedAt { get; set; }
 
@@ -66,7 +66,7 @@ namespace Neon.Docker
         /// Time when the service was last created or updated (as a string).
         /// </summary>
         [JsonProperty(PropertyName = "UpdatedAt", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "UpdatedAt")]
+        [YamlMember(Alias = "UpdatedAt", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string UpdatedAt { get; set; }
 
@@ -84,7 +84,7 @@ namespace Neon.Docker
         /// The service specification.
         /// </summary>
         [JsonProperty(PropertyName = "Spec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Spec")]
+        [YamlMember(Alias = "Spec", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceSpec Spec { get; set; }
 
@@ -94,7 +94,7 @@ namespace Neon.Docker
         /// back.
         /// </summary>
         [JsonProperty(PropertyName = "PreviousSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "PreviousSpec")]
+        [YamlMember(Alias = "PreviousSpec", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceSpec PreviousSpec { get; set; }
 
@@ -102,7 +102,7 @@ namespace Neon.Docker
         /// Describes the service's current endpoint state.
         /// </summary>
         [JsonProperty(PropertyName = "Endpoint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Endpoint")]
+        [YamlMember(Alias = "Endpoint", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceEndpoint Endpoint { get; set; }
 
@@ -110,7 +110,7 @@ namespace Neon.Docker
         /// Describes the service update status.
         /// </summary>
         [JsonProperty(PropertyName = "UpdateStatus", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "UpdateStatus")]
+        [YamlMember(Alias = "UpdateStatus", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceUpdateStatus UpdateStatus { get; set; }
 

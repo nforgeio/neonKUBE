@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// IP addresses of the nameservers.
         /// </summary>
         [JsonProperty(PropertyName = "Nameservers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Nameservers")]
+        [YamlMember(Alias = "Nameservers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> Nameservers { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Domain search list for hostname lookups.
         /// </summary>
         [JsonProperty(PropertyName = "Search", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Search")]
+        [YamlMember(Alias = "Search", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> Search { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// Low-level internal resolver options.  See: http://manpages.ubuntu.com/manpages/precise/man5/resolvconf.conf.5.html
         /// </summary>
         [JsonProperty(PropertyName = "Options", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Options")]
+        [YamlMember(Alias = "Options", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> Options { get; set; }
 

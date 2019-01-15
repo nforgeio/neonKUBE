@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// <b>Windows Only:</b> Windows container credential specification.
         /// </summary>
         [JsonProperty(PropertyName = "CredentialSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "CredentialSpec")]
+        [YamlMember(Alias = "CredentialSpec", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceCredentialSpec CredentialSpec { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// SELinux labels for the container.
         /// </summary>
         [JsonProperty(PropertyName = "SELinuxContext", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "SELinuxContext")]
+        [YamlMember(Alias = "SELinuxContext", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceSELinuxContext SELinuxContext { get; set; }
 

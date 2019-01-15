@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Spread swarm orchestrator options.
         /// </summary>
         [JsonProperty(PropertyName = "Spread", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Spread")]
+        [YamlMember(Alias = "Spread", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<ServicePlacementSpreadSettings> Spread { get; set; }
 

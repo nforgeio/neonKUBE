@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Named setting for a resource.
         /// </summary>
         [JsonProperty(PropertyName = "Propagation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Propagation")]
+        [YamlMember(Alias = "Propagation", ApplyNamingConventions = false)]
         [DefaultValue(default(ServiceMountBindPropagation))]
         public ServiceMountBindPropagation Propagation { get; set; }
 

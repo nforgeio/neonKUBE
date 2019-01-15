@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// The service Name.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Name")]
+        [YamlMember(Alias = "Name", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Name { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Service labels.
         /// </summary>
         [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Labels")]
+        [YamlMember(Alias = "Labels", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, string> Labels { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// User modifiable service task configuration.
         /// </summary>
         [JsonProperty(PropertyName = "TaskTemplate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "TaskTemplate")]
+        [YamlMember(Alias = "TaskTemplate", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceTaskTemplate TaskTemplate { get; set; }
 
@@ -48,7 +48,7 @@ namespace Neon.Docker
         /// Service scheduling mode details.
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Mode")]
+        [YamlMember(Alias = "Mode", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceSchedulingMode Mode { get; set; }
 
@@ -56,7 +56,7 @@ namespace Neon.Docker
         /// Specifies the service update strategy.
         /// </summary>
         [JsonProperty(PropertyName = "UpdateConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "UpdateConfig")]
+        [YamlMember(Alias = "UpdateConfig", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceUpdateConfig UpdateConfig { get; set; }
 
@@ -64,7 +64,7 @@ namespace Neon.Docker
         /// Specifies the service update strategy.
         /// </summary>
         [JsonProperty(PropertyName = "RollbackConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "RollbackConfig")]
+        [YamlMember(Alias = "RollbackConfig", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceRollbackConfig RollbackConfig { get; set; }
 
@@ -72,7 +72,7 @@ namespace Neon.Docker
         /// Specifies attached networks.
         /// </summary>
         [JsonProperty(PropertyName = "Networks", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Networks")]
+        [YamlMember(Alias = "Networks", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<ServiceNetwork> Networks { get; set; }
 
@@ -80,7 +80,7 @@ namespace Neon.Docker
         /// Service endpoint and Docker load balancer settings.
         /// </summary>
         [JsonProperty(PropertyName = "EndpointSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "EndpointSpec")]
+        [YamlMember(Alias = "EndpointSpec", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceEndpointSpec EndpointSpec { get; set; }
 

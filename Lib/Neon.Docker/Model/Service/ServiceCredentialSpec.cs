@@ -25,7 +25,7 @@ namespace Neon.Docker
         /// Specifies the file on the Docker host with the credentials.
         /// </summary>
         [JsonProperty(PropertyName = "File", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "File")]
+        [YamlMember(Alias = "File", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string File { get; set; }
 
@@ -34,7 +34,7 @@ namespace Neon.Docker
         /// credentials.
         /// </summary>
         [JsonProperty(PropertyName = "Registry", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Registry")]
+        [YamlMember(Alias = "Registry", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Registry { get; set; }
 

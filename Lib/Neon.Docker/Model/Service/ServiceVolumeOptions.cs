@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Enables populating the volume with data from the container target.
         /// </summary>
         [JsonProperty(PropertyName = "NoCopy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "NoCopy")]
+        [YamlMember(Alias = "NoCopy", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool NoCopy { get; set; } = false;
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Volume driver labels.
         /// </summary>
         [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Labels")]
+        [YamlMember(Alias = "Labels", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, string> Labels { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// Optionally specifies volume driver and options.
         /// </summary>
         [JsonProperty(PropertyName = "DriverConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "DriverConfig")]
+        [YamlMember(Alias = "DriverConfig", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ServiceVolumeDriverConfig DriverConfig { get; set; }
 

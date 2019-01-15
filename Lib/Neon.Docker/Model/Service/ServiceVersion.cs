@@ -25,7 +25,7 @@ namespace Neon.Docker
         /// Update index for the service when the <see cref="ServiceDetails"/> snapshot was taken.
         /// </summary>
         [JsonProperty(PropertyName = "Index", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Index")]
+        [YamlMember(Alias = "Index", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public long Index { get; set; }
 

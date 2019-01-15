@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Specifies the condition under which a service container should be restarted.
         /// </summary>
         [JsonProperty(PropertyName = "Condition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Condition")]
+        [YamlMember(Alias = "Condition", ApplyNamingConventions = false)]
         [DefaultValue(default(ServiceRestartCondition))]
         public ServiceRestartCondition Condition { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Deplay between restart attempts (nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Delay", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Delay")]
+        [YamlMember(Alias = "Delay", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? Delay { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// Specifies the maximum number of container restart attempts before giving up.
         /// </summary>
         [JsonProperty(PropertyName = "MaxAttempts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "MaxAttempts")]
+        [YamlMember(Alias = "MaxAttempts", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? MaxAttempts { get; set; }
 
@@ -49,7 +49,7 @@ namespace Neon.Docker
         /// enavluated (nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Window", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Window")]
+        [YamlMember(Alias = "Window", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? Window { get; set; }
 

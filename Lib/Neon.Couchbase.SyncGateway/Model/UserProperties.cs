@@ -40,35 +40,35 @@ namespace Neon.Couchbase.SyncGateway
         /// The user's unique name within the database.
         /// </summary>
         [JsonProperty(PropertyName = "Name")]
-        [YamlMember(Alias = "Name")]
+        [YamlMember(Alias = "Name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
         /// The user's password.
         /// </summary>
         [JsonProperty(PropertyName = "Password")]
-        [YamlMember(Alias = "Password")]
+        [YamlMember(Alias = "Password", ApplyNamingConventions = false)]
         public string Password { get; set; }
 
         /// <summary>
         /// The user's email address.
         /// </summary>
         [JsonProperty(PropertyName = "Email")]
-        [YamlMember(Alias = "Email")]
+        [YamlMember(Alias = "Email", ApplyNamingConventions = false)]
         public string Email { get; set; }
 
         /// <summary>
         /// Indicates whether the user is disabled.  Disabled users cannot login.
         /// </summary>
         [JsonProperty(PropertyName = "IsDisabled")]
-        [YamlMember(Alias = "IsDisabled")]
+        [YamlMember(Alias = "IsDisabled", ApplyNamingConventions = false)]
         public bool IsDisabled { get; set; }
 
         /// <summary>
         /// The channels to be made accessable to this specific user.
         /// </summary>
         [JsonProperty(PropertyName = "AdminChannels")]
-        [YamlMember(Alias = "AdminChannels")]
+        [YamlMember(Alias = "AdminChannels", ApplyNamingConventions = false)]
         public List<string> AdminChannels { get; set; } = new List<string>();
 
         /// <summary>
@@ -78,14 +78,14 @@ namespace Neon.Couchbase.SyncGateway
         /// granted by the Sync-Server's sync function.
         /// </summary>
         [JsonProperty(PropertyName = "AllChannels")]
-        [YamlMember(Alias = "AllChannels")]
+        [YamlMember(Alias = "AllChannels", ApplyNamingConventions = false)]
         public List<String> AllChannels { get; set; } = new List<string>();
 
         /// <summary>
         /// Identifies the roles the user may assume.
         /// </summary>
         [JsonProperty(PropertyName = "Roles")]
-        [YamlMember(Alias = "Roles")]
+        [YamlMember(Alias = "Roles", ApplyNamingConventions = false)]
         public List<string> Roles { get; set; } = new List<string>();
     }
 }

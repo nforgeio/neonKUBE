@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Maximum number of tasks to be updated in parallel during an update interation.
         /// </summary>
         [JsonProperty(PropertyName = "Parallelism", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Parallelism")]
+        [YamlMember(Alias = "Parallelism", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? Parallelism { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Time between update interations (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Delay", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Delay")]
+        [YamlMember(Alias = "Delay", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? Delay { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neon.Docker
         /// Action to take if an updated task fails to run or stops running during the update.
         /// </summary>
         [JsonProperty(PropertyName = "FailureAction", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "FailureAction")]
+        [YamlMember(Alias = "FailureAction", ApplyNamingConventions = false)]
         [DefaultValue(default(ServiceUpdateFailureAction))]
         public ServiceUpdateFailureAction FailureAction { get; set; }
 
@@ -48,7 +48,7 @@ namespace Neon.Docker
         /// Time to monitor updated tasks for failure (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Monitor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Monitor")]
+        [YamlMember(Alias = "Monitor", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public long? Monitor { get; set; }
 
@@ -57,7 +57,7 @@ namespace Neon.Docker
         /// action is invoked, specified as a floating point number between 0 and 1.
         /// </summary>
         [JsonProperty(PropertyName = "MaxFailureRatio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "MaxFailureRatio")]
+        [YamlMember(Alias = "MaxFailureRatio", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public double? MaxFailureRatio { get; set; }
 
@@ -65,7 +65,7 @@ namespace Neon.Docker
         /// Specifies the order in which the running task is stopped and the new task is started.
         /// </summary>
         [JsonProperty(PropertyName = "Order", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Order")]
+        [YamlMember(Alias = "Order", ApplyNamingConventions = false)]
         [DefaultValue(default(ServiceUpdateOrder))]
         public ServiceUpdateOrder Order { get; set; }
 

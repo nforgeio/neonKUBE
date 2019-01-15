@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// The number of service replicas (tasks/containers).
         /// </summary>
         [JsonProperty(PropertyName = "Replicas", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Replicas")]
+        [YamlMember(Alias = "Replicas", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int Replicas { get; set; }
 

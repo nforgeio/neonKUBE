@@ -24,7 +24,7 @@ namespace Neon.Docker
         /// Target network ID.
         /// </summary>
         [JsonProperty(PropertyName = "Target", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Target")]
+        [YamlMember(Alias = "Target", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Target { get; set; }
 
@@ -32,7 +32,7 @@ namespace Neon.Docker
         /// Network aliases (network IDs).
         /// </summary>
         [JsonProperty(PropertyName = "Aliases", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [YamlMember(Alias = "Aliases")]
+        [YamlMember(Alias = "Aliases", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> Aliases { get; set; }
 
