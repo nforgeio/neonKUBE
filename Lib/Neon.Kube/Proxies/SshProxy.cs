@@ -676,19 +676,19 @@ namespace Neon.Kube
             //
             // To ensure against this, I'm going to do the following:
             //
-            //      1. Create a transient file at [/dev/shm/neon/rebooting]. 
+            //      1. Create a transient file at [/dev/shm/neonkube/rebooting]. 
             //         Since [/dev/shm] is a TMPFS, this file will no longer
             //         exist after a reboot.
             //
             //      2. Command the server to reboot.
             //
             //      3. Loop and attempt to reconnect.  After reconnecting,
-            //         verify that the [/dev/shm/neon/rebooting] file is no
+            //         verify that the [/dev/shm/neonkube/rebooting] file is no
             //         longer present.  Reboot is complete if it's gone,
             //         otherwise, we need to continue trying.
             //
             //         We're also going to submit a new reboot command every 
-            //         10 seconds when [/dev/shm/neon/rebooting] is still present
+            //         10 seconds when [/dev/shm/neonkube/rebooting] is still present
             //         in case the original reboot command was somehow missed
             //         because the reboot command is not retried automatically.
             //  
@@ -920,7 +920,7 @@ namespace Neon.Kube
                             sshClient.Connect();
                         }
 
-                        // We need to verify that the [/dev/shm/neon/rebooting] file is not present
+                        // We need to verify that the [/dev/shm/neonkube/rebooting] file is not present
                         // to ensure that the machine has actually restarted (see [Reboot()]
                         // for more information.
 
@@ -928,7 +928,7 @@ namespace Neon.Kube
 
                         if (response.ExitStatus != 0)
                         {
-                            // [/dev/shm/neon/rebooting] file is not present, so we're done.
+                            // [/dev/shm/neonkube/rebooting] file is not present, so we're done.
 
                             break;
                         }
@@ -2145,7 +2145,7 @@ namespace Neon.Kube
             //
             //      1. Generating a GUID for the operation.
             //
-            //      2. Creating a folder named [/dev/shm/neon/cmd/GUID] for the 
+            //      2. Creating a folder named [/dev/shm/neonkube/cmd/GUID] for the 
             //         operation.  This folder will be referred to as [$] below.
             //
             //      3. Generating a script called [$/cmd.sh] that 

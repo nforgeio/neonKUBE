@@ -87,8 +87,18 @@ sed -i '/^ENABLED="false"/c\ENABLED="true"' /etc/default/sysstat
 #
 # Note that [systemd] ignores [limits.conf] when starting services, etc.  It
 # has its own configuration which we'll update below.  Note that [limits.conf]
-# is still important because the kernel uses those settings when sStarting
+# is still important because the kernel uses those settings when starting
 # [systemd] as the init process 1.
+
+# $todo(jeff.lill):
+#
+# I need to think about whether this makes sense from a security perspective
+# because this means that any malicious that manages to run (even as non-root) 
+# will be able to max-out files and RAM and DOS other services.
+#
+# Now that we'll be installing a lot fewer Linux services after switching
+# to Kubernetes, it probable makes more sense to set limits for the fewer
+# specific services we're actually deploying.
 
 cat <<EOF > /etc/security/limits.conf
 # /etc/security/limits.conf
@@ -160,7 +170,7 @@ EOF
 mkdir -p /etc/systemd/user.conf.d
 chmod 764 /etc/systemd/user.conf.d
 
-cat <<EOF > /etc/systemd/user.conf.d/50-neon.conf
+cat <<EOF > /etc/systemd/user.conf.d/50-neonkube.conf
 #  This file is part of systemd.
 #
 #  systemd is free software; you can redistribute it and/or modify it
@@ -182,7 +192,8 @@ EOF
 chmod 664 /etc/systemd/user.conf.d/50-neon.conf
 
 #------------------------------------------------------------------------------
-# Tweak some kernel settings.
+# Tweak some kernel settings.  I extracted this file from a clean Ubuntu 18.04
+# installed and then made the changes marked by the "# TWEAK" comment.
 
 cat <<EOF > /etc/sysctl.conf
 #
@@ -211,23 +222,14 @@ cat <<EOF > /etc/sysctl.conf
 # Note: This may impact IPv6 TCP sessions too
 #net.ipv4.tcp_syncookies=1
 
-# Docker overlay networks require TCP keepalive packets to be
-# transmitted at least every 15 minutes on idle connections to
-# prevent zombie connections that appear to be alive but don't
-# actually transmit data.  This is described here:
-#
-#	https://github.com/moby/moby/issues/31208
-#
-# We're going to configure TCP connections to begin sending
-# keepalives after 30 seconds (5 minutes) of being idle and 
-# then every 30 seconds thereafter (regardless of any other
-# traffic).  If keepalives are not ACKed after 30*3 seconds 
-# (90 seconds), Linux will report the connection as closed 
-# to the application layer.
+# Uncomment the next line to enable packet forwarding for IPv4
+#net.ipv4.ip_forward=1
 
-net.ipv4.tcp_keepalive_time = 30
-net.ipv4.tcp_keepalive_intvl = 30
-net.ipv4.tcp_keepalive_probes = 3
+# Uncomment the next line to enable packet forwarding for IPv6
+#  Enabling this option disables Stateless Address Autoconfiguration
+#  based on Router Advertisements for this host
+#net.ipv6.conf.all.forwarding=1
+
 
 ###################################################################
 # Additional settings - these settings can improve the network
@@ -253,20 +255,27 @@ net.ipv4.tcp_keepalive_probes = 3
 #
 # Log Martian Packets
 #net.ipv4.conf.all.log_martians = 1
+#
 
 ###################################################################
-# Fluentd/TD-Agent recommended settings:
-
-net.ipv4.tcp_tw_recycle = 1
-net.ipv4.tcp_tw_reuse = 1
-
-###################################################################
-# OpenVPN requires packet forwarding.
-
-net.ipv4.ip_forward=1
+# Magic system request Key
+# 0=disable, 1=enable all
+# Debian kernels have this set to 0 (disable the key)
+# See https://www.kernel.org/doc/Documentation/sysrq.txt
+# for what other values do
+#kernel.sysrq=1
 
 ###################################################################
-# cluster settings
+# Protected links
+#
+# Protects against creating or following links under certain conditions
+# Debian kernels have both set to 1 (restricted) 
+# See https://www.kernel.org/doc/Documentation/sysctl/fs.txt
+#fs.protected_hardlinks=0
+#fs.protected_symlinks=0
+
+###################################################################
+# TWEAK: neonKUBE settings:
 
 # Explicitly set the maximum number of file descriptors for the
 # entire system.  This looks like it defaults to [398327] for
@@ -274,6 +283,80 @@ net.ipv4.ip_forward=1
 # consistency across Linux updates, etc.
 
 fs.file-max=398327
+
+###################################################################
+# TWEAK: Setting overrides recommended for custom Google Cloud images
+#
+#   https://cloud.google.com/compute/docs/images/building-custom-os
+
+# Enable syn flood protection
+net.ipv4.tcp_syncookies = 1
+
+# Ignore source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+
+# Ignore source-routed packets
+net.ipv4.conf.default.accept_source_route = 0
+
+# Ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+
+# Ignore ICMP redirects
+net.ipv4.conf.default.accept_redirects = 0
+
+# Ignore ICMP redirects from non-GW hosts
+net.ipv4.conf.all.secure_redirects = 1
+
+# Ignore ICMP redirects from non-GW hosts
+net.ipv4.conf.default.secure_redirects = 1
+
+# Don't allow traffic between networks or act as a router
+net.ipv4.ip_forward = 0
+
+# Don't allow traffic between networks or act as a router
+net.ipv4.conf.all.send_redirects = 0
+
+# Don't allow traffic between networks or act as a router
+net.ipv4.conf.default.send_redirects = 0
+
+# Reverse path filtering - IP spoofing protection
+net.ipv4.conf.all.rp_filter = 1
+
+# Reverse path filtering - IP spoofing protection
+net.ipv4.conf.default.rp_filter = 1
+
+# Ignore ICMP broadcasts to avoid participating in Smurf attacks
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+
+# Ignore bad ICMP errors
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+
+# Log spoofed, source-routed, and redirect packets
+net.ipv4.conf.all.log_martians = 1
+
+# Log spoofed, source-routed, and redirect packets
+net.ipv4.conf.default.log_martians = 1
+
+# Implement RFC 1337 fix
+net.ipv4.tcp_rfc1337 = 1
+
+# Randomize addresses of mmap base, heap, stack and VDSO page
+kernel.randomize_va_space = 2
+
+# Provide protection from ToCToU races
+fs.protected_hardlinks=1
+
+# Provide protection from ToCToU races
+fs.protected_symlinks=1
+
+# Make locating kernel addresses more difficult
+kernel.kptr_restrict=1
+
+# Set ptrace protections
+kernel.yama.ptrace_scope=1
+
+# Set perf only available to root
+kernel.perf_event_paranoid=2
 EOF
 
 #------------------------------------------------------------------------------
@@ -300,7 +383,7 @@ EOF
 #------------------------------------------------------------------------------
 # iptables may be configured to track only a small number of TCP connections by
 # default.  We're going to explicitly set the limit to 1 million connections.
-# This will consume about 8MiB of RAM.
+# This will consume about 8MiB of RAM (so not too bad).
 
 cat <<EOF > /etc/modprobe.d/nf_conntrack.conf
 # Explicitly set the maximum number of TCP connections that iptables can track.
@@ -312,7 +395,7 @@ EOF
 # Databases are generally not compatible with transparent huge pages.  It appears
 # that the best way to disable this is with a simple service.
 
-cat <<EOF > /lib/systemd/system/neon-disable-thp.service
+cat <<EOF > /lib/systemd/system/neonkube-disable-thp.service
 # Disables transparent home pages.
 
 [Unit]
@@ -326,17 +409,17 @@ ExecStart=/bin/sh -c "echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
 WantedBy=multi-user.target
 EOF
 
-systemctl enable neon-disable-thp
+systemctl enable neonkube-disable-thp
 systemctl daemon-reload
-systemctl restart neon-disable-thp
+systemctl restart neonkube-disable-thp
 
 #------------------------------------------------------------------------------
 # Configure the systemd journal to perist the journal to the file system at
-# [/var/log/journal].  We need this so the node's [neon-log-host] container
-# will be able to access the journal.
+# [/var/log/journal].  This will allow us to easily capture these logs in The
+# future so they can be included in a cluster logging solution.
 #
-# We're also setting [MaxRetentionSec=86400] which limits log local retention 
-# to one day.  This overrides the default policy which will consume up to 10%
+# We're also setting [MaxRetentionSec=345600] which limits log local retention 
+# to 4 days.  This overrides the default policy which will consume up to 10%
 # of the local file system while still providing enough time for operators
 # to manually review local logs when something bad happened to hive logging.
 
@@ -347,9 +430,7 @@ cat <<EOF >> /etc/systemd/journald.conf
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Configure the systemd journal to perist the journal to the file system at
-# [/var/log/journal].  We need this so the node's [neon-log-host] service
-# will be able to forward the system logs to the hive log aggregation
-# pipeline.
+# [/var/log/journal].
 #
 # We're also setting [MaxRetentionSec=86400] which limits log local retention 
 # to one day.  This overrides the default policy which will consume up to 10%
@@ -374,7 +455,7 @@ Storage=persistent
 #RuntimeKeepFree=
 #RuntimeMaxFileSize=
 #RuntimeMaxFiles=100
-MaxRetentionSec=86400
+MaxRetentionSec=345600
 #MaxFileSec=1month
 #ForwardToSyslog=yes
 #ForwardToKMsg=no
@@ -400,10 +481,10 @@ EOF
 # an [exit] code file) and are older than one day (or perhaps even older than an
 # hour or two) and then purge those.  Not a high priority.
 
-cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
+cat <<EOF > ${NEON_BIN_FOLDER}/neonkube-cleaner
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         neon-cleaner
+# FILE:         neonkube-cleaner
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
@@ -415,7 +496,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
 #      sensitive information such as credentials, etc.
 #
 #   2. Purge temporary Neon command files uploaded by SshProxy.  These
-#      are located within folder beneath [/dev/shm/neon/cmd].  Although
+#      are located within folder beneath [/dev/shm/neonkube/cmd].  Although
 #      SshProxy removes these files after commands finish executing, it
 #      is possible to see these accumulate if the session was interrupted.
 #      We'll purge folders and files older than one day.
@@ -450,9 +531,9 @@ do
 
     # Clean the [SshProxy] temporary command files.
 
-    if [ -d /dev/shm/neon/cmd ] ; then
-        echo "[INFO] Cleaning: /dev/shm/neon/cmd"
-        find /dev/shm/neon/cmd ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+    if [ -d /dev/shm/neonkube/cmd ] ; then
+        echo "[INFO] Cleaning: /dev/shm/neonkube/cmd"
+        find /dev/shm/neonkube/cmd ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
     fi
 
     # Clean the [SshProxy] temporary upload files.
@@ -471,9 +552,9 @@ do
 
     # Clean the [SshProxy] temporary exec files.
 
-    if [ -d /var/lib/neon/exec ] ; then
-        echo "[INFO] Cleaning: /var/lib/neon/exec"
-        find /var/lib/neon/exec ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+    if [ -d "${HOME}/.exec" ] ; then
+        echo "[INFO] Cleaning: "${HOME}/.exec""
+        find "${HOME}/.exec" ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
     fi
 
     # Sleep for a while before trying again.
@@ -482,22 +563,22 @@ do
 done
 EOF
 
-chmod 700 ${NEON_BIN_FOLDER}/neon-cleaner
+chmod 700 ${NEON_BIN_FOLDER}/neonkube-cleaner
 
-# Generate the [neon-cleaner] systemd unit.
+# Generate the [neonkube-cleaner] systemd unit.
 
-cat <<EOF > /lib/systemd/system/neon-cleaner.service
+cat <<EOF > /lib/systemd/system/neonkube-cleaner.service
 # A service that periodically shreds the root's Bash history
 # as a security measure.
 
 [Unit]
-Description=neon-cleaner
+Description=neonkube-cleaner
 Documentation=
 After=local-fs.target
 Requires=local-fs.target
 
 [Service]
-ExecStart=${NEON_BIN_FOLDER}/neon-cleaner
+ExecStart=${NEON_BIN_FOLDER}/neonkube-cleaner
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -505,9 +586,9 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-systemctl enable neon-cleaner
+systemctl enable neonkube-cleaner
 systemctl daemon-reload
-systemctl restart neon-cleaner
+systemctl restart neonkube-cleaner
 
 #------------------------------------------------------------------------------
 # Configure the PowerDNS Recursor.
@@ -1099,47 +1180,6 @@ sleep 10    # Give the service some time to start.
 echo "" > /etc/resolvconf/interface-order
 echo "nameserver ${NEON_NODE_IP}" > /etc/resolvconf/resolv.conf.d/base
 resolvconf -u
-
-#------------------------------------------------------------------------------
-# Configure a CRON job that performs daily node maintenance including purging
-# unreferenced Docker images.
-
-cat <<EOF > ${NEON_BIN_FOLDER}/neon-host-maintenance 
-#!/bin/bash
-#------------------------------------------------------------------------------
-# FILE:         neon-host-maintenance
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
-#
-# This script runs is invoked by CRON to perform periodic host maintenance incuding
-# purging unreferenced Docker images to avoid maxing out the file system.  This
-# script needs root privileges.
-
-docker image prune --all --force
-EOF
-
-chmod 744 ${NEON_BIN_FOLDER}/neon-host-maintenance
-
-# $todo(jeff.lill):
-#
-# It would be nice to log what happened during maintenance and record This
-# in Elasticsearch for analysis.
-
-cat <<EOF > /etc/cron.d/neon-host-maintenance
-#------------------------------------------------------------------------------
-# FILE:         neon-host-maintenance
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
-#
-# Daily cluster related host maintenance scheduled for 9:15pm system time (UTC)
-# or the middle of the night Pacific time.
-
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-
-15 21 * * * root ${NEON_BIN_FOLDER}/neon-host-maintenance
-EOF
-
-chmod 644 /etc/cron.d/neon-host-maintenance
 
 # Indicate that the script has completed.
 
