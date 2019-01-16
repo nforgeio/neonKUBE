@@ -190,7 +190,7 @@ namespace Neon.Kube
             };
 
             controller.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
-            controller.AddStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
+            controller.AddStep("virtual machines", (node, stepDelay) => ProvisionVM(node));
             controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())

@@ -238,7 +238,7 @@ namespace Neon.Kube
             controller.AddStep("node folders", (node, stepDelay) => node.CreateHostFolders());
             controller.AddStep("verify readiness", (node, stepDelay) => VerifyReady(node));
             controller.AddStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
-            controller.AddStep("provision virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
+            controller.AddStep("virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
             controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())
@@ -408,7 +408,7 @@ namespace Neon.Kube
                                 Thread.Sleep(1000);
                             }
                         },
-                        TimeSpan.FromSeconds(120));
+                        TimeSpan.FromMinutes(3));
                 }
                 catch (TimeoutException)
                 {
@@ -462,12 +462,12 @@ namespace Neon.Kube
                         // to delay for a few seconds before performing the operations.
 
                         Thread.Sleep(TimeSpan.FromSeconds(5));
-                        nodeProxy.SudoCommand("growpart /dev/xvda 1");
-                        nodeProxy.SudoCommand("resize2fs /dev/xvda1");
+                        nodeProxy.SudoCommand("growpart /dev/xvda 2");
+                        nodeProxy.SudoCommand("resize2fs /dev/xvda2");
 
                         // Reboot to pick up the changes.
 
-                        xenSshProxy.Status = FormatVmStatus(vmName, "reboot");
+                        xenSshProxy.Status = FormatVmStatus(vmName, "rebooting");
                         nodeProxy.Reboot(wait: false);
                     }
                 }

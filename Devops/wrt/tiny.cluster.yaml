@@ -1,0 +1,38 @@
+Name: wrt-tiny
+Datacenter: wrt-00
+Environment: development
+TimeSources:
+- pool.ntp.org
+AllowUnitTesting: true
+Hosting:
+  Environment: xenserver
+  VmHostUsername: $<<HIVE_XENSERVER_USERNAME>>
+  VmHostPassword: $<<HIVE_XENSERVER_PASSWORD>>
+  VmNamePrefix: jeff
+  VmHosts:
+  - Name: WRT-00-XEN-00
+    Address: 10.100.128.85
+  - Name: WRT-00-XEN-01
+    Address: 10.100.128.91
+  - Name: WRT-00-XEN-02
+    Address: 10.100.128.97
+  - Name: WRT-00-XEN-03
+    Address: 10.100.128.103
+  - Name: WRT-00-XEN-04
+    Address: 10.100.128.109
+  XenServer:
+     Snapshot: true
+Network:
+  PremiseSubnet: 10.100.0.0/16
+  NodesSubnet: 10.100.24.0/22
+Node:
+   Upgrade: none
+   PasswordLength: 20
+Nodes:
+   master-0:
+     Role: master
+     PrivateAddress: 10.100.24.0
+     VmHost: WRT-00-XEN-00
+     VmProcessors: 4
+     VmMemory: 4GB
+     VmDisk: 32GB

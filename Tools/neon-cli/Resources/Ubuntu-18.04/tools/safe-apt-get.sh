@@ -87,7 +87,7 @@ do
             # Looks like the operation failed due to a non-transient
             # problem so we'll break out of the retry loop and return
             # and error.
-            exit $EXIT_CODE
+            break
         fi
 
         RETRY=true
