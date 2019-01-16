@@ -35,10 +35,10 @@ namespace Neon.Kube
     /// nodes for pod scheduling and other purposes.
     /// </para>
     /// <para>
-    /// By convention, label names should use a reverse domain name form using a
-    /// DNS domain you control.  For example, cluster related labels are prefixed
-    /// with <b>"io.neonkube/..."</b>.  You should follow this convention for any
-    /// custom labels you define.
+    /// By convention, label names should use a reverse domain name prefix using a
+    /// DNS domain you control.  For example, neonCLUSTER cluster related labels 
+    /// are prefixed with <b>"io.neonkube/..."</b>.  You should follow this convention 
+    /// for any custom labels you define.
     /// </para>
     /// <note>
     /// You may specify labels without a domain prefix if you're not concerned
@@ -60,18 +60,18 @@ namespace Neon.Kube
     public class NodeLabels
     {
         private INeonLogger     log = LogManager.Default.GetLogger<NodeLabels>();
-        private NodeDefinition  node;    // The parent node
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="parentNode">The parent node.</param>
-        public NodeLabels(NodeDefinition parentNode)
+        public NodeLabels()
         {
-            Covenant.Requires<ArgumentNullException>(parentNode != null);
-
-            this.node = parentNode;
         }
+
+        /// <summary>
+        /// The parent node definition.
+        /// </summary>
+        internal NodeDefinition Node { get; set; }
 
         //---------------------------------------------------------------------
         // Define global cluster and node definition labels.
@@ -363,7 +363,7 @@ namespace Neon.Kube
         [DefaultValue("")]
         public string PhysicalFaultDomain
         {
-            get { return string.IsNullOrWhiteSpace(physicalFaultDomain) ? node.Name : physicalFaultDomain; }
+            get { return string.IsNullOrWhiteSpace(physicalFaultDomain) ? Node.Name : physicalFaultDomain; }
             set { physicalFaultDomain = value; }
         }
 
@@ -383,9 +383,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "PhysicalPower", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [YamlMember(Alias = "PhysicalPower", ApplyNamingConventions = false)]
         [DefaultValue("")]
-        public string PhysicalPower { get; set; } = string.Empty;
-
-        // $todo(jeff.lill): Define the format of this string for APC PDUs.
+        public string PhysicalPower { get; set; } = string.Empty;       // $todo(jeff.lill): Define the format of this string for APC PDUs.
 
         //---------------------------------------------------------------------
 
@@ -402,7 +400,7 @@ namespace Neon.Kube
         /// </remarks>
         [JsonProperty(PropertyName = "Custom")]
         [YamlMember(Alias = "Custom", ApplyNamingConventions = false)]
-        public Dictionary<string, object> Custom { get; set; } = new Dictionary<string, object>();
+        public Dictionary<string, string> Custom { get; set; } = new Dictionary<string, string>();
 
         //---------------------------------------------------------------------
         // Implementation
@@ -424,16 +422,16 @@ namespace Neon.Kube
 
                 // Standard labels from the parent node definition.
 
-                list.Add(new KeyValuePair<string, object>(LabelPublicAddress,           node.PublicAddress));
-                list.Add(new KeyValuePair<string, object>(LabelPrivateAddress,          node.PrivateAddress));
-                list.Add(new KeyValuePair<string, object>(LabelRole,                    node.Role));
+                list.Add(new KeyValuePair<string, object>(LabelPublicAddress,           Node.PublicAddress));
+                list.Add(new KeyValuePair<string, object>(LabelPrivateAddress,          Node.PrivateAddress));
+                list.Add(new KeyValuePair<string, object>(LabelRole,                    Node.Role));
 
-                if (node.Azure != null)
+                if (Node.Azure != null)
                 {
-                    list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,         node.Azure.VmSize));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,    node.Azure.StorageType));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveCount,     node.Azure.HardDriveCount));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSizeGB,    node.Azure.HardDriveSizeGB));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,         Node.Azure.VmSize));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,    Node.Azure.StorageType));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveCount,     Node.Azure.HardDriveCount));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSizeGB,    Node.Azure.HardDriveSizeGB));
                 }
 
                 // Standard labels from this class.
@@ -469,7 +467,7 @@ namespace Neon.Kube
             }
             catch (Exception e)
             {
-                log.LogWarn(() => $"[node={node.Name}]: [{e.GetType().Name}] parsing [{label.Key}={label.Value}");
+                log.LogWarn(() => $"[node={Node.Name}]: [{e.GetType().Name}] parsing [{label.Key}={label.Value}");
             }
         }
 
@@ -488,42 +486,42 @@ namespace Neon.Kube
             {
                 switch (label.Key)
                 {
-                    case LabelPublicAddress:            node.PublicAddress = label.Value; break;
-                    case LabelPrivateAddress:           node.PrivateAddress = label.Value; break;
-                    case LabelRole:                     node.Role = label.Value; break;
+                    case LabelPublicAddress:            Node.PublicAddress = label.Value; break;
+                    case LabelPrivateAddress:           Node.PrivateAddress = label.Value; break;
+                    case LabelRole:                     Node.Role = label.Value; break;
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:
                     case LabelAzureDriveCount:
                     case LabelAzureDriveSizeGB:
 
-                        if (node.Azure == null)
+                        if (Node.Azure == null)
                         {
-                            node.Azure = new AzureNodeOptions();
+                            Node.Azure = new AzureNodeOptions();
                         }
 
                         switch (label.Key)
                         {
-                            case LabelAzureVmSize:      ParseCheck(label, () => { node.Azure.VmSize = NeonHelper.ParseEnum<AzureVmSizes>(label.Value); }); break;
-                            case LabelAzureStorageType: ParseCheck(label, () => { node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
-                            case LabelAzureDriveCount:  ParseCheck(label, () => { node.Azure.HardDriveCount = int.Parse(label.Value); }); break;
-                            case LabelAzureDriveSizeGB: ParseCheck(label, () => { node.Azure.HardDriveSizeGB = int.Parse(label.Value); }); break;
+                            case LabelAzureVmSize:      ParseCheck(label, () => { Node.Azure.VmSize = NeonHelper.ParseEnum<AzureVmSizes>(label.Value); }); break;
+                            case LabelAzureStorageType: ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
+                            case LabelAzureDriveCount:  ParseCheck(label, () => { Node.Azure.HardDriveCount = int.Parse(label.Value); }); break;
+                            case LabelAzureDriveSizeGB: ParseCheck(label, () => { Node.Azure.HardDriveSizeGB = int.Parse(label.Value); }); break;
                         }
                         break;
 
-                    case LabelStorageCapacityGB:        ParseCheck(label, () => { node.Labels.StorageCapacityGB = int.Parse(label.Value); }); break;
-                    case LabelStorageLocal:             node.Labels.StorageLocal = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageHDD:               node.Labels.StorageHDD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageRedundant:         node.Labels.StorageRedundant = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageEphemeral:         node.Labels.StorageEphemeral = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageCapacityGB:        ParseCheck(label, () => { Node.Labels.StorageCapacityGB = int.Parse(label.Value); }); break;
+                    case LabelStorageLocal:             Node.Labels.StorageLocal = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageHDD:               Node.Labels.StorageHDD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageRedundant:         Node.Labels.StorageRedundant = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageEphemeral:         Node.Labels.StorageEphemeral = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
-                    case LabelComputeCores:             ParseCheck(label, () => { node.Labels.ComputeCores = int.Parse(label.Value); }); break;
-                    case LabelComputeRamMB:             ParseCheck(label, () => { node.Labels.ComputeRamMB = int.Parse(label.Value); }); break;
+                    case LabelComputeCores:             ParseCheck(label, () => { Node.Labels.ComputeCores = int.Parse(label.Value); }); break;
+                    case LabelComputeRamMB:             ParseCheck(label, () => { Node.Labels.ComputeRamMB = int.Parse(label.Value); }); break;
 
-                    case LabelPhysicalLocation:         node.Labels.PhysicalLocation = label.Value; break;
-                    case LabelPhysicalMachine:          node.Labels.PhysicalMachine = label.Value;  break;
-                    case LabelPhysicalFaultDomain:      node.Labels.PhysicalFaultDomain = label.Value; break;
-                    case LabelPhysicalPower:            node.Labels.PhysicalPower = label.Value;  break;
+                    case LabelPhysicalLocation:         Node.Labels.PhysicalLocation = label.Value; break;
+                    case LabelPhysicalMachine:          Node.Labels.PhysicalMachine = label.Value;  break;
+                    case LabelPhysicalFaultDomain:      Node.Labels.PhysicalFaultDomain = label.Value; break;
+                    case LabelPhysicalPower:            Node.Labels.PhysicalPower = label.Value;  break;
 
                     case LabelDatacenter:
                     case LabelEnvironment:
@@ -537,26 +535,10 @@ namespace Neon.Kube
 
                         // Must be a custom label.
 
-                        node.Labels.Custom.Add(label.Key, label.Value);
+                        Node.Labels.Custom.Add(label.Key, label.Value);
                         break;
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns a clone of the current instance.
-        /// </summary>
-        /// <param name="parentNode">The cloned parent node.</param>
-        /// <returns>The clone.</returns>
-        public NodeLabels Clone(NodeDefinition parentNode)
-        {
-            Covenant.Requires<ArgumentNullException>(parentNode != null);
-
-            var clone = new NodeLabels(parentNode);
-
-            this.CopyTo(clone);
-
-            return clone;
         }
 
         /// <summary>
@@ -604,11 +586,12 @@ namespace Neon.Kube
             // Verify that custom node label names satisfy the 
             // following criteria:
             // 
-            //      1. Be at least one character long.
-            //      2. Start and end with an alpha numeric character.
-            //      3. Include only alpha numeric characters, dashes,
+            //      1. Have an optional reverse domain prefix.
+            //      2. Be at least one character long.
+            //      3. Start and end with an alpha numeric character.
+            //      4. Include only alpha numeric characters, dashes,
             //         underscores or dots.
-            //      4. Does not have consecutive dots or dashes.
+            //      5. Does not have consecutive dots or dashes.
 
             foreach (var item in Custom)
             {
@@ -616,39 +599,57 @@ namespace Neon.Kube
                 {
                     throw new ClusterDefinitionException($"Custom node label for value [{item.Value}] has no label name.");
                 }
-                else if (item.Key.Contains(".."))
+
+                var pSlash = item.Key.IndexOf('/');
+                var domain = pSlash == -1 ? null : item.Key.Substring(0, pSlash);
+                var name   = pSlash == -1 ? item.Key : item.Key.Substring(pSlash + 1);
+
+                if (domain != null)
                 {
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] has consecutive dots.");
-                }
-                else if (item.Key.Contains("--"))
-                {
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] has consecutive dashes.");
-                }
-                else if (!char.IsLetterOrDigit(item.Key.First()))
-                {
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
-                }
-                else if (!char.IsLetterOrDigit(item.Key.Last()))
-                {
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
+                    if (!ClusterDefinition.DnsHostRegex.IsMatch(domain))
+                    {
+                        throw new ClusterDefinitionException($"Custom node label [{item.Key}] has an invalid reverse domain prefix.");
+                    }
+
+                    if (domain.Length > 253)
+                    {
+                        throw new ClusterDefinitionException($"Custom node label [{item.Key}] has a reverse domain prefix that's longer than 253 characters.");
+                    }
                 }
 
-                foreach (var ch in item.Key)
+                if (name.Length == 0)
+                {
+                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] is empty.");
+                }
+                else if (name.Contains(".."))
+                {
+                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] has consecutive dots.");
+                }
+                else if (name.Contains("--"))
+                {
+                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] has consecutive dashes.");
+                }
+                else if (name.Contains("__"))
+                {
+                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] has consecutive underscores.");
+                }
+                else if (!char.IsLetterOrDigit(name.First()))
+                {
+                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] does not begin with a letter or digit.");
+                }
+                else if (!char.IsLetterOrDigit(name.Last()))
+                {
+                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] does not end with a letter or digit.");
+                }
+
+                foreach (var ch in name)
                 {
                     if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-' || ch == '_')
                     {
                         continue;
                     }
 
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] has an illegal character.  Only letters, digits, dash and dots are allowed.");
-                }
-
-                foreach (var ch in item.Value.ToString())
-                {
-                    if (char.IsWhiteSpace(ch))
-                    {
-                        throw new ClusterDefinitionException($"Whitespace in the value of [{item.Key}={item.Value}] is not allowed.");
-                    }
+                    throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] has an illegal character.  Only letters, digits, dashs, underscores and dots are allowed.");
                 }
             }
         }

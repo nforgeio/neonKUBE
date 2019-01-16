@@ -17,3 +17,6 @@ Nodes:
    master-0:
      Role: master
      PrivateAddress: 10.0.0.30
+     Labels:
+       Custom:
+          io.neonkube/test: foo

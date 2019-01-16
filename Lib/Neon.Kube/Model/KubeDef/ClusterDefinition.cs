@@ -79,7 +79,11 @@ namespace Neon.Kube
             {
                 using (var preprocessReader = new PreprocessReader(stringReader))
                 {
-                    return NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
+                    var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
+
+                    clusterDefinition.Validate();
+
+                    return clusterDefinition;
                 }
             }
         }
@@ -463,6 +467,18 @@ namespace Neon.Kube
         [Pure]
         public void Validate()
         {
+            // Wire up the node label parents.
+
+            foreach (var node in NodeDefinitions.Values)
+            {
+                if (node.Labels != null)
+                {
+                    node.Labels.Node = node;
+                }
+            }
+
+            // Validate the properties.
+
             Provisioner = Provisioner ?? defaultProvisioner;
             DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();

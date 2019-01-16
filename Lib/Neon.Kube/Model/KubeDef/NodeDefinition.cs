@@ -55,7 +55,7 @@ namespace Neon.Kube
         /// </summary>
         public NodeDefinition()
         {
-            Labels = new NodeLabels(this);
+            Labels = new NodeLabels();
         }
 
         /// <summary>
