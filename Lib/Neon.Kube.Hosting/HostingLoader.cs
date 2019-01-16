@@ -87,7 +87,7 @@ namespace Neon.Kube
                 AzureHostingManager.Load();
                 GoogleHostingManager.Load();
                 HyperVHostingManager.Load();
-                HyperVDevHostingManager.Load();
+                HyperVLocalHostingManager.Load();
                 MachineHostingManager.Load();
                 XenServerHostingManager.Load();
 

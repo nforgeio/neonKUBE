@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HyperVDevHostingManager.cs
+// FILE:	    HyperVLocalHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Dynamic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -39,7 +40,7 @@ namespace Neon.Kube
     /// This is typically used for development and test purposes.
     /// </summary>
     [HostingProvider(HostingEnvironments.HyperVLocal)]
-    public class HyperVDevHostingManager : HostingManager
+    public class HyperVLocalHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
         // Private types
@@ -65,6 +66,14 @@ namespace Neon.Kube
             [YamlMember(Alias = "Length", ApplyNamingConventions = false)]
             [DefaultValue(-1)]
             public long Length { get; set; }
+
+            /// <summary>
+            /// Indicates whether the file is GZIP compressed.
+            /// </summary>
+            [JsonProperty(PropertyName = "Compressed", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            [YamlMember(Alias = "Compressed", ApplyNamingConventions = false)]
+            [DefaultValue(false)]
+            public bool Compressed { get; set; }
         }
 
         //---------------------------------------------------------------------
@@ -98,7 +107,7 @@ namespace Neon.Kube
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVDevHostingManager(ClusterProxy cluster, string logFolder = null)
+        public HyperVLocalHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             cluster.HostingManager = this;
 
@@ -321,12 +330,7 @@ namespace Neon.Kube
                 Task.Run(
                     async () =>
                     {
-                        var httpHandler = new HttpClientHandler()
-                        {
-                            AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
-                        };
-
-                        using (var client = new HttpClient(httpHandler, disposeHandler: true))
+                        using (var client = new HttpClient())
                         {
                             // Download the file.
 
@@ -334,7 +338,21 @@ namespace Neon.Kube
 
                             response.EnsureSuccessStatusCode();
 
-                            var contentLength = response.Content.Headers.ContentLength;
+                            var contentLength   = response.Content.Headers.ContentLength;
+                            var contentEncoding = response.Content.Headers.ContentEncoding.SingleOrDefault();
+                            var compressed      = false;
+
+                            if (!string.IsNullOrEmpty(contentEncoding))
+                            {
+                                if (contentEncoding.Equals("gzip", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    compressed = true;
+                                }
+                                else
+                                {
+                                    throw new KubeException($"[{cluster.Definition.Hosting.HyperVDev.HostVhdxUri}] has unsupported [Content-Encoding={contentEncoding}].");
+                                }
+                            }
 
                             try
                             {
@@ -392,7 +410,8 @@ namespace Neon.Kube
 
                             var templateInfo = new DriveTemplateInfo();
 
-                            templateInfo.Length = new FileInfo(driveTemplatePath).Length;
+                            templateInfo.Length     = new FileInfo(driveTemplatePath).Length;
+                            templateInfo.Compressed = compressed;
 
                             if (response.Headers.TryGetValues("ETag", out var etags))
                             {
@@ -500,41 +519,80 @@ namespace Neon.Kube
                 // Copy the VHDX template file to the virtual machine's
                 // virtual hard drive file.
 
-                var drivePath = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
+                var driveTemplateInfoPath = driveTemplatePath + ".info";
+                var driveTemplateInfo     = NeonHelper.JsonDeserialize<DriveTemplateInfo>(File.ReadAllText(driveTemplateInfoPath));
+                var drivePath             = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
 
                 node.Status = $"create disk";
 
-                // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
+                // $hack(jeff.lill): Update console at 2 sec intervals to mitigate annoying flicker
 
                 var updateInterval = TimeSpan.FromSeconds(2);
-                var stopwatch = new Stopwatch();
+                var stopwatch      = new Stopwatch();
 
                 stopwatch.Start();
 
                 using (var input = new FileStream(driveTemplatePath, FileMode.Open, FileAccess.Read))
                 {
-                    using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
+                    if (driveTemplateInfo.Compressed)
                     {
-                        var buffer = new byte[64 * 1024];
-                        int cb;
-
-                        while (true)
+                        using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
                         {
-                            cb = input.Read(buffer, 0, buffer.Length);
-
-                            if (cb == 0)
+                            using (var decompressor = new GZipStream(input, CompressionMode.Decompress))
                             {
-                                break;
+                                var     buffer = new byte[64 * 1024];
+                                long    cbRead = 0;
+                                int     cb;
+
+                                while (true)
+                                {
+                                    cb = decompressor.Read(buffer, 0, buffer.Length);
+
+                                    if (cb == 0)
+                                    {
+                                        break;
+                                    }
+
+                                    output.Write(buffer, 0, cb);
+
+                                    cbRead += cb;
+
+                                    var percentComplete = (int)(((double)output.Length / (double)cbRead) * 100.0);
+
+                                    if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
+                                    {
+                                        node.Status = $"[{percentComplete}%] create disk";
+                                        stopwatch.Restart();
+                                    }
+                                }
                             }
+                        }
+                    }
+                    else
+                    {
+                        using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            var buffer = new byte[64 * 1024];
+                            int cb;
 
-                            output.Write(buffer, 0, cb);
-
-                            var percentComplete = (int)(((double)output.Length / (double)input.Length) * 100.0);
-
-                            if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
+                            while (true)
                             {
-                                node.Status = $"[{percentComplete}%] create disk";
-                                stopwatch.Restart();
+                                cb = input.Read(buffer, 0, buffer.Length);
+
+                                if (cb == 0)
+                                {
+                                    break;
+                                }
+
+                                output.Write(buffer, 0, cb);
+
+                                var percentComplete = (int)(((double)output.Length / (double)input.Length) * 100.0);
+
+                                if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
+                                {
+                                    node.Status = $"[{percentComplete}%] create disk";
+                                    stopwatch.Restart();
+                                }
                             }
                         }
                     }
