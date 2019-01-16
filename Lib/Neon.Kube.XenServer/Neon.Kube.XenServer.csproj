@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -24,7 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
-    <ProjectReference Include="..\Neon.Xen\Neon.Xen.csproj" />
+    <ProjectReference Include="..\Neon.XenServer\Neon.XenServer.csproj" />
   </ItemGroup>
 
   <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />

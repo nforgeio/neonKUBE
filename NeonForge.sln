@@ -128,13 +128,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.HyperVLocal", "Li
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Machine", "Lib\Neon.Kube.Machine\Neon.Kube.Machine.csproj", "{FC110EBB-25E9-49AC-9D21-DBD956090ED1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Xen", "Lib\Neon.Kube.Xen\Neon.Kube.Xen.csproj", "{22CA72EE-FFA9-412A-B995-D51C617B8FEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.XenServer", "Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj", "{22CA72EE-FFA9-412A-B995-D51C617B8FEF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Hosting", "Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj", "{08B7000C-F261-4543-B611-5710D12263DB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.HyperV", "Lib\Neon.HyperV\Neon.HyperV.csproj", "{2E9E803A-1422-42E7-8472-4E15EDFC7002}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xen", "Lib\Neon.Xen\Neon.Xen.csproj", "{1A6C061D-83FD-4B53-8E96-80A1546C8F4B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.XenServer", "Lib\Neon.XenServer\Neon.XenServer.csproj", "{1A6C061D-83FD-4B53-8E96-80A1546C8F4B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home", "home", "{E4CB108C-A8C4-4B30-A07E-44D56027B98B}"
 	ProjectSection(SolutionItems) = preProject

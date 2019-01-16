@@ -40,7 +40,7 @@ SetVersion Neon.Kube.Xen
 SetVersion Neon.HiveMQ
 SetVersion Neon.HyperV
 SetVersion Neon.Web
-SetVersion Neon.Xen
+SetVersion Neon.XenServer
 SetVersion Neon.Xunit
 SetVersion Neon.Xunit.Couchbase
 SetVersion Neon.Xunit.RabbitMQ
@@ -63,7 +63,7 @@ Publish Neon.HyperV
 Publish Neon.Couchbase
 Publish Neon.Docker
 Publish Neon.Web
-Publish Neon.Xen
+Publish Neon.XenServer
 Publish Neon.Xunit
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.RabbitMQ

@@ -56,7 +56,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube.Machine\Neon.Kube.Machine.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Xen\Neon.Kube.Xen.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
   </ItemGroup>
 
