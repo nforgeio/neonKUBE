@@ -23,33 +23,6 @@ ARG         APPNAME
 
 ENV NEON_TOOL_CONTAINER=1
 
-# We're going to configure NANO as the default editor used by Ansible Vault
-# to edit encrypted files.  We're also going to install VIM/VI as an option.
-
-ENV EDITOR=/bin/nano
-
-RUN apt-get update \
-    && apt-get install -yq nano vim zip \
-    && apt-get clean -yq
-
-# Install OpenVPN in it's own layer.
-
-RUN apt-get update \
-    && apt-get install -yq openvpn \
-    && apt-get clean -yq
-
-# [neon-cli] implements commands that integrate Ansible and since Ansible
-# only runs on Linux, we're going to integrate it into this image.
-#
-#   http://docs.ansible.com/ansible/latest/intro_installation.html#latest-releases-via-apt-ubuntu
-
-RUN apt-get update \
-    && apt-get install -yq software-properties-common \
-    && apt-add-repository ppa:ansible/ansible \
-    && apt-get update \
-    && apt-get install -yq ansible \
-    && apt-get clean -yq
-
 # Add the application files in two layers.  The first will contain the dependencies
 # and the second will contain the application files.  This should result in more
 # efficient images because dependencies tend to be more stable than application files.
