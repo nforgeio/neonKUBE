@@ -120,12 +120,6 @@ namespace Neon.Kube
         /// split-brain).  One management node may be deployed for non-production environments,
         /// but to enable high-availability, three or five management nodes may be deployed.
         /// </para>
-        /// <note>
-        /// Consul documentation recommends no more than 5 nodes be deployed per cluster to
-        /// prevent floods of network traffic from the internal gossip discovery protocol.
-        /// Swarm does not have this limitation but to keep things simple, Neon is going 
-        /// to standardize on a single management node concept.
-        /// </note>
         /// </remarks>
         [JsonIgnore]
         [YamlIgnore]
