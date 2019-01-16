@@ -62,6 +62,9 @@ do
     apt-get "$@" 1>$STDOUT_PATH 2>$STDERR_PATH
     EXIT_CODE=$?
 
+    echo apt-get "$@"
+    break
+
     if $EXIT_CODE; then
     
         # Combine STDOUT and STDERR into a single file so we can
@@ -82,8 +85,9 @@ do
 
         if ! $TRANSIENT_ERROR ; then
             # Looks like the operation failed due to a non-transient
-            # problem so we'll break out of the retry loop.
-            break
+            # problem so we'll break out of the retry loop and return
+            # and error.
+            exit $EXIT_CODE
         fi
 
         RETRY=true

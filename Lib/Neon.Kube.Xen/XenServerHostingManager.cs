@@ -126,8 +126,7 @@ namespace Neon.Kube
             // $todo(jeff.lill):
             //
             // I'm not implementing [force] here.  I'm not entirely sure
-            // that this makes sense for production clusters and especially
-            // when there are pet nodes.
+            // that this makes sense for production clusters.
             //
             // Perhaps it would make more sense to replace this with a
             // [neon cluster remove] command.

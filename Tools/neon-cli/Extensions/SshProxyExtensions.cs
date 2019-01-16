@@ -140,7 +140,7 @@ namespace NeonCli
             //      NEON_MASTER_#
             //
             // where [#] is the zero-based index of the node.  This is compatible
-            // with the [getmanager] function included the script.
+            // with the [getmaster] function included the script.
             //
             // Each variable defines an associative array with [name] and [address]
             // properties.
@@ -227,7 +227,7 @@ namespace NeonCli
                 sbMasters.Append("export NEON_MASTER_PEERS=\"\"\n");
             }
 
-            // Generate the manager and worker NTP time sources.
+            // Generate the master and worker NTP time sources.
 
             var masterTimeSources = string.Empty;
             var workerTimeSources = string.Empty;
@@ -267,51 +267,6 @@ namespace NeonCli
                 masterTimeSources = "\"pool.ntp.org\"";
             }
 
-            // Format the network upstream nameservers as semicolon separated
-            // to be compatible with the PowerDNS Recursor [forward-zones-recurse]
-            // configuration setting.
-            //
-            // Note that manager nodes will recurse to upstream (external) DNS 
-            // servers and workers/pets will recurse to the managers so they can
-            // dynamically pickup cluster DNS changes.
-
-            if (clusterDefinition.Network?.Nameservers == null)
-            {
-                // $hack(jeff.lill): 
-                //
-                // [Network] will be null if we're just preparing servers, not doing full setup
-                // so we'll set this to the defaults to avoid null references below.
-
-                clusterDefinition.Network = new NetworkOptions();
-            }
-
-            var nameservers = string.Empty;
-
-            if (nodeDefinition.Role == NodeRole.Master)
-            {
-                for (int i = 0; i < clusterDefinition.Network.Nameservers.Length; i++)
-                {
-                    if (i > 0)
-                    {
-                        nameservers += ";";
-                    }
-
-                    nameservers += clusterDefinition.Network.Nameservers[i].Trim();
-                }
-            }
-            else
-            {
-                foreach (var master in clusterDefinition.SortedMasters)
-                {
-                    if (nameservers.Length > 0)
-                    {
-                        nameservers += ";";
-                    }
-
-                    nameservers += master.PrivateAddress;
-                }
-            }
-
             // Set the variables.
 
             preprocessReader.Set("load-cluster-conf", KubeHostFolders.Config + "/cluster.conf.sh --echo-summary");
@@ -333,8 +288,8 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.folders.tools", KubeHostFolders.Tools);
 
             SetBashVariable(preprocessReader, "nodes.master.count", clusterDefinition.Masters.Count());
-            preprocessReader.Set("nodes.managers", sbMasters);
-            preprocessReader.Set("nodes.manager.summary", sbMasterNodesSummary);
+            preprocessReader.Set("nodes.masters", sbMasters);
+            preprocessReader.Set("nodes.masters.summary", sbMasterNodesSummary);
 
             SetBashVariable(preprocessReader, "ntp.master.sources", masterTimeSources);
             NewMethod(preprocessReader, workerTimeSources);

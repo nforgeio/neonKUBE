@@ -256,18 +256,18 @@ namespace NeonCli
                             new Folder("conf",
                                 files: new List<File>()
                                 {
-                                    new File("kube.conf.sh", hasVariables: true),
+                                    new File("cluster.conf.sh", hasVariables: true),
                                 }),
                             new Folder("setup",
                                 files: new List<File>()
                                 {
-                                    new File("setup-apt-proxy.sh", hasVariables: true),
                                     new File("setup-disk.sh", hasVariables: true),
                                     new File("setup-docker.sh", hasVariables: true),
                                     new File("setup-environment.sh", hasVariables: true),
                                     new File("setup-exists.sh", hasVariables: true),
                                     new File("setup-node.sh", hasVariables: true),
                                     new File("setup-ntp.sh", hasVariables: true),
+                                    new File("setup-package-proxy.sh", hasVariables: true),
                                     new File("setup-prep-node.sh", hasVariables: true),
                                     new File("setup-ssd.sh", hasVariables: true),
                                     new File("setup-utility.sh", hasVariables: true),
@@ -275,9 +275,6 @@ namespace NeonCli
                             new Folder("tools",
                                 files: new List<File>()
                                 {
-                                    new File("docker-volume-create.sh", hasVariables: true),
-                                    new File("docker-volume-exists.sh", hasVariables: true),
-                                    new File("docker-volume-rm.sh", hasVariables: true),
                                     new File("safe-apt-get.sh", hasVariables: true)
                                 }),
                             new Folder("updates",
@@ -288,7 +285,7 @@ namespace NeonCli
                         })
                 });
 
-            // We need to wireup the folder paths.  Note that we need to strip
+            // We need to wire up the folder paths.  Note that we need to strip
             // off the leading "file:" for Linux/OSX or "file:///" for Windows.
 
             string prefix;

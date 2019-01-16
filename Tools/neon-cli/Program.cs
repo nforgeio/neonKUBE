@@ -852,7 +852,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         /// <summary>
         /// Returns the folder holding the Linux resource files for the target operating system.
         /// </summary>
-        public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("CoreOS");
+        public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("Ubuntu-18.04");
 
         /// <summary>
         /// Presents the user with a yes/no question and waits for a response.

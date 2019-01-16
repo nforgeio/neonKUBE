@@ -94,7 +94,7 @@ namespace Neon.Kube
                 // We're going to reflect all loaded assemblies for classes that implement
                 // [IHostingManager] and are decorated with an [HostingProviderAttribute],
                 // end then use the environment specified in the attributes to determine
-                // which manager class to instantiate and return.
+                // which hosting manager class to instantiate and return.
 
                 var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -122,7 +122,7 @@ namespace Neon.Kube
                 }
 
                 // Configure [HostingManagerFactory.Loader] so it will call an instance of the class to 
-                // map hosting a environment type to a concrete environment manager implementation.
+                // map hosting a environment type to a concrete hosting manager implementation.
 
                 HostingManagerFactory.Loader = new HostingLoader();
             }

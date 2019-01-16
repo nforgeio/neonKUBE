@@ -196,7 +196,7 @@ namespace NeonCli
 
                 foreach (var master in clusterDefinition.SortedMasters)
                 {
-                    // We're going to check the for presence of the manager's IP address
+                    // We're going to check the for presence of the master's IP address
                     // or its name, the latter because [ntpq] appears to attempt a reverse
                     // IP address lookup which will resolve into one of the DNS names defined
                     // in the local [/etc/hosts] file.
@@ -221,11 +221,11 @@ namespace NeonCli
                 {
                     // $hack(jeff.lill):
                     //
-                    // I've seen the NTP check fail on a non-manager node, complaining
+                    // I've seen the NTP check fail on worker nodes, complaining
                     // that the connection attempt was rejected.  I manually restarted
                     // the node and then it worked.  I'm not sure if the rejected connection
                     // was being made to the local NTP service or from the local service
-                    // to NTP running on the manager.
+                    // to NTP running on the master.
                     //
                     // I'm going to assume that it was to the local NTP service and I'm
                     // going to try mitigating this by restarting the local NTP service

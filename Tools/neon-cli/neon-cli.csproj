@@ -67,13 +67,13 @@
     <None Update="Resources\Ubuntu-18.04\archive\setup-disk.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\conf\kube.conf.sh">
+    <None Update="Resources\Ubuntu-18.04\conf\cluster.conf.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\conf\cluster.conf.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\setup\setup-apt-proxy.sh">
+    <None Update="Resources\Ubuntu-18.04\setup\setup-package-proxy.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-apt-proxy.sh.txt">
@@ -148,19 +148,10 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-vault-server.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\tools\docker-volume-create.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-create.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\tools\docker-volume-exists.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-exists.sh.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Resources\Ubuntu-18.04\tools\docker-volume-rm.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-rm.sh.txt">

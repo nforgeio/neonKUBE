@@ -119,7 +119,7 @@ EOF
 # source on the local network, so the clocks should be very
 # close to being synchronized.
 
-if [ "${NEON_NODE_ROLE}" == "manager" ] ; then
+if [ "${NEON_NODE_ROLE}" == "master" ] ; then
     sources=${NEON_NTP_MANAGER_SOURCES}
 else
     sources=${NEON_NTP_WORKER_SOURCES}

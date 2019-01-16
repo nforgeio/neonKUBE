@@ -31,11 +31,11 @@ namespace NeonCli
         {
             node.Status = "check: OS";
 
-            var response = node.SudoCommand("lsb_release -a");
+            // $todo(jeff.lill): We're currently hardcoded to Ubuntu 18.04.x
 
-            if (!response.OutputText.Contains("CoreOS"))
+            if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("18.04"))
             {
-                node.Fault("Expected [CoreOS].");
+                node.Fault("Expected: Ubuntu 18.04.x");
             }
         }
 
@@ -204,10 +204,11 @@ TCPKeepAlive yes
 
             // Add the global cluster related environment variables. 
 
-            sb.AppendLine($"NEON_HIVE_PROVISIONER={clusterDefinition.Provisioner}");
-            sb.AppendLine($"NEON_HIVE={clusterDefinition.Name}");
+            sb.AppendLine($"NEON_CLUSTER_PROVISIONER={clusterDefinition.Provisioner}");
+            sb.AppendLine($"NEON_CLUSTER={clusterDefinition.Name}");
             sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
             sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
+            sb.AppendLine($"NEON_PACKAGE_PROXY={clusterDefinition.PackageProxy}");
 
             if (clusterDefinition.Hosting != null)
             {
@@ -223,14 +224,6 @@ TCPKeepAlive yes
                 sb.AppendLine($"NEON_NODE_HDD={node.Metadata.Labels.StorageHDD.ToString().ToLowerInvariant()}");
             }
 
-            var sbNameservers = new StringBuilder();
-
-            foreach (var nameServer in clusterDefinition.Network.Nameservers)
-            {
-                sbNameservers.AppendWithSeparator(nameServer, ",");
-            }
-
-            sb.AppendLine($"NEON_UPSTREAM_DNS=\"{sbNameservers}\"");
             sb.AppendLine($"NEON_ARCHIVE_FOLDER={KubeHostFolders.Archive}");
             sb.AppendLine($"NEON_BIN_FOLDER={KubeHostFolders.Bin}");
             sb.AppendLine($"NEON_CONFIG_FOLDER={KubeHostFolders.Config}");

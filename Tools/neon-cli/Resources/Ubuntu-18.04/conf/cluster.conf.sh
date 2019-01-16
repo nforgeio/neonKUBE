@@ -1,6 +1,6 @@
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         kube.conf.sh
+# FILE:         cluster.conf.sh
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 # REQUIRES:     
@@ -18,7 +18,7 @@
 # This script also loads and exports environment variables from [/etc/environment]
 # so they will be available to scripts invoked remotely by [neon-cli].
 #
-# Usage: kube.conf.sh [ --echo-summary ]
+# Usage: cluster.conf.sh [ --echo-summary ]
 
 if [ "${1-none}" == "--echo-summary" ] ; then
     summary=true
@@ -74,17 +74,17 @@ export NEON_TOOLS_FOLDER=$<neon.folders.tools>
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${NEON_SETUP_FOLDER}:${NEON_TOOLS_FOLDER}
 
 #------------------------------------------------------------------------------
-# Describe the hive manager nodes.  You can use the [getmanager] function
+# Describe the cluster master nodes.  You can use the [getmaster] function
 # below to retrieve node information using a zero-based index.
 #
 # You can access node properties using array syntax like:
 #
-#       ${managernode[name]}
-#       ${managernode[address]}
+#       ${masternode[name]}
+#       ${masternode[address]}
 
 export NEON_MASTER_COUNT=$<nodes.master.count>
 
-$<nodes.managers>
+$<nodes.masters>
 #------------------------------------------------------------------------------
 # Specify component specific settings
 
@@ -100,34 +100,31 @@ export NEON_LOG_ENABLED=$<log.enabled>
 # Echo the configuration to STDERR if requested.
 
 if $summary ; then
-    echo "NEON_HIVE_PROVISIONER              = ${NEON_HIVE_PROVISIONER}" 1>&2
+    echo "NEON_CLUSTER_PROVISIONER           = ${NEON_CLUSTER_PROVISIONER}" 1>&2
     echo 1>&2
-    echo "NEON_HIVE                          = ${NEON_HIVE}" 1>&2
+    echo "NEON_CLUSTER                       = ${NEON_CLUSTER}" 1>&2
     echo "NEON_DATACENTER                    = ${NEON_DATACENTER}" 1>&2
     echo "NEON_ENVIRONMENT                   = ${NEON_ENVIRONMENT}" 1>&2
     echo "NEON_HOSTING                       = ${NEON_HOSTING}" 1>&2
     echo "NEON_NODE_NAME                     = ${NEON_NODE_NAME}" 1>&2
     echo "NEON_NODE_ROLE                     = ${NEON_NODE_ROLE}" 1>&2
-    echo "NEON_NODE_FS                       = ${NEON_NODE_FS}" 1>&2
     echo "NEON_NODE_IP                       = ${NEON_NODE_IP}" 1>&2
     echo "NEON_NODE_HDD                      = ${NEON_NODE_HDD}" 1>&2
-    echo "NEON_NODE_SWAP                     = ${NEON_NODE_SWAP}" 1>&2
-    echo "NEON_UPSTREAM_DNS                  = ${NEON_UPSTREAM_DNS}" 1>&2
-    echo "NEON_APT_PROXY                     = ${NEON_APT_PROXY}" 1>&2
+    echo "NEON_PACKAGE_PROXY                 = ${NEON_PACKAGE_PROXY}" 1>&2
     echo 1>&2
     echo "NEON_ARCHIVE_FOLDER                = ${NEON_ARCHIVE_FOLDER}" 1>&2
     echo "NEON_BIN_FOLDER                    = ${NEON_BIN_FOLDER}" 1>&2
     echo "NEON_CONFIG_FOLDER                 = ${NEON_CONFIG_FOLDER}" 1>&2
     echo "NEON_EXEC_FOLDER                   = ${NEON_EXEC_FOLDER}" 1>&2
-    echo "NEON_SETUP_FOLDER                  = ${NEON_SETUP_FOLDER}" 1>&2
-    echo "NEON_SECRETS_FOLDER                = ${NEON_SECRETS_FOLDER}" 1>&2
     echo "NEON_SCRIPTS_FOLDER                = ${NEON_SCRIPTS_FOLDER}" 1>&2
+    echo "NEON_SECRETS_FOLDER                = ${NEON_SECRETS_FOLDER}" 1>&2
+    echo "NEON_SETUP_FOLDER                  = ${NEON_SETUP_FOLDER}" 1>&2
     echo "NEON_STATE_FOLDER                  = ${NEON_STATE_FOLDER}" 1>&2
     echo "NEON_TMPFS_FOLDER                  = ${NEON_TMPFS_FOLDER}" 1>&2
     echo "NEON_TOOLS_FOLDER                  = ${NEON_TOOLS_FOLDER}" 1>&2
     echo 1>&2
     echo "NEON_MASTER_COUNT                  = ${NEON_MASTER_COUNT}" 1>&2
-$<nodes.manager.summary>
+$<nodes.master.summary>
     echo "NEON_MASTER_NAMES                  = ${NEON_MASTER_NAMES[@]}" 1>&2
     echo "NEON_MASTER_ADDRESSES              = ${NEON_MASTER_ADDRESSES[@]}" 1>&2
     echo "NEON_MASTER_PEERS                  = ${NEON_MASTER_PEERS[@]}" 1>&2
@@ -151,14 +148,14 @@ fi
 #------------------
 #<<<BEGIN-FUNCTIONS
 
-# Returns the manager information for a manager node based on its zero based
+# Returns the information for a master node based on its zero based
 # index.  The result will be returned in the $MANAGE_NODE variable.
 #
-# Usage: getmanager INDEX
+# Usage: getmaster INDEX
 
-function getmanager
+function getmaster
 {
-    eval MANAGE_NODE=$NEON_MASTER_$1
+    eval MASTER_NODE=$NEON_MASTER_$1
 }
 
 #<<<END-FUNCTIONS

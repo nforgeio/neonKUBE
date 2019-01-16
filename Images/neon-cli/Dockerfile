@@ -69,7 +69,6 @@ RUN echo ** NEW LAYER **
 COPY bin/__app              /usr/bin/$APPNAME.dotnet/
 COPY docker-entrypoint.sh   /
 COPY conf/ssh_config.conf   /etc/ssh/ssh_config
-COPY modules/*              /usr/share/ansible/plugins/modules/
 
 # External Ansible modules.  Both of these have pull requests pending to
 # have them built-in to Ansible.
