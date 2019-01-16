@@ -62,19 +62,20 @@ namespace Neon.Kube
 
                 // $todo(jeff.lill):
                 //
-                // This is hardcoded to load all of the built-in manager assemblies.  In the
-                // future, it would be nice if this could be less hardcoded and also support
-                // loading custom assemblies so that users could author their own managers.
+                // This is hardcoded to load all of the built-in hosting manager assemblies.  
+                // In the future, it would be nice if this could be less hardcoded and also 
+                // support loading custom assemblies so that users could author their own 
+                // managers.
                 //
                 // This implemention is also pretty stupid in that it has to load all of the
-                // manager assemblies because it doesn't know which manager will be requested.
+                // hosting manager assemblies because it doesn't know which manager will be requested.
                 // One way to fix this would be to implement some kind of callback that could
                 // be registered statically with [HostingManager] before [HostingManager.GetManager()]
                 // is called.
                 //
                 // Another potential problem is that it's possible in the future for hosting
-                // manager subassemblies to conflict.  For example, say we have a [Xen] hosting
-                // manager that uses the latest Azure class libraries but we also have a
+                // manager subassemblies to conflict.  For example, say we have a [XenServer] 
+                // hosting manager that uses the latest Azure class libraries but we also have a
                 // [XenLegacy] hosting manager that needs to use an older library for some
                 // reason.  It could be possible that we can't reference or load both sets
                 // of subassemblies at the same time.

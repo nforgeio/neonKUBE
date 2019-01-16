@@ -114,7 +114,7 @@ EOF
 # Append the time sources to the configuration file.
 #
 # We're going to prefer the first source.  For worker nodes
-# this will be the first manager node.  The nice thing about this
+# this will be the first master node.  The nice thing about this
 # is that all of the worker nodes will be using the same time
 # source on the local network, so the clocks should be very
 # close to being synchronized.
