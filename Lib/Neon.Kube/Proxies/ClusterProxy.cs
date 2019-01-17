@@ -183,7 +183,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the first cluster master node as sorted by name.
         /// </summary>
-        public SshProxy<NodeDefinition> FirstManager { get; private set; }
+        public SshProxy<NodeDefinition> FirstMaster { get; private set; }
 
         /// <summary>
         /// Specifies the <see cref="RunOptions"/> to use when executing commands that 
@@ -228,8 +228,8 @@ namespace Neon.Kube
                 nodes.Add(node);
             }
 
-            this.Nodes        = nodes;
-            this.FirstManager = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
+            this.Nodes       = nodes;
+            this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
         }
 
         /// <summary>

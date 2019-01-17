@@ -213,21 +213,17 @@ namespace Neon.Kube
         public static string KubeConfigPath => Path.Combine(KubeHelper.GetKubeUserFolder(), "config");
 
         /// <summary>
-        /// Returns the path the folder containing cluster definition files, creating
-        /// the folder if it doesn't already exist.
+        /// Returns the path the folder containing cluster related files (including kube context 
+        /// extension), creating the folder if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
         /// to deploy and manage clusters.  Each known cluster will have a JSON file named
-        /// <b><i>cluster-name</i>.json</b> holding the serialized <see cref="Kube.KubeConfig"/> 
-        /// information for the cluster, where <i>cluster-name</i> maps to a cluster name
+        /// <b><i>NAME</i>.context.json</b> holding the serialized <see cref="KubeContextExtension"/> 
+        /// information for the cluster, where <i>NAME</i> maps to a cluster configuration name
         /// within the <c>kubeconfig</c> file.
-        /// </para>
-        /// <para>
-        /// The <b>.current</b> file (if present) specifies the name of the cluster to be considered
-        /// to be currently logged in.
         /// </para>
         /// </remarks>
         public static string ClustersFolder
@@ -240,6 +236,22 @@ namespace Neon.Kube
 
                 return path;
             }
+        }
+
+        /// <summary>
+        /// Returns the path to the kubecontext extension file for a specific context.
+        /// </summary>
+        /// <param name="contextName">The kubecontext extension JSON file.</param>
+        /// <returns>The file path.</returns>
+        public static string GetConfigExtensionPath(string contextName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName));
+
+            // Kubecontext names may include a forward slash to specify a Kubernetes
+            // namespace.  This won't work for a file name, so we're going to replace
+            // and of these 
+
+            return Path.Combine(ClustersFolder, $"{contextName}.context.yaml");
         }
 
         /// <summary>
@@ -268,13 +280,18 @@ namespace Neon.Kube
         /// folder, creating the directory if it doesn't already exist.
         /// </summary>
         /// <returns>The path to the cluster setup folder.</returns>
-        public static string GetVmTemplatesFolder()
+        public static string VmTemplatesFolder
         {
-            var path = Path.Combine(GetNeonKubeUserFolder(), "vm-templates");
+            get
+            {
+                {
+                    var path = Path.Combine(GetNeonKubeUserFolder(), "vm-templates");
 
-            Directory.CreateDirectory(path);
+                    Directory.CreateDirectory(path);
 
-            return path;
+                    return path;
+                }
+            }
         }
 
         /// <summary>

@@ -550,13 +550,13 @@ namespace Neon.Kube
 
                             if (typeof(NodeMetadata) == typeof(NodeDefinition))
                             {
-                                var firstManager = nodes
+                                var firstMaster = nodes
                                     .Where(n => (n.Metadata as NodeDefinition).IsMaster)
                                     .OrderBy(n => n.Name)
                                     .First();
 
-                                firstManager.Fault(NeonHelper.ExceptionError(e));
-                                firstManager.LogException(e);
+                                firstMaster.Fault(NeonHelper.ExceptionError(e));
+                                firstMaster.LogException(e);
                             }
                         }
 

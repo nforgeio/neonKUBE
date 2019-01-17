@@ -41,33 +41,29 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Internal constructor.
-        /// </summary>
-        /// <param name="sshCredentials">Optional node SSH credentials.</param>
-        /// <param name="clusterDefintion">Optional cluster definition.</param>
-        internal KubeContextExtension(
-            SshCredentials      sshCredentials = null,
-            ClusterDefinition   clusterDefintion = null)
-        {
-            this.SshCredentials    = sshCredentials ?? SshCredentials.None;
-            this.ClusterDefinition = clusterDefintion;
-        }
-
-        /// <summary>
-        /// Returns the credentials required to perform SSH/SCP operations 
+        /// The credentials required to perform SSH/SCP operations 
         /// on the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "sshCredentials", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshCredentials", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public SshCredentials SshCredentials { get; private set; }
+        public SshCredentials SshCredentials { get; set; }
 
         /// <summary>
-        /// Returns the cluster definition.
+        /// The cluster definition.
         /// </summary>
         [JsonProperty(PropertyName = "clusterDefinition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clusterDefinition", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public ClusterDefinition ClusterDefinition { get; private set; }
+        public ClusterDefinition ClusterDefinition { get; set; }
+
+        /// <summary>
+        /// Indicates whether provisioning is complete but setup is still
+        /// pending for this cluster
+        /// </summary>
+        [JsonProperty(PropertyName = "SetupPending", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "SetupPending", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool SetupPending { get; set; } = false;
     }
 }

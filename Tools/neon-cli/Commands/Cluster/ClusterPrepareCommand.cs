@@ -113,7 +113,7 @@ Server Requirements:
             {
                 Console.WriteLine("Removing cached virtual machine templates.");
 
-                foreach (var fileName in Directory.GetFiles(KubeHelper.GetVmTemplatesFolder(), "*.*", SearchOption.TopDirectoryOnly))
+                foreach (var fileName in Directory.GetFiles(KubeHelper.VmTemplatesFolder, "*.*", SearchOption.TopDirectoryOnly))
                 {
                     File.Delete(fileName);
                 }
@@ -384,21 +384,17 @@ Server Requirements:
                 Program.Exit(1);
             }
 
-            // Write the cluster context and extension.
+            // Persist the cluster context extension.
 
-            // $todo(jeff.lill): Implement this.
+            var configExtensionsPath = KubeHelper.GetConfigExtensionPath(clusterDefinition.Name);
+            var contextExtension     = new KubeContextExtension()
+            {
+                ClusterDefinition = clusterDefinition,
+                SshCredentials    = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword),
+                SetupPending      = true
+            };
 
-            //var hiveLoginPath = Program.GetHiveLoginPath(KubeHelper.RootUser, cluster.Definition.Name);
-            //var hiveLogin     = new HiveLogin()
-            //{
-            //    Path                 = hiveLoginPath,
-            //    Username             = KubeHelper.RootUser,
-            //    Definition           = cluster.Definition,
-            //    SshUsername          = Program.MachineUsername,
-            //    SshPassword          = Program.MachinePassword,
-            //    SshProvisionPassword = Program.MachinePassword,
-            //    SetupPending         = true
-            //};
+            File.WriteAllText(configExtensionsPath, NeonHelper.JsonSerialize(contextExtension, Formatting.Indented));
 
             // Write the operation end marker to all cluster node logs.
 

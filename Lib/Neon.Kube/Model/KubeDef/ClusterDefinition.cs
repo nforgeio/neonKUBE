@@ -218,6 +218,15 @@ namespace Neon.Kube
         public string Provisioner { get; set; } = defaultProvisioner;
 
         /// <summary>
+        /// Returns the options to be used when installing Docker on each
+        /// of the cluster nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "Docker", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Docker", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public DockerOptions Docker { get; set; } = new DockerOptions();
+
+        /// <summary>
         /// <para>
         /// Returns the prefix for block devices that will be attached to
         /// the host machines.  For many hosting environments this will be
@@ -480,6 +489,7 @@ namespace Neon.Kube
             // Validate the properties.
 
             Provisioner = Provisioner ?? defaultProvisioner;
+            Docker      = Docker ?? new DockerOptions();
             DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
@@ -487,6 +497,7 @@ namespace Neon.Kube
             Network     = Network ?? new NetworkOptions();
 
             Setup.Validate(this);
+            Docker.Validate(this);
             Network.Validate(this);
             Hosting.Validate(this);
             NodeOptions.Validate(this);

@@ -294,9 +294,9 @@ namespace Neon.Kube
             var driveTemplateUri  = new Uri(cluster.Definition.Hosting.HyperVDev.HostVhdxUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
-            driveTemplatePath = Path.Combine(KubeHelper.GetVmTemplatesFolder(), driveTemplateName);
+            driveTemplatePath = Path.Combine(KubeHelper.VmTemplatesFolder, driveTemplateName);
 
-            var driveTemplateInfoPath  = Path.Combine(KubeHelper.GetVmTemplatesFolder(), driveTemplateName + ".info");
+            var driveTemplateInfoPath  = Path.Combine(KubeHelper.VmTemplatesFolder, driveTemplateName + ".info");
             var driveTemplateIsCurrent = true;
             var driveTemplateInfo      = (DriveTemplateInfo)null;
 
