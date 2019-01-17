@@ -217,11 +217,11 @@ function GetRegistry($image)
 {
 	if (IsProd)
 	{
-		return "nhive/" + $image
+		return "nkubeio/" + $image
 	}
 	else
 	{
-		return "nhivedev/" + $image
+		return "nkubedev/" + $image
 	}
 }
 
@@ -232,11 +232,11 @@ function DockerOrg
 {
 	if (IsProd)
 	{
-		return "nhive"
+		return "nkubeio"
 	}
 	else
 	{
-		return "nhivedev"
+		return "nkubedev"
 	}
 }
 

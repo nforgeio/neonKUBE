@@ -13,7 +13,7 @@
 
 ARG         ORGANIZATION
 ARG         BRANCH
-FROM        ${ORGANIZATION}/Ubuntu-18.04:${BRANCH}-latest
+FROM        ${ORGANIZATION}/ubuntu-16.04:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

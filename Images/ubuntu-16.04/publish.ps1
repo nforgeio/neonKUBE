@@ -28,7 +28,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = GetRegistry "Ubuntu-18.04"
+	$registry = GetRegistry "ubuntu-16.04"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$date"

@@ -16,7 +16,7 @@ param
 
 "   "
 "======================================="
-"* Ubuntu-18.04-DOTNET " + $tag
+"* UBUNTU-16.04-DOTNET " + $tag
 "======================================="
 
 $organization = DockerOrg

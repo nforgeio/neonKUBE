@@ -14,7 +14,7 @@
 
 ARG         ORGANIZATION
 ARG         BRANCH
-FROM        ${ORGANIZATION}/Ubuntu-18.04-dotnet:${BRANCH}-2.1
+FROM        ${ORGANIZATION}/ubuntu-16.04-dotnet:${BRANCH}-2.1
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
@@ -43,19 +43,12 @@ COPY bin/__app              /usr/bin/$APPNAME.dotnet/
 COPY docker-entrypoint.sh   /
 COPY conf/ssh_config.conf   /etc/ssh/ssh_config
 
-# External Ansible modules.  Both of these have pull requests pending to
-# have them built-in to Ansible.
-#
-# https://github.com/dariko/ansible-module-docker_stack
-# https://github.com/dariko/ansible/tree/ansible-modules-core/pull/5547/lib/ansible/modules/cloud/docker
-
 # The Docker 
 
 RUN chmod 700 /docker-entrypoint.sh \
     && chmod 666 /etc/ssh/ssh_config \
     && echo "#!/bin/bash" > /usr/bin/$APPNAME \ 
     && echo "exec dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
-    && chmod 770 /usr/bin/$APPNAME \
-    && chmod 770 /usr/share/ansible/plugins/modules/*
+    && chmod 770 /usr/bin/$APPNAME
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

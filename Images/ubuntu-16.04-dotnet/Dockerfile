@@ -19,7 +19,7 @@
 # rebuild the image to pick up the latest point release.
 
 ARG         ORGANIZATION
-FROM        ${ORGANIZATION}/Ubuntu-18.04
+FROM        ${ORGANIZATION}/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION

@@ -103,7 +103,7 @@ if ($base)
 	# Base OS images:
 
 	Publish "$image_root\\alpine"
-	Publish "$image_root\\Ubuntu-18.04"
+	Publish "$image_root\\ubuntu-16.04"
 
 	# Other base images:
 
@@ -114,8 +114,8 @@ if ($dotnetBase)
 {
 	Publish "$image_root\\dotnet"
 	Publish "$image_root\\aspnet"
-	Publish "$image_root\\Ubuntu-18.04-dotnet"
-	Publish "$image_root\\Ubuntu-18.04-aspnet"
+	Publish "$image_root\\ubuntu-16.04-dotnet"
+	Publish "$image_root\\ubuntu-16.04-aspnet"
 }
 
 if ($dotnet)

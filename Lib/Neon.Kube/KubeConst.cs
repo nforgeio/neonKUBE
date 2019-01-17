@@ -22,12 +22,12 @@ namespace Neon.Kube
         /// <summary>
         /// Identifies the production cluster public Docker registry.
         /// </summary>
-        public const string NeonProdRegistry = "nhive";
+        public const string NeonProdRegistry = "nkubeio";
 
         /// <summary>
         /// Identifies the development cluster public Docker registry.
         /// </summary>
-        public const string NeonDevRegistry = "nhivedev";
+        public const string NeonDevRegistry = "nkubedev";
 
         /// <summary>
         /// The default username for component dashboards and management tools (like Ceph and RabbitMQ).
