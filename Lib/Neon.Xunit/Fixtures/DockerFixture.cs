@@ -674,7 +674,7 @@ namespace Neon.Xunit
 
                 if (!isSingleNode)
                 {
-                    throw new InvalidOperationException("Cannot reset the swarm because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production hive.");
+                    throw new InvalidOperationException("Cannot reset the swarm because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production cluster.");
                 }
 
                 // $hack(jeff.lill):

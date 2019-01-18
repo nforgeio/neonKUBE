@@ -13,7 +13,7 @@
 #
 # This script defines the current configuration of the cluster as is
 # currently known to this node.  [neon-cli] generates this during initial
-# hive deployment and may modify it as the hive is reconfigured.
+# cluster deployment and may modify it as the cluster is reconfigured.
 #
 # This script also loads and exports environment variables from [/etc/environment]
 # so they will be available to scripts invoked remotely by [neon-cli].
@@ -27,9 +27,9 @@ else
 fi
 
 #------------------------------------------------------------------------------
-# This identifies the tool/version that deployed or upgraded the hive.
+# This identifies the tool/version that deployed or upgraded the cluster.
 
-NEON_HIVE_PROVISIONER=$<hive.provisioner>
+NEON_HIVE_PROVISIONER=$<cluster.provisioner>
 
 #------------------------------------------------------------------------------
 # Bash does not run interactively when called remotely via SSH.  This means
@@ -52,7 +52,7 @@ do
 done < /etc/environment
 
 #------------------------------------------------------------------------------
-# CURL download retry settings to make hive setup more robust in the
+# CURL download retry settings to make cluster setup more robust in the
 # face of transient network problems.
 
 export CURL_RETRY="--retry 10 --retry-delay 30"

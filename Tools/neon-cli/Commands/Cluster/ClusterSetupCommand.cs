@@ -39,7 +39,7 @@ namespace NeonCli
     public class ClusterSetupCommand : CommandBase
     {
         private const string usage = @"
-Configures a neonHIVE as described in the hive definition file.
+Configures a neonHIVE as described in the cluster definition file.
 
 USAGE: 
 
@@ -152,7 +152,7 @@ OPTIONS:
                     CommonSteps.VerifyOS(node);
                 });
 
-            // Write the operation begin marker to all hive node logs.
+            // Write the operation begin marker to all cluster node logs.
 
             cluster.LogLine(logBeginMarker);
 
@@ -269,7 +269,7 @@ OPTIONS:
 
             if (!controller.Run())
             {
-                // Write the operation end/failed to all hive node logs.
+                // Write the operation end/failed to all cluster node logs.
 
                 cluster.LogLine(logFailedMarker);
 
@@ -277,7 +277,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            // Write the operation end marker to all hive node logs.
+            // Write the operation end marker to all cluster node logs.
 
             cluster.LogLine(logEndMarker);
 
@@ -320,7 +320,7 @@ OPTIONS:
             //
             // We're going to perform the following steps outside of the
             // idempotent check to make it easier to debug and modify 
-            // scripts and tools when hive setup has been partially
+            // scripts and tools when cluster setup has been partially
             // completed.  These steps are implicitly idempotent and
             // complete pretty quickly.
 
@@ -456,7 +456,7 @@ OPTIONS:
         /// <summary>
         /// Reboots the cluster nodes.
         /// </summary>
-        /// <param name="node">The hive node.</param>
+        /// <param name="node">The cluster node.</param>
         private void RebootAndWait(SshProxy<NodeDefinition> node)
         {
             node.Status = "restarting...";
@@ -488,7 +488,7 @@ ff02::2         ip6-allrouters
         /// <summary>
         /// Creates the initial swarm on the bootstrap manager node passed and 
         /// captures the manager and worker swarm tokens required to join additional
-        /// nodes to the hive.
+        /// nodes to the cluster.
         /// </summary>
         /// <param name="bootstrapManager">The target bootstrap manager server.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
@@ -516,14 +516,14 @@ ff02::2         ip6-allrouters
             hiveLogin.SwarmWorkerToken = ExtractSwarmToken(response.OutputText);
 #endif
 
-            // Persist the swarm tokens into the hive login.
+            // Persist the swarm tokens into the cluster login.
 
             kubeContextExtension.Save();
         }
 
         /// <summary>
         /// Extracts the cluster join token from a <b>docker swarm join-token [manager|worker]</b> 
-        /// command.  The token returned can be used when adding additional nodes to the hive.
+        /// command.  The token returned can be used when adding additional nodes to the cluster.
         /// </summary>
         /// <param name="commandResponse">The command response string.</param>
         /// <returns>The join token.</returns>
@@ -600,7 +600,7 @@ ff02::2         ip6-allrouters
         {
             if (node == cluster.FirstMaster)
             {
-                // This node is implictly joined to the hive.
+                // This node is implictly joined to the cluster.
 
                 node.Status = "joined";
                 return;
@@ -622,7 +622,7 @@ ff02::2         ip6-allrouters
         /// <summary>
         /// Generates the SSH key to be used for authenticating SSH client connections.
         /// </summary>
-        /// <param name="manager">A hive manager node.</param>
+        /// <param name="manager">A cluster manager node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void GenerateClientSshKey(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
         {
@@ -773,7 +773,7 @@ echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshPassword}' | c
         }
 
         /// <summary>
-        /// Generates the private key that will be used to secure SSH on the hive servers.
+        /// Generates the private key that will be used to secure SSH on the cluster nodes.
         /// </summary>
         private void ConfigureSshCerts()
         {
@@ -838,7 +838,7 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void ConfigureSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            // Configure the SSH credentials on all hive nodes.
+            // Configure the SSH credentials on all cluster nodes.
 
             node.InvokeIdempotentAction("setup/ssh",
                 () =>

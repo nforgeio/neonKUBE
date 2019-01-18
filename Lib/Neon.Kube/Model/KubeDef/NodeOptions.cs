@@ -38,7 +38,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies whether the host node operating system should be upgraded
-        /// during hive preparation.  This defaults to <see cref="OsUpgrade.Full"/>
+        /// during cluster preparation.  This defaults to <see cref="OsUpgrade.Full"/>
         /// to pick up most criticial updates.
         /// </summary>
         [JsonProperty(PropertyName = "Upgrade", Required = Required.Default)]

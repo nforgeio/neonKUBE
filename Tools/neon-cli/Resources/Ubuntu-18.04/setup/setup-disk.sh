@@ -25,7 +25,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-DISK                               **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the hive configuration and setup utilities.
+# Load the cluster configuration and setup utilities.
 
 . $<load-cluster-conf>
 . setup-utility.sh

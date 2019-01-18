@@ -23,7 +23,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-DOCKER                             **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the hive configuration and setup utilities.
+# Load the cluster configuration and setup utilities.
 
 . $<load-cluster-conf>
 . setup-utility.sh
@@ -141,7 +141,7 @@ fi
 
 # Add the current user to the [docker] group so SUDO won't be necessary.
 
-addgroup $<hive.rootuser> docker
+addgroup $<cluster.rootuser> docker
 
 # Prevent the package manager from automatically upgrading the Docker engine.
 

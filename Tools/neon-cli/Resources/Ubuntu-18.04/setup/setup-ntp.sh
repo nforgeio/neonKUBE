@@ -25,7 +25,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-NTP                                **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the hive configuration and setup utilities.
+# Load the cluster configuration and setup utilities.
 
 . $<load-cluster-conf>
 . setup-utility.sh
@@ -246,7 +246,7 @@ case $1 in
         # This is the modification.
 
 		# This bit of voodoo disables Hyper-V time synchronization with The
-		# host server.  We don't want this because the hive is doing its
+		# host server.  We don't want this because the cluster is doing its
 		# own time management and time sync will fight us.  This is described
 		# here:
 		#

@@ -28,7 +28,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-NODE                               **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the hive configuration and setup utilities.
+# Load the cluster configuration and setup utilities.
 
 . $<load-cluster-conf>
 . setup-utility.sh
@@ -421,7 +421,7 @@ systemctl restart neonkube-disable-thp
 # We're also setting [MaxRetentionSec=345600] which limits log local retention 
 # to 4 days.  This overrides the default policy which will consume up to 10%
 # of the local file system while still providing enough time for operators
-# to manually review local logs when something bad happened to hive logging.
+# to manually review local logs when something bad happened to cluster logging.
 
 cat <<EOF >> /etc/systemd/journald.conf
 #------------------------------------------------------------------------------
@@ -435,7 +435,7 @@ cat <<EOF >> /etc/systemd/journald.conf
 # We're also setting [MaxRetentionSec=86400] which limits log local retention 
 # to one day.  This overrides the default policy which will consume up to 10%
 # of the local file system while still providing enough time for operators
-# to manually review local logs when something bad happened to hive logging.
+# to manually review local logs when something bad happened to cluster logging.
 # 
 # See: https://www.freedesktop.org/software/systemd/man/journald.conf.html
 
