@@ -52,7 +52,7 @@ namespace Neon.Kube
         /// <param name="text">The input text.</param>
         /// <returns>The parsed name.</returns>
         /// <exception cref="FormatException">Thrown if the name is not valid.</exception>
-        public KubeConfigName Parse(string text)
+        public static KubeConfigName Parse(string text)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(text));
 

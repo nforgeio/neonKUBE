@@ -218,6 +218,14 @@ namespace Neon.Kube
         public string Provisioner { get; set; } = defaultProvisioner;
 
         /// <summary>
+        /// Returns the Kubernetes cluster options.,
+        /// </summary>
+        [JsonProperty(PropertyName = "Kubernetes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Kubernetes", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public KubernetesOptions Kubernetes { get; set; } = new KubernetesOptions();
+
+        /// <summary>
         /// Returns the options to be used when installing Docker on each
         /// of the cluster nodes.
         /// </summary>
@@ -489,6 +497,7 @@ namespace Neon.Kube
             // Validate the properties.
 
             Provisioner = Provisioner ?? defaultProvisioner;
+            Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
             DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();
@@ -496,8 +505,9 @@ namespace Neon.Kube
             NodeOptions = NodeOptions ?? new NodeOptions();
             Network     = Network ?? new NetworkOptions();
 
-            Setup.Validate(this);
+            Kubernetes.Validate(this);
             Docker.Validate(this);
+            Setup.Validate(this);
             Network.Validate(this);
             Hosting.Validate(this);
             NodeOptions.Validate(this);

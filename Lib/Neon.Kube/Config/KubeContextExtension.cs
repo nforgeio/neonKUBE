@@ -33,11 +33,15 @@ namespace Neon.Kube
     /// </summary>
     public class KubeContextExtension
     {
+        private string path;
+
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeContextExtension()
+        /// <param name="path">Optionally specifies the path to the extension file.</param>
+        public KubeContextExtension(string path = null)
         {
+            this.path = path;
         }
 
         /// <summary>
@@ -65,5 +69,18 @@ namespace Neon.Kube
         [YamlMember(Alias = "SetupPending", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool SetupPending { get; set; } = false;
+
+        /// <summary>
+        /// <para>
+        /// Persists the extension data.
+        /// </para>
+        /// <note>
+        /// A valid path must have been passed to the constructor for this to work.
+        /// </note>
+        /// </summary>
+        public void Save()
+        {
+            File.WriteAllText(path, NeonHelper.YamlSerialize(this));
+        }
     }
 }

@@ -831,7 +831,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             }
             else if (KubeHelper.KubeContext != null)
             {
-                sshCredentials = KubeHelper.KubeContext.Properties.Extensions.SshCredentials;
+                sshCredentials = KubeHelper.KubeContext.Properties.Extension.SshCredentials;
             }
             else
             {

@@ -56,7 +56,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The server node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckWorkers(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckWorker(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsWorker);

@@ -34,6 +34,7 @@ namespace Neon.Kube
         /// </summary>
         public KubeConfigContext()
         {
+            Properties = new KubeConfigContextProperties();
         }
 
         /// <summary>

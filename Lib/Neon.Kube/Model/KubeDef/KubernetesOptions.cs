@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DockerOptions.cs
+// FILE:	    KubernetesOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,27 +26,22 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes the Docker options for a neonKUBE.
+    /// Describes the Kubernetes options for a neonKUBE.
     /// </summary>
-    public class DockerOptions
+    public class KubernetesOptions
     {
-        private const string defaultVersion = "default";
+        private const string defaultVersion = "latest";
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DockerOptions()
+        public KubernetesOptions()
         {
         }
 
         /// <summary>
-        /// <para>
-        /// The version of Docker to be installed or <b>default</b> to install a reasonable
-        /// version for the version of Kubernetes being deployed.  This defaults to <b>default</b>.
-        /// </para>
-        /// <note>
-        /// Only Community Editions of Docker are supported at this time.
-        /// </note>
+        /// The version of Kubernetes to be installed.  This defaults to <b>latest</b> which
+        /// will install the latest tested version of Kubernetes.
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultVersion)]
@@ -66,9 +61,9 @@ namespace Neon.Kube
             Version = Version ?? defaultVersion;
             Version = Version.ToLowerInvariant();
 
-            if (!Version.EndsWith("-ce") && Version != defaultVersion)
+            if (!System.Version.TryParse(Version, out var v) && Version != "latest")
             {
-                throw new ClusterDefinitionException($"[{nameof(DockerOptions)}.{Version}] does not specify a Docker community edition.  neonKUBE only supports Docker Community Edition at this time.");
+                throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
             }
         }
 

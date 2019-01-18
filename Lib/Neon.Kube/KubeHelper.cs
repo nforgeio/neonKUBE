@@ -42,6 +42,7 @@ namespace Neon.Kube
 
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static KubeConfig           cachedKubeConfig;
+        private static KubeConfigContext    cachedKubeContext;
 
         /// <summary>
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
@@ -239,19 +240,52 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the kubecontext extension file for a specific context.
+        /// Returns the path to the kubecontext extension file path for a specific context
+        /// by raw name.
         /// </summary>
-        /// <param name="contextName">The kubecontext extension JSON file.</param>
+        /// <param name="rawName">The raw kubecontext name.</param>
         /// <returns>The file path.</returns>
-        public static string GetConfigExtensionPath(string contextName)
+        public static string GetContextExtensionPath(string rawName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contextName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName));
 
             // Kubecontext names may include a forward slash to specify a Kubernetes
             // namespace.  This won't work for a file name, so we're going to replace
-            // and of these 
+            // any of these 
 
-            return Path.Combine(ClustersFolder, $"{contextName}.context.yaml");
+            return Path.Combine(ClustersFolder, $"{rawName.Replace("/", "~")}.context.yaml");
+        }
+
+        /// <summary>
+        /// Returns the path to the kubecontext extension file path for a specific context
+        /// by structured name.
+        /// </summary>
+        /// <param name="name">The structured kubecontext name.</param>
+        /// <returns>The file path.</returns>
+        public static string GetContextExtensionPath(KubeConfigName name)
+        {
+            Covenant.Requires<ArgumentNullException>(name != null);
+
+            return GetContextExtensionPath(name.ToString());
+        }
+
+        /// <summary>
+        /// Returns the kubecontext extension for the structured configuration name.
+        /// </summary>
+        /// <param name="name">The structured context name.</param>
+        /// <returns>The <see cref="KubeContextExtension"/> or <c>null</c>.</returns>
+        public static KubeContextExtension GetContextExtension(KubeConfigName name)
+        {
+            Covenant.Requires<ArgumentNullException>(name != null);
+
+            var path = GetContextExtensionPath(name.ToString());
+
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            return NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path));
         }
 
         /// <summary>
@@ -329,6 +363,11 @@ namespace Neon.Kube
         {
             get
             {
+                if (cachedKubeContext != null)
+                {
+                    return cachedKubeContext;
+                }
+
                 if (string.IsNullOrEmpty(KubeConfig.CurrentContext))
                 {
                     return null;
@@ -341,7 +380,18 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the <see cref="Kube.ClusterProxy"/> for the connected cluster (or <c>null</c>).
+        /// This is used for special situations for setting up a cluster to
+        /// set an uninitialized Kubernetes config context as the current
+        /// <see cref="KubeContext"/>.
+        /// </summary>
+        /// <param name="context">The context being set or <c>null</c> to reset.</param>
+        public static void SetKubeContext(KubeConfigContext context = null)
+        {
+            cachedKubeContext = context;
+        }
+
+        /// <summary>
+        /// Returns the <see cref="Kube.ClusterProxy"/> for the current cluster (or <c>null</c>).
         /// </summary>
         public static ClusterProxy KubeProxy { get; private set; } = null;
 

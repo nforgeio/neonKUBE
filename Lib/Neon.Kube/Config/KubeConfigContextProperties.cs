@@ -34,6 +34,7 @@ namespace Neon.Kube
         /// </summary>
         public KubeConfigContextProperties()
         {
+            Extension = new KubeContextExtension();
         }
 
         /// <summary>
@@ -65,6 +66,6 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public KubeContextExtension Extensions { get; set; }
+        public KubeContextExtension Extension { get; set; }
     }
 }

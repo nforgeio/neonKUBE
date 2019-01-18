@@ -38,7 +38,7 @@ namespace Neon.Kube
         /// <summary>
         /// Constructs a cluster proxy from a cluster login.
         /// </summary>
-        /// <param name="kubeLogin">The cluster login.</param>
+        /// <param name="kubeContext">The cluster context.</param>
         /// <param name="nodeProxyCreator">
         /// The optional application supplied function that creates a node proxy
         /// given the node name, public address or FQDN, private address, and
@@ -58,16 +58,16 @@ namespace Neon.Kube
         /// is passed.
         /// </remarks>
         public ClusterProxy(
-            KubeContextExtension kubeLogin,
+            KubeConfigContext kubeContext,
             Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
             bool                                                            appendLog         = false,
             RunOptions                                                      defaultRunOptions = RunOptions.None)
 
-            : this(kubeLogin.ClusterDefinition, nodeProxyCreator, appendLog: appendLog, defaultRunOptions: defaultRunOptions)
+            : this(kubeContext.Properties.Extension.ClusterDefinition, nodeProxyCreator, appendLog: appendLog, defaultRunOptions: defaultRunOptions)
         {
-            Covenant.Requires<ArgumentNullException>(kubeLogin != null);
+            Covenant.Requires<ArgumentNullException>(kubeContext != null);
 
-            this.KubeLogin = kubeLogin;
+            this.KubeContext = kubeContext;
         }
 
         /// <summary>
@@ -107,9 +107,9 @@ namespace Neon.Kube
                     {
                         var context = KubeHelper.KubeContext;
 
-                        if (context != null && context.Properties.Extensions != null)
+                        if (context != null && context.Properties.Extension != null)
                         {
-                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, context.Properties.Extensions.SshCredentials);
+                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, context.Properties.Extension.SshCredentials);
                         }
                         else
                         {
@@ -124,7 +124,7 @@ namespace Neon.Kube
             }
 
             this.Definition        = clusterDefinition;
-            this.KubeLogin         = new KubeContextExtension();
+            this.KubeContext       = new KubeConfigContext();
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendLog;
@@ -166,9 +166,9 @@ namespace Neon.Kube
         public IHostingManager HostingManager { get; set; }
 
         /// <summary>
-        /// Returns the cluster login information.
+        /// Returns the cluster context.
         /// </summary>
-        public KubeContextExtension KubeLogin { get; set; }
+        public KubeConfigContext KubeContext { get; set; }
 
         /// <summary>
         /// Returns the cluster definition.

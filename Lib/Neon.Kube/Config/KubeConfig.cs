@@ -64,11 +64,11 @@ namespace Neon.Kube
 
                     if (File.Exists(extensionPath))
                     {
-                        context.Properties.Extensions = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(extensionPath));
+                        context.Properties.Extension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(extensionPath));
                     }
                     else
                     {
-                        context.Properties.Extensions = new KubeContextExtension();
+                        context.Properties.Extension = new KubeContextExtension();
                     }
                 }
                 
@@ -188,15 +188,29 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the named context.
+        /// Returns the named context (using a raw context name).
         /// </summary>
-        /// <param name="name">The context name.</param>
+        /// <param name="rawName">The raw context name.</param>
         /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
-        public KubeConfigContext GetContext(string name)
+        public KubeConfigContext GetContext(string rawName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName));
 
-            return Contexts.SingleOrDefault(c => c.Name == name);
+            return Contexts.SingleOrDefault(c => c.Name == rawName);
+        }
+
+        /// <summary>
+        /// Returns the named context (using a structured context name).
+        /// </summary>
+        /// <param name="name">The raw context name.</param>
+        /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
+        public KubeConfigContext GetContext(KubeConfigName name)
+        {
+            Covenant.Requires<ArgumentNullException>(name != null);
+
+            var rawName = name.ToString();
+
+            return Contexts.SingleOrDefault(c => c.Name == rawName);
         }
 
         /// <summary>
@@ -403,11 +417,11 @@ namespace Neon.Kube
 
             // Persist any extensions.
 
-            foreach (var context in Contexts.Where(c => c.Properties.Extensions != null))
+            foreach (var context in Contexts.Where(c => c.Properties.Extension != null))
             {
                 var extensionPath = Path.Combine(KubeHelper.ClustersFolder, $"{context.Name}.context.yaml");
 
-                File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Properties.Extensions));
+                File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Properties.Extension));
             }
         }
     }

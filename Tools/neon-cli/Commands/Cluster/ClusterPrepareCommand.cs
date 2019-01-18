@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterPrepareCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -65,7 +65,7 @@ Server Requirements:
     * [sudo] elevates permissions without a password
 ";
         private const string    logBeginMarker  = "# CLUSTER-BEGIN-PREPARE ##########################################################";
-        private const string    logEndMarker    = "# CLUSTER-END-PREPARE ############################################################";
+        private const string    logEndMarker    = "# CLUSTER-END-PREPARE-SUCCESS ####################################################";
         private const string    logFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################";
 
         private ClusterProxy    cluster;
@@ -386,7 +386,7 @@ Server Requirements:
 
             // Persist the cluster context extension.
 
-            var configExtensionsPath = KubeHelper.GetConfigExtensionPath(clusterDefinition.Name);
+            var configExtensionsPath = KubeHelper.GetContextExtensionPath(clusterDefinition.Name);
             var contextExtension     = new KubeContextExtension()
             {
                 ClusterDefinition = clusterDefinition,

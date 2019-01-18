@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ClusterSetupCommand.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -31,8 +31,6 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
 
-/*
-
 namespace NeonCli
 {
     /// <summary>
@@ -45,11 +43,7 @@ Configures a neonHIVE as described in the hive definition file.
 
 USAGE: 
 
-    neon hive setup [OPTIONS] root@HIVE
-
-ARGUMENTS:
-
-    HIVE        - The hive name.
+    neon cluster setup [OPTIONS] root@CLUSTER-NAME  
 
 OPTIONS:
 
@@ -58,17 +52,15 @@ OPTIONS:
                           for debugging cluster setup  issues.  Do not
                           use for production hives.
 ";
-        private const string        logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
-        private const string        logEndMarker    = "# CLUSTER-END-SETUP ##############################################################";
-        private const string        logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
+        private const string logBeginMarker = "# CLUSTER-BEGIN-SETUP ############################################################";
+        private const string logEndMarker = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
+        private const string logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
 
-        private string              hiveLoginPath;
-        private HiveLogin           hiveLogin;
-        private HiveProxy           hive;
-        private string              managerNodeNames     = string.Empty;
-        private string              managerNodeAddresses = string.Empty;
-        private int                 managerCount         = 0;
-        private bool                sshTlsAuth;
+        private string contextName;
+        private KubeConfig kubeConfig;
+        private KubeConfigContext kubeContext;
+        private KubeContextExtension kubeContextExtension;
+        private ClusterProxy cluster;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -83,12 +75,6 @@ OPTIONS:
         }
 
         /// <inheritdoc/>
-        public override bool NeedsSshCredentials(CommandLine commandLine)
-        {
-            return true;
-        }
-
-        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
@@ -97,150 +83,73 @@ OPTIONS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            if (Program.HiveLogin != null)
-            {
-                Console.Error.WriteLine("*** ERROR: You are logged into a hive.  You need to logout before setting up another.");
-                Program.Exit(1);
-            }
-
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: [root@HIVE] argument is required.");
+                Console.Error.WriteLine("*** ERROR: [root@CLUSTER-NAME] argument is required.");
                 Program.Exit(1);
             }
 
-            var login = HiveHelper.SplitLogin(commandLine.Arguments[0]);
+            kubeConfig = KubeConfig.Load();
 
-            if (!login.IsOK)
+            var contextName = KubeConfigName.Parse(commandLine.Arguments[0]);
+
+            if (kubeConfig.GetCluster(contextName.Cluster) != null)
             {
-                Console.Error.WriteLine($"*** ERROR: Invalid username/hive [{commandLine.Arguments[0]}].  Expected something like: USER@HIVE");
+                Console.Error.WriteLine($"*** ERROR: You already have a deployed cluster named [{contextName.Cluster}].");
                 Program.Exit(1);
             }
 
-            var username = login.Username;
-            var hiveName = login.HiveName;
+            var username = contextName.User;
+            var clusterName = contextName.Cluster;
 
-            hiveLoginPath = Program.GetHiveLoginPath(username, hiveName);
+            kubeContextExtension = KubeHelper.GetContextExtension(contextName);
 
-            if (!File.Exists(hiveLoginPath))
+            if (kubeContextExtension == null)
             {
-                Console.Error.WriteLine($"*** ERROR: Be sure to prepare the hive first using [neon hive prepare...].  File [{hiveLoginPath}] not found.");
+                Console.Error.WriteLine($"*** ERROR: Be sure to prepare the hive first using [neon cluster prepare...].");
                 Program.Exit(1);
             }
 
-            hiveLogin      = NeonHelper.JsonDeserialize<HiveLogin>(File.ReadAllText(hiveLoginPath));
-            hiveLogin.Path = hiveLoginPath;
-
-            if (!hiveLogin.SetupPending)
+            if (!kubeContextExtension.SetupPending)
             {
-                Console.Error.WriteLine($"*** ERROR: Hive [{hiveLogin.HiveName}] has already been setup.");
+                Console.Error.WriteLine($"*** ERROR: Cluster [{contextName.Cluster}] has already been setup.");
             }
 
-            // $hack(jeff.lill):
-            //
-            // The [hive setup] command used to use the [Program.MachineUsername] and [Program.MachinePassword]
-            // settings directly but we changes this to let the [hive prepare] command do that and persist the
-            // credentials to the hive login so the setup command will use those.  We needed to do that because
-            // Azure no longer accepts the default password "sysadmin0000" as not meeting their new complexity
-            // requirements and also because cloud VMs will now be provisioned with secure passwords right out
-            // of the box.
-            //
-            // Note that if [hiveLogin.SshProvisionPassword == NULL] that means that all of the nodes have
-            // already been set to use the secure password so we'll use that instead.
-            //
-            // We're going to set the Program credentials to here so that we'll end up using the credentials
-            // from the login.  This isn't super clean.
+            kubeContext = new KubeConfigContext();
+            kubeContext.Properties.Extension = kubeContextExtension;
 
-            Program.MachineUsername = hiveLogin.SshUsername;
-            Program.MachinePassword = hiveLogin.SshProvisionPassword ?? hiveLogin.SshPassword;
+            KubeHelper.SetKubeContext(kubeContext);
 
-            // Note that hive setup appends to existing log files.
+            // Note that cluster setup appends to existing log files.
 
-            hive = new HiveProxy(hiveLogin, Program.CreateNodeProxy<NodeDefinition>, appendLog: true, useBootstrap: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
-
-            // We need to ensure that any necessary VPN connection is opened if we're
-            // not provisioning on-premise or not running in the tool container.
-
-            if (hiveLogin.Definition.Vpn.Enabled && 
-                hiveLogin.Definition.Hosting.IsCloudProvider && 
-                !HiveHelper.InToolContainer)
-            {
-                HiveHelper.VpnOpen(hiveLogin,
-                    onStatus: message => Console.WriteLine($"*** {message}"),
-                    onError: message => Console.Error.WriteLine($"*** ERROR {message}"));
-            }
-
-            // Emulate a hive connection so the [HiveHelper] methods will work.
-
-            HiveHelper.OpenHive(hiveLogin);
-
-            // Generate a string with the IP addresses of the management nodes separated
-            // by spaces.  We'll need this when we initialize the management nodes.
-            //
-            // We're also going to select the management address that we'll use to for
-            // joining regular nodes to the hive.  We'll use the first management
-            // node when sorting in ascending order by name for this.
-
-            foreach (var managerNodeDefinition in hive.Definition.SortedManagers)
-            {
-                managerCount++;
-
-                if (managerNodeNames.Length > 0)
-                {
-                    managerNodeNames     += " ";
-                    managerNodeAddresses += " ";
-                }
-
-                managerNodeNames     += managerNodeDefinition.Name;
-                managerNodeAddresses += managerNodeDefinition.PrivateAddress.ToString();
-            }
+            cluster = new ClusterProxy(kubeContextExtension, Program.CreateNodeProxy<NodeDefinition>, appendLog: true, useBootstrap: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
             // Configure global options.
 
             if (commandLine.HasOption("--unredacted"))
             {
-                hive.SecureRunOptions = RunOptions.None;
+                cluster.SecureRunOptions = RunOptions.None;
             }
 
             // Perform the setup operations.
 
-            var controller = 
-                new SetupController<NodeDefinition>(new string[] { "hive", "setup", $"[{hive.Name}]" }, hive.Nodes)
+            var controller =
+                new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
                 {
-                    ShowStatus  = !Program.Quiet,
+                    ShowStatus = !Program.Quiet,
                     MaxParallel = Program.MaxParallel
                 };
 
             controller.AddWaitUntilOnlineStep("connect");
 
-            switch (hive.Definition.HiveNode.SshAuth)
-            {
-                case AuthMethods.Password:
+            controller.AddStep("ssh client cert",
+                (node, stepDelay) =>
+                {
+                    GenerateClientSshKey(node, stepDelay);
+                },
+                node => node == cluster.FirstMaster);
 
-                    sshTlsAuth = false;
-                    break;
-
-                case AuthMethods.Tls:
-
-                    sshTlsAuth = true;
-                    break;
-
-                default:
-
-                    throw new NotSupportedException($"Unsupported SSH authentication method [{hive.Definition.HiveNode.SshAuth}].");
-            }
-
-            if (sshTlsAuth)
-            {
-                controller.AddStep("ssh client cert", 
-                    (node, stepDelay) =>
-                    {
-                        GenerateClientSshKey(node, stepDelay);
-                    },
-                    node => node == hive.FirstMaster);
-            }
-
-            controller.AddStep("verify OS", 
+            controller.AddStep("verify OS",
                 (node, stepDelay) =>
                 {
                     Thread.Sleep(stepDelay);
@@ -249,67 +158,19 @@ OPTIONS:
 
             // Write the operation begin marker to all hive node logs.
 
-            hive.LogLine(logBeginMarker);
+            cluster.LogLine(logBeginMarker);
 
-            // We're going to configure the managers separately from the workers
-            // because we need to be careful about when we reboot the managers
-            // since this will also take down the VPN.  We're also going to 
-            // reboot all of the managers together after common manager 
-            // configuration is complete for the same reason.
+            // Perform common configuration for all cluster nodes.
 
-            controller.AddStep("manager initialize",
+            controller.AddStep("configure nodes",
                 (node, stepDelay) =>
                 {
                     ConfigureCommon(node, stepDelay);
+                    node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
+                    ConfigureNode(node);
                 },
-                node => node.Metadata.IsManager);
-
-            controller.AddStep("manager restart",
-                (node, stepDelay) =>
-                {
-                    node.InvokeIdempotentAction("setup/common-restart",
-                        () =>
-                        {
-                            Thread.Sleep(stepDelay);
-                            RebootAndWait(node);
-                        });
-                },
-                node => node.Metadata.IsManager,
-                noParallelLimit: true);
-
-            controller.AddStep("manager config",
-                (node, stepDelay) =>
-                {
-                    ConfigureManager(node, stepDelay);
-                },
-                node => node.Metadata.IsManager,
-                stepStaggerSeconds: hive.Definition.Setup.StepStaggerSeconds);
-
-            // Configure the workers and pets.
-
-            if (hive.Workers.Count() > 0 || hive.Pets.Count() > 0)
-            {
-                var workerPetStepLabel = "worker/pet config";
-
-                if (hive.Workers.Count() == 0)
-                {
-                    workerPetStepLabel = "pet config";
-                }
-                else if (hive.Pets.Count() == 0)
-                {
-                    workerPetStepLabel = "worker config";
-                }
-
-                controller.AddStep(workerPetStepLabel,
-                    (node, stepDelay) =>
-                    {
-                        ConfigureCommon(node, stepDelay);
-                        node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
-                        ConfigureNonManager(node);
-                    },
-                    node => node.Metadata.IsWorker || node.Metadata.IsPet,
-                    stepStaggerSeconds: hive.Definition.Setup.StepStaggerSeconds);
-            }
+                node => true,
+                stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
 
             // Create the Swarm.
 
@@ -318,178 +179,32 @@ OPTIONS:
                 {
                     CreateSwarm(node, stepDelay);
                 },
-                node => node == hive.FirstMaster);
+                node => node == cluster.FirstMaster);
 
             controller.AddStep("swarm join",
                 (node, stepDelay) =>
                 {
                     JoinSwarm(node, stepDelay);
-                }, 
-                node => node != hive.FirstMaster && !node.Metadata.IsPet);
+                },
+                node => node != cluster.FirstMaster && !node.Metadata.IsPet);
 
-            // Continue with the configuration unless we're just installing bare Docker.
+            // Continue with the configuration.
 
-            if (!hive.Definition.BareDocker)
-            {
-                if (hive.Definition.HiveFS.Enabled)
+            controller.AddStep("check masters",
+                (node, stepDelay) =>
                 {
-                    controller.AddStep("ceph user",
-                        (node, stepDelay) =>
-                        {
-                            // Note that we're creating the Ceph user and group on all cluster
-                            // nodes when Ceph is enabled so that it'll be easier for an operator
-                            // to manually move services around without needing to create these
-                            // as well.
+                    Thread.Sleep(stepDelay);
+                    HiveDiagnostics.CheckMaster(node, cluster.Definition);
+                },
+                node => node.Metadata.IsMaster);
 
-                            CephUser(node, stepDelay);
-                        });
-
-                    controller.AddStep("ceph packages",
-                        (node, stepDelay) =>
-                        {
-                            CephPackages(node, stepDelay);
-                        },
-                        stepStaggerSeconds: hive.Definition.Setup.StepStaggerSeconds);
-
-                    controller.AddGlobalStep("ceph settings", () => CephSettings());
-
-                    controller.AddStep("ceph bootstrap",
-                        (node, stepDelay) =>
-                        {
-                            CephBootstrap(node, stepDelay);
-                        },
-                        node => node.Metadata.Labels.CephMON);
-
-                    controller.AddStep("ceph cluster",
-                        (node, stepDelay) =>
-                        {
-                            CephCluster(node, stepDelay);
-                        }, 
-                        noParallelLimit: true);
-                }
-
-                controller.AddStep("networks",
-                    (node, stepDelay) =>
-                        {
-                            ConfigureHiveNetworks(node, stepDelay);
-                        }, 
-                        node => node == hive.FirstMaster);
-
-                controller.AddStep("node labels",
-                    (node, stepDelay) =>
-                    {
-                        AddNodeLabels(node);
-                    },
-                    n => n == hive.FirstMaster);
-
-                if (hive.Definition.Docker.RegistryCache)
+            controller.AddStep("check workers",
+                (node, stepDelay) =>
                 {
-                    var registryCacheConfigurator = new RegistryCache(hive, hiveLoginPath);
-
-                    controller.AddStep("registry cache",
-                        (node, stepDelay) =>
-                        {
-                            Thread.Sleep(stepDelay);
-                            registryCacheConfigurator.Configure(node);
-                        });
-                }
-
-                if (hive.Definition.Docker.RegistryCache && hive.Definition.NodeDefinitions.Count > 1)
-                {
-                    // The hive deploys a local registry cache and we have multiple
-                    // nodes, so we're going to pull images on the first manager first 
-                    // so they get loaded into the hive's register's registry cache 
-                    // and then pull for all of the other nodes in a subsequent step
-                    // (so we don't slam the Internet connection and the package mirrors.
-
-                    controller.AddStep("pull images to cache",
-                        (node, stepDelay) =>
-                        {
-                            Thread.Sleep(stepDelay);
-                            PullImages(node, pullAll: true);
-                        },
-                        node => node == hive.FirstMaster);
-
-                    controller.AddStep("pull images to nodes",
-                        (node, stepDelay) =>
-                        {
-                            Thread.Sleep(stepDelay);
-                            PullImages(node);
-                        }, 
-                        node => node != hive.FirstMaster);
-                }
-                else
-                {
-                    // Just pull the images to all nodes in parallel if there's 
-                    // no registry cache deployed.
-
-                    controller.AddStep("pull images",
-                        (node, stepDelay) =>
-                        {
-                            Thread.Sleep(stepDelay);
-                            PullImages(node);
-                        });
-                }
-
-                controller.AddGlobalStep("hive key/value",
-                    () =>
-                    {
-                        HiveHelper.OpenHive(hive);
-
-                        ConfigureVaultProxy();
-                        ConfigureVault();
-                        ConfigureConsul();
-                        ConfigureSecrets();
-                    });
-
-                var hiveServices = new HiveServices(hive);
-
-                controller.AddGlobalStep("hive services", () => hiveServices.Configure(hive.FirstMaster));
-
-                controller.AddStep("hive containers",
-                    (node, stepDelay) =>
-                    {
-                        hiveServices.DeployContainers(node, stepDelay);
-                    });
-
-                if (hive.Definition.Log.Enabled)
-                {
-                    var logServices = new LogServices(hive);
-
-                    controller.AddGlobalStep("log services", () => logServices.Configure(hive.FirstMaster));
-
-                    controller.AddStep("log containers",
-                        (node, stepDelay) =>
-                        {
-                            logServices.DeployContainers(node, stepDelay);
-                        });
-
-                    controller.AddGlobalStep("kibana config", () => logServices.ConfigureKibana(hive.FirstMaster));
-                }
-
-                controller.AddGlobalStep("dashboards", () => ConfigureDashboards());
-
-                controller.AddStep("check managers", 
-                    (node, stepDelay) =>
-                    {
-                        Thread.Sleep(stepDelay);
-                        HiveDiagnostics.CheckManager(node, hive.Definition);
-                    }, 
-                    node => node.Metadata.IsManager);
-
-                controller.AddStep("check workers/pets",
-                    (node, stepDelay) =>
-                    {
-                        Thread.Sleep(stepDelay);
-                        HiveDiagnostics.CheckWorkersOrPet(node, hive.Definition);
-                    }, 
-                    node => node.Metadata.IsWorker || node.Metadata.IsPet);
-
-                if (hive.Definition.Log.Enabled)
-                {
-                    controller.AddGlobalStep("check logging", () => HiveDiagnostics.CheckLogServices(hive));
-                }
-            }
+                    Thread.Sleep(stepDelay);
+                    HiveDiagnostics.CheckWorker(node, cluster.Definition);
+                },
+                node => node.Metadata.IsWorker);
 
             // Change the root account's password to something very strong.  
             // This step should be very close to the last one so it will still be
@@ -503,9 +218,9 @@ OPTIONS:
 
             if (!hiveLogin.HasStrongSshPassword)
             {
-                if (hive.Definition.HiveNode.PasswordLength > 0)
+                if (cluster.Definition.HiveNode.PasswordLength > 0)
                 {
-                    hiveLogin.SshPassword          = NeonHelper.GetRandomPassword(hive.Definition.HiveNode.PasswordLength);
+                    hiveLogin.SshPassword = NeonHelper.GetRandomPassword(cluster.Definition.HiveNode.PasswordLength);
                     hiveLogin.HasStrongSshPassword = true;
                 }
                 else
@@ -516,7 +231,7 @@ OPTIONS:
                 hiveLogin.Save();
             }
 
-            if (hive.Definition.HiveNode.PasswordLength > 0)
+            if (cluster.Definition.HiveNode.PasswordLength > 0)
             {
                 // $todo(jeff.lill):
                 //
@@ -570,7 +285,7 @@ OPTIONS:
                     // activities until hive setup has completed, so we'll indicate
                     // that we're done.
 
-                    hive.Globals.Set(HiveGlobals.SetupPending, false);
+                    cluster.Globals.Set(HiveGlobals.SetupPending, false);
                 });
 
             // Start setup.
@@ -579,7 +294,7 @@ OPTIONS:
             {
                 // Write the operation end/failed to all hive node logs.
 
-                hive.LogLine(logFailedMarker);
+                cluster.LogLine(logFailedMarker);
 
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                 Program.Exit(1);
@@ -588,11 +303,11 @@ OPTIONS:
             // Update the hive login file.
 
             hiveLogin.SetupPending = false;
-            hiveLogin.IsRoot       = true;
-            hiveLogin.Username     = HiveConst.RootUser;
-            hiveLogin.Definition   = hive.Definition;
+            hiveLogin.IsRoot = true;
+            hiveLogin.Username = HiveConst.RootUser;
+            hiveLogin.Definition = cluster.Definition;
 
-            if (hive.Definition.Vpn.Enabled)
+            if (cluster.Definition.Vpn.Enabled)
             {
                 // We don't need to save the certificate authority files any more
                 // because they've been stored in the hive Vault.
@@ -604,9 +319,9 @@ OPTIONS:
 
             // Write the operation end marker to all hive node logs.
 
-            hive.LogLine(logEndMarker);
+            cluster.LogLine(logEndMarker);
 
-            Console.WriteLine($"*** Logging into [{HiveConst.RootUser}@{hive.Definition.Name}].");
+            Console.WriteLine($"*** Logging into [{HiveConst.RootUser}@{cluster.Definition.Name}].");
 
             // Note that we're going to login via the VPN for cloud environments
             // but not for local hosting since the operator had to be on-premise
@@ -614,148 +329,13 @@ OPTIONS:
             var currentLogin =
                 new CurrentHiveLogin()
                 {
-                    Login  = $"{HiveConst.RootUser}@{hive.Definition.Name}",
+                    Login = $"{HiveConst.RootUser}@{cluster.Definition.Name}",
                     ViaVpn = hiveLogin.Definition.Hosting.Environment != HostingEnvironments.Machine
                 };
 
             currentLogin.Save();
 
             Console.WriteLine();
-        }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            var commandLine = shim.CommandLine.Shift(Words.Length);
-
-            if (commandLine.HasOption("--remove-templates"))
-            {
-                // We'll run the command in [no-shim] mode for this option.
-
-                return new DockerShimInfo(shimability: DockerShimability.None);
-            }
-
-            if (Program.HiveLogin != null)
-            {
-                Console.Error.WriteLine("*** ERROR: You are logged into a hive.  You need to logout before setting up another.");
-                Program.Exit(1);
-            }
-
-            // The argument should be the user's hive login.
-
-            if (commandLine.Arguments.Length < 1)
-            {
-                Console.Error.WriteLine("*** ERROR: [root@HIVE] argument is required.");
-                Program.Exit(1);
-            }
-
-            var login = HiveHelper.SplitLogin(commandLine.Arguments[0]);
-
-            if (!login.IsOK)
-            {
-                Console.Error.WriteLine($"*** ERROR: Invalid username/hive [{commandLine.Arguments[0]}].  Expected something like: USER@HIVE");
-                Program.Exit(1);
-            }
-
-            var username = login.Username;
-            var hiveName = login.HiveName;
-
-            var hiveLoginPath = Program.GetHiveLoginPath(username, hiveName);
-
-            if (!File.Exists(hiveLoginPath))
-            {
-                Console.Error.WriteLine($"*** ERROR: Be sure to prepare the hive first using [neon hive prepare...].  File [{hiveLoginPath}] not found.");
-                Program.Exit(1);
-            }
-
-            hiveLogin      = NeonHelper.JsonDeserialize<HiveLogin>(File.ReadAllText(hiveLoginPath));
-            hiveLogin.Path = hiveLoginPath;
-
-            hiveLogin.Definition.Validate();
-
-            if (!hiveLogin.SetupPending)
-            {
-                Console.Error.WriteLine($"*** ERROR: Hive [{hiveName}] has already been setup.");
-            }
-
-            // Cloud deployments had their VPN configured when they were prepared
-            // so we need to connect the VPN now so we can setup the nodes.  
-            //
-            // On-premise hives are always setup via local network connections
-            // so we will be connecting the VPN. 
-
-            if (hiveLogin.Definition.Vpn.Enabled &&
-                hiveLogin.Definition.Hosting.IsCloudProvider)
-            {
-                HiveHelper.VpnOpen(hiveLogin,
-                    onStatus: message => Console.WriteLine($"*** {message}"),
-                    onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
-            }
-
-            // We're going to use WinSCP to convert the OpenSSH PEM formatted key
-            // to the PPK format PuTTY/WinSCP require.  Note that this won't work
-            // when the tool is running in a Docker Linux container.  We're going
-            // to handle the conversion here as a post run action.
-
-            shim.SetPostAction(
-                exitCode =>
-                {
-                    if (exitCode != 0)
-                    {
-                        return;
-                    }
-
-                    var pemKeyPath = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
-                    var ppkKeyPath = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
-
-                    try
-                    {
-                        // Reload the login to pick up changes from the shimmed command.
-
-                        hiveLogin      = HiveHelper.LoadHiveLogin(HiveConst.RootUser, hiveLogin.Definition.Name);
-                        hiveLogin.Path = hiveLoginPath;
-
-                        // Update the PuTTY/WinSCP key.
-
-                        File.WriteAllText(pemKeyPath, hiveLogin.SshClientKey.PrivatePEM);
-
-                        ExecuteResult result;
-
-                        try
-                        {
-                            result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{hiveLogin.Definition.Name} Key"" /output=""{ppkKeyPath}""");
-                        }
-                        catch (Win32Exception)
-                        {
-                            return; // Tolerate when WinSCP isn't installed.
-                        }
-
-                        if (result.ExitCode != 0)
-                        {
-                            Console.WriteLine(result.OutputText);
-                            Console.Error.WriteLine(result.ErrorText);
-                            Program.Exit(result.ExitCode);
-                        }
-
-                        hiveLogin.SshClientKey.PrivatePPK = File.ReadAllText(ppkKeyPath);
-
-                        hiveLogin.Save();
-                    }
-                    finally
-                    {
-                        if (File.Exists(pemKeyPath))
-                        {
-                            File.Delete(pemKeyPath);
-                        }
-
-                        if (File.Exists(ppkKeyPath))
-                        {
-                            File.Delete(ppkKeyPath);
-                        }
-                    }
-                });
-
-            return new DockerShimInfo(shimability: DockerShimability.Optional, ensureConnection: false);
         }
 
         /// <summary>
@@ -768,13 +348,13 @@ OPTIONS:
         {
             // Configure the node's environment variables.
 
-            CommonSteps.ConfigureEnvironmentVariables(node, hive.Definition);
+            CommonSteps.ConfigureEnvironmentVariables(node, cluster.Definition);
 
             // Upload the setup and configuration files.
 
-            node.CreateHiveHostFolders();
-            node.UploadConfigFiles(hive.Definition);
-            node.UploadResources(hive.Definition);
+            node.CreateHostFolders();
+            node.UploadConfigFiles(cluster.Definition);
+            node.UploadResources(cluster.Definition);
         }
 
         /// <summary>
@@ -811,516 +391,49 @@ OPTIONS:
                         ConfigureBasic(node);
                     }
 
-                    // Ensure that the node has been prepared for setup.
+            // Ensure that the node has been prepared for setup.
 
-                    CommonSteps.PrepareNode(node, hive.Definition);
+            CommonSteps.PrepareNode(node, cluster.Definition);
 
-                    // Create the [/mnt-data] folder if it doesn't already exist.  This folder
-                    // is where we're going to host the Docker containers and volumes that should
-                    // have been initialized to link to any data drives attached to the machine
-                    // or simply be located on the OS drive.  This may not be initialized for
-                    // some prepared nodes, so we'll create this on the OS drive if necessary.
+            // Create the [/mnt-data] folder if it doesn't already exist.  This folder
+            // is where we're going to host the Docker containers and volumes that should
+            // have been initialized to link to any data drives attached to the machine
+            // or simply be located on the OS drive.  This may not be initialized for
+            // some prepared nodes, so we'll create this on the OS drive if necessary.
 
-                    if (!node.DirectoryExists("/mnt-data"))
+            if (!node.DirectoryExists("/mnt-data"))
                     {
                         node.SudoCommand("mkdir -p /mnt-data");
                     }
 
-                    // Configure the APT proxy server settings early.
+            // Configure the APT proxy server settings early.
 
-                    node.Status = "run: setup-apt-proxy.sh";
+            node.Status = "run: setup-apt-proxy.sh";
                     node.SudoCommand("setup-apt-proxy.sh");
 
-                    // Perform basic node setup including changing the hostname.
+            // Perform basic node setup including changing the hostname.
 
-                    UploadHostsFile(node);
-                    UploadHostEnvFile(node);
+            UploadHostsFile(node);
 
                     node.Status = "run: setup-node.sh";
                     node.SudoCommand("setup-node.sh");
 
-                    // Create and configure the internal hive self-signed certificates.
+            // Tune Linux for SSDs, if enabled.
 
-                    node.Status = "install: certs";
-
-                    if (node.Metadata.IsManager)
-                    {
-                        // Configure the Vault service certificate (with private key).
-
-                        node.SudoCommand("mkdir -p /etc/vault");
-                        node.UploadText($"/etc/vault/vault.crt", hiveLogin.HiveCertificate.CertPem);
-                        node.UploadText($"/etc/vault/vault.key", hiveLogin.HiveCertificate.KeyPem);
-                        node.SudoCommand("chmod 600 /etc/vault/*");
-                    }
-
-                    node.SudoCommand("mkdir -p /etc/neon/certs");
-                    node.SudoCommand("chmod 700 /etc/neon/certs");
-                    node.UploadText($"/etc/neon/certs/hive.crt", hiveLogin.HiveCertificate.CertPem);
-                    node.UploadText($"/etc/neon/certs/hive.key", hiveLogin.HiveCertificate.KeyPem);
-                    node.SudoCommand("chmod 600 /etc/neon/certs/*");
-
-                    // Configure the Consul service certificate (with private key).  Note that
-                    // these need to be configured on all hive nodes because the manager runs
-                    // the Consul service as the masters and the workers and pets run the
-                    // service as a proxy.
-
-                    node.SudoCommand("mkdir -p /etc/consul.d");
-                    node.UploadText($"/etc/consul.d/consul.crt", hiveLogin.HiveCertificate.CertPem);
-                    node.UploadText($"/etc/consul.d/consul.key", hiveLogin.HiveCertificate.KeyPem);
-                    node.SudoCommand("chmod 600 /etc/consul.d/*");
-
-                    // Upload the hive certificates (without private key) to all hive nodes
-                    // so they'll be trusted implicitly.
-                    //
-                    // Note that uploading a registry cache certificiate even if that isn't
-                    // currently enabled in the cluster definition so it'll be easy to upgrade 
-                    // the hive later.
-
-                    node.SudoCommand("mkdir -p /usr/local/share/ca-certificates");
-
-                    var hiveName = hiveLogin.Definition.Name.ToLowerInvariant();
-
-                    node.UploadText($"/usr/local/share/ca-certificates/hive-{hiveName}.crt", hiveLogin.HiveCertificate.CertPem);
-
-                    node.SudoCommand("chmod 644 /usr/local/share/ca-certificates/*");
-                    node.SudoCommand("update-ca-certificates");
-
-                    // Tune Linux for SSDs, if enabled.
-
-                    node.Status = "run: setup-ssd.sh";
+            node.Status = "run: setup-ssd.sh";
                     node.SudoCommand("setup-ssd.sh");
                 });
         }
 
         /// <summary>
-        /// Reboots the nodes and waits until the package manager is ready.
-        /// </summary>
-        /// <param name="node">The hive node.</param>
-        private void RebootAndWait(SshProxy<NodeDefinition> node)
-        {
-            node.Status = "restarting...";
-            node.Reboot(wait: true);
-        }
-
-        /// <summary>
-        /// Generates and uploads the <b>/etc/hosts</b> file for a node.
+        /// Performs basic node configuration.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void UploadHostsFile(SshProxy<NodeDefinition> node)
+        private void ConfigureNode(SshProxy<NodeDefinition> node)
         {
-            var sbHosts = new StringBuilder();
-
-            var nodeAddress = node.PrivateAddress.ToString();
-            var separator   = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
-
-            sbHosts.Append(
-$@"
-127.0.0.1	    localhost
-{nodeAddress}{separator}{node.Name}
-::1             localhost ip6-localhost ip6-loopback
-ff02::1         ip6-allnodes
-ff02::2         ip6-allrouters
-");
-            node.UploadText("/etc/hosts", sbHosts.ToString(), 4, Encoding.UTF8);
-        }
-
-        /// <summary>
-        /// Generates and uploads the <b>/etc/neon/host-env</b> file for a node.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        private void UploadHostEnvFile(SshProxy<NodeDefinition> node)
-        {
-            var sbEnvHost       = new StringBuilder();
-            var vaultDirectLine = string.Empty;
-            var consulDefs      = string.Empty;
-
-            if (node.Metadata.IsManager)
-            {
-                vaultDirectLine = $"export VAULT_DIRECT_ADDR={hive.Definition.GetVaultDirectUri(node.Name)}";
-            }
-
-            if (hive.Definition.Consul.Tls)
-            {
-                consulDefs =
-$@"
-export CONSUL_HTTP_SSL=true
-export CONSUL_HTTP_ADDR={hive.Definition.Hostnames.Consul}:{hive.Definition.Consul.Port}
-export CONSUL_HTTP_FULLADDR=https://{hive.Definition.Hostnames.Consul}:{hive.Definition.Consul.Port}
-";
-            }
-            else
-            {
-                consulDefs =
-$@"
-export CONSUL_HTTP_SSL=false
-export CONSUL_HTTP_ADDR={hive.Definition.Hostnames.Consul}:{hive.Definition.Consul.Port}
-export CONSUL_HTTP_FULLADDR=http://{hive.Definition.Hostnames.Consul}:{hive.Definition.Consul.Port}
-";
-            }
-
-            sbEnvHost.AppendLine(
-$@"#------------------------------------------------------------------------------
-# FILE:         /etc/neon/host-env
-# CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
-#
-# This script can be mounted into containers that require extended knowledge
-# about the hive and host node.  This will be generally be mounted to the container
-# at [/etc/neon/host-env] such that the container entrypoint script can execute it.
-
-# Define the hive and Docker host related environment variables.
-
-export NEON_HIVE={hive.Definition.Name}
-export NEON_DATACENTER={hive.Definition.Datacenter}
-export NEON_ENVIRONMENT={hive.Definition.Environment}
-export NEON_HOSTING={hive.Definition.Hosting.Environment.ToString().ToLowerInvariant()}
-export NEON_NODE_NAME={node.Name}
-export NEON_NODE_ROLE={node.Metadata.Role}
-export NEON_NODE_IP={node.Metadata.PrivateAddress}
-export NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}
-export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
-
-export VAULT_ADDR={hive.Definition.VaultProxyUri}
-{vaultDirectLine}
-{consulDefs}
-
-# Define the hive-specific host names.
-
-export HiveHostnames_Base=$NEON_HIVE.nhive.io
-export HiveHostnames_RegistryCache=neon-registry-cache.$NEON_HIVE.nhive.io
-export HiveHostnames_LogEsData=neon-log-esdata.$NEON_HIVE.nhive.io
-export HiveHostnames_Consul=neon-consul.$NEON_HIVE.nhive.io
-export HiveHostnames_Vault=neon-vault.$NEON_HIVE.nhive.io
-export HiveHostnames_RabbitMQ=neon-hivemq.$NEON_HIVE.nhive.io
-export HiveHostnames_UpdateHosts=neon-hosts-fixture-modify.$NEON_HIVE.nhive.io
-
-if [ -d /mnt/host/ca-certificates ] ; then
-
-# This ensures that the hive certificates mounted from the host to
-# [/usr/local/share/ca-certificates] are trusted by the container.
-# We currently support the following tools if they exist within
-# the container:
-#
-# update-ca-certificates: Debian, Ubuntu, Alpine,...
-#   
-# update-ca-trust: RedHat, CentOS...
-#
-# Note that custom applications (like Java) may need additional
-# certificate initialization.  You can do this in your image
-# entrypoint script.
-
-    if which update-ca-certificates ; then
-
-        cp /mnt/host/ca-certificates/* /usr/local/share/ca-certificates
-        update-ca-certificates
-
-    elif which update-ca-trust ; then
-
-        cp /mnt/host/ca-certificates/* /usr/share/pki/ca-trust-source/anchors/
-        update-ca-trust force-enable
-        update-ca-trust extract
-    fi
-fi
-");
-            node.UploadText($"{HiveHostFolders.Config}/host-env", sbEnvHost.ToString(), 4, Encoding.UTF8);
-        }
-
-        /// <summary>
-        /// Generates the Consul configuration file for a hive node.
-        /// </summary>
-        /// <param name="node">The target hive node.</param>
-        /// <returns>The configuration file text.</returns>
-        private string GetConsulConfig(SshProxy<NodeDefinition> node)
-        {
-            var consulTls  = node.Hive.Definition.Consul.Tls;
-            var consulDef  = node.Hive.Definition.Consul;
-            var consulConf = new JObject();
-
-            consulConf.Add("log_level", "info");
-            consulConf.Add("datacenter", hive.Definition.Datacenter);
-            consulConf.Add("node_name", node.Name);
-            consulConf.Add("data_dir", "/mnt-data/consul");
-            consulConf.Add("advertise_addr", node.Metadata.PrivateAddress.ToString());
-            consulConf.Add("client_addr", "0.0.0.0");
-
-            var ports = new JObject();
-
-            ports.Add("http", consulTls ? -1 : 8500);
-            ports.Add("https", consulTls ? 8500 : -1);
-            ports.Add("dns", 8600);     // This is the default Consul DNS port.
-
-            consulConf.Add("ports", ports);
-
-            if (consulTls)
-            {
-                consulConf.Add("cert_file", "/etc/consul.d/consul.crt");
-                consulConf.Add("key_file", "/etc/consul.d/consul.key");
-            }
-
-            consulConf.Add("ui", true);
-            consulConf.Add("leave_on_terminate", false);
-            consulConf.Add("skip_leave_on_interrupt", true);
-            consulConf.Add("disable_remote_exec", true);
-            consulConf.Add("domain", "hive");
-
-            var recursors = new JArray();
-
-            foreach (var nameserver in hive.Definition.Network.Nameservers)
-            {
-                recursors.Add(nameserver);
-            }
-        
-            consulConf.Add("recursors", recursors);
-
-            var dnsConfig  = new JObject();
-            var serviceTtl = new JObject();
-
-            if (consulDef.DnsMaxStale > 0)
-            {
-                dnsConfig.Add("allow_stale", true);
-                dnsConfig.Add("max_stale", $"{consulDef.DnsMaxStale}s");
-            }
-            else
-            {
-                dnsConfig.Add("allow_stale", false);
-                dnsConfig.Add("max_stale", "0s");
-            }
-
-            dnsConfig.Add("node_ttl", $"{consulDef.DnsTTL}s");
-
-            serviceTtl.Add("*", $"{consulDef.DnsTTL}s");
-            dnsConfig.Add("service_ttl", serviceTtl);
-            consulConf.Add("dns_config", dnsConfig);
-
-            if (node.Metadata.IsManager)
-            {
-                consulConf.Add("bootstrap_expect", hive.Definition.Managers.Count());
-
-                var performance = new JObject();
-
-                performance.Add("raft_multiplier", 1);
-
-                consulConf.Add("performance", performance);
-            }
-            else
-            {
-                var managerAddresses = new JArray();
-
-                foreach (var manager in hive.Managers)
-                {
-                    managerAddresses.Add(manager.Metadata.PrivateAddress.ToString());
-                }
-
-                consulConf.Add("retry_join", managerAddresses);
-                consulConf.Add("retry_interval", "30s");
-            }
-
-            return consulConf.ToString(Formatting.Indented);
-        }
-
-        /// <summary>
-        /// Returns the contents of the <b>/etc/docker/daemon.json</b> file to
-        /// be provisioned on a node.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        /// <returns>The Docker settings as JSON text.</returns>
-        private string GetDockerConfig(SshProxy<NodeDefinition> node)
-        {
-            var settings = new JObject();
-
-#if USERNS_REMAP
-            // $todo(jeff.lill): https://github.com/moby/moby/issues/37560
-            if (node.Hive.Definition.Docker.UsernsRemap)
-            {
-                settings.Add("userns-remap", "default");
-            }
-#endif
-            // Logging configuration.
-
-            settings.Add("log-level", "info");
-            settings.Add("log-driver", hive.Definition.Docker.LogDriver);
-
-            var logOptions = new JObject();
-
-            foreach (var option in hive.Definition.Docker.LogOptions.Split(';'))
-            {
-                if (string.IsNullOrWhiteSpace(option))
-                {
-                    continue;   // Ignore blank options.
-                }
-
-                var fields = option.Split(new char[] { '=' }, 2);
-
-                if (fields.Length == 1)
-                {
-                    logOptions.Add(fields[0], string.Empty);    // Not sure if this is reallt necessary (but it probably won't hurt).
-                }
-                else
-                {
-                    logOptions.Add(fields[0], fields[1]);
-                }
-            }
-
-            settings.Add("log-opts", logOptions);
-
-            // Storage driver configuration.
-
-            switch (Program.OSProperties.StorageDriver)
-            {
-                case DockerStorageDrivers.Aufs:
-
-                    settings.Add("storage-driver", "aufs");
-                    break;
-
-                case DockerStorageDrivers.Overlay:
-
-                    settings.Add("storage-driver", "overlay");
-                    break;
-
-                case DockerStorageDrivers.Overlay2:
-
-                    settings.Add("storage-driver", "overlay2");
-                    break;
-
-                default:
-
-                    throw new NotImplementedException($"Unsupported storage driver: {Program.OSProperties.StorageDriver}.");
-            }
-
-            // Configure experimental Docker behavior. 
-
-            settings.Add("experimental", hive.Definition.Docker.Experimental);
-
-            // Specify any registry caches followed by the Docker public registry.
-
-            var registries = new JArray();
-
-            if (!hive.Definition.BareDocker && hive.Definition.Docker.RegistryCache)
-            {
-                foreach (var manager in hive.Definition.SortedManagers)
-                {
-                    registries.Add($"https://{manager.Name}.{hive.Definition.Hostnames.RegistryCache}:{HiveHostPorts.DockerRegistryCache}");
-                }
-            }
-
-            registries.Add($"https://{HiveConst.DockerPublicRegistry}");
-
-            settings.Add("registry-mirrors", registries);
-
-            // I believe this will set the default network MTU for all Docker networks.
-
-            settings.Add("mtu", hive.Definition.Network.MTU);
-
-            return NeonHelper.JsonSerialize(settings, Formatting.Indented);
-        }
-
-        /// <summary>
-        /// Configures the required VPN return routes for on-premise hives 
-        /// that enable VPN.
-        /// </summary>
-        /// <param name="node">The target hive node.</param>
-        private void ConfigureVpnPoolRoutes(SshProxy<NodeDefinition> node)
-        {
-            if (!hive.Definition.Vpn.Enabled)
-            {
-                // Note that cloud deployments handle VPN return routing via routing tables setup
-                // during hive preparation.
-
-                return;
-            }
-
-            node.Status = "vpn return routes";
-
-            // Since hive VPN traffic is coming throught the manager nodes and
-            // isn't coming through the hive router directly, we need to setup
-            // explict routes on each node that will direct packets back to the
-            // manager where specific client VPN connections are terminated.
-            //
-            // We need to make the routes available for the current session and
-            // also edit [/etc/network/interfaces] to add the routes during 
-            // after a machine or networking restart.
-            //
-            // Note that even managers will need VPN return routes to the other
-            // managers.
-
-            // Create a list of route commands for the current node.
-
-            var primaryInterface = node.GetNetworkInterface(node.PrivateAddress);
-            var routeCommands    = new List<string>();
-
-            foreach (var manager in hive.Managers.Where(m => m != node))
-            {
-                routeCommands.Add($"ip route add {manager.Metadata.VpnPoolSubnet} via {manager.PrivateAddress} dev {primaryInterface} || true");
-            }
-
-            // Execute the route commands on the node so they will be 
-            // available immediately.
-
-            foreach (var command in routeCommands)
-            {
-                node.SudoCommand(command);
-            }
-
-            // Read the existing [/etc/network/interfaces] file and strip out
-            // any existing section that looks like:
-            //
-            //      # BEGIN-VPN-RETURN-ROUTES
-            //        ...
-            //      # END-VPN-RETURN-ROUTES
-            //
-            // Then append the a new section of the commands to the end of
-            // the file with the [up] prefix and write it back to the node.
-
-            var existingInterfaces = node.DownloadText("/etc/network/interfaces");
-            var newInterfaces      = new StringBuilder();
-            var inReturnSection    = false;
-
-            foreach (var line in new StringReader(existingInterfaces).Lines())
-            {
-                if (line.StartsWith("# BEGIN-VPN-RETURN-ROUTES"))
-                {
-                    inReturnSection = true;
-                    continue;
-                }
-                else if (line.StartsWith("# END-VPN-RETURN-ROUTES"))
-                {
-                    inReturnSection = false;
-                    continue;
-                }
-
-                if (!inReturnSection)
-                {
-                    newInterfaces.AppendLine(line);
-                }
-            }
-
-            if (routeCommands.Count > 0)
-            {
-                newInterfaces.AppendLine("# BEGIN-VPN-RETURN-ROUTES");
-
-                foreach (var command in routeCommands)
-                {
-                    newInterfaces.AppendLine($"up {command}");
-                }
-
-                newInterfaces.AppendLine("# END-VPN-RETURN-ROUTES");
-            }
-
-            node.UploadText("/etc/network/interfaces", newInterfaces.ToString());
-        }
-
-        /// <summary>
-        /// Completes manager node configuration.
-        /// </summary>
-        /// <param name="node">The target hive node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void ConfigureManager(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
-        {
-            node.InvokeIdempotentAction("setup/manager",
+            node.InvokeIdempotentAction($"setup/{node.Metadata.Role}",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
-
                     // Configure the APT package proxy on the managers
                     // and configure the proxy selector for all nodes.
 
@@ -1330,7 +443,7 @@ fi
                     // Upgrade Linux packages if requested.  We're doing this after
                     // deploying the APT package proxy so it'll be faster.
 
-                    switch (hive.Definition.HiveNode.Upgrade)
+                    switch (cluster.Definition.NodeOptions.Upgrade)
                     {
                         case OsUpgrade.Partial:
 
@@ -1350,16 +463,6 @@ fi
                     // Check to see whether the upgrade requires a reboot and
                     // do that now if necessary.
 
-                    // $todo(jeff.lill):
-                    //
-                    // This is probably an extra step for managers because we
-                    // already restart managers after the [manager initialize]
-                    // step.  Perhaps we could relocate manager upgrade to
-                    // the initialize step and avoid this extra reboot.
-                    //
-                    // I'm not going to mess with this right now because there
-                    // could be some impacts on VPN config etc.
-
                     if (node.FileExists("/var/run/reboot-required"))
                     {
                         node.Status = "reboot after update";
@@ -1371,61 +474,9 @@ fi
                     node.Status = "run: setup-ntp.sh";
                     node.SudoCommand("setup-ntp.sh");
 
-                    // Configure the VPN return routes.
-
-                    ConfigureVpnPoolRoutes(node);
-
-                    // Setup the Consul server and join it to the Consul cluster.
-
-                    node.Status = "upload: consul.json";
-                    node.SudoCommand("mkdir -p /etc/consul.d");
-                    node.SudoCommand("chmod 770 /etc/consul.d");
-                    node.UploadText("/etc/consul.d/consul.json", GetConsulConfig(node));
-
-                    node.Status = "run: setup-consul-server.sh";
-                    node.SudoCommand("setup-consul-server.sh", hive.Definition.Consul.EncryptionKey);
-
-                    if (!hive.Definition.BareDocker)
-                    {
-                        // Bootstrap Consul cluster discovery.
-
-                        node.InvokeIdempotentAction("setup/consul-bootstrap",
-                            () =>
-                            {
-                                var discoveryTimer = new PolledTimer(TimeSpan.FromMinutes(2));
-
-                                node.Status = "consul cluster bootstrap";
-
-                                while (true)
-                                {
-                                    if (node.SudoCommand($"consul join {managerNodeAddresses}", RunOptions.None).ExitCode == 0)
-                                    {
-                                        break;
-                                    }
-
-                                    if (discoveryTimer.HasFired)
-                                    {
-                                        node.Fault($"Unable to form Consul cluster within [{discoveryTimer.Interval}].");
-                                        break;
-                                    }
-
-                                    Thread.Sleep(TimeSpan.FromSeconds(5));
-                                }
-                            });
-
-                        // Install Vault server.
-
-                        node.Status = "run: setup-vault-server.sh";
-                        node.SudoCommand("setup-vault-server.sh");
-                    }
-
-                    // Setup Docker
+                    // Setup Docker.
 
                     node.Status = "setup docker";
-
-                    node.SudoCommand("mkdir -p /etc/docker");
-                    node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
-                    node.SudoCommand("chmod 640 /etc/docker/daemon.json");
 
                     var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
@@ -1452,6 +503,38 @@ fi
         }
 
         /// <summary>
+        /// Reboots the cluster nodes.
+        /// </summary>
+        /// <param name="node">The hive node.</param>
+        private void RebootAndWait(SshProxy<NodeDefinition> node)
+        {
+            node.Status = "restarting...";
+            node.Reboot(wait: true);
+        }
+
+        /// <summary>
+        /// Generates and uploads the <b>/etc/hosts</b> file for a node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void UploadHostsFile(SshProxy<NodeDefinition> node)
+        {
+            var sbHosts = new StringBuilder();
+
+            var nodeAddress = node.PrivateAddress.ToString();
+            var separator = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
+
+            sbHosts.Append(
+$@"
+127.0.0.1	    localhost
+{nodeAddress}{separator}{node.Name}
+::1             localhost ip6-localhost ip6-loopback
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+");
+            node.UploadText("/etc/hosts", sbHosts.ToString(), 4, Encoding.UTF8);
+        }
+
+        /// <summary>
         /// Creates the initial swarm on the bootstrap manager node passed and 
         /// captures the manager and worker swarm tokens required to join additional
         /// nodes to the hive.
@@ -1468,7 +551,7 @@ fi
             Thread.Sleep(stepDelay);
 
             bootstrapManager.Status = "create swarm";
-            bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm init --advertise-addr {bootstrapManager.Metadata.PrivateAddress}:{hive.Definition.Docker.SwarmPort}");
+            bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm init --advertise-addr {bootstrapManager.Metadata.PrivateAddress}:{cluster.Definition.Docker.SwarmPort}");
 
             var response = bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm join-token manager");
 
@@ -1529,139 +612,6 @@ fi
         }
 
         /// <summary>
-        /// Configures non-manager nodes like workers or individuals.
-        /// </summary>
-        /// <param name="node">The target hive node.</param>
-        private void ConfigureNonManager(SshProxy<NodeDefinition> node)
-        {
-            node.InvokeIdempotentAction($"setup/{node.Metadata.Role}",
-                () =>
-                {
-                    // Configure the APT package proxy on the managers
-                    // and configure the proxy selector for all nodes.
-
-                    node.Status = "run: setup-apt-proxy.sh";
-                    node.SudoCommand("setup-apt-proxy.sh");
-
-                    // Upgrade Linux packages if requested.  We're doing this after
-                    // deploying the APT package proxy so it'll be faster.
-
-                    switch (hive.Definition.HiveNode.Upgrade)
-                    {
-                        case OsUpgrade.Partial:
-
-                            node.Status = "package upgrade (partial)";
-
-                            node.SudoCommand("safe-apt-get upgrade -yq");
-                            break;
-
-                        case OsUpgrade.Full:
-
-                            node.Status = "package upgrade (full)";
-
-                            node.SudoCommand("safe-apt-get dist-upgrade -yq");
-                            break;
-                    }
-
-                    // Check to see whether the upgrade requires a reboot and
-                    // do that now if necessary.
-
-                    if (node.FileExists("/var/run/reboot-required"))
-                    {
-                        node.Status = "reboot after update";
-                        node.Reboot();
-                    }
-
-                    // Setup NTP.
-
-                    node.Status = "run: setup-ntp.sh";
-                    node.SudoCommand("setup-ntp.sh");
-
-                    // Configure the VPN return routes.
-
-                    ConfigureVpnPoolRoutes(node);
-
-                    if (!hive.Definition.BareDocker)
-                    {
-                        // Setup the Consul proxy and join it to the Consul cluster.
-
-                        node.Status = "upload: consul.json";
-                        node.SudoCommand("mkdir -p /etc/consul.d");
-                        node.SudoCommand("chmod 770 /etc/consul.d");
-                        node.UploadText("/etc/consul.d/consul.json", GetConsulConfig(node));
-
-                        node.Status = "run: setup-consul-proxy.sh";
-                        node.SudoCommand("setup-consul-proxy.sh", hive.Definition.Consul.EncryptionKey);
-
-                        // Join this node's Consul agent with the master(s).
-
-                        node.InvokeIdempotentAction("setup/consul-join",
-                            () =>
-                            {
-                                var discoveryTimer = new PolledTimer(TimeSpan.FromMinutes(5));
-
-                                node.Status = "join consul cluster";
-
-                                while (true)
-                                {
-                                    if (node.SudoCommand($"consul join {managerNodeAddresses}", RunOptions.None).ExitCode == 0)
-                                    {
-                                        break;
-                                    }
-
-                                    if (discoveryTimer.HasFired)
-                                    {
-                                        node.Fault($"Unable to join Consul cluster within [{discoveryTimer.Interval}].");
-                                        break;
-                                    }
-
-                                    Thread.Sleep(TimeSpan.FromSeconds(5));
-                                }
-                            });
-                    }
-
-                    // Setup Docker.
-
-                    node.Status = "setup docker";
-
-                    node.SudoCommand("mkdir -p /etc/docker");
-                    node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
-
-                    var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
-
-                    dockerRetry.InvokeAsync(
-                        async () =>
-                        {
-                            var response = node.SudoCommand("setup-docker.sh", node.DefaultRunOptions & ~RunOptions.FaultOnError);
-
-                            if (response.ExitCode != 0)
-                            {
-                                throw new TransientException(response.ErrorText);
-                            }
-
-                            await Task.CompletedTask;
-
-                        }).Wait();
-
-                    // Other initialization.
-
-                    if (!hive.Definition.BareDocker)
-                    {
-                        // Configure Vault client.
-
-                        node.Status = "run: setup-vault-client.sh";
-                        node.SudoCommand("setup-vault-client.sh");
-                    }
-
-                    // Clean up any cached APT files.
-
-                    node.Status = "clean up";
-                    node.SudoCommand("safe-apt-get clean -yq");
-                    node.SudoCommand("rm -rf /var/lib/apt/lists");
-                });
-        }
-
-        /// <summary>
         /// Creates the standard hive overlay networks.
         /// </summary>
         /// <param name="manager">The manager node.</param>
@@ -1695,9 +645,9 @@ sleep 10
 docker network create \
    --driver overlay \
    --ingress \
-   --subnet={hive.Definition.Network.IngressSubnet} \
-   --gateway={hive.Definition.Network.IngressGateway} \
-   --opt com.docker.network.mtu={hive.Definition.Network.IngressMTU} \
+   --subnet={cluster.Definition.Network.IngressSubnet} \
+   --gateway={cluster.Definition.Network.IngressGateway} \
+   --opt com.docker.network.mtu={cluster.Definition.Network.IngressMTU} \
    ingress
 ";
                     var bundle = new CommandBundle(". ./ingress.sh");
@@ -1715,9 +665,9 @@ docker network create \
                     manager.DockerCommand(
                         "docker network create",
                         "--driver", "overlay",
-                        "--subnet", hive.Definition.Network.PublicSubnet,
+                        "--subnet", cluster.Definition.Network.PublicSubnet,
                         "--opt", "encrypt",
-                        hive.Definition.Network.PublicAttachable ? "--attachable" : null,
+                        cluster.Definition.Network.PublicAttachable ? "--attachable" : null,
                         HiveConst.PublicNetwork);
                 });
 
@@ -1728,9 +678,9 @@ docker network create \
                     manager.DockerCommand(
                         "docker network create",
                         "--driver", "overlay",
-                        "--subnet", hive.Definition.Network.PrivateSubnet,
+                        "--subnet", cluster.Definition.Network.PrivateSubnet,
                         "--opt", "encrypt",
-                        hive.Definition.Network.PrivateAttachable ? "--attachable" : null,
+                        cluster.Definition.Network.PrivateAttachable ? "--attachable" : null,
                         HiveConst.PrivateNetwork);
                 });
         }
@@ -1746,12 +696,12 @@ docker network create \
                 {
                     manager.Status = "labeling";
 
-                    foreach (var node in hive.Nodes.Where(n => n.Metadata.InSwarm))
+                    foreach (var node in cluster.Nodes.Where(n => n.Metadata.InSwarm))
                     {
                         var labelDefinitions = new List<string>();
 
-                        labelDefinitions.Add($"{NodeLabels.LabelDatacenter}={hive.Definition.Datacenter.ToLowerInvariant()}");
-                        labelDefinitions.Add($"{NodeLabels.LabelEnvironment}={hive.Definition.Environment.ToString().ToLowerInvariant()}");
+                        labelDefinitions.Add($"{NodeLabels.LabelDatacenter}={cluster.Definition.Datacenter.ToLowerInvariant()}");
+                        labelDefinitions.Add($"{NodeLabels.LabelEnvironment}={cluster.Definition.Environment.ToString().ToLowerInvariant()}");
 
                         foreach (var item in node.Metadata.Labels.Standard)
                         {
@@ -1854,44 +804,44 @@ docker network create \
                     {
                         Program.ResolveDockerImage("nhive/ubuntu-16.04"),
                         Program.ResolveDockerImage("nhive/ubuntu-16.04-dotnet"),
-                        Program.ResolveDockerImage(hive.Definition.Image.Proxy),
-                        Program.ResolveDockerImage(hive.Definition.Image.ProxyVault)
+                        Program.ResolveDockerImage(cluster.Definition.Image.Proxy),
+                        Program.ResolveDockerImage(cluster.Definition.Image.ProxyVault)
                     };
 
                     if (node.Metadata.IsManager)
                     {
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.HiveManager));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.ProxyManager));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.Dns));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.DnsMon));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.SecretRetriever));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Image.HiveManager));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Image.ProxyManager));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Image.Dns));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Image.DnsMon));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Image.SecretRetriever));
                     }
 
-                    if (hive.Definition.Log.Enabled)
+                    if (cluster.Definition.Log.Enabled)
                     {
                         // All nodes pull these images:
 
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.LogHost));
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.Metricbeat));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Image.LogHost));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Image.Metricbeat));
 
                         // [neon-log-collector] only runs on managers.
 
                         if (pullAll || node.Metadata.IsManager)
                         {
-                            images.Add(Program.ResolveDockerImage(hive.Definition.Image.LogCollector));
+                            images.Add(Program.ResolveDockerImage(cluster.Definition.Image.LogCollector));
                         }
 
                         // [elasticsearch] only runs on designated nodes.
 
                         if (pullAll || node.Metadata.Labels.LogEsData)
                         {
-                            images.Add(Program.ResolveDockerImage(hive.Definition.Image.Elasticsearch));
+                            images.Add(Program.ResolveDockerImage(cluster.Definition.Image.Elasticsearch));
                         }
                     }
 
                     if (pullAll || node.Metadata.Labels.HiveMQ)
                     {
-                        images.Add(Program.ResolveDockerImage(hive.Definition.Image.HiveMQ));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Image.HiveMQ));
                     }
 
                     foreach (var image in images)
@@ -1911,7 +861,7 @@ docker network create \
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void JoinSwarm(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            if (node == hive.FirstMaster)
+            if (node == cluster.FirstMaster)
             {
                 // This node is implictly joined to the hive.
 
@@ -1928,13 +878,13 @@ docker network create \
 
                     if (node.Metadata.IsManager)
                     {
-                        node.DockerCommand(hive.SecureRunOptions | RunOptions.FaultOnError, $"docker swarm join --token {hiveLogin.SwarmManagerToken} {hive.FirstMaster.Metadata.PrivateAddress}:2377");
+                        node.DockerCommand(cluster.SecureRunOptions | RunOptions.FaultOnError, $"docker swarm join --token {hiveLogin.SwarmManagerToken} {cluster.FirstMaster.Metadata.PrivateAddress}:2377");
                     }
                     else
                     {
                         // Must be a worker node.
 
-                        node.DockerCommand(hive.SecureRunOptions | RunOptions.FaultOnError, $"docker swarm join --token {hiveLogin.SwarmWorkerToken} {hive.FirstMaster.Metadata.PrivateAddress}:2377");
+                        node.DockerCommand(cluster.SecureRunOptions | RunOptions.FaultOnError, $"docker swarm join --token {hiveLogin.SwarmWorkerToken} {cluster.FirstMaster.Metadata.PrivateAddress}:2377");
                     }
                 });
 
@@ -1969,9 +919,9 @@ StartLimitBurst=6307200";
         /// </summary>
         /// <param name="node">The target hive node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void CephPackages (SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void CephPackages(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            if (!hive.Definition.HiveFS.Enabled)
+            if (!cluster.Definition.HiveFS.Enabled)
             {
                 return;
             }
@@ -2001,7 +951,7 @@ StartLimitBurst=6307200";
                     // Extract the Ceph release and version from the configuration.
                     // Note that the version is optional and is currently ignored.
 
-                    var parts       = hive.Definition.HiveFS.Release.Split('/');
+                    var parts = cluster.Definition.HiveFS.Release.Split('/');
                     var cephRelease = parts[0].Trim().ToLowerInvariant();
 
                     // Configure the Ceph Debian package repositories and install
@@ -2198,7 +1148,7 @@ WantedBy=ceph-osd.target
         /// </summary>
         private void CephSettings()
         {
-            if (!hive.Definition.HiveFS.Enabled)
+            if (!cluster.Definition.HiveFS.Enabled)
             {
                 return;
             }
@@ -2219,14 +1169,14 @@ WantedBy=ceph-osd.target
 
             // Use the first manager node to access the Ceph admin tools.
 
-            var manager          = hive.FirstMaster;
-            var cephConfig       = new CephConfig();
-            var tmpPath          = "/tmp/ceph";
-            var monKeyringPath   = LinuxPath.Combine(tmpPath, "mon.keyring");
+            var manager = cluster.FirstMaster;
+            var cephConfig = new CephConfig();
+            var tmpPath = "/tmp/ceph";
+            var monKeyringPath = LinuxPath.Combine(tmpPath, "mon.keyring");
             var adminKeyringPath = LinuxPath.Combine(tmpPath, "admin.keyring");
-            var osdKeyringPath   = LinuxPath.Combine(tmpPath, "osd.keyring");
-            var monMapPath       = LinuxPath.Combine(tmpPath, "monmap");
-            var runOptions       = RunOptions.Defaults | RunOptions.FaultOnError;
+            var osdKeyringPath = LinuxPath.Combine(tmpPath, "osd.keyring");
+            var monMapPath = LinuxPath.Combine(tmpPath, "monmap");
+            var runOptions = RunOptions.Defaults | RunOptions.FaultOnError;
 
             hiveLogin.Ceph = cephConfig;
 
@@ -2266,7 +1216,7 @@ WantedBy=ceph-osd.target
 
             var sbAddOptions = new StringBuilder();
 
-            foreach (var monNode in hive.Nodes.Where(n => n.Metadata.Labels.CephMON))
+            foreach (var monNode in cluster.Nodes.Where(n => n.Metadata.Labels.CephMON))
             {
                 sbAddOptions.AppendWithSeparator($"--add {monNode.Name} {monNode.PrivateAddress}");
             }
@@ -2295,19 +1245,19 @@ WantedBy=ceph-osd.target
         {
             node.Status = "ceph config";
 
-            var sbHostNames     = new StringBuilder();
+            var sbHostNames = new StringBuilder();
             var sbHostAddresses = new StringBuilder();
 
-            foreach (var monitorNode in hive.Definition.SortedNodes.Where(n => n.Labels.CephMON))
+            foreach (var monitorNode in cluster.Definition.SortedNodes.Where(n => n.Labels.CephMON))
             {
                 sbHostNames.AppendWithSeparator(monitorNode.Name, ", ");
                 sbHostAddresses.AppendWithSeparator(monitorNode.PrivateAddress, ", ");
             }
 
             var hiveSubnet =
-                new HostingManagerFactory().IsCloudEnvironment(hive.Definition.Hosting.Environment)
-                    ? hive.Definition.Network.CloudSubnet
-                    : hive.Definition.Network.PremiseSubnet;
+                new HostingManagerFactory().IsCloudEnvironment(cluster.Definition.Hosting.Environment)
+                    ? cluster.Definition.Network.CloudSubnet
+                    : cluster.Definition.Network.PremiseSubnet;
 
             node.SudoCommand("mkdir -p /etc/ceph");
 
@@ -2319,7 +1269,7 @@ WantedBy=ceph-osd.target
 $@"
 [mds.{node.Name}]
 host = {node.Name}
-mds cache memory limit = {(int)(node.Metadata.GetCephMDSCacheSize(hive.Definition) * HiveFSOptions.CacheSizeFudge)}
+mds cache memory limit = {(int)(node.Metadata.GetCephMDSCacheSize(cluster.Definition) * HiveFSOptions.CacheSizeFudge)}
 mds_standby_replay = true
 ";
             }
@@ -2335,18 +1285,18 @@ public network = {hiveSubnet}
 auth cluster required = cephx
 auth service required = cephx
 auth client required = cephx
-osd journal size = {HiveDefinition.ValidateSize(hive.Definition.HiveFS.OSDJournalSize, hive.Definition.HiveFS.GetType(), nameof(hive.Definition.HiveFS.OSDJournalSize)) / NeonHelper.Mega}
-osd pool default size = {hive.Definition.HiveFS.OSDReplicaCount}
-osd pool default min size = {hive.Definition.HiveFS.OSDReplicaCountMin}
-osd pool default pg num = {hive.Definition.HiveFS.OSDPlacementGroups}
-osd pool default pgp num = {hive.Definition.HiveFS.OSDPlacementGroups}
+osd journal size = {HiveDefinition.ValidateSize(cluster.Definition.HiveFS.OSDJournalSize, cluster.Definition.HiveFS.GetType(), nameof(cluster.Definition.HiveFS.OSDJournalSize)) / NeonHelper.Mega}
+osd pool default size = {cluster.Definition.HiveFS.OSDReplicaCount}
+osd pool default min size = {cluster.Definition.HiveFS.OSDReplicaCountMin}
+osd pool default pg num = {cluster.Definition.HiveFS.OSDPlacementGroups}
+osd pool default pgp num = {cluster.Definition.HiveFS.OSDPlacementGroups}
 osd crush chooseleaf type = 1
-bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition) * HiveFSOptions.CacheSizeFudge) / NeonHelper.Mega}
+bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definition) * HiveFSOptions.CacheSizeFudge) / NeonHelper.Mega}
 {mdsConf}
 ");
             if (!configOnly)
             {
-                var cephUser         = hive.Definition.HiveFS.Username;
+                var cephUser = cluster.Definition.HiveFS.Username;
                 var adminKeyringPath = "/etc/ceph/ceph.client.admin.keyring";
 
                 node.UploadText(adminKeyringPath, hiveLogin.Ceph.AdminKeyring);
@@ -2407,7 +1357,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             node.InvokeIdempotentAction("setup/ceph-user",
                 () =>
                 {
-                    var cephUser = hive.Definition.HiveFS.Username;
+                    var cephUser = cluster.Definition.HiveFS.Username;
 
                     // Ensure that the Ceph lib folder exists because this acts as
                     // the HOME directory for the user.
@@ -2436,7 +1386,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                 {
                     Thread.Sleep(stepDelay);
 
-                    var cephUser = hive.Definition.HiveFS.Username;
+                    var cephUser = cluster.Definition.HiveFS.Username;
                     var tempPath = "/tmp/ceph";
 
                     // Create a temporary folder.
@@ -2452,12 +1402,12 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     node.Status = "ceph-mon config";
 
                     var monFolder = $"/var/lib/ceph/mon/{hiveLogin.Ceph.Name}-{node.Name}";
-                    
+
                     node.SudoCommand($"mkdir -p {monFolder}");
                     node.SudoCommand($"chown {cephUser}:{cephUser} {monFolder}");
                     node.SudoCommand($"chmod 770 {monFolder}");
 
-                    var monitorMapPath     = LinuxPath.Combine(tempPath, "monmap");
+                    var monitorMapPath = LinuxPath.Combine(tempPath, "monmap");
                     var monitorKeyringPath = LinuxPath.Combine(tempPath, "ceph.mon.keyring");
 
                     node.UploadBytes(monitorMapPath, hiveLogin.Ceph.MonitorMap);
@@ -2518,7 +1468,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                     Thread.Sleep(TimeSpan.FromSeconds(15));
 
-                    if (hive.Definition.Dashboard.HiveFS)
+                    if (cluster.Definition.Dashboard.HiveFS)
                     {
                         // Enable the Ceph dashboard.
 
@@ -2527,7 +1477,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                         // Ceph versions after [luminous] require additional configuration
                         // to setup the TLS certificate and login credentials.
 
-                        if (hive.Definition.HiveFS.Release != "luminous")
+                        if (cluster.Definition.HiveFS.Release != "luminous")
                         {
                             node.SudoCommand($"ceph config-key set mgr/dashboard/crt -i /etc/neon/certs/hive.crt");
                             node.SudoCommand($"ceph config-key set mgr/dashboard/key -i /etc/neon/certs/hive.key");
@@ -2601,7 +1551,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
         {
             var status = new CephClusterStatus();
 
-            if (!hive.Definition.HiveFS.Enabled)
+            if (!cluster.Definition.HiveFS.Enabled)
             {
                 return status;
             }
@@ -2617,15 +1567,15 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             {
                 var cephStatus = JObject.Parse(result.OutputText);
 
-                var health   = (JObject)cephStatus.GetValue("health");
-                var monMap   = (JObject)cephStatus.GetValue("monmap");
+                var health = (JObject)cephStatus.GetValue("health");
+                var monMap = (JObject)cephStatus.GetValue("monmap");
                 var monArray = (JArray)monMap.GetValue("mons");
                 var monCount = monArray.Count();
-                var osdMap   = (JObject)cephStatus.GetValue("osdmap");
-                var osdMap2  = (JObject)osdMap.GetValue("osdmap");
+                var osdMap = (JObject)cephStatus.GetValue("osdmap");
+                var osdMap2 = (JObject)osdMap.GetValue("osdmap");
 
-                status.IsHealthy      = (string)health.GetValue("status") == "HEALTH_OK";
-                status.OSDCount       = (int)osdMap2.GetValue("num_osds");
+                status.IsHealthy = (string)health.GetValue("status") == "HEALTH_OK";
+                status.OSDCount = (int)osdMap2.GetValue("num_osds");
                 status.OSDActiveCount = (int)osdMap2.GetValue("num_up_osds");
             }
 
@@ -2641,7 +1591,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                 // This counts the number of MDS servers that are running
                 // in cold standby mode.
 
-                var fsMap    = (JObject)mdsStatus.GetValue("fsmap");
+                var fsMap = (JObject)mdsStatus.GetValue("fsmap");
                 var standbys = (JArray)fsMap.GetValue("standbys");
 
                 foreach (JObject standby in standbys)
@@ -2659,17 +1609,17 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                 // This counts the number of MDS servers that are active
                 // or are running in hot standby mode.
 
-                var filesystems     = (JArray)fsMap.GetValue("filesystems");
+                var filesystems = (JArray)fsMap.GetValue("filesystems");
                 var firstFileSystem = (JObject)filesystems.FirstOrDefault();
 
                 if (firstFileSystem != null)
                 {
                     var mdsMap = (JObject)firstFileSystem.GetValue("mdsmap");
-                    var info   = (JObject)mdsMap.GetValue("info");
+                    var info = (JObject)mdsMap.GetValue("info");
 
                     foreach (var property in info.Properties())
                     {
-                        var item  = (JObject)property.Value;
+                        var item = (JObject)property.Value;
                         var state = (string)item.GetValue("state");
 
                         status.MDSCount++;
@@ -2715,7 +1665,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
 
                     node.Status = "ceph-osd config";
 
-                    var cephUser = hive.Definition.HiveFS.Username;
+                    var cephUser = cluster.Definition.HiveFS.Username;
 
                     // All nodes need the config file.
 
@@ -2736,9 +1686,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             // all nodes wait but only the first manager will report status to
             // the UX.
 
-            var osdCount = hive.Definition.Nodes.Count(n => n.Labels.CephOSD);
+            var osdCount = cluster.Definition.Nodes.Count(n => n.Labels.CephOSD);
 
-            if (node == hive.FirstMaster)
+            if (node == cluster.FirstMaster)
             {
                 node.Status = $"OSD servers: [0 of {osdCount}] ready";
             }
@@ -2754,7 +1704,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     {
                         var clusterStatus = GetCephClusterStatus(node);
 
-                        if (node == hive.FirstMaster)
+                        if (node == cluster.FirstMaster)
                         {
                             node.Status = $"OSD servers: [{clusterStatus.OSDActiveCount} of {osdCount}] ready";
                         }
@@ -2799,9 +1749,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             // all nodes wait but only the first manager will report status to
             // the UX.
 
-            var mdsCount = hive.Definition.Nodes.Count(n => n.Labels.CephMDS);
+            var mdsCount = cluster.Definition.Nodes.Count(n => n.Labels.CephMDS);
 
-            if (node == hive.FirstMaster)
+            if (node == cluster.FirstMaster)
             {
                 node.Status = $"MDS servers: [0 of {mdsCount}] ready";
             }
@@ -2817,7 +1767,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
                     {
                         var clusterStatus = GetCephClusterStatus(node);
 
-                        if (node == hive.FirstMaster)
+                        if (node == cluster.FirstMaster)
                         {
                             node.Status = $"MDS servers: [{clusterStatus.MDSActiveCount} of {mdsCount}] ready";
                         }
@@ -2838,14 +1788,14 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             // pools and then the [hiveFS] filesystem using those pools.  Then we'll have the first manager 
             // wait for the filesystem to be created.
 
-            if (node == hive.FirstMaster)
+            if (node == cluster.FirstMaster)
             {
                 node.InvokeIdempotentAction("setup/hive-fs",
                     () =>
                     {
                         node.Status = "create file system";
-                        node.SudoCommand($"ceph osd pool create hivefs_data {hive.Definition.HiveFS.OSDPlacementGroups}");
-                        node.SudoCommand($"ceph osd pool create hivefs_metadata {hive.Definition.HiveFS.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph osd pool create hivefs_data {cluster.Definition.HiveFS.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph osd pool create hivefs_metadata {cluster.Definition.HiveFS.OSDPlacementGroups}");
                         node.SudoCommand($"ceph fs new hivefs hivefs_metadata hivefs_data");
                     });
             }
@@ -2882,7 +1832,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(hive.Definition)
             node.InvokeIdempotentAction("setup/ceph-mount",
                 () =>
                 {
-                    var monNode = hive.Definition.SortedNodes.First(n => n.Labels.CephMON);
+                    var monNode = cluster.Definition.SortedNodes.First(n => n.Labels.CephMON);
 
                     node.Status = "mount file system";
                     node.SudoCommand($"mkdir -p /mnt/hivefs");
@@ -2968,7 +1918,7 @@ WantedBy=docker.service
                     node.SudoCommand($"systemctl start ceph-fuse-hivefs.service");
                 });
 
-            if (node == hive.FirstMaster)
+            if (node == cluster.FirstMaster)
             {
                 node.InvokeIdempotentAction("setup/hive-fs-init",
                     () =>
@@ -3023,7 +1973,7 @@ WantedBy=docker.service
                     installCommand.AddFile("install.sh",
 $@"# Download and install the plugin.
 
-curl {Program.CurlOptions} {hive.Definition.HiveFS.VolumePluginPackage} -o /tmp/neon-volume-plugin-deb 1>&2
+curl {Program.CurlOptions} {cluster.Definition.HiveFS.VolumePluginPackage} -o /tmp/neon-volume-plugin-deb 1>&2
 dpkg --install /tmp/neon-volume-plugin-deb
 rm /tmp/neon-volume-plugin-deb
 
@@ -3068,12 +2018,12 @@ systemctl start neon-volume-plugin
 
             var sbEndpoints = new StringBuilder();
 
-            foreach (var manager in hive.Definition.SortedManagers)
+            foreach (var manager in cluster.Definition.SortedManagers)
             {
-                sbEndpoints.AppendWithSeparator($"{manager.Name}:{manager.Name}.{hive.Definition.Hostnames.Vault}:{NetworkPorts.Vault}", ",");
+                sbEndpoints.AppendWithSeparator($"{manager.Name}:{manager.Name}.{cluster.Definition.Hostnames.Vault}:{NetworkPorts.Vault}", ",");
             }
 
-            hive.FirstMaster.InvokeIdempotentAction("setup/proxy-vault",
+            cluster.FirstMaster.InvokeIdempotentAction("setup/proxy-vault",
                 () =>
                 {
                     // Docker mesh routing seemed unstable on versions [17.03.0-ce]
@@ -3089,7 +2039,7 @@ systemctl start neon-volume-plugin
 
                     var options = new List<string>();
 
-                    if (hive.Definition.Docker.GetAvoidIngressNetwork(hive.Definition))
+                    if (cluster.Definition.Docker.GetAvoidIngressNetwork(cluster.Definition))
                     {
                         options.Add("--publish");
                         options.Add($"mode=host,published={HiveHostPorts.ProxyVault},target={NetworkPorts.Vault}");
@@ -3105,7 +2055,7 @@ systemctl start neon-volume-plugin
 
                     // Deploy [neon-proxy-vault].
 
-                    ServiceHelper.StartService(hive, "neon-proxy-vault", hive.Definition.Image.ProxyVault,
+                    ServiceHelper.StartService(cluster, "neon-proxy-vault", cluster.Definition.Image.ProxyVault,
                         new CommandBundle(
                             "docker service create",
                             "--name", "neon-proxy-vault",
@@ -3118,7 +2068,7 @@ systemctl start neon-volume-plugin
                             "--mount", "type=bind,src=/usr/local/share/ca-certificates,dst=/mnt/host/ca-certificates,readonly=true",
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                             "--env", $"LOG_LEVEL=INFO",
-                            "--restart-delay", hive.Definition.Docker.RestartDelay,
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             ServiceHelper.ImagePlaceholderArg));
                 });
 
@@ -3129,14 +2079,14 @@ systemctl start neon-volume-plugin
 
             var vaultTasks = new List<Task>();
 
-            foreach (var pet in hive.Pets)
+            foreach (var pet in cluster.Pets)
             {
                 var task = Task.Run(
                     () =>
                     {
                         var steps = new ConfigStepList();
 
-                        ServiceHelper.AddContainerStartSteps(hive, steps, pet, "neon-proxy-vault", hive.Definition.Image.ProxyVault,
+                        ServiceHelper.AddContainerStartSteps(cluster, steps, pet, "neon-proxy-vault", cluster.Definition.Image.ProxyVault,
                             new CommandBundle(
                                 "docker run",
                                 "--name", "neon-proxy-vault",
@@ -3149,7 +2099,7 @@ systemctl start neon-volume-plugin
                                 "--restart", "always",
                                 ServiceHelper.ImagePlaceholderArg));
 
-                        hive.Configure(steps);
+                        cluster.Configure(steps);
                     });
 
                 vaultTasks.Add(task);
@@ -3166,9 +2116,9 @@ systemctl start neon-volume-plugin
             // Wait for the Vault instance on each manager node to become ready 
             // and then unseal them.
 
-            var firstMaster = hive.FirstMaster;
-            var timer        = new Stopwatch();
-            var timeout      = TimeSpan.FromMinutes(5);
+            var firstMaster = cluster.FirstMaster;
+            var timer = new Stopwatch();
+            var timeout = TimeSpan.FromMinutes(5);
 
             // We're going to use a raw JsonClient here that is configured
             // to accept self-signed certificates.  We can't use [NeonClusterHelper.Vault]
@@ -3181,11 +2131,11 @@ systemctl start neon-volume-plugin
 
             using (httpHandler)
             {
-                foreach (var manager in hive.Managers)
+                foreach (var manager in cluster.Managers)
                 {
                     using (var vaultJsonClient = new JsonClient(httpHandler, disposeHandler: false))
                     {
-                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.Name}.{hive.Definition.Hostnames.Vault}:{NetworkPorts.Vault}/");
+                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.Name}.{cluster.Definition.Hostnames.Vault}:{NetworkPorts.Vault}/");
 
                         // Wait for Vault to start and be able to respond to requests.
 
@@ -3225,7 +2175,7 @@ systemctl start neon-volume-plugin
 
                         for (int i = 0; i < hiveLogin.VaultCredentials.KeyThreshold; i++)
                         {
-                            manager.SudoCommand($"vault-direct operator unseal", hive.SecureRunOptions | RunOptions.FaultOnError, hiveLogin.VaultCredentials.UnsealKeys[i]);
+                            manager.SudoCommand($"vault-direct operator unseal", cluster.SecureRunOptions | RunOptions.FaultOnError, hiveLogin.VaultCredentials.UnsealKeys[i]);
                         }
 
                         // Wait for Vault to indicate that it's unsealed and is
@@ -3264,7 +2214,7 @@ systemctl start neon-volume-plugin
 
                     using (var vaultJsonClient = new JsonClient(httpHandler, disposeHandler: false))
                     {
-                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.Name}.{hive.Definition.Hostnames.Vault}:{NetworkPorts.Vault}/");
+                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.Name}.{cluster.Definition.Hostnames.Vault}:{NetworkPorts.Vault}/");
 
                         manager.Status = "vault: stablize";
 
@@ -3303,7 +2253,7 @@ systemctl start neon-volume-plugin
 
             // Be really sure that vault is ready on all managers.
 
-            hive.Vault.WaitUntilReady();
+            cluster.Vault.WaitUntilReady();
         }
 
         /// <summary>
@@ -3311,7 +2261,7 @@ systemctl start neon-volume-plugin
         /// </summary>
         private void ConfigureVault()
         {
-            var firstMaster = hive.FirstMaster;
+            var firstMaster = cluster.FirstMaster;
 
             try
             {
@@ -3324,9 +2274,9 @@ systemctl start neon-volume-plugin
 
                     var response = firstMaster.SudoCommand(
                         "vault-direct operator init",
-                        hive.SecureRunOptions | RunOptions.FaultOnError,
-                        $"-key-shares={hive.Definition.Vault.KeyCount}",
-                        $"-key-threshold={hive.Definition.Vault.KeyThreshold}");
+                        cluster.SecureRunOptions | RunOptions.FaultOnError,
+                        $"-key-shares={cluster.Definition.Vault.KeyCount}",
+                        $"-key-threshold={cluster.Definition.Vault.KeyThreshold}");
 
                     if (response.ExitCode != 0)
                     {
@@ -3336,7 +2286,7 @@ systemctl start neon-volume-plugin
 
                     var rawVaultCredentials = response.OutputText;
 
-                    hiveLogin.VaultCredentials = VaultCredentials.FromInit(rawVaultCredentials, hive.Definition.Vault.KeyThreshold);
+                    hiveLogin.VaultCredentials = VaultCredentials.FromInit(rawVaultCredentials, cluster.Definition.Vault.KeyThreshold);
 
                     // Persist the Vault credentials.
 
@@ -3371,7 +2321,7 @@ systemctl start neon-volume-plugin
                     () =>
                     {
                         firstMaster.Status = "vault: enable neon-secret backend";
-                        hive.Vault.Command("vault secrets enable", "-path=neon-secret", "generic");
+                        cluster.Vault.Command("vault secrets enable", "-path=neon-secret", "generic");
                     });
 
                 // Mount the [transit] backend and create the hive key.
@@ -3380,8 +2330,8 @@ systemctl start neon-volume-plugin
                     () =>
                     {
                         firstMaster.Status = "vault: transit backend";
-                        hive.Vault.Command("vault secrets enable transit");
-                        hive.Vault.Command($"vault write -f transit/keys/{HiveConst.VaultTransitKey}");
+                        cluster.Vault.Command("vault secrets enable transit");
+                        cluster.Vault.Command($"vault write -f transit/keys/{HiveConst.VaultTransitKey}");
                     });
 
                 // Mount the [approle] backend.
@@ -3390,7 +2340,7 @@ systemctl start neon-volume-plugin
                     () =>
                     {
                         firstMaster.Status = "vault: approle backend";
-                        hive.Vault.Command("vault auth enable approle");
+                        cluster.Vault.Command("vault auth enable approle");
                     });
 
                 // Initialize the standard policies.
@@ -3401,18 +2351,18 @@ systemctl start neon-volume-plugin
                         firstMaster.Status = "vault: policies";
 
                         var writeCapabilities = VaultCapabilies.Create | VaultCapabilies.Read | VaultCapabilies.Update | VaultCapabilies.Delete | VaultCapabilies.List;
-                        var readCapabilities  = VaultCapabilies.Read | VaultCapabilies.List;
+                        var readCapabilities = VaultCapabilies.Read | VaultCapabilies.List;
 
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-reader", "neon-secret/*", readCapabilities));
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-writer", "neon-secret/*", writeCapabilities));
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-cert-reader", "neon-secret/cert/*", readCapabilities));
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-cert-writer", "neon-secret/cert/*", writeCapabilities));
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-hosting-reader", "neon-secret/hosting/*", readCapabilities));
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-hosting-writer", "neon-secret/hosting/*", writeCapabilities));
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-service-reader", "neon-secret/service/*", readCapabilities));
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-service-writer", "neon-secret/service/*", writeCapabilities));
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-global-reader", "neon-secret/global/*", readCapabilities));
-                        hive.Vault.SetPolicy(new VaultPolicy("neon-global-writer", "neon-secret/global/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-reader", "neon-secret/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-writer", "neon-secret/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-cert-reader", "neon-secret/cert/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-cert-writer", "neon-secret/cert/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-hosting-reader", "neon-secret/hosting/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-hosting-writer", "neon-secret/hosting/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-service-reader", "neon-secret/service/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-service-writer", "neon-secret/service/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-global-reader", "neon-secret/global/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-global-writer", "neon-secret/global/*", writeCapabilities));
                     });
 
                 // Initialize the [neon-proxy-*] related service roles.  Each of these services 
@@ -3424,9 +2374,9 @@ systemctl start neon-volume-plugin
                     {
                         firstMaster.Status = "vault: roles";
 
-                        hive.Vault.SetAppRole("neon-proxy-manager", "neon-cert-reader", "neon-hosting-reader");
-                        hive.Vault.SetAppRole("neon-proxy-public", "neon-cert-reader");
-                        hive.Vault.SetAppRole("neon-proxy-private", "neon-cert-reader");
+                        cluster.Vault.SetAppRole("neon-proxy-manager", "neon-cert-reader", "neon-hosting-reader");
+                        cluster.Vault.SetAppRole("neon-proxy-public", "neon-cert-reader");
+                        cluster.Vault.SetAppRole("neon-proxy-private", "neon-cert-reader");
                     });
 
                 // Store the hive hosting options in the Vault so services that need to perform
@@ -3442,7 +2392,7 @@ systemctl start neon-volume-plugin
 
                         using (var vault = HiveHelper.OpenVault(HiveCredentials.FromVaultToken(hiveLogin.VaultCredentials.RootToken)))
                         {
-                            vault.WriteJsonAsync("neon-secret/hosting/options", hive.Definition.Hosting).Wait();
+                            vault.WriteJsonAsync("neon-secret/hosting/options", cluster.Definition.Hosting).Wait();
 
                             // Store the zipped OpenVPN certificate authority files in the hive Vault.
 
@@ -3460,7 +2410,7 @@ systemctl start neon-volume-plugin
             }
             finally
             {
-                hive.FirstMaster.Status = string.Empty;
+                cluster.FirstMaster.Status = string.Empty;
             }
         }
 
@@ -3469,7 +2419,7 @@ systemctl start neon-volume-plugin
         /// </summary>
         private void ConfigureConsul()
         {
-            var firstMaster = hive.FirstMaster;
+            var firstMaster = cluster.FirstMaster;
 
             firstMaster.InvokeIdempotentAction("setup/consul-initialize",
                 () =>
@@ -3489,17 +2439,17 @@ systemctl start neon-volume-plugin
 
                     firstMaster.Status = "saving hive globals";
 
-                    hive.Globals.Set(HiveGlobals.CreateDateUtc, DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture));
-                    hive.Globals.Set(HiveGlobals.NeonCli, Program.MinimumVersion);
-                    hive.Globals.Set(HiveGlobals.SetupPending, true);
-                    hive.Globals.Set(HiveGlobals.UserAllowUnitTesting, hive.Definition.AllowUnitTesting);
-                    hive.Globals.Set(HiveGlobals.UserDisableAutoUnseal, false);
-                    hive.Globals.Set(HiveGlobals.UserLogRetentionDays, hive.Definition.Log.RetentionDays);
-                    hive.Globals.Set(HiveGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
-                    hive.Globals.Set(HiveGlobals.Version, Program.Version);
+                    cluster.Globals.Set(HiveGlobals.CreateDateUtc, DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture));
+                    cluster.Globals.Set(HiveGlobals.NeonCli, Program.MinimumVersion);
+                    cluster.Globals.Set(HiveGlobals.SetupPending, true);
+                    cluster.Globals.Set(HiveGlobals.UserAllowUnitTesting, cluster.Definition.AllowUnitTesting);
+                    cluster.Globals.Set(HiveGlobals.UserDisableAutoUnseal, false);
+                    cluster.Globals.Set(HiveGlobals.UserLogRetentionDays, cluster.Definition.Log.RetentionDays);
+                    cluster.Globals.Set(HiveGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
+                    cluster.Globals.Set(HiveGlobals.Version, Program.Version);
                 });
 
-            
+
             // Write the Consul globals that hold the HiveMQ settings for the
             // [app], [neon], and [sysadmin] accounts. 
 
@@ -3521,12 +2471,12 @@ systemctl start neon-volume-plugin
                     // to the hive host nodes, as long as at least one of the listed hive
                     // hosts is still active.
 
-                    var hosts    = new List<string>();
+                    var hosts = new List<string>();
                     var maxHosts = 10;
 
-                    foreach (var node in hive.Definition.SortedWorkers)
+                    foreach (var node in cluster.Definition.SortedWorkers)
                     {
-                        hosts.Add($"{node.Name}.{hive.Definition.Hostnames.HiveMQ}");
+                        hosts.Add($"{node.Name}.{cluster.Definition.Hostnames.HiveMQ}");
 
                         if (hosts.Count >= maxHosts)
                         {
@@ -3536,9 +2486,9 @@ systemctl start neon-volume-plugin
 
                     if (hosts.Count < maxHosts)
                     {
-                        foreach (var node in hive.Definition.SortedManagers)
+                        foreach (var node in cluster.Definition.SortedManagers)
                         {
-                            hosts.Add($"{node.Name}.{hive.Definition.Hostnames.HiveMQ}");
+                            hosts.Add($"{node.Name}.{cluster.Definition.Hostnames.HiveMQ}");
 
                             if (hosts.Count >= maxHosts)
                             {
@@ -3549,37 +2499,37 @@ systemctl start neon-volume-plugin
 
                     var hiveMQSettings = new HiveMQSettings()
                     {
-                        AmqpHosts   = hosts,
-                        AmqpPort    = HiveHostPorts.ProxyPrivateHiveMQAMQP,
-                        AdminHosts  = hosts,
-                        AdminPort   = HiveHostPorts.ProxyPrivateHiveMQAdmin,
-                        TlsEnabled  = false,
-                        Username    = HiveConst.HiveMQSysadminUser,
-                        Password    = hive.Definition.HiveMQ.SysadminPassword,
+                        AmqpHosts = hosts,
+                        AmqpPort = HiveHostPorts.ProxyPrivateHiveMQAMQP,
+                        AdminHosts = hosts,
+                        AdminPort = HiveHostPorts.ProxyPrivateHiveMQAdmin,
+                        TlsEnabled = false,
+                        Username = HiveConst.HiveMQSysadminUser,
+                        Password = cluster.Definition.HiveMQ.SysadminPassword,
                         VirtualHost = "/"
                     };
 
                     firstMaster.InvokeIdempotentAction("setup/neon-hivemq-settings-sysadmin",
-                        () => hive.Globals.Set(HiveGlobals.HiveMQSettingSysadmin, hiveMQSettings));
+                        () => cluster.Globals.Set(HiveGlobals.HiveMQSettingSysadmin, hiveMQSettings));
 
-                    hiveMQSettings.Username    = HiveConst.HiveMQNeonUser;
-                    hiveMQSettings.Password    = hive.Definition.HiveMQ.NeonPassword;
+                    hiveMQSettings.Username = HiveConst.HiveMQNeonUser;
+                    hiveMQSettings.Password = cluster.Definition.HiveMQ.NeonPassword;
                     hiveMQSettings.VirtualHost = HiveConst.HiveMQNeonVHost;
 
                     firstMaster.InvokeIdempotentAction("setup/neon-hivemq-settings-neon",
-                        () => hive.Globals.Set(HiveGlobals.HiveMQSettingsNeon, hiveMQSettings));
+                        () => cluster.Globals.Set(HiveGlobals.HiveMQSettingsNeon, hiveMQSettings));
 
-                    hiveMQSettings.Username    = HiveConst.HiveMQAppUser;
-                    hiveMQSettings.Password    = hive.Definition.HiveMQ.AppPassword;
+                    hiveMQSettings.Username = HiveConst.HiveMQAppUser;
+                    hiveMQSettings.Password = cluster.Definition.HiveMQ.AppPassword;
                     hiveMQSettings.VirtualHost = HiveConst.HiveMQAppVHost;
 
                     firstMaster.InvokeIdempotentAction("setup/neon-hivemq-settings-app",
-                        () => hive.Globals.Set(HiveGlobals.HiveMQSettingsApp, hiveMQSettings));
+                        () => cluster.Globals.Set(HiveGlobals.HiveMQSettingsApp, hiveMQSettings));
 
                     // Persist the HiveMQ bootstrap settings to Consul.  These settings have no credentials
                     // and reference the HiveMQ nodes directly (not via a traffic manager rule).
 
-                    hive.HiveMQ.SaveBootstrapSettings();
+                    cluster.HiveMQ.SaveBootstrapSettings();
                 });
         }
 
@@ -3588,7 +2538,7 @@ systemctl start neon-volume-plugin
         /// </summary>
         public void ConfigureSecrets()
         {
-            var firstMaster = hive.FirstMaster;
+            var firstMaster = cluster.FirstMaster;
 
             // Create the [neon-ssh-credentials] Docker secret.
 
@@ -3596,7 +2546,7 @@ systemctl start neon-volume-plugin
                 () =>
                 {
                     firstMaster.Status = "secret: SSH credentials";
-                    hive.Docker.Secret.Set("neon-ssh-credentials", $"{hiveLogin.SshUsername}/{hiveLogin.SshPassword}");
+                    cluster.Docker.Secret.Set("neon-ssh-credentials", $"{hiveLogin.SshUsername}/{hiveLogin.SshPassword}");
                 });
 
             // Create the [neon-ceph-dashboard-credentials] Docker secret.
@@ -3608,7 +2558,7 @@ systemctl start neon-volume-plugin
                     hiveLogin.CephDashboardUsername = HiveConst.DefaultUsername;
                     // hiveLogin.CephDashboardPassword = NeonHelper.GetRandomPassword(20);  $todo(jeff.lill): UNCOMMENT THIS????
                     hiveLogin.CephDashboardPassword = HiveConst.DefaultPassword;
-                    hive.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
+                    cluster.Docker.Secret.Set("neon-ceph-dashboard-credentials", $"{hiveLogin.CephDashboardUsername}/{hiveLogin.CephDashboardPassword}");
                 });
         }
 
@@ -3701,7 +2651,7 @@ chmod 666 /run/ssh-key*
 
                     try
                     {
-                        result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{hive.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                        result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
                     }
                     catch (Win32Exception)
                     {
@@ -3775,10 +2725,10 @@ echo '{hiveLogin.SshUsername}:{hiveLogin.SshPassword}' | chpasswd
         /// </summary>
         private void ConfigureSshCerts()
         {
-            hive.FirstMaster.InvokeIdempotentAction("setup/ssh-server-key",
+            cluster.FirstMaster.InvokeIdempotentAction("setup/ssh-server-key",
                 () =>
                 {
-                    hive.FirstMaster.Status = "generate server SSH key";
+                    cluster.FirstMaster.Status = "generate server SSH key";
 
                     var configScript =
 @"
@@ -3811,17 +2761,17 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
                     var bundle = new CommandBundle("./config.sh");
 
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
-                    hive.FirstMaster.SudoCommand(bundle);
+                    cluster.FirstMaster.SudoCommand(bundle);
 
-                    hive.FirstMaster.Status = "download server SSH key";
+                    cluster.FirstMaster.Status = "download server SSH key";
 
-                    hiveLogin.SshHiveHostPrivateKey     = hive.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
-                    hiveLogin.SshHiveHostPublicKey      = hive.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
-                    hiveLogin.SshHiveHostKeyFingerprint = hive.FirstMaster.DownloadText("/dev/shm/ssh/ssh.fingerprint");
+                    hiveLogin.SshHiveHostPrivateKey = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
+                    hiveLogin.SshHiveHostPublicKey = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
+                    hiveLogin.SshHiveHostKeyFingerprint = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh.fingerprint");
 
                     // Delete the SSH key files for security.
 
-                    hive.FirstMaster.SudoCommand("rm -r /dev/shm/ssh");
+                    cluster.FirstMaster.SudoCommand("rm -r /dev/shm/ssh");
 
                     // Persist the server SSH key and fingerprint.
 
@@ -3914,7 +2864,7 @@ systemctl restart sshd
         /// </summary>
         private void ConfigureDashboards()
         {
-            var firstMaster = hive.FirstMaster;
+            var firstMaster = cluster.FirstMaster;
 
             firstMaster.InvokeIdempotentAction("setup/dashboards",
                 () =>
@@ -3934,27 +2884,27 @@ systemctl restart sshd
                     //
                     //      https://github.com/jefflill/NeonForge/issues/222
 
-                    if (hive.Definition.HiveFS.Enabled && hive.Definition.Dashboard.HiveFS)
+                    if (cluster.Definition.HiveFS.Enabled && cluster.Definition.Dashboard.HiveFS)
                     {
                         firstMaster.Status = "hivefs dashboard";
 
-                        if (hive.Definition.HiveFS.Release == "luminous")
+                        if (cluster.Definition.HiveFS.Release == "luminous")
                         {
                             var hiveFSDashboard = new HiveDashboard()
                             {
-                                Name        = "hivefs",
-                                Title       = "Hive File System",
-                                Folder      = HiveConst.DashboardSystemFolder,
-                                Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
+                                Name = "hivefs",
+                                Title = "Hive File System",
+                                Folder = HiveConst.DashboardSystemFolder,
+                                Url = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
                                 Description = "Ceph distributed file system"
                             };
 
-                            hive.Dashboard.Set(hiveFSDashboard);
+                            cluster.Dashboard.Set(hiveFSDashboard);
 
                             var rule = new TrafficHttpRule()
                             {
-                                Name     = "neon-hivefs-dashboard",
-                                System   = true,
+                                Name = "neon-hivefs-dashboard",
+                                System = true,
                                 Resolver = null
                             };
 
@@ -3966,8 +2916,8 @@ systemctl restart sshd
                             // We're going to consider only servers that return 2xx status codes
                             // as healthy so we'll always direct traffic to the lead MGR.
 
-                            rule.CheckMode   = TrafficCheckMode.Http;
-                            rule.CheckTls    = false;
+                            rule.CheckMode = TrafficCheckMode.Http;
+                            rule.CheckTls = false;
                             rule.CheckExpect = @"rstatus ^2\d\d";
 
                             // Initialize the frontends and backends.
@@ -3978,17 +2928,17 @@ systemctl restart sshd
                                     ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
                                 });
 
-                            foreach (var monNode in hive.Nodes.Where(n => n.Metadata.Labels.CephMON))
+                            foreach (var monNode in cluster.Nodes.Where(n => n.Metadata.Labels.CephMON))
                             {
                                 rule.Backends.Add(
                                     new TrafficHttpBackend()
                                     {
                                         Server = monNode.Metadata.PrivateAddress.ToString(),
-                                        Port   = 7000,  // The [luminous] dashboard is hardcoded to port 7000
+                                        Port = 7000,  // The [luminous] dashboard is hardcoded to port 7000
                                     });
                             }
 
-                            hive.PrivateTraffic.SetRule(rule);
+                            cluster.PrivateTraffic.SetRule(rule);
                         }
                         else
                         {
@@ -4007,19 +2957,19 @@ systemctl restart sshd
 
                             var hiveFSDashboard = new HiveDashboard()
                             {
-                                Name        = "hivefs",
-                                Title       = "Hive File System",
-                                Folder      = HiveConst.DashboardSystemFolder,
-                                Url         = $"https://reachable-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
+                                Name = "hivefs",
+                                Title = "Hive File System",
+                                Folder = HiveConst.DashboardSystemFolder,
+                                Url = $"https://reachable-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
                                 Description = "Ceph distributed file system"
                             };
 
-                            hive.Dashboard.Set(hiveFSDashboard);
+                            cluster.Dashboard.Set(hiveFSDashboard);
 
                             var rule = new TrafficTcpRule()
                             {
-                                Name     = "neon-hivefs-dashboard",
-                                System   = true,
+                                Name = "neon-hivefs-dashboard",
+                                System = true,
                                 Resolver = null
                             };
 
@@ -4031,8 +2981,8 @@ systemctl restart sshd
                             // We're going to consider only servers that return 2xx status codes
                             // as healthy so we'll always direct traffic to the lead MGR.
 
-                            rule.CheckMode   = TrafficCheckMode.Http;
-                            rule.CheckTls    = true;
+                            rule.CheckMode = TrafficCheckMode.Http;
+                            rule.CheckTls = true;
                             rule.CheckExpect = @"rstatus ^2\d\d";
 
                             // Initialize the frontends and backends.
@@ -4046,12 +2996,12 @@ systemctl restart sshd
                             rule.Backends.Add(
                                 new TrafficTcpBackend()
                                 {
-                                    Group      = HiveHostGroups.CephMON,
+                                    Group = HiveHostGroups.CephMON,
                                     GroupLimit = 5,
-                                    Port       = HiveHostPorts.CephDashboard
+                                    Port = HiveHostPorts.CephDashboard
                                 });
 
-                            hive.PrivateTraffic.SetRule(rule);
+                            cluster.PrivateTraffic.SetRule(rule);
                         }
 
                         firstMaster.Status = string.Empty;
@@ -4059,84 +3009,88 @@ systemctl restart sshd
 
                     // Configure the Consul dashboard.
 
-                    if (hive.Definition.Dashboard.Consul)
+                    if (cluster.Definition.Dashboard.Consul)
                     {
                         firstMaster.Status = "consul dashboard";
 
                         var consulDashboard = new HiveDashboard()
                         {
-                            Name        = "consul",
-                            Title       = "Consul",
-                            Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"{hive.Definition.Consul.Scheme}://reachable-manager:{NetworkPorts.Consul}/ui",
+                            Name = "consul",
+                            Title = "Consul",
+                            Folder = HiveConst.DashboardSystemFolder,
+                            Url = $"{cluster.Definition.Consul.Scheme}://reachable-manager:{NetworkPorts.Consul}/ui",
                             Description = "Hive Consul key/value store"
                         };
 
-                        hive.Dashboard.Set(consulDashboard);
+                        cluster.Dashboard.Set(consulDashboard);
                         firstMaster.Status = string.Empty;
                     }
 
                     // Configure the Kibana dashboard.
 
-                    if (hive.Definition.Log.Enabled && hive.Definition.Dashboard.Kibana)
+                    if (cluster.Definition.Log.Enabled && cluster.Definition.Dashboard.Kibana)
                     {
                         firstMaster.Status = "kibana dashboard";
 
                         var kibanaDashboard = new HiveDashboard()
                         {
-                            Name        = "kibana",
-                            Title       = "Kibana",
-                            Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateKibanaDashboard}",
+                            Name = "kibana",
+                            Title = "Kibana",
+                            Folder = HiveConst.DashboardSystemFolder,
+                            Url = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateKibanaDashboard}",
                             Description = "Kibana hive monitoring dashboard"
                         };
 
-                        hive.Dashboard.Set(kibanaDashboard);
+                        cluster.Dashboard.Set(kibanaDashboard);
                         firstMaster.Status = string.Empty;
                     }
 
                     // Configure the Vault dashboard.
 
-                    if (hive.Definition.Dashboard.Vault)
+                    if (cluster.Definition.Dashboard.Vault)
                     {
                         firstMaster.Status = "vault dashboard";
 
                         var vaultDashboard = new HiveDashboard()
                         {
-                            Name        = "vault",
-                            Title       = "Vault",
-                            Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"https://reachable-manager:{hive.Definition.Vault.Port}/ui",
+                            Name = "vault",
+                            Title = "Vault",
+                            Folder = HiveConst.DashboardSystemFolder,
+                            Url = $"https://reachable-manager:{cluster.Definition.Vault.Port}/ui",
                             Description = "Hive Vault secure storage"
                         };
 
-                        hive.Dashboard.Set(vaultDashboard);
+                        cluster.Dashboard.Set(vaultDashboard);
                         firstMaster.Status = string.Empty;
                     }
 
                     // Configure the HiveMQ dashboard.
 
-                    if (hive.Definition.Dashboard.HiveMQ)
+                    if (cluster.Definition.Dashboard.HiveMQ)
                     {
                         firstMaster.Status = "hivemq dashboard";
 
                         var rabbitDashboard = new HiveDashboard()
                         {
-                            Name        = "hivemq",
-                            Title       = "Hive Messaging System",
-                            Folder      = HiveConst.DashboardSystemFolder,
-                            Url         = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHiveMQAdmin}",
+                            Name = "hivemq",
+                            Title = "Hive Messaging System",
+                            Folder = HiveConst.DashboardSystemFolder,
+                            Url = $"http://reachable-manager:{HiveHostPorts.ProxyPrivateHiveMQAdmin}",
                             //Url         = $"https://reachable-manager:{HiveHostPorts.ProxyPrivateHiveMQManagement}",
                             Description = "RabbitMQ based messaging system"
                         };
 
-                        hive.Dashboard.Set(rabbitDashboard);
+                        cluster.Dashboard.Set(rabbitDashboard);
                     }
 
                     firstMaster.Status = string.Empty;
                 });
         }
+
+        /// <inheritdoc/>
+        public override DockerShimInfo Shim(DockerShim shim)
+        {
+            return new DockerShimInfo(shimability: DockerShimability.None);
+        }
     }
 }
-
-*/

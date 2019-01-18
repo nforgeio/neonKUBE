@@ -57,7 +57,8 @@ fi
 #
 #   https://docs.docker.com/engine/installation/linux/ubuntulinux/
 
-# Install the prerequisites.
+# Install the prerequisites.  We need to do this manually  because the 
+# [gdebi] command executed below doesn't do this.
 
 safe-apt-get install -yq apt-transport-https ca-certificates curl software-properties-common
 
@@ -69,8 +70,6 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 # specific edge or testing release.
 
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-# add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge"
-# add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) testing"
 safe-apt-get update
 
 # Download and install the Docker package.
