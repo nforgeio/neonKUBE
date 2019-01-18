@@ -387,10 +387,11 @@ Server Requirements:
             // Persist the cluster context extension.
 
             var configExtensionsPath = KubeHelper.GetContextExtensionPath(clusterDefinition.Name);
-            var contextExtension     = new KubeContextExtension()
+            var contextExtension = new KubeContextExtension()
             {
                 ClusterDefinition = clusterDefinition,
-                SshCredentials    = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword),
+                SshUsername       = Program.MachineUsername,
+                SshPassword       = Program.MachinePassword,
                 SetupPending      = true
             };
 

@@ -119,6 +119,24 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Parameterized constructor.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        /// <param name="cluster">The cluster name.</param>
+        /// <param name="kubeNamespace">Optionally specifies the namespace (defaults to <b>"default"</b>).</param>
+        public KubeConfigName(string username, string cluster, string kubeNamespace = "default")
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cluster));
+
+            kubeNamespace = kubeNamespace ?? "default";
+
+            this.User      = username;
+            this.Cluster   = cluster;
+            this.Namespace = kubeNamespace;
+        }
+
+        /// <summary>
         /// Returns the username.
         /// </summary>
         public string User { get; private set; }

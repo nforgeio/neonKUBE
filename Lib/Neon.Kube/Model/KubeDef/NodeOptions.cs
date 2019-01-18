@@ -48,8 +48,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// cluster hosts are configured with a random root account password.
-        /// This defaults to <b>20</b> characters.  The minumum non-zero length
-        /// is <b>8</b>.  Specify <b>0</b> to leave the root password unchanged.
+        /// This defaults to <b>20</b> characters.  The minumum length is <b>8</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PasswordLength", Required = Required.Default)]
         [YamlMember(Alias = "PasswordLength", ApplyNamingConventions = false)]
@@ -84,9 +83,9 @@ namespace Neon.Kube
         [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            if (PasswordLength > 0 && PasswordLength < 8)
+            if (PasswordLength < 8)
             {
-                throw new ClusterDefinitionException($"[{nameof(NodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
+                throw new ClusterDefinitionException($"[{nameof(NodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] cannot be less than 8 characters.");
             }
         }
     }

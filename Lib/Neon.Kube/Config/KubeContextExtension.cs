@@ -45,15 +45,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The credentials required to perform SSH/SCP operations 
-        /// on the cluster nodes.
-        /// </summary>
-        [JsonProperty(PropertyName = "sshCredentials", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "sshCredentials", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public SshCredentials SshCredentials { get; set; }
-
-        /// <summary>
         /// The cluster definition.
         /// </summary>
         [JsonProperty(PropertyName = "clusterDefinition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -69,6 +60,81 @@ namespace Neon.Kube
         [YamlMember(Alias = "SetupPending", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool SetupPending { get; set; } = false;
+
+        /// <summary>
+        /// The SSH root username.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "SshUsername", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SshUsername { get; set; }
+
+        /// <summary>
+        /// The SSH root password.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "SshPassword", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SshPassword { get; set; }
+
+        /// <summary>
+        /// Returns a <see cref="SshCredentials"/> instance suitable for connecting to
+        /// a clsueter node.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public SshCredentials SshCredentials => SshCredentials.FromUserPassword(SshUsername, SshPassword);
+
+        /// <summary>
+        /// Indicates whether a strong host SSH password was generated for the cluster.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "HasStrongSshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "HasStrongSshPassword", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool HasStrongSshPassword { get; set; }
+
+        /// <summary>
+        /// The SSH RSA private key fingerprint used to secure the cluster nodes.  This is a
+        /// MD5 hash encoded as hex bytes separated by colons.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshNodeFingerprint")]
+        [YamlMember(Alias = "SshNodeFingerprint", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public string SshNodeFingerprint { get; set; }
+
+        /// <summary>
+        /// The SSH RSA private key used to secure the cluster nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshNodePrivateKey")]
+        [YamlMember(Alias = "SshNodePrivateKey", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public string SshNodePrivateKey { get; set; }
+
+        /// <summary>
+        /// The SSH RSA private key used to secure the cluster nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshNodePublicKey")]
+        [YamlMember(Alias = "SshNodePublicKey", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public string SshNodePublicKey { get; set; }
+
+        /// <summary>
+        /// The public and private parts of the SSH client key used to
+        /// authenticate an SSH session with a cluster node.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshClientKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "SshClientKey", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public SshClientKey SshClientKey { get; set; }
+
+        /// <summary>
+        /// The token required to join a node to the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterJoinToken", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ClusterJoinToken", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ClusterJoinToken { get; set; }
 
         /// <summary>
         /// <para>

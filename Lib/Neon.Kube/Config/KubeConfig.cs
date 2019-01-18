@@ -400,6 +400,9 @@ namespace Neon.Kube
                 {
                     throw new KubeException($"Context [{contextName}] does not exist.");
                 }
+
+                CurrentContext = contextName;
+                Save();
             }
         }
 
