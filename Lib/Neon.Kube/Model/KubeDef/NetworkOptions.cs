@@ -31,7 +31,7 @@ namespace Neon.Kube
     /// </summary>
     public class NetworkOptions
     {
-        private const string defaultPodSubnet = "10.248.0.0/16";
+        private const string defaultPodSubnet = "10.254.0.0/16";
 
         /// <summary>
         /// Default constructor.
@@ -70,6 +70,16 @@ namespace Neon.Kube
         [YamlMember(Alias = "NodesSubnet", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string NodeSubnet { get; set; }
+
+        /// <summary>
+        /// Specifies the pod subnet to be used for the cluster.  This subnet will be
+        /// split so that each node will be allocated its own subnet.  This defaults
+        /// to <b>10.254.0.0/16</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "PodSubnet", ApplyNamingConventions = false)]
+        [DefaultValue(defaultPodSubnet)]
+        public string PodSubnet { get; set; } = defaultPodSubnet;
 
         /// <summary>
         /// The IP addresses of the upstream DNS nameservers to be used by the cluster.  This defaults to the 
@@ -146,10 +156,21 @@ namespace Neon.Kube
 
             // Verify [PremiseSubnet].
 
-            if (!NetworkCidr.TryParse(PremiseSubnet, out var premiseCidr))
+            if (!NetworkCidr.TryParse(PremiseSubnet, out var premiseSubnet))
             {
                 throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
             }
+
+            subnets.Add(new SubnetDefinition(nameof(PremiseSubnet), premiseSubnet));
+
+            // Verify [PodSubnet].
+
+            if (!NetworkCidr.TryParse(PodSubnet, out var podSubnet))
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PodSubnet)}={PodSubnet}] is not a valid IPv4 subnet.");
+            }
+
+            subnets.Add(new SubnetDefinition(nameof(PodSubnet), podSubnet));
 
             // Verify [Gateway]
 
@@ -158,7 +179,7 @@ namespace Neon.Kube
                 // Default to the first valid address of the cluster nodes subnet 
                 // if this isn't already set.
 
-                Gateway = premiseCidr.FirstUsableAddress.ToString();
+                Gateway = premiseSubnet.FirstUsableAddress.ToString();
             }
 
             if (!IPAddress.TryParse(Gateway, out var gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
@@ -166,19 +187,21 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
             }
 
-            if (!premiseCidr.Contains(gateway))
+            if (!premiseSubnet.Contains(gateway))
             {
                 throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodeSubnet)}={NodeSubnet}] subnet.");
             }
 
             // Verify [NodeSubnet].
 
-            if (!NetworkCidr.TryParse(NodeSubnet, out var nodesSubnetCidr))
+            if (!NetworkCidr.TryParse(NodeSubnet, out var nodesSubnet))
             {
                 throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid IPv4 subnet.");
             }
 
-            if (!premiseCidr.Contains(nodesSubnetCidr))
+            subnets.Add(new SubnetDefinition(nameof(NodeSubnet), nodesSubnet));
+
+            if (!premiseSubnet.Contains(nodesSubnet))
             {
                 throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
             }
