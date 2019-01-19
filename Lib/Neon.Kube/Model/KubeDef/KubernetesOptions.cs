@@ -30,7 +30,7 @@ namespace Neon.Kube
     /// </summary>
     public class KubernetesOptions
     {
-        private const string defaultPodSubnet = "";
+        private const string defaultVersion = "1.13.2";
 
         /// <summary>
         /// Default constructor.
