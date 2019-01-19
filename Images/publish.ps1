@@ -108,6 +108,7 @@ if ($base)
 	# Other base images:
 
 	Publish "$image_root\\golang"
+	Publish "$image_root\\haproxy"
 }
 
 if ($dotnetBase)

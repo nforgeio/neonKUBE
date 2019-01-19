@@ -19,5 +19,10 @@ The easiest way to to accomplish this is visit the Docker package repo at:
 
   Example: `docker.ce-18.09.0-ce-ubuntu-bionic-stable-amd64.deb`
 
-3. Upload the file to S3 and **make it public**: https://s3-us-west-2.amazonaws.com/neonforge/kube/FILENAME.deb
+3. Upload the filesto S3 and **MAKE THEM PUBLIC**: https://s3-us-west-2.amazonaws.com/neonforge/kube/FILENAME.deb
 4. Update the headend services (or simulated services for now) to include a Docker version to URL mapping.
+
+5. Check for base software updates:
+
+  a. [kubernetes](https://github.com/kubernetes/kubernetes/releases)
+  b. [haproxy](http://haproxy.org)

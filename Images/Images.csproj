@@ -61,6 +61,12 @@
     <None Include="aspnet\README.md" />
     <None Include="aspnet\resolv.conf.head.sh" />
     <None Include="dotnet\resolv.conf.head.sh" />
+    <None Include="haproxy\.dockerignore" />
+    <None Include="haproxy\build.ps1" />
+    <None Include="haproxy\docker-entrypoint.sh" />
+    <None Include="haproxy\Dockerfile" />
+    <None Include="haproxy\publish.ps1" />
+    <None Include="haproxy\README.md" />
     <None Include="neon-cli\conf\ssh_config.conf" />
     <Content Include="neon-cli\modules\docker_stack.py" />
     <Content Include="golang\.dockerignore">
