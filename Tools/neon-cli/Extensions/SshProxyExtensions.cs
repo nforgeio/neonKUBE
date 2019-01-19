@@ -294,9 +294,7 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "ntp.master.sources", masterTimeSources);
             NewMethod(preprocessReader, workerTimeSources);
 
-            var dockerPackageUri = new HeadendClient().GetSetupInfo(clusterDefinition).DockerPackageUri;
-
-            SetBashVariable(preprocessReader, "docker.packageuri", dockerPackageUri);
+            SetBashVariable(preprocessReader, "docker.packageuri", KubeHelper.SetupInfo.UbuntuDockerPackageUri);
 
             //-----------------------------------------------------------------
             // Configure the variables for the [setup-disk.sh] script.

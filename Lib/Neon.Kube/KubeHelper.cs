@@ -43,6 +43,7 @@ namespace Neon.Kube
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static KubeConfig           cachedKubeConfig;
         private static KubeConfigContext    cachedKubeContext;
+        private static HeadendClient        cachedHeadendClient;
 
         /// <summary>
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
@@ -83,6 +84,53 @@ namespace Neon.Kube
         {
             get { return Environment.GetEnvironmentVariable("NEON_TOOL_CONTAINER") == "1"; }
         }
+
+        /// <summary>
+        /// Returns the <see cref="KubeHostPlatform"/> for the current workstation.
+        /// </summary>
+        public static KubeHostPlatform HostPlatform
+        {
+            get
+            {
+                if (NeonHelper.IsLinux)
+                {
+                    return KubeHostPlatform.Linux;
+                }
+                else if (NeonHelper.IsOSX)
+                {
+                    return KubeHostPlatform.Osx;
+                }
+                else if (NeonHelper.IsWindows)
+                {
+                    return KubeHostPlatform.Windows;
+                }
+                else
+                {
+                    throw new NotSupportedException("The current workstation opersating system is not supported.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns a <see cref="HeadendClient"/>.
+        /// </summary>
+        public static HeadendClient Headend
+        {
+            get
+            {
+                if (cachedHeadendClient != null)
+                {
+                    return cachedHeadendClient;
+                }
+
+                return cachedHeadendClient = new HeadendClient();
+            }
+        }
+
+        /// <summary>
+        /// Holds the Kubernetes setup information for the cluster setup task. 
+        /// </summary>
+        public static KubeSetupInfo SetupInfo { get; set; }
 
         /// <summary>
         /// Returns the path the folder holding the user specific cluster files.
@@ -237,6 +285,85 @@ namespace Neon.Kube
 
                 return path;
             }
+        }
+
+        /// <summary>
+        /// Returns the path the folder containing cached files for various environments.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string CacheFolder
+        {
+            get
+            {
+                var path = Path.Combine(GetNeonKubeUserFolder(), "cache");
+
+                Directory.CreateDirectory(path);
+
+                return path;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the folder containing cached files for the specified platform.
+        /// </summary>
+        /// <param name="platform">Identifies the platform.</param>
+        /// <returns>The folder path.</returns>
+        public static string GetPlatformCacheFolder(KubeHostPlatform platform)
+        {
+            string subfolder;
+
+            switch (platform)
+            {
+                case KubeHostPlatform.Linux:
+
+                    subfolder = "linux";
+                    break;
+
+                case KubeHostPlatform.Osx:
+
+                    subfolder = "osx";
+                    break;
+
+                case KubeHostPlatform.Windows:
+
+                    subfolder = "windows";
+                    break;
+
+                default:
+
+                    throw new NotImplementedException($"Platform [{platform}] is not implemented.");
+            }
+
+            var path = Path.Combine(CacheFolder, subfolder);
+
+            Directory.CreateDirectory(path);
+
+            return path;
+        }
+
+        /// <summary>
+        /// Returns the path to the cached file for a specific named component with optional version.
+        /// </summary>
+        /// <param name="platform">Identifies the platform.</param>
+        /// <param name="component">The component name.</param>
+        /// <param name="version">The optional component version.</param>
+        /// <returns>The component file path.</returns>
+        public static string GetComponentCachePath(KubeHostPlatform platform, string component, string version = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(component));
+
+            string path;
+
+            if (string.IsNullOrEmpty(version))
+            {
+                path = Path.Combine(GetPlatformCacheFolder(platform), component);
+            }
+            else
+            {
+                path = Path.Combine(GetPlatformCacheFolder(platform), $"{component}-{version}");
+            }
+
+            return path;
         }
 
         /// <summary>

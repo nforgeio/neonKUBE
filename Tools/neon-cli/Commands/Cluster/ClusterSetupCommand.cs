@@ -56,7 +56,6 @@ OPTIONS:
         private const string logEndMarker = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
         private const string logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
 
-        private string                  contextName;
         private KubeConfig              kubeConfig;
         private KubeConfigContext       kubeContext;
         private KubeContextExtension    kubeContextExtension;
@@ -135,6 +134,17 @@ OPTIONS:
                     ShowStatus = !Program.Quiet,
                     MaxParallel = Program.MaxParallel
                 };
+
+            controller.AddGlobalStep("dpownload setup details",
+                () =>
+                {
+                    using (var client = new HeadendClient())
+                    {
+                        KubeHelper.SetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
+                    }
+                });
+
+            controller.AddGlobalStep("download binaries", () => DownloadBinaries());
 
             controller.AddWaitUntilOnlineStep("connect");
 
@@ -287,6 +297,62 @@ OPTIONS:
             kubeContextExtension.SetupPending = false;
             kubeConfig.SetContext(kubeContext.Name);
             Console.WriteLine();
+        }
+
+        /// <summary>
+        /// Downloads any required binaries to the cache if they're not already present.
+        /// </summary>
+        private async void DownloadBinaries()
+        {
+            var handler = new HttpClientHandler()
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            };
+
+            var firstMaster = cluster.FirstMaster;
+
+            using (var client = new HttpClient(handler, disposeHandler: true))
+            {
+                var hostPlatform = KubeHelper.HostPlatform;
+                var kubeCtlPath  = KubeHelper.GetComponentCachePath(hostPlatform, "kubectl", cluster.Definition.Kubernetes.Version);
+
+                if (!File.Exists(kubeCtlPath))
+                {
+                    firstMaster.Status = "download: kubectl";
+
+                    string kubeCtlUri;
+
+                    switch (hostPlatform)
+                    {
+                        case KubeHostPlatform.Linux:
+
+                            kubeCtlUri = KubeHelper.SetupInfo.LinuxKubeCtlUri;
+                            break;
+
+                        case KubeHostPlatform.Osx:
+
+                            kubeCtlUri = KubeHelper.SetupInfo.OsxKubeCtlUri;
+                            break;
+
+                        case KubeHostPlatform.Windows:
+
+                            kubeCtlUri = KubeHelper.SetupInfo.WindowsKubeCtlUri;
+                            break;
+
+                        default:
+
+                            throw new NotSupportedException($"Unsupported workstation platform [{hostPlatform}]");
+                    }
+
+                    using (var response = await client.GetStreamAsync(kubeCtlUri))
+                    {
+                        using (var file = new FileStream(kubeCtlPath, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            await response.CopyToAsync(file);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>

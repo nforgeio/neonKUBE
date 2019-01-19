@@ -54,17 +54,23 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>A <see cref="KubeSetupInfo"/> with the information.</returns>
-        public KubeSetupInfo GetSetupInfo(ClusterDefinition clusterDefinition)
+        public async Task<KubeSetupInfo> GetSetupInfoAsync(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+
             // $todo(jeff.lill): Hardcoded
             // $todo(jeff.lill): Verify Docker/Kubernetes version compatibility.
 
-            return new KubeSetupInfo()
-            {
-                KubeAdminUri     = $"",
-                KubeCtlUri       = $"",
-                DockerPackageUri = "https://s3-us-west-2.amazonaws.com/neonforge/kube/docker.ce-18.06.1-ubuntu-bionic-stable-amd64.deb"
-            };
+            return await Task.FromResult(
+                new KubeSetupInfo()
+                {
+                    LinuxKubeCtlUri        = $"https://storage.googleapis.com/kubernetes-release/release/v{clusterDefinition.Kubernetes.Version}/linux/amd64/kubectl",
+                    LinuxKubeAdminUri      = $"https://storage.googleapis.com/kubernetes-release/release/v{clusterDefinition.Kubernetes.Version}/linux/amd64/kubeadm",
+                    OsxKubeCtlUri          = $"https://storage.googleapis.com/kubernetes-release/release/v{clusterDefinition.Kubernetes.Version}/bin/darwin/amd64/kubectl",
+                    WindowsKubeCtlUri      = $"https://storage.googleapis.com/kubernetes-release/release/v{clusterDefinition.Kubernetes.Version}/bin/windows/amd64/kubectl.exe",
+
+                    UbuntuDockerPackageUri = "https://s3-us-west-2.amazonaws.com/neonforge/kube/docker.ce-18.06.1-ubuntu-bionic-stable-amd64.deb"
+                });
         }
 
         /// <inheritdoc/>

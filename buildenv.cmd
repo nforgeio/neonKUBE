@@ -65,5 +65,10 @@ REM smart enough to only add directories that actually exist.
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files\7-Zip"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\7-Zip"
 
+REM Configure the neonKUBE program folder and add it to the PATH.
+
+if not exist "C:\Program Files\neonKUBE" mkdir "C:\Program Files\neonKUBE"
+%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files\neonKUBE"
+
 :done
 pause

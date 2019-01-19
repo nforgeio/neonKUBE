@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -17,6 +18,7 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
@@ -39,18 +41,43 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the <b>kubeadm</b> binrary download URI.
+        /// Returns the <b>kubectl</b> binary download URI for Windows.
         /// </summary>
-        public string KubeAdminUri { get; set; }
+        [JsonProperty(PropertyName = "OsxKubeAdminUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "OsxKubeAdminUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string WindowsKubeCtlUri { get; set; }
 
         /// <summary>
-        /// Returns the <b>kubectl</b> binrary download URI.
+        /// Returns the <b>kubectl</b> binary download URI for OS/X.
         /// </summary>
-        public string KubeCtlUri { get; set; }
+        [JsonProperty(PropertyName = "OsxKubeCtlUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "OsxKubeCtlUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string OsxKubeCtlUri { get; set; }
 
         /// <summary>
-        /// Returns the Docker package 
+        /// Returns the <b>kubeadm</b> binary download URI for Linux.
         /// </summary>
-        public string DockerPackageUri { get; set; }
+        [JsonProperty(PropertyName = "LinuxKubeAdminUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "LinuxKubeAdminUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string LinuxKubeAdminUri { get; set; }
+
+        /// <summary>
+        /// Returns the <b>kubectl</b> binary download URI for Linux.
+        /// </summary>
+        [JsonProperty(PropertyName = "LinuxKubeCtlUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "LinuxKubeCtlUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string LinuxKubeCtlUri { get; set; }
+
+        /// <summary>
+        /// Returns the Docker package for Ubuntu.
+        /// </summary>
+        [JsonProperty(PropertyName = "UbuntuDockerPackageUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "UbuntuDockerPackageUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string UbuntuDockerPackageUri { get; set; }
     }
 }
