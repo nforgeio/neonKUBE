@@ -38,8 +38,15 @@ namespace Neon.Kube
         /// <summary>
         /// Default constructor.
         /// </summary>
+        public KubeContextExtension()
+        {
+        }
+
+        /// <summary>
+        /// Parameterized constructor.
+        /// </summary>
         /// <param name="path">Optionally specifies the path to the extension file.</param>
-        public KubeContextExtension(string path = null)
+        public KubeContextExtension(string path)
         {
             this.path = path;
         }
@@ -79,7 +86,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns a <see cref="SshCredentials"/> instance suitable for connecting to
-        /// a clsueter node.
+        /// a cluster node.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -135,6 +142,17 @@ namespace Neon.Kube
         [YamlMember(Alias = "ClusterJoinToken", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ClusterJoinToken { get; set; }
+
+        /// <summary>
+        /// Sets the file path where the extension will be persisted.
+        /// </summary>
+        /// <param name="path">The target path.</param>
+        internal void SetPath(string path)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+
+            this.path = path;
+        }
 
         /// <summary>
         /// <para>

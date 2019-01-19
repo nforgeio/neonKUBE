@@ -1,6 +1,6 @@
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         setup-prep-node.sh
+# FILE:         setup-prep.sh
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
@@ -30,7 +30,7 @@ set -eo pipefail
 
 echo
 echo "**********************************************" 1>&2
-echo "** SETUP-PREP-NODE                          **" 1>&2
+echo "** SETUP-PREP                               **" 1>&2
 echo "**********************************************" 1>&2
 echo
 
@@ -111,14 +111,14 @@ EOF
 chmod a+x /usr/bin/sbash
 
 #------------------------------------------------------------------------------
-# OpenVPN requires packet forwarding.
+# Kubernetes requires packet forwarding.
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
 cat <<EOF >> /etc/sysctl.conf
 
 ###################################################################
-# OpenVPN requires packet forwarding.
+# Kubernetes requires packet forwarding.
 
 net.ipv4.ip_forward=1
 EOF

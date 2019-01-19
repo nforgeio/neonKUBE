@@ -10,7 +10,7 @@ Hosting:
 Network:
   PremiseSubnet: 10.0.0.0/16
   NodesSubnet: 10.0.0.0/16
-ClusterNode:
+NodeOptions:
    Upgrade: none
    PasswordLength: 20
 Nodes:

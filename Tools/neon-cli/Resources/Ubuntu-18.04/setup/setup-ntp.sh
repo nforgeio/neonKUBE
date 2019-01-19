@@ -120,7 +120,7 @@ EOF
 # close to being synchronized.
 
 if [ "${NEON_NODE_ROLE}" == "master" ] ; then
-    sources=${NEON_NTP_MANAGER_SOURCES}
+    sources=${NEON_NTP_MASTER_SOURCES}
 else
     sources=${NEON_NTP_WORKER_SOURCES}
 fi

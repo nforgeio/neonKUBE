@@ -88,9 +88,9 @@ $<nodes.masters>
 #------------------------------------------------------------------------------
 # Specify component specific settings
 
-# NTP time sources to be configured on manager and worker nodes.
+# NTP time sources to be configured on master and worker nodes.
 
-export NEON_NTP_MANAGER_SOURCES=( $<ntp.master.sources> )
+export NEON_NTP_MASTER_SOURCES=( $<ntp.master.sources> )
 export NEON_NTP_WORKER_SOURCES=( $<ntp.worker.sources> )
 
 # Log settings
@@ -124,12 +124,11 @@ if $summary ; then
     echo "NEON_TOOLS_FOLDER                  = ${NEON_TOOLS_FOLDER}" 1>&2
     echo 1>&2
     echo "NEON_MASTER_COUNT                  = ${NEON_MASTER_COUNT}" 1>&2
+    echo "NEON_MASTER_ADDRESSES              = ${NEON_MASTER_ADDRESSES[@]}" 1>&2
 $<nodes.master.summary>
     echo "NEON_MASTER_NAMES                  = ${NEON_MASTER_NAMES[@]}" 1>&2
-    echo "NEON_MASTER_ADDRESSES              = ${NEON_MASTER_ADDRESSES[@]}" 1>&2
-    echo "NEON_MASTER_PEERS                  = ${NEON_MASTER_PEERS[@]}" 1>&2
     echo 1>&2
-    echo "NEON_NTP_MANAGER_SOURCES           = ${NEON_NTP_MANAGER_SOURCES}" 1>&2
+    echo "NEON_NTP_MASTER_SOURCES            = ${NEON_NTP_MASTER_SOURCES}" 1>&2
     echo "NEON_NTP_WORKER_SOURCES            = ${NEON_NTP_WORKER_SOURCES}" 1>&2
     echo 1>&2
     echo "PATH                               = ${PATH}" 1>&2
@@ -143,7 +142,7 @@ fi
 #       #<<<END-FUNCTIONS
 #
 # are here to allow [neon-cli] to easily replace these with updated functions
-# when necessary, in the future.
+# if necessary in the future.
 
 #------------------
 #<<<BEGIN-FUNCTIONS

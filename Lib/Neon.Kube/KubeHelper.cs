@@ -128,11 +128,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Holds the Kubernetes setup information for the cluster setup task. 
-        /// </summary>
-        public static KubeSetupInfo SetupInfo { get; set; }
-
-        /// <summary>
         /// Returns the path the folder holding the user specific cluster files.
         /// </summary>
         /// <param name="ignoreNeonToolContainerVar">
@@ -393,7 +388,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(name != null);
 
-            return GetContextExtensionPath(name.ToString());
+            return GetContextExtensionPath(name.Cluster);
         }
 
         /// <summary>
@@ -405,14 +400,18 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(name != null);
 
-            var path = GetContextExtensionPath(name.ToString());
+            var path = GetContextExtensionPath(name);
 
             if (!File.Exists(path))
             {
                 return null;
             }
 
-            return NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path));
+            var extension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path));
+
+            extension.SetPath(path);
+
+            return extension;
         }
 
         /// <summary>

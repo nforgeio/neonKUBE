@@ -301,7 +301,7 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The cluster managers will be configured to synchronize their time with these
+        /// The cluster masters will be configured to synchronize their time with these
         /// time sources and the worker nodes will be configured to synchronize their time
         /// with the master nodes.
         /// </para>
@@ -313,10 +313,10 @@ namespace Neon.Kube
 
         /// <summary>
         /// Optionally specifies one or more APT proxy/cache servers the cluster will use to install
-        /// and update Linux packages.  These are HTTP URLs including the port (generally 
-        /// <see cref="NetworkPorts.AppCacherNg"/> = 3142) of a  <b>apt-cacher-ng</b> or other proxy
-        /// server.  Multiple URLs may be specified by separating them with spaces.  This defaults to
-        /// <c>null</c>.
+        /// and update Linux packages.  These are endpoints like <b>HOSTNAME:PORT</b> or <b>ADDRESS.PORT</b>
+        /// of a <b>apt-cacher-ng</b> or other package proxy server.  The port is generall set to <b>3142</b>
+        /// Multiple proxies may be specified by separating them with spaces.  This defaults to
+        /// referencing the <b>apt-cacher-ng</b> instances running on the master nodes.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -347,20 +347,20 @@ namespace Neon.Kube
         public SetupOptions Setup { get; set; } = null;
 
         /// <summary>
-        /// Specifies host node options.
-        /// </summary>
-        [JsonProperty(PropertyName = "NodeOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "NodeOptions", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public NodeOptions NodeOptions { get; set; } = new NodeOptions();
-
-        /// <summary>
         /// Describes the cluster's network configuration.
         /// </summary>
         [JsonProperty(PropertyName = "Network", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "Network", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public NetworkOptions Network { get; set; } = new NetworkOptions();
+
+        /// <summary>
+        /// Specifies host node options.
+        /// </summary>
+        [JsonProperty(PropertyName = "NodeOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "NodeOptions", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public NodeOptions NodeOptions { get; set; } = new NodeOptions();
 
         /// <summary>
         /// Describes the host nodes in the cluster.
@@ -563,6 +563,30 @@ namespace Neon.Kube
             else if (!NeonHelper.IsOdd(managementNodeCount))
             {
                 throw new ClusterDefinitionException("Clusters must have an odd number of management nodes: [1, 3, or 5]");
+            }
+
+            if (!string.IsNullOrEmpty(PackageProxy))
+            {
+                // Ensure that this is set to zero or more network endpoints
+                // formatted like:
+                //
+                //      HOSTNAME:PORT
+                //      ADDRESS:PORT
+
+                foreach (var endpoint in PackageProxy.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var fields = endpoint.Split(':');
+
+                    if (!IPAddress.TryParse(fields[0], out var address) && !ClusterDefinition.DnsHostRegex.IsMatch(fields[0]))
+                    {
+                        throw new ClusterDefinitionException($"Invalid IP address or HOSTNAME [{fields[0]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
+                    }
+
+                    if (!int.TryParse(fields[1], out var port) || !NetHelper.IsValidPort(port))
+                    {
+                        throw new ClusterDefinitionException($"Invalid port [{fields[1]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
+                    }
+                }
             }
 
             // Ensure that each node has a valid unique or NULL IP address.

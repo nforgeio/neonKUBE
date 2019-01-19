@@ -467,7 +467,7 @@ namespace Neon.Kube
 
                         // Reboot to pick up the changes.
 
-                        xenSshProxy.Status = FormatVmStatus(vmName, "rebooting");
+                        xenSshProxy.Status = FormatVmStatus(vmName, "restarting...");
                         nodeProxy.Reboot(wait: false);
                     }
                 }

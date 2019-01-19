@@ -979,7 +979,7 @@ namespace Neon.Kube
                 Thread.Sleep(TimeSpan.FromSeconds(5));
             }
 
-            Status = "online";
+            Status = "connected";
 
             // Determine the remote operating name and version by examining the
             // [/etc/os-release] file.  This should look something like:
@@ -2376,7 +2376,7 @@ echo $? > {cmdFolder}/exit
             if (shutdown)
             {
                 // We just ran commands that shutdown or rebooted the server 
-                // directly to prevent continuously rebooting the server.
+                // directly to prevent the server from continuously rebooting.
                 //
                 // Because we're not using [SafeRunCommand()], there's some
                 // risk that the connection is lost just before the command

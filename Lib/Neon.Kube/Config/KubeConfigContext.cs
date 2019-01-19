@@ -53,6 +53,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="configName">The structured configuration name.</param>
         public KubeConfigContext(KubeConfigName configName)
+            : this()
         {
             Covenant.Requires<ArgumentNullException>(configName != null);
 

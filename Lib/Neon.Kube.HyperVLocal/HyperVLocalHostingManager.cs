@@ -653,7 +653,7 @@ namespace Neon.Kube
 
                     using (var nodeProxy = cluster.GetNode(node.Name))
                     {
-                        node.Status = $"connecting";
+                        node.Status = $"connecting...";
                         nodeProxy.WaitForBoot();
 
                         // We need to ensure that the host folders exist.
@@ -692,7 +692,7 @@ namespace Neon.Kube
 
                         // Reboot to pick up the changes.
 
-                        node.Status = $"rebooting";
+                        node.Status = $"restarting...";
                         nodeProxy.Reboot(wait: false);
                     }
                 }

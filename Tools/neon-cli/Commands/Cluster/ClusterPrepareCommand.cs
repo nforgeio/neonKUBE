@@ -69,9 +69,10 @@ Server Requirements:
         private const string    logFailedMarker = "# CLUSTER-END-PREPARE-FAILED #####################################################";
 
         private ClusterProxy    cluster;
+        private KubeSetupInfo   kubeSetupInfo;
         private HostingManager  hostingManager;
         private string          clusterDefPath;
-        private string          packageCacheUri;
+        private string          packageCaches;
         private bool            force;
 
         /// <inheritdoc/>
@@ -122,8 +123,6 @@ Server Requirements:
             }
 
             // Implement the command.
-
-            packageCacheUri = commandLine.GetOption("--package-cache");     // This overrides the cluster definition, if specified.
 
             if (KubeHelper.KubeContext != null)
             {
@@ -332,10 +331,30 @@ Server Requirements:
                 ipAddressToServer.Add(node.PrivateAddress, node);
             }
 
+            // We're going to use the masters as package caches unless the user
+            // specifies something else.
+
+            packageCaches = commandLine.GetOption("--package-cache");     // This overrides the cluster definition, if specified.
+
+            if (!string.IsNullOrEmpty(packageCaches))
+            {
+                cluster.Definition.PackageProxy = packageCaches;
+            }
+
+            if (string.IsNullOrEmpty(cluster.Definition.PackageProxy))
+            {
+                var sbProxies = new StringBuilder();
+
+                foreach (var master in cluster.Masters)
+                {
+                    sbProxies.AppendWithSeparator($"{master.PrivateAddress}:{NetworkPorts.AppCacherNg}");
+                }
+
+                cluster.Definition.PackageProxy = sbProxies.ToString();
+            }
+
             //-----------------------------------------------------------------
-            // Perform basic node provisioning including operating system updates & configuration,
-            // and configure OpenVPN on the manager nodes so that cluster setup will be
-            // able to reach the nodes on all ports.
+            // Setup the cluster.
 
             // Write the operation begin marker to all cluster node logs.
 
@@ -350,10 +369,14 @@ Server Requirements:
                     MaxParallel = Program.MaxParallel
                 };
 
-            if (!string.IsNullOrEmpty(packageCacheUri))
-            {
-                cluster.Definition.PackageProxy = packageCacheUri;
-            }
+            controller.AddGlobalStep("setup details",
+                () =>
+                {
+                    using (var client = new HeadendClient())
+                    {
+                        kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
+                    }
+                });
 
             // Prepare the nodes.
 
@@ -370,7 +393,7 @@ Server Requirements:
                 (node, stepDelay) =>
                 {
                     Thread.Sleep(stepDelay);
-                    CommonSteps.PrepareNode(node, cluster.Definition, shutdown: false);
+                    CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, shutdown: false);
                 },
                 stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
             
@@ -386,8 +409,8 @@ Server Requirements:
 
             // Persist the cluster context extension.
 
-            var configExtensionsPath = KubeHelper.GetContextExtensionPath(clusterDefinition.Name);
-            var contextExtension = new KubeContextExtension()
+            var contextExtensionsPath = KubeHelper.GetContextExtensionPath(clusterDefinition.Name);
+            var contextExtension      = new KubeContextExtension(contextExtensionsPath)
             {
                 ClusterDefinition = clusterDefinition,
                 SshUsername       = Program.MachineUsername,
@@ -395,7 +418,7 @@ Server Requirements:
                 SetupPending      = true
             };
 
-            File.WriteAllText(configExtensionsPath, NeonHelper.JsonSerialize(contextExtension, Formatting.Indented));
+            contextExtension.Save();
 
             // Write the operation end marker to all cluster node logs.
 

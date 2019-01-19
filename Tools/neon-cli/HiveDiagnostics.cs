@@ -179,7 +179,7 @@ namespace NeonCli
             //           + 10.0.1.7        198.60.22.240    2 u  111  128  377    0.062    3.409   0.608
             //           + 10.0.1.7        198.60.22.240    2 u  111  128  377    0.062    3.409   0.608
             //
-            // For worker nodes, we need to verify that each of the managers are answering
+            // For worker nodes, we need to verify that each of the masters are answering
             // by confirming that their IP addresses are present.
 
             node.Status = "checking: NTP";

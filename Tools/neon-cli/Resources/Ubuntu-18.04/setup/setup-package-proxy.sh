@@ -70,12 +70,12 @@ cat <<EOF > ${NEON_BIN_FOLDER}/package-proxy-detect
 #		https://trent.utfs.org/wiki/Apt-get#Failover_Proxy
 
 for proxy in \${NEON_PACKAGE_PROXY}; do
-	if nc -w1 -z \${proxy/:/ }; then
-		echo http://\${proxy}
+	if nc -w 2 -z \${proxy/:/ }; then
+		echo http://\${proxy}/
 		exit
 	fi
 done
-echo "DIRECT"
+echo DIRECT
 EOF
 
 chmod 771 ${NEON_BIN_FOLDER}/package-proxy-detect

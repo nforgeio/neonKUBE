@@ -277,7 +277,7 @@ namespace Neon.Kube
             AddStep(stepLabel,
                 (node, stepDelay) =>
                 {
-                    node.Status = status ?? "connecting";
+                    node.Status = status ?? "connecting...";
                     node.WaitForBoot(timeout: timeout);
                     node.IsReady = true;
                 },
@@ -784,7 +784,7 @@ namespace Neon.Kube
                         if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsMaster))
                         {
                             sbDisplay.AppendLine();
-                            sbDisplay.AppendLine(" Managers:");
+                            sbDisplay.AppendLine(" Masters:");
 
                             foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsMaster))
                             {

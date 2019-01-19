@@ -139,10 +139,6 @@ if [ -d /var/lib/docker ] ; then
 	rm -r /var/lib/docker
 fi
 
-# Add the current user to the [docker] group so SUDO won't be necessary.
-
-addgroup $<cluster.rootuser> docker
-
 # Prevent the package manager from automatically upgrading the Docker engine.
 
 set +e      # Don't exit if the next command fails

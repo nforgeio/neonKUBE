@@ -172,6 +172,7 @@ OPTIONS:
                 {
                     new ClusterCommand(),
                     new ClusterPrepareCommand(),
+                    new ClusterSetupCommand(),
                     new ClusterVerifyCommand(),
                     new VersionCommand()
                 };
@@ -503,7 +504,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
 
                 if (command.CheckOptions)
                 {
-                    // Make sure there are no unexpected command line options.
+                    // Ensure that there are no unexpected command line options.
 
                     validOptions.Add("--help");
 
@@ -753,11 +754,6 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         public static bool IsProd => ThisAssembly.Git.Branch.Equals("prod", StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Returns the folder where local Kubernetes configuration state is persisted.
-        /// </summary>
-        public static string KubeRootFolder { get; private set; }
-
-        /// <summary>
         /// Returns the username used to secure the cluster nodes before they are setup.  This
         /// defaults to <b>sysadmin</b> which is used for the cluster machine templates.
         /// </summary>
@@ -781,7 +777,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         public static int MaxParallel { get; set; }
 
         /// <summary>
-        /// The seconds to wait for cluster stablization.
+        /// The seconds to wait after operations that may need a stablization period.
         /// </summary>
         public static double WaitSeconds { get; set; }
 

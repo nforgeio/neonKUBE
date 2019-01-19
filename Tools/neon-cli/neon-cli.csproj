@@ -61,9 +61,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Elasticsearch\logstash-template.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\Ubuntu-18.04\archive\setup-disk.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -124,7 +121,7 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-ntp.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\setup\setup-prep-node.sh">
+    <None Update="Resources\Ubuntu-18.04\setup\setup-prep.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-prep-node.sh.txt">

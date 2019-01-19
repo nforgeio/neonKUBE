@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Kube;
 using Neon.IO;
+using System.Diagnostics.Contracts;
 
 namespace NeonCli
 {
@@ -208,7 +209,15 @@ TCPKeepAlive yes
             sb.AppendLine($"NEON_CLUSTER={clusterDefinition.Name}");
             sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
             sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
-            sb.AppendLine($"NEON_PACKAGE_PROXY={clusterDefinition.PackageProxy}");
+
+            var sbPackageProxies = new StringBuilder();
+
+            foreach (var proxyEndpoint in clusterDefinition.PackageProxy.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                sbPackageProxies.AppendWithSeparator(proxyEndpoint);
+            }
+            
+            sb.AppendLine($"NEON_PACKAGE_PROXY=({sbPackageProxies})");
 
             if (clusterDefinition.Hosting != null)
             {
@@ -246,9 +255,14 @@ TCPKeepAlive yes
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="kubeSetupInfo">Kubernetes setup details.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, bool shutdown = false)
+        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, bool shutdown = false)
         {
+            Covenant.Requires<ArgumentNullException>(node != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null);
+
             if (node.FileExists($"{KubeHostFolders.State}/setup/prepared"))
             {
                 return;     // Already prepared
@@ -280,8 +294,8 @@ TCPKeepAlive yes
             // Other configuration.
 
             ConfigureOpenSSH(node);
-            node.UploadConfigFiles(clusterDefinition);
-            node.UploadResources(clusterDefinition);
+            node.UploadConfigFiles(clusterDefinition, kubeSetupInfo);
+            node.UploadResources(clusterDefinition, kubeSetupInfo);
 
             if (clusterDefinition != null)
             {
@@ -293,8 +307,8 @@ TCPKeepAlive yes
             node.InvokeIdempotentAction("setup/prep-node",
                 () =>
                 {
-                    node.Status = "run: setup-prep-node.sh";
-                    node.SudoCommand("setup-prep-node.sh");
+                    node.Status = "run: setup-prep.sh";
+                    node.SudoCommand("setup-prep.sh");
                     node.Reboot(wait: true);
                 });
 

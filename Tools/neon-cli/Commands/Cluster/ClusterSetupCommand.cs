@@ -60,6 +60,7 @@ OPTIONS:
         private KubeConfigContext       kubeContext;
         private KubeContextExtension    kubeContextExtension;
         private ClusterProxy            cluster;
+        private KubeSetupInfo           kubeSetupInfo;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -88,22 +89,8 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            kubeConfig = KubeConfig.Load();
-
             var contextName = KubeConfigName.Parse(commandLine.Arguments[0]);
 
-            if (kubeConfig.GetCluster(contextName.Cluster) != null)
-            {
-                Console.Error.WriteLine($"*** ERROR: You already have a deployed cluster named [{contextName.Cluster}].");
-                Program.Exit(1);
-            }
-
-            if (!kubeContextExtension.SetupPending)
-            {
-                Console.Error.WriteLine($"*** ERROR: Cluster [{contextName.Cluster}] has already been setup.");
-            }
-
-            kubeContext          = new KubeConfigContext(contextName);
             kubeContextExtension = KubeHelper.GetContextExtension(contextName);
 
             if (kubeContextExtension == null)
@@ -111,8 +98,21 @@ OPTIONS:
                 Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via [neon cluster prepare...].");
                 Program.Exit(1);
             }
+            else if (!kubeContextExtension.SetupPending)
+            {
+                Console.Error.WriteLine($"*** ERROR: Cluster [{contextName.Cluster}] has already been setup.");
+            }
 
+            kubeConfig                       = KubeConfig.Load();
+            kubeContext                      = new KubeConfigContext(contextName);
             kubeContext.Properties.Extension = kubeContextExtension;
+
+            if (kubeConfig.GetCluster(contextName.Cluster) != null)
+            {
+                Console.Error.WriteLine($"*** ERROR: You already have a deployed cluster named [{contextName.Cluster}].");
+                Program.Exit(1);
+            }
+
             KubeHelper.SetKubeContext(kubeContext);
 
             // Note that cluster setup appends to existing log files.
@@ -135,12 +135,12 @@ OPTIONS:
                     MaxParallel = Program.MaxParallel
                 };
 
-            controller.AddGlobalStep("dpownload setup details",
+            controller.AddGlobalStep("setup details",
                 () =>
                 {
                     using (var client = new HeadendClient())
                     {
-                        KubeHelper.SetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
+                        kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
                     }
                 });
 
@@ -168,12 +168,12 @@ OPTIONS:
 
             // Perform common configuration for all cluster nodes.
 
-            controller.AddStep("configure nodes",
+            controller.AddStep("setup nodes",
                 (node, stepDelay) =>
                 {
-                    ConfigureCommon(node, stepDelay);
+                    SetupCommon(node, stepDelay);
                     node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
-                    ConfigureNode(node);
+                    SetupNode(node);
                 },
                 node => true,
                 stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
@@ -212,25 +212,6 @@ OPTIONS:
                 },
                 node => node.Metadata.IsWorker);
 
-            // Change the node root account SSH password to something very strong.  
-            // This step should be very close being the last one so it will still 
-            // be possible to log into nodes with the old password to diagnose
-            // setup issues.
-            //
-            // Note that the if statement verifies that we haven't already generated
-            // the strong password in a previous setup run that failed.  This prevents
-            // us from generating a new password, perhaps resulting in cluster nodes
-            // ending up with different passwords.
-
-            if (!kubeContextExtension.HasStrongSshPassword)
-            {
-                kubeContextExtension.SshUsername          = Program.MachineUsername;
-                kubeContextExtension.SshPassword          = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
-                kubeContextExtension.HasStrongSshPassword = true;
-
-                kubeContextExtension.Save();
-            }
-
             // $todo(jeff.lill):
             //
             // Note that this step isn't entirely idempotent.  The problem happens
@@ -238,8 +219,8 @@ OPTIONS:
             // on others.  This will result in SSH connection failures for the nodes
             // that had their passwords changes.
             //
-            // A possible workaround would be to try both the provisioning and new 
-            // password when connecting to nodes, but I'm going to defer this.
+            // One solution would be to store credentials in the node definitions
+            // rather than using common credentials across all nodes.
             //
             //      https://github.com/jefflill/NeonForge/issues/397
 
@@ -326,17 +307,17 @@ OPTIONS:
                     {
                         case KubeHostPlatform.Linux:
 
-                            kubeCtlUri = KubeHelper.SetupInfo.LinuxKubeCtlUri;
+                            kubeCtlUri = kubeSetupInfo.LinuxKubeCtlUri;
                             break;
 
                         case KubeHostPlatform.Osx:
 
-                            kubeCtlUri = KubeHelper.SetupInfo.OsxKubeCtlUri;
+                            kubeCtlUri = kubeSetupInfo.OsxKubeCtlUri;
                             break;
 
                         case KubeHostPlatform.Windows:
 
-                            kubeCtlUri = KubeHelper.SetupInfo.WindowsKubeCtlUri;
+                            kubeCtlUri = kubeSetupInfo.WindowsKubeCtlUri;
                             break;
 
                         default:
@@ -370,8 +351,8 @@ OPTIONS:
             // Upload the setup and configuration files.
 
             node.CreateHostFolders();
-            node.UploadConfigFiles(cluster.Definition);
-            node.UploadResources(cluster.Definition);
+            node.UploadConfigFiles(cluster.Definition, kubeSetupInfo);
+            node.UploadResources(cluster.Definition, kubeSetupInfo);
         }
 
         /// <summary>
@@ -379,7 +360,7 @@ OPTIONS:
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void ConfigureCommon(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupCommon(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             //-----------------------------------------------------------------
             // NOTE: 
@@ -408,36 +389,36 @@ OPTIONS:
                         ConfigureBasic(node);
                     }
 
-            // Ensure that the node has been prepared for setup.
+                    // Ensure that the node has been prepared for setup.
 
-            CommonSteps.PrepareNode(node, cluster.Definition);
+                    CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo);
 
-            // Create the [/mnt-data] folder if it doesn't already exist.  This folder
-            // is where we're going to host the Docker containers and volumes that should
-            // have been initialized to link to any data drives attached to the machine
-            // or simply be located on the OS drive.  This may not be initialized for
-            // some prepared nodes, so we'll create this on the OS drive if necessary.
+                    // Create the [/mnt-data] folder if it doesn't already exist.  This folder
+                    // is where we're going to host the Docker containers and volumes that should
+                    // have been initialized to link to any data drives attached to the machine
+                    // or simply be located on the OS drive.  This may not be initialized for
+                    // some prepared nodes, so we'll create this on the OS drive if necessary.
 
-            if (!node.DirectoryExists("/mnt-data"))
+                    if (!node.DirectoryExists("/mnt-data"))
                     {
                         node.SudoCommand("mkdir -p /mnt-data");
                     }
 
-            // Configure the APT proxy server settings early.
+                    // Configure the APT proxy server settings early.
 
-            node.Status = "run: setup-apt-proxy.sh";
-                    node.SudoCommand("setup-apt-proxy.sh");
+                    node.Status = "run: setup-package-proxy.sh";
+                    node.SudoCommand("setup-package-proxy.sh");
 
-            // Perform basic node setup including changing the hostname.
+                    // Perform basic node setup including changing the hostname.
 
-            UploadHostsFile(node);
+                    UploadHostsFile(node);
 
                     node.Status = "run: setup-node.sh";
                     node.SudoCommand("setup-node.sh");
 
-            // Tune Linux for SSDs, if enabled.
+                    // Tune Linux for SSDs, if enabled.
 
-            node.Status = "run: setup-ssd.sh";
+                    node.Status = "run: setup-ssd.sh";
                     node.SudoCommand("setup-ssd.sh");
                 });
         }
@@ -446,16 +427,16 @@ OPTIONS:
         /// Performs basic node configuration.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void ConfigureNode(SshProxy<NodeDefinition> node)
+        private void SetupNode(SshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction($"setup/{node.Metadata.Role}",
                 () =>
                 {
-                    // Configure the APT package proxy on the managers
+                    // Configure the APT package proxy on the masters
                     // and configure the proxy selector for all nodes.
 
-                    node.Status = "run: setup-apt-proxy.sh";
-                    node.SudoCommand("setup-apt-proxy.sh");
+                    node.Status = "run: setup-package-proxy.sh";
+                    node.SudoCommand("setup-package-proxy.sh");
 
                     // Upgrade Linux packages if requested.  We're doing this after
                     // deploying the APT package proxy so it'll be faster.
@@ -552,13 +533,13 @@ ff02::2         ip6-allrouters
         }
 
         /// <summary>
-        /// Creates the initial swarm on the bootstrap manager node passed and 
-        /// captures the manager and worker swarm tokens required to join additional
-        /// nodes to the cluster.
+        /// Creates the initial cluster on the bootstrap master node passed and 
+        /// captures the master and worker cluster tokens required to join 
+        /// additional nodes to the cluster.
         /// </summary>
-        /// <param name="bootstrapManager">The target bootstrap manager server.</param>
+        /// <param name="bootstrapMaster">The target bootstrap manager server.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void InitializeCluster(SshProxy<NodeDefinition> bootstrapManager, TimeSpan stepDelay)
+        private void InitializeCluster(SshProxy<NodeDefinition> bootstrapMaster, TimeSpan stepDelay)
         {
             if (kubeContextExtension.ClusterJoinToken != null)
             {
@@ -567,7 +548,7 @@ ff02::2         ip6-allrouters
 
             Thread.Sleep(stepDelay);
 
-            bootstrapManager.Status = "initialize cluster";
+            bootstrapMaster.Status = "initialize cluster";
 
             // $todo(jeff.lill): Implement this.
 #if TODO
@@ -637,13 +618,13 @@ ff02::2         ip6-allrouters
         /// <summary>
         /// Adds the node labels.
         /// </summary>
-        /// <param name="manager">The manager node.</param>
-        private void AddNodeLabels(SshProxy<NodeDefinition> manager)
+        /// <param name="master">A master node.</param>
+        private void AddNodeLabels(SshProxy<NodeDefinition> master)
         {
-            manager.InvokeIdempotentAction("setup/node-labels",
+            master.InvokeIdempotentAction("setup/node-labels",
                 () =>
                 {
-                    manager.Status = "labeling";
+                    master.Status = "labeling";
 
                     foreach (var node in cluster.Nodes)
                     {
@@ -688,9 +669,9 @@ ff02::2         ip6-allrouters
         /// <summary>
         /// Generates the SSH key to be used for authenticating SSH client connections.
         /// </summary>
-        /// <param name="manager">A cluster manager node.</param>
+        /// <param name="master">A cluster manager node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void GenerateClientSshKey(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
+        private void GenerateClientSshKey(SshProxy<NodeDefinition> master, TimeSpan stepDelay)
         {
             // Here's some information explaining what how I'm doing this:
             //
@@ -709,10 +690,10 @@ ff02::2         ip6-allrouters
             // $hack(jeff.lill): 
             //
             // We're going to generate a 2048 bit key pair on one of the
-            // manager nodes and then download and then delete it.  This
+            // master nodes and then download and then delete it.  This
             // means that the private key will be persisted to disk (tmpfs)
             // for a moment but I'm going to worry about that too much
-            // since we'll be rebooting the manager later on during setup.
+            // since we'll be rebooting the master later on during setup.
             //
             // Technically, I could have installed OpenSSL or something
             // on Windows or figured out the .NET Crypto libraries but
@@ -721,8 +702,9 @@ ff02::2         ip6-allrouters
 
             const string keyGenScript =
 @"
-# Generate a 2048-bit key without a passphrase (the -N """" option).
+# Generate a 2048-bit key without a passphrase (the -N option).
 
+rm -f /run/ssh-key*
 ssh-keygen -t rsa -b 2048 -N """" -C ""neonhive"" -f /run/ssh-key
 
 # Relax permissions so we can download the key parts.
@@ -733,23 +715,23 @@ chmod 666 /run/ssh-key*
 
             bundle.AddFile("keygen.sh", keyGenScript, isExecutable: true);
 
-            manager.SudoCommand(bundle);
+            master.SudoCommand(bundle);
 
             using (var stream = new MemoryStream())
             {
-                manager.Download("/run/ssh-key.pub", stream);
+                master.Download("/run/ssh-key.pub", stream);
 
-                kubeContextExtension.SshClientKey.PublicPUB = Encoding.UTF8.GetString(stream.ToArray());
+                kubeContextExtension.SshClientKey.PublicPUB = NeonHelper.ToLinuxLineEndings(Encoding.UTF8.GetString(stream.ToArray()));
             }
 
             using (var stream = new MemoryStream())
             {
-                manager.Download("/run/ssh-key", stream);
+                master.Download("/run/ssh-key", stream);
 
-                kubeContextExtension.SshClientKey.PrivatePEM = Encoding.UTF8.GetString(stream.ToArray());
+                kubeContextExtension.SshClientKey.PrivatePEM = NeonHelper.ToLinuxLineEndings(Encoding.UTF8.GetString(stream.ToArray()));
             }
 
-            manager.SudoCommand("rm /run/ssh-key*");
+            master.SudoCommand("rm /run/ssh-key*");
 
             // We're going to use WinSCP to convert the OpenSSH PEM formatted key
             // to the PPK format PuTTY/WinSCP require.  Note that this won't work
@@ -783,7 +765,7 @@ chmod 666 /run/ssh-key*
                         Program.Exit(result.ExitCode);
                     }
 
-                    kubeContextExtension.SshClientKey.PrivatePPK = File.ReadAllText(ppkKeyPath);
+                    kubeContextExtension.SshClientKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
 
                     // Persist the SSH client key.
 
