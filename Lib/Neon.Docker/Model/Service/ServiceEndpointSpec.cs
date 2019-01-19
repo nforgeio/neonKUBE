@@ -11,6 +11,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 namespace Neon.Docker
 {
@@ -23,6 +24,7 @@ namespace Neon.Docker
         /// Specifies how the Docker swarm will load balance traffic to the service tasks.
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Mode", ApplyNamingConventions = false)]
         [DefaultValue(default(ServiceEndpointMode))]
         public ServiceEndpointMode Mode { get; set; }
 
@@ -30,6 +32,7 @@ namespace Neon.Docker
         /// Details the network ports exposed by the service tasks.
         /// </summary>
         [JsonProperty(PropertyName = "Ports", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [YamlMember(Alias = "Ports", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<ServiceEndpointPortConfig> Ports { get; set; }
 

@@ -30,7 +30,7 @@ namespace Neon.Kube
     /// </summary>
     public class KubernetesOptions
     {
-        private const string defaultVersion = "latest";
+        private const string defaultPodSubnet = "";
 
         /// <summary>
         /// Default constructor.
@@ -44,6 +44,7 @@ namespace Neon.Kube
         /// will install the latest tested version of Kubernetes.
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Version", ApplyNamingConventions = false)]
         [DefaultValue(defaultVersion)]
         public string Version { get; set; } = defaultVersion;
 
