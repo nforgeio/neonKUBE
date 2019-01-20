@@ -343,7 +343,7 @@ namespace Neon.Kube
         /// <param name="component">The component name.</param>
         /// <param name="version">The optional component version.</param>
         /// <returns>The component file path.</returns>
-        public static string GetComponentCachePath(KubeHostPlatform platform, string component, string version = null)
+        public static string GetCachedComponentPath(KubeHostPlatform platform, string component, string version = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(component));
 

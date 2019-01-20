@@ -53,14 +53,19 @@ if [ ! -d /mnt-data/docker ] ; then
 fi
 
 #--------------------------------------------------------------------------
+# Install Kubernetes (and other) prerequisites.
+
+safe-apt-get install -yq curl apt-transport-https ca-certificates 
+
+#--------------------------------------------------------------------------
 # Install Docker
 #
 #   https://docs.docker.com/engine/installation/linux/ubuntulinux/
 
-# Install the prerequisites.  We need to do this manually  because the 
+# Install additional Docker prerequisites.  We need to do this manually  because the 
 # [gdebi] command executed below doesn't do this.
 
-safe-apt-get install -yq apt-transport-https ca-certificates curl software-properties-common
+safe-apt-get install -yq software-properties-common
 
 # Download the Docker GPG key.
 

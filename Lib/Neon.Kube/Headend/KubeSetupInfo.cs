@@ -41,7 +41,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the <b>kubectl</b> binary download URI for Windows.
+        /// The <b>kubectl</b> binary download URI for Windows.
         /// </summary>
         [JsonProperty(PropertyName = "OsxKubeAdminUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "OsxKubeAdminUri", ApplyNamingConventions = false)]
@@ -49,7 +49,7 @@ namespace Neon.Kube
         public string WindowsKubeCtlUri { get; set; }
 
         /// <summary>
-        /// Returns the <b>kubectl</b> binary download URI for OS/X.
+        /// The <b>kubectl</b> binary download URI for OS/X.
         /// </summary>
         [JsonProperty(PropertyName = "OsxKubeCtlUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "OsxKubeCtlUri", ApplyNamingConventions = false)]
@@ -57,7 +57,7 @@ namespace Neon.Kube
         public string OsxKubeCtlUri { get; set; }
 
         /// <summary>
-        /// Returns the <b>kubeadm</b> binary download URI for Linux.
+        /// The <b>kubeadm</b> binary download URI for Linux.
         /// </summary>
         [JsonProperty(PropertyName = "LinuxKubeAdminUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "LinuxKubeAdminUri", ApplyNamingConventions = false)]
@@ -65,12 +65,44 @@ namespace Neon.Kube
         public string LinuxKubeAdminUri { get; set; }
 
         /// <summary>
-        /// Returns the <b>kubectl</b> binary download URI for Linux.
+        /// The <b>kubectl</b> binary download URI for Linux.
         /// </summary>
         [JsonProperty(PropertyName = "LinuxKubeCtlUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "LinuxKubeCtlUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string LinuxKubeCtlUri { get; set; }
+
+        /// <summary>
+        /// The <b>kubelet</b> binary download URI for Linux.
+        /// </summary>
+        [JsonProperty(PropertyName = "LinuxKubeletUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "LinuxKubeletUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string LinuxKubeletUri { get; set; }
+
+        /// <summary>
+        /// The Ubuntu package version for <b>kubeadm.</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "UbuntuKubeAdmPackageVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "UbuntuKubeAdmPackageVersion", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string UbuntuKubeAdmPackageVersion { get; set; }
+
+        /// <summary>
+        /// The Ubuntu package version for <b>kubectl.</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "UbuntuKubeCtlPackageVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "UbuntuKubeCtlPackageVersion", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string UbuntuKubeCtlPackageVersion { get; set; }
+
+        /// <summary>
+        /// The Ubuntu package version for <b>kubelet.</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "UbuntuKubeletPackageVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "UbuntuKubeletPackageVersion", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string UbuntuKubeletPackageVersion { get; set; }
 
         /// <summary>
         /// Returns the Docker package for Ubuntu.

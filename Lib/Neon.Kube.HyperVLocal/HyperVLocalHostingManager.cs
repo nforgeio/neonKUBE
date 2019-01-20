@@ -631,7 +631,7 @@ namespace Neon.Kube
                 // to obtain the IP address we'll use to SSH into the machine and configure
                 // it's static IP.
 
-                node.Status = $"discover: address";
+                node.Status = $"discover: ip address";
 
                 var adapters = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
                 var adapter = adapters.FirstOrDefault();

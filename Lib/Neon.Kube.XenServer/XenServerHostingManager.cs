@@ -388,7 +388,7 @@ namespace Neon.Kube
 
                 var address = string.Empty;
 
-                xenSshProxy.Status = FormatVmStatus(vmName, "discover: address");
+                xenSshProxy.Status = FormatVmStatus(vmName, "discover: ip address");
 
                 try
                 {

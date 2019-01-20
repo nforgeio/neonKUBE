@@ -281,11 +281,15 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "nodes.master.count", clusterDefinition.Masters.Count());
             preprocessReader.Set("nodes.masters", sbMasters);
             preprocessReader.Set("nodes.masters.summary", sbMasterNodesSummary);
-
+            
             SetBashVariable(preprocessReader, "ntp.master.sources", masterTimeSources);
             NewMethod(preprocessReader, workerTimeSources);
 
             SetBashVariable(preprocessReader, "docker.packageuri", kubeSetupInfo.UbuntuDockerPackageUri);
+
+            SetBashVariable(preprocessReader, "neon.kube.kubeadm.package_version", kubeSetupInfo.UbuntuKubeAdmPackageVersion);
+            SetBashVariable(preprocessReader, "neon.kube.kubectl.package_version", kubeSetupInfo.UbuntuKubeCtlPackageVersion);
+            SetBashVariable(preprocessReader, "neon.kube.kubelet.package_version", kubeSetupInfo.UbuntuKubeletPackageVersion);
 
             //-----------------------------------------------------------------
             // Configure the variables for the [setup-disk.sh] script.
@@ -477,7 +481,7 @@ namespace NeonCli
         
             server.Status = "upload: binary files";
 
-            foreach (var file in Program.LinuxFolder.GetFolder("bin").Files())
+            foreach (var file in Program.LinuxFolder.GetFolder("binary").Files())
             {
                 server.UploadFile(clusterDefinition, kubeSetupInfo, file, $"{KubeHostFolders.Bin}/{file.Name.Replace(".sh", string.Empty)}");
             }

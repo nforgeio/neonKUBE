@@ -19,10 +19,34 @@ The easiest way to to accomplish this is visit the Docker package repo at:
 
   Example: `docker.ce-18.09.0-ce-ubuntu-bionic-stable-amd64.deb`
 
-3. Upload the filesto S3 and **MAKE THEM PUBLIC**: https://s3-us-west-2.amazonaws.com/neonforge/kube/FILENAME.deb
+3. Upload the files to S3 and **MAKE THEM PUBLIC**: https://s3-us-west-2.amazonaws.com/neonforge/kube/FILENAME.deb
 4. Update the headend services (or simulated services for now) to include a Docker version to URL mapping.
 
-5. Check for base software updates:
+## Check for new Kubernetes releases:
 
-  a. [kubernetes](https://github.com/kubernetes/kubernetes/releases)
-  b. [haproxy](http://haproxy.org)
+1. Check the official release notes: [here](https://github.com/kubernetes/kubernetes/releases)
+
+2. Update the Headend service (currently stubbed)
+
+   a. Start an Ubuntu VM
+
+   b. Configure the Kubernetes package  repo:
+```
+apt-get update && apt-get install -y apt-transport-https curl
+curl - s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
+```
+  c. Run these commands one at a time to discover the latest package releases:
+```
+apt-cache madison kubeadm
+apt-cache madison kubectl
+apt-cache madison kubelet
+```
+  d. Edit the `HeadendClient.cs` file:
+    * updating the `latestSupportedVersion` constant.
+    * adding or updating the package mappings.
+
+## Check for base Docker image updates:
+
+1. [haproxy](http://haproxy.org)
+2. .NET Core

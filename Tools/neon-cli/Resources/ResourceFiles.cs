@@ -253,7 +253,7 @@ namespace NeonCli
                     new Folder("Ubuntu-18.04",
                         folders: new List<Folder>()
                         {
-                            new Folder("bin",
+                            new Folder("binary",
                                 files: new List<File>()
                                 {
                                     new File("safe-apt-get.sh", hasVariables: true)
@@ -270,6 +270,7 @@ namespace NeonCli
                                     new File("setup-docker.sh", hasVariables: true),
                                     new File("setup-environment.sh", hasVariables: true),
                                     new File("setup-exists.sh", hasVariables: true),
+                                    new File("setup-kubernetes.sh", hasVariables: true),
                                     new File("setup-node.sh", hasVariables: true),
                                     new File("setup-ntp.sh", hasVariables: true),
                                     new File("setup-package-proxy.sh", hasVariables: true),

@@ -168,7 +168,7 @@ OPTIONS:
 
             // Perform common configuration for all cluster nodes.
 
-            controller.AddStep("setup nodes",
+            controller.AddStep("configure nodes",
                 (node, stepDelay) =>
                 {
                     SetupCommon(node, stepDelay);
@@ -178,23 +178,31 @@ OPTIONS:
                 node => true,
                 stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
 
-            // Create the Swarm.
+            //-----------------------------------------------------------------
+            // Kubernetes configuration.
 
-            controller.AddStep("cluster create",
+            controller.AddStep("install kubernetes",
+                (node, stepDelay) =>
+                {
+                    InstallKubernetes(node, stepDelay);
+                });
+
+            controller.AddStep("create cluster",
                 (node, stepDelay) =>
                 {
                     InitializeCluster(node, stepDelay);
                 },
                 node => node == cluster.FirstMaster);
 
-            controller.AddStep("cluster join",
+            controller.AddStep("join cluster",
                 (node, stepDelay) =>
                 {
                     JoinCluster(node, stepDelay);
                 },
                 node => node != cluster.FirstMaster);
 
-            // Continue with the configuration.
+            //-----------------------------------------------------------------
+            // Verify the cluster.
 
             controller.AddStep("check masters",
                 (node, stepDelay) =>
@@ -212,6 +220,10 @@ OPTIONS:
                 },
                 node => node.Metadata.IsWorker);
 
+            //-----------------------------------------------------------------
+            // Update the node security to use a strong password and also 
+            // configure the SSH client certificate.
+
             // $todo(jeff.lill):
             //
             // Note that this step isn't entirely idempotent.  The problem happens
@@ -227,7 +239,7 @@ OPTIONS:
             kubeContextExtension.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
             kubeContextExtension.Save();
 
-            controller.AddStep("strong password",
+            controller.AddStep("set strong password",
                 (node, stepDelay) =>
                 {
                     SetStrongPassword(node, TimeSpan.Zero);
@@ -244,7 +256,7 @@ OPTIONS:
                 },
                 quiet: true);
 
-            controller.AddGlobalStep("ssh certs", () => ConfigureSshCerts());
+            controller.AddGlobalStep("set ssh certs", () => ConfigureSshCerts());
 
             // This needs to be run last because it will likely disable
             // SSH username/password authentication which may block
@@ -274,9 +286,9 @@ OPTIONS:
 
             // Persist the new strong password and indicate that setup is complete.
 
-            kubeContextExtension.SshPassword     = kubeContextExtension.SshStrongPassword;
+            kubeContextExtension.SshPassword       = kubeContextExtension.SshStrongPassword;
             kubeContextExtension.SshStrongPassword = null;
-            kubeContextExtension.SetupPending    = false;
+            kubeContextExtension.SetupPending      = false;
 
             kubeContextExtension.Save();
 
@@ -306,7 +318,7 @@ OPTIONS:
             using (var client = new HttpClient(handler, disposeHandler: true))
             {
                 var hostPlatform = KubeHelper.HostPlatform;
-                var kubeCtlPath  = KubeHelper.GetComponentCachePath(hostPlatform, "kubectl", cluster.Definition.Kubernetes.Version);
+                var kubeCtlPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", cluster.Definition.Kubernetes.Version);
 
                 if (!File.Exists(kubeCtlPath))
                 {
@@ -480,12 +492,12 @@ OPTIONS:
 
                     // Setup NTP.
 
-                    node.Status = "setup: NTP";
+                    node.Status = "configure: NTP";
                     node.SudoCommand("setup-ntp.sh");
 
                     // Setup Docker.
 
-                    node.Status = "setup: docker";
+                    node.Status = "install: docker";
 
                     var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
@@ -544,11 +556,28 @@ ff02::2         ip6-allrouters
         }
 
         /// <summary>
+        /// Installs the required Kubernetes components on a node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void InstallKubernetes(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        {
+            node.InvokeIdempotentAction("setup/setup-install-kubernetes",
+                () =>
+                {
+                    Thread.Sleep(stepDelay);
+
+                    node.Status = "install: kubernetes";
+                    node.SudoCommand("setup-kubernetes.sh");
+                });
+        }
+
+        /// <summary>
         /// Creates the initial cluster on the bootstrap master node passed and 
         /// captures the master and worker cluster tokens required to join 
         /// additional nodes to the cluster.
         /// </summary>
-        /// <param name="bootstrapMaster">The target bootstrap manager server.</param>
+        /// <param name="bootstrapMaster">The target bootstrap master node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void InitializeCluster(SshProxy<NodeDefinition> bootstrapMaster, TimeSpan stepDelay)
         {

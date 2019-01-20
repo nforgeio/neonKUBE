@@ -30,6 +30,7 @@ namespace Neon.Kube
     /// </summary>
     public class KubernetesOptions
     {
+        private const string minVersion     = "1.13.0";
         private const string defaultVersion = "1.13.2";
 
         /// <summary>
@@ -41,7 +42,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// The version of Kubernetes to be installed.  This defaults to <b>latest</b> which
-        /// will install the latest tested version of Kubernetes.
+        /// will install the latest tested version of Kubernetes.  The minimum supported
+        /// version is <b>1.13.0</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "Version", ApplyNamingConventions = false)]
@@ -62,9 +64,17 @@ namespace Neon.Kube
             Version = Version ?? defaultVersion;
             Version = Version.ToLowerInvariant();
 
-            if (!System.Version.TryParse(Version, out var v) && Version != "latest")
+            if (Version != "latest")
             {
-                throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
+                if (!System.Version.TryParse(Version, out var v))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
+                }
+
+                if (v < System.Version.Parse(minVersion))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is less than the supported version [{minVersion}].");
+                }
             }
         }
 

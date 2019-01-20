@@ -25,8 +25,11 @@
 
   <ItemGroup>
     <Compile Remove="Resources\Ubuntu-18.04\source\**" />
+    <Compile Remove="Resources\Ubuntu-18.04\updates\**" />
     <EmbeddedResource Remove="Resources\Ubuntu-18.04\source\**" />
+    <EmbeddedResource Remove="Resources\Ubuntu-18.04\updates\**" />
     <None Remove="Resources\Ubuntu-18.04\source\**" />
+    <None Remove="Resources\Ubuntu-18.04\updates\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -65,6 +68,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Linux\Ubuntu-16.04\conf\cluster.conf.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Ubuntu-18.04\setup\setup-kubernetes.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\Ubuntu-18.04\setup\setup-package-proxy.sh">
@@ -151,13 +157,13 @@
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-rm.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\bin\safe-apt-get.sh">
+    <None Update="Resources\Ubuntu-18.04\binary\safe-apt-get.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Resources\Ubuntu-18.04\updates\" />
+    <Folder Include="Resources\Ubuntu-18.04\binary\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
