@@ -70,9 +70,6 @@
     <None Update="Linux\Ubuntu-16.04\conf\cluster.conf.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\setup\setup-kubernetes.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\Ubuntu-18.04\setup\setup-package-proxy.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

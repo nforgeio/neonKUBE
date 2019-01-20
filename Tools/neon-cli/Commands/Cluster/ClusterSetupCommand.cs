@@ -166,17 +166,34 @@ OPTIONS:
 
             cluster.LogLine(logBeginMarker);
 
-            // Perform common configuration for all cluster nodes.
+            // Perform common configuration for the bootstrap node first.
+            // We need to do this so the the package cache will be running
+            // when the remaining nodes are configured.
 
-            controller.AddStep("configure nodes",
+            controller.AddStep("setup boot master",
                 (node, stepDelay) =>
                 {
                     SetupCommon(node, stepDelay);
                     node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                     SetupNode(node);
                 },
-                node => true,
+                node => node == cluster.FirstMaster,
                 stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+
+            // Perform common configuration for the remaining nodes (if any).
+
+            if (cluster.Definition.Nodes.Count() > 1)
+            {
+                controller.AddStep("setup other nodes",
+                    (node, stepDelay) =>
+                    {
+                        SetupCommon(node, stepDelay);
+                        node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
+                        SetupNode(node);
+                    },
+                    node => node != cluster.FirstMaster,
+                    stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+            }
 
             //-----------------------------------------------------------------
             // Kubernetes configuration.
@@ -190,7 +207,7 @@ OPTIONS:
             controller.AddStep("create cluster",
                 (node, stepDelay) =>
                 {
-                    InitializeCluster(node, stepDelay);
+                    CreateCluster(node, stepDelay);
                 },
                 node => node == cluster.FirstMaster);
 
@@ -242,7 +259,9 @@ OPTIONS:
             controller.AddStep("set strong password",
                 (node, stepDelay) =>
                 {
-                    SetStrongPassword(node, TimeSpan.Zero);
+                    // $todo(jeff.lill): RESTORE THIS!
+
+                    // SetStrongPassword(node, TimeSpan.Zero);
                 });
 
             controller.AddGlobalStep("passwords set",
@@ -495,8 +514,6 @@ OPTIONS:
                     node.Status = "configure: NTP";
                     node.SudoCommand("setup-ntp.sh");
 
-                    // Setup Docker.
-
                     node.Status = "install: docker";
 
                     var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
@@ -567,8 +584,33 @@ ff02::2         ip6-allrouters
                 {
                     Thread.Sleep(stepDelay);
 
-                    node.Status = "install: kubernetes";
-                    node.SudoCommand("setup-kubernetes.sh");
+                    node.Status = "configure: package repo";
+
+                    var bundle = new CommandBundle("./run.sh");
+
+                    bundle.AddFile("run.sh",
+$@"#!/bin/bash
+curl {Program.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
+safe-apt-get update
+",
+                    isExecutable: true);
+                    node.SudoCommand(bundle);
+
+                    node.Status = "install: kubeadm";
+                    node.SudoCommand($"safe-apt-get install -yq kubeadm={kubeSetupInfo.UbuntuKubeAdmPackageVersion}");
+
+                    node.Status = "install: kubectl";
+                    node.SudoCommand($"safe-apt-get install -yq kubectl={kubeSetupInfo.UbuntuKubeCtlPackageVersion}");
+
+                    node.Status = "install: kubelet";
+                    node.SudoCommand($"safe-apt-get install -yq kubelet={kubeSetupInfo.UbuntuKubeletPackageVersion}");
+
+                    node.Status = "pull: images";
+                    node.SudoCommand("kubeadm config images pull");
+
+                    node.Status = "hold: packages";
+                    node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
                 });
         }
 
@@ -579,80 +621,68 @@ ff02::2         ip6-allrouters
         /// </summary>
         /// <param name="bootstrapMaster">The target bootstrap master node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void InitializeCluster(SshProxy<NodeDefinition> bootstrapMaster, TimeSpan stepDelay)
+        private void CreateCluster(SshProxy<NodeDefinition> bootstrapMaster, TimeSpan stepDelay)
         {
-            if (kubeContextExtension.ClusterJoinToken != null)
+            if (kubeContextExtension.ClusterJoinCommand != null)
             {
                 return; // Cluster has already been initialized.
             }
 
             Thread.Sleep(stepDelay);
 
-            bootstrapMaster.Status = "initialize cluster";
+            bootstrapMaster.Status = "create: cluster";
 
-            // $todo(jeff.lill): Implement this.
-#if TODO
-            bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm init --advertise-addr {bootstrapManager.Metadata.PrivateAddress}:{cluster.Definition.Docker.SwarmPort}");
+            var response = bootstrapMaster.SudoCommand($"kubeadm init --pod-network-cidr {cluster.Definition.Network.PodSubnet} --token-ttl 0");
+            var output   = response.OutputText;
+            var pStart   = output.IndexOf("kubeadm join");
 
-            var response = bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm join-token manager");
+            if (pStart == -1)
+            {
+                throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadmin init ...] response.");
+            }
 
-            hiveLogin.SwarmManagerToken = ExtractSwarmToken(response.OutputText);
+            var pEnd = output.IndexOf('\n', pStart);
 
-            response = bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm join-token worker");
+            if (pEnd == -1)
+            {
+                kubeContextExtension.ClusterJoinCommand = output.Substring(pStart).Trim();
+            }
+            else
+            {
+                kubeContextExtension.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart ).Trim();
+            }
 
-            hiveLogin.SwarmWorkerToken = ExtractSwarmToken(response.OutputText);
-#endif
-
-            // Persist the swarm tokens into the cluster login.
+            // Persist the join command context extension.
 
             kubeContextExtension.Save();
         }
 
         /// <summary>
-        /// Extracts the cluster join token from a <b>docker swarm join-token [manager|worker]</b> 
-        /// command.  The token returned can be used when adding additional nodes to the cluster.
+        /// Adds the node to the cluster.
         /// </summary>
-        /// <param name="commandResponse">The command response string.</param>
-        /// <returns>The join token.</returns>
-        private string ExtractClusterToken(string commandResponse)
+        /// <param name="node">The target node.</param>
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void JoinCluster(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            // $todo(jeff.lill): Implement this.
-
-            const string tokenOpt = "--token ";
-
-            var startPos = commandResponse.IndexOf(tokenOpt);
-            var errorMsg = $"Cannot extract swarm token from:\r\n\r\n{commandResponse}";
-
-            if (startPos == -1)
+            if (node == cluster.FirstMaster)
             {
-                throw new KubeException(errorMsg);
+                // This node is implictly joined to the cluster.
+
+                node.Status = "joined";
+                return;
             }
 
-            if (startPos == -1)
-            {
-                throw new KubeException(errorMsg);
-            }
+            node.InvokeIdempotentAction("setup/swarm-join",
+                () =>
+                {
+                    Thread.Sleep(stepDelay);
 
-            startPos += tokenOpt.Length;
+                    node.Status = "join: cluster";
 
-            // It looks like the format for output has changed.  Older releases
-            // like [17.03-ce] have a backslash to continue the example command.
-            // Newer versions have a space and additional arguments on the same
-            // line.  We're going to handle both.
+                    // $todo(jeff.lill): Implement this.
+                });
 
-            var endPos = commandResponse.IndexOf("\\", startPos);
-
-            if (endPos == -1)
-            {
-                endPos = commandResponse.IndexOfAny(new char[] { ' ', '\r', '\n' }, startPos);
-            }
-
-            if (endPos == -1)
-            {
-                throw new KubeException($"Cannot extract swarm token from:\r\n\r\n{commandResponse}");
-            }
-
-            return commandResponse.Substring(startPos, endPos - startPos).Trim();
+            node.Status = "joined";
         }
 
         /// <summary>
@@ -676,34 +706,6 @@ ff02::2         ip6-allrouters
                         // $todo(jeff.lill): Implement this.
                     }
                 });
-        }
-
-        /// <summary>
-        /// Adds the node to the cluster.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void JoinCluster(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
-        {
-            if (node == cluster.FirstMaster)
-            {
-                // This node is implictly joined to the cluster.
-
-                node.Status = "joined";
-                return;
-            }
-
-            node.InvokeIdempotentAction("setup/swarm-join",
-                () =>
-                {
-                    Thread.Sleep(stepDelay);
-
-                    node.Status = "joining";
-
-                    // $todo(jeff.lill): IMplement this.
-                });
-
-            node.Status = "joined";
         }
 
         /// <summary>

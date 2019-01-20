@@ -145,12 +145,12 @@ namespace Neon.Kube
         public SshClientKey SshClientKey { get; set; }
 
         /// <summary>
-        /// The token required to join a node to the cluster.
+        /// The command to be used join nodes to an existing cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "ClusterJoinToken", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ClusterJoinToken", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ClusterJoinCommand", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ClusterJoinCommand", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string ClusterJoinToken { get; set; }
+        public string ClusterJoinCommand { get; set; }
 
         /// <summary>
         /// Sets the file path where the extension will be persisted.

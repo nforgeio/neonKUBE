@@ -101,14 +101,14 @@ EOF
 # As a convienence, we're going to create an [sbash] script, that uses
 # [sudo] to start Bash while inheriting the current environment.
 
-cat <<EOF > /usr/bin/sbash
+cat <<EOF > /usr/local/bin/sbash
 # Starts Bash with elevated permissions while also inheriting
 # the current environment variables.
 
 /usr/bin/sudo -E bash \$@
 EOF
 
-chmod a+x /usr/bin/sbash
+chmod a+x /usr/local/bin/sbash
 
 #------------------------------------------------------------------------------
 # Kubernetes requires packet forwarding.

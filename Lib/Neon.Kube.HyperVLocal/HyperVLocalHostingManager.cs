@@ -561,7 +561,7 @@ namespace Neon.Kube
 
                                     if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
                                     {
-                                        node.Status = $"[{percentComplete}%] create: disk";
+                                        node.Status = $"create: disk [{percentComplete}%]";
                                         stopwatch.Restart();
                                     }
                                 }
@@ -590,7 +590,7 @@ namespace Neon.Kube
 
                                 if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
                                 {
-                                    node.Status = $"[{percentComplete}%] create: disk";
+                                    node.Status = $"create: disk [{percentComplete}%]";
                                     stopwatch.Restart();
                                 }
                             }

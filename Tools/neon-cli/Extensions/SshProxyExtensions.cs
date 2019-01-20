@@ -459,7 +459,7 @@ namespace NeonCli
 
             // Upload the setup files.
 
-            server.Status = "upload: setup files";
+            server.Status = "upload: setup scripts";
 
             foreach (var file in Program.LinuxFolder.GetFolder("setup").Files())
             {
