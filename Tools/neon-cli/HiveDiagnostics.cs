@@ -90,7 +90,7 @@ namespace NeonCli
             // For master nodes, we're simply going to verify that we have at least one external 
             // time source answering.
 
-            node.Status = "checking: NTP";
+            node.Status = "check: NTP";
 
             var retryDelay = TimeSpan.FromSeconds(30);
             var fault      = (string)null;
@@ -182,7 +182,7 @@ namespace NeonCli
             // For worker nodes, we need to verify that each of the masters are answering
             // by confirming that their IP addresses are present.
 
-            node.Status = "checking: NTP";
+            node.Status = "check: NTP";
 
             var retryDelay = TimeSpan.FromSeconds(30);
             var fault      = (string)null;

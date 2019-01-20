@@ -354,7 +354,7 @@ Server Requirements:
             }
 
             //-----------------------------------------------------------------
-            // Setup the cluster.
+            // Prepare the cluster.
 
             // Write the operation begin marker to all cluster node logs.
 

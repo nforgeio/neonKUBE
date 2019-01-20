@@ -65,13 +65,10 @@ export NEON_BIN_FOLDER=$<neon.folders.bin>
 export NEON_CONFIG_FOLDER=$<neon.folders.config>
 export NEON_EXEC_FOLDER=$<neon.folders.exec>
 export NEON_SETUP_FOLDER=$<neon.folders.setup>
-export NEON_SECRETS_FOLDER=$<neon.folders.secrets>
-export NEON_SCRIPTS_FOLDER=$<neon.folders.scripts>
 export NEON_STATE_FOLDER=$<neon.folders.state>
 export NEON_TMPFS_FOLDER=$<neon.folders.tmpfs>
-export NEON_TOOLS_FOLDER=$<neon.folders.tools>
 
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${NEON_SETUP_FOLDER}:${NEON_TOOLS_FOLDER}
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${NEON_SETUP_FOLDER}:${NEON_BIN_FOLDER}
 
 #------------------------------------------------------------------------------
 # Describe the cluster master nodes.  You can use the [getmaster] function
@@ -116,12 +113,9 @@ if $summary ; then
     echo "NEON_BIN_FOLDER                    = ${NEON_BIN_FOLDER}" 1>&2
     echo "NEON_CONFIG_FOLDER                 = ${NEON_CONFIG_FOLDER}" 1>&2
     echo "NEON_EXEC_FOLDER                   = ${NEON_EXEC_FOLDER}" 1>&2
-    echo "NEON_SCRIPTS_FOLDER                = ${NEON_SCRIPTS_FOLDER}" 1>&2
-    echo "NEON_SECRETS_FOLDER                = ${NEON_SECRETS_FOLDER}" 1>&2
     echo "NEON_SETUP_FOLDER                  = ${NEON_SETUP_FOLDER}" 1>&2
     echo "NEON_STATE_FOLDER                  = ${NEON_STATE_FOLDER}" 1>&2
     echo "NEON_TMPFS_FOLDER                  = ${NEON_TMPFS_FOLDER}" 1>&2
-    echo "NEON_TOOLS_FOLDER                  = ${NEON_TOOLS_FOLDER}" 1>&2
     echo 1>&2
     echo "NEON_MASTER_COUNT                  = ${NEON_MASTER_COUNT}" 1>&2
     echo "NEON_MASTER_ADDRESSES              = ${NEON_MASTER_ADDRESSES[@]}" 1>&2

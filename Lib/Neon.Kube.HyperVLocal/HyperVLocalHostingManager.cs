@@ -523,7 +523,7 @@ namespace Neon.Kube
                 var driveTemplateInfo     = NeonHelper.JsonDeserialize<DriveTemplateInfo>(File.ReadAllText(driveTemplateInfoPath));
                 var drivePath             = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
 
-                node.Status = $"create disk";
+                node.Status = $"create: disk";
 
                 // $hack(jeff.lill): Update console at 2 sec intervals to mitigate annoying flicker
 
@@ -561,7 +561,7 @@ namespace Neon.Kube
 
                                     if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
                                     {
-                                        node.Status = $"[{percentComplete}%] create disk";
+                                        node.Status = $"[{percentComplete}%] create: disk";
                                         stopwatch.Restart();
                                     }
                                 }
@@ -590,7 +590,7 @@ namespace Neon.Kube
 
                                 if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
                                 {
-                                    node.Status = $"[{percentComplete}%] create disk";
+                                    node.Status = $"[{percentComplete}%] create: disk";
                                     stopwatch.Restart();
                                 }
                             }
@@ -613,7 +613,7 @@ namespace Neon.Kube
                 var minMemoryBytes = node.Metadata.GetVmMinimumMemory(cluster.Definition);
                 var diskBytes = node.Metadata.GetVmDisk(cluster.Definition);
 
-                node.Status = $"create virtual machine";
+                node.Status = $"create: virtual machine";
                 hyperv.AddVM(
                     vmName,
                     processorCount: processors,
@@ -623,7 +623,7 @@ namespace Neon.Kube
                     drivePath: drivePath,
                     switchName: switchName);
 
-                node.Status = $"start virtual machine";
+                node.Status = $"start: virtual machine";
 
                 hyperv.StartVM(vmName);
 
@@ -631,7 +631,7 @@ namespace Neon.Kube
                 // to obtain the IP address we'll use to SSH into the machine and configure
                 // it's static IP.
 
-                node.Status = $"fetch ip address";
+                node.Status = $"discover: address";
 
                 var adapters = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
                 var adapter = adapters.FirstOrDefault();
@@ -663,7 +663,7 @@ namespace Neon.Kube
                         // Configure the node's network stack to the static IP address
                         // and upstream nameservers.
 
-                        node.Status = $"network config [IP={node.PrivateAddress}]";
+                        node.Status = $"config: network [IP={node.PrivateAddress}]";
 
                         var primaryInterface = node.GetNetworkInterface(address);
 
@@ -677,7 +677,7 @@ namespace Neon.Kube
                         // Extend the primary partition and file system to fill 
                         // the virtual the drive. 
 
-                        node.Status = $"resize primary partition";
+                        node.Status = $"resize: primary drive";
 
                         // $hack(jeff.lill):
                         //

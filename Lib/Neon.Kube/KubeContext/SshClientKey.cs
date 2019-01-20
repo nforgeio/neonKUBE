@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
@@ -64,7 +65,7 @@ namespace Neon.Kube
         /// tool.
         /// </summary>
         [JsonProperty(PropertyName = "PublicPUB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PublicPUB", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "PublicPUB", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PublicPUB { get; set; }
 
@@ -72,7 +73,7 @@ namespace Neon.Kube
         /// The private key formatted for <b>OpenSSH</b> (PEM formatted).  
         /// </summary>
         [JsonProperty(PropertyName = "PrivatePEM", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PrivatePEM", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "PrivatePEM", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PrivatePEM { get; set; }
 
@@ -80,7 +81,7 @@ namespace Neon.Kube
         /// The private key formatted as <b>PuTTY Private Key (PPK)</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PrivatePPK", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PrivatePPK", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "PrivatePPK", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PrivatePPK { get; set; }
 

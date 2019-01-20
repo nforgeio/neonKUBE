@@ -44,14 +44,14 @@ fi
 
 startsetup node
 
-# Remove unncessary home folders that might be present on older prepped OS images.
-
-if [ -d ${HOME}/.bundles ] ; then
-    rm -r ${HOME}/.bundles
-fi
-
 # Install some common packages:
 #
+#   nano                Text editor
+#   sysstat             Linux monitoring tools
+#   dstat               Linux performance monitoring
+#   iotop               Linux I/O monitoring
+#   apache2-utils       Apache utilities
+#   daemon              daemon wrapper
 #	jq			        JSON parser (useful for shell scripts)
 #	aptitude	        Apt related utilities
 #	gdebi-core	        Installs .deb package files AND their dependencies
@@ -59,7 +59,7 @@ fi
 #   ca-certificates     Latest certificate authority certs
 
 safe-apt-get update
-safe-apt-get install -yq jq aptitude gdebi-core mmv ca-certificates
+safe-apt-get install -yq nano sysstat dstat iotop iptraf apache2-utils daemon jq aptitude gdebi-core mmv ca-certificates
 
 # Configure the hostname.
 #

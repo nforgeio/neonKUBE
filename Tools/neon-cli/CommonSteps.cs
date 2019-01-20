@@ -186,9 +186,9 @@ TCPKeepAlive yes
                     {
                         if (line.StartsWith("PATH="))
                         {
-                            if (!line.Contains(KubeHostFolders.Tools))
+                            if (!line.Contains(KubeHostFolders.Bin))
                             {
-                                sb.AppendLine(line + $":{KubeHostFolders.Tools}");
+                                sb.AppendLine(line + $":{KubeHostFolders.Bin}");
                             }
                             else
                             {
@@ -217,7 +217,7 @@ TCPKeepAlive yes
                 sbPackageProxies.AppendWithSeparator(proxyEndpoint);
             }
             
-            sb.AppendLine($"NEON_PACKAGE_PROXY=({sbPackageProxies})");
+            sb.AppendLine($"NEON_PACKAGE_PROXY={sbPackageProxies}");
 
             if (clusterDefinition.Hosting != null)
             {
@@ -237,12 +237,9 @@ TCPKeepAlive yes
             sb.AppendLine($"NEON_BIN_FOLDER={KubeHostFolders.Bin}");
             sb.AppendLine($"NEON_CONFIG_FOLDER={KubeHostFolders.Config}");
             sb.AppendLine($"NEON_EXEC_FOLDER={KubeHostFolders.Exec}");
-            sb.AppendLine($"NEON_SCRIPTS_FOLDER={KubeHostFolders.Scripts}");
-            sb.AppendLine($"NEON_SECRETS_FOLDER={KubeHostFolders.Secrets}");
             sb.AppendLine($"NEON_SETUP_FOLDER={KubeHostFolders.Setup}");
             sb.AppendLine($"NEON_STATE_FOLDER={KubeHostFolders.State}");
             sb.AppendLine($"NEON_TMPFS_FOLDER={KubeHostFolders.Tmpfs}");
-            sb.AppendLine($"NEON_TOOLS_FOLDER={KubeHostFolders.Tools}");
 
             // Upload the new environment to the server.
 
@@ -307,7 +304,7 @@ TCPKeepAlive yes
             node.InvokeIdempotentAction("setup/prep-node",
                 () =>
                 {
-                    node.Status = "run: setup-prep.sh";
+                    node.Status = "run: setup-prep";
                     node.SudoCommand("setup-prep.sh");
                     node.Reboot(wait: true);
                 });
@@ -329,7 +326,7 @@ TCPKeepAlive yes
             // Clear any DHCP leases to be super sure that cloned node
             // VMs will obtain fresh IP addresses.
 
-            node.Status = "clear DHCP leases";
+            node.Status = "clear: DHCP leases";
             node.SudoCommand("rm -f /var/lib/dhcp/*");
 
             // Indicate that the node has been fully prepared.

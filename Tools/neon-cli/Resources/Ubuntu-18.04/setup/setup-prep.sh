@@ -124,10 +124,10 @@ net.ipv4.ip_forward=1
 EOF
 
 #------------------------------------------------------------------------------
-# Update the APT package index and install some common packages.
+# Install some required packages.
 
 safe-apt-get update -yq
-safe-apt-get install -yq unzip curl nano sysstat dstat iotop iptraf apache2-utils daemon
+safe-apt-get install -yq unzip
 
 #------------------------------------------------------------------------------
 # Clean some things up.

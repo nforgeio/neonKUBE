@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
@@ -93,6 +94,14 @@ namespace Neon.Kube
         public SshCredentials SshCredentials => SshCredentials.FromUserPassword(SshUsername, SshPassword);
 
         /// <summary>
+        /// Temporarily holds the strong password during cluster setup.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshStrongPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "SshStrongPassword", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SshStrongPassword { get; set; }
+
+        /// <summary>
         /// Indicates whether a strong host SSH password was generated for the cluster.
         /// This defaults to <c>false</c>.
         /// </summary>
@@ -102,11 +111,11 @@ namespace Neon.Kube
         public bool HasStrongSshPassword { get; set; }
 
         /// <summary>
-        /// The SSH RSA private key fingerprint used to secure the cluster nodes.  This is a
+        /// The SSH RSA private key fingerprint used to secure the cluster nodes.  Thisk is a
         /// MD5 hash encoded as hex bytes separated by colons.
         /// </summary>
         [JsonProperty(PropertyName = "SshNodeFingerprint")]
-        [YamlMember(Alias = "SshNodeFingerprint", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "SshNodeFingerprint", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public string SshNodeFingerprint { get; set; }
 
@@ -114,7 +123,7 @@ namespace Neon.Kube
         /// The SSH RSA private key used to secure the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshNodePrivateKey")]
-        [YamlMember(Alias = "SshNodePrivateKey", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "SshNodePrivateKey", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public string SshNodePrivateKey { get; set; }
 
@@ -122,7 +131,7 @@ namespace Neon.Kube
         /// The SSH RSA private key used to secure the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshNodePublicKey")]
-        [YamlMember(Alias = "SshNodePublicKey", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "SshNodePublicKey", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public string SshNodePublicKey { get; set; }
 

@@ -295,7 +295,7 @@ namespace Neon.Kube
             var xenHost = xenSshProxy.Metadata;
             var nodes   = GetHostedNodes(xenHost);
 
-            xenSshProxy.Status = "check virtual machines";
+            xenSshProxy.Status = "check: virtual machines";
 
             var vmNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -325,11 +325,11 @@ namespace Neon.Kube
             var xenHost      = xenSshProxy.Metadata;
             var templateName = cluster.Definition.Hosting.XenServer.TemplateName;
 
-            xenSshProxy.Status = "check template";
+            xenSshProxy.Status = "check: template";
 
             if (xenHost.Template.Find(templateName) == null)
             {
-                xenSshProxy.Status = "download vm template (slow)";
+                xenSshProxy.Status = "download: vm template (slow)";
                 xenHost.Template.Install(cluster.Definition.Hosting.XenServer.HostXvaUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
             }
         }
@@ -369,7 +369,7 @@ namespace Neon.Kube
                 var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
                 var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
 
-                xenSshProxy.Status = FormatVmStatus(vmName, "create virtual machine");
+                xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
                 var vm = xenHost.Machine.Create(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
                     processors:                 processors,
@@ -379,7 +379,7 @@ namespace Neon.Kube
                     primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository,
                     extraStorageRespository:    cluster.Definition.Hosting.XenServer.OsdStorageRepository);
 
-                xenSshProxy.Status = FormatVmStatus(vmName, "start virtual machine");
+                xenSshProxy.Status = FormatVmStatus(vmName, "start: virtual machine");
 
                 xenHost.Machine.Start(vm);
 
@@ -388,7 +388,7 @@ namespace Neon.Kube
 
                 var address = string.Empty;
 
-                xenSshProxy.Status = FormatVmStatus(vmName, "fetch ip address");
+                xenSshProxy.Status = FormatVmStatus(vmName, "discover: address");
 
                 try
                 {
@@ -452,7 +452,7 @@ namespace Neon.Kube
                         // Extend the primary partition and file system to fill 
                         // the virtual the drive. 
 
-                        xenSshProxy.Status = FormatVmStatus(vmName, $"resize primary partition");
+                        xenSshProxy.Status = FormatVmStatus(vmName, $"resize: primary drive");
 
                         // $hack(jeff.lill):
                         //

@@ -273,12 +273,10 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.folders.bin", KubeHostFolders.Bin);
             SetBashVariable(preprocessReader, "neon.folders.exec", KubeHostFolders.Exec);
             SetBashVariable(preprocessReader, "neon.folders.config", KubeHostFolders.Config);
-            SetBashVariable(preprocessReader, "neon.folders.scripts", KubeHostFolders.Scripts);
-            SetBashVariable(preprocessReader, "neon.folders.secrets", KubeHostFolders.Secrets);
             SetBashVariable(preprocessReader, "neon.folders.setup", KubeHostFolders.Setup);
             SetBashVariable(preprocessReader, "neon.folders.state", KubeHostFolders.State);
             SetBashVariable(preprocessReader, "neon.folders.tmpfs", KubeHostFolders.Tmpfs);
-            SetBashVariable(preprocessReader, "neon.folders.tools", KubeHostFolders.Tools);
+            SetBashVariable(preprocessReader, "neon.folders.tools", KubeHostFolders.Bin);
 
             SetBashVariable(preprocessReader, "nodes.master.count", clusterDefinition.Masters.Count());
             preprocessReader.Set("nodes.masters", sbMasters);
@@ -469,24 +467,24 @@ namespace NeonCli
             server.SudoCommand($"chmod 744 {KubeHostFolders.Setup}/*");
 
             //-----------------------------------------------------------------
-            // Upload files to the tools folder.
+            // Upload files to the bin folder.
 
-            server.Status = $"clear: {KubeHostFolders.Tools}";
-            server.SudoCommand($"rm -rf {KubeHostFolders.Tools}/*.*");
+            server.Status = $"clear: {KubeHostFolders.Bin}";
+            server.SudoCommand($"rm -rf {KubeHostFolders.Bin}/*.*");
 
             // Upload the tool files.  Note that we're going to strip out the [.sh] 
             // file type to make these easier to run.
         
-            server.Status = "upload: tool files";
+            server.Status = "upload: binary files";
 
-            foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
+            foreach (var file in Program.LinuxFolder.GetFolder("bin").Files())
             {
-                server.UploadFile(clusterDefinition, kubeSetupInfo, file, $"{KubeHostFolders.Tools}/{file.Name.Replace(".sh", string.Empty)}");
+                server.UploadFile(clusterDefinition, kubeSetupInfo, file, $"{KubeHostFolders.Bin}/{file.Name.Replace(".sh", string.Empty)}");
             }
 
             // Make the scripts executable.
 
-            server.SudoCommand($"chmod 744 {KubeHostFolders.Tools}/*");
+            server.SudoCommand($"chmod 744 {KubeHostFolders.Bin}/*");
         }
     }
 }

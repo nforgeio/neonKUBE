@@ -837,12 +837,7 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
                 return null;
             }
 
-            var proxy = new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
-
-            proxy.RemotePath += $":{KubeHostFolders.Setup}";
-            proxy.RemotePath += $":{KubeHostFolders.Tools}";
-
-            return proxy;
+            return new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
         }
 
         /// <summary>

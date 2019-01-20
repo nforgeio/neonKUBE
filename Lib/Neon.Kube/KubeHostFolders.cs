@@ -64,11 +64,6 @@ namespace Neon.Kube
         public const string Scripts = "/lib/neonkube/scripts";
 
         /// <summary>
-        /// Path to the cluster secrets directory.
-        /// </summary>
-        public const string Secrets = "${HOME}/.secrets";
-
-        /// <summary>
         /// Path to the cluster setup scripts directory.
         /// </summary>
         public const string Setup = "/lib/neonkube/setup";
@@ -83,10 +78,5 @@ namespace Neon.Kube
         /// cluster will persist misc temporary files.
         /// </summary>
         public const string Tmpfs = "/dev/shm/neonkube";
-
-        /// <summary>
-        /// Path to the cluster tools directory.
-        /// </summary>
-        public const string Tools = "/lib/neonkube/tools";
     }
 }

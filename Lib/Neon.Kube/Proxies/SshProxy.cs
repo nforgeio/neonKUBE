@@ -506,7 +506,7 @@ namespace Neon.Kube
         /// <summary>
         /// The PATH to use on the remote server when executing commands in the
         /// session or <c>null</c>/empty to run commands without a path.  This
-        /// defaults to the standard Linux path and <see cref="KubeHostFolders.Tools"/>.
+        /// defaults to the standard Linux path and <see cref="KubeHostFolders.Bin"/>.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -514,7 +514,7 @@ namespace Neon.Kube
         /// multiple directories as required.
         /// </note>
         /// </remarks>
-        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{KubeHostFolders.Tools}";
+        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{KubeHostFolders.Bin}:{KubeHostFolders.Setup}";
 
         /// <summary>
         /// Returns the username used to log into the remote node.
@@ -1353,13 +1353,7 @@ namespace Neon.Kube
             SudoCommand($"chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 755 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {KubeHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {KubeHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
@@ -1369,9 +1363,6 @@ namespace Neon.Kube
 
             SudoCommand($"mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {KubeHostFolders.Tools}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Tools}", RunOptions.LogOnErrorOnly);
 
             // $hack(jeff.lill):
             //
@@ -2919,7 +2910,7 @@ echo $? > {cmdFolder}/exit
                 return new CommandResponse() { ExitCode = 0 };
             }
 
-            Status = $"verifying: [{name}] certificate";
+            Status = $"verify: [{name}] certificate";
 
             if (string.IsNullOrEmpty(hostname))
             {

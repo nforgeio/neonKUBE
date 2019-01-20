@@ -52,8 +52,8 @@ OPTIONS:
                           for debugging cluster setup  issues.  Do not
                           use for production hives.
 ";
-        private const string logBeginMarker = "# CLUSTER-BEGIN-SETUP ############################################################";
-        private const string logEndMarker = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
+        private const string logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
+        private const string logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
         private const string logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
 
         private KubeConfig              kubeConfig;
@@ -224,13 +224,17 @@ OPTIONS:
             //
             //      https://github.com/jefflill/NeonForge/issues/397
 
+            kubeContextExtension.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
+            kubeContextExtension.Save();
+
             controller.AddStep("strong password",
                 (node, stepDelay) =>
                 {
                     SetStrongPassword(node, TimeSpan.Zero);
                 });
 
-            controller.AddGlobalStep("passwords set", () =>
+            controller.AddGlobalStep("passwords set",
+                () =>
                 {
                     // This hidden step sets the SSH provisioning password to NULL to 
                     // indicate that the final password has been set for all of the nodes.
@@ -268,6 +272,14 @@ OPTIONS:
                 Program.Exit(1);
             }
 
+            // Persist the new strong password and indicate that setup is complete.
+
+            kubeContextExtension.SshPassword     = kubeContextExtension.SshStrongPassword;
+            kubeContextExtension.SshStrongPassword = null;
+            kubeContextExtension.SetupPending    = false;
+
+            kubeContextExtension.Save();
+
             // Write the operation end marker to all cluster node logs.
 
             cluster.LogLine(logEndMarker);
@@ -275,7 +287,6 @@ OPTIONS:
             // Update the kubecluster config.
 
             Console.WriteLine($"*** Connecting to [{kubeContext.Name}].");
-            kubeContextExtension.SetupPending = false;
             kubeConfig.SetContext(kubeContext.Name);
             Console.WriteLine();
         }
@@ -406,19 +417,19 @@ OPTIONS:
 
                     // Configure the APT proxy server settings early.
 
-                    node.Status = "run: setup-package-proxy.sh";
+                    node.Status = "setup: package-proxy";
                     node.SudoCommand("setup-package-proxy.sh");
 
                     // Perform basic node setup including changing the hostname.
 
                     UploadHostsFile(node);
 
-                    node.Status = "run: setup-node.sh";
+                    node.Status = "setup: node";
                     node.SudoCommand("setup-node.sh");
 
                     // Tune Linux for SSDs, if enabled.
 
-                    node.Status = "run: setup-ssd.sh";
+                    node.Status = "tune: disks";
                     node.SudoCommand("setup-ssd.sh");
                 });
         }
@@ -435,7 +446,7 @@ OPTIONS:
                     // Configure the APT package proxy on the masters
                     // and configure the proxy selector for all nodes.
 
-                    node.Status = "run: setup-package-proxy.sh";
+                    node.Status = "setup: package proxy";
                     node.SudoCommand("setup-package-proxy.sh");
 
                     // Upgrade Linux packages if requested.  We're doing this after
@@ -445,14 +456,14 @@ OPTIONS:
                     {
                         case OsUpgrade.Partial:
 
-                            node.Status = "package upgrade (partial)";
+                            node.Status = "upgrade: partial";
 
                             node.SudoCommand("safe-apt-get upgrade -yq");
                             break;
 
                         case OsUpgrade.Full:
 
-                            node.Status = "package upgrade (full)";
+                            node.Status = "upgrade: full";
 
                             node.SudoCommand("safe-apt-get dist-upgrade -yq");
                             break;
@@ -463,18 +474,18 @@ OPTIONS:
 
                     if (node.FileExists("/var/run/reboot-required"))
                     {
-                        node.Status = "reboot after update";
+                        node.Status = "restarting...";
                         node.Reboot();
                     }
 
                     // Setup NTP.
 
-                    node.Status = "run: setup-ntp.sh";
+                    node.Status = "setup: NTP";
                     node.SudoCommand("setup-ntp.sh");
 
                     // Setup Docker.
 
-                    node.Status = "setup docker";
+                    node.Status = "setup: docker";
 
                     var dockerRetry = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
@@ -802,7 +813,7 @@ chmod 666 /run/ssh-key*
 
                     var script =
 $@"
-echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshPassword}' | chpasswd
+echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshStrongPassword}' | chpasswd
 ";
                     var bundle = new CommandBundle("./set-strong-password.sh");
 
@@ -816,7 +827,7 @@ echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshPassword}' | c
                         Program.Exit(response.ExitCode);
                     }
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(kubeContextExtension.SshUsername, kubeContextExtension.SshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(kubeContextExtension.SshUsername, kubeContextExtension.SshStrongPassword));
                 });
         }
 
@@ -828,7 +839,7 @@ echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshPassword}' | c
             cluster.FirstMaster.InvokeIdempotentAction("setup/ssh-server-key",
                 () =>
                 {
-                    cluster.FirstMaster.Status = "generate server SSH key";
+                    cluster.FirstMaster.Status = "generate: server SSH key";
 
                     var configScript =
 @"
@@ -863,7 +874,7 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
                     cluster.FirstMaster.SudoCommand(bundle);
 
-                    cluster.FirstMaster.Status = "download server SSH key";
+                    cluster.FirstMaster.Status = "download: server SSH key";
 
                     kubeContextExtension.SshNodePrivateKey  = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
                     kubeContextExtension.SshNodePublicKey   = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
@@ -900,7 +911,7 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
 
-                    node.Status = "client SSH key";
+                    node.Status = "setup: client SSH key";
 
                     // Enable the public key by appending it to [$HOME/.ssh/authorized_keys],
                     // creating the file if necessary.  Note that we're allowing only a single
@@ -929,7 +940,7 @@ chmod 600 $HOME/.ssh/authorized_keys
 
                     // These steps are required for both password and public key authentication.
 
-                    // Upload the server key and edit the SSHD config to disable all host keys 
+                    // Upload the server key and edit the [sshd] config to disable all host keys 
                     // except for RSA.
 
                     var configScript =

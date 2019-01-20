@@ -253,6 +253,11 @@ namespace NeonCli
                     new Folder("Ubuntu-18.04",
                         folders: new List<Folder>()
                         {
+                            new Folder("bin",
+                                files: new List<File>()
+                                {
+                                    new File("safe-apt-get.sh", hasVariables: true)
+                                }),
                             new Folder("conf",
                                 files: new List<File>()
                                 {
@@ -272,15 +277,9 @@ namespace NeonCli
                                     new File("setup-ssd.sh", hasVariables: true),
                                     new File("setup-utility.sh", hasVariables: true),
                                 }),
-                            new Folder("tools",
-                                files: new List<File>()
-                                {
-                                    new File("safe-apt-get.sh", hasVariables: true)
-                                }),
                             new Folder("updates",
                                 files: new List<File>()
                                 {
-                                    new File("010297_010298.zip", hasVariables: false)
                                 })
                         })
                 });

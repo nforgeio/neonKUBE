@@ -61,9 +61,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Ubuntu-18.04\archive\setup-disk.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\Ubuntu-18.04\conf\cluster.conf.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -154,12 +151,13 @@
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-rm.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\tools\safe-apt-get.sh">
+    <None Update="Resources\Ubuntu-18.04\bin\safe-apt-get.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-18.04\updates\010297_010298.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\Ubuntu-18.04\updates\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
