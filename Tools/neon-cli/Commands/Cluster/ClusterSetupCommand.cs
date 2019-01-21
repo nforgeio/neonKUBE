@@ -453,7 +453,7 @@ OPTIONS:
 
                     // Perform basic node setup including changing the hostname.
 
-                    UploadHostsFile(node);
+                    UploadHostname(node);
 
                     node.Status = "setup: node";
                     node.SudoCommand("setup-node.sh");
@@ -551,15 +551,29 @@ OPTIONS:
         }
 
         /// <summary>
-        /// Generates and uploads the <b>/etc/hosts</b> file for a node.
+        /// Updates the node hostname and related configuration.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void UploadHostsFile(SshProxy<NodeDefinition> node)
+        private void UploadHostname(SshProxy<NodeDefinition> node)
         {
+            // Update the hostname.
+
+            node.SudoCommand($"hostnamectl set-hostname {node.Name}");
+
+            // We need to edit [/etc/cloud/cloud.cfg] to preserve the hostname change.
+
+            var cloudCfg = node.DownloadText("/etc/cloud/cloud.cfg");
+
+            cloudCfg = cloudCfg.Replace("preserve_hostname: false", "preserve_hostname: true");
+
+            node.UploadText("/etc/cloud/cloud.cfg", cloudCfg);
+
+            // Update the [/etc/hosts] file to resolve the new hostname.
+
             var sbHosts = new StringBuilder();
 
             var nodeAddress = node.PrivateAddress.ToString();
-            var separator = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
+            var separator   = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
 
             sbHosts.Append(
 $@"

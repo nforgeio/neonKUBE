@@ -61,17 +61,6 @@ startsetup node
 safe-apt-get update
 safe-apt-get install -yq nano sysstat dstat iotop iptraf apache2-utils daemon jq aptitude gdebi-core mmv ca-certificates
 
-# Configure the hostname.
-#
-# NOTE: This assumes that the hostname was originally configured 
-#       configured to be "ubuntu" as described in:
-#
-#       [Ubuntu-18.04 cluster Template.docx]
-
-hostname ${NEON_NODE_NAME}
-echo ${NEON_NODE_NAME} > /etc/hostname
-sed -i "s/ubuntu/${NEON_NODE_NAME}/g" /etc/hosts
-
 # All Neon servers will be configured for UTC time.
 
 timedatectl set-timezone UTC
