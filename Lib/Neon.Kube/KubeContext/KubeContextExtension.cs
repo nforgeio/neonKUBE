@@ -34,6 +34,7 @@ namespace Neon.Kube
     /// </summary>
     public class KubeContextExtension
     {
+        private object syncRoot = new object():
         private string path;
 
         /// <summary>
@@ -153,6 +154,14 @@ namespace Neon.Kube
         public string ClusterJoinCommand { get; set; }
 
         /// <summary>
+        /// The Kubernetes admin configuration file obtained from the first master at: <b>/etc/kubernetes/admin.conf</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "AdminConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "AdminConfig", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string AdminConfig { get; set; }
+
+        /// <summary>
         /// Sets the file path where the extension will be persisted.
         /// </summary>
         /// <param name="path">The target path.</param>
@@ -173,7 +182,10 @@ namespace Neon.Kube
         /// </summary>
         public void Save()
         {
-            File.WriteAllText(path, NeonHelper.YamlSerialize(this));
+            lock (syncRoot)
+            {
+                File.WriteAllText(path, NeonHelper.YamlSerialize(this));
+            }
         }
     }
 }

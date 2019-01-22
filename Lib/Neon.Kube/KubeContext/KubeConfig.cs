@@ -41,6 +41,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
+        private static object syncRoot = new object();
+
         /// <summary>
         /// Reads and returns the current KubeConfig.
         /// </summary>
@@ -412,19 +414,22 @@ namespace Neon.Kube
         /// </summary>
         public void Save()
         {
-            // Persist the KubeConfig.
-
-            var configPath = KubeHelper.KubeConfigPath;
-
-            File.WriteAllText(configPath, NeonHelper.YamlSerialize(this));
-
-            // Persist any extensions.
-
-            foreach (var context in Contexts.Where(c => c.Properties.Extension != null))
+            lock (syncRoot)
             {
-                var extensionPath = Path.Combine(KubeHelper.ClustersFolder, $"{context.Name}.context.yaml");
+                // Persist the KubeConfig.
 
-                File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Properties.Extension));
+                var configPath = KubeHelper.KubeConfigPath;
+
+                File.WriteAllText(configPath, NeonHelper.YamlSerialize(this));
+
+                // Persist any extensions.
+
+                foreach (var context in Contexts.Where(c => c.Properties.Extension != null))
+                {
+                    var extensionPath = Path.Combine(KubeHelper.ClustersFolder, $"{context.Name}.context.yaml");
+
+                    File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Properties.Extension));
+                }
             }
         }
     }
