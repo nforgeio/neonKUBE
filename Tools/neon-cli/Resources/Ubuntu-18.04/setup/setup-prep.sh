@@ -130,6 +130,29 @@ safe-apt-get update -yq
 safe-apt-get install -yq unzip
 
 #------------------------------------------------------------------------------
+# I've seen some situations after a reboot where the machine complains about
+# running out of entropy.  Apparently, modern CPUs have an instruction that
+# returns cryptographically random data, but these CPUs weren't available
+# until 2015 so our old HP SL 365 G10 XenServer machines won't support this.
+#
+# An reasonable alternative is [haveged]:
+#   
+#       https://wiki.archlinux.org/index.php/Haveged
+#       https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged
+#
+# This article warns about using this though:
+#
+#       https://lwn.net/Articles/525459/
+#
+# The basic problem is that headless servers generally have very poor entropy
+# sources because there's no mouse, keyboard, or active video card.  Outside
+# of the new CPU instruction, the only sources are the HDD and network drivers.
+# [haveged] works by timing running code at very high resolution and hoping for
+# execution time variations.  This looksa like it'll be better than nothing.
+
+safe-apt-get install -yq haveged
+
+#------------------------------------------------------------------------------
 # Clean some things up.
 
 echo "** Clean up" 1>&2
