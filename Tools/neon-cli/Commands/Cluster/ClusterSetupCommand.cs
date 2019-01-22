@@ -586,9 +586,6 @@ safe-apt-get update
                     node.Status = "install: kubelet";
                     node.SudoCommand($"safe-apt-get install -yq kubelet={kubeSetupInfo.UbuntuKubeletPackageVersion}");
 
-                    node.Status = "pull: images";
-                    node.SudoCommand("kubeadm config images pull");
-
                     node.Status = "hold: packages";
                     node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
                 });
@@ -609,6 +606,15 @@ safe-apt-get update
                     Thread.Sleep(stepDelay);
 
                     bootMaster.Status = "create: cluster";
+
+                    // Pull the Kubernetes images:
+
+                    bootMaster.InvokeIdempotentAction("setup/cluster-images",
+                        () =>
+                        {
+                            bootMaster.Status = "pull: Kubernetes images";
+                            bootMaster.SudoCommand("kubeadm config images pull");
+                        });
 
                     // $todo(jeff.lill):
                     //
@@ -644,10 +650,18 @@ safe-apt-get update
                         kubeContextExtension.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
                     }
 
-                    // Install the Helm client.
+                    // kubectl config:
 
-                    bootMaster.Status = "install: Helm client";
-                    bootMaster.SudoCommand("snap install helm --classic");
+                    var kubeConfigCopyScript =
+$@"#!/bin/bash
+mkdir -p /home/{KubeHelper.RootUser}/.kube
+sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
+sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
+";
+                    var kubeCtlInitBundle = new CommandBundle("./run.sh");
+
+                    kubeCtlInitBundle.AddFile("run.sh", kubeConfigCopyScript, isExecutable: true);
+                    bootMaster.SudoCommand(kubeCtlInitBundle);
 
                     // Download the Kubernetes configuration file because we'll need that for configuring other
                     // cluster masters.
@@ -658,6 +672,11 @@ safe-apt-get update
                     // Persist the cluster join command and admin config.
 
                     kubeContextExtension.Save();
+
+                    // Install the Helm client:
+
+                    bootMaster.Status = "install: Helm client";
+                    bootMaster.SudoCommand("snap install helm --classic");
                 });
         }
 
@@ -681,6 +700,13 @@ safe-apt-get update
                 {
                     Thread.Sleep(stepDelay);
 
+                    // Pull the Kubernetes images:
+
+                    node.Status = "pull: Kubernetes images";
+                    node.SudoCommand("kubeadm config images pull");
+
+                    // Join the cluster:
+
                     node.Status = "join: cluster";
                     node.SudoCommand(kubeContextExtension.ClusterJoinCommand);
 
@@ -688,10 +714,23 @@ safe-apt-get update
 
                     if (node.Metadata.IsMaster)
                     {
-                        // The other masters need the Kubernetes [admin.conf] file.
+                        // The other masters need the Kubernetes [admin.conf] file too.
 
                         node.Status = "upload: kubernetes admin config";
                         node.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.AdminConfig, permissions: "600");
+
+                        // kubectl config:
+
+                        var kubeConfigCopyScript =
+$@"#!/bin/bash
+mkdir -p /home/{KubeHelper.RootUser}/.kube
+sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
+sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
+";
+                        var kubeCtlInitBundle = new CommandBundle("./run.sh");
+
+                        kubeCtlInitBundle.AddFile("run.sh", kubeConfigCopyScript, isExecutable: true);
+                        node.SudoCommand(kubeCtlInitBundle);
 
                         // Install the Helm client.
 
@@ -710,12 +749,15 @@ safe-apt-get update
         {
             var master = cluster.FirstMaster;
 
+            // 
+
             // Install the Helm/Tiller service.  This will install the latest stable version.
 
             master.Status = "install: Helm/Tiller";
+            master.SudoCommand("kubectl apply -f install/kubernetes/helm/helm-service-account.yaml");
             master.SudoCommand("helm init --service-account tiller");
 
-            // Configure Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 2)
+            // Configure Helm and Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 2)
 
             var istioScript =
 $@"#!/bin/bash
@@ -733,9 +775,14 @@ cd istio
 chmod 330 /bin/*
 cp bin/* /usr/local/bin
 
+# Initialize Helm:
+
+# kubectl apply -f install/kubernetes/helm/helm-service-account.yaml
+# helm init --service-account tiller --wait
+
 # Bootstrap Istio CRDs:
 
-helm install install/kubernetes/helm/istio-init --name istio-init --namespace istio-system
+# helm install install/kubernetes/helm/istio-init --name istio-init --namespace istio-system
 
 # 
 
