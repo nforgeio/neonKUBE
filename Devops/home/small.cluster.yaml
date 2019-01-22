@@ -17,12 +17,6 @@ Nodes:
    master-0:
      Role: master
      PrivateAddress: 10.0.0.30
-   master-1:
-     Role: master
-     PrivateAddress: 10.0.0.31
-   master-2:
-     Role: master
-     PrivateAddress: 10.0.0.32
    worker-0:
      Role: worker
      PrivateAddress: 10.0.0.40

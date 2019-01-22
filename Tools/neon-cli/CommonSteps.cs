@@ -28,7 +28,8 @@ namespace NeonCli
         /// Verifies that the node has the correct operating system installed.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        public static void VerifyOS(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">Ignored.</param>
+        public static void VerifyOS(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.Status = "check: OS";
 
@@ -44,7 +45,8 @@ namespace NeonCli
         /// Customizes the OpenSSH configuration on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        public static void ConfigureOpenSSH(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelayed">Ignored.</param>
+        public static void ConfigureOpenSSH(SshProxy<NodeDefinition> node, TimeSpan stepDelayed)
         {
             // Upload the OpenSSH server configuration, restart OpenSSH and
             // then disconnect and wait for the OpenSSH to restart.
@@ -188,7 +190,7 @@ TCPKeepAlive yes
                         {
                             if (!line.Contains(KubeHostFolders.Bin))
                             {
-                                sb.AppendLine(line + $":{KubeHostFolders.Bin}");
+                                sb.AppendLine(line + $":/snap/bin:{KubeHostFolders.Bin}");
                             }
                             else
                             {
@@ -297,7 +299,7 @@ TCPKeepAlive yes
             //-----------------------------------------------------------------
             // Other configuration.
 
-            ConfigureOpenSSH(node);
+            ConfigureOpenSSH(node, TimeSpan.Zero);
             node.UploadConfigFiles(clusterDefinition, kubeSetupInfo);
             node.UploadResources(clusterDefinition, kubeSetupInfo);
 

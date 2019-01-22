@@ -37,7 +37,21 @@ namespace Neon.Kube
     /// </summary>
     public sealed class HeadendClient : IDisposable
     {
-        private const string latestSupportedVersion = "1.13.2";
+        private const string latestKubernetesVersion = "1.13.2";
+        private const string defaultDockerVersion    = "docker.ce-18.06.1";
+        private const string defaultIstioVersion     = "1.0.5";
+
+        private string[] supportedDockerVersions
+            = new string[]
+            {
+                defaultDockerVersion
+            };
+
+        private static string[] supportedIstioVersions
+            = new string[]
+            {
+                defaultIstioVersion
+            };
 
         private JsonClient                      jsonClient;
         private Dictionary<string, string>      ubuntuKubeAdmPackages;
@@ -109,17 +123,41 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            var kubeVersion = Version.Parse(latestSupportedVersion);
+            var kubeVersion = Version.Parse(latestKubernetesVersion);
 
             if (!clusterDefinition.Kubernetes.Version.Equals("latest", StringComparison.InvariantCultureIgnoreCase))
             {
                 kubeVersion = Version.Parse(clusterDefinition.Kubernetes.Version);
             }
-           
+
             // $todo(jeff.lill): Hardcoded
             // $todo(jeff.lill): Verify Docker/Kubernetes version compatibility.
 
-            return await Task.FromResult(
+            var dockerVersion = clusterDefinition.Docker.Version;
+
+            if (dockerVersion == "default")
+            {
+                dockerVersion = defaultDockerVersion;
+            }
+
+            if (supportedDockerVersions.SingleOrDefault(v => v == dockerVersion) == null)
+            {
+                throw new KubeException($"[{dockerVersion}] is not a supported Docker version.");
+            }
+
+            var istioVersion = clusterDefinition.Docker.Version;
+
+            if (istioVersion == "default")
+            {
+                istioVersion = defaultIstioVersion;
+            }
+
+            if (supportedIstioVersions.SingleOrDefault(v => v == istioVersion) == null)
+            {
+                throw new KubeException($"[{istioVersion}] is not a supported Istio version.");
+            }
+
+            var setupInfo = await Task.FromResult(
                 new KubeSetupInfo()
                 {
                     LinuxKubeCtlUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubectl",
@@ -130,11 +168,19 @@ namespace Neon.Kube
                     
                     WindowsKubeCtlUri           = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/windows/amd64/kubectl.exe",
 
-                    UbuntuDockerPackageUri      = "https://s3-us-west-2.amazonaws.com/neonforge/kube/docker.ce-18.06.1-ubuntu-bionic-stable-amd64.deb",
+                    UbuntuDockerPackageUri      = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{dockerVersion}-ubuntu-bionic-stable-amd64.deb",
                     UbuntuKubeAdmPackageVersion = ubuntuKubeAdmPackages[kubeVersion.ToString()],
                     UbuntuKubeCtlPackageVersion = ubuntuKubeCtlPackages[kubeVersion.ToString()],
                     UbuntuKubeletPackageVersion = ubuntuKubeletPackages[kubeVersion.ToString()],
+
+                    IstioLinuxUri               = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-{istioVersion}-linux.tar.gz"
                 });
+
+            setupInfo.Versions.Kubernetes = kubeVersion.ToString();
+            setupInfo.Versions.Docker     = dockerVersion;
+            setupInfo.Versions.Istio      = istioVersion;
+
+            return setupInfo;
         }
 
         /// <inheritdoc/>

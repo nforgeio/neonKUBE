@@ -50,3 +50,11 @@ apt-cache madison kubelet
 
 1. [haproxy](http://haproxy.org)
 2. .NET Core
+
+## Kubernetes Components
+
+1. **Helm:** We're currently using **snap** to install the latest version.
+
+2. *Istio:* Releases: https://github.com/istio/istio/releases
+
+  Upload releases to: https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-VERSION-linux.tar.gz and make public.

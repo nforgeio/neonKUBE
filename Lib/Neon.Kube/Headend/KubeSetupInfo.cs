@@ -41,6 +41,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Lists the installed component versions.
+        /// </summary>
+        [JsonProperty(PropertyName = "Versions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Versions", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public KubeSetupVersions Versions { get; set; } = new KubeSetupVersions();
+
+        /// <summary>
         /// The <b>kubectl</b> binary download URI for Windows.
         /// </summary>
         [JsonProperty(PropertyName = "OsxKubeAdminUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -105,11 +113,19 @@ namespace Neon.Kube
         public string UbuntuKubeletPackageVersion { get; set; }
 
         /// <summary>
-        /// Returns the Docker package for Ubuntu.
+        /// The Docker package for Ubuntu.
         /// </summary>
         [JsonProperty(PropertyName = "UbuntuDockerPackageUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "UbuntuDockerPackageUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string UbuntuDockerPackageUri { get; set; }
+
+        /// <summary>
+        /// The Istio binary URL for Linux.
+        /// </summary>
+        [JsonProperty(PropertyName = "IstioLinuxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "IstioLinuxUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string IstioLinuxUri { get; set; }
     }
 }

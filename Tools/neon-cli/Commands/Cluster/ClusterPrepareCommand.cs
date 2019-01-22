@@ -382,12 +382,7 @@ Server Requirements:
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             hostingManager.AddPostProvisionSteps(controller);
-            controller.AddStep("verify OS",
-                (node, stepDelay) =>
-                {
-                    Thread.Sleep(stepDelay);
-                    CommonSteps.VerifyOS(node);
-                });
+            controller.AddStep("verify OS", CommonSteps.VerifyOS);
 
             controller.AddStep("prepare", 
                 (node, stepDelay) =>

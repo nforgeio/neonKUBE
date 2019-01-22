@@ -514,7 +514,7 @@ namespace Neon.Kube
         /// multiple directories as required.
         /// </note>
         /// </remarks>
-        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{KubeHostFolders.Bin}:{KubeHostFolders.Setup}";
+        public string RemotePath { get; set; } = $"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:{KubeHostFolders.Bin}:{KubeHostFolders.Setup}";
 
         /// <summary>
         /// Returns the username used to log into the remote node.

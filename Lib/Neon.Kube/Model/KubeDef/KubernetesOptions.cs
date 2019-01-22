@@ -51,6 +51,15 @@ namespace Neon.Kube
         public string Version { get; set; } = defaultVersion;
 
         /// <summary>
+        /// The version of Istio to be installed.  This defaults to <b>default</b> which
+        /// will install a reasonable version for the Kubernetes release being inbstalled.
+        /// </summary>
+        [JsonProperty(PropertyName = "IstioVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "IstioVersion", ApplyNamingConventions = false)]
+        [DefaultValue("default")]
+        public string IstioVersion { get; set; } = "default";
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -75,6 +84,11 @@ namespace Neon.Kube
                 {
                     throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is less than the supported version [{minVersion}].");
                 }
+            }
+
+            if (IstioVersion != "default" && !System.Version.TryParse(IstioVersion, out var vIstio))
+            {
+                throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(IstioVersion)}={IstioVersion}] is invalid].");
             }
         }
 

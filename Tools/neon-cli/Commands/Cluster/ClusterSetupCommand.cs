@@ -145,22 +145,9 @@ OPTIONS:
                 });
 
             controller.AddGlobalStep("download binaries", () => DownloadBinaries());
-
             controller.AddWaitUntilOnlineStep("connect");
-
-            controller.AddStep("ssh client cert",
-                (node, stepDelay) =>
-                {
-                    GenerateClientSshKey(node, stepDelay);
-                },
-                node => node == cluster.FirstMaster);
-
-            controller.AddStep("verify OS",
-                (node, stepDelay) =>
-                {
-                    Thread.Sleep(stepDelay);
-                    CommonSteps.VerifyOS(node);
-                });
+            controller.AddStep("ssh client cert", GenerateClientSshKey, node => node == cluster.FirstMaster);
+            controller.AddStep("verify OS", CommonSteps.VerifyOS);
 
             // Write the operation begin marker to all cluster node logs.
 
@@ -170,7 +157,7 @@ OPTIONS:
             // We need to do this so the the package cache will be running
             // when the remaining nodes are configured.
 
-            controller.AddStep("setup boot master",
+            controller.AddStep("initialize boot master",
                 (node, stepDelay) =>
                 {
                     SetupCommon(node, stepDelay);
@@ -184,7 +171,7 @@ OPTIONS:
 
             if (cluster.Definition.Nodes.Count() > 1)
             {
-                controller.AddStep("setup other nodes",
+                controller.AddStep("initialize other nodes",
                     (node, stepDelay) =>
                     {
                         SetupCommon(node, stepDelay);
@@ -198,25 +185,10 @@ OPTIONS:
             //-----------------------------------------------------------------
             // Kubernetes configuration.
 
-            controller.AddStep("install kubernetes",
-                (node, stepDelay) =>
-                {
-                    InstallKubernetes(node, stepDelay);
-                });
-
-            controller.AddStep("create cluster",
-                (node, stepDelay) =>
-                {
-                    CreateCluster(node, stepDelay);
-                },
-                node => node == cluster.FirstMaster);
-
-            controller.AddStep("join cluster",
-                (node, stepDelay) =>
-                {
-                    JoinCluster(node, stepDelay);
-                },
-                node => node != cluster.FirstMaster);
+            controller.AddStep("install Kubernetes", InstallKubernetes);
+            controller.AddStep("create cluster", CreateCluster, node => node == cluster.FirstMaster);
+            controller.AddStep("join cluster", JoinCluster, node => node != cluster.FirstMaster);
+            controller.AddGlobalStep("configure cluster", ConfigureCluster);
 
             //-----------------------------------------------------------------
             // Verify the cluster.
@@ -224,7 +196,6 @@ OPTIONS:
             controller.AddStep("check masters",
                 (node, stepDelay) =>
                 {
-                    Thread.Sleep(stepDelay);
                     HiveDiagnostics.CheckMaster(node, cluster.Definition);
                 },
                 node => node.Metadata.IsMaster);
@@ -232,7 +203,6 @@ OPTIONS:
             controller.AddStep("check workers",
                 (node, stepDelay) =>
                 {
-                    Thread.Sleep(stepDelay);
                     HiveDiagnostics.CheckWorker(node, cluster.Definition);
                 },
                 node => node.Metadata.IsWorker);
@@ -285,11 +255,7 @@ OPTIONS:
             // manually login with the original credentials to diagnose
             // setup issues.
 
-            controller.AddStep("ssh secured",
-                (node, stepDelay) =>
-                {
-                    ConfigureSsh(node, stepDelay);
-                });
+            controller.AddStep("ssh secured", ConfigureSsh);
 
             // Start setup.
 
@@ -448,14 +414,14 @@ OPTIONS:
 
                     // Configure the APT proxy server settings early.
 
-                    node.Status = "setup: package-proxy";
+                    node.Status = "setup: package proxy";
                     node.SudoCommand("setup-package-proxy.sh");
 
                     // Perform basic node setup including changing the hostname.
 
                     UploadHostname(node);
 
-                    node.Status = "setup: node";
+                    node.Status = "initialize: node";
                     node.SudoCommand("setup-node.sh");
 
                     // Tune Linux for SSDs, if enabled.
@@ -598,7 +564,7 @@ ff02::2         ip6-allrouters
                 {
                     Thread.Sleep(stepDelay);
 
-                    node.Status = "configure: package repo";
+                    node.Status = "configure: kubernetes package repo";
 
                     var bundle = new CommandBundle("./run.sh");
 
@@ -633,62 +599,66 @@ safe-apt-get update
         /// captures the master and worker cluster tokens required to join 
         /// additional nodes to the cluster.
         /// </summary>
-        /// <param name="bootstrapMaster">The target bootstrap master node.</param>
+        /// <param name="bootMaster">The target bootstrap master node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void CreateCluster(SshProxy<NodeDefinition> bootstrapMaster, TimeSpan stepDelay)
+        private void CreateCluster(SshProxy<NodeDefinition> bootMaster, TimeSpan stepDelay)
         {
-            if (kubeContextExtension.ClusterJoinCommand != null)
-            {
-                return; // Cluster has already been initialized.
-            }
+            bootMaster.InvokeIdempotentAction("setup/cluster",
+                () =>
+                {
+                    Thread.Sleep(stepDelay);
 
-            Thread.Sleep(stepDelay);
+                    bootMaster.Status = "create: cluster";
 
-            bootstrapMaster.Status = "create: cluster";
+                    // $todo(jeff.lill):
+                    //
+                    // By default, [kubeadm init] returns a cluster join token that's good only for 24 hours.
+                    // We're using [--token-ttl 0] to obtain a token with unlimited.  This will make it easier
+                    // to join nodes to the cluster after creation.  This might could end up being a security 
+                    // issue though.  It is possible to obtain a new join token from a master node, so perhaps
+                    // we'll use that in the future and go back to short-lived initial tokens.
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/424
 
-            // $todo(jeff.lill):
-            //
-            // By default, [kubeadm init] returns a cluster join token that's good only for 24 hours.
-            // We're using [--token-ttl 0] to obtain a token with unlimited.  This will make it easier
-            // to join nodes to the cluster after creation.  This might could end up being a security 
-            // issue though.  It is possible to obtain a new join token from a master node, so perhaps
-            // we'll use that in the future and go back to short-lived initial tokens.
-            //
-            //      https://github.com/jefflill/NeonForge/issues/424
+                    var response = bootMaster.SudoCommand($"kubeadm init --pod-network-cidr {cluster.Definition.Network.PodSubnet} --token-ttl 0");
 
-            var response = bootstrapMaster.SudoCommand($"kubeadm init --pod-network-cidr {cluster.Definition.Network.PodSubnet} --token-ttl 0");
+                    // Extract the cluster join command from the response.  We'll need this to join
+                    // other nodes to the cluster.
 
-            // Extract the cluster join command from the response.  We'll need this to join
-            // other nodes to the cluster.
+                    var output = response.OutputText;
+                    var pStart = output.IndexOf("kubeadm join");
 
-            var output = response.OutputText;
-            var pStart = output.IndexOf("kubeadm join");
+                    if (pStart == -1)
+                    {
+                        throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadmin init ...] response.");
+                    }
 
-            if (pStart == -1)
-            {
-                throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadmin init ...] response.");
-            }
+                    var pEnd = output.IndexOf('\n', pStart);
 
-            var pEnd = output.IndexOf('\n', pStart);
+                    if (pEnd == -1)
+                    {
+                        kubeContextExtension.ClusterJoinCommand = output.Substring(pStart).Trim();
+                    }
+                    else
+                    {
+                        kubeContextExtension.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
+                    }
 
-            if (pEnd == -1)
-            {
-                kubeContextExtension.ClusterJoinCommand = output.Substring(pStart).Trim();
-            }
-            else
-            {
-                kubeContextExtension.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart ).Trim();
-            }
+                    // Install the Helm client.
 
-            // Download the Kubernetes configuration file because we'll need that for configuring other
-            // cluster masters.
+                    bootMaster.Status = "install: Helm client";
+                    bootMaster.SudoCommand("snap install helm --classic");
 
-            bootstrapMaster.Status = "download: kubernetes admin config";
-            kubeContextExtension.AdminConfig = bootstrapMaster.DownloadText("/etc/kubernetes/admin.conf");
+                    // Download the Kubernetes configuration file because we'll need that for configuring other
+                    // cluster masters.
 
-            // Persist the cluster join command and admin config.
+                    bootMaster.Status = "download: kubernetes admin config";
+                    kubeContextExtension.AdminConfig = bootMaster.DownloadText("/etc/kubernetes/admin.conf");
 
-            kubeContextExtension.Save();
+                    // Persist the cluster join command and admin config.
+
+                    kubeContextExtension.Save();
+                });
         }
 
         /// <summary>
@@ -706,7 +676,7 @@ safe-apt-get update
                 return;
             }
 
-            node.InvokeIdempotentAction("setup/swarm-join",
+            node.InvokeIdempotentAction("setup/cluster",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -714,16 +684,66 @@ safe-apt-get update
                     node.Status = "join: cluster";
                     node.SudoCommand(kubeContextExtension.ClusterJoinCommand);
 
-                    // The other masters need the Kubernetes [admin.conf] file.
+                    // Complete master node configuration.
 
                     if (node.Metadata.IsMaster)
                     {
+                        // The other masters need the Kubernetes [admin.conf] file.
+
                         node.Status = "upload: kubernetes admin config";
                         node.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.AdminConfig, permissions: "600");
+
+                        // Install the Helm client.
+
+                        node.Status = "install: Helm client";
+                        node.SudoCommand("snap install helm --classic");
                     }
                 });
 
             node.Status = "joined";
+        }
+
+        /// <summary>
+        /// Configures the Kubernetes cluster,
+        /// </summary>
+        private void ConfigureCluster()
+        {
+            var master = cluster.FirstMaster;
+
+            // Install the Helm/Tiller service.  This will install the latest stable version.
+
+            master.Status = "install: Helm/Tiller";
+            master.SudoCommand("helm init --service-account tiller");
+
+            // Configure Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 2)
+
+            var istioScript =
+$@"#!/bin/bash
+
+# Download and extract the Istio binaries:
+
+cd /tmp
+curl {Program.CurlOptions} {kubeSetupInfo.IstioLinuxUri} > istio.tar.gz
+tar xvf /tmp/istio.tar.gz
+mv istio-{kubeSetupInfo.Versions.Istio} istio
+cd istio
+
+# Copy the tools:
+
+chmod 330 /bin/*
+cp bin/* /usr/local/bin
+
+# Bootstrap Istio CRDs:
+
+helm install install/kubernetes/helm/istio-init --name istio-init --namespace istio-system
+
+# 
+
+# Cleanup:
+
+# rm istio.tar.gz
+# rm -r istio
+";
         }
 
         /// <summary>
@@ -966,7 +986,7 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
         /// Configures SSH on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        /// <param name="stepDelay">Ignored.</param>
         private void ConfigureSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             // Configure the SSH credentials on all cluster nodes.
@@ -974,8 +994,6 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
             node.InvokeIdempotentAction("setup/ssh",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
-
                     CommandBundle bundle;
 
                     // Here's some information explaining what how I'm doing this:
