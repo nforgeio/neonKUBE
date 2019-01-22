@@ -646,9 +646,23 @@ safe-apt-get update
 
             bootstrapMaster.Status = "create: cluster";
 
+            // $todo(jeff.lill):
+            //
+            // By default, [kubeadm init] returns a cluster join token that's good only for 24 hours.
+            // We're using [--token-ttl 0] to obtain a token with unlimited.  This will make it easier
+            // to join nodes to the cluster after creation.  This might could end up being a security 
+            // issue though.  It is possible to obtain a new join token from a master node, so perhaps
+            // we'll use that in the future and go back to short-lived initial tokens.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/424
+
             var response = bootstrapMaster.SudoCommand($"kubeadm init --pod-network-cidr {cluster.Definition.Network.PodSubnet} --token-ttl 0");
-            var output   = response.OutputText;
-            var pStart   = output.IndexOf("kubeadm join");
+
+            // Extract the cluster join command from the response.  We'll need this to join
+            // other nodes to the cluster.
+
+            var output = response.OutputText;
+            var pStart = output.IndexOf("kubeadm join");
 
             if (pStart == -1)
             {
@@ -666,7 +680,13 @@ safe-apt-get update
                 kubeContextExtension.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart ).Trim();
             }
 
-            // Persist the join command context extension.
+            // Download the Kubernetes configuration file because we'll need that for configuring other
+            // cluster masters.
+
+            bootstrapMaster.Status = "download: kubernetes admin config";
+            kubeContextExtension.AdminConfig = bootstrapMaster.DownloadText("/etc/kubernetes/admin.conf");
+
+            // Persist the cluster join command and admin config.
 
             kubeContextExtension.Save();
         }
@@ -692,8 +712,15 @@ safe-apt-get update
                     Thread.Sleep(stepDelay);
 
                     node.Status = "join: cluster";
+                    node.SudoCommand(kubeContextExtension.ClusterJoinCommand);
 
-                    // $todo(jeff.lill): Implement this.
+                    // The other masters need the Kubernetes [admin.conf] file.
+
+                    if (node.Metadata.IsMaster)
+                    {
+                        node.Status = "upload: kubernetes admin config";
+                        node.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.AdminConfig, permissions: "600");
+                    }
                 });
 
             node.Status = "joined";

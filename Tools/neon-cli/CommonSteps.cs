@@ -241,6 +241,13 @@ TCPKeepAlive yes
             sb.AppendLine($"NEON_STATE_FOLDER={KubeHostFolders.State}");
             sb.AppendLine($"NEON_TMPFS_FOLDER={KubeHostFolders.Tmpfs}");
 
+            // Kubernetes related variables for masters.
+
+            if (node.Metadata.IsMaster)
+            {
+                sb.AppendLine($"KUBECONFIG=/etc/kubernetes/admin.conf");
+            }
+
             // Upload the new environment to the server.
 
             node.UploadText("/etc/environment", sb.ToString(), tabStop: 4);

@@ -34,7 +34,7 @@ namespace Neon.Kube
     /// </summary>
     public class KubeContextExtension
     {
-        private object syncRoot = new object():
+        private object syncRoot = new object();
         private string path;
 
         /// <summary>
