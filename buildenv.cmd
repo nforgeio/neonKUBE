@@ -59,16 +59,17 @@ REM smart enough to only add directories that actually exist.
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%\OpenSSL"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files\PuTTY"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\PuTTY"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\WinSCP"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files\7-Zip"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\7-Zip"
+%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\7-Zip"
+%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\7-Zip"
+%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\PuTTY"
+%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\PuTTY"
+%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\WinSCP"
+%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\WinSCP"
 
 REM Configure the neonKUBE program folder and add it to the PATH.
 
-if not exist "C:\Program Files\neonKUBE" mkdir "C:\Program Files\neonKUBE"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files\neonKUBE"
+if not exist "%ProgramFiles%\neonKUBE" mkdir "%ProgramFiles%\neonKUBE"
+%NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\neonKUBE"
 
 :done
 pause

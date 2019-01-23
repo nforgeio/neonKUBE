@@ -30,8 +30,9 @@ namespace Neon.Kube
     /// </summary>
     public class KubernetesOptions
     {
-        private const string minVersion     = "1.13.0";
-        private const string defaultVersion = "1.13.2";
+        private const string minVersion              = "1.13.0";
+        private const string defaultVersion          = "default";
+        private const string defaultDashboardVersion = "default";
 
         /// <summary>
         /// Default constructor.
@@ -41,7 +42,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The version of Kubernetes to be installed.  This defaults to <b>latest</b> which
+        /// The version of Kubernetes to be installed.  This defaults to <b>default</b> which
         /// will install the latest tested version of Kubernetes.  The minimum supported
         /// version is <b>1.13.0</b>.
         /// </summary>
@@ -49,6 +50,15 @@ namespace Neon.Kube
         [YamlMember(Alias = "Version", ApplyNamingConventions = false)]
         [DefaultValue(defaultVersion)]
         public string Version { get; set; } = defaultVersion;
+
+        /// <summary>
+        /// The version of Kubernetes dashboard to be installed.  This defaults to <b>default</b> which
+        /// will install the latest tested version of Kubernetes.
+        /// </summary>
+        [JsonProperty(PropertyName = "DashboardVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "DashboardVersion", ApplyNamingConventions = false)]
+        [DefaultValue(defaultVersion)]
+        public string DashboardVersion { get; set; } = defaultDashboardVersion;
 
         /// <summary>
         /// The version of Istio to be installed.  This defaults to <b>default</b> which
@@ -73,16 +83,24 @@ namespace Neon.Kube
             Version = Version ?? defaultVersion;
             Version = Version.ToLowerInvariant();
 
-            if (Version != "latest")
+            if (Version != defaultVersion)
             {
-                if (!System.Version.TryParse(Version, out var v))
+                if (!System.Version.TryParse(Version, out var vKubernetes))
                 {
                     throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is not a valid Kubernetes version.");
                 }
 
-                if (v < System.Version.Parse(minVersion))
+                if (vKubernetes < System.Version.Parse(minVersion))
                 {
                     throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(Version)}={Version}] is less than the supported version [{minVersion}].");
+                }
+            }
+
+            if (DashboardVersion != defaultDashboardVersion)
+            {
+                if (!System.Version.TryParse(DashboardVersion, out var vDashboard))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(DashboardVersion)}={DashboardVersion}] is not a valid version number.");
                 }
             }
 

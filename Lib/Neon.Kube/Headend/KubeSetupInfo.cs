@@ -127,5 +127,13 @@ namespace Neon.Kube
         [YamlMember(Alias = "IstioLinuxUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string IstioLinuxUri { get; set; }
+
+        /// <summary>
+        /// The Kubernetes Dashboard resource configuration URI.
+        /// </summary>
+        [JsonProperty(PropertyName = "KubeDashboardUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "KubeDashboardUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string KubeDashboardUri { get; set; }
     }
 }

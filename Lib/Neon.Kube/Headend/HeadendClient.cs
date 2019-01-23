@@ -37,9 +37,10 @@ namespace Neon.Kube
     /// </summary>
     public sealed class HeadendClient : IDisposable
     {
-        private const string latestKubernetesVersion = "1.13.2";
-        private const string defaultDockerVersion    = "docker.ce-18.06.1";
-        private const string defaultIstioVersion     = "1.1.0-snapshot.3";
+        private const string defaultKubeVersion          = "1.13.2";
+        private const string defaultKubeDashboardVersion = "1.10.1";
+        private const string defaultDockerVersion        = "docker.ce-18.06.1";
+        private const string defaultIstioVersion         = "1.1.0-snapshot.3";
 
         private string[] supportedDockerVersions
             = new string[]
@@ -123,11 +124,18 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            var kubeVersion = Version.Parse(latestKubernetesVersion);
+            var kubeVersion = Version.Parse(defaultKubeVersion);
 
-            if (!clusterDefinition.Kubernetes.Version.Equals("latest", StringComparison.InvariantCultureIgnoreCase))
+            if (!clusterDefinition.Kubernetes.Version.Equals("default", StringComparison.InvariantCultureIgnoreCase))
             {
                 kubeVersion = Version.Parse(clusterDefinition.Kubernetes.Version);
+            }
+
+            var kubeDashboardVersion = Version.Parse(defaultKubeDashboardVersion);
+
+            if (!clusterDefinition.Kubernetes.DashboardVersion.Equals("default", StringComparison.InvariantCultureIgnoreCase))
+            {
+                kubeDashboardVersion = Version.Parse(clusterDefinition.Kubernetes.DashboardVersion);
             }
 
             // $todo(jeff.lill): Hardcoded
@@ -173,12 +181,14 @@ namespace Neon.Kube
                     UbuntuKubeCtlPackageVersion = ubuntuKubeCtlPackages[kubeVersion.ToString()],
                     UbuntuKubeletPackageVersion = ubuntuKubeletPackages[kubeVersion.ToString()],
 
-                    IstioLinuxUri               = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-{istioVersion}-linux.tar.gz"
+                    IstioLinuxUri               = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-{istioVersion}-linux.tar.gz",
+                    KubeDashboardUri            = $"https://raw.githubusercontent.com/kubernetes/dashboard/v{kubeDashboardVersion}/src/deploy/recommended/kubernetes-dashboard.yaml",
                 });
 
-            setupInfo.Versions.Kubernetes = kubeVersion.ToString();
-            setupInfo.Versions.Docker     = dockerVersion;
-            setupInfo.Versions.Istio      = istioVersion;
+            setupInfo.Versions.Kube          = kubeVersion.ToString();
+            setupInfo.Versions.KubeDashboard = kubeDashboardVersion.ToString();
+            setupInfo.Versions.Docker        = dockerVersion;
+            setupInfo.Versions.Istio         = istioVersion;
 
             return setupInfo;
         }

@@ -826,6 +826,11 @@ kubectl apply -f /tmp/istio.yaml
 # rm istio.yaml
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript));
+
+            // Install the Kubernetes dashboard:
+
+            master.Status = "install: Kubernetes dashboard";
+            master.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
         }
 
         /// <summary>
