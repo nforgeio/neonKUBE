@@ -52,10 +52,20 @@ apt-cache madison kubelet
 2. [.NET Core](https://github.com/dotnet/core/releases) - current: **2.1**
 3. [golang](https://golang.org/doc/devel/release.html) - current: **1.9.4**
 
+# Hyper-V and XenServer OS Images
+
+**Ubuntu 18.04:** [releases](http://releases.ubuntu.com/18.04/) - current **18.04.1**
+
+Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
+
 ## Kubernetes Components
 
-1. **Helm:** We're currently using **snap** to install the latest version.
+1. **Kubernetes:** [releases](https://github.com/kubernetes/kubernetes/releases) - current: **1.13.2**
 
-2. *Istio:* Releases: https://github.com/istio/istio/releases - current: **1.1.0-snapshot.3**
+2. **Kubernetes Dashboard:** [releases](https://github.com/kubernetes/dashboard/releases) - current **1.10.1**
 
-  Upload releases to: https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-VERSION-linux.tar.gz and make public.
+3. **Helm:** We're currently using **snap** to install the latest version.
+
+4. *Istio:* [releases](https://github.com/istio/istio/releases) - current: **1.1.0-snapshot.3**
+
+  Upload releases to: https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-VERSION-linux.tar.gz and **MAKE PUBLIC**.
