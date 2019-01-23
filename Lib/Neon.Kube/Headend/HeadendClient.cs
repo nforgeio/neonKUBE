@@ -39,7 +39,7 @@ namespace Neon.Kube
     {
         private const string latestKubernetesVersion = "1.13.2";
         private const string defaultDockerVersion    = "docker.ce-18.06.1";
-        private const string defaultIstioVersion     = "1.0.5";
+        private const string defaultIstioVersion     = "1.1.0-snapshot.3";
 
         private string[] supportedDockerVersions
             = new string[]

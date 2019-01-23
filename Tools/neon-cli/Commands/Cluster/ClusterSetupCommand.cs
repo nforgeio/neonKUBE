@@ -603,80 +603,95 @@ safe-apt-get update
             bootMaster.InvokeIdempotentAction("setup/cluster",
                 () =>
                 {
-                    Thread.Sleep(stepDelay);
+                Thread.Sleep(stepDelay);
 
-                    bootMaster.Status = "create: cluster";
+                bootMaster.Status = "create: cluster";
 
-                    // Pull the Kubernetes images:
+                // Pull the Kubernetes images:
 
-                    bootMaster.InvokeIdempotentAction("setup/cluster-images",
-                        () =>
+                bootMaster.InvokeIdempotentAction("setup/cluster-images",
+                    () =>
+                    {
+                        bootMaster.Status = "pull: Kubernetes images";
+                        bootMaster.SudoCommand("kubeadm config images pull");
+                    });
+
+                bootMaster.InvokeIdempotentAction("setup/cluster-init",
+                    () =>
+                    {
+                            // $todo(jeff.lill):
+                            //
+                            // By default, [kubeadm init] returns a cluster join token that's good only for 24 hours.
+                            // We're using [--token-ttl 0] to obtain a token with unlimited.  This will make it easier
+                            // to join nodes to the cluster after creation.  This might could end up being a security 
+                            // issue though.  It is possible to obtain a new join token from a master node, so perhaps
+                            // we'll use that in the future and go back to short-lived initial tokens.
+                            //
+                            //      https://github.com/jefflill/NeonForge/issues/424
+
+                            var response = bootMaster.SudoCommand($"kubeadm init --pod-network-cidr {cluster.Definition.Network.PodSubnet} --token-ttl 0");
+
+                            // Extract the cluster join command from the response.  We'll need this to join
+                            // other nodes to the cluster.
+
+                            var output = response.OutputText;
+                        var pStart = output.IndexOf("kubeadm join");
+
+                        if (pStart == -1)
                         {
-                            bootMaster.Status = "pull: Kubernetes images";
-                            bootMaster.SudoCommand("kubeadm config images pull");
-                        });
+                            throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadmin init ...] response.");
+                        }
 
-                    // $todo(jeff.lill):
-                    //
-                    // By default, [kubeadm init] returns a cluster join token that's good only for 24 hours.
-                    // We're using [--token-ttl 0] to obtain a token with unlimited.  This will make it easier
-                    // to join nodes to the cluster after creation.  This might could end up being a security 
-                    // issue though.  It is possible to obtain a new join token from a master node, so perhaps
-                    // we'll use that in the future and go back to short-lived initial tokens.
-                    //
-                    //      https://github.com/jefflill/NeonForge/issues/424
+                        var pEnd = output.IndexOf('\n', pStart);
 
-                    var response = bootMaster.SudoCommand($"kubeadm init --pod-network-cidr {cluster.Definition.Network.PodSubnet} --token-ttl 0");
-
-                    // Extract the cluster join command from the response.  We'll need this to join
-                    // other nodes to the cluster.
-
-                    var output = response.OutputText;
-                    var pStart = output.IndexOf("kubeadm join");
-
-                    if (pStart == -1)
-                    {
-                        throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadmin init ...] response.");
-                    }
-
-                    var pEnd = output.IndexOf('\n', pStart);
-
-                    if (pEnd == -1)
-                    {
-                        kubeContextExtension.ClusterJoinCommand = output.Substring(pStart).Trim();
-                    }
-                    else
-                    {
-                        kubeContextExtension.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
-                    }
+                        if (pEnd == -1)
+                        {
+                            kubeContextExtension.ClusterJoinCommand = output.Substring(pStart).Trim();
+                        }
+                        else
+                        {
+                            kubeContextExtension.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
+                        }
+                    });
 
                     // kubectl config:
 
-                    var kubeConfigCopyScript =
+                    bootMaster.InvokeIdempotentAction("setup/cluster-kubectl",
+                        () =>
+                            {
+                                var kubeConfigCopyScript =
 $@"#!/bin/bash
 mkdir -p /home/{KubeHelper.RootUser}/.kube
 sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
 sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
 ";
-                    var kubeCtlInitBundle = new CommandBundle("./run.sh");
+                                var kubeCtlInitBundle = new CommandBundle("./run.sh");
 
-                    kubeCtlInitBundle.AddFile("run.sh", kubeConfigCopyScript, isExecutable: true);
-                    bootMaster.SudoCommand(kubeCtlInitBundle);
+                                kubeCtlInitBundle.AddFile("run.sh", kubeConfigCopyScript, isExecutable: true);
+                                bootMaster.SudoCommand(kubeCtlInitBundle);
+                            });
 
-                    // Download the Kubernetes configuration file because we'll need that for configuring other
-                    // cluster masters.
+                    // Download the Kubernetes configuration file (if we don't already have it) because 
+                    // we'll need that for configuring other cluster masters.
 
-                    bootMaster.Status = "download: kubernetes admin config";
-                    kubeContextExtension.AdminConfig = bootMaster.DownloadText("/etc/kubernetes/admin.conf");
+                    if (kubeContextExtension.AdminConfig == null)
+                    {
+                        bootMaster.Status = "download: kubernetes admin config";
+                        kubeContextExtension.AdminConfig = bootMaster.DownloadText("/etc/kubernetes/admin.conf");
+                    
+                        // Persist the cluster join command and admin config.
 
-                    // Persist the cluster join command and admin config.
-
-                    kubeContextExtension.Save();
+                        kubeContextExtension.Save();
+                    }
 
                     // Install the Helm client:
 
-                    bootMaster.Status = "install: Helm client";
-                    bootMaster.SudoCommand("snap install helm --classic");
+                    bootMaster.InvokeIdempotentAction("setup/cluster-helm-client",
+                        () =>
+                        {
+                            bootMaster.Status = "install: Helm client";
+                            bootMaster.SudoCommand("snap install helm --classic");
+                        });
                 });
         }
 
@@ -700,42 +715,56 @@ sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUse
                 {
                     Thread.Sleep(stepDelay);
 
-                    // Pull the Kubernetes images:
-
-                    node.Status = "pull: Kubernetes images";
-                    node.SudoCommand("kubeadm config images pull");
-
                     // Join the cluster:
 
-                    node.Status = "join: cluster";
-                    node.SudoCommand(kubeContextExtension.ClusterJoinCommand);
+                    node.InvokeIdempotentAction("setup/cluster-join",
+                        () =>
+                        {
+                            node.Status = "join: cluster";
+                            node.SudoCommand(kubeContextExtension.ClusterJoinCommand);
+                        });
 
                     // Complete master node configuration.
 
                     if (node.Metadata.IsMaster)
                     {
-                        // The other masters need the Kubernetes [admin.conf] file too.
+                        node.InvokeIdempotentAction("setup/cluster-kubectl",
+                            () =>
+                            {
+                                // Pull the Kubernetes images:
 
-                        node.Status = "upload: kubernetes admin config";
-                        node.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.AdminConfig, permissions: "600");
+                                node.InvokeIdempotentAction("setup/cluster-images",
+                                    () =>
+                                    {
+                                        node.Status = "pull: Kubernetes images";
+                                        node.SudoCommand("kubeadm config images pull");
+                                    });
 
-                        // kubectl config:
+                                // The other masters need the Kubernetes [admin.conf] file too.
 
-                        var kubeConfigCopyScript =
+                                node.Status = "upload: kubernetes admin config";
+                                node.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.AdminConfig, permissions: "600");
+
+                                var kubeConfigCopyScript =
 $@"#!/bin/bash
 mkdir -p /home/{KubeHelper.RootUser}/.kube
 sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
 sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
 ";
-                        var kubeCtlInitBundle = new CommandBundle("./run.sh");
+                                var kubeCtlInitBundle = new CommandBundle("./run.sh");
 
-                        kubeCtlInitBundle.AddFile("run.sh", kubeConfigCopyScript, isExecutable: true);
-                        node.SudoCommand(kubeCtlInitBundle);
+                                kubeCtlInitBundle.AddFile("run.sh", kubeConfigCopyScript, isExecutable: true);
+                                node.SudoCommand(kubeCtlInitBundle);
+                            });
 
                         // Install the Helm client.
 
-                        node.Status = "install: Helm client";
-                        node.SudoCommand("snap install helm --classic");
+                        node.InvokeIdempotentAction("setup/cluster-helm-client",
+                            () =>
+                            {
+                                node.Status = "install: Helm client";
+                                node.SudoCommand("snap install helm --classic");
+                            });
                     }
                 });
 
@@ -749,16 +778,16 @@ sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUse
         {
             var master = cluster.FirstMaster;
 
-            // 
-
             // Install the Helm/Tiller service.  This will install the latest stable version.
 
             master.Status = "install: Helm/Tiller";
-            master.SudoCommand("kubectl apply -f install/kubernetes/helm/helm-service-account.yaml");
             master.SudoCommand("helm init --service-account tiller");
 
-            // Configure Helm and Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 2)
+            // Configure Helm and Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 1)
 
+            master.Status = "install: Istio";
+
+            var mutualTls   = cluster.Definition.Network.IstioMutualTls ? "true" : "false";
             var istioScript =
 $@"#!/bin/bash
 
@@ -772,25 +801,40 @@ cd istio
 
 # Copy the tools:
 
-chmod 330 /bin/*
+chmod 330 bin/*
 cp bin/* /usr/local/bin
 
-# Initialize Helm:
+#------------------------------------------------------------------------------
+# Update Helm dependencies:
 
-# kubectl apply -f install/kubernetes/helm/helm-service-account.yaml
-# helm init --service-account tiller --wait
+helm repo add istio.io ""https://storage.googleapis.com/istio-prerelease/daily-build/master-latest-daily/charts""
+helm dep update install/kubernetes/helm/istio
 
-# Bootstrap Istio CRDs:
+#------------------------------------------------------------------------------
+# Option 1: Install with Helm via [helm template]
+# https://preliminary.istio.io/docs/setup/kubernetes/helm-install/
 
-# helm install install/kubernetes/helm/istio-init --name istio-init --namespace istio-system
+# Step 1: Install Istio CRDs:
 
-# 
+for i in install/kubernetes/helm/istio/templates/crd*yaml; do kubectl apply -f $i; done
+sleep 10
+
+# Step 2: Generate the Istio Kubernetes manifest:
+
+cat install/kubernetes/namespace.yaml > /tmp/istio.yaml
+helm template install/kubernetes/helm/istio --name istio --namespace istio-system --set global.mtls.enabled={mutualTls} >> /tmp/istio.yaml
+
+# Step 3: Install the components via the manifest:
+
+kubectl apply -f /tmp/istio.yaml
 
 # Cleanup:
 
 # rm istio.tar.gz
 # rm -r istio
+# rm istio.yaml
 ";
+            master.SudoCommand(CommandBundle.FromScript(istioScript));
         }
 
         /// <summary>

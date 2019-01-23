@@ -164,6 +164,20 @@ namespace Neon.Kube
             return arg;
         }
 
+        /// <summary>
+        /// Creates a bundle that simply uploads and runs a script.
+        /// </summary>
+        /// <param name="script">The script text.</param>
+        /// <returns>The <see cref="CommandBundle"/>.</returns>
+        public static CommandBundle FromScript(string script)
+        {
+            var bundle = new CommandBundle("./script.sh");
+
+            bundle.AddFile("script.sh", script, isExecutable: true);
+
+            return bundle;
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 

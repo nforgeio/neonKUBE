@@ -48,13 +48,14 @@ apt-cache madison kubelet
 
 ## Check for base Docker image updates:
 
-1. [haproxy](http://haproxy.org)
-2. .NET Core
+1. [haproxy](http://haproxy.org) - current: **1.9.2**
+2. [.NET Core](https://github.com/dotnet/core/releases) - current: **2.1**
+3. [golang](https://golang.org/doc/devel/release.html) - current: **1.9.4**
 
 ## Kubernetes Components
 
 1. **Helm:** We're currently using **snap** to install the latest version.
 
-2. *Istio:* Releases: https://github.com/istio/istio/releases
+2. *Istio:* Releases: https://github.com/istio/istio/releases - current: **1.1.0-snapshot.3**
 
   Upload releases to: https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-VERSION-linux.tar.gz and make public.

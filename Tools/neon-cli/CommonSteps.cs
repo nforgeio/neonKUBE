@@ -313,7 +313,7 @@ TCPKeepAlive yes
             node.InvokeIdempotentAction("setup/prep-node",
                 () =>
                 {
-                    node.Status = "run: setup-prep";
+                    node.Status = "preparing";
                     node.SudoCommand("setup-prep.sh");
                     node.Reboot(wait: true);
                 });
@@ -329,7 +329,7 @@ TCPKeepAlive yes
 
             CommonSteps.ConfigureEnvironmentVariables(node, clusterDefinition);
 
-            node.Status = "run: setup-disk.sh";
+            node.Status = "setup: disk";
             node.SudoCommand("setup-disk.sh");
 
             // Clear any DHCP leases to be super sure that cloned node
