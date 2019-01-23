@@ -566,15 +566,12 @@ ff02::2         ip6-allrouters
 
                     node.Status = "configure: kubernetes package repo";
 
-                    var bundle = new CommandBundle("./run.sh");
-
-                    bundle.AddFile("run.sh",
+                    var bundle = CommandBundle.FromScript(
 $@"#!/bin/bash
 curl {Program.CurlOptions} https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo ""deb https://apt.kubernetes.io/ kubernetes-xenial main"" > /etc/apt/sources.list.d/kubernetes.list
 safe-apt-get update
-",
-                    isExecutable: true);
+");
                     node.SudoCommand(bundle);
 
                     node.Status = "install: kubeadm";
@@ -665,10 +662,7 @@ mkdir -p /home/{KubeHelper.RootUser}/.kube
 sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
 sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
 ";
-                                var kubeCtlInitBundle = new CommandBundle("./run.sh");
-
-                                kubeCtlInitBundle.AddFile("run.sh", kubeConfigCopyScript, isExecutable: true);
-                                bootMaster.SudoCommand(kubeCtlInitBundle);
+                                bootMaster.SudoCommand(CommandBundle.FromScript(kubeConfigCopyScript));
                             });
 
                     // Download the Kubernetes configuration file (if we don't already have it) because 
@@ -751,10 +745,7 @@ mkdir -p /home/{KubeHelper.RootUser}/.kube
 sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
 sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
 ";
-                                var kubeCtlInitBundle = new CommandBundle("./run.sh");
-
-                                kubeCtlInitBundle.AddFile("run.sh", kubeConfigCopyScript, isExecutable: true);
-                                node.SudoCommand(kubeCtlInitBundle);
+                                node.SudoCommand(CommandBundle.FromScript(kubeConfigCopyScript));
                             });
 
                         // Install the Helm client.
@@ -905,11 +896,7 @@ ssh-keygen -t rsa -b 2048 -N """" -C ""neonhive"" -f /run/ssh-key
 
 chmod 666 /run/ssh-key*
 ";
-            var bundle = new CommandBundle("./keygen.sh");
-
-            bundle.AddFile("keygen.sh", keyGenScript, isExecutable: true);
-
-            master.SudoCommand(bundle);
+            master.SudoCommand(CommandBundle.FromScript(keyGenScript));
 
             using (var stream = new MemoryStream())
             {
@@ -998,11 +985,7 @@ chmod 666 /run/ssh-key*
 $@"
 echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshStrongPassword}' | chpasswd
 ";
-                    var bundle = new CommandBundle("./set-strong-password.sh");
-
-                    bundle.AddFile("set-strong-password.sh", script, isExecutable: true);
-
-                    var response = node.SudoCommand(bundle);
+                    var response = node.SudoCommand(CommandBundle.FromScript(script));
 
                     if (response.ExitCode != 0)
                     {
@@ -1052,10 +1035,7 @@ chmod 666 /dev/shm/ssh/ssh_host_rsa_key
 chmod 666 /dev/shm/ssh/ssh_host_rsa_key.pub
 chmod 666 /dev/shm/ssh/ssh.fingerprint
 ";
-                    var bundle = new CommandBundle("./config.sh");
-
-                    bundle.AddFile("config.sh", configScript, isExecutable: true);
-                    cluster.FirstMaster.SudoCommand(bundle);
+                    cluster.FirstMaster.SudoCommand(CommandBundle.FromScript(configScript));
 
                     cluster.FirstMaster.Status = "download: server SSH key";
 
