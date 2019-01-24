@@ -71,5 +71,10 @@ REM Configure the neonKUBE program folder and add it to the PATH.
 if not exist "%ProgramFiles%\neonKUBE" mkdir "%ProgramFiles%\neonKUBE"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\neonKUBE"
 
+REM Configure the neonKUBE kubeconfig path (as a USER environment variable).
+
+set KUBECONTEXT=%USERPROFILE%\.neonkube\admin.config
+reg add HKCU\Environment /v KUBECONTEXT /t REG_EXPAND_SZ /d %USERPROFILE%\.neonkube\admin.config
+
 :done
 pause

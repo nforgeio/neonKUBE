@@ -141,6 +141,9 @@ OPTIONS:
                     using (var client = new HeadendClient())
                     {
                         kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
+
+                        kubeContextExtension.ComponentVersions = kubeSetupInfo.Versions;
+                        kubeContextExtension.Save();
                     }
                 });
 
@@ -240,8 +243,10 @@ OPTIONS:
                     // This hidden step sets the SSH provisioning password to NULL to 
                     // indicate that the final password has been set for all of the nodes.
 
-                    kubeContextExtension.HasStrongSshPassword = true;
-                    kubeContextExtension.Save();
+                    // $todo(jeff.lill): RESTORE THIS!
+
+                    //kubeContextExtension.HasStrongSshPassword = true;
+                    //kubeContextExtension.Save();
                 },
                 quiet: true);
 
@@ -271,8 +276,8 @@ OPTIONS:
 
             // Persist the new strong password and indicate that setup is complete.
 
-            kubeContextExtension.SshPassword       = kubeContextExtension.SshStrongPassword;
-            kubeContextExtension.SshStrongPassword = null;
+            //kubeContextExtension.SshPassword       = kubeContextExtension.SshStrongPassword;
+            //kubeContextExtension.SshStrongPassword = null;
             kubeContextExtension.SetupPending      = false;
 
             kubeContextExtension.Save();
@@ -281,10 +286,11 @@ OPTIONS:
 
             cluster.LogLine(logEndMarker);
 
-            // Update the kubecluster config.
+            // Update the kubeconfig.
 
             Console.WriteLine($"*** Connecting to [{kubeContext.Name}].");
-            kubeConfig.SetContext(kubeContext.Name);
+            //kubeConfig.SetContext(kubeContext.Name);
+            KubeHelper.InstallKubeCtl(kubeSetupInfo.Versions.Kubernetes);
             Console.WriteLine();
         }
 
@@ -303,7 +309,7 @@ OPTIONS:
             using (var client = new HttpClient(handler, disposeHandler: true))
             {
                 var hostPlatform = KubeHelper.HostPlatform;
-                var kubeCtlPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", cluster.Definition.Kubernetes.Version);
+                var kubeCtlPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", kubeSetupInfo.Versions.Kubernetes);
 
                 if (!File.Exists(kubeCtlPath))
                 {
@@ -335,9 +341,9 @@ OPTIONS:
 
                     using (var response = await client.GetStreamAsync(kubeCtlUri))
                     {
-                        using (var file = new FileStream(kubeCtlPath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var output = new FileStream(kubeCtlPath, FileMode.Create, FileAccess.ReadWrite))
                         {
-                            await response.CopyToAsync(file);
+                            await response.CopyToAsync(output);
                         }
                     }
                 }
@@ -769,17 +775,27 @@ sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUse
         {
             var master = cluster.FirstMaster;
 
-            // Install the Helm/Tiller service.  This will install the latest stable version.
+            master.InvokeIdempotentAction("setup/cluster-configure",
+                () =>
+                {
+                    // Install the Helm/Tiller service.  This will install the latest stable version.
 
-            master.Status = "install: Helm/Tiller";
-            master.SudoCommand("helm init --service-account tiller");
+                    master.InvokeIdempotentAction("setup/cluster-deploy-helm",
+                        () =>
+                        {
+                            master.Status = "deploy: Helm/Tiller";
+                            master.SudoCommand("helm init --service-account tiller");
+                        });
 
-            // Configure Helm and Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 1)
+                    // Configure Helm and Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 1)
 
-            master.Status = "install: Istio";
+                    master.InvokeIdempotentAction("setup/cluster-deploy-helm",
+                        () =>
+                        {
+                            master.Status = "deploy: Istio";
 
-            var mutualTls   = cluster.Definition.Network.IstioMutualTls ? "true" : "false";
-            var istioScript =
+                            var mutualTls   = cluster.Definition.Network.IstioMutualTls ? "true" : "false";
+                            var istioScript =
 $@"#!/bin/bash
 
 # Download and extract the Istio binaries:
@@ -825,12 +841,14 @@ kubectl apply -f /tmp/istio.yaml
 # rm -r istio
 # rm istio.yaml
 ";
-            master.SudoCommand(CommandBundle.FromScript(istioScript));
+                            master.SudoCommand(CommandBundle.FromScript(istioScript));
+                        });
 
-            // Install the Kubernetes dashboard:
+                    // Install the Kubernetes dashboard:
 
-            master.Status = "install: Kubernetes dashboard";
-            master.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
+                    master.Status = "deploy: Kubernetes dashboard";
+                    master.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
+                });
         }
 
         /// <summary>

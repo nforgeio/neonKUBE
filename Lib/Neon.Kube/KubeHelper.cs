@@ -19,6 +19,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Win32;
+
 using Couchbase;
 using Newtonsoft.Json;
 
@@ -254,7 +256,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the path to the Kubernetes configuration file.
         /// </summary>
-        public static string KubeConfigPath => Path.Combine(KubeHelper.GetKubeUserFolder(), "config");
+        public static string KubeConfigPath => Path.Combine(KubeHelper.GetKubeUserFolder(), "admin.config");
 
         /// <summary>
         /// Returns the path the folder containing cluster related files (including kube context 
@@ -341,9 +343,9 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="platform">Identifies the platform.</param>
         /// <param name="component">The component name.</param>
-        /// <param name="version">The optional component version.</param>
+        /// <param name="version">The component version (or <c>null</c>).</param>
         /// <returns>The component file path.</returns>
-        public static string GetCachedComponentPath(KubeHostPlatform platform, string component, string version = null)
+        public static string GetCachedComponentPath(KubeHostPlatform platform, string component, string version)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(component));
 
@@ -455,6 +457,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns the path to the neonKUBE program folder.
+        /// </summary>
+        public static string ProgramFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "neonKUBE");
+
+        /// <summary>
         /// Indicates whether the application is connected to thje cluster.
         /// </summary>
         public static bool IsConnected { get; private set; } = false;
@@ -552,6 +559,131 @@ namespace Neon.Kube
             if (!IsConnected)
             {
                 throw new InvalidOperationException("cluster is not connected.");
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Ensures that <b>kubectl</b> tool whose version is at least as great as the Kubernetes
+        /// cluster version is installed to the <b>neonKUBE</b> programs folder by copying the
+        /// tool from the cache if necessary.
+        /// </para>
+        /// <note>
+        /// This will probably require elevated privileges.
+        /// </note>
+        /// <note>
+        /// This assumes that <b>kubectl</b> has already been downloaded and cached and also that 
+        /// more recent <b>kubectl</b> releases are backwards compatible with older deployed versions
+        /// of Kubernetes.
+        /// </note>
+        /// </summary>
+        /// <param name="kubernetesVersion">The installed Kubernetes version..</param>
+        public static void InstallKubeCtl(string kubernetesVersion)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(kubernetesVersion));
+
+            var hostPlatform = KubeHelper.HostPlatform;
+            var kubeCtlPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", kubernetesVersion);
+            var targetPath   = Path.Combine(KubeHelper.ProgramFolder, "kubectl.exe");
+
+            switch (hostPlatform)
+            {
+                case KubeHostPlatform.Windows:
+
+                    // Ensure that the KUBECONFIG environment variable exists and includes
+                    // the path to the user's [.neonkube] configuration.
+
+                    var kubeConfigVar = Environment.GetEnvironmentVariable("KUBECONFIG");
+
+                    if (string.IsNullOrEmpty(kubeConfigVar))
+                    {
+                        // The [KUBECONFIG] environment variable doesn't exist so we'll set it.
+
+                        Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", KubeConfigPath, RegistryValueKind.ExpandString);
+                        Environment.SetEnvironmentVariable("KUBECONFIG", KubeConfigPath);
+                    }
+                    else
+                    {
+                        // The [KUBECONFIG] environment variable exists but we still need to
+                        // ensure that the path to our [USER/.neonkube] config is present.
+
+                        var sb    = new StringBuilder();
+                        var found = false;
+
+                        foreach (var path in kubeConfigVar.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            if (path == KubeConfigPath)
+                            {
+                                found = true;
+                            }
+
+                            sb.AppendWithSeparator(path, ";");
+                        }
+
+                        if (!found)
+                        {
+                            sb.AppendWithSeparator(KubeConfigPath, ";");
+                        }
+
+                        var newKubeConfigVar = sb.ToString();
+
+                        if (newKubeConfigVar != kubeConfigVar)
+                        {
+                            Registry.SetValue(@"HKEY_CURRENT_USER\Environment", "KUBECONFIG", newKubeConfigVar, RegistryValueKind.ExpandString);
+                            Environment.SetEnvironmentVariable("KUBECONFIG", newKubeConfigVar);
+                        }
+                    }
+
+                    if (!File.Exists(targetPath))
+                    {
+                        File.Copy(kubeCtlPath, targetPath);
+                    }
+                    else
+                    {
+                        // Execute the existing target to obtain its version and update it
+                        // to the cached copy if the cluster installed a more recent version
+                        // of Kubernetes.
+
+                        // $hack(jeff.lill): Simple client version extraction
+
+                        var pattern  = "GitVersion:\"v";
+                        var response = NeonHelper.ExecuteCapture(targetPath, "version");
+                        var pStart   = response.OutputText.IndexOf("GitVersion:\"v") + pattern.Length;
+                        var error    = "Cannot identify existing [kubectl] version.";
+
+                        if (pStart == -1)
+                        {
+                            throw new KubeException(error);
+                        }
+
+                        var pEnd = response.OutputText.IndexOf("\"", pStart);
+
+                        if (pEnd == -1)
+                        {
+                            throw new KubeException(error);
+                        }
+
+                        var currentVersionString = response.OutputText.Substring(pStart, pEnd - pStart);
+
+                        if (!Version.TryParse(currentVersionString, out var currentVersion))
+                        {
+                            throw new KubeException(error);
+                        }
+
+                        if (Version.Parse(kubernetesVersion) > currentVersion)
+                        {
+                            // We need to copy the latest version.
+
+                            File.Copy(kubeCtlPath, targetPath);
+                        }
+                    }
+                    break;
+
+                case KubeHostPlatform.Linux:
+                case KubeHostPlatform.Osx:
+                default:
+
+                    throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
             }
         }
     }

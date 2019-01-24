@@ -29,6 +29,8 @@ namespace Neon.Kube
     /// </summary>
     public class KubeConfigContext
     {
+        private KubeContextExtension cachedExtension;
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -73,5 +75,23 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "context", Required = Required.Always)]
         [YamlMember(Alias = "context", ApplyNamingConventions = false)]
         public KubeConfigContextProperties Properties { get; set; }
+
+        /// <summary>
+        /// Returns the context extension information for the context.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public KubeContextExtension Extension
+        {
+            get
+            {
+                if (cachedExtension != null)
+                {
+                    return cachedExtension;
+                }
+
+                return cachedExtension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(KubeHelper.GetContextExtensionPath(Name)));
+            }
+        }
     }
 }

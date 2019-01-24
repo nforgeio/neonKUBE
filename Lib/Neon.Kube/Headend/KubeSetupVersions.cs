@@ -43,18 +43,18 @@ namespace Neon.Kube
         /// <summary>
         /// The Kubernetes version.
         /// </summary>
-        [JsonProperty(PropertyName = "Kube", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Kube", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Kubernetes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Kubernetes", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Kube { get; set; }
+        public string Kubernetes { get; set; }
 
         /// <summary>
         /// The Kubernetes dashboard version;
         /// </summary>
-        [JsonProperty(PropertyName = "KubeDashboard", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeDashboard", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "KubernetesDashboard", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "KubernetesDashboard", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string KubeDashboard { get; set; }
+        public string KubernetesDashboard { get; set; }
 
         /// <summary>
         /// The Docker version.

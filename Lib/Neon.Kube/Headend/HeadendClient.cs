@@ -185,8 +185,8 @@ namespace Neon.Kube
                     KubeDashboardUri            = $"https://raw.githubusercontent.com/kubernetes/dashboard/v{kubeDashboardVersion}/src/deploy/recommended/kubernetes-dashboard.yaml",
                 });
 
-            setupInfo.Versions.Kube          = kubeVersion.ToString();
-            setupInfo.Versions.KubeDashboard = kubeDashboardVersion.ToString();
+            setupInfo.Versions.Kubernetes          = kubeVersion.ToString();
+            setupInfo.Versions.KubernetesDashboard = kubeDashboardVersion.ToString();
             setupInfo.Versions.Docker        = dockerVersion;
             setupInfo.Versions.Istio         = istioVersion;
 

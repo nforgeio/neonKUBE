@@ -162,6 +162,14 @@ namespace Neon.Kube
         public string AdminConfig { get; set; }
 
         /// <summary>
+        /// Identifies the installed cluster software component versions.
+        /// </summary>
+        [JsonProperty(PropertyName = "ComponentVersions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ComponentVersions", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public KubeSetupVersions ComponentVersions { get; set; }
+
+        /// <summary>
         /// Sets the file path where the extension will be persisted.
         /// </summary>
         /// <param name="path">The target path.</param>
