@@ -55,7 +55,7 @@ namespace Neon.Kube
         /// </summary>
         public NodeDefinition()
         {
-            Labels = new NodeLabels();
+            Labels = new NodeLabels(this);
         }
 
         /// <summary>
@@ -316,6 +316,17 @@ namespace Neon.Kube
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+
+            // Ensure that the labels are wired up to the parent node.
+
+            if (Labels == null)
+            {
+                Labels = new NodeLabels(this);
+            }
+            else
+            {
+                Labels.Node = this;
+            }
 
             if (Name == null)
             {

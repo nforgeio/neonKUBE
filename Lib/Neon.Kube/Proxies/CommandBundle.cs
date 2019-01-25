@@ -165,7 +165,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates a bundle that simply uploads and runs a script.
+        /// Creates a bundle that simply uploads and runs a (<c>string</c>) script.
         /// </summary>
         /// <param name="script">The script text.</param>
         /// <returns>The <see cref="CommandBundle"/>.</returns>
@@ -176,6 +176,16 @@ namespace Neon.Kube
             bundle.AddFile("script.sh", script, isExecutable: true);
 
             return bundle;
+        }
+
+        /// <summary>
+        /// Creates a bundle that simply uploads and runs a (<see cref="StringBuilder"/>) script.
+        /// </summary>
+        /// <param name="script">The script text.</param>
+        /// <returns>The <see cref="CommandBundle"/>.</returns>
+        public static CommandBundle FromScript(StringBuilder script)
+        {
+            return FromScript(script.ToString());
         }
 
         //---------------------------------------------------------------------

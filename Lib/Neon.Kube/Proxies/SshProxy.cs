@@ -2744,7 +2744,7 @@ echo $? > {cmdFolder}/exit
 
             sbScript.AppendLine(command);
 
-            var response = SudoCommand(CommandBundle.FromScript(sbScript.ToString()), runOptions | RunOptions.IgnoreRemotePath);
+            var response = SudoCommand(CommandBundle.FromScript(sbScript), runOptions | RunOptions.IgnoreRemotePath);
 
             response.BashCommand = ToBash(command, args);
 

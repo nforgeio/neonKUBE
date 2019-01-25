@@ -412,6 +412,7 @@ namespace Neon.Kube
             var extension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path));
 
             extension.SetPath(path);
+            extension.ClusterDefinition.Validate();
 
             return extension;
         }

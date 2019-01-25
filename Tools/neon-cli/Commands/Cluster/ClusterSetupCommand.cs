@@ -160,7 +160,7 @@ OPTIONS:
             // We need to do this so the the package cache will be running
             // when the remaining nodes are configured.
 
-            controller.AddStep("initialize boot master",
+            controller.AddStep("configure: first master",
                 (node, stepDelay) =>
                 {
                     SetupCommon(node, stepDelay);
@@ -174,7 +174,7 @@ OPTIONS:
 
             if (cluster.Definition.Nodes.Count() > 1)
             {
-                controller.AddStep("initialize other nodes",
+                controller.AddStep("configure: other nodes",
                     (node, stepDelay) =>
                     {
                         SetupCommon(node, stepDelay);
@@ -197,6 +197,7 @@ OPTIONS:
             }
 
             controller.AddGlobalStep("configure cluster", ConfigureCluster);
+            controller.AddGlobalStep("label nodes", LabelNodes);
 
             //-----------------------------------------------------------------
             // Verify the cluster.
@@ -950,22 +951,52 @@ kubectl apply -f /tmp/istio.yaml
         /// <summary>
         /// Adds the node labels.
         /// </summary>
-        /// <param name="master">A master node.</param>
-        private void AddNodeLabels(SshProxy<NodeDefinition> master)
+        private void LabelNodes()
         {
-            master.InvokeIdempotentAction("setup/node-labels",
+            var master = cluster.FirstMaster;
+
+            master.InvokeIdempotentAction("setup/cluster-label-nodes",
                 () =>
                 {
-                    master.Status = "labeling";
+                    master.Status = "label: nodes";
 
-                    foreach (var node in cluster.Nodes)
+                    try
                     {
-                        var labelDefinitions = new List<string>();
+                        // Generate a Bash script we'll submit to the first master
+                        // that initializes the labels for all nodes.
 
-                        labelDefinitions.Add($"{NodeLabels.LabelDatacenter}={cluster.Definition.Datacenter.ToLowerInvariant()}");
-                        labelDefinitions.Add($"{NodeLabels.LabelEnvironment}={cluster.Definition.Environment.ToString().ToLowerInvariant()}");
+                        var sbScript = new StringBuilder();
+                        var sbArgs   = new StringBuilder();
 
-                        // $todo(jeff.lill): Implement this.
+                        sbScript.AppendLineLinux("#!/bin/bash");
+
+                        foreach (var node in cluster.Nodes)
+                        {
+                            var labelDefinitions = new List<string>();
+
+                            labelDefinitions.Add($"{NodeLabels.LabelDatacenter}={cluster.Definition.Datacenter.ToLowerInvariant()}");
+                            labelDefinitions.Add($"{NodeLabels.LabelEnvironment}=\"{cluster.Definition.Environment.ToString().ToLowerInvariant()}\"");
+
+                            foreach (var label in node.Metadata.Labels.All)
+                            {
+                                labelDefinitions.Add($"{label.Key}=\"{label.Value}\"");
+                            }
+
+                            sbArgs.Clear();
+
+                            foreach (var label in labelDefinitions)
+                            {
+                                sbArgs.AppendWithSeparator(label);
+                            }
+
+                            sbScript.AppendLineLinux($"kubectl label nodes {node.Name} {sbArgs}");
+                        }
+
+                        master.SudoCommand(CommandBundle.FromScript(sbScript));
+                    }
+                    finally
+                    {
+                        master.Status = string.Empty;
                     }
                 });
         }

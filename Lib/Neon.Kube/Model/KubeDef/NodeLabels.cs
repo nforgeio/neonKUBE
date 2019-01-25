@@ -62,10 +62,20 @@ namespace Neon.Kube
         private INeonLogger     log = LogManager.Default.GetLogger<NodeLabels>();
 
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
         public NodeLabels()
         {
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public NodeLabels(NodeDefinition node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null);
+
+            this.Node = node;
         }
 
         /// <summary>
@@ -79,27 +89,27 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name that identifies the datacenter.
         /// </summary>
-        public const string LabelDatacenter = ClusterDefinition.ReservedLabelPrefix + ".cluster.datacenter";
+        public const string LabelDatacenter = ClusterDefinition.ReservedLabelPrefix + "cluster.datacenter";
 
         /// <summary>
         /// Reserved label name that identifies the cluster environment.
         /// </summary>
-        public const string LabelEnvironment = ClusterDefinition.ReservedLabelPrefix + ".cluster.environment";
+        public const string LabelEnvironment = ClusterDefinition.ReservedLabelPrefix + "cluster.environment";
 
         /// <summary>
         /// Reserved label name that identifies the node's public IP address or FQDN.
         /// </summary>
-        public const string LabelPublicAddress = ClusterDefinition.ReservedLabelPrefix + ".node.public_address";
+        public const string LabelPublicAddress = ClusterDefinition.ReservedLabelPrefix + "node.public_address";
 
         /// <summary>
         /// Reserved label name that identifies the node's private IP address.
         /// </summary>
-        public const string LabelPrivateAddress = ClusterDefinition.ReservedLabelPrefix + ".node.private_address";
+        public const string LabelPrivateAddress = ClusterDefinition.ReservedLabelPrefix + "node.private_address";
 
         /// <summary>
         /// Reserved label name that identifies the node role.
         /// </summary>
-        public const string LabelRole = ClusterDefinition.ReservedLabelPrefix + ".node.role";
+        public const string LabelRole = ClusterDefinition.ReservedLabelPrefix + "node.role";
 
         //---------------------------------------------------------------------
         // Azure hosting related labels.
@@ -107,22 +117,22 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name that identifies the node's Azure VM size.
         /// </summary>
-        public const string LabelAzureVmSize = ClusterDefinition.ReservedLabelPrefix + ".azure.vm_size";
+        public const string LabelAzureVmSize = ClusterDefinition.ReservedLabelPrefix + "azure.vm_size";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached storage type.
         /// </summary>
-        public const string LabelAzureStorageType = ClusterDefinition.ReservedLabelPrefix + ".azure.storage_type";
+        public const string LabelAzureStorageType = ClusterDefinition.ReservedLabelPrefix + "azure.storage_type";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive count.
         /// </summary>
-        public const string LabelAzureDriveCount = ClusterDefinition.ReservedLabelPrefix + ".azure.drive_count";
+        public const string LabelAzureDriveCount = ClusterDefinition.ReservedLabelPrefix + "azure.drive_count";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive size in GB.
         /// </summary>
-        public const string LabelAzureDriveSizeGB = ClusterDefinition.ReservedLabelPrefix + ".azure.drive_size_gb";
+        public const string LabelAzureDriveSizeGB = ClusterDefinition.ReservedLabelPrefix + "azure.drive_size_gb";
 
         //---------------------------------------------------------------------
         // Define the node storage related labels.
@@ -130,27 +140,27 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="StorageCapacityGB"/>.
         /// </summary>
-        public const string LabelStorageCapacityGB = ClusterDefinition.ReservedLabelPrefix + ".storage.capacity_gb";
+        public const string LabelStorageCapacityGB = ClusterDefinition.ReservedLabelPrefix + "storage.capacity_gb";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageLocal"/>.
         /// </summary>
-        public const string LabelStorageLocal = ClusterDefinition.ReservedLabelPrefix + ".storage.local";
+        public const string LabelStorageLocal = ClusterDefinition.ReservedLabelPrefix + "storage.local";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageHDD"/>.
         /// </summary>
-        public const string LabelStorageHDD = ClusterDefinition.ReservedLabelPrefix + ".storage.hdd";
+        public const string LabelStorageHDD = ClusterDefinition.ReservedLabelPrefix + "storage.hdd";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageRedundant"/>.
         /// </summary>
-        public const string LabelStorageRedundant = ClusterDefinition.ReservedLabelPrefix + ".storage.redundant";
+        public const string LabelStorageRedundant = ClusterDefinition.ReservedLabelPrefix + "storage.redundant";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageEphemeral"/>.
         /// </summary>
-        public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + ".storage.ephemral";
+        public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + "storage.ephemral";
 
         /// <summary>
         /// <b>io.neonkube/storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
@@ -207,12 +217,12 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="ComputeCores"/>.
         /// </summary>
-        public const string LabelComputeCores = ClusterDefinition.ReservedLabelPrefix + ".compute.cores";
+        public const string LabelComputeCores = ClusterDefinition.ReservedLabelPrefix + "compute.cores";
 
         /// <summary>
         /// Reserved label name for <see cref="ComputeRamMB"/>.
         /// </summary>
-        public const string LabelComputeRamMB = ClusterDefinition.ReservedLabelPrefix + ".compute.ram_mb";
+        public const string LabelComputeRamMB = ClusterDefinition.ReservedLabelPrefix + "compute.ram_mb";
 
         /// <summary>
         /// <b>io.neonkube/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
@@ -242,22 +252,22 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
-        public const string LabelPhysicalLocation = ClusterDefinition.ReservedLabelPrefix + ".physical.location";
+        public const string LabelPhysicalLocation = ClusterDefinition.ReservedLabelPrefix + "physical.location";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalMachine"/>.
         /// </summary>
-        public const string LabelPhysicalMachine = ClusterDefinition.ReservedLabelPrefix + ".physical.machine";
+        public const string LabelPhysicalMachine = ClusterDefinition.ReservedLabelPrefix + "physical.machine";
 
         /// <summary>
         /// Reserved label name for <see cref="PhysicalFaultDomain"/>.
         /// </summary>
-        public const string LabelPhysicalFaultDomain = ClusterDefinition.ReservedLabelPrefix + ".physical.faultdomain";
+        public const string LabelPhysicalFaultDomain = ClusterDefinition.ReservedLabelPrefix + "physical.faultdomain";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
-        public const string LabelPhysicalPower = ClusterDefinition.ReservedLabelPrefix + ".physical.power";
+        public const string LabelPhysicalPower = ClusterDefinition.ReservedLabelPrefix + "physical.power";
 
         /// <summary>
         /// <b>io.neonkube/physical.location</b> [<c>string</c>]: A free format string describing the
@@ -418,7 +428,7 @@ namespace Neon.Kube
                 //
                 // This method will need to be updated whenever new standard labels are added or changed.
 
-                var list = new List<KeyValuePair<string, object>>(20);
+                var list = new List<KeyValuePair<string, object>>(50);
 
                 // Standard labels from the parent node definition.
 
@@ -451,6 +461,26 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
 
                 return list;
+            }
+        }
+
+        /// <summary>
+        /// Enumerates all node labels.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public IEnumerable<KeyValuePair<string, object>> All
+        {
+            get
+            {
+                var labels = (List<KeyValuePair<string, object>>)Standard;
+
+                foreach (var label in Custom)
+                {
+                    labels.Add(new KeyValuePair<string, object>(label.Key, label.Value));
+                }
+
+                return labels;
             }
         }
 
