@@ -4,6 +4,8 @@ Environment: development
 TimeSources:
 - pool.ntp.org
 AllowUnitTesting: true
+Kubernetes:
+  AllowPodsOnMasters: true
 Hosting:
   Environment: hyperv-local
   VmDriveFolder: D:\\VM

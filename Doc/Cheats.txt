@@ -5,3 +5,7 @@ neon cluster setup --log-folder=c:/cluster-logs --unredacted root@home-tiny
 # HOME: small
 neon cluster prepare %NF_ROOT%/devops/home/small.cluster.yaml --log-folder=c:/cluster-logs --unredacted
 neon cluster setup --log-folder=c:/cluster-logs --unredacted root@home-small
+
+# HOME: large
+neon cluster prepare %NF_ROOT%/devops/home/large.cluster.yaml --log-folder=c:/cluster-logs --unredacted
+neon cluster setup --log-folder=c:/cluster-logs --unredacted root@home-large

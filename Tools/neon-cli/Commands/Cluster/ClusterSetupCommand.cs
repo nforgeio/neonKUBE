@@ -190,7 +190,12 @@ OPTIONS:
 
             controller.AddStep("install Kubernetes", InstallKubernetes);
             controller.AddStep("create cluster", CreateCluster, node => node == cluster.FirstMaster);
-            controller.AddStep("join cluster", JoinCluster, node => node != cluster.FirstMaster);
+
+            if (cluster.Nodes.Count() > 0)
+            {
+                controller.AddStep("join cluster", JoinCluster, node => node != cluster.FirstMaster);
+            }
+
             controller.AddGlobalStep("configure cluster", ConfigureCluster);
 
             //-----------------------------------------------------------------
@@ -279,18 +284,71 @@ OPTIONS:
             //kubeContextExtension.SshPassword       = kubeContextExtension.SshStrongPassword;
             //kubeContextExtension.SshStrongPassword = null;
             kubeContextExtension.SetupPending      = false;
-
             kubeContextExtension.Save();
 
             // Write the operation end marker to all cluster node logs.
 
             cluster.LogLine(logEndMarker);
 
+            // Ensure that the [kubectl] tool is installed.
+
+            KubeHelper.InstallKubeCtl(kubeSetupInfo.Versions.Kubernetes);
+
             // Update the kubeconfig.
 
-            Console.WriteLine($"*** Connecting to [{kubeContext.Name}].");
-            //kubeConfig.SetContext(kubeContext.Name);
-            KubeHelper.InstallKubeCtl(kubeSetupInfo.Versions.Kubernetes);
+            var kubeConfigPath = KubeHelper.KubeConfigPath;
+
+            if (!File.Exists(kubeConfigPath))
+            {
+                File.WriteAllText(kubeConfigPath, kubeContextExtension.AdminConfig);
+            }
+            else
+            {
+                // The user already has an existing kubeconfig, so we need
+                // to merge in the new config.
+
+                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.AdminConfig);
+                var existingConfig = KubeHelper.KubeConfig;
+
+                // Remove any existing user, context, and cluster with the same names.
+                // Note that we're assuming that there's only one of each in the config
+                // we dornloaded from the cluster.
+
+                var newCluster = newConfig.Clusters.Single();
+                var newContext = newConfig.Contexts.Single();
+                var newUser    = newConfig.Users.Single();
+
+                var existingCluster = existingConfig.GetCluster(newCluster.Name);
+                var existingContext = existingConfig.GetContext(newContext.Name);
+                var existingUser    = existingConfig.GetUser(newUser.Name);
+
+                if (existingConfig != null)
+                {
+                    existingConfig.Clusters.Remove(existingCluster);
+                }
+
+                if (existingContext != null)
+                {
+                    existingConfig.Contexts.Remove(existingContext);
+                }
+
+                if (existingUser != null)
+                {
+                    existingConfig.Users.Remove(existingUser);
+                }
+
+                existingConfig.Clusters.Add(newCluster);
+                existingConfig.Contexts.Add(newContext);
+                existingConfig.Users.Add(newUser);
+                existingConfig.CurrentContext = newContext.Name;
+                KubeHelper.SetKubeConfig(existingConfig);
+            }
+
+            // We don't need the admin config anymore.
+
+            kubeContextExtension.AdminConfig = null;
+            kubeContextExtension.Save();
+
             Console.WriteLine();
         }
 
@@ -420,14 +478,14 @@ OPTIONS:
 
                     // Configure the APT proxy server settings early.
 
-                    node.Status = "setup: package proxy";
+                    node.Status = "configure: package proxy";
                     node.SudoCommand("setup-package-proxy.sh");
 
                     // Perform basic node setup including changing the hostname.
 
                     UploadHostname(node);
 
-                    node.Status = "initialize: node";
+                    node.Status = "configure: node basics";
                     node.SudoCommand("setup-node.sh");
 
                     // Tune Linux for SSDs, if enabled.
@@ -449,7 +507,7 @@ OPTIONS:
                     // Configure the APT package proxy on the masters
                     // and configure the proxy selector for all nodes.
 
-                    node.Status = "setup: package proxy";
+                    node.Status = "configure: package proxy";
                     node.SudoCommand("setup-package-proxy.sh");
 
                     // Upgrade Linux packages if requested.  We're doing this after
@@ -599,45 +657,57 @@ safe-apt-get update
         /// captures the master and worker cluster tokens required to join 
         /// additional nodes to the cluster.
         /// </summary>
-        /// <param name="bootMaster">The target bootstrap master node.</param>
+        /// <param name="master">The target bootstrap master node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void CreateCluster(SshProxy<NodeDefinition> bootMaster, TimeSpan stepDelay)
+        private void CreateCluster(SshProxy<NodeDefinition> master, TimeSpan stepDelay)
         {
-            bootMaster.InvokeIdempotentAction("setup/cluster",
+            master.InvokeIdempotentAction("setup/cluster",
                 () =>
                 {
                 Thread.Sleep(stepDelay);
 
-                bootMaster.Status = "create: cluster";
+                master.Status = "create: cluster";
 
                 // Pull the Kubernetes images:
 
-                bootMaster.InvokeIdempotentAction("setup/cluster-images",
+                master.InvokeIdempotentAction("setup/cluster-images",
                     () =>
                     {
-                        bootMaster.Status = "pull: Kubernetes images";
-                        bootMaster.SudoCommand("kubeadm config images pull");
+                        master.Status = "pull: Kubernetes images";
+                        master.SudoCommand("kubeadm config images pull");
                     });
 
-                bootMaster.InvokeIdempotentAction("setup/cluster-init",
+                master.InvokeIdempotentAction("setup/cluster-init",
                     () =>
                     {
-                            // $todo(jeff.lill):
-                            //
-                            // By default, [kubeadm init] returns a cluster join token that's good only for 24 hours.
-                            // We're using [--token-ttl 0] to obtain a token with unlimited.  This will make it easier
-                            // to join nodes to the cluster after creation.  This might could end up being a security 
-                            // issue though.  It is possible to obtain a new join token from a master node, so perhaps
-                            // we'll use that in the future and go back to short-lived initial tokens.
-                            //
-                            //      https://github.com/jefflill/NeonForge/issues/424
+                        // $todo(jeff.lill):
+                        //
+                        // By default, [kubeadm init] returns a cluster join token that's good only for 24 hours.
+                        // We're using [--token-ttl 0] to obtain a token with unlimited.  This will make it easier
+                        // to join nodes to the cluster after creation.  This might could end up being a security 
+                        // issue though.  It is possible to obtain a new join token from a master node, so perhaps
+                        // we'll use that in the future and go back to short-lived initial tokens.
+                        //
+                        //      https://github.com/jefflill/NeonForge/issues/424
 
-                            var response = bootMaster.SudoCommand($"kubeadm init --pod-network-cidr {cluster.Definition.Network.PodSubnet} --token-ttl 0");
+                        var clusterConfig =
+$@"
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+clusterName: {cluster.Name}
+networking:
+  podSubnet: {cluster.Definition.Network.PodSubnet}
+";
+                        master.UploadText("/tmp/cluster.yaml", clusterConfig);
+                                               
+                        var response = master.SudoCommand($"kubeadm init --config /tmp/cluster.yaml");
 
-                            // Extract the cluster join command from the response.  We'll need this to join
-                            // other nodes to the cluster.
+                        master.SudoCommand("rm /tmp/cluster.yaml");
 
-                            var output = response.OutputText;
+                        // Extract the cluster join command from the response.  We'll need this to join
+                        // other nodes to the cluster.
+
+                        var output = response.OutputText;
                         var pStart = output.IndexOf("kubeadm join");
 
                         if (pStart == -1)
@@ -657,27 +727,53 @@ safe-apt-get update
                         }
                     });
 
+                    // Allow pods to be scheduled on master nodes if configured.
+
+                    master.InvokeIdempotentAction("setup/cluster-master-pods",
+                        () =>
+                        {
+                            var allowPodsOnMasters = false;
+
+                            if (cluster.Definition.Kubernetes.AllowPodsOnMasters.HasValue)
+                            {
+                                allowPodsOnMasters = cluster.Definition.Kubernetes.AllowPodsOnMasters.Value;
+                            }
+                            else
+                            {
+                                allowPodsOnMasters = cluster.Definition.Workers.Count() > 0;
+                            }
+
+                            master.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-");
+                        });
+
                     // kubectl config:
 
-                    bootMaster.InvokeIdempotentAction("setup/cluster-kubectl",
+                    master.InvokeIdempotentAction("setup/cluster-kubectl",
                         () =>
-                            {
-                                var kubeConfigCopyScript =
-$@"#!/bin/bash
-mkdir -p /home/{KubeHelper.RootUser}/.kube
-sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
-sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
-";
-                                bootMaster.SudoCommand(CommandBundle.FromScript(kubeConfigCopyScript));
-                            });
+                        {
+                            // Edit the Kubernetes configuration file to rename the context:
+                            //
+                            //       CLUSTERNAME-admin@kubernetes --> root@CLUSTERNAME
+                            //
+                            // rename the user:
+                            //
+                            //      CLUSTERNAME-admin --> CLUSTERNAME-roots 
+
+                            kubeContextExtension.AdminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
+                            kubeContextExtension.AdminConfig = kubeContextExtension.AdminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
+                            kubeContextExtension.AdminConfig = kubeContextExtension.AdminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
+                            kubeContextExtension.Save();
+
+                            master.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.AdminConfig, permissions: "500");
+                        });
 
                     // Download the Kubernetes configuration file (if we don't already have it) because 
                     // we'll need that for configuring other cluster masters.
 
                     if (kubeContextExtension.AdminConfig == null)
                     {
-                        bootMaster.Status = "download: kubernetes admin config";
-                        kubeContextExtension.AdminConfig = bootMaster.DownloadText("/etc/kubernetes/admin.conf");
+                        master.Status = "download: kubernetes admin config";
+                        kubeContextExtension.AdminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
                     
                         // Persist the cluster join command and admin config.
 
@@ -686,11 +782,11 @@ sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUse
 
                     // Install the Helm client:
 
-                    bootMaster.InvokeIdempotentAction("setup/cluster-helm-client",
+                    master.InvokeIdempotentAction("setup/cluster-helm-client",
                         () =>
                         {
-                            bootMaster.Status = "install: Helm client";
-                            bootMaster.SudoCommand("snap install helm --classic");
+                            master.Status = "install: Helm client";
+                            master.SudoCommand("snap install helm --classic");
                         });
                 });
         }

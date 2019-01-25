@@ -207,7 +207,7 @@ namespace Neon.Kube
 
             if (NeonHelper.IsWindows)
             {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
+                var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".kube");
 
                 Directory.CreateDirectory(path);
 
@@ -487,6 +487,19 @@ namespace Neon.Kube
 
                 return cachedKubeConfig = new KubeConfig();
             }
+        }
+
+        /// <summary>
+        /// Rewrites the local kubeconfig file.
+        /// </summary>
+        /// <param name="config">The new configuration.</param>
+        public static void SetKubeConfig(KubeConfig config)
+        {
+            Covenant.Requires<ArgumentNullException>(config != null);
+
+            cachedKubeConfig = config;
+
+            File.WriteAllText(KubeConfigPath, NeonHelper.YamlSerialize(config));
         }
 
         /// <summary>

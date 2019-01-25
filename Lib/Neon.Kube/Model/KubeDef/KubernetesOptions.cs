@@ -70,6 +70,17 @@ namespace Neon.Kube
         public string IstioVersion { get; set; } = "default";
 
         /// <summary>
+        /// Enable pods to be scheduled on cluster master nodes.  This defaults to <c>null</c>
+        /// which will allow pods to be scheduled on masters if the cluster consists only of
+        /// master nodes (e.g. for a single node cluster.  This defaults to <c>false</c> for
+        /// clusters with worker nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "AllowPodsOnMasters", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "AllowPodsOnMasters", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public bool? AllowPodsOnMasters { get; set; } = null;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
