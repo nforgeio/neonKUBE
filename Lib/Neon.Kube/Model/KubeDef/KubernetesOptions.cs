@@ -61,6 +61,15 @@ namespace Neon.Kube
         public string DashboardVersion { get; set; } = defaultDashboardVersion;
 
         /// <summary>
+        /// The version of Helm to be installed.  This defaults to <b>default</b> which
+        /// will install a reasonable version for the Kubernetes release being inbstalled.
+        /// </summary>
+        [JsonProperty(PropertyName = "HelmVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "HelmVersion", ApplyNamingConventions = false)]
+        [DefaultValue("default")]
+        public string HelmVersion { get; set; } = "default";
+
+        /// <summary>
         /// The version of Istio to be installed.  This defaults to <b>default</b> which
         /// will install a reasonable version for the Kubernetes release being inbstalled.
         /// </summary>
@@ -113,6 +122,11 @@ namespace Neon.Kube
                 {
                     throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(DashboardVersion)}={DashboardVersion}] is not a valid version number.");
                 }
+            }
+
+            if (HelmVersion != "default" && !System.Version.TryParse(HelmVersion, out var vHelm))
+            {
+                throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
             }
 
             if (IstioVersion != "default" && !System.Version.TryParse(IstioVersion, out var vIstio))

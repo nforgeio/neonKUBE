@@ -591,18 +591,20 @@ namespace Neon.Kube
         /// of Kubernetes.
         /// </note>
         /// </summary>
-        /// <param name="kubernetesVersion">The installed Kubernetes version..</param>
-        public static void InstallKubeCtl(string kubernetesVersion)
+        /// <param name="setupInfo">The KUbernetes setup information.</param>
+        public static void InstallKubeCtl(KubeSetupInfo setupInfo)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(kubernetesVersion));
+            Covenant.Requires<ArgumentNullException>(setupInfo != null);
 
-            var hostPlatform = KubeHelper.HostPlatform;
-            var kubeCtlPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", kubernetesVersion);
-            var targetPath   = Path.Combine(KubeHelper.ProgramFolder, "kubectl.exe");
+            var hostPlatform      = KubeHelper.HostPlatform;
+            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", setupInfo.Versions.Kubernetes);
+            var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
 
             switch (hostPlatform)
             {
                 case KubeHostPlatform.Windows:
+
+                    targetPath = Path.Combine(targetPath, "kubectl.exe");
 
                     // Ensure that the KUBECONFIG environment variable exists and includes
                     // the path to the user's [.neonkube] configuration.
@@ -650,7 +652,7 @@ namespace Neon.Kube
 
                     if (!File.Exists(targetPath))
                     {
-                        File.Copy(kubeCtlPath, targetPath);
+                        File.Copy(cachedKubeCtlPath, targetPath);
                     }
                     else
                     {
@@ -662,13 +664,15 @@ namespace Neon.Kube
 
                         var pattern  = "GitVersion:\"v";
                         var response = NeonHelper.ExecuteCapture(targetPath, "version");
-                        var pStart   = response.OutputText.IndexOf("GitVersion:\"v") + pattern.Length;
+                        var pStart   = response.OutputText.IndexOf(pattern);
                         var error    = "Cannot identify existing [kubectl] version.";
 
                         if (pStart == -1)
                         {
                             throw new KubeException(error);
                         }
+
+                        pStart += pattern.Length;
 
                         var pEnd = response.OutputText.IndexOf("\"", pStart);
 
@@ -684,11 +688,96 @@ namespace Neon.Kube
                             throw new KubeException(error);
                         }
 
-                        if (Version.Parse(kubernetesVersion) > currentVersion)
+                        if (Version.Parse(setupInfo.Versions.Kubernetes) > currentVersion)
                         {
                             // We need to copy the latest version.
 
-                            File.Copy(kubeCtlPath, targetPath);
+                            File.Copy(cachedKubeCtlPath, targetPath);
+                        }
+                    }
+                    break;
+
+                case KubeHostPlatform.Linux:
+                case KubeHostPlatform.Osx:
+                default:
+
+                    throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Ensures that <b>helm</b> tool whose version is at least as great as the requested
+        /// cluster version is installed to the <b>neonKUBE</b> programs folder by copying the
+        /// tool from the cache if necessary.
+        /// </para>
+        /// <note>
+        /// This will probably require elevated privileges.
+        /// </note>
+        /// <note>
+        /// This assumes that <b>Helm</b> has already been downloaded and cached and also that 
+        /// more recent <b>Helm</b> releases are backwards compatible with older deployed versions
+        /// of Tiller.
+        /// </note>
+        /// </summary>
+        /// <param name="setupInfo">The KUbernetes setup information.</param>
+        public static void InstallHelm(KubeSetupInfo setupInfo)
+        {
+            Covenant.Requires<ArgumentNullException>(setupInfo != null);
+
+            var hostPlatform    = KubeHelper.HostPlatform;
+            var cachedHelmPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", setupInfo.Versions.Helm);
+            var targetPath      = Path.Combine(KubeHelper.ProgramFolder);
+
+            switch (hostPlatform)
+            {
+                case KubeHostPlatform.Windows:
+
+                    targetPath = Path.Combine(targetPath, "helm.exe");
+
+                    if (!File.Exists(targetPath))
+                    {
+                        File.Copy(cachedHelmPath, targetPath);
+                    }
+                    else
+                    {
+                        // Execute the existing target to obtain its version and update it
+                        // to the cached copy if the cluster installed a more recent version
+                        // of Kubernetes.
+
+                        // $hack(jeff.lill): Simple client version extraction
+
+                        var pattern  = "SemVer:\"v";
+                        var response = NeonHelper.ExecuteCapture(targetPath, "version");
+                        var pStart   = response.OutputText.IndexOf(pattern);
+                        var error    = "Cannot identify existing [helm] version.";
+
+                        if (pStart == -1)
+                        {
+                            throw new KubeException(error);
+                        }
+
+                        pStart += pattern.Length;
+
+                        var pEnd = response.OutputText.IndexOf("\"", pStart);
+
+                        if (pEnd == -1)
+                        {
+                            throw new KubeException(error);
+                        }
+
+                        var currentVersionString = response.OutputText.Substring(pStart, pEnd - pStart);
+
+                        if (!Version.TryParse(currentVersionString, out var currentVersion))
+                        {
+                            throw new KubeException(error);
+                        }
+
+                        if (Version.Parse(setupInfo.Versions.Helm) > currentVersion)
+                        {
+                            // We need to copy the latest version.
+
+                            File.Copy(cachedHelmPath, targetPath);
                         }
                     }
                     break;

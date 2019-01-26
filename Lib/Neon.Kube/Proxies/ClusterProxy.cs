@@ -87,7 +87,7 @@ namespace Neon.Kube
         /// </param>
         /// <remarks>
         /// The <paramref name="nodeProxyCreator"/> function will be called for each node in
-        /// the cluster definition giving the application the chance to create the management
+        /// the cluster definition giving the application the chance to create the node
         /// proxy using the node's SSH credentials and also to specify logging.  A default
         /// creator that doesn't initialize SSH credentials and logging is used if <c>null</c>
         /// is passed.
@@ -124,7 +124,7 @@ namespace Neon.Kube
             }
 
             this.Definition        = clusterDefinition;
-            this.KubeContext       = new KubeConfigContext();
+            this.KubeContext       = KubeHelper.KubeContext;
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendLog;

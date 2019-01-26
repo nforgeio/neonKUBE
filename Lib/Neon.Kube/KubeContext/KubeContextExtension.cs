@@ -92,7 +92,20 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public SshCredentials SshCredentials => SshCredentials.FromUserPassword(SshUsername, SshPassword);
+        public SshCredentials SshCredentials
+        {
+            get
+            {
+                if (SshUsername != null && SshPassword != null)
+                {
+                    return SshCredentials.FromUserPassword(SshUsername, SshPassword);
+                }
+                else
+                {
+                    return SshCredentials.None;
+                }
+            }
+        }
 
         /// <summary>
         /// Temporarily holds the strong password during cluster setup.

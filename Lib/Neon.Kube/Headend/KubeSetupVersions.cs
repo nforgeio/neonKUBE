@@ -65,6 +65,14 @@ namespace Neon.Kube
         public string Docker { get; set; }
 
         /// <summary>
+        /// The Helm version.
+        /// </summary>
+        [JsonProperty(PropertyName = "Helm", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Helm", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Helm { get; set; }
+
+        /// <summary>
         /// The Istio version.
         /// </summary>
         [JsonProperty(PropertyName = "Istio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

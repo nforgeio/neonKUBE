@@ -40,12 +40,19 @@ namespace Neon.Kube
         private const string defaultKubeVersion          = "1.13.2";
         private const string defaultKubeDashboardVersion = "1.10.1";
         private const string defaultDockerVersion        = "docker.ce-18.06.1";
+        private const string defaultHelmVersion          = "2.12.3";
         private const string defaultIstioVersion         = "1.1.0-snapshot.3";
 
         private string[] supportedDockerVersions
             = new string[]
             {
                 defaultDockerVersion
+            };
+
+        private string[] supportedHelmVersions
+            = new string[]
+            {
+                defaultHelmVersion
             };
 
         private static string[] supportedIstioVersions
@@ -153,6 +160,18 @@ namespace Neon.Kube
                 throw new KubeException($"[{dockerVersion}] is not a supported Docker version.");
             }
 
+            var helmVersion = clusterDefinition.Kubernetes.HelmVersion;
+
+            if (helmVersion == "default")
+            {
+                helmVersion = defaultHelmVersion;
+            }
+
+            if (supportedHelmVersions.SingleOrDefault(v => v == helmVersion) == null)
+            {
+                throw new KubeException($"[{helmVersion}] is not a supported Helm version.");
+            }
+
             var istioVersion = clusterDefinition.Docker.Version;
 
             if (istioVersion == "default")
@@ -168,18 +187,22 @@ namespace Neon.Kube
             var setupInfo = await Task.FromResult(
                 new KubeSetupInfo()
                 {
-                    LinuxKubeCtlUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubectl",
-                    LinuxKubeAdminUri           = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubeadm",
-                    LinuxKubeletUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubelet",
+                    KubeAdmLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubeadm",
+                    KubeCtlLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubectl",
+                    KubeletLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubelet",
 
-                    OsxKubeCtlUri               = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/darwin/amd64/kubectl",
+                    KubeCtlOsxUri               = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/darwin/amd64/kubectl",
                     
-                    WindowsKubeCtlUri           = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/windows/amd64/kubectl.exe",
+                    KubeCtlWindowsUri           = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/windows/amd64/kubectl.exe",
 
-                    UbuntuDockerPackageUri      = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{dockerVersion}-ubuntu-bionic-stable-amd64.deb",
-                    UbuntuKubeAdmPackageVersion = ubuntuKubeAdmPackages[kubeVersion.ToString()],
-                    UbuntuKubeCtlPackageVersion = ubuntuKubeCtlPackages[kubeVersion.ToString()],
-                    UbuntuKubeletPackageVersion = ubuntuKubeletPackages[kubeVersion.ToString()],
+                    DockerPackageUbuntuUri      = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{dockerVersion}-ubuntu-bionic-stable-amd64.deb",
+                    KubeAdmPackageUbuntuVersion = ubuntuKubeAdmPackages[kubeVersion.ToString()],
+                    KubeCtlPackageUbuntuVersion = ubuntuKubeCtlPackages[kubeVersion.ToString()],
+                    KubeletPackageUbuntuVersion = ubuntuKubeletPackages[kubeVersion.ToString()],
+
+                    HelmLinuxUri                = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-linux-amd64.tar.gz",
+                    HelmOsxUri                  = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-darwin-amd64.tar.gz",
+                    HelmWindowsUri              = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-windows-amd64.zip",
 
                     IstioLinuxUri               = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-{istioVersion}-linux.tar.gz",
                     KubeDashboardUri            = $"https://raw.githubusercontent.com/kubernetes/dashboard/v{kubeDashboardVersion}/src/deploy/recommended/kubernetes-dashboard.yaml",
@@ -187,8 +210,9 @@ namespace Neon.Kube
 
             setupInfo.Versions.Kubernetes          = kubeVersion.ToString();
             setupInfo.Versions.KubernetesDashboard = kubeDashboardVersion.ToString();
-            setupInfo.Versions.Docker        = dockerVersion;
-            setupInfo.Versions.Istio         = istioVersion;
+            setupInfo.Versions.Docker              = dockerVersion;
+            setupInfo.Versions.Helm                = helmVersion;
+            setupInfo.Versions.Istio               = istioVersion;
 
             return setupInfo;
         }

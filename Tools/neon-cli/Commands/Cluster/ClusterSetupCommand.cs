@@ -19,6 +19,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -147,7 +148,7 @@ OPTIONS:
                     }
                 });
 
-            controller.AddGlobalStep("download binaries", () => DownloadBinaries());
+            controller.AddGlobalStep("workstation binaries", () => WorkstationBinaries());
             controller.AddWaitUntilOnlineStep("connect");
             controller.AddStep("ssh client cert", GenerateClientSshKey, node => node == cluster.FirstMaster);
             controller.AddStep("verify OS", CommonSteps.VerifyOS);
@@ -160,7 +161,9 @@ OPTIONS:
             // We need to do this so the the package cache will be running
             // when the remaining nodes are configured.
 
-            controller.AddStep("configure: first master",
+            var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "configure first master" : "configure master";
+
+            controller.AddStep(configureFirstMasterStepLabel,
                 (node, stepDelay) =>
                 {
                     SetupCommon(node, stepDelay);
@@ -174,7 +177,7 @@ OPTIONS:
 
             if (cluster.Definition.Nodes.Count() > 1)
             {
-                controller.AddStep("configure: other nodes",
+                controller.AddStep("configure other nodes",
                     (node, stepDelay) =>
                     {
                         SetupCommon(node, stepDelay);
@@ -291,10 +294,6 @@ OPTIONS:
 
             cluster.LogLine(logEndMarker);
 
-            // Ensure that the [kubectl] tool is installed.
-
-            KubeHelper.InstallKubeCtl(kubeSetupInfo.Versions.Kubernetes);
-
             // Update the kubeconfig.
 
             var kubeConfigPath = KubeHelper.KubeConfigPath;
@@ -354,59 +353,149 @@ OPTIONS:
         }
 
         /// <summary>
-        /// Downloads any required binaries to the cache if they're not already present.
+        /// Downloads and installs any required binaries to the workstation cache if they're not already present.
         /// </summary>
-        private async void DownloadBinaries()
+        private async void WorkstationBinaries()
         {
             var handler = new HttpClientHandler()
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             };
 
-            var firstMaster = cluster.FirstMaster;
+            var firstMaster       = cluster.FirstMaster;
+            var hostPlatform      = KubeHelper.HostPlatform;
+            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", kubeSetupInfo.Versions.Kubernetes);
+            var cachedHelmPath    = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", kubeSetupInfo.Versions.Helm);
+
+            string kubeCtlUri;
+            string helmUri;
+
+            switch (hostPlatform)
+            {
+                case KubeHostPlatform.Linux:
+
+                    kubeCtlUri = kubeSetupInfo.KubeCtlLinuxUri;
+                    helmUri    = kubeSetupInfo.HelmLinuxUri;
+                    break;
+
+                case KubeHostPlatform.Osx:
+
+                    kubeCtlUri = kubeSetupInfo.KubeCtlOsxUri;
+                    helmUri    = kubeSetupInfo.HelmOsxUri;
+                    break;
+
+                case KubeHostPlatform.Windows:
+
+                    kubeCtlUri = kubeSetupInfo.KubeCtlWindowsUri;
+                    helmUri    = kubeSetupInfo.HelmWindowsUri;
+                    break;
+
+                default:
+
+                    throw new NotSupportedException($"Unsupported workstation platform [{hostPlatform}]");
+            }
+
+            // Download the components if they're not already cached.
 
             using (var client = new HttpClient(handler, disposeHandler: true))
             {
-                var hostPlatform = KubeHelper.HostPlatform;
-                var kubeCtlPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", kubeSetupInfo.Versions.Kubernetes);
-
-                if (!File.Exists(kubeCtlPath))
+                if (!File.Exists(cachedKubeCtlPath))
                 {
                     firstMaster.Status = "download: kubectl";
 
-                    string kubeCtlUri;
-
-                    switch (hostPlatform)
-                    {
-                        case KubeHostPlatform.Linux:
-
-                            kubeCtlUri = kubeSetupInfo.LinuxKubeCtlUri;
-                            break;
-
-                        case KubeHostPlatform.Osx:
-
-                            kubeCtlUri = kubeSetupInfo.OsxKubeCtlUri;
-                            break;
-
-                        case KubeHostPlatform.Windows:
-
-                            kubeCtlUri = kubeSetupInfo.WindowsKubeCtlUri;
-                            break;
-
-                        default:
-
-                            throw new NotSupportedException($"Unsupported workstation platform [{hostPlatform}]");
-                    }
-
                     using (var response = await client.GetStreamAsync(kubeCtlUri))
                     {
-                        using (var output = new FileStream(kubeCtlPath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var output = new FileStream(cachedKubeCtlPath, FileMode.Create, FileAccess.ReadWrite))
                         {
                             await response.CopyToAsync(output);
                         }
                     }
                 }
+
+                if (!File.Exists(cachedHelmPath))
+                {
+                    firstMaster.Status = "download: Helm";
+
+                    using (var response = await client.GetStreamAsync(helmUri))
+                    {
+                        // This is a [zip] file for Windows and a [tar.gz] file for Linux and OS/X.
+                        // We're going to download to a temporary file so we can extract just the
+                        // Helm binary.
+
+                        var cachedTempHelmPath = cachedHelmPath + ".tmp";
+
+                        try
+                        {
+                            using (var output = new FileStream(cachedTempHelmPath, FileMode.Create, FileAccess.ReadWrite))
+                            {
+                                await response.CopyToAsync(output);
+                            }
+
+                            switch (hostPlatform)
+                            {
+                                case KubeHostPlatform.Linux:
+                                case KubeHostPlatform.Osx:
+
+                                    throw new NotImplementedException($"Unsupported workstation platform [{hostPlatform}]");
+
+                                case KubeHostPlatform.Windows:
+
+                                    // The downloaded file is a ZIP archive for Windows.  We're going
+                                    // to extract the [windows-amd64/helm.exe] file.
+
+                                    using (var input = new FileStream(cachedTempHelmPath, FileMode.Open, FileAccess.ReadWrite))
+                                    {
+                                        using (var zip = new ZipFile(input))
+                                        {
+                                            foreach (ZipEntry zipEntry in zip)
+                                            {
+                                                if (!zipEntry.IsFile)
+                                                {
+                                                    continue;
+                                                }
+
+                                                if (zipEntry.Name == "windows-amd64/helm.exe")
+                                                {
+                                                    using (var zipStream = zip.GetInputStream(zipEntry))
+                                                    {
+                                                        using (var output = new FileStream(cachedHelmPath, FileMode.Create, FileAccess.ReadWrite))
+                                                        {
+                                                            zipStream.CopyTo(output);
+                                                        }
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+
+                                default:
+
+                                    throw new NotSupportedException($"Unsupported workstation platform [{hostPlatform}]");
+                            }
+                        }
+                        finally
+                        {
+                            if (File.Exists(cachedTempHelmPath))
+                            {
+                                File.Delete(cachedTempHelmPath);
+                            }
+                        }
+                    }
+                }
             }
+
+            // We're going to assume that the workstation tools are backwards 
+            // compatible with older versions of Kubernetes and other infrastructure
+            // components and simply compare the installed tool (if present) version
+            // with the requested tool version and overwrite the installed tool if
+            // the new one is more current.
+
+            KubeHelper.InstallKubeCtl(kubeSetupInfo);
+            KubeHelper.InstallHelm(kubeSetupInfo);
+
+            firstMaster.Status = string.Empty;
         }
 
         /// <summary>
@@ -618,7 +707,7 @@ ff02::2         ip6-allrouters
         }
 
         /// <summary>
-        /// Installs the required Kubernetes components on a node.
+        /// Installs the required Kubernetes related components on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
@@ -640,16 +729,36 @@ safe-apt-get update
                     node.SudoCommand(bundle);
 
                     node.Status = "install: kubeadm";
-                    node.SudoCommand($"safe-apt-get install -yq kubeadm={kubeSetupInfo.UbuntuKubeAdmPackageVersion}");
+                    node.SudoCommand($"safe-apt-get install -yq kubeadm={kubeSetupInfo.KubeAdmPackageUbuntuVersion}");
 
                     node.Status = "install: kubectl";
-                    node.SudoCommand($"safe-apt-get install -yq kubectl={kubeSetupInfo.UbuntuKubeCtlPackageVersion}");
+                    node.SudoCommand($"safe-apt-get install -yq kubectl={kubeSetupInfo.KubeCtlPackageUbuntuVersion}");
 
                     node.Status = "install: kubelet";
-                    node.SudoCommand($"safe-apt-get install -yq kubelet={kubeSetupInfo.UbuntuKubeletPackageVersion}");
+                    node.SudoCommand($"safe-apt-get install -yq kubelet={kubeSetupInfo.KubeletPackageUbuntuVersion}");
 
                     node.Status = "hold: packages";
                     node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
+                    
+                    // Download and install the Helm client:
+
+                    node.InvokeIdempotentAction("setup/cluster-helm",
+                        () =>
+                        {
+                            node.Status = "install: Helm client";
+
+                            var helmInstallScript =
+$@"#!/bin/bash
+cd /tmp
+curl {Program.CurlOptions} {kubeSetupInfo.HelmLinuxUri} > helm.tar.gz
+tar xvf helm.tar.gz
+cp linux-amd64/helm /usr/local/bin
+chmod 770 /usr/local/bin/helm
+rm -f helm.tar.gz
+rm -rf helm
+";
+                            node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
+                        });
                 });
         }
 
@@ -681,16 +790,6 @@ safe-apt-get update
                 master.InvokeIdempotentAction("setup/cluster-init",
                     () =>
                     {
-                        // $todo(jeff.lill):
-                        //
-                        // By default, [kubeadm init] returns a cluster join token that's good only for 24 hours.
-                        // We're using [--token-ttl 0] to obtain a token with unlimited.  This will make it easier
-                        // to join nodes to the cluster after creation.  This might could end up being a security 
-                        // issue though.  It is possible to obtain a new join token from a master node, so perhaps
-                        // we'll use that in the future and go back to short-lived initial tokens.
-                        //
-                        //      https://github.com/jefflill/NeonForge/issues/424
-
                         var clusterConfig =
 $@"
 apiVersion: kubeadm.k8s.io/v1beta1
@@ -780,15 +879,6 @@ networking:
 
                         kubeContextExtension.Save();
                     }
-
-                    // Install the Helm client:
-
-                    master.InvokeIdempotentAction("setup/cluster-helm-client",
-                        () =>
-                        {
-                            master.Status = "install: Helm client";
-                            master.SudoCommand("snap install helm --classic");
-                        });
                 });
         }
 
@@ -849,15 +939,6 @@ sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
 sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
 ";
                                 node.SudoCommand(CommandBundle.FromScript(kubeConfigCopyScript));
-                            });
-
-                        // Install the Helm client.
-
-                        node.InvokeIdempotentAction("setup/cluster-helm-client",
-                            () =>
-                            {
-                                node.Status = "install: Helm client";
-                                node.SudoCommand("snap install helm --classic");
                             });
                     }
                 });

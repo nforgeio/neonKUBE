@@ -62,9 +62,9 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
 
 1. **Kubernetes:** [releases](https://github.com/kubernetes/kubernetes/releases) - current: **1.13.2**
 
-2. **Kubernetes Dashboard:** [releases](https://github.com/kubernetes/dashboard/releases) - current **1.10.1**
+2. **Kubernetes Dashboard:** [releases](https://github.com/kubernetes/dashboard/releases) - current: **1.10.1**
 
-3. **Helm:** We're currently using **snap** to install the latest version.
+3. **Helm:** [releases](https://github.com/helm/helm/releases) - current: **2.12.3**
 
 4. *Istio:* [releases](https://github.com/istio/istio/releases) - current: **1.1.0-snapshot.3**
 

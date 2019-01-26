@@ -722,10 +722,10 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
             {
                 // $hack(jeff.lill):
                 //
-                // Calling Exit() short circuits the using statement above so we're
-                // going to dispose the shim here instead (if there is one).  I had
-                // accumulated almost 38K shim folders over the past six months or so.
-                // This should help prevent that.
+                // Calling Exit() short circuits the using statement in the [Main]
+                // method above so we're going to dispose the shim here instead 
+                // (if there is one).  I had accumulated almost 38K shim folders 
+                // over the past six months or so.  This should help prevent that.
                 //
                 //      https://github.com/jefflill/NeonForge/issues/394
 
