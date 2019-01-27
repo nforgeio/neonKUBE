@@ -102,6 +102,38 @@ namespace Neon.Kube
         public string Gateway { get; set; } = null;
 
         /// <summary>
+        /// Specifies the cluster network provider.  This currently defaults to <see cref="NetworkCni.Calico"/>
+        /// but this will change to the <see cref="NetworkCni.Istio"/> integrated provider once that stablizes.
+        /// </summary>
+        [JsonProperty(PropertyName = "Cni", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Cni", ApplyNamingConventions = false)]
+        [DefaultValue(NetworkCni.Calico)]
+        public NetworkCni Cni { get; set; } = NetworkCni.Calico;
+
+        /// <summary>
+        /// <para>
+        /// Specifies the cluster network provider version.  This defaults to <b>default</b> which will install
+        /// a reasonable supported version.
+        /// </para>
+        /// <note>
+        /// This is ignored for the <see cref="NetworkCni.Istio"/> integrated provider.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "CniVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "CniVersion", ApplyNamingConventions = false)]
+        [DefaultValue("default")]
+        public string CniVersion { get; set; } = "default";
+
+        /// <summary>
+        /// Specifies the version  of Istio to be installed.  This defaults to <b>default</b> which
+        /// will install a reasonable supported version.
+        /// </summary>
+        [JsonProperty(PropertyName = "IstioVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "IstioVersion", ApplyNamingConventions = false)]
+        [DefaultValue("default")]
+        public string IstioVersion { get; set; } = "default";
+
+        /// <summary>
         /// Enables global mutual TLS for communication between pods via the Istio sidecar proxies.
         /// This defaults to <c>true</c>
         /// </summary>
@@ -148,6 +180,8 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
+            // Nameservers
+
             var subnets = new List<SubnetDefinition>();
 
             if (Nameservers == null || Nameservers.Length == 0)
@@ -160,6 +194,28 @@ namespace Neon.Kube
                 if (!IPAddress.TryParse(nameserver, out var address))
                 {
                     throw new ClusterDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
+                }
+            }
+
+            // Istio version.
+
+            if (IstioVersion != "default" && !Version.TryParse(IstioVersion, out var vIstio))
+            {
+                throw new ClusterDefinitionException($"The [{nameof(NetworkOptions)}.{nameof(IstioVersion)}={IstioVersion}] is invalid.");
+            }
+
+            // Network provider.
+
+            if (Cni == NetworkCni.Istio)
+            {
+                throw new ClusterDefinitionException($"The [{nameof(NetworkOptions)}.{nameof(Cni)}={Cni}] network provider is not implemented.");
+            }
+
+            if (Cni != NetworkCni.Istio)
+            {
+                if (CniVersion != "default" && !Version.TryParse(CniVersion, out var vCni))
+                {
+                    throw new ClusterDefinitionException($"The [{nameof(NetworkOptions)}.{nameof(CniVersion)}={CniVersion}] is invalid.");
                 }
             }
 

@@ -42,7 +42,8 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// The version of Docker to be installed or <b>default</b> to install a reasonable
-        /// version for the version of Kubernetes being deployed.  This defaults to <b>default</b>.
+        /// version for the version of Kubernetes being deployed.  This defaults to <b>default</b>
+        /// which will install a reasonable supported version.
         /// </para>
         /// <note>
         /// Only Community Editions of Docker are supported at this time.

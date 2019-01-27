@@ -160,6 +160,25 @@ namespace Neon.Kube
         public string HelmWindowsUri { get; set; }
 
         //---------------------------------------------------------------------
+        // Calico:
+
+        /// <summary>
+        /// The Calico RBAC rules download (YAML for kubectl).
+        /// </summary>
+        [JsonProperty(PropertyName = "CalicoRbacUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "CalicoRbacUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string CalicoRbacUri { get; set; }
+
+        /// <summary>
+        /// The Calico setup download (YAML for kubectl).
+        /// </summary>
+        [JsonProperty(PropertyName = "CalicoSetupUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "CalicoSetupUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string CalicoSetupUri { get; set; }
+
+        //---------------------------------------------------------------------
         // Istio:
 
         /// <summary>

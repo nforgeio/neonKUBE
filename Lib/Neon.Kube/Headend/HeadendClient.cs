@@ -41,6 +41,7 @@ namespace Neon.Kube
         private const string defaultKubeDashboardVersion = "1.10.1";
         private const string defaultDockerVersion        = "docker.ce-18.06.1";
         private const string defaultHelmVersion          = "2.12.3";
+        private const string defaultCalicoVersion        = "3.3";
         private const string defaultIstioVersion         = "1.1.0-snapshot.3";
 
         private string[] supportedDockerVersions
@@ -53,6 +54,12 @@ namespace Neon.Kube
             = new string[]
             {
                 defaultHelmVersion
+            };
+
+        private string[] supportedCalicoVersions
+            = new string[]
+            {
+                defaultCalicoVersion
             };
 
         private static string[] supportedIstioVersions
@@ -172,7 +179,31 @@ namespace Neon.Kube
                 throw new KubeException($"[{helmVersion}] is not a supported Helm version.");
             }
 
-            var istioVersion = clusterDefinition.Docker.Version;
+            // $todo(jeff.lill):
+            //
+            // The code below supports only Istio and Calico CNIs.  I'm not entirely sure
+            // that we'll ever support anything but the Istio CNI once it is stable so
+            // I'm not going to bother with implementing something more universial yet.
+
+            if (clusterDefinition.Network.Cni != NetworkCni.Istio ||
+                clusterDefinition.Network.Cni != NetworkCni.Calico)
+            {
+                throw new NotImplementedException($"The [{clusterDefinition.Network.Cni}] CNI is not currently supported.");
+            }
+
+            var calicoVersion = clusterDefinition.Network.CniVersion;
+
+            if (calicoVersion == "default")
+            {
+                calicoVersion = defaultCalicoVersion;
+            }
+
+            if (clusterDefinition.Network.Cni == NetworkCni.Calico && supportedCalicoVersions.SingleOrDefault(v => v == calicoVersion) == null)
+            {
+                throw new KubeException($"[{calicoVersion}] is not a supported Calico version.");
+            }
+
+            var istioVersion = clusterDefinition.Network.IstioVersion;
 
             if (istioVersion == "default")
             {
@@ -204,6 +235,15 @@ namespace Neon.Kube
                     HelmOsxUri                  = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-darwin-amd64.tar.gz",
                     HelmWindowsUri              = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-windows-amd64.zip",
 
+                    // $todo(jeff.lill):
+                    //
+                    // I'm a little worried about where the "1.7" in the [CalicoSetupUri] came from.  I suspect that
+                    // this will vary too.  Once the Istio CNI is stable, we'll probably delete this anyway but if 
+                    // we do decide to allow for custom CNIs, we'll need to figure this out.
+
+                    CalicoRbacUri               = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
+                    CalicoSetupUri              = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml",
+
                     IstioLinuxUri               = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-{istioVersion}-linux.tar.gz",
                     KubeDashboardUri            = $"https://raw.githubusercontent.com/kubernetes/dashboard/v{kubeDashboardVersion}/src/deploy/recommended/kubernetes-dashboard.yaml",
                 });
@@ -212,6 +252,7 @@ namespace Neon.Kube
             setupInfo.Versions.KubernetesDashboard = kubeDashboardVersion.ToString();
             setupInfo.Versions.Docker              = dockerVersion;
             setupInfo.Versions.Helm                = helmVersion;
+            setupInfo.Versions.Calico              = calicoVersion;
             setupInfo.Versions.Istio               = istioVersion;
 
             return setupInfo;

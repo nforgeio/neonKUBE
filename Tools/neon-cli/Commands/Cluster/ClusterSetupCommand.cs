@@ -99,7 +99,7 @@ OPTIONS:
                 Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via [neon cluster prepare...].");
                 Program.Exit(1);
             }
-            else if (!kubeContextExtension.SetupPending)
+            else if (!kubeContextExtension.SetupDetails.SetupPending)
             {
                 Console.Error.WriteLine($"*** ERROR: Cluster [{contextName.Cluster}] has already been setup.");
             }
@@ -143,7 +143,7 @@ OPTIONS:
                     {
                         kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
 
-                        kubeContextExtension.ComponentVersions = kubeSetupInfo.Versions;
+                        kubeContextExtension.SetupDetails.SetupInfo = kubeSetupInfo;
                         kubeContextExtension.Save();
                     }
                 });
@@ -235,7 +235,7 @@ OPTIONS:
             //
             //      https://github.com/jefflill/NeonForge/issues/397
 
-            kubeContextExtension.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
+            kubeContextExtension.SetupDetails.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
             kubeContextExtension.Save();
 
             controller.AddStep("set strong password",
@@ -254,7 +254,7 @@ OPTIONS:
 
                     // $todo(jeff.lill): RESTORE THIS!
 
-                    //kubeContextExtension.HasStrongSshPassword = true;
+                    //kubeContextExtension.SetupDetails.HasStrongSshPassword = true;
                     //kubeContextExtension.Save();
                 },
                 quiet: true);
@@ -287,7 +287,7 @@ OPTIONS:
 
             //kubeContextExtension.SshPassword       = kubeContextExtension.SshStrongPassword;
             //kubeContextExtension.SshStrongPassword = null;
-            kubeContextExtension.SetupPending      = false;
+            kubeContextExtension.SetupDetails.SetupPending = false;
             kubeContextExtension.Save();
 
             // Write the operation end marker to all cluster node logs.
@@ -300,14 +300,14 @@ OPTIONS:
 
             if (!File.Exists(kubeConfigPath))
             {
-                File.WriteAllText(kubeConfigPath, kubeContextExtension.AdminConfig);
+                File.WriteAllText(kubeConfigPath, kubeContextExtension.SetupDetails.AdminConfig);
             }
             else
             {
                 // The user already has an existing kubeconfig, so we need
                 // to merge in the new config.
 
-                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.AdminConfig);
+                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.AdminConfig);
                 var existingConfig = KubeHelper.KubeConfig;
 
                 // Remove any existing user, context, and cluster with the same names.
@@ -340,14 +340,11 @@ OPTIONS:
                 existingConfig.Clusters.Add(newCluster);
                 existingConfig.Contexts.Add(newContext);
                 existingConfig.Users.Add(newUser);
+
                 existingConfig.CurrentContext = newContext.Name;
+
                 KubeHelper.SetKubeConfig(existingConfig);
             }
-
-            // We don't need the admin config anymore.
-
-            kubeContextExtension.AdminConfig = null;
-            kubeContextExtension.Save();
 
             Console.WriteLine();
         }
@@ -819,11 +816,11 @@ networking:
 
                         if (pEnd == -1)
                         {
-                            kubeContextExtension.ClusterJoinCommand = output.Substring(pStart).Trim();
+                            kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart).Trim();
                         }
                         else
                         {
-                            kubeContextExtension.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
+                            kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
                         }
                     });
 
@@ -857,23 +854,23 @@ networking:
                             //
                             // rename the user:
                             //
-                            //      CLUSTERNAME-admin --> CLUSTERNAME-roots 
+                            //      CLUSTERNAME-admin --> CLUSTERNAME-root 
 
-                            kubeContextExtension.AdminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
-                            kubeContextExtension.AdminConfig = kubeContextExtension.AdminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
-                            kubeContextExtension.AdminConfig = kubeContextExtension.AdminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
+                            kubeContextExtension.SetupDetails.AdminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
+                            kubeContextExtension.SetupDetails.AdminConfig = kubeContextExtension.SetupDetails.AdminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
+                            kubeContextExtension.SetupDetails.AdminConfig = kubeContextExtension.SetupDetails.AdminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
                             kubeContextExtension.Save();
 
-                            master.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.AdminConfig, permissions: "500");
+                            master.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.SetupDetails.AdminConfig, permissions: "500");
                         });
 
                     // Download the Kubernetes configuration file (if we don't already have it) because 
                     // we'll need that for configuring other cluster masters.
 
-                    if (kubeContextExtension.AdminConfig == null)
+                    if (kubeContextExtension.SetupDetails.AdminConfig == null)
                     {
                         master.Status = "download: kubernetes admin config";
-                        kubeContextExtension.AdminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
+                        kubeContextExtension.SetupDetails.AdminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
                     
                         // Persist the cluster join command and admin config.
 
@@ -902,22 +899,20 @@ networking:
                 {
                     Thread.Sleep(stepDelay);
 
-                    // Join the cluster:
-
-                    node.InvokeIdempotentAction("setup/cluster-join",
-                        () =>
-                        {
-                            node.Status = "join: cluster";
-                            node.SudoCommand(kubeContextExtension.ClusterJoinCommand);
-                        });
-
-                    // Complete master node configuration.
-
                     if (node.Metadata.IsMaster)
                     {
                         node.InvokeIdempotentAction("setup/cluster-kubectl",
                             () =>
                             {
+                                // Join the cluster:
+
+                                node.InvokeIdempotentAction("setup/cluster-join",
+                                    () =>
+                                    {
+                                        node.Status = "join: as master";
+                                        node.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --experimental-control-plane");
+                                    });
+
                                 // Pull the Kubernetes images:
 
                                 node.InvokeIdempotentAction("setup/cluster-images",
@@ -930,7 +925,7 @@ networking:
                                 // The other masters need the Kubernetes [admin.conf] file too.
 
                                 node.Status = "upload: kubernetes admin config";
-                                node.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.AdminConfig, permissions: "600");
+                                node.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.SetupDetails.AdminConfig, permissions: "600");
 
                                 var kubeConfigCopyScript =
 $@"#!/bin/bash
@@ -939,6 +934,17 @@ sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
 sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
 ";
                                 node.SudoCommand(CommandBundle.FromScript(kubeConfigCopyScript));
+                            });
+                    }
+                    else
+                    {
+                        // Join the cluster:
+
+                        node.InvokeIdempotentAction("setup/cluster-join",
+                            () =>
+                            {
+                                node.Status = "join: as worker";
+                                node.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand);
                             });
                     }
                 });
@@ -1214,7 +1220,7 @@ chmod 666 /run/ssh-key*
 
                     var script =
 $@"
-echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshStrongPassword}' | chpasswd
+echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SetupDetails.SshStrongPassword}' | chpasswd
 ";
                     var response = node.SudoCommand(CommandBundle.FromScript(script));
 
@@ -1224,7 +1230,7 @@ echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshStrongPassword
                         Program.Exit(response.ExitCode);
                     }
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(kubeContextExtension.SshUsername, kubeContextExtension.SshStrongPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(kubeContextExtension.SshUsername, kubeContextExtension.SetupDetails.SshStrongPassword));
                 });
         }
 

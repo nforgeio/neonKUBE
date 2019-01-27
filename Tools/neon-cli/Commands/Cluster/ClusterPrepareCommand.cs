@@ -410,7 +410,7 @@ Server Requirements:
                 ClusterDefinition = clusterDefinition,
                 SshUsername       = Program.MachineUsername,
                 SshPassword       = Program.MachinePassword,
-                SetupPending      = true
+                SetupDetails      = new KubeSetupDetails() { SetupPending = true }
             };
 
             contextExtension.Save();

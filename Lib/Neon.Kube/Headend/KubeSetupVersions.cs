@@ -73,6 +73,14 @@ namespace Neon.Kube
         public string Helm { get; set; }
 
         /// <summary>
+        /// The Calico version.
+        /// </summary>
+        [JsonProperty(PropertyName = "Calico", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Calico", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Calico { get; set; }
+
+        /// <summary>
         /// The Istio version.
         /// </summary>
         [JsonProperty(PropertyName = "Istio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

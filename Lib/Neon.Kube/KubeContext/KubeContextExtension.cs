@@ -62,13 +62,13 @@ namespace Neon.Kube
         public ClusterDefinition ClusterDefinition { get; set; }
 
         /// <summary>
-        /// Indicates whether provisioning is complete but setup is still
-        /// pending for this cluster
+        /// Holds additional information required during setup as well as for
+        /// provisoning additional clsuter nodes.
         /// </summary>
-        [JsonProperty(PropertyName = "SetupPending", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SetupPending", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SetupDetails", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "SetupDetails", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool SetupPending { get; set; } = false;
+        public KubeSetupDetails SetupDetails { get; set; } = new KubeSetupDetails();
 
         /// <summary>
         /// The SSH root username.
@@ -108,24 +108,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Temporarily holds the strong password during cluster setup.
-        /// </summary>
-        [JsonProperty(PropertyName = "SshStrongPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SshStrongPassword", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string SshStrongPassword { get; set; }
-
-        /// <summary>
-        /// Indicates whether a strong host SSH password was generated for the cluster.
-        /// This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "HasStrongSshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HasStrongSshPassword", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool HasStrongSshPassword { get; set; }
-
-        /// <summary>
-        /// The SSH RSA private key fingerprint used to secure the cluster nodes.  Thisk is a
+        /// The SSH RSA private key fingerprint used to secure the cluster nodes.  This is a
         /// MD5 hash encoded as hex bytes separated by colons.
         /// </summary>
         [JsonProperty(PropertyName = "SshNodeFingerprint")]
@@ -157,30 +140,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "SshClientKey", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public SshClientKey SshClientKey { get; set; }
-
-        /// <summary>
-        /// The command to be used join nodes to an existing cluster.
-        /// </summary>
-        [JsonProperty(PropertyName = "ClusterJoinCommand", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ClusterJoinCommand", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string ClusterJoinCommand { get; set; }
-
-        /// <summary>
-        /// The Kubernetes admin configuration file obtained from the first master at: <b>/etc/kubernetes/admin.conf</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "AdminConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "AdminConfig", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string AdminConfig { get; set; }
-
-        /// <summary>
-        /// Identifies the installed cluster software component versions.
-        /// </summary>
-        [JsonProperty(PropertyName = "ComponentVersions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ComponentVersions", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public KubeSetupVersions ComponentVersions { get; set; }
 
         /// <summary>
         /// Sets the file path where the extension will be persisted.
