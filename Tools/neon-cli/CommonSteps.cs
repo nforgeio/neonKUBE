@@ -252,7 +252,7 @@ TCPKeepAlive yes
 
             // Upload the new environment to the server.
 
-            node.UploadText("/etc/environment", sb.ToString(), tabStop: 4);
+            node.UploadText("/etc/environment", sb, tabStop: 4);
         }
 
         /// <summary>

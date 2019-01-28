@@ -1715,6 +1715,42 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Uploads text from a <see cref="StringBuilder"/> to the Linux server and then writes it to the file system,
+        /// converting any CR-LF line endings to the Unix-style LF.
+        /// </summary>
+        /// <param name="target">The target path on the Linux server.</param>
+        /// <param name="text">The input text.</param>
+        /// <param name="tabStop">
+        /// Optionally expands TABs into spaces when greater than zero or converts 
+        /// a series of leading spaces into tabs if less than zero.
+        /// </param>
+        /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
+        /// <param name="permissions">Optionally specifies the file permissions (must be <c>chmod</c> compatible).</param>
+        /// <param name="owner">Optionally specifies the file owner (must be <c>chown</c> compatible).</param>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// <b>Implementation Note:</b> The SSH.NET library we're using does not allow for
+        /// files to be uploaded directly to arbitrary file system locations, even if the
+        /// logged-in user has admin permissions.  The problem is that SSH.NET does not
+        /// provide a way to use <b>sudo</b> to claim these higher permissions.
+        /// </para>
+        /// <para>
+        /// The workaround is to create an upload folder in the user's home directory
+        /// called <b>~/upload</b> and upload the file there first and then use SSH
+        /// to move the file to its target location under sudo.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public void UploadText(string target, StringBuilder text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null, string owner = null)
+        {
+            Covenant.Requires<ArgumentNullException>(text != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
+
+            UploadText(target, text.ToString(), tabStop: tabStop, outputEncoding: outputEncoding, permissions: permissions, owner: owner);
+        }
+
+        /// <summary>
         /// Downloads a file from the remote node to the local file computer, creating
         /// parent folders as necessary.
         /// </summary>
@@ -3181,7 +3217,7 @@ broadcast {subnet.LastAddress}
                 sbResolveBaseText.AppendLine($"nameserver {nameserver}");
             }
 
-            UploadText("/etc/resolvconf/resolv.conf.d/base", sbResolveBaseText.ToString());
+            UploadText("/etc/resolvconf/resolv.conf.d/base", sbResolveBaseText);
         }
 
         /// <summary>

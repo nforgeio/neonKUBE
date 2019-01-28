@@ -197,7 +197,7 @@ OPTIONS:
 
             controller.AddGlobalStep("workstation binaries", () => WorkstationBinaries());
             controller.AddWaitUntilOnlineStep("connect");
-            controller.AddStep("ssh certificate", GenerateClientSshKey, node => node == cluster.FirstMaster);
+            controller.AddStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
             controller.AddStep("verify OS", CommonSteps.VerifyOS);
 
             // Write the operation begin marker to all cluster node logs.
@@ -238,6 +238,7 @@ OPTIONS:
             //-----------------------------------------------------------------
             // Kubernetes configuration.
 
+            controller.AddStep("setup api proxy", SetupApiProxy, node => node.Metadata.IsMaster);
             controller.AddStep("setup kubernetes", SetupKubernetes);
             controller.AddGlobalStep("setup cluster", SetupCluster);
             controller.AddGlobalStep("label nodes", LabelNodes);
@@ -740,7 +741,67 @@ $@"
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
 ");
-            node.UploadText("/etc/hosts", sbHosts.ToString(), 4, Encoding.UTF8);
+            node.UploadText("/etc/hosts", sbHosts, 4, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// Configures a local HAProxy container on a master to load balance across
+        /// the Kubernetes API servers running on each of the masters.
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private void SetupApiProxy(SshProxy<NodeDefinition> master)
+        {
+            master.InvokeIdempotentAction("setup/setup-api-loadbalancer",
+                () =>
+                {
+                    // We're simply going to generate the HAProxy config file
+                    // and write it to [/etc/neonkube/haproxy/haproxy.config]
+                    // and then deploy an HAProxy container named [neon-api-proxy] 
+                    // to each of the master nodes.
+
+                    var sbConfig = new StringBuilder();
+
+                    sbConfig.Append(
+@"#------------------------------------------------------------------------------
+# Kubernetes API server load balancer configuration.
+
+global
+
+    # Maximum number of connections.  1K should be more than enough for
+    # anything besides truly gigantic clusters.
+
+    maxconn             1000
+
+    # Randomize health check timing.
+
+    spread-checks       5
+
+defaults
+
+    # Proxy inbound traffic as TCP so we can balance both HTTP and HTTPS
+    # traffic without needing the TLS certificate.
+
+    mode                tcp
+
+    # Timeouts are relatively brief because backends are cluster local and should be fast.
+
+    timeout             connect 2s
+    timeout             client 2s
+    timeout             server 2s
+
+    # Load balancing strategy.
+
+    balance             roundrobin
+
+    # Retry failed connections a couple of times (for a total of three attempts).
+
+    retries             2
+
+    # Amount of time after which a health check is considered to have timed out.
+
+    timeout check       2s
+");
+                });
         }
 
         /// <summary>
@@ -1290,7 +1351,7 @@ kubectl apply -f /tmp/istio.yaml
         /// </summary>
         /// <param name="master">A cluster manager node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void GenerateClientSshKey(SshProxy<NodeDefinition> master, TimeSpan stepDelay)
+        private void GenerateClientSshCert(SshProxy<NodeDefinition> master, TimeSpan stepDelay)
         {
             // Here's some information explaining what how I'm doing this:
             //
