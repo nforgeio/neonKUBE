@@ -10,12 +10,6 @@
 
 PATH=${PATH}:/
 
-# Load the host node environment.
-
-if [ -f /etc/neon/host-env ] ; then
-    . /etc/neon/host-env
-fi
-
 # Initialize the configuration file check interval.
 
 configInterval=${CONFIG_INTERVAL}
