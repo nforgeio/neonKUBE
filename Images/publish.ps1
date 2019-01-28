@@ -13,7 +13,7 @@ param
 (
 	[switch]$all         = $False,        # Rebuild all images
 	[switch]$base        = $False,        # Rebuild base images
-	[switch]$dotnetBase  = $False,        # Rebuild .NET base images
+	[switch]$dotnetBase  = $False,        # Rebuild base .NET images
 	[switch]$dotnet      = $False,        # Rebuild .NET based images
 	[switch]$other       = $False,        # Rebuild all other images (usually script based)
     [switch]$nopush      = $False,        # Don't push to the registry
