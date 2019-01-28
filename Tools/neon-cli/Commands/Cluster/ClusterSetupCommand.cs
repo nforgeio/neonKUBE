@@ -197,7 +197,7 @@ OPTIONS:
 
             controller.AddGlobalStep("workstation binaries", () => WorkstationBinaries());
             controller.AddWaitUntilOnlineStep("connect");
-            controller.AddStep("ssh client cert", GenerateClientSshKey, node => node == cluster.FirstMaster);
+            controller.AddStep("ssh certificate", GenerateClientSshKey, node => node == cluster.FirstMaster);
             controller.AddStep("verify OS", CommonSteps.VerifyOS);
 
             // Write the operation begin marker to all cluster node logs.
@@ -208,7 +208,7 @@ OPTIONS:
             // We need to do this so the the package cache will be running
             // when the remaining nodes are configured.
 
-            var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "configure first master" : "configure master";
+            var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
             controller.AddStep(configureFirstMasterStepLabel,
                 (node, stepDelay) =>
@@ -224,7 +224,7 @@ OPTIONS:
 
             if (cluster.Definition.Nodes.Count() > 1)
             {
-                controller.AddStep("configure other nodes",
+                controller.AddStep("setup other nodes",
                     (node, stepDelay) =>
                     {
                         SetupCommon(node, stepDelay);
@@ -238,15 +238,8 @@ OPTIONS:
             //-----------------------------------------------------------------
             // Kubernetes configuration.
 
-            controller.AddStep("install Kubernetes", InstallKubernetes);
-            controller.AddStep("create cluster", CreateCluster, node => node == cluster.FirstMaster);
-
-            if (cluster.Nodes.Count() > 1)
-            {
-                controller.AddStep("join cluster", JoinCluster, node => node != cluster.FirstMaster);
-            }
-
-            controller.AddGlobalStep("configure cluster", ConfigureCluster);
+            controller.AddStep("setup kubernetes", SetupKubernetes);
+            controller.AddGlobalStep("setup cluster", SetupCluster);
             controller.AddGlobalStep("label nodes", LabelNodes);
 
             //-----------------------------------------------------------------
@@ -755,14 +748,14 @@ ff02::2         ip6-allrouters
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void InstallKubernetes(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupKubernetes(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.InvokeIdempotentAction("setup/setup-install-kubernetes",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
 
-                    node.Status = "configure: kubernetes package repo";
+                    node.Status = "setup: kubernetes repo";
 
                     var bundle = CommandBundle.FromScript(
 $@"#!/bin/bash
@@ -807,51 +800,51 @@ rm -rf helm
         }
 
         /// <summary>
-        /// Creates the initial cluster on the bootstrap master node passed and 
-        /// captures the master and worker cluster tokens required to join 
-        /// additional nodes to the cluster.
+        /// Initializes the cluster on the first manager, then joins the remaining
+        /// masters and workers to the cluster.
         /// </summary>
-        /// <param name="master">The target bootstrap master node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void CreateCluster(SshProxy<NodeDefinition> master, TimeSpan stepDelay)
+        private void SetupCluster()
         {
-            master.InvokeIdempotentAction("setup/cluster",
+            var firstMaster = cluster.FirstMaster;
+
+            firstMaster.InvokeIdempotentAction("setup/cluster",
                 () =>
                 {
-                Thread.Sleep(stepDelay);
+                    //---------------------------------------------------------
+                    // Initialize the cluster on the first master:
 
-                master.Status = "create: cluster";
+                    firstMaster.Status = "create: cluster";
 
-                // Pull the Kubernetes images:
+                    // Pull the Kubernetes images:
 
-                master.InvokeIdempotentAction("setup/cluster-images",
-                    () =>
-                    {
-                        master.Status = "pull: Kubernetes images";
-                        master.SudoCommand("kubeadm config images pull");
-                    });
-
-                master.InvokeIdempotentAction("setup/cluster-init",
-                    () =>
-                    {
-                        // $todo(jeff.lill): More work:
-                        //
-                        //  * We'll need to add the public DNS host to [certSANs] if/when we support public access.
-                        //
-                        //  * We don't yet support HA access to the API Server.  When we do, we'll need to
-                        //    set [controlPlaneEndpoint] to the address of the load balancer.
-
-                        var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:6443";
-                        var sbCertSANs           = new StringBuilder();
-
-                        foreach (var node in cluster.Masters)
+                    firstMaster.InvokeIdempotentAction("setup/cluster-images",
+                        () =>
                         {
-                            sbCertSANs.AppendLine($"  - \"{node.PrivateAddress}\"");
-                        }
+                            firstMaster.Status = "pull: kubernetes images";
+                            firstMaster.SudoCommand("kubeadm config images pull");
+                        });
 
-                        // Note that we're configuring the token TTL so the token never expires.
+                    firstMaster.InvokeIdempotentAction("setup/cluster-init",
+                        () =>
+                        {
+                            // $todo(jeff.lill): More work:
+                            //
+                            //  * We'll need to add the public DNS host to [certSANs] if/when we support public access.
+                            //
+                            //  * We don't yet support HA access to the API Server.  When we do, we'll need to
+                            //    set [controlPlaneEndpoint] to the address of the load balancer.
 
-                        var clusterConfig =
+                            var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:6443";
+                            var sbCertSANs           = new StringBuilder();
+
+                            foreach (var node in cluster.Masters)
+                            {
+                                sbCertSANs.AppendLine($"  - \"{node.PrivateAddress}\"");
+                            }
+
+                            // Note that we're configuring the token TTL so the token never expires.
+
+                            var clusterConfig =
 $@"
 apiVersion: kubeadm.k8s.io/v1beta1
 bootstrapTokens:
@@ -870,38 +863,38 @@ controlPlaneEndpoint: ""{controlPlaneEndpoint}""
 networking:
   podSubnet: ""{cluster.Definition.Network.PodSubnet}""
 ";
-                        master.UploadText("/tmp/cluster.yaml", clusterConfig);
-                                               
-                        var response = master.SudoCommand($"kubeadm init --config /tmp/cluster.yaml");
+                            firstMaster.UploadText("/tmp/cluster.yaml", clusterConfig);
 
-                        master.SudoCommand("rm /tmp/cluster.yaml");
+                            var response = firstMaster.SudoCommand($"kubeadm init --config /tmp/cluster.yaml");
 
-                        // Extract the cluster join command from the response.  We'll need this to join
-                        // other nodes to the cluster.
+                            firstMaster.SudoCommand("rm /tmp/cluster.yaml");
 
-                        var output = response.OutputText;
-                        var pStart = output.IndexOf("kubeadm join");
+                            // Extract the cluster join command from the response.  We'll need this to join
+                            // other nodes to the cluster.
 
-                        if (pStart == -1)
-                        {
-                            throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadmin init ...] response.");
-                        }
+                            var output = response.OutputText;
+                            var pStart = output.IndexOf("kubeadm join");
 
-                        var pEnd = output.IndexOf('\n', pStart);
+                            if (pStart == -1)
+                            {
+                                throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadmin init ...] response.");
+                            }
 
-                        if (pEnd == -1)
-                        {
-                            kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart).Trim();
-                        }
-                        else
-                        {
-                            kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
-                        }
-                    });
+                            var pEnd = output.IndexOf('\n', pStart);
+
+                            if (pEnd == -1)
+                            {
+                                kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart).Trim();
+                            }
+                            else
+                            {
+                                kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
+                            }
+                        });
 
                     // kubectl config:
 
-                    master.InvokeIdempotentAction("setup/cluster-kubectl",
+                    firstMaster.InvokeIdempotentAction("setup/cluster-kubectl",
                         () =>
                         {
                             // Edit the Kubernetes configuration file to rename the context:
@@ -912,12 +905,12 @@ networking:
                             //
                             //      CLUSTERNAME-admin --> CLUSTERNAME-root 
 
-                            var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
+                            var adminConfig = firstMaster.DownloadText("/etc/kubernetes/admin.conf");
 
                             adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
                             adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
 
-                            master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
+                            firstMaster.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });
 
                     // Download the boot master files that will need to be provisioned on
@@ -950,100 +943,87 @@ networking:
 
                         foreach (var file in files)
                         {
-                            var text = master.DownloadText(file.Path);
+                            var text = firstMaster.DownloadText(file.Path);
 
                             kubeContextExtension.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
                         }
                     }
 
-                    // Persist the cluster join command and master files.
+                    // Persist the cluster join command and downloaded master files.
 
                     kubeContextExtension.Save();
-                });
-        }
 
-        /// <summary>
-        /// Adds the node to the cluster.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void JoinCluster(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
-        {
-            if (node == cluster.FirstMaster)
-            {
-                // This node is implictly joined to the cluster.
+                    firstMaster.Status = "joined";
 
-                node.Status = "joined";
-                return;
-            }
+                    //---------------------------------------------------------
+                    // Join the remaining masters to the cluster:
 
-            node.InvokeIdempotentAction("setup/cluster",
-                () =>
-                {
-                    Thread.Sleep(stepDelay);
-
-                    if (node.Metadata.IsMaster)
+                    foreach (var master in cluster.Masters.Where(m => m != firstMaster))
                     {
-                        node.InvokeIdempotentAction("setup/cluster-kubectl",
+                        master.InvokeIdempotentAction("setup/cluster-kubectl",
                             () =>
                             {
                                 // The other (non-boot) masters need files downloaded from the boot master.
 
-                                node.Status = "upload: master files";
+                                master.Status = "upload: master files";
 
                                 foreach (var file in kubeContextExtension.SetupDetails.MasterFiles)
                                 {
-                                    node.UploadText(file.Key, file.Value.Text, permissions: file.Value.Permissions, owner: file.Value.Owner);
+                                    master.UploadText(file.Key, file.Value.Text, permissions: file.Value.Permissions, owner: file.Value.Owner);
                                 }
 
                                 // Join the cluster:
 
-                                node.InvokeIdempotentAction("setup/cluster-join",
+                                master.InvokeIdempotentAction("setup/cluster-join",
                                     () =>
                                     {
-                                        node.Status = "join: as master";
-                                        node.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --experimental-control-plane");
+                                        master.Status = "join: as master";
+                                        master.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --experimental-control-plane");
                                     });
 
                                 // Pull the Kubernetes images:
 
-                                node.InvokeIdempotentAction("setup/cluster-images",
+                                master.InvokeIdempotentAction("setup/cluster-images",
                                     () =>
                                     {
-                                        node.Status = "pull: Kubernetes images";
-                                        node.SudoCommand("kubeadm config images pull");
+                                        master.Status = "pull: kubernetes images";
+                                        master.SudoCommand("kubeadm config images pull");
                                     });
                             });
-                    }
-                    else
-                    {
-                        // Join the cluster:
 
-                        node.InvokeIdempotentAction("setup/cluster-join",
+                        master.Status = "joined";
+                    }
+
+                    //---------------------------------------------------------
+                    // Join the remaining workers to the cluster:
+
+                    foreach (var worker in cluster.Workers)
+                    {
+                        worker.InvokeIdempotentAction("setup/cluster-join",
                             () =>
                             {
-                                node.Status = "join: as worker";
-                                node.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand);
+                                worker.Status = "join: as worker";
+                                worker.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand);
                             });
+
+                        worker.Status = "joined";
                     }
                 });
 
-            node.Status = "joined";
-        }
+            //-----------------------------------------------------------------
+            // Configure the cluster.
 
-        /// <summary>
-        /// Configures the Kubernetes cluster,
-        /// </summary>
-        private void ConfigureCluster()
-        {
-            var master = cluster.FirstMaster;
-
-            master.InvokeIdempotentAction("setup/cluster-configure",
+            firstMaster.InvokeIdempotentAction("setup/cluster-configure",
                 () =>
                 {
+                    foreach (var node in cluster.Nodes)
+                    {
+                        node.Status = string.Empty;
+                    }
+
                     // Allow pods to be scheduled on master nodes if enabled.
 
-                    master.InvokeIdempotentAction("setup/cluster-master-pods",
+                    firstMaster.InvokeIdempotentAction("setup/cluster-master-pods",
                         () =>
                         {
                             var allowPodsOnMasters = false;
@@ -1057,7 +1037,10 @@ networking:
                                 allowPodsOnMasters = cluster.Definition.Workers.Count() > 0;
                             }
 
-                            master.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-");
+                            // The [kubectl taint] command looks like it can return a non-zero exit code.
+                            // We'll ignore this.
+
+                            firstMaster.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
                         });
 
                     // Install the network CNI.
@@ -1068,7 +1051,7 @@ networking:
                     {
                         case NetworkCni.Calico:
 
-                            DeployCalicoCni(master);
+                            DeployCalicoCni(firstMaster);
                             break;
 
                         case NetworkCni.Istio:
@@ -1079,17 +1062,21 @@ networking:
 
                     // Install the Helm/Tiller service.  This will install the latest stable version.
 
-                    master.InvokeIdempotentAction("setup/cluster-deploy-helm",
+                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-helm",
                         () =>
                         {
-                            master.Status = "deploy: Helm/Tiller";
-                            master.SudoCommand("helm init --service-account tiller");
+                            firstMaster.Status = "deploy: Helm/Tiller";
+                            firstMaster.SudoCommand("helm init --service-account tiller");
                         });
 
                     // Install the Kubernetes dashboard:
 
-                    master.Status = "deploy: Kubernetes dashboard";
-                    master.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
+                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-dashboard",
+                        () =>
+                        {
+                            firstMaster.Status = "deploy: Kubernetes dashboard";
+                            firstMaster.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
+                        });
                 });
         }
 
