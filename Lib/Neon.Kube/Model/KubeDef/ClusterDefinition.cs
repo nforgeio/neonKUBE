@@ -118,37 +118,34 @@ namespace Neon.Kube
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                using (var stringReader = new StreamReader(stream))
+                using (var reader = new StreamReader(stream))
                 {
-                    using (var preprocessReader = new PreprocessReader(stringReader))
+                    var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(reader.ReadToEnd(), strict: strict);
+
+                    if (clusterDefinition == null)
                     {
-                        var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
-
-                        if (clusterDefinition == null)
-                        {
-                            throw new ArgumentException($"Invalid cluster definition in [{path}].");
-                        }
-
-                        // Populate the [node.Name] properties from the dictionary name.
-
-                        foreach (var item in clusterDefinition.NodeDefinitions)
-                        {
-                            var node = item.Value;
-
-                            if (string.IsNullOrEmpty(node.Name))
-                            {
-                                node.Name = item.Key;
-                            }
-                            else if (item.Key != node.Name)
-                            {
-                                throw new FormatException($"The node names don't match [\"{item.Key}\" != \"{node.Name}\"].");
-                            }
-                        }
-
-                        clusterDefinition.Validate();
-
-                        return clusterDefinition;
+                        throw new ArgumentException($"Invalid cluster definition in [{path}].");
                     }
+
+                    // Populate the [node.Name] properties from the dictionary name.
+
+                    foreach (var item in clusterDefinition.NodeDefinitions)
+                    {
+                        var node = item.Value;
+
+                        if (string.IsNullOrEmpty(node.Name))
+                        {
+                            node.Name = item.Key;
+                        }
+                        else if (item.Key != node.Name)
+                        {
+                            throw new FormatException($"The node names don't match [\"{item.Key}\" != \"{node.Name}\"].");
+                        }
+                    }
+
+                    clusterDefinition.Validate();
+
+                    return clusterDefinition;
                 }
             }
         }
@@ -550,19 +547,19 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            var managementNodeCount = Masters.Count();
+            var masterNodeCount = Masters.Count();
 
-            if (managementNodeCount == 0)
+            if (masterNodeCount == 0)
             {
-                throw new ClusterDefinitionException("Clusters must have at least one management node.");
+                throw new ClusterDefinitionException("Clusters must have at least one master node.");
             }
-            else if (managementNodeCount > 5)
+            else if (masterNodeCount > 5)
             {
-                throw new ClusterDefinitionException("Clusters may not have more than [5] management nodes.");
+                throw new ClusterDefinitionException("Clusters may not have more than [5] master nodes.");
             }
-            else if (!NeonHelper.IsOdd(managementNodeCount))
+            else if (!NeonHelper.IsOdd(masterNodeCount))
             {
-                throw new ClusterDefinitionException("Clusters must have an odd number of management nodes: [1, 3, or 5]");
+                throw new ClusterDefinitionException($"[{masterNodeCount}] master nodes is not allowed.  Only an off number of master nodes is allowed: [1, 3, or 5]");
             }
 
             if (!string.IsNullOrEmpty(PackageProxy))

@@ -83,11 +83,13 @@ namespace Neon.Kube
         public string ClusterJoinCommand { get; set; }
 
         /// <summary>
-        /// The Kubernetes admin configuration file obtained from the first master at: <b>/etc/kubernetes/admin.conf</b>.
+        /// Holds files captured from the boot master node that will need to be provisioned
+        /// on the remaining masters.  The dictionary key is the file path and the value 
+        /// specifies the file text, permissions, and owner.
         /// </summary>
-        [JsonProperty(PropertyName = "AdminConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "AdminConfig", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "MasterFiles", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "MasterFiles", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string AdminConfig { get; set; }
+        public Dictionary<string, KubeFileDetails> MasterFiles { get; set; } = new Dictionary<string, KubeFileDetails>();
     }
 }

@@ -66,6 +66,10 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
 
 3. **Helm:** [releases](https://github.com/helm/helm/releases) - current: **2.12.3**
 
-4. *Istio:* [releases](https://github.com/istio/istio/releases) - current: **1.1.0-snapshot.3**
+4. **Istio:** [releases](https://github.com/istio/istio/releases) - current: **1.0.5**
 
-  Upload releases to: https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-VERSION-linux.tar.gz and **MAKE PUBLIC**.
+5. **Calico**: [releases](https://github.com/projectcalico/calico/releases) - current: **3.4.0**
+
+  **NOTE:** You'll needs to update the two URLs in `HeadendClient`.
+
+

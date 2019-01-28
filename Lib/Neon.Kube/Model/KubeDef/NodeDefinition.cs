@@ -108,17 +108,17 @@ namespace Neon.Kube
         public string PrivateAddress { get; set; } = null;
 
         /// <summary>
-        /// Indicates that the node will act as a management node (defaults to <c>false</c>).
+        /// Indicates that the node will act as a master node (defaults to <c>false</c>).
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Management nodes are reponsible for managing service discovery and coordinating 
+        /// Master nodes are reponsible for managing service discovery and coordinating 
         /// pod deployment across the cluster.
         /// </para>
         /// <para>
-        /// An odd number of management nodes must be deployed in a cluster (to help prevent
-        /// split-brain).  One management node may be deployed for non-production environments,
-        /// but to enable high-availability, three or five management nodes may be deployed.
+        /// An odd number of master nodes must be deployed in a cluster (to help prevent
+        /// split-brain).  One master node may be deployed for non-production environments,
+        /// but to enable high-availability, three or five master nodes may be deployed.
         /// </para>
         /// </remarks>
         [JsonIgnore]

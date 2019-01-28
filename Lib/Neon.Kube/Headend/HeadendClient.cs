@@ -181,12 +181,10 @@ namespace Neon.Kube
 
             // $todo(jeff.lill):
             //
-            // The code below supports only Istio and Calico CNIs.  I'm not entirely sure
-            // that we'll ever support anything but the Istio CNI once it is stable so
-            // I'm not going to bother with implementing something more universial yet.
+            // The code below supports onlythe Calico CNI for now.  This will probably be
+            // replaced by the integrated Istio CNI soon.
 
-            if (clusterDefinition.Network.Cni != NetworkCni.Istio ||
-                clusterDefinition.Network.Cni != NetworkCni.Calico)
+            if (clusterDefinition.Network.Cni != NetworkCni.Calico)
             {
                 throw new NotImplementedException($"The [{clusterDefinition.Network.Cni}] CNI is not currently supported.");
             }
@@ -241,10 +239,11 @@ namespace Neon.Kube
                     // this will vary too.  Once the Istio CNI is stable, we'll probably delete this anyway but if 
                     // we do decide to allow for custom CNIs, we'll need to figure this out.
 
-                    CalicoRbacUri               = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
-                    CalicoSetupUri              = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml",
+                    CalicoRbacYamlUri           = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
+                    CalicoSetupYamUri           = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml",
 
-                    IstioLinuxUri               = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/istio-{istioVersion}-linux.tar.gz",
+                    IstioLinuxUri               = $"https://github.com/istio/istio/releases/download/{istioVersion}/istio-{istioVersion}-linux.tar.gz",
+
                     KubeDashboardUri            = $"https://raw.githubusercontent.com/kubernetes/dashboard/v{kubeDashboardVersion}/src/deploy/recommended/kubernetes-dashboard.yaml",
                 });
 

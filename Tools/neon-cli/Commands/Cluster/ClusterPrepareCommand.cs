@@ -360,7 +360,8 @@ Server Requirements:
 
             cluster.LogLine(logBeginMarker);
 
-            var operation = $"Preparing [{cluster.Definition.Name}] nodes";
+            var nodesText = cluster.Nodes.Count() == 1 ? "node" : "nodes";
+            var operation = $"Preparing [{cluster.Definition.Name}] {nodesText}";
 
             var controller = 
                 new SetupController<NodeDefinition>(operation, cluster.Nodes)

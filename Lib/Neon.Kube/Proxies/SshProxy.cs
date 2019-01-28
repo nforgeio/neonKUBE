@@ -1520,6 +1520,8 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="target">The target path on the Linux server.</param>
         /// <param name="input">The input stream.</param>
+        /// <param name="permissions">Optionally specifies the file permissions (must be <c>chmod</c> compatible).</param>
+        /// <param name="owner">Optionally specifies the file owner (must be <c>chown</c> compatible).</param>
         /// <param name="userPermissions">Optionally indicates that the operation should be performed with user-level permissions.</param>
         /// <remarks>
         /// <note>
@@ -1536,7 +1538,7 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </remarks>
-        public void Upload(string target, Stream input, bool userPermissions = false)
+        public void Upload(string target, Stream input, string permissions = null, string owner = null, bool userPermissions = false)
         {
             Covenant.Requires<ArgumentNullException>(input != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
@@ -1565,6 +1567,16 @@ namespace Neon.Kube
                 else
                 {
                     SudoCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {target}; fi", RunOptions.LogOnErrorOnly);
+                }
+
+                if (!string.IsNullOrEmpty(permissions))
+                {
+                    SudoCommand("chmod", permissions, target);
+                }
+
+                if (!string.IsNullOrEmpty(owner))
+                {
+                    SudoCommand("chown", owner, target);
                 }
             }
             catch (Exception e)
@@ -1613,6 +1625,7 @@ namespace Neon.Kube
         /// <param name="inputEncoding">Optionally specifies the input text encoding (defaults to UTF-8).</param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <param name="permissions">Optionally specifies the file permissions (must be <c>chmod</c> compatible).</param>
+        /// <param name="owner">Optionally specifies the file owner (must be <c>chown</c> compatible).</param>
         /// <remarks>
         /// <note>
         /// Any Unicode Byte Order Markers (BOM) at start of the input stream will be removed.
@@ -1631,7 +1644,7 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </remarks>
-        public void UploadText(string target, Stream textStream, int tabStop = 0, Encoding inputEncoding = null, Encoding outputEncoding = null, string permissions = null)
+        public void UploadText(string target, Stream textStream, int tabStop = 0, Encoding inputEncoding = null, Encoding outputEncoding = null, string permissions = null, string owner = null)
         {
             Covenant.Requires<ArgumentNullException>(textStream != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
@@ -1657,13 +1670,8 @@ namespace Neon.Kube
                     }
 
                     binaryStream.Position = 0;
-                    Upload(target, binaryStream);
+                    Upload(target, binaryStream, permissions: permissions, owner: owner);
                 }
-            }
-
-            if (!string.IsNullOrEmpty(permissions))
-            {
-                SudoCommand("chmod", permissions, target);
             }
         }
 
@@ -1679,6 +1687,7 @@ namespace Neon.Kube
         /// </param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <param name="permissions">Optionally specifies the file permissions (must be <c>chmod</c> compatible).</param>
+        /// <param name="owner">Optionally specifies the file owner (must be <c>chown</c> compatible).</param>
         /// <remarks>
         /// <note>
         /// <para>
@@ -1694,14 +1703,14 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </remarks>
-        public void UploadText(string target, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
+        public void UploadText(string target, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null, string owner = null)
         {
             Covenant.Requires<ArgumentNullException>(text != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
 
             using (var textStream = new MemoryStream(Encoding.UTF8.GetBytes(text)))
             {
-                UploadText(target, textStream, tabStop, Encoding.UTF8, outputEncoding, permissions);
+                UploadText(target, textStream, tabStop, Encoding.UTF8, outputEncoding, permissions: permissions, owner: owner);
             }
         }
 

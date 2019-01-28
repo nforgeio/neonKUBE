@@ -39,6 +39,46 @@ namespace NeonCli
     /// </summary>
     public class ClusterSetupCommand : CommandBase
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Holds information about a remote file we'll need to download.
+        /// </summary>
+        private class RemoteFile
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="path">The file path.</param>
+            /// <param name="permissions">Optional file permissions.</param>
+            /// <param name="owner">Optional file owner.</param>
+            public RemoteFile(string path, string permissions = "600", string owner = "root:root")
+            {
+                this.Path        = path;
+                this.Permissions = permissions;
+                this.Owner       = owner;
+            }
+
+            /// <summary>
+            /// Returns the file path.
+            /// </summary>
+            public string Path { get; private set; }
+
+            /// <summary>
+            /// Returns the file permissions.
+            /// </summary>
+            public string Permissions { get; private set; }
+
+            /// <summary>
+            /// Returns the file owner formatted as: USER:GROUP.
+            /// </summary>
+            public string Owner { get; private set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private const string usage = @"
 Configures a neonHIVE as described in the cluster definition file.
 
@@ -139,12 +179,19 @@ OPTIONS:
             controller.AddGlobalStep("setup details",
                 () =>
                 {
-                    using (var client = new HeadendClient())
+                    if (kubeContextExtension.SetupDetails?.SetupInfo != null)
                     {
-                        kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
+                        kubeSetupInfo = kubeContextExtension.SetupDetails.SetupInfo;
+                    }
+                    else
+                    {
+                        using (var client = new HeadendClient())
+                        {
+                            kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
 
-                        kubeContextExtension.SetupDetails.SetupInfo = kubeSetupInfo;
-                        kubeContextExtension.Save();
+                            kubeContextExtension.SetupDetails.SetupInfo = kubeSetupInfo;
+                            kubeContextExtension.Save();
+                        }
                     }
                 });
 
@@ -194,7 +241,7 @@ OPTIONS:
             controller.AddStep("install Kubernetes", InstallKubernetes);
             controller.AddStep("create cluster", CreateCluster, node => node == cluster.FirstMaster);
 
-            if (cluster.Nodes.Count() > 0)
+            if (cluster.Nodes.Count() > 1)
             {
                 controller.AddStep("join cluster", JoinCluster, node => node != cluster.FirstMaster);
             }
@@ -300,14 +347,14 @@ OPTIONS:
 
             if (!File.Exists(kubeConfigPath))
             {
-                File.WriteAllText(kubeConfigPath, kubeContextExtension.SetupDetails.AdminConfig);
+                File.WriteAllText(kubeConfigPath, kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
             }
             else
             {
                 // The user already has an existing kubeconfig, so we need
                 // to merge in the new config.
 
-                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.AdminConfig);
+                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
                 var existingConfig = KubeHelper.KubeConfig;
 
                 // Remove any existing user, context, and cluster with the same names.
@@ -742,7 +789,7 @@ safe-apt-get update
                     node.InvokeIdempotentAction("setup/cluster-helm",
                         () =>
                         {
-                            node.Status = "install: Helm client";
+                            node.Status = "install: helm";
 
                             var helmInstallScript =
 $@"#!/bin/bash
@@ -787,13 +834,41 @@ rm -rf helm
                 master.InvokeIdempotentAction("setup/cluster-init",
                     () =>
                     {
+                        // $todo(jeff.lill): More work:
+                        //
+                        //  * We'll need to add the public DNS host to [certSANs] if/when we support public access.
+                        //
+                        //  * We don't yet support HA access to the API Server.  When we do, we'll need to
+                        //    set [controlPlaneEndpoint] to the address of the load balancer.
+
+                        var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:6443";
+                        var sbCertSANs           = new StringBuilder();
+
+                        foreach (var node in cluster.Masters)
+                        {
+                            sbCertSANs.AppendLine($"  - \"{node.PrivateAddress}\"");
+                        }
+
+                        // Note that we're configuring the token TTL so the token never expires.
+
                         var clusterConfig =
 $@"
 apiVersion: kubeadm.k8s.io/v1beta1
+bootstrapTokens:
+- groups:
+  ttl: ""0""
+kind: InitConfiguration
+---
+apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
+kubernetesVersion: ""v{kubeSetupInfo.Versions.Kubernetes}""
+apiServer:
+  certSANs:
+{sbCertSANs}
+controlPlaneEndpoint: ""{controlPlaneEndpoint}""
 networking:
-  podSubnet: {cluster.Definition.Network.PodSubnet}
+  podSubnet: ""{cluster.Definition.Network.PodSubnet}""
 ";
                         master.UploadText("/tmp/cluster.yaml", clusterConfig);
                                                
@@ -824,25 +899,6 @@ networking:
                         }
                     });
 
-                    // Allow pods to be scheduled on master nodes if configured.
-
-                    master.InvokeIdempotentAction("setup/cluster-master-pods",
-                        () =>
-                        {
-                            var allowPodsOnMasters = false;
-
-                            if (cluster.Definition.Kubernetes.AllowPodsOnMasters.HasValue)
-                            {
-                                allowPodsOnMasters = cluster.Definition.Kubernetes.AllowPodsOnMasters.Value;
-                            }
-                            else
-                            {
-                                allowPodsOnMasters = cluster.Definition.Workers.Count() > 0;
-                            }
-
-                            master.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-");
-                        });
-
                     // kubectl config:
 
                     master.InvokeIdempotentAction("setup/cluster-kubectl",
@@ -856,26 +912,53 @@ networking:
                             //
                             //      CLUSTERNAME-admin --> CLUSTERNAME-root 
 
-                            kubeContextExtension.SetupDetails.AdminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
-                            kubeContextExtension.SetupDetails.AdminConfig = kubeContextExtension.SetupDetails.AdminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
-                            kubeContextExtension.SetupDetails.AdminConfig = kubeContextExtension.SetupDetails.AdminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
-                            kubeContextExtension.Save();
+                            var adminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
 
-                            master.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.SetupDetails.AdminConfig, permissions: "500");
+                            adminConfig = adminConfig.Replace($"kubernetes-admin@{cluster.Definition.Name}", $"root@{cluster.Definition.Name}");
+                            adminConfig = adminConfig.Replace("kubernetes-admin", $"root@{cluster.Definition.Name}");
+
+                            master.UploadText("/etc/kubernetes/admin.conf", adminConfig, permissions: "600", owner: "root:root");
                         });
 
-                    // Download the Kubernetes configuration file (if we don't already have it) because 
-                    // we'll need that for configuring other cluster masters.
+                    // Download the boot master files that will need to be provisioned on
+                    // the remaining masters and may also be needed for other purposes
+                    // (if we haven't already downloaded these).
 
-                    if (kubeContextExtension.SetupDetails.AdminConfig == null)
+                    if (kubeContextExtension.SetupDetails.MasterFiles != null)
                     {
-                        master.Status = "download: kubernetes admin config";
-                        kubeContextExtension.SetupDetails.AdminConfig = master.DownloadText("/etc/kubernetes/admin.conf");
-                    
-                        // Persist the cluster join command and admin config.
-
-                        kubeContextExtension.Save();
+                        kubeContextExtension.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
                     }
+
+                    if (kubeContextExtension.SetupDetails.MasterFiles.Count == 0)
+                    {
+                        // I'm hardcoding the permissions and owner here.  It might be nice to
+                        // scrape this from the source files in the future but this was not
+                        // worth the bother at this point.
+
+                        var files = new RemoteFile[]
+                        {
+                            new RemoteFile("/etc/kubernetes/admin.conf", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/ca.crt", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/ca.key", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/sa.pub", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/sa.key", "644", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.crt", "644", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/front-proxy-ca.key", "600", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.crt", "644", "root:root"),
+                            new RemoteFile("/etc/kubernetes/pki/etcd/ca.key", "600", "root:root"),
+                        };
+
+                        foreach (var file in files)
+                        {
+                            var text = master.DownloadText(file.Path);
+
+                            kubeContextExtension.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
+                        }
+                    }
+
+                    // Persist the cluster join command and master files.
+
+                    kubeContextExtension.Save();
                 });
         }
 
@@ -904,6 +987,15 @@ networking:
                         node.InvokeIdempotentAction("setup/cluster-kubectl",
                             () =>
                             {
+                                // The other (non-boot) masters need files downloaded from the boot master.
+
+                                node.Status = "upload: master files";
+
+                                foreach (var file in kubeContextExtension.SetupDetails.MasterFiles)
+                                {
+                                    node.UploadText(file.Key, file.Value.Text, permissions: file.Value.Permissions, owner: file.Value.Owner);
+                                }
+
                                 // Join the cluster:
 
                                 node.InvokeIdempotentAction("setup/cluster-join",
@@ -921,19 +1013,6 @@ networking:
                                         node.Status = "pull: Kubernetes images";
                                         node.SudoCommand("kubeadm config images pull");
                                     });
-
-                                // The other masters need the Kubernetes [admin.conf] file too.
-
-                                node.Status = "upload: kubernetes admin config";
-                                node.UploadText("/etc/kubernetes/admin.conf", kubeContextExtension.SetupDetails.AdminConfig, permissions: "600");
-
-                                var kubeConfigCopyScript =
-$@"#!/bin/bash
-mkdir -p /home/{KubeHelper.RootUser}/.kube
-sudo cp -i /etc/kubernetes/admin.conf /home/{KubeHelper.RootUser}/.kube/config
-sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUser}/.kube/config
-";
-                                node.SudoCommand(CommandBundle.FromScript(kubeConfigCopyScript));
                             });
                     }
                     else
@@ -962,6 +1041,42 @@ sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUse
             master.InvokeIdempotentAction("setup/cluster-configure",
                 () =>
                 {
+                    // Allow pods to be scheduled on master nodes if enabled.
+
+                    master.InvokeIdempotentAction("setup/cluster-master-pods",
+                        () =>
+                        {
+                            var allowPodsOnMasters = false;
+
+                            if (cluster.Definition.Kubernetes.AllowPodsOnMasters.HasValue)
+                            {
+                                allowPodsOnMasters = cluster.Definition.Kubernetes.AllowPodsOnMasters.Value;
+                            }
+                            else
+                            {
+                                allowPodsOnMasters = cluster.Definition.Workers.Count() > 0;
+                            }
+
+                            master.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-");
+                        });
+
+                    // Install the network CNI.
+
+                    // $todo(jeff.lill): Not supporting the integrated Istio CNI yet.
+
+                    switch (cluster.Definition.Network.Cni)
+                    {
+                        case NetworkCni.Calico:
+
+                            DeployCalicoCni(master);
+                            break;
+
+                        case NetworkCni.Istio:
+                        default:
+
+                            throw new NotImplementedException($"The [{cluster.Definition.Network.Cni}] CNI support is not implemented.");
+                    }
+
                     // Install the Helm/Tiller service.  This will install the latest stable version.
 
                     master.InvokeIdempotentAction("setup/cluster-deploy-helm",
@@ -971,15 +1086,108 @@ sudo chown {KubeHelper.RootUser}:{KubeHelper.RootUser} /home/{KubeHelper.RootUse
                             master.SudoCommand("helm init --service-account tiller");
                         });
 
-                    // Configure Helm and Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 1)
+                    // Install the Kubernetes dashboard:
 
-                    master.InvokeIdempotentAction("setup/cluster-deploy-helm",
+                    master.Status = "deploy: Kubernetes dashboard";
+                    master.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
+                });
+        }
+
+        /// <summary>
+        /// Installs the Calico CNI.
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private void DeployCalicoCni(SshProxy<NodeDefinition> master)
+        {
+            master.InvokeIdempotentAction("setup/cluster-deploy-cni",
+                () =>
+                {
+                    // Deploy Calico
+
+                    var script =
+$@"#!/bin/bash
+
+# Configure RBAC:
+
+kubectl apply -f {kubeSetupInfo.CalicoRbacYamlUri}
+
+# We need to edit the setup manifest to specify the 
+# cluster subnet before applying it.
+
+curl {Program.CurlOptions} {kubeSetupInfo.CalicoSetupYamUri} > /tmp/calico.yaml
+sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
+kubectl apply -f /tmp/calico.yaml
+rm /tmp/calico.yaml
+";
+                    master.SudoCommand(CommandBundle.FromScript(script));
+
+                    // Wait for Calico and CoreDNS pods to report that they're running.
+
+                    // $todo(jeff.lill):
+                    //
+                    // This is a horrible hack.  I'm going to examine the [kubectl get pods]
+                    // response by skipping the column headers and then ensuring that each
+                    // remaining line includes a " Running " string.  If one or more lines
+                    // don't include this then we're not ready.
+                    //
+                    // [kubectl wait] as an experimental command that we should investigate
+                    // in the future:
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/424
+                    //
+                    // We're going to wait a maximum of 120 seconds.
+
+                    NeonHelper.WaitFor(
                         () =>
                         {
-                            master.Status = "deploy: Istio";
+                            var response = master.SudoCommand("kubectl get pods --all-namespaces");
 
-                            var mutualTls   = cluster.Definition.Network.IstioMutualTls ? "true" : "false";
-                            var istioScript =
+                            using (var reader = new StringReader(response.OutputText))
+                            {
+                                foreach (var line in reader.Lines().Skip(1))
+                                {
+                                    if (!line.Contains(" Running "))
+                                    {
+                                        return false;
+                                    }
+                                }
+                            }
+
+                            return true;
+                        },
+                        timeout: TimeSpan.FromSeconds(120),
+                        pollTime: TimeSpan.FromSeconds(1));
+                });
+        }
+
+        /// <summary>
+        /// Installs Istio without its CNI.
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private void InstallIstio(SshProxy<NodeDefinition> master)
+        {
+        }
+
+        /// <summary>
+        /// Installs Istio with its integrated CNI.
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private void InstallIstioWithCni(SshProxy<NodeDefinition> master)
+        {
+            // $todo(jeff.lill): This doesn't work.  Waiting for a stable release of Istio with integrated CNI.
+
+            throw new NotImplementedException("Istio installation with integrated CNI doesn't work yet.");
+
+/*
+            // Configure Helm and Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 1)
+
+            master.InvokeIdempotentAction("setup/cluster-deploy-helm",
+                () =>
+                {
+                    master.Status = "deploy: Istio";
+
+                    var mutualTls = cluster.Definition.Network.IstioMutualTls ? "true" : "false";
+                    var istioScript =
 $@"#!/bin/bash
 
 # Download and extract the Istio binaries:
@@ -1025,14 +1233,9 @@ kubectl apply -f /tmp/istio.yaml
 # rm -r istio
 # rm istio.yaml
 ";
-                            master.SudoCommand(CommandBundle.FromScript(istioScript));
-                        });
-
-                    // Install the Kubernetes dashboard:
-
-                    master.Status = "deploy: Kubernetes dashboard";
-                    master.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
+                    master.SudoCommand(CommandBundle.FromScript(istioScript));
                 });
+*/
         }
 
         /// <summary>
@@ -1060,6 +1263,13 @@ kubectl apply -f /tmp/istio.yaml
                         foreach (var node in cluster.Nodes)
                         {
                             var labelDefinitions = new List<string>();
+
+                            if (node.Metadata.IsWorker)
+                            {
+                                // Kubernetes doesn't set the role for worker nodes so we'll do that here.
+
+                                labelDefinitions.Add("kubernetes.io/role=worker");
+                            }
 
                             labelDefinitions.Add($"{NodeLabels.LabelDatacenter}={cluster.Definition.Datacenter.ToLowerInvariant()}");
                             labelDefinitions.Add($"{NodeLabels.LabelEnvironment}=\"{cluster.Definition.Environment.ToString().ToLowerInvariant()}\"");
