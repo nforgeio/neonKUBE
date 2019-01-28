@@ -81,7 +81,7 @@ OPTIONS:
                                           (defaults to 60s).
     --log-folder=LOG-FOLDER             - Optional log folder path
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
-                                          configured in parallel [default=5]
+                                          configured in parallel [default=6]
     --machine-password=PASSWORD         - Overrides default initial machine
                                           password: sysadmin0000
     --machine-username=USERNAME         - Overrides default initial machine
@@ -139,7 +139,7 @@ OPTIONS:
                     cmdLine.DefineOption("--machine-password");
                     cmdLine.DefineOption("-os").Default = "Ubuntu-18.04";
                     cmdLine.DefineOption("-q", "--quiet");
-                    cmdLine.DefineOption("-m", "--max-parallel").Default = "5";
+                    cmdLine.DefineOption("-m", "--max-parallel").Default = "6";
                     cmdLine.DefineOption("-w", "--wait").Default = "60";
                     cmdLine.DefineOption("--log-folder").Default = string.Empty;
                 }
