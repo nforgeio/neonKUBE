@@ -68,7 +68,6 @@
     <None Include="haproxy\publish.ps1" />
     <None Include="haproxy\README.md" />
     <None Include="neon-cli\conf\ssh_config.conf" />
-    <Content Include="neon-cli\modules\docker_stack.py" />
     <Content Include="golang\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -79,21 +78,6 @@
     </None>
     <None Include="golang\publish.ps1" />
     <None Include="golang\README.md" />
-    <None Include="neon-cli\modules\neon_certificate.sh" />
-    <None Include="neon-cli\modules\neon_couchbase_import.sh" />
-    <None Include="neon-cli\modules\neon_couchbase_index.sh" />
-    <None Include="neon-cli\modules\neon_couchbase_query.sh" />
-    <None Include="neon-cli\modules\neon_dashboard.sh" />
-    <None Include="neon-cli\modules\neon_hivemq.sh" />
-    <None Include="neon-cli\modules\neon_docker_stack.sh" />
-    <None Include="neon-cli\modules\neon_globals.sh" />
-    <None Include="neon-cli\modules\neon_hive_dns.sh" />
-    <None Include="neon-cli\modules\neon_docker_registry.sh" />
-    <None Include="neon-cli\modules\neon_docker_secret.sh" />
-    <None Include="neon-cli\modules\neon_docker_config.sh" />
-    <None Include="neon-cli\modules\neon_docker_service.sh" />
-    <None Include="neon-cli\modules\neon_docker_login.sh" />
-    <None Include="neon-cli\modules\neon_traffic_manager.sh" />
     <Content Include="couchbase-test\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
