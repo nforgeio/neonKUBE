@@ -255,14 +255,14 @@ OPTIONS:
             controller.AddStep("check masters",
                 (node, stepDelay) =>
                 {
-                    HiveDiagnostics.CheckMaster(node, cluster.Definition);
+                    ClusterDiagnostics.CheckMaster(node, cluster.Definition);
                 },
                 node => node.Metadata.IsMaster);
 
             controller.AddStep("check workers",
                 (node, stepDelay) =>
                 {
-                    HiveDiagnostics.CheckWorker(node, cluster.Definition);
+                    ClusterDiagnostics.CheckWorker(node, cluster.Definition);
                 },
                 node => node.Metadata.IsWorker);
 

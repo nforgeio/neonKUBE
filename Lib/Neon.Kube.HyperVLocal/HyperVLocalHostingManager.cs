@@ -634,8 +634,8 @@ namespace Neon.Kube
                 node.Status = $"discover: ip address";
 
                 var adapters = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
-                var adapter = adapters.FirstOrDefault();
-                var address = adapter.Addresses.First();
+                var adapter  = adapters.FirstOrDefault();
+                var address  = adapter.Addresses.First();
 
                 if (adapter == null)
                 {
