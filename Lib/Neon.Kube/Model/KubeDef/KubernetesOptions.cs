@@ -9,7 +9,9 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -90,6 +92,54 @@ namespace Neon.Kube
         public bool? AllowPodsOnMasters { get; set; } = null;
 
         /// <summary>
+        /// Optionally configures an external Kubernetes API server load balancer by
+        /// specifying the load balancer endpoint as HOSTNAME:PORT or IPADDRESS:PORT.
+        /// This defaults to <c>null</c>.  See the remarks to see what this means.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Production clusters really should be deployed using an external highly
+        /// available load balancer that distributes API server traffic across
+        /// the API servers running on the masters.
+        /// </para>
+        /// <para>
+        /// For cloud environments like AWS and Azure, neonKUBE provisions a cloud
+        /// load balancer by default for this.  This is the ideal situation.
+        /// </para>
+        /// <para>
+        /// For on-premise environments like Hyper-V and XenServer, we use the
+        /// HAProxy based load balancer deployed to the first master node (as sorted
+        /// by node name).  This forwards traffic to port 5000 to the Kubernetes
+        /// API servers running on the masters.  This is not reeally HA though,
+        /// because the loss of the first master will result in the loss of 
+        /// API server connectivity.  This does help some though.  For example,
+        /// stopping the API server on the first master won't take the cluster
+        /// API server offline because HAProxy will still be able to direct 
+        /// traffic to the remaining masters.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// The HAProxy load balancer is actually deployed to all of the masters
+        /// but the other master HAProxy instances won't see any traffic because
+        /// Kubernetes is configured with a single balancer endpoint.
+        /// </para>
+        /// <para>
+        /// In the future, it may be possible to turn the master HAProxy instances
+        /// into an HA cluster via a virtual IP address and heartbeat mechanism.
+        /// </para>
+        /// <para>
+        /// You can use the <see cref="ApiLoadBalancer"/> property to specify an
+        /// external load balancer that already exists.  Setting this will override
+        /// the default behaviors described above.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "ApiLoadBalancer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ApiLoadBalancer", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ApiLoadBalancer { get; set; } = null;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -132,6 +182,24 @@ namespace Neon.Kube
             if (IstioVersion != "default" && !System.Version.TryParse(IstioVersion, out var vIstio))
             {
                 throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(IstioVersion)}={IstioVersion}] is invalid].");
+            }
+
+            if (!string.IsNullOrEmpty(ApiLoadBalancer))
+            {
+                // Ensure that this specifies a HOSTNAME:PORT or IPADDRESS:PORT.
+
+                var fields = ApiLoadBalancer.Split(new char[] { ':' }, 2);
+                var error  = $"[{nameof(KubernetesOptions)}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].";
+
+                if (!ClusterDefinition.DnsHostRegex.IsMatch(fields[0]) || !IPAddress.TryParse(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork)
+                {
+                    throw new ClusterDefinitionException(error);
+                }
+
+                if (!int.TryParse(fields[1], out var port) || NetHelper.IsValidPort(port))
+                {
+                    throw new ClusterDefinitionException(error);
+                }
             }
         }
 

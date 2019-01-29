@@ -238,7 +238,7 @@ OPTIONS:
             //-----------------------------------------------------------------
             // Kubernetes configuration.
 
-            controller.AddStep("setup api proxy", SetupApiProxy, node => node.Metadata.IsMaster);
+            controller.AddStep("setup api balancer", SetupApiProxy, node => node.Metadata.IsMaster);
             controller.AddStep("setup kubernetes", SetupKubernetes);
             controller.AddGlobalStep("setup cluster", SetupCluster);
             controller.AddGlobalStep("label nodes", LabelNodes);
@@ -749,58 +749,104 @@ ff02::2         ip6-allrouters
         /// the Kubernetes API servers running on each of the masters.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private void SetupApiProxy(SshProxy<NodeDefinition> master)
+        /// <param name="stepDelay">Ignored.</param>
+        private void SetupApiProxy(SshProxy<NodeDefinition> master, TimeSpan stepDelay)
         {
-            master.InvokeIdempotentAction("setup/setup-api-loadbalancer",
+            master.InvokeIdempotentAction("setup/setup-loadbalancer",
                 () =>
                 {
+                    master.Status = "setup: api balancer";
+
                     // We're simply going to generate the HAProxy config file
-                    // and write it to [/etc/neonkube/haproxy/haproxy.config]
-                    // and then deploy an HAProxy container named [neon-api-proxy] 
+                    // and write it to [/etc/neonkube/haproxy.config] and then
+                    // deploy an HAProxy container named [neonkube-balancer] 
                     // to each of the master nodes.
 
-                    var sbConfig = new StringBuilder();
+                    var sbBackends = new StringBuilder();
 
-                    sbConfig.Append(
-@"#------------------------------------------------------------------------------
-# Kubernetes API server load balancer configuration.
+                    foreach (var node in cluster.Masters)
+                    {
+                        sbBackends.AppendLine($"    server {node.Name} {node.PrivateAddress}:{KubeHostPorts.KubeApiServer}");
+                    }
+
+                    var sbHaProxyConfig = new StringBuilder();
+
+                    sbHaProxyConfig.AppendLine(
+$@"#------------------------------------------------------------------------------
+# neonKUBE cluster load balancer.
 
 global
 
-    # Maximum number of connections.  1K should be more than enough for
+    # Maximum number of connections.  2K should be more than enough for
     # anything besides truly gigantic clusters.
 
-    maxconn             1000
+    maxconn         2000
 
     # Randomize health check timing.
 
-    spread-checks       5
+    spread-checks   5
 
 defaults
 
     # Proxy inbound traffic as TCP so we can balance both HTTP and HTTPS
     # traffic without needing the TLS certificate.
 
-    mode                tcp
+    mode            tcp
 
     # Timeouts are relatively brief because backends are cluster local and should be fast.
 
-    timeout             connect 2s
-    timeout             client 2s
-    timeout             server 2s
+    timeout         connect 5s
+    timeout         client 5s
+    timeout         server 5s
 
     # Load balancing strategy.
 
-    balance             roundrobin
+    balance         roundrobin
 
     # Retry failed connections a couple of times (for a total of three attempts).
 
-    retries             2
+    retries         2
 
-    # Amount of time after which a health check is considered to have timed out.
+    # Maximum time to wait for a health check.
 
-    timeout check       2s
-");
+    timeout check   1s
+
+# Load balance Kubernetes API server traffic across the cluster master nodes.
+
+frontend tcp:kube-api-server
+    bind *:{KubeHostPorts.ApiServerProxy}
+    mode tcp
+    default_backend tcp:kube-api-server
+
+backend tcp:kube-api-server
+    mode tcp
+    balance roundrobin
+{sbBackends}");
+                    var haproxyConfigPath = $"{KubeHostFolders.Config}/cluster-balancer.cfg";
+                    var haproxyScriptPath = $"{KubeHostFolders.Bin}/neonkube-balancer";
+
+                    master.UploadText(haproxyConfigPath, sbHaProxyConfig, permissions: "644", owner: "root:root");
+
+                    var haproxyScript =
+$@"#!/bin/bash
+#------------------------------------------------------------------------------
+# Starts the [neonkube-balancer] container on this master node if it's not already
+# running.  This load balances traffic hitting port {KubeHostPorts.ApiServerProxy} across the 
+# Kubernetes API servers running on the master nodes.
+
+if ! docker ps --filter name=neonkube-balancer --format ""{{{{.Names}}}}"" | grep --quiet neonkube-balancer ; then
+
+    docker run \
+        --name neonkube-balancer \
+        --detach \
+        --restart always \
+        --publish {KubeHostPorts.ApiServerProxy}:{KubeHostPorts.ApiServerProxy} \
+        --mount type=bind,source={haproxyConfigPath},target=/etc/haproxy/haproxy.cfg,readonly \
+        {Program.ResolveDockerImage(KubeConst.NeonProdRegistry + "/haproxy:latest")}
+fi
+";
+                    master.UploadText(haproxyScriptPath, haproxyScript, permissions: "700", owner: "root:root");
+                    master.SudoCommand(haproxyScriptPath);
                 });
         }
 
@@ -891,12 +937,14 @@ rm -rf helm
                             // $todo(jeff.lill): More work:
                             //
                             //  * We'll need to add the public DNS host to [certSANs] if/when we support public access.
-                            //
-                            //  * We don't yet support HA access to the API Server.  When we do, we'll need to
-                            //    set [controlPlaneEndpoint] to the address of the load balancer.
 
-                            var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:6443";
+                            var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:{KubeHostPorts.ApiServerProxy}";
                             var sbCertSANs           = new StringBuilder();
+
+                            if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
+                            {
+                                controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
+                            }
 
                             foreach (var node in cluster.Masters)
                             {

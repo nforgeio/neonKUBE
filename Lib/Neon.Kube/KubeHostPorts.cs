@@ -17,11 +17,15 @@ namespace Neon.Kube
     public static class KubeHostPorts
     {
         /// <summary>
-        /// This port is reserved and must not be assigned to any service.  This is
-        /// currently referenced by the manager traffic manager rule for Azure deployments
-        /// and it must not actually host a service.  See the <b>AzureHostingManager</b>
-        /// source code for more information.
+        /// Kubernetes API server load balancer port exposed by HAProxy
+        /// instances running on each of the master nodes.  This balances
+        /// traffic across all of the masters.
         /// </summary>
-        public const int ReservedUnused = 5099;
+        public const int ApiServerProxy = 5000;
+
+        /// <summary>
+        /// Port exposed by the Kubernetes API servers on the master nodes.
+        /// </summary>
+        public const int KubeApiServer = 6443;
     }
 }
