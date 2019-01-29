@@ -836,6 +836,8 @@ $@"#!/bin/bash
 
 if ! docker ps --filter name=neonkube-balancer --format ""{{{{.Names}}}}"" | grep --quiet neonkube-balancer ; then
 
+    docker pull {Program.ResolveDockerImage(KubeConst.NeonProdRegistry + "/haproxy:latest")}
+
     docker run \
         --name neonkube-balancer \
         --detach \
@@ -934,9 +936,10 @@ rm -rf helm
                     firstMaster.InvokeIdempotentAction("setup/cluster-init",
                         () =>
                         {
-                            // $todo(jeff.lill): More work:
-                            //
-                            //  * We'll need to add the public DNS host to [certSANs] if/when we support public access.
+                            // It's possible that a previous cluster initialization operation
+                            // was interrupted.  This command resets the state.
+
+                            firstMaster.SudoCommand("kubeadm reset --force");
 
                             var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:{KubeHostPorts.ApiServerProxy}";
                             var sbCertSANs           = new StringBuilder();
@@ -986,7 +989,7 @@ networking:
 
                             if (pStart == -1)
                             {
-                                throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadmin init ...] response.");
+                                throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadm init ...] response.");
                             }
 
                             var pEnd = output.IndexOf('\n', pStart);
@@ -1033,7 +1036,7 @@ networking:
 
                     if (kubeContextExtension.SetupDetails.MasterFiles.Count == 0)
                     {
-                        // I'm hardcoding the permissions and owner here.  It might be nice to
+                        // I'm hardcoding the permissions and owner here.  It would be nice to
                         // scrape this from the source files in the future but this was not
                         // worth the bother at this point.
 
@@ -1067,38 +1070,63 @@ networking:
                     //---------------------------------------------------------
                     // Join the remaining masters to the cluster:
 
+                    // Wait for the API proxy to discover a healthy endpoint.
+
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var response = firstMaster.SudoCommand($"nc {firstMaster.PrivateAddress} {KubeHostPorts.ApiServerProxy} -w 1", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
+
+                            return response.ExitCode == 0;
+                        },
+                        TimeSpan.FromSeconds(120),
+                        TimeSpan.FromSeconds(1));
+
                     foreach (var master in cluster.Masters.Where(m => m != firstMaster))
                     {
-                        master.InvokeIdempotentAction("setup/cluster-kubectl",
-                            () =>
-                            {
-                                // The other (non-boot) masters need files downloaded from the boot master.
-
-                                master.Status = "upload: master files";
-
-                                foreach (var file in kubeContextExtension.SetupDetails.MasterFiles)
+                        try
+                        {
+                            master.InvokeIdempotentAction("setup/cluster-kubectl",
+                                () =>
                                 {
-                                    master.UploadText(file.Key, file.Value.Text, permissions: file.Value.Permissions, owner: file.Value.Owner);
-                                }
+                                    // It's possible that a previous cluster join operation
+                                    // was interrupted.  This command resets the state.
 
-                                // Join the cluster:
+                                    master.SudoCommand("kubeadm reset --force");
 
-                                master.InvokeIdempotentAction("setup/cluster-join",
-                                    () =>
+                                    // The other (non-boot) masters need files downloaded from the boot master.
+
+                                    master.Status = "upload: master files";
+
+                                    foreach (var file in kubeContextExtension.SetupDetails.MasterFiles)
                                     {
-                                        master.Status = "join: as master";
-                                        master.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --experimental-control-plane");
-                                    });
+                                        master.UploadText(file.Key, file.Value.Text, permissions: file.Value.Permissions, owner: file.Value.Owner);
+                                    }
 
-                                // Pull the Kubernetes images:
+                                    // Join the cluster:
 
-                                master.InvokeIdempotentAction("setup/cluster-images",
-                                    () =>
-                                    {
-                                        master.Status = "pull: kubernetes images";
-                                        master.SudoCommand("kubeadm config images pull");
-                                    });
-                            });
+                                    master.InvokeIdempotentAction("setup/cluster-join",
+                                            () =>
+                                            {
+                                                master.Status = "join: as master";
+                                                master.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --experimental-control-plane");
+                                            });
+
+                                    // Pull the Kubernetes images:
+
+                                    master.InvokeIdempotentAction("setup/cluster-images",
+                                            () =>
+                                            {
+                                                master.Status = "pull: kubernetes images";
+                                                master.SudoCommand("kubeadm config images pull");
+                                            });
+                                });
+                        }
+                        catch (Exception e)
+                        {
+                            master.Fault(NeonHelper.ExceptionError(e));
+                            master.LogException(e);
+                        }
 
                         master.Status = "joined";
                     }
@@ -1108,12 +1136,20 @@ networking:
 
                     foreach (var worker in cluster.Workers)
                     {
-                        worker.InvokeIdempotentAction("setup/cluster-join",
-                            () =>
-                            {
-                                worker.Status = "join: as worker";
-                                worker.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand);
-                            });
+                        try
+                        {
+                            worker.InvokeIdempotentAction("setup/cluster-join",
+                                () =>
+                                {
+                                    worker.Status = "join: as worker";
+                                    worker.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand);
+                                });
+                        }
+                        catch (Exception e)
+                        {
+                            worker.Fault(NeonHelper.ExceptionError(e));
+                            worker.LogException(e);
+                        }
 
                         worker.Status = "joined";
                     }
