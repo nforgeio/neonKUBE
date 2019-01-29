@@ -34,9 +34,9 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string DefaultVmMemory        = "4GB";
-        internal const string DefaultVmMinimumMemory = "2GB";
-        internal const string DefaultVmDisk          = "64GB";
+        internal const string DefaultVmMemory        = "4GiB";
+        internal const string DefaultVmMinimumMemory = "2GiB";
+        internal const string DefaultVmDisk          = "64GiB";
 
         //---------------------------------------------------------------------
         // Instance members
@@ -156,8 +156,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the default maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
-        /// that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  
-        /// This defaults to <b>4GB</b>.
+        /// that can be a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  
+        /// This defaults to <b>4GiB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "VmMemory", ApplyNamingConventions = false)]
@@ -167,9 +167,9 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Specifies the minimum amount of memory to allocate to each cluster virtual machine.  This is specified as a string that
-        /// can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b> or may be set to <c>null</c> to set
-        /// the same value as <see cref="VmMemory"/>.  This defaults to <c>2GB</c>, which is half of the default value of <see cref="VmMemory"/>
-        /// which is <b>4GB</b>.
+        /// can be a byte count or a number with units like <b>512MB</b>, <b>0.5GiB</b>, <b>2GiB</b>, or <b>1TiB</b> or may be set to <c>null</c> to set
+        /// the same value as <see cref="VmMemory"/>.  This defaults to <c>2GiB</c>, which is half of the default value of <see cref="VmMemory"/>
+        /// which is <b>4GiB</b>.
         /// </para>
         /// <note>
         /// This is currently honored only when provisioning to a local Hyper-V instance (typically as a developer).  This is ignored
@@ -183,8 +183,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
-        /// that can be a long byte count or a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, 
-        /// or <b>1TB</b>.  This defaults to <b>64GB</b>.
+        /// that can be a long byte count or a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
+        /// or <b>1TiB</b>.  This defaults to <b>64GiB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "VmDisk", ApplyNamingConventions = false)]

@@ -159,8 +159,8 @@ namespace Neon.HyperV
         /// <param name="machineName">The machine name.</param>
         /// <param name="memorySize">
         /// A string specifying the memory size.  This can be a long byte count or a
-        /// byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, 
-        /// or <b>1TB</b>.  This defaults to <b>2GB</b>.
+        /// byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
+        /// or <b>1TiB</b>.  This defaults to <b>2GiB</b>.
         /// </param>
         /// <param name="minimumMemorySize">
         /// Optionally specifies the minimum memory size.  This defaults to <c>null</c> which will
@@ -171,8 +171,8 @@ namespace Neon.HyperV
         /// </param>
         /// <param name="diskSize">
         /// A string specifying the primary disk size.  This can be a long byte count or a
-        /// byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, 
-        /// or <b>1TB</b>.  This defaults to <b>64GB</b>.
+        /// byte count or a number with units like <b>512MB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
+        /// or <b>1TiB</b>.  This defaults to <b>64GiB</b>.
         /// </param>
         /// <param name="drivePath">
         /// Optionally specifies the path where the virtual hard drive will be located.  Pass 
@@ -201,10 +201,10 @@ namespace Neon.HyperV
         /// </remarks>
         public void AddVM(
             string                      machineName, 
-            string                      memorySize        = "2GB", 
+            string                      memorySize        = "2GiB", 
             string                      minimumMemorySize = null, 
             int                         processorCount    = 4,
-            string                      diskSize          = "64GB",
+            string                      diskSize          = "64GiB",
             string                      drivePath         = null,
             bool                        checkpointDrives  = false,
             string                      templateDrivePath = null, 

@@ -176,7 +176,7 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}] cannot be NULL or empty.");
             }
 
-            if (!NeonHelper.TryParseCount(sizeValue, out var size))
+            if (!ByteUnits.TryParseCount(sizeValue, out var size))
             {
                 throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] cannot be parsed.");
             }

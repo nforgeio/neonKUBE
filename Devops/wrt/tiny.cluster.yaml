@@ -34,5 +34,5 @@ Nodes:
      PrivateAddress: 10.100.24.0
      VmHost: WRT-00-XEN-00
      VmProcessors: 4
-     VmMemory: 4GB
-     VmDisk: 32GB
+     VmMemory: 4GiB
+     VmDisk: 32GiB

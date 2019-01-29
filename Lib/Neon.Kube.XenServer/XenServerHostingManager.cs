@@ -155,14 +155,14 @@ namespace Neon.Kube
                     node.Labels.ComputeCores = node.GetVmProcessors(cluster.Definition);
                 }
 
-                if (node.Labels.ComputeRamMB == 0)
+                if (node.Labels.ComputeRamMiB == 0)
                 {
-                    node.Labels.ComputeRamMB = (int)(node.GetVmMemory(cluster.Definition) / NeonHelper.Mega);
+                    node.Labels.ComputeRamMiB = (int)(node.GetVmMemory(cluster.Definition) / ByteUnits.MebiBytes);
                 }
 
-                if (node.Labels.StorageCapacityGB == 0)
+                if (node.Labels.StorageCapacityGiB == 0)
                 {
-                    node.Labels.StorageCapacityGB = (int)(node.GetVmDisk(cluster.Definition) / NeonHelper.Giga);
+                    node.Labels.StorageCapacityGiB = (int)(node.GetVmDisk(cluster.Definition) / ByteUnits.GibiBytes);
                 }
             }
 

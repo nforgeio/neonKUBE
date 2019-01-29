@@ -40,49 +40,49 @@ namespace Neon.Kube
         public const int MaxHostedEndpoints = 150;
 
         /// <summary>
-        /// Converts the requested disk size in GB to the actual required size of the Azure
-        /// managed disk in GB.
+        /// Converts the requested disk size in GiB to the actual required size of the Azure
+        /// managed disk in GiB.
         /// </summary>
         /// <param name="storageType">Specifies the disk storage type.</param>
-        /// <param name="requestedSizeGB">The requested size in GB.</param>
-        /// <returns>The actual Azure disk size in GB.</returns>
-        public static int GetDiskSizeGB(AzureStorageTypes storageType, int requestedSizeGB)
+        /// <param name="requestedSizeGiB">The requested size in GB.</param>
+        /// <returns>The actual Azure disk size in GiB.</returns>
+        public static int GetDiskSizeGiB(AzureStorageTypes storageType, int requestedSizeGiB)
         {
             switch (storageType)
             {
                 case AzureStorageTypes.StandardHDD_LRS:
 
-                    // Azure currently standard HDD sizes: 32GB, 64GB, 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
+                    // Azure currently standard HDD sizes: 32GiB, 64GiB, 128GiB, 512GiB, 1TiB, 2TiB, 4TiB, 8TiB, 16TiB or 32TiB.
 
-                    if (requestedSizeGB <= 32)
+                    if (requestedSizeGiB <= 32)
                     {
                         return 32;
                     }
-                    else if (requestedSizeGB <= 64)
+                    else if (requestedSizeGiB <= 64)
                     {
                         return 64;
                     }
-                    else if (requestedSizeGB <= 128)
+                    else if (requestedSizeGiB <= 128)
                     {
                         return 128;
                     }
-                    else if (requestedSizeGB <= 512)
+                    else if (requestedSizeGiB <= 512)
                     {
                         return 512;
                     }
-                    else if (requestedSizeGB <= 1024)
+                    else if (requestedSizeGiB <= 1024)
                     {
                         return 1024;
                     }
-                    else if (requestedSizeGB <= 2048)
+                    else if (requestedSizeGiB <= 2048)
                     {
                         return 2048;
                     }
-                    else if (requestedSizeGB <= 8192)
+                    else if (requestedSizeGiB <= 8192)
                     {
                         return 8192;
                     }
-                    else if (requestedSizeGB <= 16314)
+                    else if (requestedSizeGiB <= 16314)
                     {
                         return 16314;
                     }
@@ -95,27 +95,27 @@ namespace Neon.Kube
 
                     // Azure currently standard SSD sizes: 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
 
-                    if (requestedSizeGB <= 128)
+                    if (requestedSizeGiB <= 128)
                     {
                         return 128;
                     }
-                    else if (requestedSizeGB <= 512)
+                    else if (requestedSizeGiB <= 512)
                     {
                         return 512;
                     }
-                    else if (requestedSizeGB <= 1024)
+                    else if (requestedSizeGiB <= 1024)
                     {
                         return 1024;
                     }
-                    else if (requestedSizeGB <= 2048)
+                    else if (requestedSizeGiB <= 2048)
                     {
                         return 2048;
                     }
-                    else if (requestedSizeGB <= 8192)
+                    else if (requestedSizeGiB <= 8192)
                     {
                         return 8192;
                     }
-                    else if (requestedSizeGB <= 16314)
+                    else if (requestedSizeGiB <= 16314)
                     {
                         return 16314;
                     }
@@ -128,35 +128,35 @@ namespace Neon.Kube
 
                     // Azure currently premium disks sizes: 32GB, 64GB, 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
 
-                    if (requestedSizeGB <= 32)
+                    if (requestedSizeGiB <= 32)
                     {
                         return 32;
                     }
-                    else if (requestedSizeGB <= 64)
+                    else if (requestedSizeGiB <= 64)
                     {
                         return 64;
                     }
-                    else if (requestedSizeGB <= 128)
+                    else if (requestedSizeGiB <= 128)
                     {
                         return 128;
                     }
-                    else if (requestedSizeGB <= 512)
+                    else if (requestedSizeGiB <= 512)
                     {
                         return 512;
                     }
-                    else if (requestedSizeGB <= 1024)
+                    else if (requestedSizeGiB <= 1024)
                     {
                         return 1024;
                     }
-                    else if (requestedSizeGB <= 2048)
+                    else if (requestedSizeGiB <= 2048)
                     {
                         return 2048;
                     }
-                    else if (requestedSizeGB <= 8192)
+                    else if (requestedSizeGiB <= 8192)
                     {
                         return 8192;
                     }
-                    else if (requestedSizeGB <= 16314)
+                    else if (requestedSizeGiB <= 16314)
                     {
                         return 16314;
                     }

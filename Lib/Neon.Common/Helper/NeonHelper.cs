@@ -69,26 +69,6 @@ namespace Neon.Common
         public static readonly string LineEnding = IsWindows ? "\r\n" : "\n";
 
         /// <summary>
-        /// The constant 1,024 (2^10).
-        /// </summary>
-        public const long Kilo = 1024;
-
-        /// <summary>
-        /// The constant 1,048,576 (2^20).
-        /// </summary>
-        public const long Mega = Kilo * Kilo;
-
-        /// <summary>
-        /// The constant 1,073,741,824 (2^30).
-        /// </summary>
-        public const long Giga = Mega * Kilo;
-
-        /// <summary>
-        /// The constant 1,099,511,627,776 (2^40).
-        /// </summary>
-        public const long Tera = Giga * Kilo;
-
-        /// <summary>
         /// Returns the characters used as wildcards for the current file system.
         /// </summary>
         public static char[] FileWildcards { get; private set; } = new char[] { '*', '?' };
@@ -235,87 +215,6 @@ namespace Neon.Common
                 Encoding.RegisterProvider(new SpecialUtf8EncodingProvider());
                 specialUtf8EncodingProvider = true;
             }
-        }
-
-        /// <summary>
-        /// Parses a floating point count string that may include one of the following unit
-        /// suffixes: <b>B</b>, <b>K</b>, <b>KB</b>, <b>M</b>, <b>MB</b>, <b>G</b>,
-        /// <b>GB</b>, <b>T</b>, or <b>TB</b>.
-        /// </summary>
-        /// <param name="input">The input string.</param>
-        /// <param name="value">Returns as the output value.</param>
-        /// <returns><b>true</b> on success</returns>
-        public static bool TryParseCount(string input, out double value)
-        {
-            value = 0.0;
-
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                return false;
-            }
-
-            var units = 1L;
-            var trim  = 0;
-
-            if (input.EndsWith("KB", StringComparison.OrdinalIgnoreCase))
-            {
-                units = Kilo;
-                trim  = 2;
-            }
-            else if (input.EndsWith("MB", StringComparison.OrdinalIgnoreCase))
-            {
-                units = Mega;
-                trim  = 2;
-            }
-            else if (input.EndsWith("GB", StringComparison.OrdinalIgnoreCase))
-            {
-                units = Giga;
-                trim  = 2;
-            }
-            else if (input.EndsWith("TB", StringComparison.OrdinalIgnoreCase))
-            {
-                units = Tera;
-                trim  = 2;
-            }
-            else if (input.EndsWith("B", StringComparison.OrdinalIgnoreCase))
-            {
-                units = 1;
-                trim  = 1;
-            }
-            else if (input.EndsWith("K", StringComparison.OrdinalIgnoreCase))
-            {
-                units = Kilo;
-                trim  = 1;
-            }
-            else if (input.EndsWith("M", StringComparison.OrdinalIgnoreCase))
-            {
-                units = Mega;
-                trim  = 1;
-            }
-            else if (input.EndsWith("G", StringComparison.OrdinalIgnoreCase))
-            {
-                units = Giga;
-                trim  = 1;
-            }
-            else if (input.EndsWith("T", StringComparison.OrdinalIgnoreCase))
-            {
-                units = Tera;
-                trim  = 1;
-            }
-
-            if (trim != 0)
-            {
-                input = input.Substring(0, input.Length - trim);
-            }
-
-            if (!double.TryParse(input.Trim(), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var raw))
-            {
-                return false;
-            }
-
-            value = raw * units;
-
-            return value >= 0.0;
         }
     }
 }

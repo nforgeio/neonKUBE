@@ -149,12 +149,12 @@ namespace Neon.Kube
                 var memTotalRegex = new Regex(@"^MemTotal:\s*(?<size>\d+)\s*kB", RegexOptions.Multiline);
                 var memMatch      = memTotalRegex.Match(memInfo);
 
-                if (memMatch.Success && long.TryParse(memMatch.Groups["size"].Value, out var memSizeKB))
+                if (memMatch.Success && long.TryParse(memMatch.Groups["size"].Value, out var memSizeKiB))
                 {
                     // Note that the RAM reported by Linux is somewhat less than the
                     // physical RAM installed.
 
-                    node.Metadata.Labels.ComputeRamMB = (int)(memSizeKB / 1024);    // Convert KB --> MB
+                    node.Metadata.Labels.ComputeRamMiB = (int)(memSizeKiB / 1024);  // Convert KiB --> MiB
                 }
             }
 
@@ -203,7 +203,7 @@ namespace Neon.Kube
                 {
                     if (long.TryParse(result.OutputText.Trim(), out var deviceSize) && deviceSize > 0)
                     {
-                        node.Metadata.Labels.StorageCapacityGB = (int)(deviceSize / NeonHelper.Giga);
+                        node.Metadata.Labels.StorageCapacityGiB = (int)(deviceSize / ByteUnits.GibiBytes);
                         break;
                     }
                 }

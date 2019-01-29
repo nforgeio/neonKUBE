@@ -31,7 +31,8 @@ namespace Neon.Kube
     /// </summary>
     public class NetworkOptions
     {
-        private const string defaultPodSubnet = "10.254.0.0/16";
+        private const string defaultPodSubnet     = "10.254.0.0/16";
+        private const string defaultServiceSubnet = "10.253.0.0/16";
 
         /// <summary>
         /// Default constructor.
@@ -72,14 +73,29 @@ namespace Neon.Kube
         public string NodeSubnet { get; set; }
 
         /// <summary>
+        /// <para>
         /// Specifies the pod subnet to be used for the cluster.  This subnet will be
         /// split so that each node will be allocated its own subnet.  This defaults
         /// to <b>10.254.0.0/16</b>.
+        /// </para>
+        /// <note>
+        /// <b>WARNING:</b> This subnet must not conflict with any other subnets
+        /// provisioned within the premise network.
+        /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "PodSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "PodSubnet", ApplyNamingConventions = false)]
         [DefaultValue(defaultPodSubnet)]
         public string PodSubnet { get; set; } = defaultPodSubnet;
+
+        /// <summary>
+        /// Specifies the subnet subnet to be used for the allocating service addresses
+        /// within the cluster.  This defaults to <b>10.253.0.0/16</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ServiceSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ServiceSubnet", ApplyNamingConventions = false)]
+        [DefaultValue(defaultServiceSubnet)]
+        public string ServiceSubnet { get; set; } = defaultServiceSubnet;
 
         /// <summary>
         /// The IP addresses of the upstream DNS nameservers to be used by the cluster.  This defaults to the 
@@ -236,6 +252,15 @@ namespace Neon.Kube
             }
 
             subnets.Add(new SubnetDefinition(nameof(PodSubnet), podSubnet));
+
+            // Verify [ServiceSubnet].
+
+            if (!NetworkCidr.TryParse(ServiceSubnet, out var serviceSubnet))
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ServiceSubnet)}={ServiceSubnet}] is not a valid IPv4 subnet.");
+            }
+
+            subnets.Add(new SubnetDefinition(nameof(ServiceSubnet), serviceSubnet));
 
             // Verify [Gateway]
 

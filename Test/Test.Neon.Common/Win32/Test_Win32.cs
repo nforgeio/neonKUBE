@@ -26,7 +26,7 @@ namespace TestCommon
         public void GetPhysicallyInstalledSystemMemory()
         {
             Assert.True(Win32.GetPhysicallyInstalledSystemMemory(out var memKB));
-            Assert.True(memKB > NeonHelper.Mega);
+            Assert.True(memKB > ByteUnits.MebiBytes);
         }
     }
 }

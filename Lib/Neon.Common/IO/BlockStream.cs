@@ -22,12 +22,12 @@ namespace Neon.IO
     /// </summary>
     /// <remarks>
     /// <note>
-    /// Buffer array streams can be greater than or equal to 2GB in length.
+    /// Buffer array streams cannot be greater than or equal to 2GiB in length.
     /// </note>
     /// </remarks>
     public sealed class BlockStream : Stream
     {
-        private const string TooLongError = "Block streams can be greater than or equal to 2GB.";
+        private const string TooLongError = "Block streams cannot be greater than or equal to 2GiB.";
 
         private BlockArray      blocks;     // Underlying blocks
         private int             pos;        // Current stream position

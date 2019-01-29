@@ -130,17 +130,17 @@ namespace Neon.Kube
         public const string LabelAzureDriveCount = ClusterDefinition.ReservedLabelPrefix + "azure.drive_count";
 
         /// <summary>
-        /// Reserved label name that identifies the node's Azure attached drive size in GB.
+        /// Reserved label name that identifies the node's Azure attached drive size in GiB.
         /// </summary>
-        public const string LabelAzureDriveSizeGB = ClusterDefinition.ReservedLabelPrefix + "azure.drive_size_gb";
+        public const string LabelAzureDriveSizeGiB = ClusterDefinition.ReservedLabelPrefix + "azure.drive_size_gib";
 
         //---------------------------------------------------------------------
         // Define the node storage related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageCapacityGB"/>.
+        /// Reserved label name for <see cref="StorageCapacityGiB"/>.
         /// </summary>
-        public const string LabelStorageCapacityGB = ClusterDefinition.ReservedLabelPrefix + "storage.capacity_gb";
+        public const string LabelStorageCapacityGiB = ClusterDefinition.ReservedLabelPrefix + "storage.capacity_gib";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageLocal"/>.
@@ -166,10 +166,10 @@ namespace Neon.Kube
         /// <b>io.neonkube/storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
         /// storage capacity in gigabytes.
         /// </summary>
-        [JsonProperty(PropertyName = "StorageCapacityGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageCapacityGB", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "StorageCapacityGiB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "StorageCapacityGiB", ApplyNamingConventions = false)]
         [DefaultValue(0)]
-        public int StorageCapacityGB { get; set; } = 0;
+        public int StorageCapacityGiB { get; set; } = 0;
 
         /// <summary>
         /// <b>io.neonkube/storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
@@ -220,9 +220,9 @@ namespace Neon.Kube
         public const string LabelComputeCores = ClusterDefinition.ReservedLabelPrefix + "compute.cores";
 
         /// <summary>
-        /// Reserved label name for <see cref="ComputeRamMB"/>.
+        /// Reserved label name for <see cref="ComputeRamMiB"/>.
         /// </summary>
-        public const string LabelComputeRamMB = ClusterDefinition.ReservedLabelPrefix + "compute.ram_mb";
+        public const string LabelComputeRamMiB = ClusterDefinition.ReservedLabelPrefix + "compute.ram_mib";
 
         /// <summary>
         /// <b>io.neonkube/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
@@ -239,10 +239,10 @@ namespace Neon.Kube
         /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
-        [JsonProperty(PropertyName = "ComputeRamMB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "ComputeRamMB", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ComputeRamMiB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "ComputeRamMiB", ApplyNamingConventions = false)]
         [DefaultValue(0)]
-        public int ComputeRamMB { get; set; } = 0;
+        public int ComputeRamMiB { get; set; } = 0;
 
         //---------------------------------------------------------------------
         // Define physical host labels.
@@ -441,19 +441,19 @@ namespace Neon.Kube
                     list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,         Node.Azure.VmSize));
                     list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,    Node.Azure.StorageType));
                     list.Add(new KeyValuePair<string, object>(LabelAzureDriveCount,     Node.Azure.HardDriveCount));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSizeGB,    Node.Azure.HardDriveSizeGB));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSizeGiB,   Node.Azure.HardDriveSizeGiB));
                 }
 
                 // Standard labels from this class.
 
-                list.Add(new KeyValuePair<string, object>(LabelStorageCapacityGB,       StorageCapacityGB));
+                list.Add(new KeyValuePair<string, object>(LabelStorageCapacityGiB,       StorageCapacityGiB));
                 list.Add(new KeyValuePair<string, object>(LabelStorageLocal,            StorageLocal));
                 list.Add(new KeyValuePair<string, object>(LabelStorageHDD,              StorageHDD));
                 list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,        StorageRedundant));
                 list.Add(new KeyValuePair<string, object>(LabelStorageEphemeral,        StorageEphemeral));
 
                 list.Add(new KeyValuePair<string, object>(LabelComputeCores,            ComputeCores));
-                list.Add(new KeyValuePair<string, object>(LabelComputeRamMB,            ComputeRamMB));
+                list.Add(new KeyValuePair<string, object>(LabelComputeRamMiB,           ComputeRamMiB));
 
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalLocation,        PhysicalLocation));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,         PhysicalMachine));
@@ -516,14 +516,14 @@ namespace Neon.Kube
             {
                 switch (label.Key)
                 {
-                    case LabelPublicAddress:            Node.PublicAddress = label.Value; break;
-                    case LabelPrivateAddress:           Node.PrivateAddress = label.Value; break;
-                    case LabelRole:                     Node.Role = label.Value; break;
+                    case LabelPublicAddress:                Node.PublicAddress = label.Value; break;
+                    case LabelPrivateAddress:               Node.PrivateAddress = label.Value; break;
+                    case LabelRole:                         Node.Role = label.Value; break;
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:
                     case LabelAzureDriveCount:
-                    case LabelAzureDriveSizeGB:
+                    case LabelAzureDriveSizeGiB:
 
                         if (Node.Azure == null)
                         {
@@ -532,26 +532,26 @@ namespace Neon.Kube
 
                         switch (label.Key)
                         {
-                            case LabelAzureVmSize:      ParseCheck(label, () => { Node.Azure.VmSize = NeonHelper.ParseEnum<AzureVmSizes>(label.Value); }); break;
-                            case LabelAzureStorageType: ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
-                            case LabelAzureDriveCount:  ParseCheck(label, () => { Node.Azure.HardDriveCount = int.Parse(label.Value); }); break;
-                            case LabelAzureDriveSizeGB: ParseCheck(label, () => { Node.Azure.HardDriveSizeGB = int.Parse(label.Value); }); break;
+                            case LabelAzureVmSize:          ParseCheck(label, () => { Node.Azure.VmSize = NeonHelper.ParseEnum<AzureVmSizes>(label.Value); }); break;
+                            case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
+                            case LabelAzureDriveCount:      ParseCheck(label, () => { Node.Azure.HardDriveCount = int.Parse(label.Value); }); break;
+                            case LabelAzureDriveSizeGiB:    ParseCheck(label, () => { Node.Azure.HardDriveSizeGiB = int.Parse(label.Value); }); break;
                         }
                         break;
 
-                    case LabelStorageCapacityGB:        ParseCheck(label, () => { Node.Labels.StorageCapacityGB = int.Parse(label.Value); }); break;
-                    case LabelStorageLocal:             Node.Labels.StorageLocal = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageHDD:               Node.Labels.StorageHDD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageRedundant:         Node.Labels.StorageRedundant = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageEphemeral:         Node.Labels.StorageEphemeral = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageCapacityGiB:           ParseCheck(label, () => { Node.Labels.StorageCapacityGiB = int.Parse(label.Value); }); break;
+                    case LabelStorageLocal:                 Node.Labels.StorageLocal = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageHDD:                   Node.Labels.StorageHDD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageRedundant:             Node.Labels.StorageRedundant = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageEphemeral:             Node.Labels.StorageEphemeral = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
-                    case LabelComputeCores:             ParseCheck(label, () => { Node.Labels.ComputeCores = int.Parse(label.Value); }); break;
-                    case LabelComputeRamMB:             ParseCheck(label, () => { Node.Labels.ComputeRamMB = int.Parse(label.Value); }); break;
+                    case LabelComputeCores:                 ParseCheck(label, () => { Node.Labels.ComputeCores = int.Parse(label.Value); }); break;
+                    case LabelComputeRamMiB:                ParseCheck(label, () => { Node.Labels.ComputeRamMiB = int.Parse(label.Value); }); break;
 
-                    case LabelPhysicalLocation:         Node.Labels.PhysicalLocation = label.Value; break;
-                    case LabelPhysicalMachine:          Node.Labels.PhysicalMachine = label.Value;  break;
-                    case LabelPhysicalFaultDomain:      Node.Labels.PhysicalFaultDomain = label.Value; break;
-                    case LabelPhysicalPower:            Node.Labels.PhysicalPower = label.Value;  break;
+                    case LabelPhysicalLocation:             Node.Labels.PhysicalLocation = label.Value; break;
+                    case LabelPhysicalMachine:              Node.Labels.PhysicalMachine = label.Value;  break;
+                    case LabelPhysicalFaultDomain:          Node.Labels.PhysicalFaultDomain = label.Value; break;
+                    case LabelPhysicalPower:                Node.Labels.PhysicalPower = label.Value;  break;
 
                     case LabelDatacenter:
                     case LabelEnvironment:
@@ -583,14 +583,14 @@ namespace Neon.Kube
             //
             // This method will need to be updated whenever new standard labels are added or changed.
 
-            target.StorageCapacityGB    = this.StorageCapacityGB;
+            target.StorageCapacityGiB   = this.StorageCapacityGiB;
             target.StorageLocal         = this.StorageLocal;
             target.StorageHDD           = this.StorageHDD;
             target.StorageRedundant     = this.StorageRedundant;
             target.StorageEphemeral     = this.StorageEphemeral;
 
             target.ComputeCores         = this.ComputeCores;
-            target.ComputeRamMB         = this.ComputeRamMB;
+            target.ComputeRamMiB        = this.ComputeRamMiB;
 
             target.PhysicalLocation     = this.PhysicalLocation;
             target.PhysicalMachine      = this.PhysicalMachine;

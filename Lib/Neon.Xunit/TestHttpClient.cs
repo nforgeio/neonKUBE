@@ -169,8 +169,8 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// the maximum number of bytes to buffer when reading the response  content.
-        /// This defaults to 2GB.
+        /// the maximum number of bytes to buffer when reading the response content.
+        /// This defaults to 2GiB.
         /// </summary>
         public long MaxResponseContentBufferSize
         {

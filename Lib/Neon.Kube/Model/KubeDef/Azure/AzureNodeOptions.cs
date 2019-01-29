@@ -99,23 +99,23 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the size of each of the mounted managed drives in gigabytes.  This
-        /// defaults to <b>64GB</b>.
+        /// defaults to <b>64GiB</b>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// Azure <see cref="AzureStorageTypes.StandardHDD_LRS"/> based drives may be provisioned
-        /// with one of these sizes: <b>32 GB</b>, <b>64 GB</b>, <b>128 GB</b>, <b>256 GB</b>,
-        /// <b>512 GB</b>, <b>1TB</b>, <b>2TB</b>, <b>4TB</b> or <b>8TB</b>.
+        /// with one of these sizes: <b>32 GiB</b>, <b>64 GiB</b>, <b>128 GiB</b>, <b>256 GiB</b>,
+        /// <b>512 GiB</b>, <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b> or <b>8TiB</b>.
         /// </para>
         /// <para>
         /// Azure <see cref="AzureStorageTypes.StandardSSD_LRS"/> based drives may be provisioned
-        /// with one of these sizes: <b>32 GB</b>, <b>64 GB</b>, <b>128 GB</b>, <b>256 GB</b>,
-        /// <b>512 GB</b>, <b>1TB</b>, <b>2TB</b>, <b>4TB</b>, <b>8TB</b>, <b>16TB</b> or <b>32TB</b>.
+        /// with one of these sizes: <b>32 GiB</b>, <b>64 GiB</b>, <b>128 GiB</b>, <b>256 GiB</b>,
+        /// <b>512 GiB</b>, <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b> or <b>32TiB</b>.
         /// </para>
         /// <para>
         /// Azure <see cref="AzureStorageTypes.PremiumSSD_LRS"/> based drives may be provisioned
-        /// with sizes: <b>32GB</b>, <b>64GB</b>, <b>128GB</b>, <b>256GB</b>, <b>512GB</b>,
-        /// <b>1TB</b>, <b>2TB</b>, <b>4TB</b> or <b>8TB</b>.
+        /// with sizes: <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
+        /// <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b> or <b>8TiB</b>.
         /// </para>
         /// <note>
         /// This size will be rounded up to the next valid drive size for the given storage type
@@ -127,10 +127,10 @@ namespace Neon.Kube
         /// currently support.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "HardDriveSizeGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HardDriveSizeGB", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "HardDriveSizeGiB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "HardDriveSizeGiB", ApplyNamingConventions = false)]
         [DefaultValue(128)]
-        public int HardDriveSizeGB { get; set; } = 64;
+        public int HardDriveSizeGiB { get; set; } = 64;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -166,7 +166,7 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"cluster node [{nodeName}]configures [{nameof(HardDriveCount)}={HardDriveCount}] managed data drives.  Only up to [{caps.MaxDataDrives}] drives are allowed.");
             }
 
-            AzureHelper.GetDiskSizeGB(StorageType, HardDriveSizeGB);
+            AzureHelper.GetDiskSizeGiB(StorageType, HardDriveSizeGiB);
         }
     }
 }
