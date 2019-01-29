@@ -929,17 +929,23 @@ rm -rf helm
                     firstMaster.InvokeIdempotentAction("setup/cluster-images",
                         () =>
                         {
-                            firstMaster.Status = "pull: kubernetes images";
+                            firstMaster.Status = "pull: kubernetes images...";
                             firstMaster.SudoCommand("kubeadm config images pull");
                         });
 
                     firstMaster.InvokeIdempotentAction("setup/cluster-init",
                         () =>
                         {
+                            firstMaster.Status = "initializing...";
+
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
 
                             firstMaster.SudoCommand("kubeadm reset --force");
+
+                            // Configure the control plane's API server endpoint and initialize
+                            // the certificate SAN names to include each master IP address as well
+                            // as the HOSTNAME/ADDRESS of the API load balancer (if any).
 
                             var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:{KubeHostPorts.ApiServerProxy}";
                             var sbCertSANs           = new StringBuilder();
@@ -947,6 +953,10 @@ rm -rf helm
                             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
                             {
                                 controlPlaneEndpoint = cluster.Definition.Kubernetes.ApiLoadBalancer;
+
+                                var fields = cluster.Definition.Kubernetes.ApiLoadBalancer.Split(':');
+
+                                sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
                             }
 
                             foreach (var node in cluster.Masters)
@@ -963,6 +973,11 @@ bootstrapTokens:
 - groups:
   ttl: ""0""
 kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: {firstMaster.PrivateAddress}
+  bindPort: {KubeHostPorts.KubeApiServer}
+nodeRegistration:
+  name: {firstMaster.Name}
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
@@ -974,6 +989,7 @@ apiServer:
 controlPlaneEndpoint: ""{controlPlaneEndpoint}""
 networking:
   podSubnet: ""{cluster.Definition.Network.PodSubnet}""
+  serviceSubnet: ""{cluster.Definition.Network.ServiceSubnet}""
 ";
                             firstMaster.UploadText("/tmp/cluster.yaml", clusterConfig);
 
