@@ -45,8 +45,7 @@ fi
 
 . log-info.sh "Starting HAProxy."
 
-haproxyCommand="haproxy -f ${configPath} $@"
-eval ${haproxyCommand}
+haproxy -f ${configPath} &
 
 # Monitor the configuration for changes and restart the proxy when we see any.
 # Note that we'll report an error if the new configuration is invalid but we'll
@@ -72,11 +71,7 @@ do
 
             # Restart with the new config
 
-            if ! eval ${haproxyCommand} -sf $(pidof haproxy) ; then
-                
-                . log-error.sh "Unable to restart HAProxy even though the configuration checked out.  Container will terminate."
-                exit 1
-            fi
+            haproxy -f ${configPath} -sf $(pidof haproxy)
         else
             . log-error.sh "Invalid HAProxy configuration change.  Retaining the old configuration."
         fi
