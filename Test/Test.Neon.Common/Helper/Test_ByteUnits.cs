@@ -65,7 +65,7 @@ namespace TestCommon
             Assert.Equal(ByteUnits.TebiBytes * 4, value);
 
 #if ALLOW_PENTA
-            Assert.True(ByteUnits.TryParseCount("3pib", out value));
+            Assert.True(ByteUnits.TryParse("3pib", out value));
             Assert.Equal(ByteUnits.PebiBytes * 3, value);
 #endif
 
@@ -84,7 +84,7 @@ namespace TestCommon
             Assert.Equal(ByteUnits.TebiBytes * 1.5, value);
 
 #if ALLOW_PENTA
-            Assert.True(ByteUnits.TryParseCount("1.5PiB", out value));
+            Assert.True(ByteUnits.TryParse("1.5PiB", out value));
             Assert.Equal(ByteUnits.PebiBytes * 1.5, value);
 #endif
 
@@ -103,10 +103,10 @@ namespace TestCommon
             Assert.Equal(4.0 * ByteUnits.TebiBytes, value);
 
 #if ALLOW_PENTA
-            Assert.True(ByteUnits.TryParseCount("9 P", out value));
+            Assert.True(ByteUnits.TryParse("9 P", out value));
             Assert.Equal(9.0 * ByteUnits.PebiBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("10 PB", out value));
+            Assert.True(ByteUnits.TryParse("10 PB", out value));
             Assert.Equal(10.0 * ByteUnits.PebiBytes, value);
 #endif
         }
@@ -187,10 +187,10 @@ namespace TestCommon
             Assert.Equal(ByteUnits.TeraBytes * 4, value);
 
 #if ALLOW_PENTA
-            Assert.True(ByteUnits.TryParseCount("3p", out value));
+            Assert.True(ByteUnits.TryParse("3p", out value));
             Assert.Equal(ByteUnits.PentaBytes * 3, value);
 
-            Assert.True(ByteUnits.TryParseCount("4pb", out value));
+            Assert.True(ByteUnits.TryParse("4pb", out value));
             Assert.Equal(ByteUnits.PentaBytes * 4, value);
 #endif
 
@@ -209,7 +209,7 @@ namespace TestCommon
             Assert.Equal(ByteUnits.TeraBytes * 1.5, value);
 
 #if ALLOW_PENTA
-            Assert.True(ByteUnits.TryParseCount("1.5PB", out value));
+            Assert.True(ByteUnits.TryParse("1.5PB", out value));
             Assert.Equal(ByteUnits.PentaBytes * 1.5, value);
 #endif
 
@@ -243,10 +243,10 @@ namespace TestCommon
             Assert.Equal(9 * ByteUnits.TeraBytes, value);
 
 #if ALLOW_PENTA
-            Assert.True(ByteUnits.TryParseCount("9 P", out value));
+            Assert.True(ByteUnits.TryParse("9 P", out value));
             Assert.Equal(9.0 * ByteUnits.PebiBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("10 PB", out value));
+            Assert.True(ByteUnits.TryParse("10 PB", out value));
             Assert.Equal(10.0 * ByteUnits.PebiBytes, value);
 #endif
         }
