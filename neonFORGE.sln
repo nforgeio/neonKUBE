@@ -142,7 +142,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home", "home", "{E4CB108C-A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt", "wrt", "{68D2B92F-A5C0-4E29-9E53-64F600400568}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\wrt\tiny.cluster.yaml = Devops\wrt\tiny.cluster.yaml
+		Devops\wrt\jeff-tiny.cluster.yaml = Devops\wrt\jeff-tiny.cluster.yaml
 	EndProjectSection
 EndProject
 Global
