@@ -232,6 +232,15 @@ namespace Neon.Kube
         public DockerOptions Docker { get; set; } = new DockerOptions();
 
         /// <summary>
+        /// Returns the options to be used for configuring the cluster integrated
+        /// Ceph file system.
+        /// </summary>
+        [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Ceph", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public CephOptions Ceph { get; set; } = new CephOptions();
+
+        /// <summary>
         /// <para>
         /// Returns the prefix for block devices that will be attached to
         /// the host machines.  For many hosting environments this will be
@@ -496,6 +505,7 @@ namespace Neon.Kube
             Provisioner = Provisioner ?? defaultProvisioner;
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
+            Ceph        = Ceph ?? new CephOptions();
             DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
@@ -504,6 +514,7 @@ namespace Neon.Kube
 
             Kubernetes.Validate(this);
             Docker.Validate(this);
+            Ceph.Validate(this);
             Setup.Validate(this);
             Network.Validate(this);
             Hosting.Validate(this);
