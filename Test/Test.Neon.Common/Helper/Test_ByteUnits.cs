@@ -200,5 +200,52 @@ namespace TestCommon
             Assert.False(ByteUnits.TryParseCount("10a", out value));
             Assert.False(ByteUnits.TryParseCount("10akb", out value));
         }
+
+        [Fact]
+        public void Strings()
+        {
+            Assert.Equal("500", ByteUnits.ToByteString(500));
+            Assert.Equal("1000000", ByteUnits.ToByteString(1000000));
+
+            Assert.Equal("1KB", ByteUnits.ToKBString(1000));
+            Assert.Equal("2KB", ByteUnits.ToKBString(2000));
+            Assert.Equal("0.5KB", ByteUnits.ToKBString(500));
+
+            Assert.Equal("1KiB", ByteUnits.ToKiBString(1024));
+            Assert.Equal("2KiB", ByteUnits.ToKiBString(2048));
+            Assert.Equal("0.5KiB", ByteUnits.ToKiBString(512));
+
+            Assert.Equal("1MB", ByteUnits.ToMBString(1000000));
+            Assert.Equal("2MB", ByteUnits.ToMBString(2000000));
+            Assert.Equal("0.5MB", ByteUnits.ToMBString(500000));
+
+            Assert.Equal("1MiB", ByteUnits.ToMiBString(1 * ByteUnits.MebiBytes));
+            Assert.Equal("2MiB", ByteUnits.ToMiBString(2 * ByteUnits.MebiBytes));
+            Assert.Equal("0.5MiB", ByteUnits.ToMiBString(ByteUnits.MebiBytes/2));
+
+            Assert.Equal("1GB", ByteUnits.ToGBString(1000000000));
+            Assert.Equal("2GB", ByteUnits.ToGBString(2000000000));
+            Assert.Equal("0.5GB", ByteUnits.ToGBString(500000000));
+
+            Assert.Equal("1GiB", ByteUnits.ToGiBString(1 * ByteUnits.GibiBytes));
+            Assert.Equal("2GiB", ByteUnits.ToGiBString(2 * ByteUnits.GibiBytes));
+            Assert.Equal("0.5GiB", ByteUnits.ToGiBString(ByteUnits.GibiBytes/2));
+
+            Assert.Equal("1TB", ByteUnits.ToTBString(1000000000000));
+            Assert.Equal("2TB", ByteUnits.ToTBString(2000000000000));
+            Assert.Equal("0.5TB", ByteUnits.ToTBString(500000000000));
+
+            Assert.Equal("1TiB", ByteUnits.ToTiBString(1 * ByteUnits.TebiBytes));
+            Assert.Equal("2TiB", ByteUnits.ToTiBString(2 * ByteUnits.TebiBytes));
+            Assert.Equal("0.5TiB", ByteUnits.ToTiBString(ByteUnits.TebiBytes/2));
+
+            Assert.Equal("1PB", ByteUnits.ToPBString(1000000000000000));
+            Assert.Equal("2PB", ByteUnits.ToPBString(2000000000000000));
+            Assert.Equal("0.5PB", ByteUnits.ToPBString(500000000000000));
+
+            Assert.Equal("1PiB", ByteUnits.ToPiBString(1 * ByteUnits.PebiBytes));
+            Assert.Equal("2PiB", ByteUnits.ToPiBString(2 * ByteUnits.PebiBytes));
+            Assert.Equal("0.5PiB", ByteUnits.ToPiBString(ByteUnits.PebiBytes/2));
+        }
     }
 }

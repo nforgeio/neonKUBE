@@ -215,5 +215,134 @@ namespace Neon.Common
 
             return value >= 0.0;
         }
+
+        /// <summary>
+        /// Converts a byte count to a string using byte units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in bytes.</returns>
+        public static string ToByteString(long size)
+        {
+            return $"{size}";
+        }
+
+        /// <summary>
+        /// Converts the size to the specified units and then renders this
+        /// as an invariant culture fixed point string.
+        /// </summary>
+        /// <param name="size">The byte size.</param>
+        /// <param name="units">The units.</param>
+        /// <returns>The floating point string.</returns>
+        private static string ToDoubleString(long size, long units)
+        {
+            double doubleSize = size;
+
+            if (units > 0)
+            {
+                doubleSize = (double)doubleSize / units;
+            }
+
+            return doubleSize.ToString("#0.#", CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>KB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in KB.</returns>
+        public static string ToKBString(long size)
+        {
+            return $"{ToDoubleString(size, KiloBytes)}KB";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>KiB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in KiB.</returns>
+        public static string ToKiBString(long size)
+        {
+            return $"{ToDoubleString(size, KibiBytes)}KiB";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>MB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in MB.</returns>
+        public static string ToMBString(long size)
+        {
+            return $"{ToDoubleString(size, MegaBytes)}MB";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>MiB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in MiB.</returns>
+        public static string ToMiBString(long size)
+        {
+            return $"{ToDoubleString(size, MebiBytes)}MiB";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>GB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in GB.</returns>
+        public static string ToGBString(long size)
+        {
+            return $"{ToDoubleString(size, GigaBytes)}GB";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>GiB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in GiB.</returns>
+        public static string ToGiBString(long size)
+        {
+            return $"{ToDoubleString(size, GibiBytes)}GiB";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>TB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in TB.</returns>
+        public static string ToTBString(long size)
+        {
+            return $"{ToDoubleString(size, TeraBytes)}TB";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>TiB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in TiB.</returns>
+        public static string ToTiBString(long size)
+        {
+            return $"{ToDoubleString(size, TebiBytes)}TiB";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>PB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in PB.</returns>
+        public static string ToPBString(long size)
+        {
+            return $"{ToDoubleString(size, PentaBytes)}PB";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>PiB</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in PiB.</returns>
+        public static string ToPiBString(long size)
+        {
+            return $"{ToDoubleString(size, PebiBytes)}PiB";
+        }
     }
 }
