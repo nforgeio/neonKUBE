@@ -39,73 +39,67 @@ namespace TestCommon
             Assert.Equal(Math.Pow(2, 50), ByteUnits.PebiBytes);
 #endif
 
-            double value;
+            long value;
 
             // Parse whole values.
 
-            Assert.True(ByteUnits.TryParseCount("0", out value));
+            Assert.True(ByteUnits.TryParse("0", out value));
             Assert.Equal(0.0, value);
 
-            Assert.True(ByteUnits.TryParseCount("4kib", out value));
-            Assert.Equal((double)ByteUnits.KibiBytes * 4, value);
+            Assert.True(ByteUnits.TryParse("4kib", out value));
+            Assert.Equal(ByteUnits.KibiBytes * 4, value);
 
-            Assert.True(ByteUnits.TryParseCount("4mib", out value));
-            Assert.Equal((double)ByteUnits.MebiBytes * 4, value);
+            Assert.True(ByteUnits.TryParse("4mib", out value));
+            Assert.Equal(ByteUnits.MebiBytes * 4, value);
 
-            Assert.True(ByteUnits.TryParseCount("7GiB", out value));
-            Assert.Equal((double)ByteUnits.GibiBytes * 7, value);
+            Assert.True(ByteUnits.TryParse("7GiB", out value));
+            Assert.Equal(ByteUnits.GibiBytes * 7, value);
 
-            Assert.True(ByteUnits.TryParseCount("2TiB", out value));
-            Assert.Equal((double)ByteUnits.TebiBytes * 2, value);
+            Assert.True(ByteUnits.TryParse("2TiB", out value));
+            Assert.Equal(ByteUnits.TebiBytes * 2, value);
 
-            Assert.True(ByteUnits.TryParseCount("2GiB", out value));
-            Assert.Equal((double)ByteUnits.GibiBytes * 2, value);
+            Assert.True(ByteUnits.TryParse("2GiB", out value));
+            Assert.Equal(ByteUnits.GibiBytes * 2, value);
 
-            Assert.True(ByteUnits.TryParseCount("4tib", out value));
-            Assert.Equal((double)ByteUnits.TebiBytes * 4, value);
+            Assert.True(ByteUnits.TryParse("4tib", out value));
+            Assert.Equal(ByteUnits.TebiBytes * 4, value);
 
 #if ALLOW_PENTA
             Assert.True(ByteUnits.TryParseCount("3pib", out value));
-            Assert.Equal((double)ByteUnits.PebiBytes * 3, value);
+            Assert.Equal(ByteUnits.PebiBytes * 3, value);
 #endif
 
             // Test fractional values.
 
-            Assert.True(ByteUnits.TryParseCount("0.5", out value));
-            Assert.Equal(0.5, value);
+            Assert.True(ByteUnits.TryParse("1.5KiB", out value));
+            Assert.Equal(ByteUnits.KibiBytes * 1.5, value);
 
-            Assert.True(ByteUnits.TryParseCount("0.5B", out value));
-            Assert.Equal(0.5, value);
+            Assert.True(ByteUnits.TryParse("1.5MiB", out value));
+            Assert.Equal(ByteUnits.MebiBytes * 1.5, value);
 
-            Assert.True(ByteUnits.TryParseCount("1.5KiB", out value));
-            Assert.Equal((double)ByteUnits.KibiBytes * 1.5, value);
+            Assert.True(ByteUnits.TryParse("1.5GiB", out value));
+            Assert.Equal(ByteUnits.GibiBytes * 1.5, value);
 
-            Assert.True(ByteUnits.TryParseCount("1.5MiB", out value));
-            Assert.Equal((double)ByteUnits.MebiBytes * 1.5, value);
-
-            Assert.True(ByteUnits.TryParseCount("1.5GiB", out value));
-            Assert.Equal((double)ByteUnits.GibiBytes * 1.5, value);
-
-            Assert.True(ByteUnits.TryParseCount("1.5TiB", out value));
-            Assert.Equal((double)ByteUnits.TebiBytes * 1.5, value);
+            Assert.True(ByteUnits.TryParse("1.5TiB", out value));
+            Assert.Equal(ByteUnits.TebiBytes * 1.5, value);
 
 #if ALLOW_PENTA
             Assert.True(ByteUnits.TryParseCount("1.5PiB", out value));
-            Assert.Equal((double)ByteUnits.PebiBytes * 1.5, value);
+            Assert.Equal(ByteUnits.PebiBytes * 1.5, value);
 #endif
 
             // Parse values with a space before the units.
 
-            Assert.True(ByteUnits.TryParseCount("1 KiB", out value));
+            Assert.True(ByteUnits.TryParse("1 KiB", out value));
             Assert.Equal(1.0 * ByteUnits.KibiBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("2 MiB", out value));
+            Assert.True(ByteUnits.TryParse("2 MiB", out value));
             Assert.Equal(2.0 * ByteUnits.MebiBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("3 GiB", out value));
+            Assert.True(ByteUnits.TryParse("3 GiB", out value));
             Assert.Equal(3.0 * ByteUnits.GibiBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("4 TiB", out value));
+            Assert.True(ByteUnits.TryParse("4 TiB", out value));
             Assert.Equal(4.0 * ByteUnits.TebiBytes, value);
 
 #if ALLOW_PENTA
@@ -131,128 +125,122 @@ namespace TestCommon
             Assert.Equal(1000000000000000L, ByteUnits.PentaBytes);
 #endif
 
-            double value;
+            long value;
 
             // Parse whole values.
 
-            Assert.True(ByteUnits.TryParseCount("0", out value));
-            Assert.Equal(0.0, value);
+            Assert.True(ByteUnits.TryParse("0", out value));
+            Assert.Equal(0, value);
 
-            Assert.True(ByteUnits.TryParseCount("10b", out value));
-            Assert.Equal(10.0, value);
+            Assert.True(ByteUnits.TryParse("10b", out value));
+            Assert.Equal(10, value);
 
-            Assert.True(ByteUnits.TryParseCount("20B", out value));
-            Assert.Equal(20.0, value);
+            Assert.True(ByteUnits.TryParse("20B", out value));
+            Assert.Equal(20, value);
 
-            Assert.True(ByteUnits.TryParseCount("1K", out value));
-            Assert.Equal((double)ByteUnits.KiloBytes, value);
+            Assert.True(ByteUnits.TryParse("1K", out value));
+            Assert.Equal(ByteUnits.KiloBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("2KB", out value));
-            Assert.Equal((double)ByteUnits.KiloBytes * 2, value);
+            Assert.True(ByteUnits.TryParse("2KB", out value));
+            Assert.Equal(ByteUnits.KiloBytes * 2, value);
 
-            Assert.True(ByteUnits.TryParseCount("3k", out value));
-            Assert.Equal((double)ByteUnits.KiloBytes * 3, value);
+            Assert.True(ByteUnits.TryParse("3k", out value));
+            Assert.Equal(ByteUnits.KiloBytes * 3, value);
 
-            Assert.True(ByteUnits.TryParseCount("4kb", out value));
-            Assert.Equal((double)ByteUnits.KiloBytes * 4, value);
+            Assert.True(ByteUnits.TryParse("4kb", out value));
+            Assert.Equal(ByteUnits.KiloBytes * 4, value);
 
-            Assert.True(ByteUnits.TryParseCount("1M", out value));
-            Assert.Equal((double)ByteUnits.MegaBytes, value);
+            Assert.True(ByteUnits.TryParse("1M", out value));
+            Assert.Equal(ByteUnits.MegaBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("2MB", out value));
-            Assert.Equal((double)ByteUnits.MegaBytes * 2, value);
+            Assert.True(ByteUnits.TryParse("2MB", out value));
+            Assert.Equal(ByteUnits.MegaBytes * 2, value);
 
-            Assert.True(ByteUnits.TryParseCount("3m", out value));
-            Assert.Equal((double)ByteUnits.MegaBytes * 3, value);
+            Assert.True(ByteUnits.TryParse("3m", out value));
+            Assert.Equal(ByteUnits.MegaBytes * 3, value);
 
-            Assert.True(ByteUnits.TryParseCount("4mb", out value));
-            Assert.Equal((double)ByteUnits.MegaBytes * 4, value);
+            Assert.True(ByteUnits.TryParse("4mb", out value));
+            Assert.Equal(ByteUnits.MegaBytes * 4, value);
 
-            Assert.True(ByteUnits.TryParseCount("1G", out value));
-            Assert.Equal((double)ByteUnits.GigaBytes, value);
+            Assert.True(ByteUnits.TryParse("1G", out value));
+            Assert.Equal(ByteUnits.GigaBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("2TB", out value));
-            Assert.Equal((double)ByteUnits.TeraBytes * 2, value);
+            Assert.True(ByteUnits.TryParse("2TB", out value));
+            Assert.Equal(ByteUnits.TeraBytes * 2, value);
 
-            Assert.True(ByteUnits.TryParseCount("1T", out value));
-            Assert.Equal((double)ByteUnits.TeraBytes, value);
+            Assert.True(ByteUnits.TryParse("1T", out value));
+            Assert.Equal(ByteUnits.TeraBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("2GB", out value));
-            Assert.Equal((double)ByteUnits.GigaBytes * 2, value);
+            Assert.True(ByteUnits.TryParse("2GB", out value));
+            Assert.Equal(ByteUnits.GigaBytes * 2, value);
 
-            Assert.True(ByteUnits.TryParseCount("3g", out value));
-            Assert.Equal((double)ByteUnits.GigaBytes * 3, value);
+            Assert.True(ByteUnits.TryParse("3g", out value));
+            Assert.Equal(ByteUnits.GigaBytes * 3, value);
 
-            Assert.True(ByteUnits.TryParseCount("4gb", out value));
-            Assert.Equal((double)ByteUnits.GigaBytes * 4, value);
+            Assert.True(ByteUnits.TryParse("4gb", out value));
+            Assert.Equal(ByteUnits.GigaBytes * 4, value);
 
-            Assert.True(ByteUnits.TryParseCount("3t", out value));
-            Assert.Equal((double)ByteUnits.TeraBytes * 3, value);
+            Assert.True(ByteUnits.TryParse("3t", out value));
+            Assert.Equal(ByteUnits.TeraBytes * 3, value);
 
-            Assert.True(ByteUnits.TryParseCount("4tb", out value));
-            Assert.Equal((double)ByteUnits.TeraBytes * 4, value);
+            Assert.True(ByteUnits.TryParse("4tb", out value));
+            Assert.Equal(ByteUnits.TeraBytes * 4, value);
 
 #if ALLOW_PENTA
             Assert.True(ByteUnits.TryParseCount("3p", out value));
-            Assert.Equal((double)ByteUnits.PentaBytes * 3, value);
+            Assert.Equal(ByteUnits.PentaBytes * 3, value);
 
             Assert.True(ByteUnits.TryParseCount("4pb", out value));
-            Assert.Equal((double)ByteUnits.PentaBytes * 4, value);
+            Assert.Equal(ByteUnits.PentaBytes * 4, value);
 #endif
 
             // Parse fractional values.
 
-            Assert.True(ByteUnits.TryParseCount("0.5", out value));
-            Assert.Equal(0.5, value);
+            Assert.True(ByteUnits.TryParse("1.5KB", out value));
+            Assert.Equal(ByteUnits.KiloBytes * 1.5, value);
 
-            Assert.True(ByteUnits.TryParseCount("0.5B", out value));
-            Assert.Equal(0.5, value);
+            Assert.True(ByteUnits.TryParse("1.5MB", out value));
+            Assert.Equal(ByteUnits.MegaBytes * 1.5, value);
 
-            Assert.True(ByteUnits.TryParseCount("1.5KB", out value));
-            Assert.Equal((double)ByteUnits.KiloBytes * 1.5, value);
+            Assert.True(ByteUnits.TryParse("1.5GB", out value));
+            Assert.Equal(ByteUnits.GigaBytes * 1.5, value);
 
-            Assert.True(ByteUnits.TryParseCount("1.5MB", out value));
-            Assert.Equal((double)ByteUnits.MegaBytes * 1.5, value);
-
-            Assert.True(ByteUnits.TryParseCount("1.5GB", out value));
-            Assert.Equal((double)ByteUnits.GigaBytes * 1.5, value);
-
-            Assert.True(ByteUnits.TryParseCount("1.5TB", out value));
-            Assert.Equal((double)ByteUnits.TeraBytes * 1.5, value);
+            Assert.True(ByteUnits.TryParse("1.5TB", out value));
+            Assert.Equal(ByteUnits.TeraBytes * 1.5, value);
 
 #if ALLOW_PENTA
             Assert.True(ByteUnits.TryParseCount("1.5PB", out value));
-            Assert.Equal((double)ByteUnits.PentaBytes * 1.5, value);
+            Assert.Equal(ByteUnits.PentaBytes * 1.5, value);
 #endif
 
             // Parse values with a space before the units.
 
-            Assert.True(ByteUnits.TryParseCount("1 B", out value));
-            Assert.Equal(1.0, value);
+            Assert.True(ByteUnits.TryParse("1 B", out value));
+            Assert.Equal(1, value);
 
-            Assert.True(ByteUnits.TryParseCount("2 K", out value));
-            Assert.Equal(2.0 * ByteUnits.KiloBytes, value);
+            Assert.True(ByteUnits.TryParse("2 K", out value));
+            Assert.Equal(2 * ByteUnits.KiloBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("3 KB", out value));
-            Assert.Equal(3.0 * ByteUnits.KiloBytes, value);
+            Assert.True(ByteUnits.TryParse("3 KB", out value));
+            Assert.Equal(3 * ByteUnits.KiloBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("4 M", out value));
-            Assert.Equal(4.0 * ByteUnits.MegaBytes, value);
+            Assert.True(ByteUnits.TryParse("4 M", out value));
+            Assert.Equal(4 * ByteUnits.MegaBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("5 MB", out value));
-            Assert.Equal(5.0 * ByteUnits.MegaBytes, value);
+            Assert.True(ByteUnits.TryParse("5 MB", out value));
+            Assert.Equal(5 * ByteUnits.MegaBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("6 G", out value));
-            Assert.Equal(6.0 * ByteUnits.GigaBytes, value);
+            Assert.True(ByteUnits.TryParse("6 G", out value));
+            Assert.Equal(6 * ByteUnits.GigaBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("7 GB", out value));
-            Assert.Equal(7.0 * ByteUnits.GigaBytes, value);
+            Assert.True(ByteUnits.TryParse("7 GB", out value));
+            Assert.Equal(7 * ByteUnits.GigaBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("8 T", out value));
-            Assert.Equal(8.0 * ByteUnits.TeraBytes, value);
+            Assert.True(ByteUnits.TryParse("8 T", out value));
+            Assert.Equal(8 * ByteUnits.TeraBytes, value);
 
-            Assert.True(ByteUnits.TryParseCount("9 TB", out value));
-            Assert.Equal(9.0 * ByteUnits.TeraBytes, value);
+            Assert.True(ByteUnits.TryParse("9 TB", out value));
+            Assert.Equal(9 * ByteUnits.TeraBytes, value);
 
 #if ALLOW_PENTA
             Assert.True(ByteUnits.TryParseCount("9 P", out value));
@@ -266,16 +254,16 @@ namespace TestCommon
         [Fact]
         public void ParseErrors()
         {
-            double value;
+            long value;
 
-            Assert.False(ByteUnits.TryParseCount(null, out value));
-            Assert.False(ByteUnits.TryParseCount("", out value));
-            Assert.False(ByteUnits.TryParseCount("   ", out value));
-            Assert.False(ByteUnits.TryParseCount("ABC", out value));
-            Assert.False(ByteUnits.TryParseCount("-10", out value));
-            Assert.False(ByteUnits.TryParseCount("-20KB", out value));
-            Assert.False(ByteUnits.TryParseCount("10a", out value));
-            Assert.False(ByteUnits.TryParseCount("10akb", out value));
+            Assert.False(ByteUnits.TryParse(null, out value));
+            Assert.False(ByteUnits.TryParse("", out value));
+            Assert.False(ByteUnits.TryParse("   ", out value));
+            Assert.False(ByteUnits.TryParse("ABC", out value));
+            Assert.False(ByteUnits.TryParse("-10", out value));
+            Assert.False(ByteUnits.TryParse("-20KB", out value));
+            Assert.False(ByteUnits.TryParse("10a", out value));
+            Assert.False(ByteUnits.TryParse("10akb", out value));
         }
 
         [Fact]

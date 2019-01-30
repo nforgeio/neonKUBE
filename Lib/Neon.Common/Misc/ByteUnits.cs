@@ -131,9 +131,9 @@ namespace Neon.Common
         /// <param name="input">The input string.</param>
         /// <param name="value">Returns as the output value.</param>
         /// <returns><b>true</b> on success</returns>
-        public static bool TryParseCount(string input, out double value)
+        public static bool TryParse(string input, out long value)
         {
-            value = 0.0;
+            value = 0;
 
             if (string.IsNullOrWhiteSpace(input))
             {
@@ -215,9 +215,25 @@ namespace Neon.Common
                 return false;
             }
 
-            value = raw * units;
+            value = (long)(raw * units);
 
             return value >= 0.0;
+        }
+
+        /// <summary>
+        /// Parses a byte count and returns a <c>long</c>.
+        /// </summary>
+        /// <param name="text">The value being parsed.</param>
+        /// <returns>The parsed value.</returns>
+        /// <exception cref="FormatException">Thrown if the value cannot be parsed.</exception>
+        public static long Parse(string text)
+        {
+            if (!TryParse(text, out var value))
+            {
+                throw new FormatException($"Cannot parse the [{text}] {nameof(ByteUnits)}.");
+            }
+
+            return value;
         }
 
         /// <summary>
