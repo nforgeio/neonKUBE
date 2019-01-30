@@ -12,4 +12,4 @@ Note that any images that extend this one should launch the [tini](https://githu
 
 # Additional Packages
 
-This image extends the latest [nhive/ubuntu-16.04](https://hub.docker.com/r/nhive/ubuntu-16.04/) by installing the .NET Core runtime (including ASP.NET).  The image tag identifies the .NET Core version installed.
+This image extends the latest [nkubeio/ubuntu-16.04](https://hub.docker.com/r/nhive/ubuntu-16.04/) by installing the .NET Core runtime (including ASP.NET).  The image tag identifies the .NET Core version installed.

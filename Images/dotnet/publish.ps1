@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the [nhive/dotnet] images and pushes them to Docker Hub.
+# Builds the [nkubeio/dotnet] images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #

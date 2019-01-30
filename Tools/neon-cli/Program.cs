@@ -293,7 +293,7 @@ OPTIONS:
 
                             shim.WriteScript();
 
-                            // Run the [nhive/neon-cli] Docker image, passing the modified command line 
+                            // Run the [nkubeio/neon-cli] Docker image, passing the modified command line 
                             // arguments and mounting the following read/write volumes:
                             //
                             //      /neonkube       - the root folder for this workstation's cluster logins
@@ -366,6 +366,11 @@ OPTIONS:
                                 sbEnvOptions.AppendWithSeparator(NeonHelper.NormalizeExecArgs($"--env={envOption}"));
                             }
 
+                            // Use the [nkubeio] Docker Hub registry for PROD releases and [nhivedev]
+                            // for all other branches.
+
+                            var sourceRegistry = IsProd ? KubeConst.NeonProdRegistry : KubeConst.NeonDevRegistry;
+
                             // Verify that the matching [neon-cli] image exists in the local Docker,
                             // pulling it if it does not.  We're going to do this as an extra step
                             // to prevent the pulling messages from mixing into the command output.
@@ -375,7 +380,7 @@ OPTIONS:
                                 {
                                     "image",
                                     "ls",
-                                    "--filter", $"reference=nhive/neon-cli:{imageTag}"
+                                    "--filter", $"reference={sourceRegistry}/neon-cli:{imageTag}"
                                 });
 
                             if (result.ExitCode != 0)
@@ -387,15 +392,10 @@ $@"*** ERROR: Cannot list Docker images.
                                 Program.Exit(1);
                             }
 
-                            // Use the [nhive] Docker Hub registry for PROD releases and [nhivedev]
-                            // for all other branches.
-
-                            var sourceRegistry = IsProd ? KubeConst.NeonProdRegistry : KubeConst.NeonDevRegistry;
-
                             // The Docker image list output should look something like this:
                             //
                             //      REPOSITORY                  TAG                 IMAGE ID            CREATED             SIZE
-                            //      nhive/neon-registry         jeff-latest         b0d1d9c21ee1        20 hours ago        34.2MB
+                            //      nkubeio/neon-registry       jeff-latest         b0d1d9c21ee1        20 hours ago        34.2MB
                             //
                             // We're just going to look to see there's a line of text that specifies
                             // the repo and tag we're looking for.
@@ -428,7 +428,7 @@ $@"*** ERROR: Cannot list Docker images.
                                 if (result.ExitCode != 0)
                                 {
                                     Console.Error.WriteLine(
-$@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
+$@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
 
 {result.AllText}");
                                     Program.Exit(1);
@@ -1028,8 +1028,8 @@ $@"*** ERROR: Cannot pull: nhive/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// Optionally set to the registry to be used to override any explicit or implicit <b>nhive</b>
-        /// or <b>nhivedev</b> organizations specified when deploying or updating a neonHIVE.
+        /// Optionally set to the registry to be used to override any explicit or implicit <b>nkubeio</b>
+        /// or <b>nkubedev</b> organizations specified when deploying or updating a neonHIVE.
         /// </summary>
         /// <remarks>
         /// <para>

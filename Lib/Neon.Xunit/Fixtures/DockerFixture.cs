@@ -352,13 +352,13 @@ namespace Neon.Xunit
                 //      services:
                 //
                 //        service1:
-                //          image: nhive/test
+                //          image: nkubeio/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 1
                 //
                 //        service2:
-                //          image: nhive/test
+                //          image: nkubeio/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 2

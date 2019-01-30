@@ -11,7 +11,7 @@ This image is intended for developing GOLANG based applications:
 * Container sets the current directory to `/src/PROJECT` before running the command.
 * Simply pass `go` commands, like:
 
-&nbsp;&nbsp;&nbsp;&nbsp;`docker run --rm -v PROJECT-PATH:/src nhive/golang PROJECT go build`
+&nbsp;&nbsp;&nbsp;&nbsp;`docker run --rm -v PROJECT-PATH:/src nkubeio/golang PROJECT go build`
 
 # Build Outputs
 

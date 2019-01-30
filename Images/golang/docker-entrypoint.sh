@@ -22,7 +22,7 @@
 function usage {
 
     echo
-    echo "usage: docker run --rm -v PROJECT-PATH:/src nhive/golang PROJECT go build" 
+    echo "usage: docker run --rm -v PROJECT-PATH:/src nkubeio/golang PROJECT go build" 
     echo
     echo "where: PROJECT-PATH   - path to the GO project folder on your workstation"
     echo "       PROJECT        - project name"
