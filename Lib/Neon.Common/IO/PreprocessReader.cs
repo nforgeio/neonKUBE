@@ -39,7 +39,8 @@ namespace Neon.IO
     /// the first non-whitespace character.
     /// </para>
     /// <note>
-    /// The processor statement character can be changed by setting <see cref="StatementMarker"/>.
+    /// The processor statement character can be changed by setting <see cref="StatementMarker"/>
+    /// and preprocessor statement processing can be disabled via a constructor parameter.
     /// </note>
     /// <para>
     /// The following processing statements are supported:
@@ -240,24 +241,27 @@ namespace Neon.IO
         // Instance members
 
         private TextReader                  reader;
-        private Dictionary<string, string>  variables = new Dictionary<string, string>();
-        private Stack<State>                stateStack;
+        private Dictionary<string, string>  variables              = new Dictionary<string, string>();
         private Regex                       variableExpansionRegex = DefaultVariableExpansionRegex;
-        private int                         tabStop = 0;
-        private string                      indent  = string.Empty;
+        private string                      indent                 = string.Empty;
+        private int                         tabStop                = 0;
+        private bool                        disableStatements;
+        private Stack<State>                stateStack;
         private int                         lineNumber;
 
         /// <summary>
         /// Constructs an over another <see cref="TextReader"/>.
         /// </summary>
         /// <param name="reader">The source <see cref="TextReader"/>.</param>
-        public PreprocessReader(TextReader reader)
+        /// <param name="disableStatements">Optionally disables statement processing.</param>
+        public PreprocessReader(TextReader reader, bool disableStatements = false)
         {
             Covenant.Requires<ArgumentNullException>(reader != null);
 
-            this.reader     = reader;
-            this.stateStack = new Stack<State>();
-            this.lineNumber = 0;
+            this.reader            = reader;
+            this.stateStack        = new Stack<State>();
+            this.disableStatements = disableStatements;
+            this.lineNumber        = 0;
 
             this.stateStack.Push(new State() { OutputEnabled = true });
         }
@@ -267,8 +271,9 @@ namespace Neon.IO
         /// </summary>
         /// <param name="reader">The source <see cref="TextReader"/>.</param>
         /// <param name="variables">The variables.</param>
-        public PreprocessReader(TextReader reader, Dictionary<string, string> variables)
-            : this(reader)
+        /// <param name="disableStatements">Optionally disables statement processing.</param>
+        public PreprocessReader(TextReader reader, Dictionary<string, string> variables, bool disableStatements = false)
+            : this(reader, disableStatements: disableStatements)
         {
             Covenant.Requires<ArgumentNullException>(reader != null);
 
@@ -819,7 +824,7 @@ namespace Neon.IO
         /// <returns><b>true</b> if the line is a statement.</returns>
         private bool IsStatement(string line)
         {
-            if (line == null)
+            if (line == null || disableStatements)
             {
                 return false;
             }

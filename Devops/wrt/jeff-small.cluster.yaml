@@ -18,8 +18,8 @@ Hosting:
     Address: 10.100.128.85
   - Name: WRT-00-XEN-01
     Address: 10.100.128.91
-  - Name: WRT-00-XEN-02
-    Address: 10.100.128.97
+#  - Name: WRT-00-XEN-02
+#    Address: 10.100.128.97
   - Name: WRT-00-XEN-03
     Address: 10.100.128.103
   - Name: WRT-00-XEN-04

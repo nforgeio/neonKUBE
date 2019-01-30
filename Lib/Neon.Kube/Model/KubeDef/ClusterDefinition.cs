@@ -120,32 +120,35 @@ namespace Neon.Kube
             {
                 using (var reader = new StreamReader(stream))
                 {
-                    var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(reader.ReadToEnd(), strict: strict);
-
-                    if (clusterDefinition == null)
+                    using (var preprocessor = new PreprocessReader(reader))
                     {
-                        throw new ArgumentException($"Invalid cluster definition in [{path}].");
-                    }
+                        var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessor.ReadToEnd(), strict: strict);
 
-                    // Populate the [node.Name] properties from the dictionary name.
-
-                    foreach (var item in clusterDefinition.NodeDefinitions)
-                    {
-                        var node = item.Value;
-
-                        if (string.IsNullOrEmpty(node.Name))
+                        if (clusterDefinition == null)
                         {
-                            node.Name = item.Key;
+                            throw new ArgumentException($"Invalid cluster definition in [{path}].");
                         }
-                        else if (item.Key != node.Name)
+
+                        // Populate the [node.Name] properties from the dictionary name.
+
+                        foreach (var item in clusterDefinition.NodeDefinitions)
                         {
-                            throw new FormatException($"The node names don't match [\"{item.Key}\" != \"{node.Name}\"].");
+                            var node = item.Value;
+
+                            if (string.IsNullOrEmpty(node.Name))
+                            {
+                                node.Name = item.Key;
+                            }
+                            else if (item.Key != node.Name)
+                            {
+                                throw new FormatException($"The node names don't match [\"{item.Key}\" != \"{node.Name}\"].");
+                            }
                         }
+
+                        clusterDefinition.Validate();
+
+                        return clusterDefinition;
                     }
-
-                    clusterDefinition.Validate();
-
-                    return clusterDefinition;
                 }
             }
         }

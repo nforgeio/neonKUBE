@@ -1173,5 +1173,20 @@ line3
                 Assert.Equal("line1\nline2\nline3\n", await reader.ReadToEndAsync());
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void DisableStatements()
+        {
+            const string input =
+@"# line1
+line2
+# line3
+";
+            using (var reader = new PreprocessReader(input) { LineEnding = LineEnding.CRLF })
+            {
+                Assert.Equal("# line1\r\nline2\r\n# line3\r\n", reader.ReadToEnd());
+            }
+        }
     }
 }
