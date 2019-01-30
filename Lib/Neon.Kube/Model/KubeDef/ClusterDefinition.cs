@@ -122,6 +122,8 @@ namespace Neon.Kube
                 {
                     using (var preprocessor = new PreprocessReader(reader))
                     {
+                        preprocessor.ProcessStatements = false;
+
                         var clusterDefinition = NeonHelper.YamlDeserialize<ClusterDefinition>(preprocessor.ReadToEnd(), strict: strict);
 
                         if (clusterDefinition == null)

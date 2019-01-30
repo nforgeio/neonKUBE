@@ -373,7 +373,7 @@ namespace NeonCli
                                 {
                                     DefaultVariable = string.Empty,
                                     ExpandVariables = true,
-                                    ProcessCommands = false,
+                                    ProcessStatements = false,
                                     StripComments   = false
                                 };
 

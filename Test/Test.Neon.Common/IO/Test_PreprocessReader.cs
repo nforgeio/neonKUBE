@@ -53,7 +53,7 @@ namespace TestCommon
                 StripComments              = stripComments,
                 RemoveComments             = removeComments,
                 RemoveBlank                = removeBlank,
-                ProcessCommands            = processCommands,
+                ProcessStatements            = processCommands,
                 StatementMarker            = statementMarker,
                 Indent                     = indent,
                 LineEnding                 = lineEnding
@@ -127,7 +127,7 @@ namespace TestCommon
             var reader = new PreprocessReader(new StreamReader(new MemoryStream()));
 
             Assert.Equal(PreprocessReader.AngleVariableExpansionRegex, reader.VariableExpansionRegex);
-            Assert.True(reader.ProcessCommands);
+            Assert.True(reader.ProcessStatements);
             Assert.True(reader.StripComments);
             Assert.False(reader.RemoveComments);
             Assert.False(reader.RemoveBlank);
@@ -1185,6 +1185,8 @@ line2
 ";
             using (var reader = new PreprocessReader(input) { LineEnding = LineEnding.CRLF })
             {
+                reader.ProcessStatements = false;
+
                 Assert.Equal("# line1\r\nline2\r\n# line3\r\n", reader.ReadToEnd());
             }
         }

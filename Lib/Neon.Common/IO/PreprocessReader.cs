@@ -39,8 +39,7 @@ namespace Neon.IO
     /// the first non-whitespace character.
     /// </para>
     /// <note>
-    /// The processor statement character can be changed by setting <see cref="StatementMarker"/>
-    /// and preprocessor statement processing can be disabled via a constructor parameter.
+    /// The processor statement character can be changed by setting <see cref="StatementMarker"/>.
     /// </note>
     /// <para>
     /// The following processing statements are supported:
@@ -168,7 +167,7 @@ namespace Neon.IO
     /// </note>
     /// <para>
     /// Processing can also be customized via the <see cref="StripComments"/>, <see cref="RemoveComments"/>,
-    /// <see cref="RemoveBlank"/>,  <see cref="ProcessCommands"/>, <see cref="Indent"/>, <see cref="TabStop"/>, 
+    /// <see cref="RemoveBlank"/>,  <see cref="ProcessStatements"/>, <see cref="Indent"/>, <see cref="TabStop"/>, 
     /// and <see cref="StatementMarker"/>
     /// properties.
     /// </para>
@@ -245,7 +244,6 @@ namespace Neon.IO
         private Regex                       variableExpansionRegex = DefaultVariableExpansionRegex;
         private string                      indent                 = string.Empty;
         private int                         tabStop                = 0;
-        private bool                        disableStatements;
         private Stack<State>                stateStack;
         private int                         lineNumber;
 
@@ -253,14 +251,12 @@ namespace Neon.IO
         /// Constructs an over another <see cref="TextReader"/>.
         /// </summary>
         /// <param name="reader">The source <see cref="TextReader"/>.</param>
-        /// <param name="disableStatements">Optionally disables statement processing.</param>
-        public PreprocessReader(TextReader reader, bool disableStatements = false)
+        public PreprocessReader(TextReader reader)
         {
             Covenant.Requires<ArgumentNullException>(reader != null);
 
             this.reader            = reader;
             this.stateStack        = new Stack<State>();
-            this.disableStatements = disableStatements;
             this.lineNumber        = 0;
 
             this.stateStack.Push(new State() { OutputEnabled = true });
@@ -271,9 +267,8 @@ namespace Neon.IO
         /// </summary>
         /// <param name="reader">The source <see cref="TextReader"/>.</param>
         /// <param name="variables">The variables.</param>
-        /// <param name="disableStatements">Optionally disables statement processing.</param>
-        public PreprocessReader(TextReader reader, Dictionary<string, string> variables, bool disableStatements = false)
-            : this(reader, disableStatements: disableStatements)
+        public PreprocessReader(TextReader reader, Dictionary<string, string> variables)
+            : this(reader)
         {
             Covenant.Requires<ArgumentNullException>(reader != null);
 
@@ -407,9 +402,9 @@ namespace Neon.IO
         public bool RemoveBlank { get; set; } = false;
 
         /// <summary>
-        /// Controls whether commands are processed.  This defaults to <c>true</c>.
+        /// Controls whether preprocessor statements are processed.  This defaults to <c>true</c>.
         /// </summary>
-        public bool ProcessCommands { get; set; } = true;
+        public bool ProcessStatements { get; set; } = true;
 
         /// <summary>
         /// Controls whether embedded TAB <b>(\t)</b> characters will be converted into
@@ -536,7 +531,7 @@ namespace Neon.IO
 
                 if (IsStatement(line))
                 {
-                    if (ProcessCommands)
+                    if (ProcessStatements)
                     {
                         ProcessStatement(line);
                         return string.Empty;
@@ -596,7 +591,7 @@ namespace Neon.IO
 
                 if (IsStatement(line))
                 {
-                    if (ProcessCommands)
+                    if (ProcessStatements)
                     {
                         ProcessStatement(line);
                         return string.Empty;
@@ -824,7 +819,7 @@ namespace Neon.IO
         /// <returns><b>true</b> if the line is a statement.</returns>
         private bool IsStatement(string line)
         {
-            if (line == null || disableStatements)
+            if (line == null)
             {
                 return false;
             }
