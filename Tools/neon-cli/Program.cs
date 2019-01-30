@@ -1052,7 +1052,7 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
         /// </para>
         /// <para>
         /// This will direct <b>neon-cli</b> to use images built from the branch rather than the default
-        /// production images without needing to modify hive configuration files.  All the developer
+        /// production images without needing to modify cluster configuration files.  All the developer
         /// needs to do is ensure that all of the required images were built from that branch first and
         /// then published to Docker Hub.
         /// </para>

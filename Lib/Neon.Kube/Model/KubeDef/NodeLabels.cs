@@ -220,7 +220,7 @@ namespace Neon.Kube
         public const string LabelComputeCores = ClusterDefinition.ReservedLabelPrefix + "compute.cores";
 
         /// <summary>
-        /// Reserved label name for <see cref="ComputeRamMiB"/>.
+        /// Reserved label name for <see cref="ComputeRam"/>.
         /// </summary>
         public const string LabelComputeRamMiB = ClusterDefinition.ReservedLabelPrefix + "compute.ram_mib";
 
@@ -242,7 +242,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "ComputeRamMiB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [YamlMember(Alias = "ComputeRamMiB", ApplyNamingConventions = false)]
         [DefaultValue(0)]
-        public int ComputeRamMiB { get; set; } = 0;
+        public int ComputeRam { get; set; } = 0;
 
         //---------------------------------------------------------------------
         // Define physical host labels.
@@ -646,7 +646,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelStorageEphemeral,        StorageEphemeral));
 
                 list.Add(new KeyValuePair<string, object>(LabelComputeCores,            ComputeCores));
-                list.Add(new KeyValuePair<string, object>(LabelComputeRamMiB,           ComputeRamMiB));
+                list.Add(new KeyValuePair<string, object>(LabelComputeRamMiB,           ComputeRam));
 
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalLocation,        PhysicalLocation));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,         PhysicalMachine));
@@ -748,7 +748,7 @@ namespace Neon.Kube
                     case LabelStorageEphemeral:             Node.Labels.StorageEphemeral = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
                     case LabelComputeCores:                 ParseCheck(label, () => { Node.Labels.ComputeCores = int.Parse(label.Value); }); break;
-                    case LabelComputeRamMiB:                ParseCheck(label, () => { Node.Labels.ComputeRamMiB = int.Parse(label.Value); }); break;
+                    case LabelComputeRamMiB:                ParseCheck(label, () => { Node.Labels.ComputeRam = int.Parse(label.Value); }); break;
 
                     case LabelPhysicalLocation:             Node.Labels.PhysicalLocation    = label.Value; break;
                     case LabelPhysicalMachine:              Node.Labels.PhysicalMachine     = label.Value;  break;

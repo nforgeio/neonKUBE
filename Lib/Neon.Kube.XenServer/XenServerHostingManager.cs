@@ -118,6 +118,15 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            // Identify the OSD Bluestore block device for OSD nodes.
+
+            if (cluster.Definition.Ceph.Enabled)
+            {
+                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
+                {
+                    node.Labels.CephOSDDevice = "xvdb";
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -155,9 +164,9 @@ namespace Neon.Kube
                     node.Labels.ComputeCores = node.GetVmProcessors(cluster.Definition);
                 }
 
-                if (node.Labels.ComputeRamMiB == 0)
+                if (node.Labels.ComputeRam == 0)
                 {
-                    node.Labels.ComputeRamMiB = (int)(node.GetVmMemory(cluster.Definition) / ByteUnits.MebiBytes);
+                    node.Labels.ComputeRam = (int)(node.GetVmMemory(cluster.Definition) / ByteUnits.MebiBytes);
                 }
 
                 if (string.IsNullOrEmpty(node.Labels.StorageSize))
@@ -335,7 +344,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Formats a nice docker node machine status message.
+        /// Formats a nice node status message.
         /// </summary>
         /// <param name="vmName">The name of the virtual machine used to host the cluster node.</param>
         /// <param name="message">The status message.</param>
@@ -371,11 +380,25 @@ namespace Neon.Kube
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
+                // We need to create a raw drive if the node hosts a Ceph OSD.
+
+                var extraDrives = new List<XenVirtualDrive>();
+
+                if (node.Metadata.Labels.CephOSD)
+                {
+                    extraDrives.Add(
+                        new XenVirtualDrive()
+                        {
+                            Size = node.Metadata.GetCephOSDDriveSize(cluster.Definition)
+                        });
+                }
+
                 var vm = xenHost.Machine.Create(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
                     processors:                 processors,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  diskBytes,
                     snapshot:                   cluster.Definition.Hosting.XenServer.Snapshot,
+                    extraDrives:                extraDrives,
                     primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository,
                     extraStorageRespository:    cluster.Definition.Hosting.XenServer.OsdStorageRepository);
 
@@ -443,11 +466,11 @@ namespace Neon.Kube
                         var primaryInterface = node.GetNetworkInterface(node.PrivateAddress);
 
                         node.ConfigureNetwork(
-                            primaryInterface,
-                            nodePrivateAddress,
-                            IPAddress.Parse(cluster.Definition.Network.Gateway),
-                            NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet),
-                            cluster.Definition.Network.Nameservers.Select(ns => IPAddress.Parse(ns)));
+                            networkInterface:   primaryInterface,
+                            address:            nodePrivateAddress,
+                            gateway:            IPAddress.Parse(cluster.Definition.Network.Gateway),
+                            subnet:             NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet),
+                            nameservers:        cluster.Definition.Network.Nameservers.Select(ns => IPAddress.Parse(ns)));
 
                         // Extend the primary partition and file system to fill 
                         // the virtual the drive. 

@@ -6,6 +6,8 @@ TimeSources:
 AllowUnitTesting: true
 Kubernetes:
   AllowPodsOnMasters: true
+Ceph:
+  OSDDriveSize: 32GiB
 Hosting:
   Environment: hyperv-local
   VmDriveFolder: D:\\VM

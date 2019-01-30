@@ -6,6 +6,8 @@ TimeSources:
 AllowUnitTesting: true
 Kubernetes:
   AllowPodsOnMasters: true
+Ceph:
+  OSDDriveSize: 32GiB
 Hosting:
   Environment: hyperv-local
   VmDriveFolder: D:\\VM
@@ -23,3 +25,9 @@ Nodes:
    worker-0:
      Role: worker
      PrivateAddress: 10.0.0.40
+   worker-1:
+     Role: worker
+     PrivateAddress: 10.0.0.41
+   worker-2:
+     Role: worker
+     PrivateAddress: 10.0.0.42

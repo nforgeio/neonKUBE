@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CephOptions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -62,6 +62,7 @@ namespace Neon.Kube
         /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
+        [YamlMember(Alias = "Enabled", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
 
@@ -92,30 +93,30 @@ namespace Neon.Kube
         /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "Release", Required = Required.Default)]
+        [YamlMember(Alias = "Release", ApplyNamingConventions = false)]
         [DefaultValue(defaultRelease)]
         public string Release { get; set; } = defaultRelease;
 
         /// <summary>
         /// <para>
         /// Specifies the default size of the Ceph OSD drives created for cloud and
-        /// hypervisor based environments.  This can be a long byte count or a long
-        /// with units like <b>512MiB</b> or <b>2GiB</b>.  This can be overridden 
-        /// for specific nodes.  This defaults to <b>16GiB</b>.
+        /// hypervisor based environments (<see cref="ByteUnits"/>).  This can be 
+        /// overridden  for specific nodes.  This defaults to <b>16GiB</b>.
         /// </para>
         /// <note>
-        /// The default is probably too small for production environments
+        /// The default may be too small for production environments
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OSDDriveSize", Required = Required.Default)]
+        [YamlMember(Alias = "OSDDriveSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDDriveSize)]
         public string OSDDriveSize { get; set; } = defaultOSDDriveSize;
 
         /// <summary>
         /// <para>
         /// Specifies the default amount of RAM to allocate to Ceph OSD processes for 
-        /// caching.  This can be a long byte count or a long with units like <b>512MB</b>,
-        /// <b>2GB</b>, or <b>1TB</b>.  This can be overridden for specific nodes.  This defaults
-        /// to <b>256MB</b>.
+        /// caching (<see cref="ByteUnits"/>).  his can be overridden for specific nodes. 
+        /// This defaults to <b>256MiB</b>.
         /// </para>
         /// <note>
         /// <para>
@@ -129,35 +130,35 @@ namespace Neon.Kube
         /// as well as the OSD non-cache related memory when you're configuring this property.
         /// </para>
         /// <note>
-        /// The default is probably too small for production environments
+        /// The default may be too small for production environments
         /// </note>
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OSDCacheSize", Required = Required.Default)]
+        [YamlMember(Alias = "OSDCacheSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDCacheSize)]
         public string OSDCacheSize { get; set; } = defaultOSDCacheSize;
 
         /// <summary>
         /// <para>
-        /// Specifies the default size to allocate for the OSD journals.  This can be a 
-        /// byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, 
-        /// or <b>1TB</b>.  This  can be overridden for specific nodes.  This defaults to <b>1GB</b>.
+        /// Specifies the default size to allocate for the OSD journals  (<see cref="ByteUnits"/>).  
+        /// This  can be overridden for specific nodes.  This defaults to <b>1GiB</b>.
         /// </para>
         /// <note>
-        /// The default is probably too small for production environments
+        /// The default may be too small for production environments
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OSDJournalSize", Required = Required.Default)]
+        [YamlMember(Alias = "OSDJournalSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDJournalSize)]
         public string OSDJournalSize { get; set; } = defaultOSDJournalSize;
 
         /// <summary>
-        /// Specifies the maximum size of a Ceph RADOS object in bytes.  This can be a 
-        /// byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, 
-        /// or <b>1TB</b>.  This can be overridden for specific nodes.  This defaults to 
-        /// <b>5GB</b>.
+        /// Specifies the maximum size of a Ceph RADOS object in bytes (<see cref="ByteUnits"/>).  
+        /// This can be overridden for specific nodes.  This defaults to <b>5GiB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OSDObjectSizeMax", Required = Required.Default)]
+        [YamlMember(Alias = "OSDObjectSizeMax", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDObjectSizeMax)]
         public string OSDObjectSizeMax { get; set; } = defaultOSDObjectSizeMax;
 
@@ -167,6 +168,7 @@ namespace Neon.Kube
         /// in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "OSDReplicaCount", Required = Required.Default)]
+        [YamlMember(Alias = "OSDReplicaCount", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int OSDReplicaCount { get; set; } = 0;
 
@@ -177,6 +179,7 @@ namespace Neon.Kube
         /// in which case this will also default to 1.
         /// </summary>
         [JsonProperty(PropertyName = "OSDReplicaCountMin", Required = Required.Default)]
+        [YamlMember(Alias = "OSDReplicaCountMin", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int OSDReplicaCountMin { get; set; }
 
@@ -185,15 +188,15 @@ namespace Neon.Kube
         /// This defaults to <b>100</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OSDPlacementGroups", Required = Required.Default)]
+        [YamlMember(Alias = "OSDPlacementGroups", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDPlacementGroups)]
         public int OSDPlacementGroups { get; set; } = defaultOSDPlacementGroups;
 
         /// <summary>
         /// <para>
         /// Specifies the default amount of RAM to allocate to Ceph MDS processes for 
-        /// caching.  byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, 
-        /// <b>2GB</b>, or <b>1TB</b>.  This can be overridden for specific nodes.  This
-        /// defaults to <b>64MB</b>.
+        /// caching (<see cref="ByteUnits"/>). This can be overridden for specific nodes. 
+        /// This defaults to <b>64MiB</b>.
         /// </para>
         /// <note>
         /// <para>
@@ -212,28 +215,9 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "MDSCacheSize", Required = Required.Default)]
+        [YamlMember(Alias = "MDSCacheSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultMDSCacheSize)]
         public string MDSCacheSize { get; set; } = defaultMDSCacheSize;
-
-        /// <summary>
-        /// URL for the Docker volume plugin package to be installed on all cluster
-        /// nodes when Ceph is enabled.  This defaults to the latest released version.
-        /// </summary>
-        [JsonProperty(PropertyName = "VolumePluginPackage", Required = Required.Default)]
-        [DefaultValue(defaultVolumePluginPackage)]
-        public string VolumePluginPackage { get; set; } = defaultVolumePluginPackage;
-
-        /// <summary>
-        /// Indicates whether the Ceph dashboard requires TLS.
-        /// </summary>
-        /// <remarks>
-        /// <note>
-        /// All Ceph versions after <b>luminous</b> require TLS.
-        /// </note>
-        /// </remarks>
-        [JsonIgnore]
-        [YamlIgnore]
-        public bool DashboardTls => Release != "luminous";
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -248,13 +232,6 @@ namespace Neon.Kube
                 return;
             }
 
-            VolumePluginPackage = VolumePluginPackage ?? defaultVolumePluginPackage;
-
-            if (string.IsNullOrEmpty(VolumePluginPackage) || !Uri.TryCreate(VolumePluginPackage, UriKind.Absolute, out var uri))
-            {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(VolumePluginPackage)}={VolumePluginPackage}] must be set to a valid package URL.");
-            }
-
             Release = Release ?? defaultRelease;
             Release = Release.ToLowerInvariant();
 
@@ -267,11 +244,6 @@ namespace Neon.Kube
             // specified Ceph service assignments are reasonable.  We will also try to
             // automatically assign Ceph services to nodes when there are no explicit
             // assignments.
-
-            // $hack(jeff.lill):
-            //
-            // It's not super clean to be doing this here but it's easy and I believe
-            // I've already done this sort of thing elsewhere.
 
             var cephMONCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMON);
             var cephOSDCount = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);

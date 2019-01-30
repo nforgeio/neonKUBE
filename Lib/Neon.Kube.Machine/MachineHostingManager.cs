@@ -154,7 +154,7 @@ namespace Neon.Kube
                     // Note that the RAM reported by Linux is somewhat less than the
                     // physical RAM installed.
 
-                    node.Metadata.Labels.ComputeRamMiB = (int)(memSizeKiB / 1024);  // Convert KiB --> MiB
+                    node.Metadata.Labels.ComputeRam = (int)(memSizeKiB / 1024);  // Convert KiB --> MiB
                 }
             }
 

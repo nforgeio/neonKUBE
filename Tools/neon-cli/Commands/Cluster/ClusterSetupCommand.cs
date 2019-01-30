@@ -1303,7 +1303,8 @@ kubectl apply -f /tmp/istio.yaml
                                 sbArgs.AppendWithSeparator(label);
                             }
 
-                            sbScript.AppendLineLinux($"kubectl label nodes {node.Name} {sbArgs}");
+                            sbScript.AppendLine();
+                            sbScript.AppendLineLinux($"kubectl label nodes --overwrite {node.Name} {sbArgs}");
                         }
 
                         master.SudoCommand(CommandBundle.FromScript(sbScript));

@@ -132,6 +132,15 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            // Identify the OSD Bluestore block device for OSD nodes.
+
+            if (cluster.Definition.Ceph.Enabled)
+            {
+                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
+                {
+                    node.Labels.CephOSDDevice = "sdb";
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -159,9 +168,9 @@ namespace Neon.Kube
                     node.Labels.ComputeCores = cluster.Definition.Hosting.VmProcessors;
                 }
 
-                if (node.Labels.ComputeRamMiB == 0)
+                if (node.Labels.ComputeRam == 0)
                 {
-                    node.Labels.ComputeRamMiB = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/ ByteUnits.MebiBytes);
+                    node.Labels.ComputeRam = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/ ByteUnits.MebiBytes);
                 }
 
                 if (string.IsNullOrEmpty(node.Labels.StorageSize))
@@ -608,20 +617,36 @@ namespace Neon.Kube
 
                 // Create the virtual machine if it doesn't already exist.
 
-                var processors = node.Metadata.GetVmProcessors(cluster.Definition);
-                var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
+                // We need to create a raw drive if the node hosts a Ceph OSD.
+
+                var extraDrives = new List<VirtualDrive>();
+
+                if (node.Metadata.Labels.CephOSD)
+                {
+                    extraDrives.Add(
+                        new VirtualDrive()
+                        {
+                            IsDynamic = true,
+                            Size      = node.Metadata.GetCephOSDDriveSize(cluster.Definition),
+                            Path      = Path.Combine(vmDriveFolder, $"{vmName}-[1].vhdx")
+                        });
+                }
+
+                var processors     = node.Metadata.GetVmProcessors(cluster.Definition);
+                var memoryBytes    = node.Metadata.GetVmMemory(cluster.Definition);
                 var minMemoryBytes = node.Metadata.GetVmMinimumMemory(cluster.Definition);
-                var diskBytes = node.Metadata.GetVmDisk(cluster.Definition);
+                var diskBytes      = node.Metadata.GetVmDisk(cluster.Definition);
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVM(
                     vmName,
-                    processorCount: processors,
-                    diskSize: diskBytes.ToString(),
-                    memorySize: memoryBytes.ToString(),
-                    minimumMemorySize: minMemoryBytes.ToString(),
-                    drivePath: drivePath,
-                    switchName: switchName);
+                    processorCount:     processors,
+                    diskSize:           diskBytes.ToString(),
+                    memorySize:         memoryBytes.ToString(),
+                    minimumMemorySize:  minMemoryBytes.ToString(),
+                    drivePath:          drivePath,
+                    switchName:         switchName,
+                    extraDrives:        extraDrives);
 
                 node.Status = $"start: virtual machine";
 
@@ -668,11 +693,11 @@ namespace Neon.Kube
                         var primaryInterface = node.GetNetworkInterface(address);
 
                         node.ConfigureNetwork(
-                            primaryInterface,
-                            nodePrivateAddress,
-                            IPAddress.Parse(cluster.Definition.Network.Gateway),
-                            NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet),
-                            cluster.Definition.Network.Nameservers.Select(ns => IPAddress.Parse(ns)));
+                            networkInterface:   primaryInterface,
+                            address:            nodePrivateAddress,
+                            gateway:            IPAddress.Parse(cluster.Definition.Network.Gateway),
+                            subnet:             NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet),
+                            nameservers:        cluster.Definition.Network.Nameservers.Select(ns => IPAddress.Parse(ns)));
 
                         // Extend the primary partition and file system to fill 
                         // the virtual the drive. 
