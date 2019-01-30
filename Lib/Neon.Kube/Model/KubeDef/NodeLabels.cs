@@ -401,42 +401,42 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="CephMON"/>.
         /// </summary>
-        public const string LabelCephMON = ClusterDefinition.ReservedLabelPrefix + ".ceph.mon";
+        public const string LabelCephMON = ClusterDefinition.ReservedLabelPrefix + "ceph.mon";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSD"/>.
         /// </summary>
-        public const string LabelCephOSD = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd";
+        public const string LabelCephOSD = ClusterDefinition.ReservedLabelPrefix + "ceph.osd";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDDevice"/>.
         /// </summary>
-        public const string LabelCephOSDDevice = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_device";
+        public const string LabelCephOSDDevice = ClusterDefinition.ReservedLabelPrefix + "ceph.osd_device";
 
         /// <summary>
         /// Reserved label name for <see cref="CephMDS"/>.
         /// </summary>
-        public const string LabelCephMDS = ClusterDefinition.ReservedLabelPrefix + ".ceph.mds";
+        public const string LabelCephMDS = ClusterDefinition.ReservedLabelPrefix + "ceph.mds";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDDriveSize"/>.
         /// </summary>
-        public const string LabelCephOSDDriveSize = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_drivesize";
+        public const string LabelCephOSDDriveSize = ClusterDefinition.ReservedLabelPrefix + "ceph.osd_drivesize";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDCacheSize"/>.
         /// </summary>
-        public const string LabelCephOSDCacheSize = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_cachesize";
+        public const string LabelCephOSDCacheSize = ClusterDefinition.ReservedLabelPrefix + "ceph.osd_cachesize";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDJournalSize"/>.
         /// </summary>
-        public const string LabelCephOSDJournalSize = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_journalsize";
+        public const string LabelCephOSDJournalSize = ClusterDefinition.ReservedLabelPrefix + "ceph.osd_journalsize";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDJournalSize"/>.
         /// </summary>
-        public const string LabelCephMDSCacheSize = ClusterDefinition.ReservedLabelPrefix + ".ceph.mds_cachesize";
+        public const string LabelCephMDSCacheSize = ClusterDefinition.ReservedLabelPrefix + "ceph.mds_cachesize";
 
         /// <summary>
         /// <b>io.neonkube.ceph.monitor</b> [<c>bool</c>]: Indicates that the Ceph 
