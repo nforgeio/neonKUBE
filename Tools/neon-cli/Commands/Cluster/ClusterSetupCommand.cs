@@ -238,7 +238,6 @@ OPTIONS:
             //-----------------------------------------------------------------
             // Kubernetes configuration.
 
-            controller.AddStep("setup api balancer", SetupApiProxy, node => node.Metadata.IsMaster);
             controller.AddStep("setup kubernetes", SetupKubernetes);
             controller.AddGlobalStep("setup cluster", SetupCluster);
             controller.AddGlobalStep("label nodes", LabelNodes);
@@ -745,114 +744,6 @@ ff02::2         ip6-allrouters
         }
 
         /// <summary>
-        /// Configures a local HAProxy container on a master to load balance across
-        /// the Kubernetes API servers running on each of the masters.
-        /// </summary>
-        /// <param name="master">The master node.</param>
-        /// <param name="stepDelay">Ignored.</param>
-        private void SetupApiProxy(SshProxy<NodeDefinition> master, TimeSpan stepDelay)
-        {
-            master.InvokeIdempotentAction("setup/setup-loadbalancer",
-                () =>
-                {
-                    master.Status = "setup: api balancer";
-
-                    // We're simply going to generate the HAProxy config file
-                    // and write it to [/etc/neonkube/haproxy.config] and then
-                    // deploy an HAProxy container named [neonkube-balancer] 
-                    // to each of the master nodes.
-
-                    var sbBackends = new StringBuilder();
-
-                    foreach (var node in cluster.Masters)
-                    {
-                        sbBackends.AppendLine($"    server {node.Name} {node.PrivateAddress}:{KubeHostPorts.KubeApiServer}");
-                    }
-
-                    var sbHaProxyConfig = new StringBuilder();
-
-                    sbHaProxyConfig.AppendLine(
-$@"#------------------------------------------------------------------------------
-# neonKUBE cluster load balancer.
-
-global
-
-    # Maximum number of connections.  2K should be more than enough for
-    # anything besides truly gigantic clusters.
-
-    maxconn         2000
-
-    # Randomize health check timing.
-
-    spread-checks   5
-
-defaults
-
-    # Proxy inbound traffic as TCP so we can balance both HTTP and HTTPS
-    # traffic without needing the TLS certificate.
-
-    mode            tcp
-
-    # Timeouts are relatively brief because backends are cluster local and should be fast.
-
-    timeout         connect 5s
-    timeout         client 5s
-    timeout         server 5s
-
-    # Load balancing strategy.
-
-    balance         roundrobin
-
-    # Retry failed connections a couple of times (for a total of three attempts).
-
-    retries         2
-
-    # Maximum time to wait for a health check.
-
-    timeout check   1s
-
-# Load balance Kubernetes API server traffic across the cluster master nodes.
-
-frontend tcp:kube-api-server
-    bind *:{KubeHostPorts.ApiServerProxy}
-    mode tcp
-    default_backend tcp:kube-api-server
-
-backend tcp:kube-api-server
-    mode tcp
-    balance roundrobin
-{sbBackends}");
-                    var haproxyConfigPath = $"{KubeHostFolders.Config}/cluster-balancer.cfg";
-                    var haproxyScriptPath = $"{KubeHostFolders.Bin}/neonkube-balancer";
-
-                    master.UploadText(haproxyConfigPath, sbHaProxyConfig, permissions: "644", owner: "root:root");
-
-                    var haproxyScript =
-$@"#!/bin/bash
-#------------------------------------------------------------------------------
-# Starts the [neonkube-balancer] container on this master node if it's not already
-# running.  This load balances traffic hitting port {KubeHostPorts.ApiServerProxy} across the 
-# Kubernetes API servers running on the master nodes.
-
-if ! docker ps --filter name=neonkube-balancer --format ""{{{{.Names}}}}"" | grep --quiet neonkube-balancer ; then
-
-    docker pull {Program.ResolveDockerImage(KubeConst.NeonProdRegistry + "/haproxy:latest")}
-
-    docker run \
-        --name neonkube-balancer \
-        --detach \
-        --restart always \
-        --publish {KubeHostPorts.ApiServerProxy}:{KubeHostPorts.ApiServerProxy} \
-        --mount type=bind,source={haproxyConfigPath},target=/etc/haproxy/haproxy.cfg,readonly \
-        {Program.ResolveDockerImage(KubeConst.NeonProdRegistry + "/haproxy:latest")}
-fi
-";
-                    master.UploadText(haproxyScriptPath, haproxyScript, permissions: "700", owner: "root:root");
-                    master.SudoCommand(haproxyScriptPath);
-                });
-        }
-
-        /// <summary>
         /// Installs the required Kubernetes related components on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
@@ -959,26 +850,16 @@ rm -rf helm
                                 sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
                             }
 
+                            // $todo(jeff.lill): DELETE THIS!
+                            controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:{KubeHostPorts.KubeApiServer}";
+
                             foreach (var node in cluster.Masters)
                             {
                                 sbCertSANs.AppendLine($"  - \"{node.PrivateAddress}\"");
                             }
 
-                            // Note that we're configuring the token TTL so the token never expires.
-
                             var clusterConfig =
 $@"
-apiVersion: kubeadm.k8s.io/v1beta1
-bootstrapTokens:
-- groups:
-  ttl: ""0""
-kind: InitConfiguration
-localAPIEndpoint:
-  advertiseAddress: {firstMaster.PrivateAddress}
-  bindPort: {KubeHostPorts.KubeApiServer}
-nodeRegistration:
-  name: {firstMaster.Name}
----
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
@@ -1085,18 +966,6 @@ networking:
 
                     //---------------------------------------------------------
                     // Join the remaining masters to the cluster:
-
-                    // Wait for the API proxy to discover a healthy endpoint.
-
-                    NeonHelper.WaitFor(
-                        () =>
-                        {
-                            var response = firstMaster.SudoCommand($"nc {firstMaster.PrivateAddress} {KubeHostPorts.ApiServerProxy} -w 1", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
-
-                            return response.ExitCode == 0;
-                        },
-                        TimeSpan.FromSeconds(120),
-                        TimeSpan.FromSeconds(1));
 
                     foreach (var master in cluster.Masters.Where(m => m != firstMaster))
                     {
