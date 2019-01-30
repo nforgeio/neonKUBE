@@ -130,17 +130,17 @@ namespace Neon.Kube
         public const string LabelAzureDriveCount = ClusterDefinition.ReservedLabelPrefix + "azure.drive_count";
 
         /// <summary>
-        /// Reserved label name that identifies the node's Azure attached drive size in GiB.
+        /// Reserved label name that identifies the node's Azure attached drive size.
         /// </summary>
-        public const string LabelAzureDriveSizeGiB = ClusterDefinition.ReservedLabelPrefix + "azure.drive_size_gib";
+        public const string LabelAzureDriveSize = ClusterDefinition.ReservedLabelPrefix + "azure.drive_size";
 
         //---------------------------------------------------------------------
         // Define the node storage related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageCapacityGiB"/>.
+        /// Reserved label name for <see cref="StorageSize"/>.
         /// </summary>
-        public const string LabelStorageCapacityGiB = ClusterDefinition.ReservedLabelPrefix + "storage.capacity_gib";
+        public const string LabelStorageSize = ClusterDefinition.ReservedLabelPrefix + "storage.size";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageLocal"/>.
@@ -163,13 +163,13 @@ namespace Neon.Kube
         public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + "storage.ephemral";
 
         /// <summary>
-        /// <b>io.neonkube/storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
-        /// storage capacity in gigabytes.
+        /// <b>io.neonkube/storage.size</b> [<c>string</c>]: Specifies the node primary drive 
+        /// storage capacity in bytes (<see cref="ByteUnits"/>).
         /// </summary>
-        [JsonProperty(PropertyName = "StorageCapacityGiB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageCapacityGiB", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "StorageSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "StorageSize", ApplyNamingConventions = false)]
         [DefaultValue(0)]
-        public int StorageCapacityGiB { get; set; } = 0;
+        public string StorageSize { get; set; }
 
         /// <summary>
         /// <b>io.neonkube/storage.local</b> [<c>bool</c>]: Specifies whether the node storage is hosted
@@ -396,6 +396,199 @@ namespace Neon.Kube
         public string PhysicalPower { get; set; } = string.Empty;       // $todo(jeff.lill): Define the format of this string for APC PDUs.
 
         //---------------------------------------------------------------------
+        // Ceph Storage Cluster related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephMON"/>.
+        /// </summary>
+        public const string LabelCephMON = ClusterDefinition.ReservedLabelPrefix + ".ceph.mon";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephOSD"/>.
+        /// </summary>
+        public const string LabelCephOSD = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephOSDDevice"/>.
+        /// </summary>
+        public const string LabelCephOSDDevice = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_device";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephMDS"/>.
+        /// </summary>
+        public const string LabelCephMDS = ClusterDefinition.ReservedLabelPrefix + ".ceph.mds";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephOSDDriveSize"/>.
+        /// </summary>
+        public const string LabelCephOSDDriveSize = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_drivesize";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephOSDCacheSize"/>.
+        /// </summary>
+        public const string LabelCephOSDCacheSize = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_cachesize";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephOSDJournalSize"/>.
+        /// </summary>
+        public const string LabelCephOSDJournalSize = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_journalsize";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephOSDJournalSize"/>.
+        /// </summary>
+        public const string LabelCephMDSCacheSize = ClusterDefinition.ReservedLabelPrefix + ".ceph.mds_cachesize";
+
+        /// <summary>
+        /// <b>io.neonkube.ceph.monitor</b> [<c>bool</c>]: Indicates that the Ceph 
+        /// monitor and manager services  will be deployed to this node if 
+        /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  This defaults 
+        /// to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Monitors maintain maps of the Ceph file system state state, including 
+        /// the monitor map, manager map, the OSD map, and the CRUSH map. These maps 
+        /// are critical cluster state required for Ceph daemons to coordinate with
+        /// each other.  Monitors are also responsible for managing authentication
+        /// between daemons and clients. At least three monitors are normally required 
+        /// for redundancy and high availability.
+        /// </para>
+        /// <para>
+        /// Managers are responsible for keeping track of runtime metrics and the
+        /// current state of the Ceph cluster, including storage utilization, 
+        /// current performance metrics, and system load. The Ceph Manager daemons
+        /// also host python-based plugins to manage and expose Ceph cluster information,
+        /// including a web-based dashboard and REST API. At least two managers are
+        /// normally required for high availability.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "CephMON", Required = Required.Default)]
+        [YamlMember(Alias = "CephMON", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool CephMON { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neonkube.ceph.osd</b> [<c>bool</c>]: Indicates that a Ceph OSD 
+        /// (object storage daemon) will be deployed to this node if 
+        /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// OSDs store data, handles data replication, recovery, rebalancing, and
+        /// provides some monitoring information to Ceph Monitors and Managers by 
+        /// checking other Ceph OSD Daemons for a heartbeat. At least 3 Ceph OSDs 
+        /// are normally required for redundancy and high availability.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CephOSD", Required = Required.Default)]
+        [YamlMember(Alias = "CephOSD", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool CephOSD { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neonkube.ceph.osd_device</b> (<c>string</c>]: The path to the block
+        /// device where the OSD data will be persisted (like: <b>/dev/sdb</b>)
+        /// when <see cref="CephOSD"/> is <c>true</c>.  This will be initialized 
+        /// automatically for most hosting environments but will need to be specified 
+        /// explicitly for <see cref="HostingEnvironments.Machine"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephOSDDevice", Required = Required.Default)]
+        [YamlMember(Alias = "CephOSDDevice", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public string CephOSDDevice { get; set; } = null;
+
+        /// <summary>
+        /// <b>io.neonkube.ceph.mds</b> [<c>bool</c>]: Indicates that a Ceph MDS 
+        /// (metadata server) will be deployed to this node if <see cref="CephOptions.Enabled"/> 
+        /// is <c>true</c>.  This defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// Metadata servers store metadata on behalf of the Ceph Filesystem 
+        /// (e.g. Ceph Block Devices and Ceph Object Storage do not use MDS). 
+        /// Ceph Metadata Servers allow POSIX file system users to execute basic 
+        /// commands (like ls, find, etc.) without placing an enormous burden on
+        /// the Ceph Storage Cluster.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CephMDS", Required = Required.Default)]
+        [YamlMember(Alias = "CephMDS", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool CephMDS { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neonkube.ceph.drivesize</b> [<c>int</c>]: Specifies the size in bytes
+        /// (<see cref="ByteUnits"/>) of the Ceph OSD drive created for cloud and hypervisor
+        /// based environments if the integrated Ceph storage cluster is enabled and <see cref="CephOSD"/>
+        /// is <c>true</c> for this node.  This defaults to <see cref="CephOptions.OSDDriveSize"/>
+        /// (<b>128GiB</b>).
+        /// </summary>
+        [JsonProperty(PropertyName = "CephOSDDriveSize", Required = Required.Default)]
+        [YamlMember(Alias = "CephOSDDriveSize", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public string CephOSDDriveSize { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// <b>io.neonkube.ceph.cachesize</b> [<c>int</c>]: Specifies the RAM in bytes
+        /// <see cref="ByteUnits"/>) to assign to the Ceph OSDs for caching if the integrated 
+        /// Ceph storage cluster is enabled and <see cref="CephOSD"/> is <c>true</c> for this 
+        /// node.  This defaults to <see cref="CephOptions.OSDCacheSize"/> (<b>1GB</b>) (which
+        /// is probably too small for production clusters).
+        /// </para>
+        /// <note>
+        /// <para>
+        /// The <a href="https://ceph.com/community/new-luminous-bluestore/">Ceph documentation</a>
+        /// states that OSDs may tend to underestimate the RAM it's using by up to 1.5 times.
+        /// To avoid potential memory issues, neonKUBE will adjust this value by dividing it 
+        /// by 1.5 to when actually configuring the OSD services.
+        /// </para>
+        /// <para>
+        /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
+        /// as well as the OSD non-cache related memory when you're configuring this property.
+        /// </para>
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "CephOSDCacheSize", Required = Required.Default)]
+        [YamlMember(Alias = "CephOSDCacheSize", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public string CephOSDCacheSize { get; set; }
+
+        /// <summary>
+        /// <b>io.neonkube.ceph.journalsize</b> [<c>int</c>]: Specifies the disk capacity
+        /// in bytes <see cref="ByteUnits"/>) to assign to the Ceph OSD journal if the integrated 
+        /// Ceph storage cluster is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
+        /// This defaults to <see cref="CephOptions.OSDJournalSize"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephOSDJournalSize", Required = Required.Default)]
+        [YamlMember(Alias = "CephOSDJournalSize", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public string CephOSDJournalSize { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// <b>io.neonkube.ceph.mds_cachesize_mb</b> [<c>int</c>]: Specifies the RAM in bytes
+        /// <see cref="ByteUnits"/>) to assign to the Ceph MDS services for caching if the integrated
+        /// Ceph storage cluster is enabled and <see cref="CephMDS"/> is <c>true</c> for this node.
+        /// This defaults to <see cref="CephOptions.MDSCacheSize"/> (<b>1GB</b>) (which is 
+        /// probably too small for production clusters).
+        /// </para>
+        /// <note>
+        /// <para>
+        /// The Ceph documentation states that OSDs may tend to underestimate the RAM it's using
+        /// by up to 1.5 times.  To avoid potential memory issues, neonKUBE  will adjust this
+        /// value by dividing it  by 1.5 to when actually configuring the MDS services.
+        /// </para>
+        /// <para>
+        /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
+        /// as well as the OSD non-cache related memory when you're configuring this property.
+        /// </para>
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "CephMDSCacheSize", Required = Required.Default)]
+        [YamlMember(Alias = "CephMDSCacheSize", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public string CephMDSCacheSize { get; set; }
+
+        //---------------------------------------------------------------------
+        // Custom labels
 
         /// <summary>
         /// Custom node labels.
@@ -441,12 +634,12 @@ namespace Neon.Kube
                     list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,         Node.Azure.VmSize));
                     list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,    Node.Azure.StorageType));
                     list.Add(new KeyValuePair<string, object>(LabelAzureDriveCount,     Node.Azure.HardDriveCount));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSizeGiB,   Node.Azure.HardDriveSizeGiB));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,      Node.Azure.HardDriveSizeGiB));
                 }
 
                 // Standard labels from this class.
 
-                list.Add(new KeyValuePair<string, object>(LabelStorageCapacityGiB,       StorageCapacityGiB));
+                list.Add(new KeyValuePair<string, object>(LabelStorageSize,             StorageSize));
                 list.Add(new KeyValuePair<string, object>(LabelStorageLocal,            StorageLocal));
                 list.Add(new KeyValuePair<string, object>(LabelStorageHDD,              StorageHDD));
                 list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,        StorageRedundant));
@@ -459,6 +652,15 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,         PhysicalMachine));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
+
+                list.Add(new KeyValuePair<string, object>(LabelCephMON,                 CephMON));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 CephOSD));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSDDevice,           CephOSDDevice));
+                list.Add(new KeyValuePair<string, object>(LabelCephMDS,                 CephMDS));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSDDriveSize,        CephOSDDriveSize));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSDCacheSize,        CephOSDCacheSize));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSDJournalSize,      CephOSDJournalSize));
+                list.Add(new KeyValuePair<string, object>(LabelCephMDSCacheSize,        CephMDSCacheSize));
 
                 return list;
             }
@@ -523,7 +725,7 @@ namespace Neon.Kube
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:
                     case LabelAzureDriveCount:
-                    case LabelAzureDriveSizeGiB:
+                    case LabelAzureDriveSize:
 
                         if (Node.Azure == null)
                         {
@@ -535,23 +737,32 @@ namespace Neon.Kube
                             case LabelAzureVmSize:          ParseCheck(label, () => { Node.Azure.VmSize = NeonHelper.ParseEnum<AzureVmSizes>(label.Value); }); break;
                             case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
                             case LabelAzureDriveCount:      ParseCheck(label, () => { Node.Azure.HardDriveCount = int.Parse(label.Value); }); break;
-                            case LabelAzureDriveSizeGiB:    ParseCheck(label, () => { Node.Azure.HardDriveSizeGiB = int.Parse(label.Value); }); break;
+                            case LabelAzureDriveSize:       ParseCheck(label, () => { Node.Azure.HardDriveSizeGiB = int.Parse(label.Value); }); break;
                         }
                         break;
 
-                    case LabelStorageCapacityGiB:           ParseCheck(label, () => { Node.Labels.StorageCapacityGiB = int.Parse(label.Value); }); break;
-                    case LabelStorageLocal:                 Node.Labels.StorageLocal = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageHDD:                   Node.Labels.StorageHDD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageSize:                  ParseCheck(label, () => { Node.Labels.StorageSize = label.Value; }); break;
+                    case LabelStorageLocal:                 Node.Labels.StorageLocal     = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageHDD:                   Node.Labels.StorageHDD       = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelStorageRedundant:             Node.Labels.StorageRedundant = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelStorageEphemeral:             Node.Labels.StorageEphemeral = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
                     case LabelComputeCores:                 ParseCheck(label, () => { Node.Labels.ComputeCores = int.Parse(label.Value); }); break;
                     case LabelComputeRamMiB:                ParseCheck(label, () => { Node.Labels.ComputeRamMiB = int.Parse(label.Value); }); break;
 
-                    case LabelPhysicalLocation:             Node.Labels.PhysicalLocation = label.Value; break;
-                    case LabelPhysicalMachine:              Node.Labels.PhysicalMachine = label.Value;  break;
+                    case LabelPhysicalLocation:             Node.Labels.PhysicalLocation    = label.Value; break;
+                    case LabelPhysicalMachine:              Node.Labels.PhysicalMachine     = label.Value;  break;
                     case LabelPhysicalFaultDomain:          Node.Labels.PhysicalFaultDomain = label.Value; break;
-                    case LabelPhysicalPower:                Node.Labels.PhysicalPower = label.Value;  break;
+                    case LabelPhysicalPower:                Node.Labels.PhysicalPower       = label.Value;  break;
+
+                    case LabelCephMON:                      Node.Labels.CephMON             = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephOSD:                      Node.Labels.CephOSD             = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephOSDDevice:                Node.Labels.CephOSDDevice       = label.Value; break;
+                    case LabelCephMDS:                      Node.Labels.CephMDS             = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephOSDDriveSize:             Node.Labels.CephOSDDriveSize    = label.Value; break;
+                    case LabelCephOSDCacheSize:             Node.Labels.CephOSDCacheSize    = label.Value; break;
+                    case LabelCephOSDJournalSize:           Node.Labels.CephOSDJournalSize  = label.Value; break;
+                    case LabelCephMDSCacheSize:             Node.Labels.CephMDSCacheSize    = label.Value; break;
 
                     case LabelDatacenter:
                     case LabelEnvironment:
@@ -568,38 +779,6 @@ namespace Neon.Kube
                         Node.Labels.Custom.Add(label.Key, label.Value);
                         break;
                 }
-            }
-        }
-
-        /// <summary>
-        /// Copies the label properties to another instance.
-        /// </summary>
-        /// <param name="target">The target instance.</param>
-        internal void CopyTo(NodeLabels target)
-        {
-            Covenant.Requires<ArgumentNullException>(target != null);
-
-            // WARNING: 
-            //
-            // This method will need to be updated whenever new standard labels are added or changed.
-
-            target.StorageCapacityGiB   = this.StorageCapacityGiB;
-            target.StorageLocal         = this.StorageLocal;
-            target.StorageHDD           = this.StorageHDD;
-            target.StorageRedundant     = this.StorageRedundant;
-            target.StorageEphemeral     = this.StorageEphemeral;
-
-            target.ComputeCores         = this.ComputeCores;
-            target.ComputeRamMiB        = this.ComputeRamMiB;
-
-            target.PhysicalLocation     = this.PhysicalLocation;
-            target.PhysicalMachine      = this.PhysicalMachine;
-            target.PhysicalFaultDomain  = this.PhysicalFaultDomain;
-            target.PhysicalPower        = this.PhysicalPower;
-
-            foreach (var item in this.Custom)
-            {
-                target.Custom.Add(item.Key, item.Value);
             }
         }
 

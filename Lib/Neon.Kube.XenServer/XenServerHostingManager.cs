@@ -160,9 +160,9 @@ namespace Neon.Kube
                     node.Labels.ComputeRamMiB = (int)(node.GetVmMemory(cluster.Definition) / ByteUnits.MebiBytes);
                 }
 
-                if (node.Labels.StorageCapacityGiB == 0)
+                if (string.IsNullOrEmpty(node.Labels.StorageSize))
                 {
-                    node.Labels.StorageCapacityGiB = (int)(node.GetVmDisk(cluster.Definition) / ByteUnits.GibiBytes);
+                    node.Labels.StorageSize = ByteUnits.ToGiBString(node.GetVmDisk(cluster.Definition));
                 }
             }
 

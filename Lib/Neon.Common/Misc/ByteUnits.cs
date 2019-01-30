@@ -21,6 +21,12 @@ using Newtonsoft.Json.Serialization;
 
 using Neon.Diagnostics;
 
+// $todo(jeff.lill):
+//
+// PB and PiB units aren't working due to flowting point precision issues.
+// I'm going to disable this for now.  Perhaps we can address this by using
+// [decimal] instead of [double].
+
 namespace Neon.Common
 {
     /// <summary>
@@ -60,14 +66,6 @@ namespace Neon.Common
     ///     <term><b>TiB</b></term>
     ///     <description>1,099,511,627,776</description>
     /// </item>
-    /// <item>
-    ///     <term><b>PB</b></term>
-    ///     <description>1,000,000,000,000,000</description>
-    /// </item>
-    /// <item>
-    ///     <term><b>PiB</b></term>
-    ///     <description>1,125,899,906,842,624</description>
-    /// </item>
     /// </list>
     /// </summary>
     public static class ByteUnits
@@ -92,10 +90,12 @@ namespace Neon.Common
         /// </summary>
         public const long TeraBytes = GigaBytes * KiloBytes;
 
+#if ALLOW_PENTA
         /// <summary>
         /// One PB: 1,000,000,000,000
         /// </summary>
         public const long PentaBytes = TeraBytes * KiloBytes;
+#endif
 
         /// <summary>
         /// One KiB: 1,024 (2^10)
@@ -117,10 +117,12 @@ namespace Neon.Common
         /// </summary>
         public const long TebiBytes = GibiBytes * KibiBytes;
 
+#if ALLOW_PENTA
         /// <summary>
         /// One PiB: 1,125,899,906,842,624 (2^50)
         /// </summary>
         public const long PebiBytes = TebiBytes * KibiBytes;
+#endif
 
         /// <summary>
         /// Parses a floating point count string that may include one of the optional
@@ -167,7 +169,7 @@ namespace Neon.Common
                 temp += ch;
             }
 
-            unitLabel = temp;
+            unitLabel = temp.Trim();
             unitLabel = unitLabel.ToUpperInvariant();
 
             // Map the unit label to a count.
@@ -189,9 +191,11 @@ namespace Neon.Common
                     case "T":   units = TeraBytes;  break;
                     case "TB":  units = TeraBytes;  break;
                     case "TIB": units = TebiBytes;  break;
+#if ALLOW_PENTA
                     case "P":   units = PentaBytes; break;
                     case "PB":  units = PentaBytes; break;
                     case "PIB": units = PebiBytes;  break;
+#endif
 
                     default:
 
@@ -325,6 +329,7 @@ namespace Neon.Common
             return $"{ToDoubleString(size, TebiBytes)}TiB";
         }
 
+#if ALLOW_PENTA
         /// <summary>
         /// Converts a byte count to a string using <b>PB</b> units.
         /// </summary>
@@ -344,5 +349,6 @@ namespace Neon.Common
         {
             return $"{ToDoubleString(size, PebiBytes)}PiB";
         }
+#endif
     }
 }

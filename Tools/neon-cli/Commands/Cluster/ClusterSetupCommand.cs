@@ -1157,7 +1157,7 @@ rm /tmp/calico.yaml
                     NeonHelper.WaitFor(
                         () =>
                         {
-                            var response = master.SudoCommand("kubectl get pods --all-namespaces");
+                            var response = master.SudoCommand("kubectl get pods --all-namespaces", master.DefaultRunOptions | RunOptions.LogOnErrorOnly);
 
                             using (var reader = new StringReader(response.OutputText))
                             {
