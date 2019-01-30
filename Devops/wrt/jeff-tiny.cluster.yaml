@@ -6,8 +6,8 @@ TimeSources:
 AllowUnitTesting: true
 Hosting:
   Environment: xenserver
-  VmHostUsername: $<<HIVE_XENSERVER_USERNAME>>
-  VmHostPassword: $<<HIVE_XENSERVER_PASSWORD>>
+  VmHostUsername: $<<XENSERVER_USERNAME>>
+  VmHostPassword: $<<XENSERVER_PASSWORD>>
   VmNamePrefix: jeff
   VmHosts:
   - Name: WRT-00-XEN-00
