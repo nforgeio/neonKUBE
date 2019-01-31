@@ -988,7 +988,7 @@ namespace EntityGen
                             {
                                 if (value is bool)
                                 {
-                                    literal = ((bool)value) ? "true" : "false";
+                                    literal = NeonHelper.ToBoolString((bool)value);
                                 }
                                 else if (value is string)
                                 {

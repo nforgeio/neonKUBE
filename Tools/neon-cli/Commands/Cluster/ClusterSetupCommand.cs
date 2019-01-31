@@ -1203,7 +1203,7 @@ rm /tmp/calico.yaml
                 {
                     master.Status = "deploy: Istio";
 
-                    var mutualTls = cluster.Definition.Network.IstioMutualTls ? "true" : "false";
+                    var mutualTls = NeonHelper.ToBoolString(cluster.Definition.Network.IstioMutualTls)";
                     var istioScript =
 $@"#!/bin/bash
 

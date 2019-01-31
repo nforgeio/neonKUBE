@@ -1853,5 +1853,16 @@ namespace Neon.Common
 
             return text;
         }
+
+        /// <summary>
+        /// Renders a <c>bool</c> value as either <b>true</b> or <b>false</b>
+        /// (lower case).
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns><b>true</b> or <b>false</b>,</returns>
+        public static string ToBoolString(bool value)
+        {
+            return value ? "true" : "false";
+        }
     }
 }

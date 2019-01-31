@@ -349,7 +349,7 @@ namespace Neon.Common
             {
                 case JTokenType.Boolean:
 
-                    return (bool)jValue.Value ? "true" : "false";
+                    return NeonHelper.ToBoolString((bool)jValue.Value);
 
                 case JTokenType.Integer:
                 case JTokenType.Float:

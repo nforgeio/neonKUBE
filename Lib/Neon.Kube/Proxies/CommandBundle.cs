@@ -92,7 +92,7 @@ namespace Neon.Kube
                 }
                 else if (arg is bool)
                 {
-                    normalized.Add((bool)arg ? "true" : "false");
+                    normalized.Add(NeonHelper.ToBoolString((bool)arg));
                 }
                 else if (arg is float || arg is double)
                 {

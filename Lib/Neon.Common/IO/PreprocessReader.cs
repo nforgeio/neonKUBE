@@ -490,7 +490,7 @@ namespace Neon.IO
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name));
             Covenant.Requires<ArgumentException>(VariableValidationRegex.IsMatch(name));
 
-            variables[name] = value ? "true" : "false";
+            variables[name] = NeonHelper.ToBoolString(value);
         }
 
         /// <inheritdoc/>

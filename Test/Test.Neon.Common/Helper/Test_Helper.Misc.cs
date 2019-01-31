@@ -562,5 +562,13 @@ DEVOPS:
 
             Assert.StartsWith("# WARNING!", stripped);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void BoolString()
+        {
+            Assert.Equal("true", NeonHelper.ToBoolString(true));
+            Assert.Equal("false", NeonHelper.ToBoolString(false));
+        }
     }
 }

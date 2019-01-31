@@ -240,7 +240,7 @@ namespace Neon.Net
                 }
                 else if (arg.Value is bool)
                 {
-                    value = (bool)arg.Value ? "true" : "false";
+                    value = NeonHelper.ToBoolString((bool)arg.Value);
                 }
                 else
                 {

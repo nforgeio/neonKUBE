@@ -1816,7 +1816,7 @@ namespace Neon.Kube
 
                     if (arg is bool)
                     {
-                        sb.Append((bool)arg ? "true" : "false");
+                        sb.Append(NeonHelper.ToBoolString((bool)arg));
                     }
                     else if (arg is IEnumerable<string>)
                     {

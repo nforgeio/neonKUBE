@@ -39,7 +39,7 @@ namespace NeonCli
 
             if (value is bool)
             {
-                return (bool)value ? "true" : "false";
+                return NeonHelper.ToBoolString((bool)value);
             }
             else if (value is int)
             {
@@ -78,7 +78,7 @@ namespace NeonCli
             {
                 if (value is bool)
                 {
-                    value = (bool)value ? "true" : "false";
+                    value = NeonHelper.ToBoolString((bool)value);
                 }
                 else if (value is int)
                 {
