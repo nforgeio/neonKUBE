@@ -454,7 +454,7 @@ namespace Neon.Kube
         /// <summary>
         /// The associated <see cref="ClusterProxy"/> or <c>null</c>.
         /// </summary>
-        public ClusterProxy Kube { get; internal set; }
+        public ClusterProxy Cluster { get; internal set; }
 
         /// <summary>
         /// Returns the display name for the server.
@@ -821,14 +821,14 @@ namespace Neon.Kube
             var isPrivate = true;
             var port      = SshPort;
 
-            if (Kube?.HostingManager != null)
+            if (Cluster?.HostingManager != null)
             {
-                var ep = Kube.HostingManager.GetSshEndpoint(this.Name);
+                var ep = Cluster.HostingManager.GetSshEndpoint(this.Name);
 
                 address = ep.Address;
                 port    = ep.Port;
             }
-            else if (Kube != null)
+            else if (Cluster != null && !string.IsNullOrEmpty(PublicAddress))
             {
                 address   = PublicAddress;
                 isPrivate = false;

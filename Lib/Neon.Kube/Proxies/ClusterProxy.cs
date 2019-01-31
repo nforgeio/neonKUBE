@@ -222,7 +222,7 @@ namespace Neon.Kube
             {
                 var node = nodeProxyCreator(nodeDefinition.Name, nodeDefinition.PublicAddress, IPAddress.Parse(nodeDefinition.PrivateAddress ?? "0.0.0.0"), appendLog);
 
-                node.Kube              = this;
+                node.Cluster           = this;
                 node.DefaultRunOptions = defaultRunOptions;
                 node.Metadata          = nodeDefinition;
                 nodes.Add(node);

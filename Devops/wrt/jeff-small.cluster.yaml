@@ -43,21 +43,21 @@ Nodes:
    worker-0:
      Role: worker
      PrivateAddress: 10.100.24.10
-     VmHost: WRT-00-XEN-00
+     VmHost: WRT-00-XEN-01
      VmProcessors: 4
      VmMemory: 4GiB
      VmDisk: 32GiB
    worker-1:
      Role: worker
      PrivateAddress: 10.100.24.11
-     VmHost: WRT-00-XEN-00
+     VmHost: WRT-00-XEN-03
      VmProcessors: 4
      VmMemory: 4GiB
      VmDisk: 32GiB
    worker-2:
      Role: worker
      PrivateAddress: 10.100.24.12
-     VmHost: WRT-00-XEN-00
+     VmHost: WRT-00-XEN-04
      VmProcessors: 4
      VmMemory: 4GiB
      VmDisk: 32GiB
