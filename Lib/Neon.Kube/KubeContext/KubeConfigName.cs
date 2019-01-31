@@ -47,10 +47,65 @@ namespace Neon.Kube
         // Static members
 
         /// <summary>
+        /// Compares <see cref="KubeConfigName"/> for equality.
+        /// </summary>
+        /// <param name="name1">Name 1</param>
+        /// <param name="name2">Name 2</param>
+        /// <returns><c>true</c> if the names are equal.</returns>
+        public static bool operator ==(KubeConfigName name1, KubeConfigName name2)
+        {
+            var name1iIsNull = object.ReferenceEquals(name1, null);
+            var name2iIsNull = object.ReferenceEquals(name2, null);
+
+            if (name1iIsNull && name2iIsNull)
+            {
+                return true;
+            }
+            else if (name1iIsNull != name2iIsNull)
+            {
+                return false;
+            }
+
+            return name1.User == name2.User &&
+                   name1.Cluster == name2.Cluster &&
+                   name1.Namespace == name2.Namespace;
+        }
+
+        /// <summary>
+        /// Compares <see cref="KubeConfigName"/> for inequality.
+        /// </summary>
+        /// <param name="name1">Name 1</param>
+        /// <param name="name2">Name 2</param>
+        /// <returns><c>true</c> if the names are not equal.</returns>
+        public static bool operator !=(KubeConfigName name1, KubeConfigName name2)
+        {
+            var name1iIsNull = object.ReferenceEquals(name1, null);
+            var name2iIsNull = object.ReferenceEquals(name2, null);
+
+            if (name1iIsNull && name2iIsNull)
+            {
+                return false;
+            }
+            else if (name1iIsNull != name2iIsNull)
+            {
+                return true;
+            }
+
+            return name1.User != name2.User ||
+                   name1.Cluster != name2.Cluster ||
+                   name1.Namespace != name2.Namespace;
+        }
+
+        /// <summary>
         /// Parses a Kubernetes context name like: <b>USER</b> "@" <b>CLUSTER</b> [ "/" <b>NAMESPACE</b> ]
         /// </summary>
         /// <param name="text">The input text.</param>
         /// <returns>The parsed name.</returns>
+        /// <remarks>
+        /// <note>
+        /// The username, cluster, and namespace will be converted to lowercase.
+        /// </note>
+        /// </remarks>
         /// <exception cref="FormatException">Thrown if the name is not valid.</exception>
         public static KubeConfigName Parse(string text)
         {
@@ -105,6 +160,12 @@ namespace Neon.Kube
                 throw new FormatException($"Kubernetes context [name={text}] specifies an invalid cluster.");
             }
 
+            name.User      = name.User.ToLowerInvariant();
+            name.Cluster   = name.Cluster.ToLowerInvariant();
+            name.Namespace = name.Namespace.ToLowerInvariant();
+
+            name.Validate();
+
             return name;
         }
 
@@ -124,16 +185,26 @@ namespace Neon.Kube
         /// <param name="username">The username.</param>
         /// <param name="cluster">The cluster name.</param>
         /// <param name="kubeNamespace">Optionally specifies the namespace (defaults to <b>"default"</b>).</param>
+        /// <remarks>
+        /// <note>
+        /// The username, cluster, and namespace will be converted to lowercase.
+        /// </note>
+        /// </remarks>
         public KubeConfigName(string username, string cluster, string kubeNamespace = "default")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cluster));
 
-            kubeNamespace = kubeNamespace ?? "default";
+            if (string.IsNullOrEmpty(kubeNamespace))
+            {
+                kubeNamespace = "default";
+            }
 
-            this.User      = username;
-            this.Cluster   = cluster;
-            this.Namespace = kubeNamespace;
+            this.User      = username.ToLowerInvariant();
+            this.Cluster   = cluster.ToLowerInvariant();
+            this.Namespace = kubeNamespace.ToLowerInvariant();
+
+            Validate();
         }
 
         /// <summary>
@@ -151,6 +222,81 @@ namespace Neon.Kube
         /// </summary>
         public string Namespace { get; private set; }
 
+        /// <summary>
+        /// Validates that a name component includes only nvalid characters.
+        /// </summary>
+        /// <param name="name">The name beoing tested.</param>
+        /// <returns><c>true</c> if the name is OK.</returns>
+        private bool ValidateName(string name)
+        {
+            foreach (var ch in name)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-')
+                {
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Ensures that the properties are valid.
+        /// </summary>
+        /// <exception cref="FormatException">Thrown when there's a problem.</exception>
+        private void Validate()
+        {
+            // Looks like these fields must all be non-empty, be a maximum of 253 characters
+            // long and may include only letters, digits, dashes, and periods.
+
+            if (User.Length == 0)
+            {
+                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(User)}] cannot be empty.");
+            }
+
+            if (User.Length > 253)
+            {
+                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(User)}={User}] exceeds 253 characters.");
+            }
+
+            if (!ValidateName(User))
+            {
+                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(User)}={User}] includes invalid characters.");
+            }
+
+            if (Cluster.Length == 0)
+            {
+                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(Cluster)}] cannot be empty.");
+            }
+
+            if (Cluster.Length > 253)
+            {
+                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(Cluster)}={Cluster}] exceeds 253 characters.");
+            }
+
+            if (!ValidateName(Cluster))
+            {
+                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(Cluster)}={Cluster}] includes invalid characters.");
+            }
+
+            if (Namespace.Length == 0)
+            {
+                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(Namespace)}] cannot be empty.");
+            }
+
+            if (Namespace.Length > 253)
+            {
+                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(Namespace)}={Namespace}] exceeds 253 characters.");
+            }
+
+            if (!ValidateName(Namespace))
+            {
+                throw new FormatException($"[{nameof(KubeConfig)}.{nameof(Namespace)}={Namespace}] includes invalid characters.");
+            }
+        }
+
         /// <inheritdoc/>
         public override string ToString()
         {
@@ -162,6 +308,32 @@ namespace Neon.Kube
             {
                 return $"{User}@{Cluster}/{Namespace}";
             }
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            var other = obj as KubeConfigName;
+
+            if (other == null)
+            {
+                return false;
+            }
+
+            return this.User == other.User &&
+                   this.Cluster == other.Cluster &&
+                   this.Namespace == other.Namespace;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return User.GetHashCode() ^ Cluster.GetHashCode() ^ Namespace.GetHashCode();
         }
     }
 }

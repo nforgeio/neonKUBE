@@ -10,15 +10,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Consul;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Docker;
 using Neon.Kube;
 using Neon.IO;
 using Neon.Xunit;
-using Neon.Xunit.Hive;
+using Neon.Xunit.Kube;
 
 using Xunit;
 

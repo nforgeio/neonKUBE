@@ -15,7 +15,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.IO;
 using Neon.Xunit;
-using Neon.Xunit.Hive;
+using Neon.Xunit.Kube;
 
 using Xunit;
 
