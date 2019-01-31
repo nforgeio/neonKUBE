@@ -3269,6 +3269,36 @@ network:
             UploadText("/etc/netplan/50-cloud-init.yaml", cloudInitYaml);
         }
 
+        /// <summary>
+        /// Uses <c>kubectl apply -f</c> to apply a YAML file.
+        /// </summary>
+        /// <param name="yaml">The YAML file contents.</param>
+        /// <param name="runOptions">Optional <see cref="RunOptions"/>.</param>
+        /// <returns>The <see cref="CommandResponse"/>.</returns>
+        public CommandResponse KubeCtlApply(string yaml, RunOptions runOptions = RunOptions.Defaults)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yaml));
+
+            var bundle = new CommandBundle("kubectl apply -f file.yaml");
+
+            bundle.AddFile("file.yaml", yaml);
+
+            return SudoCommand(bundle, runOptions);
+        }
+
+        /// <summary>
+        /// Uses <c>kubectl apply -f</c> to apply a YAML file.
+        /// </summary>
+        /// <param name="sbYaml">The YAML file contents.</param>
+        /// <param name="runOptions">Optional <see cref="RunOptions"/>.</param>
+        /// <returns>The <see cref="CommandResponse"/>.</returns>
+        public CommandResponse KubeCtlApply(StringBuilder sbYaml, RunOptions runOptions = RunOptions.Defaults)
+        {
+            Covenant.Requires<ArgumentNullException>(sbYaml != null);
+
+            return KubeCtlApply(sbYaml.ToString());
+        }
+
         /// <inheritdoc/>
         public override string ToString()
         {
