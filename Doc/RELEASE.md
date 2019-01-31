@@ -31,7 +31,7 @@
 
 6. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **NuGet.org**.
 
-7. Commit all changes with a comment like: **RELEASE: 18.10.0-alpha.4** but **DO NOT** push to GitHub yet.
+7. Commit all changes with a comment like: **RELEASE: 1.0.0+1901** but **DO NOT** push to GitHub yet.
 
 8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
@@ -43,7 +43,7 @@
 
 12. Push the **PROD** branch to GitHub.
 
-13. Create a new Git branch from PROD named for the release (like **release-18.10.0-alpha.4**) and push to GitHub.
+13. Create a new Git branch from PROD named for the release (like **release-1.0.0+1901**) and push to GitHub.
 
 ## Post Release
 
@@ -59,10 +59,11 @@
 
  # Release Version Conventions
 
-* These support semantic versions.
-* The MAJOR version is used to indicate breaking changes.
-* The release date is indicated by YY.M where single digit months **WILL NOT** be prefixed by a zero due to NuGet issues.
-* Stable releases will be numbered like: **MAJOR.YY.M.PATCH**.
+* Use semantic versioning.
+* The MAJOR, MINOR, and PATCH versions work as defined: [here](https://semver.org/)
 * Patch versions start at 0.
-* Intermediate development releases will use versions like: **MAJOR.YY.M.0-alpha.N** where **YY.M* specifies the scheduled month for the release and **N** starts at **0** and is incremented for every development release made since the last stable release.  Intermediate releases are not generally intended for public consumption.
-* If a Stable release slips passed the scheduled release month, we'll retain the old month for up to 15 days into the next month.  Past that, we'll update **YY.M** to the actual published month.
+* The release year and month is encoded as build metadata as YYMM as in: **1.0.0+1901**
+* Intermediate development releases will use versions like: **MAJOR.MINOR.PATCH+1901-alpha-#** where **YYMM* specifies the scheduled month for the release and **#** starts at **0** and is incremented for every development release made since the last stable release.  Intermediate releases are not generally intended for public consumption.
+* If a Stable release slips passed the scheduled release month, we'll retain the old month for up to 15 days into the next month.  Past that, we'll update **YYMM** to the actual published month.
+* Non-production releases that are stable enough for limited public consumption will look like: **MAJOR.MINOR.PATCH+1901-preview-#**
+* Near production release candidates will look like: **MAJOR.MINOR.PATCH+1901-rc-#**

@@ -42,20 +42,20 @@ namespace Neon.Common
 
             version = new SemanticVersion();
 
-            // Extract the prerelease and build information if present.
+            // Extract the prerelease and build metadate if present.
 
-            var buildPos = versionText.IndexOf('+');
+            var metadataPos = versionText.IndexOf('+');
 
-            if (buildPos != -1)
+            if (metadataPos != -1)
             {
-                version.Build = versionText.Substring(buildPos + 1).Trim();
+                version.Build = versionText.Substring(metadataPos + 1).Trim();
 
                 if (version.Build.Length == 0)
                 {
                     return false;   // Build cannot be empty.
                 }
 
-                versionText = versionText.Substring(0, buildPos);
+                versionText = versionText.Substring(0, metadataPos);
             }
 
             var prereleasePos = versionText.IndexOf('-');
