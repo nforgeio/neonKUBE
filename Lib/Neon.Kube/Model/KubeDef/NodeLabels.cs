@@ -792,15 +792,25 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            // Verify that custom node label names satisfy the 
+            // Verify that custom node label names and values satisfy the 
             // following criteria:
             // 
+            // NAMES:
+            //
             //      1. Have an optional reverse domain prefix.
             //      2. Be at least one character long.
             //      3. Start and end with an alpha numeric character.
             //      4. Include only alpha numeric characters, dashes,
             //         underscores or dots.
             //      5. Does not have consecutive dots or dashes.
+            //
+            // VALUES:
+            //
+            //      1. Must start or end with an alphnumeric character.
+            //      2. May include alphanumerics, dashes, underscores or dots
+            //         between the begining and ending characters.
+            //      3. Values can be empty.
+            //      4. Maximum length is 63 characters.
 
             foreach (var item in Custom)
             {
@@ -812,6 +822,9 @@ namespace Neon.Kube
                 var pSlash = item.Key.IndexOf('/');
                 var domain = pSlash == -1 ? null : item.Key.Substring(0, pSlash);
                 var name   = pSlash == -1 ? item.Key : item.Key.Substring(pSlash + 1);
+                var value  = item.Value;
+
+                // Validate the NAME:
 
                 if (domain != null)
                 {
@@ -859,6 +872,33 @@ namespace Neon.Kube
                     }
 
                     throw new ClusterDefinitionException($"Custom node label name in [{item.Key}] has an illegal character.  Only letters, digits, dashs, underscores and dots are allowed.");
+                }
+
+                // Validate the VALUE:
+
+                if (value == string.Empty)
+                {
+                    continue;
+                }
+
+                if (!char.IsLetterOrDigit(value.First()) || !char.IsLetterOrDigit(value.First()))
+                {
+                    throw new ClusterDefinitionException($"Custom node label value in [{item.Key}={item.Value}] has an illegal value.  Values must start and end with a letter or digit.");
+                }
+
+                foreach (var ch in value)
+                {
+                    if (char.IsLetterOrDigit(ch) || ch == '.' || ch == '-' || ch == '_')
+                    {
+                        continue;
+                    }
+
+                    throw new ClusterDefinitionException($"Custom node label value in [{item.Key}={item.Value}] has an illegal character.  Only letters, digits, dashs, underscores and dots are allowed.");
+                }
+
+                if (value.Length > 63)
+                {
+                    throw new ClusterDefinitionException($"Custom node label value in [{item.Key}={item.Value}] is too long.  Values can have a maximum of 63 characters.");
                 }
             }
         }
