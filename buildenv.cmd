@@ -74,7 +74,7 @@ if not exist "%ProgramFiles%\neonKUBE" mkdir "%ProgramFiles%\neonKUBE"
 REM Configure the neonKUBE kubeconfig path (as a USER environment variable).
 
 set KUBECONFIG=%USERPROFILE%\.kube\admin.conf
-reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\admin.conf
+reg add HKCU\Environment /v KUBECONFIG /t REG_EXPAND_SZ /d %USERPROFILE%\.kube\config /f 
 
 :done
 pause

@@ -256,7 +256,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the path to the Kubernetes configuration file.
         /// </summary>
-        public static string KubeConfigPath => Path.Combine(KubeHelper.GetKubeUserFolder(), "admin.conf");
+        public static string KubeConfigPath => Path.Combine(KubeHelper.GetKubeUserFolder(), "config");
 
         /// <summary>
         /// Returns the path the folder containing cluster related files (including kube context 
