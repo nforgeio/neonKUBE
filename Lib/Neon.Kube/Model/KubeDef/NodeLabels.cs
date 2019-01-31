@@ -641,9 +641,9 @@ namespace Neon.Kube
 
                 list.Add(new KeyValuePair<string, object>(LabelStorageSize,             StorageSize));
                 list.Add(new KeyValuePair<string, object>(LabelStorageLocal,            StorageLocal));
-                list.Add(new KeyValuePair<string, object>(LabelStorageHDD,              StorageHDD));
-                list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,        StorageRedundant));
-                list.Add(new KeyValuePair<string, object>(LabelStorageEphemeral,        StorageEphemeral));
+                list.Add(new KeyValuePair<string, object>(LabelStorageHDD,              NeonHelper.ToBoolString(StorageHDD)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,        NeonHelper.ToBoolString(StorageRedundant)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageEphemeral,        NeonHelper.ToBoolString(StorageEphemeral)));
 
                 list.Add(new KeyValuePair<string, object>(LabelComputeCores,            ComputeCores));
                 list.Add(new KeyValuePair<string, object>(LabelComputeRamMiB,           ComputeRam));
@@ -653,10 +653,10 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
 
-                list.Add(new KeyValuePair<string, object>(LabelCephMON,                 CephMON));
-                list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 CephOSD));
+                list.Add(new KeyValuePair<string, object>(LabelCephMON,                 NeonHelper.ToBoolString(CephMON)));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 NeonHelper.ToBoolString(CephOSD)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDDevice,           CephOSDDevice));
-                list.Add(new KeyValuePair<string, object>(LabelCephMDS,                 CephMDS));
+                list.Add(new KeyValuePair<string, object>(LabelCephMDS,                 NeonHelper.ToBoolString(CephMDS)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDDriveSize,        CephOSDDriveSize));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDCacheSize,        CephOSDCacheSize));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDJournalSize,      CephOSDJournalSize));
@@ -751,9 +751,9 @@ namespace Neon.Kube
                     case LabelComputeRamMiB:                ParseCheck(label, () => { Node.Labels.ComputeRam = int.Parse(label.Value); }); break;
 
                     case LabelPhysicalLocation:             Node.Labels.PhysicalLocation    = label.Value; break;
-                    case LabelPhysicalMachine:              Node.Labels.PhysicalMachine     = label.Value;  break;
+                    case LabelPhysicalMachine:              Node.Labels.PhysicalMachine     = label.Value; break;
                     case LabelPhysicalFaultDomain:          Node.Labels.PhysicalFaultDomain = label.Value; break;
-                    case LabelPhysicalPower:                Node.Labels.PhysicalPower       = label.Value;  break;
+                    case LabelPhysicalPower:                Node.Labels.PhysicalPower       = label.Value; break;
 
                     case LabelCephMON:                      Node.Labels.CephMON             = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephOSD:                      Node.Labels.CephOSD             = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
