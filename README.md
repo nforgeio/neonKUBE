@@ -31,7 +31,13 @@ Follow the steps below to configure a development or test workstation:
 
 4. Ensure that hardware virtualization is enabled in your BIOS.
 
-5. Install **Visual Studio Community Edition 15.8+** from [here](https://www.visualstudio.com/downloads/).
+5. Install the latest **32-bit** production release of PowerShell Core from: [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
+
+6. Enable PowerShell script execution via (in a CMD window as administrator):
+
+  `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
+
+7. Install **Visual Studio Community Edition 15.8+** from [here](https://www.visualstudio.com/downloads/).
 
   * Select **all workloads** on the first panel
   * Select **individual components** and enable these:
@@ -45,9 +51,9 @@ Follow the steps below to configure a development or test workstation:
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   
-6. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonFORGE applications and services, **Visual Studio must be running with elevated privileges**.
+8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonFORGE applications and services, **Visual Studio must be running with elevated privileges**.
 
-7. Install **Docker for Windows** from [here](https://store.docker.com/editions/community/docker-ce-desktop-windows)
+9. Install **Docker for Windows** from [here](https://store.docker.com/editions/community/docker-ce-desktop-windows)
 
   * Use the **Stable** channel unless you have a specific need for bleeding edge features
   * **Right-click** the Docker icon in the system tray and select **Settings...*
@@ -57,19 +63,19 @@ Follow the steps below to configure a development or test workstation:
   * You'll need to enter your workstation **credentials**
   * Select the **Daemon** tab on the left and make sure that **Experimental** is **unchecked**
 
-8. Test your Docker configuration.
+10. Test your Docker configuration.
 
   * Open a **CMD** command window.
   * Run this command: `docker pull alpine`
 
-9. If the previous step failed with a **Network Timeout** or another error, you'll need to update Docker's network settings:
+11. If the previous step failed with a **Network Timeout** or another error, you'll need to update Docker's network settings:
 
   * **Right-click** the Docker again in the system tray and select **Settings...*
   * Click **Network** on the left, select Fixed DNS Server and then **Apply**
 
     ![Docker Network Settings](./README/DockerNetwork.png)
 
-10. **Clone** the source repository on your workstation:
+12. **Clone** the source repository on your workstation:
 
   * Create an individual Github account [here](https://github.com/join?source=header-home) if you don't already have one
   * Have one of the neonFORGE repository administrators **grant you access** to the repository
@@ -82,22 +88,16 @@ Follow the steps below to configure a development or test workstation:
     ![Video Studio Clone](./README/VisualStudioClone.png)
   * Click **Clone**
 
-11. **Close** any running instances of **Visual Studio**
+13. **Close** any running instances of **Visual Studio**
 
-12. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
+14. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
 
-13. Configure the build **environment variables**:
+15. Configure the build **environment variables**:
 
   * Open **File Explorer**
   * Navigate to the directory holding the cloned repository
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the CMD window when the script is finished
-
-14. Install the latest **32-bit** production release of PowerShell Core from: [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
-
-15. Enable PowerShell script execution via (in a CMD window as administrator):
-
-  `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
 
 16. Restart Visual Studio (to pick up any environment changes).
 
