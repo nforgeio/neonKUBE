@@ -37,6 +37,8 @@ USAGE:
     neon login list|ls
     neon login remove|rm    USER@CLUSTER[/NAMESPACE]
 
+    neon logout
+
 ARGUMENTS:
 
     PATH                        - Path to an exported login file.

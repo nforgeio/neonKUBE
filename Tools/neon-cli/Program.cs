@@ -66,7 +66,8 @@ COMMAND SUMMARY:
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster setup      [CLUSTER-DEF]
     neon login              COMMAND
-    neon version            [-n] [-git]
+    neon logout
+    neon version            [-n] [--git]
 
 ARGUMENTS:
 

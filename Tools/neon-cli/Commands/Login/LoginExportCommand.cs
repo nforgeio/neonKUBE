@@ -27,22 +27,21 @@ namespace NeonCli
     public class LoginExportCommand : CommandBase
     {
         private const string usage = @"
-Exports an extended Kubernetes context to standard output or to a file.
+Exports an extended Kubernetes context to standard output.
 
 USAGE:
 
-    neon login export USER@CLUSTER[/NAMESPACE] [PATH]
+    neon login export [ USER@CLUSTER[/NAMESPACE] ]
 
 ARGUMENTS:
 
     USER@CLUSTER[/NAMESPACE]    - Kubernetes user, cluster and optional namespace
-    PATH                        - Optional output file path
 
 REMARKS:
 
-    The file written includes the Kubernetes context information
-    along with additional neonKUBE extensions.  This is intended
-    to be used for distributing a context to other cluster operators
+    The output includes the Kubernetes context information along
+    with additional neonKUBE extensions.  This is intended to be
+    used for distributing a context to other cluster operators
     who can use the [neon login import] command to add the context
     to their workstation.
 ";
@@ -62,13 +61,25 @@ REMARKS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            if (commandLine.Arguments.Length < 1)
+            KubeContextName contextName = null;
+
+            var rawName = commandLine.Arguments.FirstOrDefault();
+
+            if (rawName != null)
             {
-                Console.Error.WriteLine("*** ERROR: USER@CLUSTER[/NAMESPACE] is required.");
-                Program.Exit(1);
+                contextName = KubeContextName.Parse(rawName);
+            }
+            else
+            {
+                contextName = KubeHelper.CurrentContextName;
+
+                if (contextName == null)
+                {
+                    Console.Error.WriteLine($"*** ERROR: You are not logged into a cluster.");
+                    Program.Exit(1);
+                }
             }
 
-            var contextName = KubeContextName.Parse(commandLine.Arguments.First());
             var context = KubeHelper.Config.GetContext(contextName);
 
             if (context == null)

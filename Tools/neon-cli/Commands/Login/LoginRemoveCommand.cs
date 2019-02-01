@@ -31,8 +31,8 @@ Removes a Kubernetes context from the local computer.
 
 USAGE:
 
-    neon login rm       [--force] USER@CLUSTER[/NAMESPACE]
-    neon login remove   [--force] USER@CLUSTER[/NAMESPACE]
+    neon login rm       [--force] [ USER@CLUSTER[/NAMESPACE] ]
+    neon login remove   [--force] [ USER@CLUSTER[/NAMESPACE] ]
 
 ARGUMENTS:
 
@@ -41,6 +41,11 @@ ARGUMENTS:
 OPTIONS:
 
     --force             - Don't prompt, just remove.
+
+REMARKS:
+
+By default, this comman will remove the current login when 
+USER@CLUSTER[/NAMESPACE is not specified.
 ";
 
         /// <inheritdoc/>
@@ -70,19 +75,35 @@ OPTIONS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            if (commandLine.Arguments.Length < 1)
+            KubeConfigContext   context     = null;
+            KubeContextName     contextName = null;
+
+            if (commandLine.Arguments.Length > 0)
             {
-                Console.Error.WriteLine("*** ERROR: USER@CLUSTER[/NAMESPACE] is required.");
-                Program.Exit(1);
+                contextName = KubeContextName.Parse(commandLine.Arguments.FirstOrDefault());
             }
 
-            var contextName = KubeContextName.Parse(commandLine.Arguments.First());
-            var context     = KubeHelper.Config.GetContext(contextName);
-
-            if (context == null)
+            if (contextName != null)
             {
-                Console.Error.WriteLine($"*** ERROR: Context [{contextName}] not found.");
-                Program.Exit(1);
+                context = KubeHelper.Config.GetContext(contextName);
+
+                if (context == null)
+                {
+                    Console.Error.WriteLine($"*** ERROR: Context [{contextName}] not found.");
+                    Program.Exit(1);
+                }
+            }
+            else
+            {
+                context = KubeHelper.CurrentContext;
+
+                if (context == null)
+                {
+                    Console.Error.WriteLine($"*** ERROR: You are not logged into a cluster.");
+                    Program.Exit(1);
+                }
+
+                contextName = (KubeContextName)context.Name;
             }
 
             if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to remove [{contextName}]?"))

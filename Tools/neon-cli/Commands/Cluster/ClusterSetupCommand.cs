@@ -148,12 +148,6 @@ OPTIONS:
             kubeContext                      = new KubeConfigContext(contextName);
             kubeContext.Properties.Extension = kubeContextExtension;
 
-            if (kubeConfig.GetCluster(contextName.Cluster) != null)
-            {
-                Console.Error.WriteLine($"*** ERROR: You already have a deployed cluster named [{contextName.Cluster}].");
-                Program.Exit(1);
-            }
-
             KubeHelper.InitContext(kubeContext);
 
             // Note that cluster setup appends to existing log files.
@@ -172,7 +166,7 @@ OPTIONS:
             var controller =
                 new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
                 {
-                    ShowStatus = !Program.Quiet,
+                    ShowStatus  = !Program.Quiet,
                     MaxParallel = Program.MaxParallel
                 };
 
@@ -353,11 +347,11 @@ OPTIONS:
 
                 // Remove any existing user, context, and cluster with the same names.
                 // Note that we're assuming that there's only one of each in the config
-                // we dornloaded from the cluster.
+                // we downloaded from the cluster.
 
-                var newCluster = newConfig.Clusters.Single();
-                var newContext = newConfig.Contexts.Single();
-                var newUser    = newConfig.Users.Single();
+                var newCluster      = newConfig.Clusters.Single();
+                var newContext      = newConfig.Contexts.Single();
+                var newUser         = newConfig.Users.Single();
 
                 var existingCluster = existingConfig.GetCluster(newCluster.Name);
                 var existingContext = existingConfig.GetContext(newContext.Name);
@@ -775,7 +769,7 @@ safe-apt-get update
                     node.Status = "install: kubelet";
                     node.SudoCommand($"safe-apt-get install -yq kubelet={kubeSetupInfo.KubeletPackageUbuntuVersion}");
 
-                    node.Status = "hold: packages";
+                    node.Status = "hold: kubernetes packages";
                     node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
 
                     node.Status = "configure: kubeket volume-plugins";
@@ -837,7 +831,7 @@ rm -rf helm
                     firstMaster.InvokeIdempotentAction("setup/cluster-init",
                         () =>
                         {
-                            firstMaster.Status = "initializing...";
+                            firstMaster.Status = "initialize: cluster";
 
                             // It's possible that a previous cluster initialization operation
                             // was interrupted.  This command resets the state.
@@ -848,7 +842,7 @@ rm -rf helm
                             // the certificate SAN names to include each master IP address as well
                             // as the HOSTNAME/ADDRESS of the API load balancer (if any).
 
-                            var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:{KubeHostPorts.ApiServerProxy}";
+                            var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:{KubeHostPorts.KubeApiServer}";
                             var sbCertSANs           = new StringBuilder();
 
                             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
@@ -859,9 +853,6 @@ rm -rf helm
 
                                 sbCertSANs.AppendLine($"  - \"{fields[0]}\"");
                             }
-
-                            // $todo(jeff.lill): DELETE THIS!
-                            controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:{KubeHostPorts.KubeApiServer}";
 
                             foreach (var node in cluster.Masters)
                             {
@@ -1353,6 +1344,7 @@ kubectl apply -f /tmp/istio.yaml
         /// </summary>
         private void SetupCeph()
         {
+            // $todo(jeff.lill): Implement this
         }
 
         /// <summary>

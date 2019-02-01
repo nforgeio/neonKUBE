@@ -28,9 +28,8 @@ namespace Neon.Kube
     /// <summary>
     /// Holds extended cluster information such as the cluster definition and
     /// node SSH credentials.  These records are persisted as files to the 
-    /// <b>$HOME/.neonkube/contexts</b> folder in YAML files named like
-    /// <b><i>NAME</i>.context.yaml</b>, where <i>NAME</i> identifies the 
-    /// associated Kubernetes context.
+    /// <b>$HOME/.neonkube/clusters</b> folder in YAML files named like
+    /// <b><i>USER</i>@<i>NAME</i>.context.yaml</b>.
     /// </summary>
     public class KubeContextExtension
     {

@@ -93,14 +93,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The name of the current context or <c>null</c> when there is no current context.
-        /// </summary>
-        [JsonProperty(PropertyName = "current-context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "current-context", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string CurrentContext { get; set; }
-
-        /// <summary>
         /// The cluster API server protocol version (defaults to <b>v1</b>).
         /// </summary>
         [JsonProperty(PropertyName = "apiVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -124,18 +116,34 @@ namespace Neon.Kube
         public List<KubeConfigCluster> Clusters { get; set; } = new List<KubeConfigCluster>();
 
         /// <summary>
-        /// The list of user configurations.
-        /// </summary>
-        [JsonProperty(PropertyName = "users", Required = Required.Always)]
-        [YamlMember(Alias = "users", ApplyNamingConventions = false)]
-        public List<KubeConfigUser> Users { get; set; } = new List<KubeConfigUser>();
-
-        /// <summary>
         /// The list of config contexts.
         /// </summary>
         [JsonProperty(PropertyName = "contexts", Required = Required.Always)]
         [YamlMember(Alias = "contexts", ApplyNamingConventions = false)]
         public List<KubeConfigContext> Contexts { get; set; } = new List<KubeConfigContext>();
+
+        /// <summary>
+        /// The name of the current context or <c>null</c> when there is no current context.
+        /// </summary>
+        [JsonProperty(PropertyName = "current-context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "current-context", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string CurrentContext { get; set; }
+
+        /// <summary>
+        /// The optional dictionary of preferences.
+        /// </summary>
+        [JsonProperty(PropertyName = "preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "preferences", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public Dictionary<string, string> Preferences { get; set; } = null;
+
+        /// <summary>
+        /// The list of user configurations.
+        /// </summary>
+        [JsonProperty(PropertyName = "users", Required = Required.Always)]
+        [YamlMember(Alias = "users", ApplyNamingConventions = false)]
+        public List<KubeConfigUser> Users { get; set; } = new List<KubeConfigUser>();
 
         /// <summary>
         /// Returns the current context or <c>null</c>.
@@ -156,14 +164,6 @@ namespace Neon.Kube
                 }
             }
         }
-
-        /// <summary>
-        /// The optional dictionary of preferences.
-        /// </summary>
-        [JsonProperty(PropertyName = "preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "preferences", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public Dictionary<string, string> Preferences { get; set; } = null;
 
         /// <summary>
         /// Returns the named cluster.
@@ -385,9 +385,9 @@ namespace Neon.Kube
                     throw new KubeException($"Context [{context.Name}] references [User={context.Properties.User}] that doesn't exist.");
                 }
 
-                if (!string.IsNullOrEmpty(context.Properties.Cluster) && GetCluster(context.Properties.Cluster) != null)
+                if (!string.IsNullOrEmpty(context.Properties.Cluster) && GetCluster(context.Properties.Cluster) == null)
                 {
-                    throw new KubeException($"Cluster [{context.Properties.Cluster}] doesn't exist.");
+                    throw new KubeException($"Context [{context.Name}] references cluster [{context.Properties.Cluster}] doesn't exist.");
                 }
             }
         }
@@ -430,13 +430,29 @@ namespace Neon.Kube
 
                 File.WriteAllText(configPath, NeonHelper.YamlSerialize(this));
 
-                // Persist any extensions.
+                // Persist any context extensions.
 
                 foreach (var context in Contexts.Where(c => c.Properties.Extension != null))
                 {
                     var extensionPath = Path.Combine(KubeHelper.ClustersFolder, $"{context.Name}.context.yaml");
 
                     File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Properties.Extension));
+                }
+
+                // Delete any existing context extension files that don't have a corresponding
+                // context in the kubeconfig.
+
+                var fileExtension = ".context.yaml";
+
+                foreach (var extensionPath in Directory.GetFiles(KubeHelper.ClustersFolder, $"*{fileExtension}"))
+                {
+                    var fileName    = Path.GetFileName(extensionPath);
+                    var contextName = fileName.Substring(0, fileName.Length - fileExtension.Length);
+
+                    if (GetContext(contextName) == null)
+                    {
+                        File.Delete(extensionPath);
+                    }
                 }
             }
         }

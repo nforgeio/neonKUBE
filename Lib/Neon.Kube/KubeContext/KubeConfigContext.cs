@@ -90,7 +90,7 @@ namespace Neon.Kube
                     return cachedExtension;
                 }
 
-                return cachedExtension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(KubeHelper.GetContextExtensionPath(Name)));
+                return cachedExtension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(KubeHelper.GetContextExtensionPath((KubeContextName)Name)));
             }
         }
     }

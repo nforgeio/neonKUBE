@@ -332,7 +332,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override string ToString()
         {
-            if (string.IsNullOrEmpty(Namespace))
+            if (string.IsNullOrEmpty(Namespace) || Namespace == "default")
             {
                 return $"{User}@{Cluster}";
             }

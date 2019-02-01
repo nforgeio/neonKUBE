@@ -130,7 +130,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path the folder holding the user specific cluster files.
+        /// Returns the path the folder holding the user specific Kubernetes files.
         /// </summary>
         /// <param name="ignoreNeonToolContainerVar">
         /// Optionally ignore the presence of a <b>NEON_TOOL_CONTAINER</b> environment 
@@ -367,30 +367,19 @@ namespace Neon.Kube
         /// Returns the path to the kubecontext extension file path for a specific context
         /// by raw name.
         /// </summary>
-        /// <param name="rawName">The raw kubecontext name.</param>
+        /// <param name="contextName">The kubecontext name.</param>
         /// <returns>The file path.</returns>
-        public static string GetContextExtensionPath(string rawName)
+        public static string GetContextExtensionPath(KubeContextName contextName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName));
+            Covenant.Requires<ArgumentNullException>(contextName != null);
 
             // Kubecontext names may include a forward slash to specify a Kubernetes
             // namespace.  This won't work for a file name, so we're going to replace
-            // any of these 
+            // any of these with a "~".
+
+            var rawName = (string)contextName;
 
             return Path.Combine(ClustersFolder, $"{rawName.Replace("/", "~")}.context.yaml");
-        }
-
-        /// <summary>
-        /// Returns the path to the kubecontext extension file path for a specific context
-        /// by structured name.
-        /// </summary>
-        /// <param name="name">The structured kubecontext name.</param>
-        /// <returns>The file path.</returns>
-        public static string GetContextExtensionPath(KubeContextName name)
-        {
-            Covenant.Requires<ArgumentNullException>(name != null);
-
-            return GetContextExtensionPath(name.Cluster);
         }
 
         /// <summary>
@@ -535,8 +524,9 @@ namespace Neon.Kube
 
                 cachedContext         = newContext;
                 Config.CurrentContext = (string)contextName;
-                Config.Save();
             }
+
+            Config.Save();
         }
 
         /// <summary>

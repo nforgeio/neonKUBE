@@ -147,8 +147,8 @@ Server Requirements:
 
             // NOTE:
             //
-            // Azure has implemented a more restrictive password policy and our
-            // default machine password does not meet the requirements:
+            // Azure has a more restrictive password policy and our default
+            // machine password does not meet the requirements:
             //
             // The supplied password must be between 6-72 characters long and must 
             // satisfy at least 3 of password complexity requirements from the following: 
@@ -405,7 +405,7 @@ Server Requirements:
 
             // Persist the cluster context extension.
 
-            var contextExtensionsPath = KubeHelper.GetContextExtensionPath(clusterDefinition.Name);
+            var contextExtensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeHelper.RootUser}@{clusterDefinition.Name}");
             var contextExtension      = new KubeContextExtension(contextExtensionsPath)
             {
                 ClusterDefinition = clusterDefinition,
