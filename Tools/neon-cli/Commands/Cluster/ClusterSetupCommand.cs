@@ -241,12 +241,7 @@ OPTIONS:
             controller.AddStep("setup kubernetes", SetupKubernetes);
             controller.AddGlobalStep("setup cluster", SetupCluster);
             controller.AddGlobalStep("label nodes", LabelNodes);
-
-            controller.AddStep("setup ceph",
-                (node, stepDelay) =>
-                {
-                    
-                });
+            controller.AddGlobalStep("setup ceph", SetupCeph);
 
             //-----------------------------------------------------------------
             // Verify the cluster.
@@ -783,12 +778,14 @@ safe-apt-get update
                     node.Status = "hold: packages";
                     node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
 
-                    // $todo(jeff.lill): Make this a script.
-
                     node.Status = "configure: kubeket volume-plugins";
-                    node.SudoCommand("echo KUBELET_EXTRA_ARGS=--volume-plugin-dir=/var/lib/kubelet/volume-plugins > /etc/default/kubelet");
-                    node.SudoCommand("systemctl daemon-reload");
-                    node.SudoCommand("service kubelet restart");
+                    node.SudoCommand(CommandBundle.FromScript(
+@"#!/bin/bash
+
+echo KUBELET_EXTRA_ARGS=--volume-plugin-dir=/var/lib/kubelet/volume-plugins > /etc/default/kubelet
+systemctl daemon-reload
+service kubelet restart
+"));
 
                     // Download and install the Helm client:
 
@@ -1349,6 +1346,13 @@ kubectl apply -f /tmp/istio.yaml
                         master.Status = string.Empty;
                     }
                 });
+        }
+
+        /// <summary>
+        /// Sets up the Ceph/ROOK cluster.
+        /// </summary>
+        private void SetupCeph()
+        {
         }
 
         /// <summary>
