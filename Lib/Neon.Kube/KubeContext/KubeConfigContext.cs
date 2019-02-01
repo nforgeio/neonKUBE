@@ -42,10 +42,10 @@ namespace Neon.Kube
         /// <summary>
         /// Constructs a configuration from a Kubernetes configuration name string.
         /// </summary>
-        /// <param name="configName">The configuration name formatted as <b>USER@CLUSTER[/NAMESPACE]</b>.</param>
-        public KubeConfigContext(string configName)
+        /// <param name="contextName">The context name formatted as <b>USER@CLUSTER[/NAMESPACE]</b>.</param>
+        public KubeConfigContext(string contextName)
         {
-            var name = KubeConfigName.Parse(configName);
+            var name = KubeContextName.Parse(contextName);
 
             this.Name = name.ToString();
         }
@@ -53,13 +53,13 @@ namespace Neon.Kube
         /// <summary>
         /// Constructs a configuration from a structured name.
         /// </summary>
-        /// <param name="configName">The structured configuration name.</param>
-        public KubeConfigContext(KubeConfigName configName)
+        /// <param name="contextName">The structured context name.</param>
+        public KubeConfigContext(KubeContextName contextName)
             : this()
         {
-            Covenant.Requires<ArgumentNullException>(configName != null);
+            Covenant.Requires<ArgumentNullException>(contextName != null);
 
-            this.Name = configName.ToString();
+            this.Name = contextName.ToString();
         }
 
         /// <summary>

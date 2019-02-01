@@ -43,8 +43,8 @@ namespace Neon.Kube
         public const string RootUser = "root";
 
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
-        private static KubeConfig           cachedKubeConfig;
-        private static KubeConfigContext    cachedKubeContext;
+        private static KubeConfig           cachedConfig;
+        private static KubeConfigContext    cachedContext;
         private static HeadendClient        cachedHeadendClient;
 
         /// <summary>
@@ -386,7 +386,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="name">The structured kubecontext name.</param>
         /// <returns>The file path.</returns>
-        public static string GetContextExtensionPath(KubeConfigName name)
+        public static string GetContextExtensionPath(KubeContextName name)
         {
             Covenant.Requires<ArgumentNullException>(name != null);
 
@@ -398,7 +398,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="name">The structured context name.</param>
         /// <returns>The <see cref="KubeContextExtension"/> or <c>null</c>.</returns>
-        public static KubeContextExtension GetContextExtension(KubeConfigName name)
+        public static KubeContextExtension GetContextExtension(KubeContextName name)
         {
             Covenant.Requires<ArgumentNullException>(name != null);
 
@@ -447,13 +447,11 @@ namespace Neon.Kube
         {
             get
             {
-                {
-                    var path = Path.Combine(GetNeonKubeUserFolder(), "vm-templates");
+                var path = Path.Combine(GetNeonKubeUserFolder(), "vm-templates");
 
-                    Directory.CreateDirectory(path);
+                Directory.CreateDirectory(path);
 
-                    return path;
-                }
+                return path;
             }
         }
 
@@ -468,25 +466,25 @@ namespace Neon.Kube
         public static bool IsConnected { get; private set; } = false;
 
         /// <summary>
-        /// Returns the user's current <see cref="KubeConfig"/>.
+        /// Returns the user's current <see cref="Config"/>.
         /// </summary>
-        public static KubeConfig KubeConfig
+        public static KubeConfig Config
         {
             get
             {
-                if (cachedKubeConfig != null)
+                if (cachedConfig != null)
                 {
-                    return cachedKubeConfig;
+                    return cachedConfig;
                 }
 
                 var configPath = KubeConfigPath;
 
                 if (File.Exists(configPath))
                 {
-                    return cachedKubeConfig = NeonHelper.YamlDeserialize<KubeConfig>(File.ReadAllText(configPath));
+                    return cachedConfig = NeonHelper.YamlDeserialize<KubeConfig>(File.ReadAllText(configPath));
                 }
 
-                return cachedKubeConfig = new KubeConfig();
+                return cachedConfig = new KubeConfig();
             }
         }
 
@@ -494,53 +492,87 @@ namespace Neon.Kube
         /// Rewrites the local kubeconfig file.
         /// </summary>
         /// <param name="config">The new configuration.</param>
-        public static void SetKubeConfig(KubeConfig config)
+        public static void SetConfig(KubeConfig config)
         {
             Covenant.Requires<ArgumentNullException>(config != null);
 
-            cachedKubeConfig = config;
+            cachedConfig = config;
 
             File.WriteAllText(KubeConfigPath, NeonHelper.YamlSerialize(config));
         }
 
         /// <summary>
-        /// Returns the <see cref="KubeContext"/> for the connected cluster (or <c>null</c>).
+        /// This is used for special situations for setting up a cluster to
+        /// set an uninitialized Kubernetes config context as the current
+        /// <see cref="CurrentContext"/>.
         /// </summary>
-        public static KubeConfigContext KubeContext
+        /// <param name="context">The context being set or <c>null</c> to reset.</param>
+        public static void InitContext(KubeConfigContext context = null)
+        {
+            cachedContext = context;
+        }
+
+        /// <summary>
+        /// Sets the current Kubernetes config context.
+        /// </summary>
+        /// <param name="contextName">The context name of <c>null</c> to clear the current context.</param>
+        /// <exception cref="ArgumentException">Thrown if the context specified doesnt exist.</exception>
+        public static void SetContext(KubeContextName contextName)
+        {
+            if (contextName == null)
+            {
+                cachedContext         = null;
+                Config.CurrentContext = null;
+            }
+            else
+            {
+                var newContext = Config.GetContext(contextName);
+
+                if (newContext == null)
+                {
+                    throw new ArgumentException($"Kubernetes [context={contextName}] does not exist.");
+                }
+
+                cachedContext         = newContext;
+                Config.CurrentContext = (string)contextName;
+                Config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="CurrentContext"/> for the connected cluster
+        /// or <c>null</c> when there is no current context.
+        /// </summary>
+        public static KubeConfigContext CurrentContext
         {
             get
             {
-                if (cachedKubeContext != null)
+                if (cachedContext != null)
                 {
-                    return cachedKubeContext;
+                    return cachedContext;
                 }
 
-                if (string.IsNullOrEmpty(KubeConfig.CurrentContext))
+                if (string.IsNullOrEmpty(Config.CurrentContext))
                 {
                     return null;
                 }
                 else
                 {
-                    return KubeConfig.GetContext(KubeConfig.CurrentContext);
+                    return Config.GetContext(Config.CurrentContext);
                 }
             }
         }
 
         /// <summary>
-        /// This is used for special situations for setting up a cluster to
-        /// set an uninitialized Kubernetes config context as the current
-        /// <see cref="KubeContext"/>.
+        /// Returns the current context's <see cref="CurrentContextName"/> or <c>null</c>
+        /// if there's no current context.
         /// </summary>
-        /// <param name="context">The context being set or <c>null</c> to reset.</param>
-        public static void SetKubeContext(KubeConfigContext context = null)
-        {
-            cachedKubeContext = context;
-        }
+        public static KubeContextName CurrentContextName => CurrentContext == null ? null : KubeContextName.Parse(CurrentContext.Name);
 
         /// <summary>
         /// Returns the <see cref="Kube.ClusterProxy"/> for the current cluster (or <c>null</c>).
         /// </summary>
-        public static ClusterProxy KubeProxy { get; private set; } = null;
+        public static ClusterProxy Cluster { get; private set; } = null;
 
         /// <summary>
         /// Looks for a certificate with a friendly name.

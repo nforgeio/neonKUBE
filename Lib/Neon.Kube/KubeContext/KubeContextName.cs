@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeConfigName.cs
+// FILE:	    KubeContextName.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,34 +25,66 @@ using Neon.Cryptography;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Handles the parsing of a Kubernetes configuration name which by
-    /// convention encodes the user, cluster, and namespace as a string.
+    /// Handles the parsing of a Kubernetes context name which by convention
+    /// encodes the user, cluster, and namespace as a string.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonKUBE encodes configuration names like:
+    /// neonKUBE encodes context names like:
     /// </para>
     /// <para>
     /// <b>USER</b> "@" <b>CLUSTER</b> [ "/" <b>NAMESPACE</b> ]
     /// </para>
-    /// <para>
+    /// <para>k
     /// where <b>USER</b> is the username, <b>CLUSTER</b> identifies the
     /// cluster and <b>NAMESPACE</b> optionally identifies the Kubernetes
     /// namespace (which defaults to <b>default</b> when not specified).
     /// </para>
     /// </remarks>
-    public class KubeConfigName
+    public class KubeContextName
     {
         //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
-        /// Compares <see cref="KubeConfigName"/> for equality.
+        /// Explictly casts a <see cref="KubeContextName"/> into a <c>string</c>.
+        /// </summary>
+        /// <param name="name">The context name or <c>null</c>.</param>
+        public static explicit operator string(KubeContextName name)
+        {
+            if (name == null)
+            {
+                return null;
+            }
+            else
+            {
+                return name.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Explictly casts a <c>string</c> into a <see cref="KubeContextName"/>.
+        /// </summary>
+        /// <param name="name">The context name or <c>null</c>.</param>
+        public static explicit operator KubeContextName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+            else
+            {
+                return KubeContextName.Parse(name);
+            }
+        }
+
+        /// <summary>
+        /// Compares <see cref="KubeContextName"/> for equality.
         /// </summary>
         /// <param name="name1">Name 1</param>
         /// <param name="name2">Name 2</param>
         /// <returns><c>true</c> if the names are equal.</returns>
-        public static bool operator ==(KubeConfigName name1, KubeConfigName name2)
+        public static bool operator ==(KubeContextName name1, KubeContextName name2)
         {
             var name1iIsNull = object.ReferenceEquals(name1, null);
             var name2iIsNull = object.ReferenceEquals(name2, null);
@@ -72,12 +104,12 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Compares <see cref="KubeConfigName"/> for inequality.
+        /// Compares <see cref="KubeContextName"/> for inequality.
         /// </summary>
         /// <param name="name1">Name 1</param>
         /// <param name="name2">Name 2</param>
         /// <returns><c>true</c> if the names are not equal.</returns>
-        public static bool operator !=(KubeConfigName name1, KubeConfigName name2)
+        public static bool operator !=(KubeContextName name1, KubeContextName name2)
         {
             var name1iIsNull = object.ReferenceEquals(name1, null);
             var name2iIsNull = object.ReferenceEquals(name2, null);
@@ -107,7 +139,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         /// <exception cref="FormatException">Thrown if the name is not valid.</exception>
-        public static KubeConfigName Parse(string text)
+        public static KubeContextName Parse(string text)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(text));
 
@@ -129,7 +161,7 @@ namespace Neon.Kube
                 throw new FormatException($"Kubernetes context [name={text}] has a '/' before the '@'.");
             }
 
-            var name = new KubeConfigName();
+            var name = new KubeContextName();
 
             name.User = text.Substring(0, pAt);
 
@@ -175,7 +207,7 @@ namespace Neon.Kube
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        private KubeConfigName()
+        private KubeContextName()
         {
         }
 
@@ -190,7 +222,7 @@ namespace Neon.Kube
         /// The username, cluster, and namespace will be converted to lowercase.
         /// </note>
         /// </remarks>
-        public KubeConfigName(string username, string cluster, string kubeNamespace = "default")
+        public KubeContextName(string username, string cluster, string kubeNamespace = "default")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cluster));
@@ -318,7 +350,7 @@ namespace Neon.Kube
                 return false;
             }
 
-            var other = obj as KubeConfigName;
+            var other = obj as KubeContextName;
 
             if (other == null)
             {

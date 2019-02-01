@@ -206,7 +206,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="name">The raw context name.</param>
         /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
-        public KubeConfigContext GetContext(KubeConfigName name)
+        public KubeConfigContext GetContext(KubeContextName name)
         {
             Covenant.Requires<ArgumentNullException>(name != null);
 
@@ -404,8 +404,9 @@ namespace Neon.Kube
                 }
 
                 CurrentContext = contextName;
-                Save();
             }
+
+            Save();
         }
 
         /// <summary>

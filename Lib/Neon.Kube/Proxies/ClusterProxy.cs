@@ -105,7 +105,7 @@ namespace Neon.Kube
                 nodeProxyCreator =
                     (name, publicAddress, privateAddress, append) =>
                     {
-                        var context = KubeHelper.KubeContext;
+                        var context = KubeHelper.CurrentContext;
 
                         if (context != null && context.Properties.Extension != null)
                         {
@@ -124,7 +124,7 @@ namespace Neon.Kube
             }
 
             this.Definition        = clusterDefinition;
-            this.KubeContext       = KubeHelper.KubeContext;
+            this.KubeContext       = KubeHelper.CurrentContext;
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendLog;
