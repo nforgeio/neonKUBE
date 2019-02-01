@@ -1096,7 +1096,7 @@ networking:
                     firstMaster.InvokeIdempotentAction("setup/cluster-deploy-helm",
                         () =>
                         {
-                            firstMaster.Status = "deploy: Helm/Tiller";
+                            firstMaster.Status = "deploy: helm/tiller";
 
                             firstMaster.KubeCtlApply(
 @"
@@ -1279,6 +1279,19 @@ kubectl apply -f /tmp/istio.yaml
         }
 
         /// <summary>
+        /// Renders a Kubernetes label value in a format suitable for labeling a node.
+        /// </summary>
+        private string GetLabelValue(object value)
+        {
+            if (value is bool)
+            {
+                value = NeonHelper.ToBoolString((bool)value);
+            }
+
+            return $"\"{value}\"";
+        }
+
+        /// <summary>
         /// Adds the node labels.
         /// </summary>
         private void LabelNodes()
@@ -1311,12 +1324,12 @@ kubectl apply -f /tmp/istio.yaml
                                 labelDefinitions.Add("kubernetes.io/role=worker");
                             }
 
-                            labelDefinitions.Add($"{NodeLabels.LabelDatacenter}={cluster.Definition.Datacenter.ToLowerInvariant()}");
-                            labelDefinitions.Add($"{NodeLabels.LabelEnvironment}=\"{cluster.Definition.Environment.ToString().ToLowerInvariant()}\"");
+                            labelDefinitions.Add($"{NodeLabels.LabelDatacenter}={GetLabelValue(cluster.Definition.Datacenter.ToLowerInvariant())}");
+                            labelDefinitions.Add($"{NodeLabels.LabelEnvironment}={GetLabelValue(cluster.Definition.Environment.ToString().ToLowerInvariant())}");
 
                             foreach (var label in node.Metadata.Labels.All)
                             {
-                                labelDefinitions.Add($"{label.Key}=\"{label.Value}\"");
+                                labelDefinitions.Add($"{label.Key}={GetLabelValue(label.Value)}");
                             }
 
                             sbArgs.Clear();
