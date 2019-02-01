@@ -47,10 +47,10 @@ namespace Neon.Kube
         /// <summary>
         /// Optional path to the cluster certificate authority file.
         /// </summary>
-        [JsonProperty(PropertyName = "certificate-authority", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "certificate-authority", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "certificate-authority-data", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "certificate-authority-data", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string CertificateAuthority { get; set; }
+        public string CertificateAuthorityData { get; set; }
 
         /// <summary>
         /// Optionally disables TLS verification of the server.

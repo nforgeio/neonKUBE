@@ -39,6 +39,13 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// The Kubernetes cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "Cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Cluster", ApplyNamingConventions = false)]
+        public KubeConfigCluster Cluster { get; set; }
+
+        /// <summary>
         /// The Kubernetes context.
         /// </summary>
         [JsonProperty(PropertyName = "Context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -53,7 +60,7 @@ namespace Neon.Kube
         public KubeContextExtension Extensions { get; set; }
 
         /// <summary>
-        /// The Kubernetes user information.
+        /// The Kubernetes user.
         /// </summary>
         [JsonProperty(PropertyName = "User", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "User", ApplyNamingConventions = false)]

@@ -81,6 +81,7 @@ REMARKS:
             }
 
             var context = KubeHelper.Config.GetContext(contextName);
+            var cluster = KubeHelper.Config.GetCluster(context.Properties.Cluster);
             var user    = KubeHelper.Config.GetUser(context.Properties.User);
 
             if (context == null)
@@ -97,9 +98,10 @@ REMARKS:
 
             var login = new KubeLogin()
             {
-                 Context    = context,
-                 Extensions = KubeHelper.GetContextExtension(contextName),
-                 User       = user
+                Cluster    = cluster,
+                Context    = context,
+                Extensions = KubeHelper.GetContextExtension(contextName),
+                User       = user
             };
 
             var yaml = NeonHelper.YamlSerialize(login);

@@ -401,7 +401,7 @@ namespace Neon.Kube
             var extension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path));
 
             extension.SetPath(path);
-            extension.ClusterDefinition.Validate();
+            extension.ClusterDefinition?.Validate();
 
             return extension;
         }
@@ -723,6 +723,11 @@ namespace Neon.Kube
                         if (Version.Parse(setupInfo.Versions.Kubernetes) > currentVersion)
                         {
                             // We need to copy the latest version.
+
+                            if (File.Exists(targetPath))
+                            {
+                                File.Delete(targetPath);
+                            }
 
                             File.Copy(cachedKubeCtlPath, targetPath);
                         }

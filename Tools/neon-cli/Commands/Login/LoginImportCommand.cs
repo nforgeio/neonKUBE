@@ -84,14 +84,29 @@ OPTIONS:
                 KubeHelper.Config.RemoveContext(existingContext);
             }
 
-            KubeHelper.Config.Contexts.Add(newContext);
+            KubeHelper.Config.Contexts.Add(newLogin.Context);
 
-            if (newContext.Name == currentContext.Name)
+            // Add/replace the user and cluster.
+
+            var existingCluster = KubeHelper.Config.GetCluster(newLogin.Context.Properties.Cluster);
+
+            if (existingCluster != null)
             {
-                KubeHelper.SetCurrentContext(newContext.Name);
+                KubeHelper.Config.Clusters.Remove(existingCluster);
             }
 
-            Console.Error.WriteLine($"Imported [{newContext.Name}].");
+            KubeHelper.Config.Clusters.Add(newLogin.Cluster);
+
+            var existingUser = KubeHelper.Config.GetUser(newLogin.Context.Properties.User);
+
+            if (existingUser != null)
+            {
+                KubeHelper.Config.Users.Remove(existingUser);
+            }
+
+            KubeHelper.Config.Users.Add(newLogin.User);
+
+            Console.Error.WriteLine($"Imported [{newLogin.Context.Name}].");
         }
 
         /// <inheritdoc/>

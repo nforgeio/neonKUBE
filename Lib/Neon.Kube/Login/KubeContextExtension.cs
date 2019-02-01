@@ -55,8 +55,8 @@ namespace Neon.Kube
         /// <summary>
         /// The cluster definition.
         /// </summary>
-        [JsonProperty(PropertyName = "clusterDefinition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "clusterDefinition", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ClusterDefinition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ClusterDefinition", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ClusterDefinition ClusterDefinition { get; set; }
 

@@ -1127,7 +1127,7 @@ subjects:
                     firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-dashboard",
                         () =>
                         {
-                            firstMaster.Status = "deploy: Kubernetes dashboard";
+                            firstMaster.Status = "deploy: kubernetes dashboard";
                             firstMaster.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
                         });
                 });
