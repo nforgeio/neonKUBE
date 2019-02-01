@@ -54,10 +54,15 @@ namespace Neon.Kube
         /// </summary>
         public static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9_]))*$", RegexOptions.IgnoreCase);
 
+        // $todo(jeff.lill):
+        //
+        // [ReservedLabelPrefix] doesn't use a normal prefix because this doesn't work
+        // for Ceph/ROOK.  Come back and see if ROOK fixes this in the future.
+
         /// <summary>
         /// The prefix reserved for neonKUBE related daemon, image, and pod labels.
         /// </summary>
-        public const string ReservedLabelPrefix = "io.neonkube/";
+        public const string ReservedLabelPrefix = "neonkube.io.";
 
         /// <summary>
         /// Parses a cluster definition from YAML text.
