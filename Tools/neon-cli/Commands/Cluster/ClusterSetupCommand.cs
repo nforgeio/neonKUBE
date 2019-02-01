@@ -130,7 +130,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var contextName = KubeConfigName.Parse(commandLine.Arguments[0]);
+            var contextName = KubeContextName.Parse(commandLine.Arguments[0]);
 
             kubeContextExtension = KubeHelper.GetContextExtension(contextName);
 
@@ -154,7 +154,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            KubeHelper.SetKubeContext(kubeContext);
+            KubeHelper.InitContext(kubeContext);
 
             // Note that cluster setup appends to existing log files.
 
@@ -348,7 +348,7 @@ OPTIONS:
                 // to merge in the new config.
 
                 var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
-                var existingConfig = KubeHelper.KubeConfig;
+                var existingConfig = KubeHelper.Config;
 
                 // Remove any existing user, context, and cluster with the same names.
                 // Note that we're assuming that there's only one of each in the config
@@ -383,7 +383,7 @@ OPTIONS:
 
                 existingConfig.CurrentContext = newContext.Name;
 
-                KubeHelper.SetKubeConfig(existingConfig);
+                KubeHelper.SetConfig(existingConfig);
             }
 
             Console.WriteLine();

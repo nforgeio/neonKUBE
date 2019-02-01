@@ -124,7 +124,7 @@ Server Requirements:
 
             // Implement the command.
 
-            if (KubeHelper.KubeContext != null)
+            if (KubeHelper.CurrentContext != null)
             {
                 Console.Error.WriteLine("*** ERROR: You are logged into a cluster.  You need to logout before preparing another.");
                 Program.Exit(1);
@@ -190,7 +190,7 @@ Server Requirements:
 
             cluster = new ClusterProxy(clusterDefinition, Program.CreateNodeProxy<NodeDefinition>, appendLog: false, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
-            if (KubeHelper.KubeConfig.GetContext(cluster.Definition.Name) != null)
+            if (KubeHelper.Config.GetContext(cluster.Definition.Name) != null)
             {
                 Console.Error.WriteLine($"*** ERROR: A context named [{cluster.Definition.Name}] already exists.");
                 Program.Exit(1);

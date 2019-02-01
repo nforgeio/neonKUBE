@@ -330,6 +330,13 @@ namespace Neon.Kube
                 }
             }
 
+            // Clear the current context if the removed context was the current one.
+
+            if (CurrentContext == context.Name)
+            {
+                CurrentContext = null;
+            }
+
             // Persist as required.
 
             if (!noSave)

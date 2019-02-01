@@ -161,6 +161,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Commands\Login\" />
     <Folder Include="Resources\Ubuntu-18.04\binary\" />
   </ItemGroup>
 

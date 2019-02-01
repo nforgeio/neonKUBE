@@ -64,7 +64,8 @@ COMMAND SUMMARY:
 
     neon help               COMMAND
     neon cluster prepare    [CLUSTER-DEF]
-    neon cluster verify     [CLUSTER-DEF]
+    neon cluster setup      [CLUSTER-DEF]
+    neon login              COMMAND
     neon version            [-n] [-git]
 
 ARGUMENTS:
@@ -72,13 +73,11 @@ ARGUMENTS:
     CLUSTER-DEF         - Path to a cluster definition file.  This is
                           optional for some commands when logged in.
 
+    COMMAND             - Subcommand and arguments.
+
 OPTIONS:
 
     --help                              - Display help
-    -q, --quiet                         - Disables operation progress
-    --shim                              - Run the command in Docker if possible
-    -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster stablization 
-                                          (defaults to 60s).
     --log-folder=LOG-FOLDER             - Optional log folder path
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
                                           configured in parallel [default=6]
@@ -86,7 +85,9 @@ OPTIONS:
                                           password: sysadmin0000
     --machine-username=USERNAME         - Overrides default initial machine
                                           username: sysadmin
-    --noterminal                        - Disables the shimmed interactive terminal
+    -q, --quiet                         - Disables operation progress
+    -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster stablization 
+                                          (defaults to 60s).
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -174,6 +175,12 @@ OPTIONS:
                     new ClusterPrepareCommand(),
                     new ClusterSetupCommand(),
                     new ClusterVerifyCommand(),
+                    new LoginCommand(),
+                    new LoginExportCommand(),
+                    new LoginImportCommand(),
+                    new LoginListCommand(),
+                    new LoginRemoveCommand(),
+                    new LogoutCommand(),
                     new VersionCommand()
                 };
 
@@ -825,9 +832,9 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
             {
                 sshCredentials = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword);
             }
-            else if (KubeHelper.KubeContext != null)
+            else if (KubeHelper.CurrentContext != null)
             {
-                sshCredentials = KubeHelper.KubeContext.Properties.Extension.SshCredentials;
+                sshCredentials = KubeHelper.CurrentContext.Properties.Extension.SshCredentials;
             }
             else
             {

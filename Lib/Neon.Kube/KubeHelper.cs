@@ -517,7 +517,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="contextName">The context name of <c>null</c> to clear the current context.</param>
         /// <exception cref="ArgumentException">Thrown if the context specified doesnt exist.</exception>
-        public static void SetContext(KubeContextName contextName)
+        public static void SetCurrentContext(KubeContextName contextName)
         {
             if (contextName == null)
             {
@@ -537,6 +537,16 @@ namespace Neon.Kube
                 Config.CurrentContext = (string)contextName;
                 Config.Save();
             }
+        }
+
+        /// <summary>
+        /// Sets the current Kubernetes config context by string name.
+        /// </summary>
+        /// <param name="contextName">The context name of <c>null</c> to clear the current context.</param>
+        /// <exception cref="ArgumentException">Thrown if the context specified doesnt exist.</exception>
+        public static void SetCurrentContext(string contextName)
+        {
+            SetCurrentContext((KubeContextName)contextName);
         }
 
         /// <summary>
