@@ -58,6 +58,8 @@ namespace Neon.Kube
         //
         // [ReservedLabelPrefix] doesn't use a normal prefix because this doesn't work
         // for Ceph/ROOK.  Come back and see if ROOK fixes this in the future.
+        //
+        //      https://github.com/jefflill/NeonForge/issues/426
 
         /// <summary>
         /// The prefix reserved for neonKUBE related daemon, image, and pod labels.
