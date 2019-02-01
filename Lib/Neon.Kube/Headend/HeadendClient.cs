@@ -37,12 +37,12 @@ namespace Neon.Kube
     /// </summary>
     public sealed class HeadendClient : IDisposable
     {
-        private const string defaultKubeVersion          = "1.13.2";
+        private const string defaultKubeVersion          = "1.13.3";
         private const string defaultKubeDashboardVersion = "1.10.1";
         private const string defaultDockerVersion        = "docker.ce-18.06.1";
         private const string defaultHelmVersion          = "2.12.3";
         private const string defaultCalicoVersion        = "3.3";
-        private const string defaultIstioVersion         = "1.1.0-snapshot.3";
+        private const string defaultIstioVersion         = "1.1.0";
 
         private string[] supportedDockerVersions
             = new string[]
@@ -110,6 +110,7 @@ namespace Neon.Kube
                 { "1.13.0", "1.13.0-00" },
                 { "1.13.1", "1.13.1-00" },
                 { "1.13.2", "1.13.2-00" },
+                { "1.13.3", "1.13.3-00" },
             };
 
             ubuntuKubeCtlPackages = new Dictionary<string, string>()
@@ -117,6 +118,7 @@ namespace Neon.Kube
                 { "1.13.0", "1.13.0-00" },
                 { "1.13.1", "1.13.1-00" },
                 { "1.13.2", "1.13.2-00" },
+                { "1.13.3", "1.13.3-00" },
             };
 
             ubuntuKubeletPackages = new Dictionary<string, string>
@@ -124,6 +126,7 @@ namespace Neon.Kube
                 { "1.13.0", "1.13.0-00" },
                 { "1.13.1", "1.13.1-00" },
                 { "1.13.2", "1.13.2-00" },
+                { "1.13.3", "1.13.3-00" },
             };
         }
 
@@ -151,6 +154,12 @@ namespace Neon.Kube
             {
                 kubeDashboardVersion = Version.Parse(clusterDefinition.Kubernetes.DashboardVersion);
             }
+
+            // Ensure that the we have package versions defined for the selected Kubernetes version.
+
+            Covenant.Assert(ubuntuKubeAdmPackages.ContainsKey(kubeVersion.ToString()));
+            Covenant.Assert(ubuntuKubeCtlPackages.ContainsKey(kubeVersion.ToString()));
+            Covenant.Assert(ubuntuKubeletPackages.ContainsKey(kubeVersion.ToString()));
 
             // $todo(jeff.lill): Hardcoded
             // $todo(jeff.lill): Verify Docker/Kubernetes version compatibility.
@@ -181,7 +190,7 @@ namespace Neon.Kube
 
             // $todo(jeff.lill):
             //
-            // The code below supports onlythe Calico CNI for now.  This will probably be
+            // The code below supports only the Calico CNI for now.  This will probably be
             // replaced by the integrated Istio CNI soon.
 
             if (clusterDefinition.Network.Cni != NetworkCni.Calico)
