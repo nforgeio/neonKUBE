@@ -81,6 +81,7 @@ REMARKS:
             }
 
             var context = KubeHelper.Config.GetContext(contextName);
+            var user    = KubeHelper.Config.GetUser(context.Properties.User);
 
             if (context == null)
             {
@@ -88,16 +89,22 @@ REMARKS:
                 Program.Exit(1);
             }
 
-            var yaml = NeonHelper.YamlSerialize(context);
+            if (user == null)
+            {
+                Console.Error.WriteLine($"*** ERROR: User [{context.Properties.User}] not found.");
+                Program.Exit(1);
+            }
 
-            if (commandLine.Arguments.Length < 2)
+            var login = new KubeLogin()
             {
-                Console.WriteLine(yaml);
-            }
-            else
-            {
-                File.WriteAllText(commandLine.Arguments[1], yaml);
-            }
+                 Context    = context,
+                 Extensions = KubeHelper.GetContextExtension(contextName),
+                 User       = user
+            };
+
+            var yaml = NeonHelper.YamlSerialize(login);
+
+            Console.WriteLine(yaml);
         }
 
         /// <inheritdoc/>

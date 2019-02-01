@@ -70,13 +70,13 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var newContext      = NeonHelper.YamlDeserialize<KubeConfigContext>(File.ReadAllText(commandLine.Arguments.First()));
-            var existingContext = KubeHelper.Config.GetContext(newContext.Name);
+            var newLogin        = NeonHelper.YamlDeserialize<KubeLogin>(File.ReadAllText(commandLine.Arguments.First()));
+            var existingContext = KubeHelper.Config.GetContext(newLogin.Context.Name);
             var currentContext  = KubeHelper.CurrentContext;
 
             if (existingContext != null)
             {
-                if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to replace [{newContext.Name}]?"))
+                if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to replace [{existingContext.Name}]?"))
                 {
                     return;
                 }

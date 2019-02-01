@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
@@ -47,7 +48,7 @@ namespace Neon.Kube
         /// Optional path to the cluster certificate authority file.
         /// </summary>
         [JsonProperty(PropertyName = "certificate-authority", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "certificate-authority", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "certificate-authority", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CertificateAuthority { get; set; }
 

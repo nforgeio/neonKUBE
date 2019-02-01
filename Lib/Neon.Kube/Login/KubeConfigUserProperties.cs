@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
@@ -48,7 +49,7 @@ namespace Neon.Kube
         /// The optional path to the client certificate (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "client-certificate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "client-certificate", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "client-certificate", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ClientCertificate { get; set; }
 
@@ -59,6 +60,14 @@ namespace Neon.Kube
         [YamlMember(Alias = "client-key", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ClientKey { get; set; }
+
+        /// <summary>
+        /// The optional client key data.
+        /// </summary>
+        [JsonProperty(PropertyName = "client-key-data", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "client-key-data", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ClientKeyData { get; set; }
 
         /// <summary>
         /// The optional username (or <c>null</c>).
