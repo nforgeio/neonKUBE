@@ -42,7 +42,7 @@ namespace Neon.Kube
         private const string defaultDockerVersion        = "docker.ce-18.06.1";
         private const string defaultHelmVersion          = "2.12.3";
         private const string defaultCalicoVersion        = "3.3";
-        private const string defaultIstioVersion         = "1.1.0";
+        private const string defaultIstioVersion         = "1.0.5";
 
         private string[] supportedDockerVersions
             = new string[]
