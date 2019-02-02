@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_KubeContext.cs
+// FILE:	    TestCli_Password.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -19,9 +19,24 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestHive
+namespace TestKube
 {
-    public class Test_KubeContext
+    /// <summary>
+    /// Tests <b>neon passwords</b> commands.fs
+    /// </summary>
+    public class TestCli_Password
     {
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Password()
+        {
+            using (new KubeMock())
+            {
+                var response = TestHelper.Neon("password");
+
+                Assert.Equal(0, response.ExitCode);
+            }
+        }
     }
 }
+

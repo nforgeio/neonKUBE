@@ -19,7 +19,7 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestHive
+namespace TestKube
 {
     public class Test_KubeContextName
     {

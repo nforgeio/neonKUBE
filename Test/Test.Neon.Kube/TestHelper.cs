@@ -19,7 +19,7 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestHive
+namespace TestKube
 {
     /// <summary>
     /// Misc local unit test helpers.
@@ -94,16 +94,38 @@ namespace TestHive
         }
 
         /// <summary>
-        /// Returns the fully qualified path to the encrypted Ansible neonHIVE 
-        /// test <b>secrets.yaml</b> file.
+        /// Executes the <b>neon-cli</b>.
         /// </summary>
-        /// <returns>The file path.</returns>
-        public static string AnsibleSecretsPath => Path.GetFullPath(Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Test", "secrets.yaml"));
+        /// <param name="args">The command arguments.</param>
+        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        public static ExecuteResult Neon(params object[] args)
+        {
+            // We're going to run the command from the NF_BUILD directory.
 
-        /// <summary>
-        /// Returns name of the <b>neon-git</b> Ansible password file used
-        /// to encrypt secret files included in the source repository.
-        /// </summary>
-        public const string AnsiblePasswordFile = "neon-git";
+            var buildFolder = Environment.GetEnvironmentVariable("NF_BUILD");
+
+            if (string.IsNullOrEmpty(buildFolder))
+            {
+                throw new Exception("The NF_BUILD environment variable is not defined.");
+            }
+
+            string neonPath;
+
+            if (NeonHelper.IsWindows)
+            {
+                neonPath = Path.Combine(buildFolder, "neon.cmd");
+            }
+            else
+            {
+                neonPath = Path.Combine(buildFolder, "neon");
+            }
+
+            if (!File.Exists(neonPath))
+            {
+                throw new Exception($"The [neon-cli] executable does not exist at [{neonPath}].");
+            }
+
+            return NeonHelper.ExecuteCapture(neonPath, args);
+        }
     }
 }

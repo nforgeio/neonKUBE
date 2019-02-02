@@ -20,7 +20,7 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestHive
+namespace TestKube
 {
     /// <summary>
     /// Verifies that the <see cref="ServiceDetails"/> class maps correctly to

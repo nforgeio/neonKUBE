@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <IsPackable>false</IsPackable>
-    <RootNamespace>TestHive</RootNamespace>
+    <RootNamespace>TestKube</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

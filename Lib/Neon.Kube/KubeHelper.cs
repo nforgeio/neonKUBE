@@ -43,9 +43,33 @@ namespace Neon.Kube
         public const string RootUser = "root";
 
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
+        private static string               orgKUBECONFIG;
+        private static string               mockFolder;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
         private static HeadendClient        cachedHeadendClient;
+        private static string               cachedNeonKubeUserFolder;
+        private static string               cachedKubeUserFolder;
+        private static string               cachedRunFolder;
+        private static string               cachedClustersFolder;
+        private static string               cachedPasswordsFolder;
+        private static string               cachedCacheFolder;
+
+        /// <summary>
+        /// Clears all cached items.
+        /// </summary>
+        private static void ClearCachedItems()
+        {
+            cachedConfig             = null;
+            cachedContext            = null;
+            cachedHeadendClient      = null;
+            cachedNeonKubeUserFolder = null;
+            cachedKubeUserFolder     = null;
+            cachedRunFolder          = null;
+            cachedClustersFolder     = null;
+            cachedPasswordsFolder    = null;
+            cachedCacheFolder        = null;
+        }
 
         /// <summary>
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
@@ -58,6 +82,43 @@ namespace Neon.Kube
 
             KubeHelper.log = log;
         }
+
+        /// <summary>
+        /// Puts <see cref="KubeHelper"/> into mock mode to support unit testing.  This
+        /// changes the folders where Kubernetes and neonKUBE persists their state to
+        /// directories beneath the folder passed.  This also modifies the KUBECONFIG
+        /// environment variable to reference the new location.
+        /// </summary>
+        public static void SetMockMode(string folder)
+        {
+            if (MockMode)
+            {
+                throw new InvalidOperationException("Already running in mock mode.");
+            }
+
+            if (!Directory.Exists(folder))
+            {
+                throw new FileNotFoundException($"Folder [{folder}] does not exist.");
+            }
+
+            ClearCachedItems();
+
+            mockFolder = folder;
+        }
+
+        /// <summary>
+        /// Resets the mock mode, restoring normal operation.
+        /// </summary>
+        public static void ClearMockMode()
+        {
+            ClearCachedItems();
+            mockFolder = null;
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the class is running in mock mode.
+        /// </summary>
+        public static bool MockMode => mockFolder != null;
 
         /// <summary>
         /// Encrypts a file or directory when supported by the underlying operating system
@@ -151,6 +212,20 @@ namespace Neon.Kube
                 return "/neonkube";
             }
 
+            if (cachedNeonKubeUserFolder != null)
+            {
+                return cachedNeonKubeUserFolder;
+            }
+
+            if (MockMode)
+            {
+                cachedNeonKubeUserFolder = Path.Combine(mockFolder, ".neonkube");
+
+                Directory.CreateDirectory(cachedNeonKubeUserFolder);
+
+                return cachedNeonKubeUserFolder;
+            }
+
             if (NeonHelper.IsWindows)
             {
                 var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
@@ -167,7 +242,7 @@ namespace Neon.Kube
                     // file systems).  The secrets won't be encrypted for these situations.
                 }
 
-                return path;
+                return cachedNeonKubeUserFolder = path;
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
             {
@@ -175,7 +250,7 @@ namespace Neon.Kube
 
                 Directory.CreateDirectory(path);
 
-                return path;
+                return cachedNeonKubeUserFolder = path;
             }
             else
             {
@@ -205,6 +280,20 @@ namespace Neon.Kube
                 return $"/{Environment.GetEnvironmentVariable("HOME")}/.kube";
             }
 
+            if (cachedKubeUserFolder != null)
+            {
+                return cachedKubeUserFolder;
+            }
+
+            if (MockMode)
+            {
+                cachedKubeUserFolder = Path.Combine(mockFolder, ".kube");
+
+                Directory.CreateDirectory(cachedKubeUserFolder);
+
+                return cachedKubeUserFolder;
+            }
+
             if (NeonHelper.IsWindows)
             {
                 var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".kube");
@@ -221,7 +310,7 @@ namespace Neon.Kube
                     // file systems).  The secrets won't be encrypted for these situations.
                 }
 
-                return path;
+                return cachedKubeUserFolder = path;
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
             {
@@ -229,7 +318,7 @@ namespace Neon.Kube
 
                 Directory.CreateDirectory(path);
 
-                return path;
+                return cachedKubeUserFolder = path;
             }
             else
             {
@@ -245,11 +334,16 @@ namespace Neon.Kube
         {
             get
             {
+                if (cachedRunFolder != null)
+                {
+                    return cachedRunFolder;
+                }
+
                 var path = Path.Combine(GetNeonKubeUserFolder(), "run");
 
                 Directory.CreateDirectory(path);
 
-                return path;
+                return cachedRunFolder = path;
             }
         }
 
@@ -276,11 +370,16 @@ namespace Neon.Kube
         {
             get
             {
+                if (cachedClustersFolder != null)
+                {
+                    return cachedClustersFolder;
+                }
+
                 var path = Path.Combine(GetNeonKubeUserFolder(), "clusters");
 
                 Directory.CreateDirectory(path);
 
-                return path;
+                return cachedClustersFolder = path;
             }
         }
 
@@ -292,11 +391,16 @@ namespace Neon.Kube
         {
             get
             {
+                if (cachedPasswordsFolder != null)
+                {
+                    return cachedPasswordsFolder;
+                }
+
                 var path = Path.Combine(GetNeonKubeUserFolder(), "passwords");
 
                 Directory.CreateDirectory(path);
 
-                return path;
+                return cachedPasswordsFolder = path;
             }
         }
 
@@ -308,11 +412,16 @@ namespace Neon.Kube
         {
             get
             {
+                if (cachedCacheFolder != null)
+                {
+                    return cachedCacheFolder;
+                }
+
                 var path = Path.Combine(GetNeonKubeUserFolder(), "cache");
 
                 Directory.CreateDirectory(path);
 
-                return path;
+                return cachedCacheFolder = path;
             }
         }
 

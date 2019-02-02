@@ -219,7 +219,7 @@ Server Requirements:
                 !cluster.Definition.Hosting.IsCloudProvider)
             {
                 Console.WriteLine();
-                Console.WriteLine(" Scanning for IP address conflicts...");
+                Console.WriteLine("  Scanning for IP address conflicts...");
                 Console.WriteLine();
 
                 var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
