@@ -8,7 +8,7 @@
     <Company>neonFORGE, LLC</Company>
     <Product>neonKUBE</Product>
     <Description>neonKUBE utilities.</Description>
-    <PackageReleaseNotes>**BREAKING:** AS few more APIs have been renamed from `TrafficDirector` to `TrafficManager`.
+    <PackageReleaseNotes>Development release.
 </PackageReleaseNotes>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

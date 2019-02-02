@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Stack.Couchbase.SyncGateway</RootNamespace>
     <LangVersion>latest</LangVersion>
-    <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 18.09 release.</PackageReleaseNotes>
+    <PackageReleaseNotes>Development release.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <Description>neonFORGE Couchbase Mobile SyncGateway classes.</Description>
     <Company>neonFORGE, LLC</Company>

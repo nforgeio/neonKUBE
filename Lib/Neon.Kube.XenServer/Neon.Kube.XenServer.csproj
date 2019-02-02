@@ -9,7 +9,7 @@
     <Description>neonKUBE XenServer Hosting</Description>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>6.0.0.0</FileVersion>
-    <PackageReleaseNotes>* NO CHANGES</PackageReleaseNotes>
+    <PackageReleaseNotes>Development release.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
   </PropertyGroup>
 

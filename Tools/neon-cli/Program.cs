@@ -35,11 +35,9 @@ namespace NeonCli
         private static DockerShim shim;     // $hack(jeff.lill): Exit() uses this to ensure that shim folders are deleted.
 
         /// <summary>
-        /// The actual program version.  This may be different from <see cref="System.Version"/>
-        /// if the <b>--version=VERSION</b> option was specified to force a specific
-        /// version.
+        /// The program version.
         /// </summary>
-        public const string Version = "7.19.1.0-alpha-0";
+        public const string Version = "0.1.0+1902-alpha-0";
     
         /// <summary>
         /// CURL command common options.

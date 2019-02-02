@@ -32,45 +32,44 @@ function Publish
 	neon run --vault-password-file=neon-git "$env:NF_ROOT\Devops\test\secrets.yaml" -- nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg" %NUGET_API_KEY%
 }
 
-# Update the project version numbers first.
+# Update the project versions first.
 
 SetVersion Neon.Common
 SetVersion Neon.Couchbase
 SetVersion Neon.Docker
+SetVersion Neon.HyperV
 SetVersion Neon.Kube
 SetVersion Neon.Kube.Aws
 SetVersion Neon.Kube.Azure
 SetVersion Neon.Kube.Google
 SetVersion Neon.Kube.Hosting
 SetVersion Neon.Kube.HyperV
-SetVersion Neon.Kube.HyperVDev
+SetVersion Neon.Kube.HyperVLocal
 SetVersion Neon.Kube.Machine
 SetVersion Neon.Kube.XenServer
-SetVersion Neon.HiveMQ
 SetVersion Neon.Web
+SetVersion Neon.XenServer
 SetVersion Neon.Xunit
-SetVersion Neon.Xunit.Couchbase
-SetVersion Neon.Xunit.RabbitMQ
-SetVersion Neon.Xunit.HKubeive
+SetVersion Neon.Xunit.Kube
 
 # Build and publish the projects.
 
 Publish Neon.Common
-Publish Neon.Couchbase
+Publush Neon.Couchbase
 Publish Neon.Docker
+Publish Neon.HyperV
 Publish Neon.Kube
 Publish Neon.Kube.Aws
 Publish Neon.Kube.Azure
 Publish Neon.Kube.Google
 Publish Neon.Kube.Hosting
 Publish Neon.Kube.HyperV
-Publish Neon.Kube.HyperVDev
+Publish Neon.Kube.HyperVLocal
 Publish Neon.Kube.Machine
 Publish Neon.Kube.XenServer
 Publish Neon.HiveMQ
 Publish Neon.Web
+Publish Neon.XenServer
 Publish Neon.Xunit
-Publish Neon.Xunit.Couchbase
-Publish Neon.Xunit.RabbitMQ
 Publish Neon.Xunit.Kube
 pause

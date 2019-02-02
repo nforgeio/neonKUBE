@@ -28,44 +28,39 @@ function Publish
 SetVersion Neon.Common
 SetVersion Neon.Couchbase
 SetVersion Neon.Docker
+SetVersion Neon.HyperV
 SetVersion Neon.Kube
 SetVersion Neon.Kube.Aws
 SetVersion Neon.Kube.Azure
 SetVersion Neon.Kube.Google
 SetVersion Neon.Kube.Hosting
 SetVersion Neon.Kube.HyperV
-SetVersion Neon.Kube.HyperVDev
+SetVersion Neon.Kube.HyperVLocal
 SetVersion Neon.Kube.Machine
-SetVersion Neon.Kube.Xen
-SetVersion Neon.HiveMQ
-SetVersion Neon.HyperV
+SetVersion Neon.Kube.XenServer
 SetVersion Neon.Web
 SetVersion Neon.XenServer
 SetVersion Neon.Xunit
-SetVersion Neon.Xunit.Couchbase
-SetVersion Neon.Xunit.RabbitMQ
 SetVersion Neon.Xunit.Kube
 
 # Build and publish the projects.
 
 Publish Neon.Common
+Publush Neon.Couchbase
+Publish Neon.Docker
+Publish Neon.HyperV
 Publish Neon.Kube
 Publish Neon.Kube.Aws
 Publish Neon.Kube.Azure
 Publish Neon.Kube.Google
 Publish Neon.Kube.Hosting
 Publish Neon.Kube.HyperV
-Publish Neon.Kube.HyperVDev
+Publish Neon.Kube.HyperVLocal
 Publish Neon.Kube.Machine
-Publish Neon.Kube.Xen
+Publish Neon.Kube.XenServer
 Publish Neon.HiveMQ
-Publish Neon.HyperV
-Publish Neon.Couchbase
-Publish Neon.Docker
 Publish Neon.Web
 Publish Neon.XenServer
 Publish Neon.Xunit
-Publish Neon.Xunit.Couchbase
-Publish Neon.Xunit.RabbitMQ
 Publish Neon.Xunit.Kube
 pause
