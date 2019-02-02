@@ -1076,8 +1076,6 @@ networking:
 
                     // Install the network CNI.
 
-                    // $todo(jeff.lill): Not supporting the integrated Istio CNI yet.
-
                     switch (cluster.Definition.Network.Cni)
                     {
                         case NetworkCni.Calico:
@@ -1090,6 +1088,14 @@ networking:
 
                             throw new NotImplementedException($"The [{cluster.Definition.Network.Cni}] CNI support is not implemented.");
                     }
+
+                    // Install Istio.
+
+                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-istio",
+                        () =>
+                        {
+                            InstallIstio(firstMaster);
+                        });
 
                     // Install the Helm/Tiller service.  This will install the latest stable version.
 
@@ -1201,34 +1207,30 @@ rm /tmp/calico.yaml
         }
 
         /// <summary>
-        /// Installs Istio without its CNI.
+        /// Installs Istio.
         /// </summary>
         /// <param name="master">The master node.</param>
         private void InstallIstio(SshProxy<NodeDefinition> master)
         {
-        }
+            master.Status = "deploy: istio";
 
-        /// <summary>
-        /// Installs Istio with its integrated CNI.
-        /// </summary>
-        /// <param name="master">The master node.</param>
-        private void InstallIstioWithCni(SshProxy<NodeDefinition> master)
-        {
-            // $todo(jeff.lill): This doesn't work.  Waiting for a stable release of Istio with integrated CNI.
+            // $todo(jeff.lill):
+            //
+            // We need to edit the Istio installation YAML file so that Istio
+            // runs with root access so it can insert pod sidecars.  This is
+            // temporary and we should be able to clean this up after Istio
+            // with integrated CNI goes GA.
+            //
+            // We're going to split the bash script into two parts and download
+            // and edit the file in the middle.
 
-            throw new NotImplementedException("Istio installation with integrated CNI doesn't work yet.");
-
-/*
-            // Configure Helm and Istio: https://preliminary.istio.io/docs/setup/kubernetes/helm-install/ (option 1)
-
-            master.InvokeIdempotentAction("setup/cluster-deploy-helm",
-                () =>
-                {
-                    master.Status = "deploy: Istio";
-
-                    var mutualTls = NeonHelper.ToBoolString(cluster.Definition.Network.IstioMutualTls)";
-                    var istioScript =
+            var istioConfigPath = cluster.Definition.Network.IstioMutualTls ? "install/kubernetes/istio-demo-auth.yaml" : "install/kubernetes/istio-demo.yaml";
+            var istioScript1 =
 $@"#!/bin/bash
+
+# Enable sidecar injection.
+
+kubectl label namespace default istio-injection=enabled
 
 # Download and extract the Istio binaries:
 
@@ -1243,29 +1245,20 @@ cd istio
 chmod 330 bin/*
 cp bin/* /usr/local/bin
 
-#------------------------------------------------------------------------------
-# Update Helm dependencies:
+# Install Istio's CRDs:
 
-helm repo add istio.io ""https://storage.googleapis.com/istio-prerelease/daily-build/master-latest-daily/charts""
-helm dep update install/kubernetes/helm/istio
-
-#------------------------------------------------------------------------------
-# Option 1: Install with Helm via [helm template]
-# https://preliminary.istio.io/docs/setup/kubernetes/helm-install/
-
-# Step 1: Install Istio CRDs:
-
-for i in install/kubernetes/helm/istio/templates/crd*yaml; do kubectl apply -f $i; done
+kubectl apply -f install/kubernetes/helm/istio/templates/crds.yaml
 sleep 10
+";
 
-# Step 2: Generate the Istio Kubernetes manifest:
+            var istioScript2 =
+$@"#!/bin/bash
 
-cat install/kubernetes/namespace.yaml > /tmp/istio.yaml
-helm template install/kubernetes/helm/istio --name istio --namespace istio-system --set global.mtls.enabled={mutualTls} >> /tmp/istio.yaml
+cd /tmp/istio
 
-# Step 3: Install the components via the manifest:
+# Install Istio:
 
-kubectl apply -f /tmp/istio.yaml
+kubectl apply -f {istioConfigPath}
 
 # Cleanup:
 
@@ -1273,9 +1266,49 @@ kubectl apply -f /tmp/istio.yaml
 # rm -r istio
 # rm istio.yaml
 ";
-                    master.SudoCommand(CommandBundle.FromScript(istioScript));
-                });
-*/
+            master.SudoCommand(CommandBundle.FromScript(istioScript1));
+
+            if (cluster.Definition.Network.IstioMutualTls)
+            {
+                // We only need to munge the YAML for mutual TLS.
+
+                var installYampPath = "/tmp/istio/" + istioConfigPath;
+                var installYaml     = master.DownloadText(installYampPath);
+                var sbYaml          = new StringBuilder();
+
+                using (var reader = new StringReader(installYaml))
+                {
+                    // We're going to scan for the first trimmed line starting with "securityContext:",
+                    // insert the two additional lines, and then copy the remaining lines.
+
+                    var modified = false;
+
+                    foreach (var line in reader.Lines())
+                    {
+                        if (!modified && line.TrimStart().StartsWith("securityContext:"))
+                        {
+                            sbYaml.AppendLineLinux(line);
+                            sbYaml.AppendLineLinux("          runAsUser: 0");
+                            sbYaml.AppendLineLinux("          runAsNonRoot: false");
+
+                            modified = true;
+                        }
+                        else
+                        {
+                            sbYaml.AppendLineLinux(line);
+                        }
+                    }
+
+                    if (!modified)
+                    {
+                        throw new KubeException("Istio setup YAML moodification failed.");
+                    }
+                }
+
+                master.UploadText(installYampPath, sbYaml);
+            }
+
+            master.SudoCommand(CommandBundle.FromScript(istioScript2));
         }
 
         /// <summary>
