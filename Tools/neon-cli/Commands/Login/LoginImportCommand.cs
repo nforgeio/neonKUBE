@@ -32,7 +32,7 @@ a previous [neon login export] command.
 
 USAGE:
 
-    neon login import --force] PATH
+    neon login import [--nologin] [--force] PATH
 
 ARGUMENTS:
 
@@ -41,6 +41,7 @@ ARGUMENTS:
 OPTIONS:
 
     --force     - Don't prompt to replace an existing context.
+    --nologin   - Don't log into the imported cluster.
 ";
 
         /// <inheritdoc/>
@@ -52,7 +53,7 @@ OPTIONS:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--force" }; }
+            get { return new string[] { "--nologin", "--force" }; }
         }
 
         /// <inheritdoc/>
@@ -74,6 +75,8 @@ OPTIONS:
             var existingContext = KubeHelper.Config.GetContext(newLogin.Context.Name);
             var currentContext  = KubeHelper.CurrentContext;
 
+            // Add/replace the context.
+
             if (existingContext != null)
             {
                 if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to replace [{existingContext.Name}]?"))
@@ -86,7 +89,7 @@ OPTIONS:
 
             KubeHelper.Config.Contexts.Add(newLogin.Context);
 
-            // Add/replace the user and cluster.
+            // Add/replace the cluster.
 
             var existingCluster = KubeHelper.Config.GetCluster(newLogin.Context.Properties.Cluster);
 
@@ -97,6 +100,8 @@ OPTIONS:
 
             KubeHelper.Config.Clusters.Add(newLogin.Cluster);
 
+            // Add/replace the user.
+
             var existingUser = KubeHelper.Config.GetUser(newLogin.Context.Properties.User);
 
             if (existingUser != null)
@@ -105,8 +110,16 @@ OPTIONS:
             }
 
             KubeHelper.Config.Users.Add(newLogin.User);
+            KubeHelper.Config.Save();
 
             Console.Error.WriteLine($"Imported: {newLogin.Context.Name}");
+
+            if (commandLine.GetOption("--nologin") == null)
+            {
+                Console.Error.WriteLine($"Logging into: {newLogin.Context.Name}");
+                KubeHelper.Config.CurrentContext = newLogin.Context.Name;
+                KubeHelper.Config.Save();
+            }
         }
 
         /// <inheritdoc/>

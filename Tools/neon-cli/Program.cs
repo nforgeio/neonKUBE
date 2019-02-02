@@ -860,22 +860,30 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
         /// <returns><c>true</c> if the answer is yes, <b>false</b> for no.</returns>
         public static bool PromptYesNo(string prompt)
         {
-            while (true)
+            try
             {
-                Console.Write($"{prompt} [y/n]: ");
+                while (true)
+                {
+                    Console.WriteLine();
+                    Console.Write($"{prompt} [y/n]: ");
 
-                var key = Console.ReadKey().KeyChar;
+                    var key = Console.ReadKey().KeyChar;
 
+                    Console.WriteLine();
+
+                    if (key == 'y' || key == 'Y')
+                    {
+                        return true;
+                    }
+                    else if (key == 'n' || key == 'N')
+                    {
+                        return false;
+                    }
+                }
+            }
+            finally
+            {
                 Console.WriteLine();
-
-                if (key == 'y' || key == 'Y')
-                {
-                    return true;
-                }
-                else if (key == 'n' || key == 'N')
-                {
-                    return false;
-                }
             }
         }
 
