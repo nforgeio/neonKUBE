@@ -92,6 +92,9 @@ OPTIONS:
                           secrets without redacting logs.  This is useful 
                           for debugging cluster setup  issues.  Do not
                           use for production hives.
+
+    --force             - Don't prompt before removing existing contexts
+                          that reference the target cluster.
 ";
         private const string logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
         private const string logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
@@ -112,7 +115,7 @@ OPTIONS:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--unredacted" }; }
+            get { return new string[] { "--unredacted", "--force" }; }
         }
 
         /// <inheritdoc/>
@@ -131,6 +134,7 @@ OPTIONS:
             }
 
             var contextName = KubeContextName.Parse(commandLine.Arguments[0]);
+            var kubeCluster = KubeHelper.Config.GetCluster(contextName.Cluster);
 
             kubeContextExtension = KubeHelper.GetContextExtension(contextName);
 
@@ -139,12 +143,42 @@ OPTIONS:
                 Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via [neon cluster prepare...].");
                 Program.Exit(1);
             }
-            else if (!kubeContextExtension.SetupDetails.SetupPending)
+
+            if (kubeCluster != null && !kubeContextExtension.SetupDetails.SetupPending)
             {
-                Console.Error.WriteLine($"*** ERROR: Cluster [{contextName.Cluster}] has already been setup.");
+                if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more logins reference [{kubeCluster.Name}].  Do you wish to delete these?"))
+                {
+                    Program.Exit(0);
+                }
+
+                // Remove the cluster from the kubeconfig and remove any 
+                // contexts that reference it.
+
+                KubeHelper.Config.Clusters.Remove(kubeCluster);
+
+                var delList = new List<KubeConfigContext>();
+
+                foreach (var context in KubeHelper.Config.Contexts)
+                {
+                    if (context.Properties.Cluster == kubeCluster.Name)
+                    {
+                        delList.Add(context);
+                    }
+                }
+
+                foreach (var context in delList)
+                {
+                    KubeHelper.Config.Contexts.Remove(context);
+                }
+
+                if (KubeHelper.CurrentContext != null && KubeHelper.CurrentContext.Properties.Cluster == kubeCluster.Name)
+                {
+                    KubeHelper.Config.CurrentContext = null;
+                }
+
+                KubeHelper.Config.Save();
             }
 
-            kubeConfig                       = KubeConfig.Load();
             kubeContext                      = new KubeConfigContext(contextName);
             kubeContext.Properties.Extension = kubeContextExtension;
 

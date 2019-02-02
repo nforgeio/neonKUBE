@@ -106,7 +106,7 @@ OPTIONS:
 
             KubeHelper.Config.Users.Add(newLogin.User);
 
-            Console.Error.WriteLine($"Imported [{newLogin.Context.Name}].");
+            Console.Error.WriteLine($"Imported: {newLogin.Context.Name}");
         }
 
         /// <inheritdoc/>

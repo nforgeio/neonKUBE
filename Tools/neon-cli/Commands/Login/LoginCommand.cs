@@ -83,7 +83,7 @@ ARGUMENTS:
 
             if (KubeHelper.CurrentContext != null && newContextName == KubeContextName.Parse(KubeHelper.CurrentContext.Name))
             {
-                Console.Error.WriteLine($"*** You are already logged into [{newContextName}].");
+                Console.Error.WriteLine($"*** You are already logged into: {newContextName}");
                 Program.Exit(0);
             }
 

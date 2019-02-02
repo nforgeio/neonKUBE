@@ -48,18 +48,10 @@ namespace Neon.Kube
         /// <summary>
         /// The optional path to the client certificate (or <c>null</c>).
         /// </summary>
-        [JsonProperty(PropertyName = "client-certificate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "client-certificate", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "client-certificate-data", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "client-certificate-data", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string ClientCertificate { get; set; }
-
-        /// <summary>
-        /// The optional path to the client key (or <c>null</c>).
-        /// </summary>
-        [JsonProperty(PropertyName = "client-key", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "client-key", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string ClientKey { get; set; }
+        public string ClientCertificateData { get; set; }
 
         /// <summary>
         /// The optional client key data.

@@ -106,18 +106,18 @@ USER@CLUSTER[/NAMESPACE is not specified.
                 contextName = (KubeContextName)context.Name;
             }
 
-            if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to remove [{contextName}]?"))
+            if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to remove: {contextName}?"))
             {
                 return;
             }
 
             if (KubeHelper.CurrentContextName == contextName)
             {
-                Console.WriteLine($"Logging out of [{contextName}].");
+                Console.WriteLine($"Logging out of: {contextName}");
             }
 
             KubeHelper.Config.RemoveContext(context);
-            Console.WriteLine($"Removed [{contextName}] context.");
+            Console.WriteLine($"Removed: {contextName}");
         }
 
         /// <inheritdoc/>

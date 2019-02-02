@@ -59,7 +59,7 @@ USAGE:
                 return;
             }
 
-            Console.WriteLine($"Logging out of [{KubeHelper.CurrentContext.Name}].");
+            Console.WriteLine($"Logging out of: {KubeHelper.CurrentContext.Name}");
             KubeHelper.SetCurrentContext((string)null);
             Console.WriteLine("");
         }
