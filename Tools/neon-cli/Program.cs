@@ -65,6 +65,7 @@ COMMAND SUMMARY:
     neon cluster setup      [CLUSTER-DEF]
     neon login              COMMAND
     neon logout
+    neon password           COMMAND
     neon version            [-n] [--git]
 
 ARGUMENTS:
@@ -180,6 +181,13 @@ OPTIONS:
                     new LoginListCommand(),
                     new LoginRemoveCommand(),
                     new LogoutCommand(),
+                    new PasswordCommand(),
+                    new PasswordExportCommand(),
+                    new PasswordGenerateCommand(),
+                    new PasswordImportCommand(),
+                    new PasswordListCommand(),
+                    new PasswordRemoveCommand(),
+                    new PasswordSetCommand(),
                     new VersionCommand()
                 };
 

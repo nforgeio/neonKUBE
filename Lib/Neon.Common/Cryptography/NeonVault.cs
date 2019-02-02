@@ -225,7 +225,31 @@ namespace Neon.Cryptography
         }
 
         //---------------------------------------------------------------------
-        // Implementation
+        // Static members
+
+        /// <summary>
+        /// Ensures that a password name is valid.
+        /// </summary>
+        /// <param name="passwordName">The password name.</param>
+        /// <returns>The password name converted to lowercase.</returns>
+        /// <exception cref="NeonVaultException">Thrown if the name is invalid.</exception>
+        public static string ValidatePasswordName(string passwordName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(passwordName));
+
+            foreach (var ch in passwordName)
+            {
+                if (!char.IsLetterOrDigit(ch) && ch != '.' && ch != '-' && ch != '_')
+                {
+                    throw new NeonVaultException($"Password name [{passwordName}] contains invalid characters.  Only letters, digits, underscores, dashs and dots are allowed.");
+                }
+            }
+
+            return passwordName.ToLowerInvariant();
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         private Func<string, string> passwordProvider;
 
@@ -258,15 +282,7 @@ namespace Neon.Cryptography
                     throw new ArgumentNullException(nameof(passwordName));
                 }
 
-                passwordName = passwordName.ToLowerInvariant();
-
-                foreach (var ch in passwordName)
-                {
-                    if (!char.IsLetterOrDigit(ch) && ch != '.' && ch != '-' && ch != '_')
-                    {
-                        throw new NeonVaultException($"Password name [{passwordName}] contains invalid characters.  Only letters, digits, underscores, dashs and dots are allowed.");
-                    }
-                }
+                passwordName = ValidatePasswordName(passwordName);
 
                 return passwordProvider(passwordName);
             }

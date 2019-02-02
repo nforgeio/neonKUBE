@@ -1,0 +1,154 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    PasswordImportCommand.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+using ICSharpCode.SharpZipLib.Zip;
+using Newtonsoft;
+using Newtonsoft.Json;
+
+using Neon.Common;
+using Neon.Cryptography;
+using Neon.Kube;
+
+namespace NeonCli
+{
+    /// <summary>
+    /// Implements the <b>password import</b> command.
+    /// </summary>
+    public class PasswordImportCommand : CommandBase
+    {
+        private const string usage = @"
+Imports passwords from an encrypted ZIP file.
+
+USAGE:
+
+    neon password import [--stdin] PATH
+
+ARGUMENTS:
+
+    PATH        - Path to the input ZIP archive.
+
+OPTIONS:
+
+    --stdin     - Read the ZIP archive password from STDIN
+                  rather then prompting for it.
+
+REMARKS:
+
+This command reads and saves passwords from an encrypted
+ZIP archive.
+";
+
+        /// <inheritdoc/>
+        public override string[] Words
+        {
+            get { return new string[] { "password", "import" }; }
+        }
+
+        /// <inheritdoc/>
+        public override void Help()
+        {
+            Console.WriteLine(usage);
+        }
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions
+        {
+            get { return new string[] { "--stdin" }; }
+        }
+
+        /// <inheritdoc/>
+        public override void Run(CommandLine commandLine)
+        {
+            if (commandLine.HasHelpOption)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(0);
+            }
+
+            var zipPath       = commandLine.Arguments.ElementAtOrDefault(0);
+            var fromStdin     = commandLine.HasOption("--stdin");
+            var zipPassword   = (string)null;
+            var passwordCount = 0;
+
+            if (zipPath == null)
+            {
+                Console.Error.WriteLine("*** ERROR: PATH argument is required.");
+                Program.Exit(1);
+            }
+
+            if (!File.Exists(zipPath))
+            {
+                Console.Error.WriteLine($"*** ERROR: File [{zipPath}] does not exist.");
+                Program.Exit(1);
+            }
+
+            if (fromStdin)
+            {
+                // Read the password from STDIN and trim.
+
+                using (var stdin = Console.OpenStandardInput())
+                {
+                    using (var reader = new StreamReader(stdin))
+                    {
+                        zipPassword = reader.ReadLine().Trim();
+                    }
+                }
+            }
+            else
+            {
+                zipPassword = NeonHelper.ReadConsolePassword("ZIP Password: ");
+            }
+
+            using (var input = new FileStream(zipPath, FileMode.Open, FileAccess.ReadWrite))
+            {
+                using (var zip = new ZipFile(input))
+                {
+                    if (!string.IsNullOrWhiteSpace(zipPassword))
+                    {
+                        zip.Password = zipPassword;
+                    }
+
+                    foreach (ZipEntry zipEntry in zip)
+                    {
+                        if (!zipEntry.IsFile)
+                        {
+                            continue;
+                        }
+
+                        passwordCount++;
+
+                        using (var zipStream = zip.GetInputStream(zipEntry))
+                        {
+                            using (var passwordStream = new FileStream(Path.Combine(KubeHelper.PasswordsFolder, zipEntry.Name), FileMode.Create, FileAccess.ReadWrite))
+                            {
+                                zipStream.CopyTo(passwordStream);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine($"[{passwordCount}] passwords imported.");
+            Program.Exit(0);
+        }
+
+        /// <inheritdoc/>
+        public override DockerShimInfo Shim(DockerShim shim)
+        {
+            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: false);
+        }
+    }
+}

@@ -100,7 +100,6 @@ OPTIONS:
         private const string logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
         private const string logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
 
-        private KubeConfig              kubeConfig;
         private KubeConfigContext       kubeContext;
         private KubeContextExtension    kubeContextExtension;
         private ClusterProxy            cluster;

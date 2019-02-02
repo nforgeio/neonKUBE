@@ -285,6 +285,22 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns path to the folder holding the encryption passwords.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string PasswordsFolder
+        {
+            get
+            {
+                var path = Path.Combine(GetNeonKubeUserFolder(), "passwords");
+
+                Directory.CreateDirectory(path);
+
+                return path;
+            }
+        }
+
+        /// <summary>
         /// Returns the path the folder containing cached files for various environments.
         /// </summary>
         /// <returns>The folder path.</returns>
