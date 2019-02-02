@@ -62,7 +62,7 @@ USAGE:
                 Program.Exit(0);
             }
 
-            foreach (var path in Directory.GetFiles(KubeHelper.PasswordsFolder))
+            foreach (var path in Directory.GetFiles(KubeHelper.PasswordsFolder).OrderBy(p => p.ToLowerInvariant()))
             {
                 Console.WriteLine(Path.GetFileName(path));
             }
