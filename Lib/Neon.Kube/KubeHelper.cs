@@ -44,7 +44,7 @@ namespace Neon.Kube
 
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static string               orgKUBECONFIG;
-        private static string               mockFolder;
+        private static string               testFolder;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
         private static HeadendClient        cachedHeadendClient;
@@ -84,16 +84,16 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Puts <see cref="KubeHelper"/> into mock mode to support unit testing.  This
+        /// Puts <see cref="KubeHelper"/> into test mode to support unit testing.  This
         /// changes the folders where Kubernetes and neonKUBE persists their state to
         /// directories beneath the folder passed.  This also modifies the KUBECONFIG
         /// environment variable to reference the new location.
         /// </summary>
-        public static void SetMockMode(string folder)
+        public static void SetTestMode(string folder)
         {
-            if (MockMode)
+            if (IsTestMode)
             {
-                throw new InvalidOperationException("Already running in mock mode.");
+                throw new InvalidOperationException("Already running in test mode.");
             }
 
             if (!Directory.Exists(folder))
@@ -103,22 +103,22 @@ namespace Neon.Kube
 
             ClearCachedItems();
 
-            mockFolder = folder;
+            testFolder = folder;
         }
 
         /// <summary>
-        /// Resets the mock mode, restoring normal operation.
+        /// Resets the test mode, restoring normal operation.
         /// </summary>
-        public static void ClearMockMode()
+        public static void ClearTestMode()
         {
             ClearCachedItems();
-            mockFolder = null;
+            testFolder = null;
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the class is running in mock mode.
+        /// Returns <c>true</c> if the class is running in test mode.
         /// </summary>
-        public static bool MockMode => mockFolder != null;
+        public static bool IsTestMode => testFolder != null;
 
         /// <summary>
         /// Encrypts a file or directory when supported by the underlying operating system
@@ -217,9 +217,9 @@ namespace Neon.Kube
                 return cachedNeonKubeUserFolder;
             }
 
-            if (MockMode)
+            if (IsTestMode)
             {
-                cachedNeonKubeUserFolder = Path.Combine(mockFolder, ".neonkube");
+                cachedNeonKubeUserFolder = Path.Combine(testFolder, ".neonkube");
 
                 Directory.CreateDirectory(cachedNeonKubeUserFolder);
 
@@ -285,9 +285,9 @@ namespace Neon.Kube
                 return cachedKubeUserFolder;
             }
 
-            if (MockMode)
+            if (IsTestMode)
             {
-                cachedKubeUserFolder = Path.Combine(mockFolder, ".kube");
+                cachedKubeUserFolder = Path.Combine(testFolder, ".kube");
 
                 Directory.CreateDirectory(cachedKubeUserFolder);
 

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TestHelper.cs
+// FILE:	    KubeTestManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -19,24 +19,25 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestKube
+namespace Neon.Xunit.Kube
 {
     /// <summary>
-    /// Creates a temporary folder and puts <see cref="KubeHelper"/> into mock mode.
-    /// <see cref="Dispose"/> revers mock mode and deletes the folder.
+    /// Creates a temporary folder and puts <see cref="KubeHelper"/> into test mode
+    /// to support <b>neon-cli</b> unit testing.  <see cref="Dispose"/> reverts the 
+    /// test mode and deletes the temporary folder.
     /// </summary>
-    public sealed class KubeMock : IDisposable
+    public sealed class KubeTestManager : IDisposable
     {
         private TempFolder tempFolder;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public KubeMock()
+        public KubeTestManager()
         {
             tempFolder = new TempFolder();
 
-            KubeHelper.SetMockMode(tempFolder.Path);
+            KubeHelper.SetTestMode(tempFolder.Path);
         }
 
         /// <inheritdoc/>
@@ -44,7 +45,7 @@ namespace TestKube
         {
             if (tempFolder != null)
             {
-                KubeHelper.ClearMockMode();
+                KubeHelper.ClearTestMode();
                 tempFolder.Dispose();
 
                 tempFolder = null;

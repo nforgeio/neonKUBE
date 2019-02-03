@@ -363,7 +363,7 @@ namespace TestKube
                 dockerArgs:
                     new string[]
                     {
-                        "--secret", $"source=secret-1,target=secret,uid={TestHelper.TestUID},gid={TestHelper.TestGID},mode=0444",
+                        "--secret", $"source=secret-1,target=secret,uid={KubeTestHelper.TestUID},gid={KubeTestHelper.TestGID},mode=0444",
                     });
 
             var info    = fixture.ListServices().Single(s => s.Name == "test");
@@ -376,8 +376,8 @@ namespace TestKube
             Assert.NotEmpty(secret.SecretID);
             Assert.Equal("secret-1", secret.SecretName);
             Assert.Equal("secret", secret.File.Name);
-            Assert.Equal(TestHelper.TestUID, secret.File.UID);
-            Assert.Equal(TestHelper.TestGID, secret.File.GID);
+            Assert.Equal(KubeTestHelper.TestUID, secret.File.UID);
+            Assert.Equal(KubeTestHelper.TestGID, secret.File.GID);
             Assert.Equal(Convert.ToInt32("444", 8), secret.File.Mode);
         }
 
@@ -391,7 +391,7 @@ namespace TestKube
                 dockerArgs:
                     new string[]
                     {
-                        "--config", $"source=config-1,target=/my-config,uid={TestHelper.TestUID},gid={TestHelper.TestGID},mode=0444",
+                        "--config", $"source=config-1,target=/my-config,uid={KubeTestHelper.TestUID},gid={KubeTestHelper.TestGID},mode=0444",
                     });
 
             var info    = fixture.ListServices().Single(s => s.Name == "test");
@@ -404,8 +404,8 @@ namespace TestKube
             Assert.NotEmpty(config.ConfigID);
             Assert.Equal("config-1", config.ConfigName);
             Assert.Equal("/my-config", config.File.Name);
-            Assert.Equal(TestHelper.TestUID, config.File.UID);
-            Assert.Equal(TestHelper.TestGID, config.File.GID);
+            Assert.Equal(KubeTestHelper.TestUID, config.File.UID);
+            Assert.Equal(KubeTestHelper.TestGID, config.File.GID);
             Assert.Equal(Convert.ToInt32("444", 8), config.File.Mode);
         }
 

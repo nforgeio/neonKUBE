@@ -147,21 +147,17 @@ OPTIONS:
 
                 var validOptions = new HashSet<string>();
 
+                validOptions.Add("--debug");
+                validOptions.Add("--help");
+                validOptions.Add("--log-folder");
                 validOptions.Add("--machine-username");
                 validOptions.Add("--machine-password");
-                validOptions.Add("--log-folder");
-                validOptions.Add("-q");
-                validOptions.Add("--quiet");
                 validOptions.Add("-m");
                 validOptions.Add("--max-parallel");
+                validOptions.Add("-q");
+                validOptions.Add("--quiet");
                 validOptions.Add("-w");
                 validOptions.Add("--wait");
-                validOptions.Add("--image-reg");
-                validOptions.Add("--image-tag");
-                validOptions.Add("--noterminal");
-                validOptions.Add("--version");
-                validOptions.Add("--debug");
-                validOptions.Add("--shim");
 
                 if (CommandLine.Arguments.Length == 0)
                 {
@@ -519,8 +515,6 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
                 if (command.CheckOptions)
                 {
                     // Ensure that there are no unexpected command line options.
-
-                    validOptions.Add("--help");
 
                     foreach (var optionName in command.ExtendedOptions)
                     {
