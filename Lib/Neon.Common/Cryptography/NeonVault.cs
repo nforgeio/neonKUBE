@@ -235,7 +235,10 @@ namespace Neon.Cryptography
         /// <exception cref="NeonVaultException">Thrown if the name is invalid.</exception>
         public static string ValidatePasswordName(string passwordName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(passwordName));
+            if (string.IsNullOrEmpty(passwordName))
+            {
+                throw new NeonVaultException("Password name cannot be empty.");
+            }
 
             foreach (var ch in passwordName)
             {

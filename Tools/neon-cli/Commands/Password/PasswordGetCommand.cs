@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PasswordListCommand.cs
+// FILE:	    PasswordGetCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -23,28 +23,26 @@ using Neon.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>password list</b> command.
+    /// Implements the <b>password get</b> command.
     /// </summary>
-    public class PasswordListCommand : CommandBase
+    public class PasswordGetCommand : CommandBase
     {
         private const string usage = @"
-Lists passwords.
+Returns the current value of an named password.
 
 USAGE:
 
-    neon password list|ls
+    neon password get NAME
+
+ARGUMENTS:
+
+    NAME        - The password name
 ";
 
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "password", "list" }; }
-        }
-
-        /// <inheritdoc/>
-        public override string[] AltWords
-        {
-            get { return new string[] { "password", "ls" }; }
+            get { return new string[] { "password", "get" }; }
         }
 
         /// <inheritdoc/>
@@ -62,11 +60,24 @@ USAGE:
                 Program.Exit(0);
             }
 
-            foreach (var path in Directory.GetFiles(KubeHelper.PasswordsFolder).OrderBy(p => p.ToLowerInvariant()))
+            var nameArg = commandLine.Arguments.ElementAtOrDefault(0);
+
+            if (nameArg == null)
             {
-                Console.WriteLine(Path.GetFileName(path));
+                Console.Error.WriteLine($"*** ERROR: NAME argument is required.");
+                Program.Exit(1);
             }
 
+            var passwordName = NeonVault.ValidatePasswordName(nameArg);
+            var path         = Path.Combine(KubeHelper.PasswordsFolder, passwordName);
+
+            if (!File.Exists(path))
+            {
+                Console.Error.WriteLine($"*** ERROR: Password [{passwordName}] not found.");
+                Program.Exit(1);
+            }
+
+            Console.Write(File.ReadAllText(path));
             Program.Exit(0);
         }
 

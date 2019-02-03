@@ -34,7 +34,7 @@ USAGE:
     neon password
     neon password export PATH NAME...
     neon password export PATH *
-    neon password generate|gen [LENGTH]
+    neon password generate [LENGTH]
     neon password import PATH
     neon password list|ls
     neon password remove|rm NAME
@@ -65,6 +65,14 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
+            var command = commandLine.Arguments.ElementAtOrDefault(0);
+
+            if (command != null)
+            {
+                Console.Error.WriteLine($"*** ERROR: Unknown command: {command}");
+                Program.Exit(1);
+            }
+
             Console.WriteLine(usage);
         }
 

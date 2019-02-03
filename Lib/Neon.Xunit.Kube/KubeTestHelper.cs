@@ -105,31 +105,50 @@ namespace Neon.Xunit.Kube
         }
 
         /// <summary>
+        /// Returns the path to the <b>neon-cli</b> executable.
+        /// </summary>
+        private static string NeonExePath
+        {
+            get
+            {
+                // We're going to run the command from the NF_BUILD directory.
+
+                var buildFolder = Environment.GetEnvironmentVariable("NF_BUILD");
+
+                if (string.IsNullOrEmpty(buildFolder))
+                {
+                    throw new Exception("The NF_BUILD environment variable is not defined.");
+                }
+
+                if (NeonHelper.IsWindows)
+                {
+                    return Path.Combine(buildFolder, "neon.cmd");
+                }
+                else
+                {
+                    return Path.Combine(buildFolder, "neon");
+                }
+            }
+        }
+
+        /// <summary>
         /// Executes <b>neon-cli</b> passing optional individual arguments.
         /// </summary>
         /// <param name="args">The command arguments.</param>
         /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        public static ExecuteResult Neon(params object[] args)
+        public static ExecuteResult NeonExec(params object[] args)
         {
-            // We're going to run the command from the NF_BUILD directory.
+            return NeonExec(NeonHelper.NormalizeExecArgs(args));
+        }
 
-            var buildFolder = Environment.GetEnvironmentVariable("NF_BUILD");
-
-            if (string.IsNullOrEmpty(buildFolder))
-            {
-                throw new Exception("The NF_BUILD environment variable is not defined.");
-            }
-
-            string neonPath;
-
-            if (NeonHelper.IsWindows)
-            {
-                neonPath = Path.Combine(buildFolder, "neon.cmd");
-            }
-            else
-            {
-                neonPath = Path.Combine(buildFolder, "neon");
-            }
+        /// <summary>
+        /// Executes <b>neon-cli</b> passing all arguments as a string.
+        /// </summary>
+        /// <param name="args">The command arguments.</param>
+        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        public static ExecuteResult NeonExec(string args)
+        {
+            var neonPath = NeonExePath;
 
             if (!File.Exists(neonPath))
             {
@@ -140,38 +159,51 @@ namespace Neon.Xunit.Kube
         }
 
         /// <summary>
-        /// Executes <b>neon-cli</b> passing all arguments as a string.
+        /// Executes <b>neon-cli</b> passing text as STDIN and also passing all 
+        /// arguments as a string.
         /// </summary>
+        /// <param name="stdIn">The text to be passed as STDIN.</param>
         /// <param name="args">The command arguments.</param>
         /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        public static ExecuteResult Neon(string args)
+        public static ExecuteResult NeonExecStdin(string stdIn, params object[] args)
         {
-            // We're going to run the command from the NF_BUILD directory.
+            return NeonExecStdin(NeonHelper.NormalizeExecArgs(args));
+        }
 
-            var buildFolder = Environment.GetEnvironmentVariable("NF_BUILD");
+        /// <summary>
+        /// Executes <b>neon-cli</b> passing text as STDIN and also passing all 
+        /// arguments as a string.
+        /// </summary>
+        /// <param name="inputText">The text to be passed as STDIN.</param>
+        /// <param name="args">The command arguments.</param>
+        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        public static ExecuteResult NeonExecStdin(string inputText, string args)
+        {
+            Covenant.Requires<ArgumentNullException>(inputText != null);
 
-            if (string.IsNullOrEmpty(buildFolder))
+            using (var tempFolder = new TempFolder())
             {
-                throw new Exception("The NF_BUILD environment variable is not defined.");
-            }
+                var inputPath = Path.Combine(tempFolder.Path, "input");
 
-            string neonPath;
+                File.WriteAllText(inputPath, inputText);
 
-            if (NeonHelper.IsWindows)
-            {
-                neonPath = Path.Combine(buildFolder, "neon.cmd");
-            }
-            else
-            {
-                neonPath = Path.Combine(buildFolder, "neon");
-            }
+                if (NeonHelper.IsWindows)
+                {
+                    var scriptPath = Path.Combine(tempFolder.Path, "script.cmd");
 
-            if (!File.Exists(neonPath))
-            {
-                throw new Exception($"The [neon-cli] executable does not exist at [{neonPath}].");
-            }
+                    File.WriteAllText(scriptPath, $"cat \"{inputPath}\" | \"{NeonExePath}\" {args}");
 
-            return NeonHelper.ExecuteCapture(neonPath, args);
+                    return NeonHelper.ExecuteCapture(scriptPath, new object[0]);
+                }
+                else
+                {
+                    var scriptPath = Path.Combine(tempFolder.Path, "script.sh");
+
+                    File.WriteAllText(scriptPath, $"cat \"{inputPath}\" | \"{NeonExePath}\" {args}");
+
+                    return NeonHelper.ExecuteCapture($"bash {scriptPath}", new object[0]);
+                }
+            }
         }
     }
 }

@@ -49,12 +49,6 @@ The generated password will be written to standard output.
         }
 
         /// <inheritdoc/>
-        public override string[] AltWords
-        {
-            get { return new string[] { "password", "gen" }; }
-        }
-
-        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);

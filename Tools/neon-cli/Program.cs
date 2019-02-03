@@ -180,6 +180,7 @@ OPTIONS:
                     new PasswordCommand(),
                     new PasswordExportCommand(),
                     new PasswordGenerateCommand(),
+                    new PasswordGetCommand(),
                     new PasswordImportCommand(),
                     new PasswordListCommand(),
                     new PasswordRemoveCommand(),

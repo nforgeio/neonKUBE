@@ -82,6 +82,7 @@ namespace Neon.Xunit.Kube
                 tempFolder.Dispose();
 
                 tempFolder = null;
+                Current    = null;
             }
         }
 
