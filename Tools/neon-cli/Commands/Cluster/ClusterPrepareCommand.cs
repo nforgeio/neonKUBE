@@ -405,7 +405,7 @@ Server Requirements:
 
             // Persist the cluster context extension.
 
-            var contextExtensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeHelper.RootUser}@{clusterDefinition.Name}");
+            var contextExtensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
             var contextExtension      = new KubeContextExtension(contextExtensionsPath)
             {
                 ClusterDefinition = clusterDefinition,

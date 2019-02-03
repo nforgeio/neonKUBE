@@ -28,16 +28,49 @@ namespace Neon.Xunit.Kube
     /// </summary>
     public sealed class KubeTestManager : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static object syncLock = new object();
+
+        /// <summary>
+        /// Returns the current test manager.
+        /// </summary>
+        public static KubeTestManager Current { get; private set; }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private TempFolder tempFolder;
 
         /// <summary>
         /// Constructor.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if another test manager instance is active.</exception>
         public KubeTestManager()
         {
-            tempFolder = new TempFolder();
+            lock (syncLock)
+            {
+                if (Current != null)
+                {
+                    throw new InvalidOperationException("Another test manager is active.");
+                }
 
-            KubeHelper.SetTestMode(tempFolder.Path);
+                try
+                {
+                    tempFolder = new TempFolder();
+                    Current    = this;
+
+                    KubeHelper.SetTestMode(tempFolder.Path);
+                    Environment.SetEnvironmentVariable(KubeConst.TestModeFolderVar, tempFolder.Path);
+                }
+                catch
+                {
+                    Environment.SetEnvironmentVariable(KubeConst.TestModeFolderVar, null);
+                    Current = null;
+                    throw;
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -45,11 +78,16 @@ namespace Neon.Xunit.Kube
         {
             if (tempFolder != null)
             {
-                KubeHelper.ClearTestMode();
+                KubeHelper.ResetTestMode();
                 tempFolder.Dispose();
 
                 tempFolder = null;
             }
         }
+
+        /// <summary>
+        /// Returns the path to the temporary test folder.
+        /// </summary>
+        public string TestFolder => tempFolder?.Path;
     }
 }

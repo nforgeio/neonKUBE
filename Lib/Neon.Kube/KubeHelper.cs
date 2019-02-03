@@ -37,11 +37,6 @@ namespace Neon.Kube
     /// </summary>
     public static partial class KubeHelper
     {
-        /// <summary>
-        /// The root Kubernetes context username for provisioned clusters. 
-        /// </summary>
-        public const string RootUser = "root";
-
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static string               orgKUBECONFIG;
         private static string               testFolder;
@@ -54,6 +49,23 @@ namespace Neon.Kube
         private static string               cachedClustersFolder;
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static KubeHelper()
+        {
+            // Check if we need to run in test mode.
+
+            var folder = Environment.GetEnvironmentVariable(KubeConst.TestModeFolderVar);
+
+            if (!string.IsNullOrEmpty(folder))
+            {
+                // Yep: this is test mode.
+
+                testFolder = folder;
+            }
+        }
 
         /// <summary>
         /// Clears all cached items.
@@ -91,6 +103,8 @@ namespace Neon.Kube
         /// </summary>
         public static void SetTestMode(string folder)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder));
+
             if (IsTestMode)
             {
                 throw new InvalidOperationException("Already running in test mode.");
@@ -103,14 +117,23 @@ namespace Neon.Kube
 
             ClearCachedItems();
 
-            testFolder = folder;
+            testFolder    = folder;
+            orgKUBECONFIG = Environment.GetEnvironmentVariable("KUBECONFIG");
+
+            Environment.SetEnvironmentVariable("KUBECONFIG", Path.Combine(testFolder, ".kube", "config"));
         }
 
         /// <summary>
         /// Resets the test mode, restoring normal operation.
         /// </summary>
-        public static void ClearTestMode()
+        /// <exception cref="InvalidOperationException">Thrown if a parent process set test mode.</exception>
+        public static void ResetTestMode()
         {
+            if (string.IsNullOrEmpty(orgKUBECONFIG))
+            {
+                throw new InvalidOperationException("Cannot reset test mode because that was set by a parent process.");
+            }
+
             ClearCachedItems();
             testFolder = null;
         }
