@@ -19,6 +19,10 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
+// $todo(jeff.lill): 
+//
+// We're not currently testing prompting actions by these commands.
+
 namespace Test.NeonCli
 {
     /// <summary>
@@ -471,6 +475,115 @@ pwd-2
 pwd-3
 ",
                     result.OutputText);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void PasswordImportExport()
+        {
+            const string zipPassword = "zip-password";
+
+            ExecuteResult result;
+
+            using (var manager = new KubeTestManager())
+            {
+                // Verify that [import --help] works:
+
+                result = KubeTestHelper.NeonExec("password import --help");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Contains("Imports passwords from an encrypted ZIP file.", result.OutputText);
+
+                // Verify that [import] checks the PATH argument.
+
+                result = KubeTestHelper.NeonExec("password import");
+                Assert.NotEqual(0, result.ExitCode);
+                Assert.Contains("PATH argument is required.", result.ErrorText);
+
+                // Verify that [export --help] works:
+
+                result = KubeTestHelper.NeonExec("password export --help");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Contains("Exports selected passwords to an encrypted ZIP file.", result.OutputText);
+
+                // Verify that [export] checks the PATH argument.
+
+                result = KubeTestHelper.NeonExec("password export");
+                Assert.NotEqual(0, result.ExitCode);
+                Assert.Contains("PATH argument is required.", result.ErrorText);
+
+                // Verify that [export] checks the NAME argument.
+
+                result = KubeTestHelper.NeonExec("password export test.zip");
+                Assert.NotEqual(0, result.ExitCode);
+                Assert.Contains("At least one NAME argument is required.", result.ErrorText);
+
+                // Add a few passwords:
+
+                result = KubeTestHelper.NeonExec("password rm --force *");
+                Assert.Equal(0, result.ExitCode);
+
+                result = KubeTestHelper.NeonExecStdin("one", "password set pwd-1 -");
+                Assert.Equal(0, result.ExitCode);
+
+                result = KubeTestHelper.NeonExecStdin("two", "password set pwd-2 -");
+                Assert.Equal(0, result.ExitCode);
+
+                result = KubeTestHelper.NeonExecStdin("three", "password set pwd-3 -");
+                Assert.Equal(0, result.ExitCode);
+
+                // Export all passwords to a ZIP file:
+
+                var zipPath = Path.Combine(manager.TestFolder, "passwords.zip");
+
+                result = KubeTestHelper.NeonExecStdin(zipPassword, "password", "export", "--stdin", zipPath, "*");
+                Assert.Equal(0, result.ExitCode);
+                Assert.True(File.Exists(zipPath));
+
+                // Remove all passwords, import the passwords using a zip password file, and verify.
+
+                result = KubeTestHelper.NeonExec("password rm --force *");
+                Assert.Equal(0, result.ExitCode);
+
+                result = KubeTestHelper.NeonExecStdin(zipPassword, "password", "import", "--stdin", zipPath);
+                Assert.Equal(0, result.ExitCode);
+
+                result = KubeTestHelper.NeonExec("password get pwd-1");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Equal("one", result.OutputText.Trim());
+
+                result = KubeTestHelper.NeonExec("password get pwd-2");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Equal("two", result.OutputText.Trim());
+
+                result = KubeTestHelper.NeonExec("password get pwd-3");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Equal("three", result.OutputText.Trim());
+
+                // Export two of the three passwords to a ZIP file:
+
+                result = KubeTestHelper.NeonExecStdin(zipPassword, "password", "export", "--stdin", zipPath, "pwd-1", "pwd-2");
+                Assert.Equal(0, result.ExitCode);
+                Assert.True(File.Exists(zipPath));
+
+                // Remove all passwords, import the passwords using a zip password file, and verify.
+
+                result = KubeTestHelper.NeonExec("password rm --force *");
+                Assert.Equal(0, result.ExitCode);
+
+                result = KubeTestHelper.NeonExecStdin(zipPassword, "password", "import", "--stdin", zipPath);
+                Assert.Equal(0, result.ExitCode);
+
+                result = KubeTestHelper.NeonExec("password get pwd-1");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Equal("one", result.OutputText.Trim());
+
+                result = KubeTestHelper.NeonExec("password get pwd-2");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Equal("two", result.OutputText.Trim());
+
+                result = KubeTestHelper.NeonExec("password get pwd-3");
+                Assert.NotEqual(0, result.ExitCode);    // This one wasn't exported.
             }
         }
     }

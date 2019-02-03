@@ -96,7 +96,7 @@ instead.
 
             if (firstName == null)
             {
-                Console.Error.WriteLine("*** ERROR: At least NAME argument is required.");
+                Console.Error.WriteLine("*** ERROR: At least one NAME argument is required.");
                 Program.Exit(1);
             }
 
@@ -146,18 +146,21 @@ instead.
 
         retryPassword:
 
-            if (string.IsNullOrEmpty(zipPassword))
+            if (!fromStdin)
             {
-                zipPassword = NeonHelper.ReadConsolePassword("Enter Password:   ");
-            }
+                if (string.IsNullOrEmpty(zipPassword))
+                {
+                    zipPassword = NeonHelper.ReadConsolePassword("Enter Password:   ");
+                }
 
-            if (!fromStdin && !string.IsNullOrEmpty(zipPassword) && zipPassword != NeonHelper.ReadConsolePassword("Confirm Password: "))
-            {
-                Console.WriteLine();
-                Console.WriteLine("The passwords don't match.  Please try again.");
-                Console.WriteLine();
+                if (!string.IsNullOrEmpty(zipPassword) && zipPassword != NeonHelper.ReadConsolePassword("Confirm Password: "))
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("The passwords don't match.  Please try again:");
+                    Console.WriteLine();
 
-                goto retryPassword;
+                    goto retryPassword;
+                }
             }
 
             using (var zip = ZipFile.Create(zipPath))

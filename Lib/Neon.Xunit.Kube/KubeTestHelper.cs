@@ -167,7 +167,7 @@ namespace Neon.Xunit.Kube
         /// <returns>The <see cref="ExecuteResult"/>.</returns>
         public static ExecuteResult NeonExecStdin(string stdIn, params object[] args)
         {
-            return NeonExecStdin(NeonHelper.NormalizeExecArgs(args));
+            return NeonExecStdin(stdIn, NeonHelper.NormalizeExecArgs(args));
         }
 
         /// <summary>
