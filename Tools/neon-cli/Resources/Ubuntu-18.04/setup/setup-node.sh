@@ -14,6 +14,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
+# limitations under the License.
 
 # NOTE: This script must be run under [sudo].
 #
@@ -439,6 +440,7 @@ cat <<EOF >> /etc/systemd/journald.conf
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
+# limitations under the License.
 
 # Configure the systemd journal to perist the journal to the file system at
 # [/var/log/journal].
@@ -509,6 +511,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neonkube-cleaner
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
+# limitations under the License.
 
 # This is a simple service script that periodically cleans accumulated files
 # on the host node including:

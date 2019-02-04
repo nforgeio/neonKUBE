@@ -13,6 +13,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
+# limitations under the License.
 
 # Builds the base Ubuntu 16.04 image by applying all current package updates to the 
 # base Ubuntu image and then adds some handy packages.

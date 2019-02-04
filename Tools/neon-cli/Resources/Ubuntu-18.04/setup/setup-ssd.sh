@@ -14,6 +14,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
+# limitations under the License.
 
 # NOTE: This script must be run under [sudo].
 #
@@ -89,6 +90,7 @@ if ! ${NEON_NODE_HDD} ; then
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
+# limitations under the License.
 
 # This script is generated during setup by [setup-ssd.sh] to execute
 # the commands necessary to properly tune any attached SSDs
