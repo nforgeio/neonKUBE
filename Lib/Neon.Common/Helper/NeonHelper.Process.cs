@@ -687,38 +687,7 @@ namespace Neon.Common
 
             if (IsWindows)
             {
-                // $todo(jeff.lill):
-                //
-                // Firefox manages its own certificate store and does not trust Windows/OSX
-                // certificates by default.  It looks like it is possible to configure
-                // Firefox to trust the platform certificates but it then complained about
-                // he certificate being self-signed, even though it was in the store.
-                // store.
-                //
-                // I tried using Microsoft Edge but that didn't work either due to
-                // apparent timing problems when reading the hosts file.  I'm going
-                // to mitigate the issue by requiring and launching Chrome instead.
-                //
-                // Here's the tracking issue:
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/282
-
-                // This code launches the default browser"
-                //
-                //      Process.Start("cmd", $"/C start {uri}");
-
-                // This code launched Microsoft Edge:
-                //
-                //      Process.Start("cmd", $"/C start microsoft-edge:{uri}");
-
-                var chromePath = Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%\\Google\\Chrome\\application\\chrome.exe"); ;
-
-                if (!File.Exists(chromePath))
-                {
-                    throw new Exception("Google Chrome is required.  Please install this from: https://www.google.com/chrome");
-                }
-
-                Process.Start(chromePath, uri);
+                Process.Start("cmd", $"/C start {uri}");
             }
             else if (IsOSX)
             {
