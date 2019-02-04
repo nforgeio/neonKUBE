@@ -53,7 +53,7 @@ Follow the steps below to configure a development or test workstation:
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   
-8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonFORGE applications and services, **Visual Studio must be running with elevated privileges**.
+8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonLKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
 9. Install **Docker for Windows** from [here](https://store.docker.com/editions/community/docker-ce-desktop-windows)
 
@@ -80,9 +80,9 @@ Follow the steps below to configure a development or test workstation:
 12. **Clone** the source repository on your workstation:
 
   * Create an individual Github account [here](https://github.com/join?source=header-home) if you don't already have one
-  * Have one of the neonFORGE repository administrators **grant you access** to the repository
+  * Have one of the neonKUBE repository administrators **grant you access** to the repository
   * Go to [GitHub](http://github.com) and log into your account
-  * Go to the neonFORGE [repository](https://github.com/jefflill/neonFORGE).
+  * Go to the neonKUBE [repository](https://github.com/nforgeio/neonKUBE).
   * Click the *green* **Clone or download** button and select **Open in Visual Studio**
   * A *Launch Application* dialog will appear.  Select **Microsoft Visual Studio Protocol Handler Selector** and click **Open Link**
   * Choose or enter the directory where the repository will be cloned.  This defaults to a user-specific folder.  I typically change this to a global folder to keep the file paths short.
@@ -103,14 +103,14 @@ Follow the steps below to configure a development or test workstation:
 
 16. Restart Visual Studio (to pick up any environment changes).
 
-17. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
+17. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonKUBE **DEVOPS Password** when prompted):
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon ansible password import %NF_ROOT%\passwords.zip`
 
 18. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
-  * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
+  * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
 19. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
