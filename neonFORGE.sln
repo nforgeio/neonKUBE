@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		.gitignore = .gitignore
 		buildenv.cmd = buildenv.cmd
 		global.json = global.json
+		LICENSE = LICENSE
 		nuget-version.txt = nuget-version.txt
 		passwords.zip = passwords.zip
 		README.md = README.md
@@ -147,7 +148,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt", "wrt", "{68D2B92F-A5C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Kube", "Test\Test.Neon.Kube\Test.Neon.Kube.csproj", "{41302EE4-1607-4BE1-A2C6-C881C3D05740}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.NeonCli", "Test\Test.NeonCli\Test.NeonCli.csproj", "{BA132F50-1C79-4FF4-A596-16BBC7CD6BAC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.NeonCli", "Test\Test.NeonCli\Test.NeonCli.csproj", "{BA132F50-1C79-4FF4-A596-16BBC7CD6BAC}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
