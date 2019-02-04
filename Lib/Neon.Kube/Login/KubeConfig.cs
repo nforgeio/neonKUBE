@@ -66,11 +66,11 @@ namespace Neon.Kube
 
                     if (File.Exists(extensionPath))
                     {
-                        context.Properties.Extension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(extensionPath));
+                        context.Extensions = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(extensionPath));
                     }
                     else
                     {
-                        context.Properties.Extension = new KubeContextExtension();
+                        context.Extensions = new KubeContextExtension();
                     }
                 }
                 
@@ -432,11 +432,11 @@ namespace Neon.Kube
 
                 // Persist any context extensions.
 
-                foreach (var context in Contexts.Where(c => c.Properties.Extension != null))
+                foreach (var context in Contexts.Where(c => c.Extensions != null))
                 {
                     var extensionPath = Path.Combine(KubeHelper.ClustersFolder, $"{context.Name}.context.yaml");
 
-                    File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Properties.Extension));
+                    File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Extensions));
                 }
 
                 // Delete any existing context extension files that don't have a corresponding

@@ -34,7 +34,6 @@ namespace Neon.Kube
         /// </summary>
         public KubeConfigContextProperties()
         {
-            Extension = new KubeContextExtension();
         }
 
         /// <summary>
@@ -60,12 +59,5 @@ namespace Neon.Kube
         [YamlMember(Alias = "user", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string User { get; set; }
-
-        /// <summary>
-        /// Specifies neonKUBE related extensions associated with the context.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        public KubeContextExtension Extension { get; set; }
     }
 }

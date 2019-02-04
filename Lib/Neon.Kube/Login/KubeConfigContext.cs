@@ -29,7 +29,8 @@ namespace Neon.Kube
     /// </summary>
     public class KubeConfigContext
     {
-        private KubeContextExtension cachedExtension;
+        private bool                    extensionsLoaded;
+        private KubeContextExtension    cachedExtensions;
 
         /// <summary>
         /// Default constructor.
@@ -37,17 +38,6 @@ namespace Neon.Kube
         public KubeConfigContext()
         {
             Properties = new KubeConfigContextProperties();
-        }
-
-        /// <summary>
-        /// Constructs a configuration from a Kubernetes configuration name string.
-        /// </summary>
-        /// <param name="contextName">The context name formatted as <b>USER@CLUSTER[/NAMESPACE]</b>.</param>
-        public KubeConfigContext(string contextName)
-        {
-            var name = KubeContextName.Parse(contextName);
-
-            this.Name = name.ToString();
         }
 
         /// <summary>
@@ -77,20 +67,47 @@ namespace Neon.Kube
         public KubeConfigContextProperties Properties { get; set; }
 
         /// <summary>
-        /// Returns the context extension information for the context.
+        /// The context extension information for the context.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public KubeContextExtension Extension
+        public KubeContextExtension Extensions
         {
             get
             {
-                if (cachedExtension != null)
+                if (cachedExtensions != null)
                 {
-                    return cachedExtension;
+                    return cachedExtensions;
                 }
 
-                return cachedExtension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(KubeHelper.GetContextExtensionPath((KubeContextName)Name)));
+                if (extensionsLoaded)
+                {
+                    return null;
+                }
+
+                var extensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)Name);
+
+                if (File.Exists(extensionsPath))
+                {
+                    cachedExtensions = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(extensionsPath));
+
+                    // We need to fixup some references.
+
+                    foreach (var nodeDefinition in cachedExtensions.ClusterDefinition.NodeDefinitions.Values)
+                    {
+                        nodeDefinition.Labels.Node = nodeDefinition;
+                    }
+                }
+
+                extensionsLoaded = true;
+
+                return cachedExtensions;
+            }
+
+            set
+            {
+                extensionsLoaded = true;
+                cachedExtensions = value;
             }
         }
     }

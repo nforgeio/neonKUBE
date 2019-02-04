@@ -27,13 +27,28 @@ using Neon.Time;
 namespace Neon.Kube
 {
     /// <summary>
+    /// Creates a <see cref="SshProxy{TMetadata}"/> for the specified host and server name,
+    /// configuring logging and the credentials as specified by the global command
+    /// line options.
+    /// </summary>
+    /// <param name="name">The node name.</param>
+    /// <param name="publicAddress">The node's public IP address or FQDN.</param>
+    /// <param name="privateAddress">The node's private IP address.</param>
+    /// <param name="appendToLog">
+    /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
+    /// or <c>false</c> to replace any existing log file with a new one.
+    /// </param>
+    /// <returns>The <see cref="SshProxy{TMetadata}"/>.</returns>
+    public delegate SshProxy<NodeDefinition> NodeProxyCreator(string name, string publicAddress, IPAddress privateAddress, bool appendToLog);
+
+    /// <summary>
     /// Used to remotely manage a cluster via SSH/SCP.
     /// </summary>
     public class ClusterProxy : IDisposable
     {
-        private RunOptions                                                          defaultRunOptions;
-        private Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>>     nodeProxyCreator;
-        private bool                                                                appendLog;
+        private RunOptions          defaultRunOptions;
+        private NodeProxyCreator    nodeProxyCreator;
+        private bool                appendLog;
 
         /// <summary>
         /// Constructs a cluster proxy from a cluster login.
@@ -44,7 +59,7 @@ namespace Neon.Kube
         /// given the node name, public address or FQDN, private address, and
         /// the node definition.
         /// </param>
-        /// <param name="appendLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
+        /// <param name="appendToLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
@@ -58,12 +73,12 @@ namespace Neon.Kube
         /// is passed.
         /// </remarks>
         public ClusterProxy(
-            KubeConfigContext kubeContext,
-            Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator  = null,
-            bool                                                            appendLog         = false,
-            RunOptions                                                      defaultRunOptions = RunOptions.None)
+            KubeConfigContext   kubeContext,
+            NodeProxyCreator    nodeProxyCreator  = null,
+            bool                appendToLog       = false,
+            RunOptions          defaultRunOptions = RunOptions.None)
 
-            : this(kubeContext.Properties.Extension.ClusterDefinition, nodeProxyCreator, appendLog: appendLog, defaultRunOptions: defaultRunOptions)
+            : this(kubeContext.Extensions.ClusterDefinition, nodeProxyCreator, appendToLog: appendToLog, defaultRunOptions: defaultRunOptions)
         {
             Covenant.Requires<ArgumentNullException>(kubeContext != null);
 
@@ -79,7 +94,7 @@ namespace Neon.Kube
         /// given the node name, public address or FQDN, private address, and
         /// the node definition.
         /// </param>
-        /// <param name="appendLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
+        /// <param name="appendToLog">Optionally have logs appended to an existing log file rather than creating a new one.</param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
         /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
@@ -93,10 +108,10 @@ namespace Neon.Kube
         /// is passed.
         /// </remarks>
         public ClusterProxy(
-            ClusterDefinition clusterDefinition,
-            Func<string, string, IPAddress, bool, SshProxy<NodeDefinition>> nodeProxyCreator = null,
-            bool                                                            appendLog = false,
-            RunOptions                                                      defaultRunOptions = RunOptions.None)
+            ClusterDefinition   clusterDefinition,
+            NodeProxyCreator    nodeProxyCreator  = null,
+            bool                appendToLog       = false,
+            RunOptions          defaultRunOptions = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
@@ -107,9 +122,9 @@ namespace Neon.Kube
                     {
                         var context = KubeHelper.CurrentContext;
 
-                        if (context != null && context.Properties.Extension != null)
+                        if (context != null && context.Extensions != null)
                         {
-                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, context.Properties.Extension.SshCredentials);
+                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, context.Extensions.SshCredentials);
                         }
                         else
                         {
@@ -127,7 +142,7 @@ namespace Neon.Kube
             this.KubeContext       = KubeHelper.CurrentContext;
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
-            this.appendLog         = appendLog;
+            this.appendLog         = appendToLog;
 
             CreateNodes();
         }

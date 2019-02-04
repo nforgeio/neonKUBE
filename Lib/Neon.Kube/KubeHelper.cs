@@ -598,11 +598,6 @@ namespace Neon.Kube
         public static string ProgramFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "neonKUBE");
 
         /// <summary>
-        /// Indicates whether the application is connected to thje cluster.
-        /// </summary>
-        public static bool IsConnected { get; private set; } = false;
-
-        /// <summary>
         /// Returns the user's current <see cref="Config"/>.
         /// </summary>
         public static KubeConfig Config
@@ -718,11 +713,6 @@ namespace Neon.Kube
         public static KubeContextName CurrentContextName => CurrentContext == null ? null : KubeContextName.Parse(CurrentContext.Name);
 
         /// <summary>
-        /// Returns the <see cref="Kube.ClusterProxy"/> for the current cluster (or <c>null</c>).
-        /// </summary>
-        public static ClusterProxy Cluster { get; private set; } = null;
-
-        /// <summary>
         /// Looks for a certificate with a friendly name.
         /// </summary>
         /// <param name="store">The certificate store.</param>
@@ -742,18 +732,6 @@ namespace Neon.Kube
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Verifies that a cluster is connected.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown when a cluster is not connected.</exception>
-        private static void VerifyConnected()
-        {
-            if (!IsConnected)
-            {
-                throw new InvalidOperationException("cluster is not connected.");
-            }
         }
 
         /// <summary>

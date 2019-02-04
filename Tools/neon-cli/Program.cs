@@ -66,14 +66,16 @@ COMMAND SUMMARY:
     neon login              COMMAND
     neon logout
     neon password           COMMAND
+    neon scp                [NODE]
+    neon ssh                [NODE]
     neon version            [-n] [--git]
 
 ARGUMENTS:
 
     CLUSTER-DEF         - Path to a cluster definition file.  This is
-                          optional for some commands when logged in.
-
+                          optional for some commands when logged in
     COMMAND             - Subcommand and arguments.
+    NODE                - A node name.
 
 OPTIONS:
 
@@ -185,6 +187,8 @@ OPTIONS:
                     new PasswordListCommand(),
                     new PasswordRemoveCommand(),
                     new PasswordSetCommand(),
+                    new ScpCommand(),
+                    new SshCommand(),
                     new VersionCommand()
                 };
 
@@ -604,6 +608,32 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
         }
 
         /// <summary>
+        /// Returns a <see cref="ClusterProxy"/> for the current Kubernetes context.
+        /// </summary>
+        /// <returns>The <see cref="ClusterProxy"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method will terminate the program with an error message when not logged
+        /// into a neonKUBE cluster.
+        /// </note>
+        /// </remarks>
+        public static ClusterProxy GetCluster()
+        {
+            if (KubeHelper.CurrentContext == null)
+            {
+                Console.Error.WriteLine("*** ERROR: You are not logged into a cluster.");
+                Program.Exit(1);
+            }
+            else if (KubeHelper.CurrentContext == null)
+            {
+                Console.Error.WriteLine("*** ERROR: You are not logged into a neonKUBE cluster.");
+                Program.Exit(1);
+            }
+
+            return new ClusterProxy(KubeHelper.CurrentContext, Program.CreateNodeProxy<NodeDefinition>);
+        }
+
+        /// <summary>
         /// Message written then a user is not logged into a cluster.
         /// </summary>
         public const string MustLoginMessage = "*** ERROR: You must first log into a cluster.";
@@ -808,13 +838,13 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
         /// <param name="name">The node name.</param>
         /// <param name="publicAddress">The node's public IP address or FQDN.</param>
         /// <param name="privateAddress">The node's private IP address.</param>
-        /// <param name="append">
+        /// <param name="appendToLog">
         /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
         /// or <c>false</c> to replace any existing log file with a new one.
         /// </param>
         /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the server.</typeparam>
         /// <returns>The <see cref="SshProxy{TMetadata}"/>.</returns>
-        public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress, bool append)
+        public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress, bool appendToLog)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -825,7 +855,7 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
             {
                 var path = Path.Combine(LogPath, name + ".log");
 
-                logWriter = new StreamWriter(new FileStream(path, append ? FileMode.Append : FileMode.Create, append ? FileAccess.Write : FileAccess.ReadWrite));
+                logWriter = new StreamWriter(new FileStream(path, appendToLog ? FileMode.Append : FileMode.Create, appendToLog ? FileAccess.Write : FileAccess.ReadWrite));
             }
 
             SshCredentials sshCredentials;
@@ -836,7 +866,7 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
             }
             else if (KubeHelper.CurrentContext != null)
             {
-                sshCredentials = KubeHelper.CurrentContext.Properties.Extension.SshCredentials;
+                sshCredentials = KubeHelper.CurrentContext.Extensions.SshCredentials;
             }
             else
             {

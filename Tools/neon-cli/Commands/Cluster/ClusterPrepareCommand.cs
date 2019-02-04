@@ -188,7 +188,7 @@ Server Requirements:
 
             // NOTE: Cluster prepare starts new log files.
 
-            cluster = new ClusterProxy(clusterDefinition, Program.CreateNodeProxy<NodeDefinition>, appendLog: false, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+            cluster = new ClusterProxy(clusterDefinition, Program.CreateNodeProxy<NodeDefinition>, appendToLog: false, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
             if (KubeHelper.Config.GetContext(cluster.Definition.Name) != null)
             {
@@ -219,7 +219,7 @@ Server Requirements:
                 !cluster.Definition.Hosting.IsCloudProvider)
             {
                 Console.WriteLine();
-                Console.WriteLine("  Scanning for IP address conflicts...");
+                Console.WriteLine(" Scanning for IP address conflicts...");
                 Console.WriteLine();
 
                 var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);

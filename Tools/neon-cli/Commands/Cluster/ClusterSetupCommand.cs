@@ -101,7 +101,7 @@ OPTIONS:
         private const string logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
 
         private KubeConfigContext       kubeContext;
-        private KubeContextExtension    kubeContextExtension;
+        private KubeContextExtension    kubeContextExtensions;
         private ClusterProxy            cluster;
         private KubeSetupInfo           kubeSetupInfo;
 
@@ -135,15 +135,15 @@ OPTIONS:
             var contextName = KubeContextName.Parse(commandLine.Arguments[0]);
             var kubeCluster = KubeHelper.Config.GetCluster(contextName.Cluster);
 
-            kubeContextExtension = KubeHelper.GetContextExtension(contextName);
+            kubeContextExtensions = KubeHelper.GetContextExtension(contextName);
 
-            if (kubeContextExtension == null)
+            if (kubeContextExtensions == null)
             {
                 Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via [neon cluster prepare...].");
                 Program.Exit(1);
             }
 
-            if (kubeCluster != null && !kubeContextExtension.SetupDetails.SetupPending)
+            if (kubeCluster != null && !kubeContextExtensions.SetupDetails.SetupPending)
             {
                 if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more logins reference [{kubeCluster.Name}].  Do you wish to delete these?"))
                 {
@@ -178,14 +178,13 @@ OPTIONS:
                 KubeHelper.Config.Save();
             }
 
-            kubeContext                      = new KubeConfigContext(contextName);
-            kubeContext.Properties.Extension = kubeContextExtension;
+            kubeContext = new KubeConfigContext(contextName);
 
             KubeHelper.InitContext(kubeContext);
 
             // Note that cluster setup appends to existing log files.
 
-            cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+            cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
             // Configure global options.
 
@@ -206,9 +205,9 @@ OPTIONS:
             controller.AddGlobalStep("setup details",
                 () =>
                 {
-                    if (kubeContextExtension.SetupDetails?.SetupInfo != null)
+                    if (kubeContextExtensions.SetupDetails?.SetupInfo != null)
                     {
-                        kubeSetupInfo = kubeContextExtension.SetupDetails.SetupInfo;
+                        kubeSetupInfo = kubeContextExtensions.SetupDetails.SetupInfo;
                     }
                     else
                     {
@@ -216,8 +215,8 @@ OPTIONS:
                         {
                             kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
 
-                            kubeContextExtension.SetupDetails.SetupInfo = kubeSetupInfo;
-                            kubeContextExtension.Save();
+                            kubeContextExtensions.SetupDetails.SetupInfo = kubeSetupInfo;
+                            kubeContextExtensions.Save();
                         }
                     }
                 });
@@ -303,15 +302,13 @@ OPTIONS:
             //
             //      https://github.com/jefflill/NeonForge/issues/397
 
-            kubeContextExtension.SetupDetails.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
-            kubeContextExtension.Save();
+            kubeContextExtensions.SetupDetails.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
+            kubeContextExtensions.Save();
 
             controller.AddStep("set strong password",
                 (node, stepDelay) =>
                 {
-                    // $todo(jeff.lill): RESTORE THIS!
-
-                    // SetStrongPassword(node, TimeSpan.Zero);
+                    SetStrongPassword(node, TimeSpan.Zero);
                 });
 
             controller.AddGlobalStep("passwords set",
@@ -320,10 +317,9 @@ OPTIONS:
                     // This hidden step sets the SSH provisioning password to NULL to 
                     // indicate that the final password has been set for all of the nodes.
 
-                    // $todo(jeff.lill): RESTORE THIS!
-
-                    //kubeContextExtension.SetupDetails.HasStrongSshPassword = true;
-                    //kubeContextExtension.Save();
+                    kubeContextExtensions.SshPassword = kubeContextExtensions.SetupDetails.SshStrongPassword;
+                    kubeContextExtensions.SetupDetails.HasStrongSshPassword = true;
+                    kubeContextExtensions.Save();
                 },
                 quiet: true);
 
@@ -355,8 +351,8 @@ OPTIONS:
 
             //kubeContextExtension.SshPassword       = kubeContextExtension.SshStrongPassword;
             //kubeContextExtension.SshStrongPassword = null;
-            kubeContextExtension.SetupDetails.SetupPending = false;
-            kubeContextExtension.Save();
+            kubeContextExtensions.SetupDetails.SetupPending = false;
+            kubeContextExtensions.Save();
 
             // Write the operation end marker to all cluster node logs.
 
@@ -368,14 +364,14 @@ OPTIONS:
 
             if (!File.Exists(kubeConfigPath))
             {
-                File.WriteAllText(kubeConfigPath, kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                File.WriteAllText(kubeConfigPath, kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
             }
             else
             {
                 // The user already has an existing kubeconfig, so we need
                 // to merge in the new config.
 
-                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
                 var existingConfig = KubeHelper.Config;
 
                 // Remove any existing user, context, and cluster with the same names.
@@ -927,11 +923,11 @@ networking:
 
                             if (pEnd == -1)
                             {
-                                kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart).Trim();
+                                kubeContextExtensions.SetupDetails.ClusterJoinCommand = output.Substring(pStart).Trim();
                             }
                             else
                             {
-                                kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
+                                kubeContextExtensions.SetupDetails.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
                             }
                         });
 
@@ -960,12 +956,12 @@ networking:
                     // the remaining masters and may also be needed for other purposes
                     // (if we haven't already downloaded these).
 
-                    if (kubeContextExtension.SetupDetails.MasterFiles != null)
+                    if (kubeContextExtensions.SetupDetails.MasterFiles != null)
                     {
-                        kubeContextExtension.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
+                        kubeContextExtensions.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
                     }
 
-                    if (kubeContextExtension.SetupDetails.MasterFiles.Count == 0)
+                    if (kubeContextExtensions.SetupDetails.MasterFiles.Count == 0)
                     {
                         // I'm hardcoding the permissions and owner here.  It would be nice to
                         // scrape this from the source files in the future but this was not
@@ -988,13 +984,13 @@ networking:
                         {
                             var text = firstMaster.DownloadText(file.Path);
 
-                            kubeContextExtension.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
+                            kubeContextExtensions.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
                         }
                     }
 
                     // Persist the cluster join command and downloaded master files.
 
-                    kubeContextExtension.Save();
+                    kubeContextExtensions.Save();
 
                     firstMaster.Status = "joined";
 
@@ -1017,7 +1013,7 @@ networking:
 
                                     master.Status = "upload: master files";
 
-                                    foreach (var file in kubeContextExtension.SetupDetails.MasterFiles)
+                                    foreach (var file in kubeContextExtensions.SetupDetails.MasterFiles)
                                     {
                                         master.UploadText(file.Key, file.Value.Text, permissions: file.Value.Permissions, owner: file.Value.Owner);
                                     }
@@ -1028,7 +1024,7 @@ networking:
                                             () =>
                                             {
                                                 master.Status = "join: as master";
-                                                master.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --experimental-control-plane");
+                                                master.SudoCommand(kubeContextExtensions.SetupDetails.ClusterJoinCommand + " --experimental-control-plane");
                                             });
 
                                     // Pull the Kubernetes images:
@@ -1061,7 +1057,7 @@ networking:
                                 () =>
                                 {
                                     worker.Status = "join: as worker";
-                                    worker.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand);
+                                    worker.SudoCommand(kubeContextExtensions.SetupDetails.ClusterJoinCommand);
                                 });
                         }
                         catch (Exception e)
@@ -1438,14 +1434,14 @@ kubectl apply -f {istioConfigPath}
             //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
             //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
 
-            if (kubeContextExtension.SshClientKey != null)
+            if (kubeContextExtensions.SshClientKey != null)
             {
                 return; // Key has already been created.
             }
 
             Thread.Sleep(stepDelay);
 
-            kubeContextExtension.SshClientKey = new SshClientKey();
+            kubeContextExtensions.SshClientKey = new SshClientKey();
 
             // $hack(jeff.lill): 
             //
@@ -1477,14 +1473,14 @@ chmod 666 /run/ssh-key*
             {
                 master.Download("/run/ssh-key.pub", stream);
 
-                kubeContextExtension.SshClientKey.PublicPUB = NeonHelper.ToLinuxLineEndings(Encoding.UTF8.GetString(stream.ToArray()));
+                kubeContextExtensions.SshClientKey.PublicPUB = NeonHelper.ToLinuxLineEndings(Encoding.UTF8.GetString(stream.ToArray()));
             }
 
             using (var stream = new MemoryStream())
             {
                 master.Download("/run/ssh-key", stream);
 
-                kubeContextExtension.SshClientKey.PrivatePEM = NeonHelper.ToLinuxLineEndings(Encoding.UTF8.GetString(stream.ToArray()));
+                kubeContextExtensions.SshClientKey.PrivatePEM = NeonHelper.ToLinuxLineEndings(Encoding.UTF8.GetString(stream.ToArray()));
             }
 
             master.SudoCommand("rm /run/ssh-key*");
@@ -1501,7 +1497,7 @@ chmod 666 /run/ssh-key*
 
                 try
                 {
-                    File.WriteAllText(pemKeyPath, kubeContextExtension.SshClientKey.PrivatePEM);
+                    File.WriteAllText(pemKeyPath, kubeContextExtensions.SshClientKey.PrivatePEM);
 
                     ExecuteResult result;
 
@@ -1521,11 +1517,11 @@ chmod 666 /run/ssh-key*
                         Program.Exit(result.ExitCode);
                     }
 
-                    kubeContextExtension.SshClientKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
+                    kubeContextExtensions.SshClientKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
 
                     // Persist the SSH client key.
 
-                    kubeContextExtension.Save();
+                    kubeContextExtensions.Save();
                 }
                 finally
                 {
@@ -1558,7 +1554,7 @@ chmod 666 /run/ssh-key*
 
                     var script =
 $@"
-echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SetupDetails.SshStrongPassword}' | chpasswd
+echo '{kubeContextExtensions.SshUsername}:{kubeContextExtensions.SetupDetails.SshStrongPassword}' | chpasswd
 ";
                     var response = node.SudoCommand(CommandBundle.FromScript(script));
 
@@ -1568,7 +1564,7 @@ echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SetupDetails.SshS
                         Program.Exit(response.ExitCode);
                     }
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(kubeContextExtension.SshUsername, kubeContextExtension.SetupDetails.SshStrongPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(kubeContextExtensions.SshUsername, kubeContextExtensions.SetupDetails.SshStrongPassword));
                 });
         }
 
@@ -1614,9 +1610,9 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
 
                     cluster.FirstMaster.Status = "download: server SSH key";
 
-                    kubeContextExtension.SshNodePrivateKey  = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
-                    kubeContextExtension.SshNodePublicKey   = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
-                    kubeContextExtension.SshNodeFingerprint = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh.fingerprint");
+                    kubeContextExtensions.SshNodePrivateKey  = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
+                    kubeContextExtensions.SshNodePublicKey   = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
+                    kubeContextExtensions.SshNodeFingerprint = cluster.FirstMaster.DownloadText("/dev/shm/ssh/ssh.fingerprint");
 
                     // Delete the SSH key files for security.
 
@@ -1624,7 +1620,7 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
 
                     // Persist the server SSH key and fingerprint.
 
-                    kubeContextExtension.Save();
+                    kubeContextExtensions.Save();
                 });
         }
 
@@ -1665,7 +1661,7 @@ chmod 600 $HOME/.ssh/authorized_keys
                     bundle = new CommandBundle("./addkeys.sh");
 
                     bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
-                    bundle.AddFile("ssh-key.pub", kubeContextExtension.SshClientKey.PublicPUB);
+                    bundle.AddFile("ssh-key.pub", kubeContextExtensions.SshClientKey.PublicPUB);
 
                     // NOTE: I'm explictly not running the bundle as [sudo] because the OpenSSH
                     //       server is very picky about the permissions on the user's [$HOME]
@@ -1698,7 +1694,7 @@ systemctl restart sshd
                     bundle = new CommandBundle("./config.sh");
 
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
-                    bundle.AddFile("ssh_host_rsa_key", kubeContextExtension.SshNodePrivateKey);
+                    bundle.AddFile("ssh_host_rsa_key", kubeContextExtensions.SshNodePrivateKey);
                     node.SudoCommand(bundle);
                 });
         }
