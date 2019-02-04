@@ -151,7 +151,7 @@ namespace Neon.Kube
             // Perhaps it would make more sense to replace this with a
             // [neon cluster remove] command.
             //
-            //      https://github.com/jefflill/NeonForge/issues/156
+            //      https://github.com/nforgeio/neonKUBE/issues/156
 
             if (IsProvisionNOP)
             {

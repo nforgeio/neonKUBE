@@ -341,7 +341,7 @@ namespace Neon.Kube
             //
             // This is part of the mitigation for:
             //
-            //      https://github.com/jefflill/NeonForge/issues/230
+            //      https://github.com/nforgeio/neonKUBE/issues/230
             //      https://github.com/sshnet/SSH.NET/issues/355
 
             var threadStart = new ThreadStart(action);
@@ -380,7 +380,7 @@ namespace Neon.Kube
             //
             // We sometimes see a deadlock when disposing SSH.NET clients.
             //
-            //      https://github.com/jefflill/NeonForge/issues/230
+            //      https://github.com/nforgeio/neonKUBE/issues/230
             //      https://github.com/sshnet/SSH.NET/issues/355
             //
             // I'm going to try to mitigate this by doing the dispose

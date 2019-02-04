@@ -152,7 +152,7 @@ namespace Neon.Xen
                 // when [sr-uuid] is passed, even if the template and target VM storage repositories
                 // are the same.
                 //
-                //      https://github.com/jefflill/NeonForge/issues/326
+                //      https://github.com/nforgeio/neonKUBE/issues/326
                 //
                 // Unfortunately, there doesn't appear to be a clean way to inspect a VM template 
                 // to list its disks and determine where they live.  So we'll list the virtual disk

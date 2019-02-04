@@ -326,7 +326,7 @@ OPTIONS:
                             //      /shim           - the generated shim files
                             //      /log            - the logging folder (if logging is enabled)
                             //
-                            // See: https://github.com/jefflill/NeonForge/issues/266
+                            // See: https://github.com/nforgeio/neonKUBE/issues/266
 
                             var secretsMount = $"--mount type=bind,source=\"{secretsRoot}\",target=/neonkube";
                             var shimMount    = $"--mount type=bind,source=\"{shim.ShimExternalFolder}\",target=/shim";
@@ -777,7 +777,7 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
                 // (if there is one).  I had accumulated almost 38K shim folders 
                 // over the past six months or so.  This should help prevent that.
                 //
-                //      https://github.com/jefflill/NeonForge/issues/394
+                //      https://github.com/nforgeio/neonKUBE/issues/394
 
                 shim.Dispose();
                 shim = null;

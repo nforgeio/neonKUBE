@@ -278,7 +278,7 @@ namespace Neon.Net
             //
             // It can take a bit of time for the Windows DNS resolver to pick up the change.
             //
-            //      https://github.com/jefflill/NeonForge/issues/244
+            //      https://github.com/nforgeio/neonKUBE/issues/244
             //
             // We're going to mitigate this by writing a [neon-modify-local-hosts.nhive.io] record with
             // a random IP address and then wait for for the DNS resolver to report the correct address.
@@ -287,7 +287,7 @@ namespace Neon.Net
             // Linux because there's no central DNS resolver there.  See the issue below for
             // more information:
             //
-            //      https://github.com/jefflill/NeonForge/issues/271
+            //      https://github.com/nforgeio/neonKUBE/issues/271
 
             var updateHost    = section != null ? $"{section.ToLowerInvariant()}.neonforge-marker" : $"H-{Guid.NewGuid().ToString("D")}.neonforge-marker";
             var addressBytes  = NeonHelper.RandBytes(4);

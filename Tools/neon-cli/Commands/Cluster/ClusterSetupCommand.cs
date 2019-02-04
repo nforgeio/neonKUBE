@@ -311,7 +311,7 @@ OPTIONS:
             // One solution would be to store credentials in the node definitions
             // rather than using common credentials across all nodes.
             //
-            //      https://github.com/jefflill/NeonForge/issues/397
+            //      https://github.com/nforgeio/neonKUBE/issues/397
 
             kubeContextExtensions.SetupDetails.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
             kubeContextExtensions.Save();
@@ -1219,7 +1219,7 @@ rm /tmp/calico.yaml
                     // [kubectl wait] as an experimental command that we should investigate
                     // in the future:
                     //
-                    //      https://github.com/jefflill/NeonForge/issues/424
+                    //      https://github.com/nforgeio/neonKUBE/issues/424
                     //
                     // We're going to wait a maximum of 120 seconds.
 

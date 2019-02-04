@@ -280,7 +280,7 @@ namespace NeonCli
             // off for now, but eventually we'll want to fix this by somehow being
             // able to specify exactly which item we're munging.
             //
-            //      https://github.com/jefflill/NeonForge/issues/162
+            //      https://github.com/nforgeio/neonKUBE/issues/162
 
             for (int i = 0; i < CommandLine.Items.Length; i++)
             {
