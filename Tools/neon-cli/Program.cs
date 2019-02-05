@@ -63,7 +63,7 @@ namespace NeonCli
         public static void Main(string[] args)
         {
             string usage = $@"
-Neon Kubernetes Tool: neon [v{Program.Version}]
+neonKUBE Management Tool: neon [v{Program.Version}]
 {Build.Copyright}
 
 USAGE:

@@ -39,7 +39,7 @@ namespace NeonCli
     public class VersionCommand : CommandBase
     {
         private const string usage = @"
-Prints the actual [neon-cli] version, ignoring any [--version] option.
+Prints the [neon-cli] version.
 
 USAGE:
 
