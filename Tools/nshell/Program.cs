@@ -64,10 +64,13 @@ USAGE:
 COMMAND SUMMARY:
 
     nshell help     COMMAND
+    nshell proxy    kube-dashboard LOCAL-PORT NODE-PORT
+    nshell version  [-n] [--git]
 
 ARGUMENTS:
 
-OPTIONS:
+    LOCAL-PORT      - local proxy port on 127.0.0.1
+    NODE-PORT       - remote cluster node port
 
 ";
             // Disable any logging that might be performed by library classes.
@@ -91,6 +94,7 @@ OPTIONS:
 
                 var commands = new List<ICommand>()
                 {
+                    new ProxyCommand(),
                     new VersionCommand()
                 };
 
@@ -247,6 +251,33 @@ OPTIONS:
             // No match.
 
             return null;
+        }
+
+        /// <summary>
+        /// Executes the neonKUBE installed version of <b>kubectl</b> passing 
+        /// the argument string.
+        /// </summary>
+        /// <param name="args">The argumuments.</param>
+        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        public static ExecuteResult Kubectl(string args)
+        {
+            // $todo(jeff.lill):
+            //
+            // For now, we're going to assume that the correct version 
+            // of KUBECTL is on the PATH.
+
+            return NeonHelper.ExecuteCapture("kubectl", args);
+        }
+
+        /// <summary>
+        /// Executes the neonKUBE installed version of <b>kubectl</b> passing 
+        /// individual arguments..
+        /// </summary>
+        /// <param name="args">The argumuments.</param>
+        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        public static ExecuteResult Kubectl(params object[] args)
+        {
+            return Kubectl(NeonHelper.NormalizeExecArgs(args));
         }
 
         /// <summary>
