@@ -220,6 +220,7 @@
     <Compile Include="Commands\CommandBase.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\Proxy\ProxyCommand.cs" />
+    <Compile Include="Commands\Proxy\ReverseProxy.cs" />
     <Compile Include="Commands\VersionCommand.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
