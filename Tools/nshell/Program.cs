@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon;
 using Neon.Common;
 
 namespace NShell
@@ -30,6 +31,11 @@ namespace NShell
     /// </summary>
     public static class Program
     {
+        /// <summary>
+        /// The program version.
+        /// </summary>
+        public const string Version = Build.ProductVersion;
+
         /// <summary>
         /// Program entry point.
         /// </summary>

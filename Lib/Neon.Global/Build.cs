@@ -39,9 +39,14 @@ namespace Neon
         public const string Copyright = "Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.";
 
         /// <summary>
-        /// The product statement to be included in all assemblies.
+        /// The product name.
         /// </summary>
-        public const string Product = "ksetup";
+        public const string ProductName = "neonKUBE";
+
+        /// <summary>
+        /// The product version.
+        /// </summary>
+        public const string ProductVersion = "0.1.0+1902-alpha-0";
 
         /// <summary>
         /// The build configuration.

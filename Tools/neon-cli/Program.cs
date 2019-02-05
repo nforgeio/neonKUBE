@@ -49,7 +49,7 @@ namespace NeonCli
         /// <summary>
         /// The program version.
         /// </summary>
-        public const string Version = "0.1.0+1902-alpha-0";
+        public const string Version = Build.ProductVersion;
     
         /// <summary>
         /// CURL command common options.

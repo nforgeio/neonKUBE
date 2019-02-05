@@ -6,9 +6,9 @@
 
 2. Merge **PROD** into **MASTER** to ensure that we have any stray changes from there too.
 
-3. Manually clean and rebuild the entire solution: RELEASE configuration.
+3. Update the product version: `Neon.Global.Build.ProductVersion`
 
-4. Make sure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
+4. Manually clean and rebuild the entire solution: RELEASE configuration.
 
 5. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
