@@ -1169,6 +1169,35 @@ subjects:
                             firstMaster.SudoCommand("helm init --service-account tiller");
                         });
 
+                    // Create the cluster's [root-user]:
+
+                    firstMaster.InvokeIdempotentAction("setup/cluster-root-user",
+                        () =>
+                        {
+                            var userYaml =
+$@"
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {KubeConst.RootUser}-user
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {KubeConst.RootUser}-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: {KubeConst.RootUser}-user
+  namespace: kube-system+
+";
+                            firstMaster.KubeCtlApply(userYaml);
+                        });
+
                     // Install the Kubernetes dashboard:
 
                     firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-dashboard",

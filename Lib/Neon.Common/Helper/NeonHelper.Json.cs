@@ -43,11 +43,7 @@ namespace Neon.Common
                 {
                     var settings = new JsonSerializerSettings();
 
-                    settings.Converters.Add(
-                        new StringEnumConverter(false)
-                        {
-                            AllowIntegerValues = false
-                        });
+                    settings.Converters.Add(new StringEnumConverter(new DefaultNamingStrategy(), allowIntegerValues: false));
 
                     // Ignore missing members for relaxed parsing.
 
@@ -75,11 +71,7 @@ namespace Neon.Common
                 {
                     var settings = new JsonSerializerSettings();
 
-                    settings.Converters.Add(
-                        new StringEnumConverter(false)
-                        {
-                            AllowIntegerValues = false
-                        });
+                    settings.Converters.Add(new StringEnumConverter(new DefaultNamingStrategy(), allowIntegerValues: false));
 
                     // Treat missing members as errors for strict parsing.
 
