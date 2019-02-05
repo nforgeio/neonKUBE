@@ -58,8 +58,8 @@ namespace NShell
     public sealed class ReverseProxy : IDisposable
     {
         private object                  syncLock = new object();
-        private EndPoint                localEndpoint;
-        private EndPoint                remoteEndpoint;
+        private IPEndPoint              localEndpoint;
+        private IPEndPoint              remoteEndpoint;
         private Action<RequestContext>  requestHandler;
         private Action<RequestContext>  responseHandler;
         private WebListener             listener;
@@ -73,8 +73,8 @@ namespace NShell
         /// <param name="requestHandler">Optional request hook.</param>
         /// <param name="responseHandler">Optional response hook.</param>
         public ReverseProxy(
-            EndPoint                localEndpoint,
-            EndPoint                remoteEndpoint,
+            IPEndPoint              localEndpoint,
+            IPEndPoint              remoteEndpoint,
             Action<RequestContext>  requestHandler = null, 
             Action<RequestContext>  responseHandler = null)
         {
@@ -141,25 +141,27 @@ namespace NShell
             {
                 try
                 {
-                    var context = await listener.AcceptAsync();
+                    var listenerCtx = await listener.AcceptAsync();
 
                     var task = Task.Run(
                         async () =>
                         {
-                            using (context)
+                            using (listenerCtx)
                             {
-                                requestHandler?.Invoke(context);
+                                // Let the request handler have a look.
+
+                                requestHandler?.Invoke(listenerCtx);
 
                                 // Copy the headers, body, and other state from the received request to the client request. 
 
-                                var remoteRequest = new HttpRequestMessage(new HttpMethod(context.Request.Method), context.Request.Path);
+                                var remoteRequest = new HttpRequestMessage(new HttpMethod(listenerCtx.Request.Method), listenerCtx.Request.Path);
 
-                                foreach (var header in context.Request.Headers)
+                                foreach (var header in listenerCtx.Request.Headers)
                                 {
                                     remoteRequest.Headers.Add(header.Key, header.Value.ToArray());
                                 }
 
-                                var bodyStream = context.Request.Body;
+                                var bodyStream = listenerCtx.Request.Body;
 
                                 if (bodyStream != null)
                                 {
@@ -172,24 +174,24 @@ namespace NShell
 
                                 // Copy the remote response headers, body, and other state to the client response.
 
-                                context.Response.StatusCode   = (int)remoteResponse.StatusCode;
-                                context.Response.ReasonPhrase = remoteResponse.ReasonPhrase;
+                                listenerCtx.Response.StatusCode   = (int)remoteResponse.StatusCode;
+                                listenerCtx.Response.ReasonPhrase = remoteResponse.ReasonPhrase;
 
                                 foreach (var header in remoteResponse.Headers)
                                 {
-                                    context.Response.Headers.Add(header.Key, header.Value.ToArray());
+                                    listenerCtx.Response.Headers.Add(header.Key, header.Value.ToArray());
                                 }
 
                                 var responseContent = remoteResponse.Content;
 
                                 if (responseContent != null)
                                 {
-                                    await responseContent.CopyToAsync(context.Response.Body);
+                                    await responseContent.CopyToAsync(listenerCtx.Response.Body);
                                 }
 
                                 // Let the response handler have a look.
 
-                                responseHandler?.Invoke(context);
+                                responseHandler?.Invoke(listenerCtx);
                             }
                         });
                 }

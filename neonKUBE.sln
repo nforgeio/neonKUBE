@@ -146,6 +146,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.NeonCli", "Test\Test.N
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nshell", "Tools\nshell\nshell.csproj", "{C475DD89-82B4-470A-A825-212C7F95AD2A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.NShell", "Test\Test.NShell\Test.NShell.csproj", "{3025BD0B-6150-4367-BD85-433519D24A9D}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
@@ -521,6 +523,18 @@ Global
 		{C475DD89-82B4-470A-A825-212C7F95AD2A}.Release|x64.Build.0 = Release|Any CPU
 		{C475DD89-82B4-470A-A825-212C7F95AD2A}.Release|x86.ActiveCfg = Release|Any CPU
 		{C475DD89-82B4-470A-A825-212C7F95AD2A}.Release|x86.Build.0 = Release|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Debug|x64.Build.0 = Debug|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Debug|x86.Build.0 = Debug|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Release|x64.ActiveCfg = Release|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Release|x64.Build.0 = Release|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Release|x86.ActiveCfg = Release|Any CPU
+		{3025BD0B-6150-4367-BD85-433519D24A9D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -562,6 +576,7 @@ Global
 		{41302EE4-1607-4BE1-A2C6-C881C3D05740} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{BA132F50-1C79-4FF4-A596-16BBC7CD6BAC} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{C475DD89-82B4-470A-A825-212C7F95AD2A} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
+		{3025BD0B-6150-4367-BD85-433519D24A9D} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

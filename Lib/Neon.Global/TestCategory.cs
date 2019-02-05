@@ -58,5 +58,10 @@ namespace Neon.Xunit
         /// Identifies <b>neon-cli</b> tests.
         /// </summary>
         public const string NeonCli = "neon-cli";
+
+        /// <summary>
+        /// Identifies <b>neon-shell</b> tests.
+        /// </summary>
+        public const string NeonShell = "neon-shell";
     }
 }

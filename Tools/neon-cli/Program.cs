@@ -620,32 +620,6 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// Returns a <see cref="ClusterProxy"/> for the current Kubernetes context.
-        /// </summary>
-        /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// This method will terminate the program with an error message when not logged
-        /// into a neonKUBE cluster.
-        /// </note>
-        /// </remarks>
-        public static ClusterProxy GetCluster()
-        {
-            if (KubeHelper.CurrentContext == null)
-            {
-                Console.Error.WriteLine("*** ERROR: You are not logged into a cluster.");
-                Program.Exit(1);
-            }
-            else if (KubeHelper.CurrentContext == null)
-            {
-                Console.Error.WriteLine("*** ERROR: You are not logged into a neonKUBE cluster.");
-                Program.Exit(1);
-            }
-
-            return new ClusterProxy(KubeHelper.CurrentContext, Program.CreateNodeProxy<NodeDefinition>);
-        }
-
-        /// <summary>
         /// Message written then a user is not logged into a cluster.
         /// </summary>
         public const string MustLoginMessage = "*** ERROR: You must first log into a cluster.";
@@ -889,6 +863,32 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
             }
 
             return new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="ClusterProxy"/> for the current Kubernetes context.
+        /// </summary>
+        /// <returns>The <see cref="ClusterProxy"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method will terminate the program with an error message when not logged
+        /// into a neonKUBE cluster.
+        /// </note>
+        /// </remarks>
+        public static ClusterProxy GetCluster()
+        {
+            if (KubeHelper.CurrentContext == null)
+            {
+                Console.Error.WriteLine("*** ERROR: You are not logged into a cluster.");
+                Program.Exit(1);
+            }
+            else if (KubeHelper.CurrentContext == null)
+            {
+                Console.Error.WriteLine("*** ERROR: You are not logged into a neonKUBE cluster.");
+                Program.Exit(1);
+            }
+
+            return new ClusterProxy(KubeHelper.CurrentContext, Program.CreateNodeProxy<NodeDefinition>);
         }
 
         /// <summary>

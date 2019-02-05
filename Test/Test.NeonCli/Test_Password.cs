@@ -38,7 +38,7 @@ using Xunit;
 namespace Test.NeonCli
 {
     /// <summary>
-    /// Tests <b>neon passwords</b> commands.fs
+    /// Tests <b>neon passwords</b> commands.
     /// </summary>
     public class Test_Password
     {

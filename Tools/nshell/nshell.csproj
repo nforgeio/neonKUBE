@@ -234,6 +234,13 @@
       <Project>{8d3bd5ba-aaf6-4233-879f-69a63eb6cda1}</Project>
       <Name>Neon.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj">
+      <Project>{c23307a1-4e5a-4b83-a8eb-90de334868c6}</Project>
+      <Name>Neon.Kube</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

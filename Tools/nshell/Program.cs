@@ -34,6 +34,7 @@ using Newtonsoft.Json;
 using Neon;
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Kube;
 
 namespace NShell
 {
@@ -64,13 +65,17 @@ USAGE:
 COMMAND SUMMARY:
 
     nshell help     COMMAND
-    nshell proxy    kube-dashboard LOCAL-PORT NODE-PORT
+    nshell proxy    SERVICE LOCAL-PORT NODE-PORT
     nshell version  [-n] [--git]
 
 ARGUMENTS:
 
     LOCAL-PORT      - local proxy port on 127.0.0.1
     NODE-PORT       - remote cluster node port
+
+    SERVICE         - identifies the service being proxied:
+
+                         kube-dashboard
 
 ";
             // Disable any logging that might be performed by library classes.
@@ -251,6 +256,56 @@ ARGUMENTS:
             // No match.
 
             return null;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="SshProxy{TMetadata}"/> for the specified host and server name,
+        /// configuring logging and the credentials as specified by the global command
+        /// line options.
+        /// </summary>
+        /// <param name="name">The node name.</param>
+        /// <param name="publicAddress">The node's public IP address or FQDN.</param>
+        /// <param name="privateAddress">The node's private IP address.</param>
+        /// <param name="appendToLog">
+        /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
+        /// or <c>false</c> to replace any existing log file with a new one.
+        /// </param>
+        /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the server.</typeparam>
+        /// <returns>The <see cref="SshProxy{TMetadata}"/>.</returns>
+        public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress, bool appendToLog)
+            where TMetadata : class
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            var sshCredentials = KubeHelper.CurrentContext.Extensions.SshCredentials; ;
+
+            return new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="ClusterProxy"/> for the current Kubernetes context.
+        /// </summary>
+        /// <returns>The <see cref="ClusterProxy"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method will terminate the program with an error message when not logged
+        /// into a neonKUBE cluster.
+        /// </note>
+        /// </remarks>
+        public static ClusterProxy GetCluster()
+        {
+            if (KubeHelper.CurrentContext == null)
+            {
+                Console.Error.WriteLine("*** ERROR: You are not logged into a cluster.");
+                Program.Exit(1);
+            }
+            else if (KubeHelper.CurrentContext == null)
+            {
+                Console.Error.WriteLine("*** ERROR: You are not logged into a neonKUBE cluster.");
+                Program.Exit(1);
+            }
+
+            return new ClusterProxy(KubeHelper.CurrentContext, Program.CreateNodeProxy<NodeDefinition>);
         }
 
         /// <summary>
