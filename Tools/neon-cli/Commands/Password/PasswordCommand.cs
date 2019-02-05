@@ -77,14 +77,6 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            var command = commandLine.Arguments.ElementAtOrDefault(0);
-
-            if (command != null)
-            {
-                Console.Error.WriteLine($"*** ERROR: Unknown command: {command}");
-                Program.Exit(1);
-            }
-
             Console.WriteLine(usage);
         }
 
