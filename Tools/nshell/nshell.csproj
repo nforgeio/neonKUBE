@@ -245,4 +245,11 @@
     <Error Condition="!Exists('..\..\packages\GitInfo.2.0.20\build\GitInfo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\GitInfo.2.0.20\build\GitInfo.targets'))" />
   </Target>
   <Import Project="..\..\packages\GitInfo.2.0.20\build\GitInfo.targets" Condition="Exists('..\..\packages\GitInfo.2.0.20\build\GitInfo.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>if not exist "$(NF_BUILD)" mkdir "$(NF_BUILD)"
+if not exist "$(NF_BUILD_NSHELL)" mkdir "$(NF_BUILD_NSHELL)"
+copy "$(TargetDir)*.exe" "$(NF_BUILD_NSHELL)"
+copy "$(TargetDir)*.dll" "$(NF_BUILD_NSHELL)"
+</PostBuildEvent>
+  </PropertyGroup>
 </Project>
