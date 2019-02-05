@@ -103,17 +103,13 @@ Follow the steps below to configure a development or test workstation:
 
 16. Restart Visual Studio (to pick up any environment changes).
 
-17. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonKUBE **DEVOPS Password** when prompted):
-
-&nbsp;&nbsp;&nbsp;&nbsp;`neon ansible password import %NF_ROOT%\passwords.zip`
-
-18. Confirm that the solution builds:
+17. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
   * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-19. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
   * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
   * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -123,27 +119,27 @@ Follow the steps below to configure a development or test workstation:
   
     ![WinSCP Hidden Files](./README/WinSCPHiddenFiles.png)
 
-20. *Optional*: Install **OpenVPN**
+19. *Optional*: Install **OpenVPN**
 
    * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
    * Run this command as administrator in a CMD window to install a second TAP interface:
 
    `"%PROGRAMFILES%\Tap-Windows\bin\addtap.bat"`
 
-21. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+20. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-22. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+21. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-23. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+22. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
-24. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
+23. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
 
   * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
   * Confgure this to run as administrator.
   * Run Cmdr and configure settings.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-25. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+24. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
 # Git Branches and Docker Image Tagging Conventions
 
