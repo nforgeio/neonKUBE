@@ -175,6 +175,40 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Ensures that sensitive folders and files on the local workstation are encrypted at rest
+        /// for security purposes.  These include the users <b>.kube</b>, <b>.neonkube</b>, and any
+        /// the <b>OpenVPN</b> if it exists.
+        /// </summary>
+        public static void EncryptSensitiveFiles()
+        {
+            if (NeonHelper.IsWindows)
+            {
+                var userFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+                var sensitiveFolders = new string[]
+                {
+                    Path.Combine(userFolderPath, ".kube"),
+                    Path.Combine(userFolderPath, ".neonkube"),
+                    Path.Combine(userFolderPath, "OpenVPN")
+                };
+
+                foreach (var sensitiveFolder in sensitiveFolders)
+                {
+                    if (Directory.Exists(sensitiveFolder))
+                    {
+                        KubeHelper.EncryptFile(sensitiveFolder);
+                    }
+                }
+            }
+            else
+            {
+                // $todo(jeff.lill): Implement this for OS/X
+
+                throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
         /// Returns <c>true</c> if the current application is running in the special 
         /// <b>neon-cli</b> container as a shimmed application.
         /// </summary>
