@@ -78,13 +78,5 @@ ARGUMENTS:
             Console.WriteLine("");
             Console.WriteLine("*** The cluster definition is OK.");
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            shim.AddFile(shim.CommandLine.Arguments.LastOrDefault());
-
-            return new DockerShimInfo(shimability: DockerShimability.Optional);
-        }
     }
 }

@@ -96,28 +96,6 @@ namespace NeonCli
         /// </summary>
         /// <param name="commandLine">The command line.</param>
         void Run(CommandLine commandLine);
-
-        /// <summary>
-        /// Called when the tool shim is being executed on the operator's workstation to
-        /// convert the command line into something that can be passed into the internal Docker
-        /// container and then executed there.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="DockerShimInfo"/> that indicates whether the command should be shimmed
-        /// and also whether the cluster should be connected before executing the command
-        /// in the <b>neon-cli</b> container.
-        /// </returns>
-        /// <remarks>
-        /// <para>
-        /// The command is responsible for modifying the shimmed command line as required
-        /// as well as adding any files or standard input that will need to be passed
-        /// into the container.
-        /// </para>
-        /// <para>
-        /// Commands that need no special handling may simply leave the shim unchanged.
-        /// </para>
-        /// </remarks>
-        DockerShimInfo Shim(DockerShim shim);
     }
 
     [ContractClassFor(typeof(ICommand))]
@@ -142,12 +120,6 @@ namespace NeonCli
         public void Run(CommandLine commandLine)
         {
             Covenant.Requires<ArgumentNullException>(commandLine != null);
-        }
-
-        public DockerShimInfo Shim(DockerShim shim)
-        {
-            Covenant.Requires<ArgumentNullException>(shim != null);
-            return null;
         }
     }
 }

@@ -156,11 +156,5 @@ ZIP archive.
             Console.WriteLine($"[{passwordCount}] passwords imported.");
             Program.Exit(0);
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: false);
-        }
     }
 }

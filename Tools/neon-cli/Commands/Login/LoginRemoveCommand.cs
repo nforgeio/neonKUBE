@@ -131,11 +131,5 @@ USER@CLUSTER[/NAMESPACE is not specified.
             KubeHelper.Config.RemoveContext(context);
             Console.WriteLine($"Removed: {contextName}");
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: false);
-        }
     }
 }

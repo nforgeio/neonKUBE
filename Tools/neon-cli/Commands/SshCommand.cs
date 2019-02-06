@@ -135,13 +135,5 @@ ARGUMENTS:
 
             Process.Start(Program.PuttyPath, $"-l {extensions.SshUsername} -pw {extensions.SshPassword} {node.PrivateAddress}:22 -hostkey \"{fingerprint}\"");
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            // This command cannot be executed within the [neon-cli] container.
-
-            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: true);
-        }
     }
 }

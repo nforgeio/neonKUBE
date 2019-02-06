@@ -92,11 +92,5 @@ ARGUMENTS:
             Console.Write(File.ReadAllText(path));
             Program.Exit(0);
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: false);
-        }
     }
 }

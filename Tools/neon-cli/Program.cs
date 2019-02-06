@@ -44,8 +44,6 @@ namespace NeonCli
     /// </summary>
     public static class Program
     {
-        private static DockerShim shim;     // $hack(jeff.lill): Exit() uses this to ensure that shim folders are deleted.
-
         /// <summary>
         /// The program version.
         /// </summary>
@@ -60,7 +58,8 @@ namespace NeonCli
         /// Program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
-        public static void Main(string[] args)
+        /// <returns>The exit code.</returns>
+        public static int Main(string[] args)
         {
             string usage = $@"
 neonKUBE Management Tool: neon [v{Program.Version}]
@@ -93,13 +92,21 @@ OPTIONS:
 
     --help                              - Display help
     --log-folder=LOG-FOLDER             - Optional log folder path
+
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
                                           configured in parallel [default=6]
+
     --machine-password=PASSWORD         - Overrides default initial machine
                                           password: sysadmin0000
+
     --machine-username=USERNAME         - Overrides default initial machine
                                           username: sysadmin
     -q, --quiet                         - Disables operation progress
+
+    --unit-test                         - Used internally for unit testing to 
+                                          indicate that the tool is not running 
+                                          as a process but was invoked directly.
+
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster stablization 
                                           (defaults to 60s).
 ";
@@ -172,6 +179,7 @@ OPTIONS:
                 validOptions.Add("--quiet");
                 validOptions.Add("-w");
                 validOptions.Add("--wait");
+                validOptions.Add("--unit-test");
 
                 if (CommandLine.Arguments.Length == 0)
                 {
@@ -257,244 +265,6 @@ OPTIONS:
                     Directory.CreateDirectory(LogPath);
                 }
 
-                // Let the command determine whether we're going to run in shim mode or not.
-
-                int exitCode;
-
-                using (shim = new DockerShim(CommandLine))
-                {
-                    var secretsRoot = KubeHelper.GetNeonKubeUserFolder(ignoreNeonToolContainerVar: true);
-
-                    // $todo(jeff.lill): Implement this?
-                    // HiveLogin = GetHiveLogin();
-
-                    if (!KubeHelper.InToolContainer)
-                    {
-                        // Give the command a chance to modify the shimmed command line and also
-                        // verify that the command can be run within Docker.
-
-                        var shimInfo = command.Shim(shim);
-
-                        if (shimInfo.EnsureConnection)
-                        {
-                            // $todo(jeff.lill): Implement this?
-                            //if (HiveLogin == null)
-                            //{
-                            //    Console.Error.WriteLine(Program.MustLoginMessage);
-                            //    Program.Exit(1);
-                            //}
-                        }
-
-                        // $note(jeff.lill):
-                        //
-                        // Although commands report whether shimming is optional, we're going to
-                        // ignore this right now and shim only when required.  If the [--shim] 
-                        // option is present and the command allows shimming, then it'll be
-                        // shimmed.
-
-                        var shimCommand = false;
-
-                        if (shimInfo.Shimability == DockerShimability.Required)
-                        {
-                            shimCommand = true;
-                        }
-                        else if (shimInfo.Shimability == DockerShimability.Optional && LeftCommandLine.HasOption("--shim"))
-                        {
-                            shimCommand = true;
-                        }
-
-                        if (shimCommand)
-                        {
-                            // Map the container's [/log] directory as required.
-
-                            var logMount = string.Empty;
-
-                            if (!string.IsNullOrEmpty(LogPath))
-                            {
-                                var fullLogPath = Path.GetFullPath(LogPath);
-
-                                Directory.CreateDirectory(fullLogPath);
-
-                                logMount = $"--mount type=bind,source=\"{fullLogPath}\",target=/log";
-                            }
-
-                            shim.WriteScript();
-
-                            // Run the [nkubeio/neon-cli] Docker image, passing the modified command line 
-                            // arguments and mounting the following read/write volumes:
-                            //
-                            //      /neonkube       - the root folder for this workstation's cluster logins
-                            //      /shim           - the generated shim files
-                            //      /log            - the logging folder (if logging is enabled)
-                            //
-                            // See: https://github.com/nforgeio/neonKUBE/issues/266
-
-                            var secretsMount = $"--mount type=bind,source=\"{secretsRoot}\",target=/neonkube";
-                            var shimMount    = $"--mount type=bind,source=\"{shim.ShimExternalFolder}\",target=/shim";
-                            var options      = shim.Terminal ? "-it" : "-i";
-
-                            if (LeftCommandLine.HasOption("--noterminal"))
-                            {
-                                options = "-i";
-                            }
-
-                            // If the NEON_RUN_ENV=PATH environment variable exists and references an 
-                            // existing file, then this instance of [neon] is running within the context 
-                            // of a [neon run ...] command.  In this case, we need to forward the run
-                            // environment variables into the container we're launching.
-                            //
-                            // The NEON_RUN_ENV file defines these variables and is compatible with the
-                            // [docker run --env-file=PATH] option so we'll use that.
-
-                            var runEnvPath = Environment.GetEnvironmentVariable("NEON_RUN_ENV");
-
-                            if (!string.IsNullOrWhiteSpace(runEnvPath) && File.Exists(runEnvPath))
-                            {
-                                if (options.Length > 0)
-                                {
-                                    options += " ";
-                                }
-
-                                options += $"--env-file \"{runEnvPath}\"";
-                            }
-
-                            // Mount any mapped client folders.
-
-                            var sbMappedMount = new StringBuilder();
-
-                            foreach (var mappedFolder in shim.MappedFolders)
-                            {
-                                var readOnly = mappedFolder.IsReadOnly ? ",readonly" : string.Empty;
-
-                                sbMappedMount.AppendWithSeparator($"--mount type=bind,source=\"{mappedFolder.ClientFolderPath}\",target={mappedFolder.ContainerFolderPath}{readOnly}");
-                            }
-
-                            // If the tool was built from the Git production branch then the Docker image
-                            // tag will simply be the tool version.  For non-production branches we'll
-                            // use [BRANCH-<version>] as the tag.
-
-#pragma warning disable 162 // Unreachable code
-
-                            var imageTag = Program.Version;
-
-                            if (ThisAssembly.Git.Branch != KubeConst.GitProdBranch)
-                            {
-                                imageTag = $"{ThisAssembly.Git.Branch}-{Program.Version}";
-                            }
-
-#pragma warning restore 162 // Unreachable code
-
-                            // Generate any [--env] options to be passed to the container.
-
-                            var sbEnvOptions = new StringBuilder();
-
-                            foreach (var envOption in shim.EnvironmentVariables)
-                            {
-                                sbEnvOptions.AppendWithSeparator(NeonHelper.NormalizeExecArgs($"--env={envOption}"));
-                            }
-
-                            // Use the [nkubeio] Docker Hub registry for PROD releases and [nhivedev]
-                            // for all other branches.
-
-                            var sourceRegistry = IsProd ? KubeConst.NeonProdRegistry : KubeConst.NeonDevRegistry;
-
-                            // Verify that the matching [neon-cli] image exists in the local Docker,
-                            // pulling it if it does not.  We're going to do this as an extra step
-                            // to prevent the pulling messages from mixing into the command output.
-
-                            var result = NeonHelper.ExecuteCapture("docker",
-                                new object[]
-                                {
-                                    "image",
-                                    "ls",
-                                    "--filter", $"reference={sourceRegistry}/neon-cli:{imageTag}"
-                                });
-
-                            if (result.ExitCode != 0)
-                            {
-                                Console.Error.WriteLine(
-$@"*** ERROR: Cannot list Docker images.
-
-{result.AllText}");
-                                Program.Exit(1);
-                            }
-
-                            // The Docker image list output should look something like this:
-                            //
-                            //      REPOSITORY                  TAG                 IMAGE ID            CREATED             SIZE
-                            //      nkubeio/neon-registry       jeff-latest         b0d1d9c21ee1        20 hours ago        34.2MB
-                            //
-                            // We're just going to look to see there's a line of text that specifies
-                            // the repo and tag we're looking for.
-
-                            var matchingNeonImages = new StringReader(result.OutputText)
-                                .Lines()
-                                .Skip(1)
-                                .Where(
-                                    line =>
-                                    {
-                                        var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                                        return fields.Length >= 2 &&
-                                            fields[0] == $"{sourceRegistry}/neon-cli" &&
-                                            fields[1] == imageTag;
-                                    });
-
-                            if (matchingNeonImages.Count() == 0)
-                            {
-                                // The required [neon-cli] image doesn't exist locally so pull it.
-
-                                result = NeonHelper.ExecuteCapture("docker",
-                                    new object[]
-                                    {
-                                        "image",
-                                        "pull",
-                                        $"{sourceRegistry}/neon-cli:{imageTag}"
-                                    });
-
-                                if (result.ExitCode != 0)
-                                {
-                                    Console.Error.WriteLine(
-$@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
-
-{result.AllText}");
-                                    Program.Exit(1);
-                                }
-                            }
-
-                            // Crank up Docker to shim into the [neon-cli] container.
-
-                            Process process;
-
-                            try
-                            {
-                                process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {sourceRegistry}/neon-cli:{imageTag}");
-                            }
-                            catch (Win32Exception)
-                            {
-                                Console.Error.WriteLine("*** ERROR: Cannot run Docker.  Make sure that it is installed and is on the PATH.");
-                                Program.Exit(1);
-                                return;
-                            }
-
-                            process.WaitForExit();
-                            exitCode = process.ExitCode;
-
-                            if (shim.PostAction != null)
-                            {
-                                shim.PostAction(exitCode);
-                            }
-
-                            Program.Exit(exitCode);
-                        }
-                    }
-                }
-
-                shim = null;    // $jack(jeff.lill): Lets the Exit() method know that it doesn't need to dispose this.
-
-                // We didn't run the command as a shim, so we're going to execute
-                // the command locally.
-
                 //-------------------------------------------------------------
                 // Process the standard command line options.
 
@@ -502,6 +272,7 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
 
                 MachineUsername = LeftCommandLine.GetOption("--machine-username", "sysadmin");
                 MachinePassword = LeftCommandLine.GetOption("--machine-password", "sysadmin0000");
+                UnitTestMode    = CommandLine.HasOption("--unit-test");
 
                 // Handle the other options.
 
@@ -609,6 +380,17 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
                     command.Run(CommandLine.Shift(command.Words.Length));
                 }
             }
+            catch (ProgramExitException e)
+            {
+                if (UnitTestMode)
+                {
+                    return e.ExitCode;
+                }
+                else
+                {
+                    Environment.Exit(e.ExitCode);
+                }
+            }
             catch (Exception e)
             {
                 Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
@@ -616,7 +398,15 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
                 Program.Exit(1);
             }
 
-            Program.Exit(0);
+            if (UnitTestMode)
+            {
+                return 0;
+            }
+            else
+            {
+                Environment.Exit(0);
+                return 0;
+            }
         }
 
         /// <summary>
@@ -748,22 +538,7 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
 
             KubeHelper.EncryptSensitiveFiles();
 
-            if (shim != null)
-            {
-                // $hack(jeff.lill):
-                //
-                // Calling Exit() short circuits the using statement in the [Main]
-                // method above so we're going to dispose the shim here instead 
-                // (if there is one).  I had accumulated almost 38K shim folders 
-                // over the past six months or so.  This should help prevent that.
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/394
-
-                shim.Dispose();
-                shim = null;
-            }
-
-            Environment.Exit(exitCode);
+            throw new ProgramExitException(exitCode);
         }
 
         /// <summary>
@@ -776,6 +551,13 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
         /// or the entire command line if there is no splitter.
         /// </summary>
         public static CommandLine LeftCommandLine { get; private set; }
+
+        /// <summary>
+        /// Returns <c>true</c> if the <b>--noprocess</b> option was specified indicating
+        /// that the tool is not running as a process but was invoked directly by a unit
+        /// test instead.
+        /// </summary>
+        public static bool UnitTestMode { get; private set; }
 
         /// <summary>
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 

@@ -90,11 +90,5 @@ The generated password will be written to standard output.
             Console.Write(NeonHelper.GetRandomPassword(length));
             Program.Exit(0);
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: false);
-        }
     }
 }

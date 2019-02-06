@@ -75,11 +75,5 @@ USAGE:
             KubeHelper.SetCurrentContext((string)null);
             Console.WriteLine("");
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: false);
-        }
     }
 }

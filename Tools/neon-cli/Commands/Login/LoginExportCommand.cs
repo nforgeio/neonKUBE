@@ -120,11 +120,5 @@ REMARKS:
 
             Console.WriteLine(yaml);
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            return new DockerShimInfo(shimability: DockerShimability.None);
-        }
     }
 }

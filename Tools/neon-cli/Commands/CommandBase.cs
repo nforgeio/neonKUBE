@@ -76,8 +76,5 @@ namespace NeonCli
 
         /// <inheritdoc/>
         public abstract void Run(CommandLine commandLine);
-
-        /// <inheritdoc/>
-        public abstract DockerShimInfo Shim(DockerShim shim);
     }
 }

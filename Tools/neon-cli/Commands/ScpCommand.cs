@@ -148,13 +148,5 @@ ARGUMENTS:
 
             Process.Start(Program.WinScpPath, $@"scp://{extensions.SshUsername}:{extensions.SshPassword}@{node.PrivateAddress}:22 /hostkey=""{fingerprint}"" /newinstance /rawsettings Shell=""sudo%20-s"" compression=1");
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            // This command cannot be executed within the [neon-cli] container.
-
-            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: true);
-        }
     }
 }

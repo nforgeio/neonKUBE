@@ -132,11 +132,5 @@ This command creates or updates a named password.
             File.WriteAllText(Path.Combine(KubeHelper.PasswordsFolder, passwordName), password);
             Program.Exit(0);
         }
-
-        /// <inheritdoc/>
-        public override DockerShimInfo Shim(DockerShim shim)
-        {
-            return new DockerShimInfo(shimability: DockerShimability.None, ensureConnection: false);
-        }
     }
 }
