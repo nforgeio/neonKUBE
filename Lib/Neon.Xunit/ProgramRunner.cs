@@ -46,17 +46,71 @@ namespace Neon.Xunit
     /// This is makes debugging easier and also deals with the fact that
     /// unit tests may leave orphan processes running.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This class is designed to simulate running a single executable
+    /// by calling its main entrypoint.  To accomplish this, use the
+    /// default constructor to create a <see cref="ProgramRunner"/> 
+    /// instance.  The constructor will set <see cref="Current"/> to
+    /// itself and then you can call <see cref="Execute(ProgramEntrypoint, string[])"/>
+    /// to execute the program synchronously (waiting for it to return),
+    /// or <see cref="Fork(ProgramEntrypoint, string[])"/> to simulate 
+    /// forking the program by running it on a new thread.
+    /// </para>
+    /// <para>
+    /// <see cref="Fork(ProgramEntrypoint, string[])"/> waits to return
+    /// until the program calls <see cref="ProgramReady"/>.  This is used
+    /// to ensure that program has completed the activities required 
+    /// by the unit tests before the tests are executed.
+    /// </para>
+    /// <note>
+    /// Only one <see cref="ProgramRunner"/> instance can active at any
+    /// particular time.
+    /// </note>
+    /// <note>
+    /// You should call <see cref="Dispose"/> when you're finished with
+    /// the runner.
+    /// </note>
+    /// </remarks>
     public sealed class ProgramRunner : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static memebrs
+
         private static Thread           programThread;
         private static AutoResetEvent   programReadyEvent;
+        private static TimeSpan         forkTimeout;
+
+        /// <summary>
+        /// Returns the current <see cref="ProgramRunner"/> or <c>null</c>.
+        /// </summary>
+        public static ProgramRunner Current { get; private set; }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private int     programExitCode;
+        private bool    programIsReady;
+        private bool    programExitBeforeReady;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ProgramRunner()
+        /// <param name="forkTimeout">
+        /// Specifies the maximum time for <see cref="Fork(ProgramEntrypoint, string[])"/>
+        /// to wait for the program to signal that it's ready by calling <see cref="ProgramReady"/>.
+        /// This defaults to <b>30 seconds</b>.
+        /// </param>
+        public ProgramRunner(TimeSpan forkTimeout = default)
         {
-            programReadyEvent = new AutoResetEvent(false);
+            if (forkTimeout <= TimeSpan.Zero)
+            {
+                forkTimeout = TimeSpan.FromSeconds(30);
+            }
+
+            ProgramRunner.forkTimeout       = forkTimeout;
+            ProgramRunner.programReadyEvent = new AutoResetEvent(false);
+            ProgramRunner.Current           = this;
         }
 
         /// <inheritdoc/>
@@ -73,6 +127,8 @@ namespace Neon.Xunit
                 programReadyEvent.Dispose();
                 programReadyEvent = null;
             }
+
+            Current = null;
         }
 
         /// <summary>
@@ -105,7 +161,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Executes a program entry point asynchronously, without waiting for the command to complete.
         /// This is useful for commands that don't terminate by themselves (like <b>nshell proxy</b>).
-        /// Call <see cref="Terminate()"/> to kill the running command.
+        /// Call <see cref="TerminateFork()"/> to kill the running command.
         /// </summary>
         /// <param name="main">The program entry point.</param>
         /// <param name="args">The arguments.</param>
@@ -122,32 +178,58 @@ namespace Neon.Xunit
 
             args = (new string[] { "--unit-test" }).Union(args).ToArray();
 
+            programIsReady         = false;
+            programExitBeforeReady = false;
+
             programThread = new Thread(
                 new ThreadStart(
                     () =>
                     {
-                        main(args);
+                        programExitCode = main(args);
+
+                        if (!programIsReady)
+                        {
+                            programExitBeforeReady = true;
+                        }
                     }));
 
+            programThread.Name         = "program-runner";
+            programThread.IsBackground = true;
             programThread.Start();
 
-            // $hack(jeff.lill):
-            //
-            // We need to give the tool some time to actually start the operation.
-            // Ideally, we'd have some way for the tool to signal that it's ready.
-            // Perhaps, we should implement an Xunit helper that implements a tool
-            // test context that replaces this class and provides a method the
-            // program can use to signal readiness.
-            //
-            // For now, we're just going to wait a bit.
+            // We need to give the program enough time to do enough initialization
+            // so the tests can succeed.  We're going to rely on the program signel
+            // this by calling [ProgramReady()] which will set the event we'll
+            // listen on.
 
-            Thread.Sleep(TimeSpan.FromSeconds(1));
+            programReadyEvent.WaitOne(forkTimeout);
+
+            if (programExitBeforeReady)
+            {
+                throw new InvalidOperationException($"The program returned with [exitcode={programExitCode}] before calling [{nameof(ProgramReady)}()].");
+            }
         }
 
         /// <summary>
-        /// Terminates the <b>nshell</b> tool if one is running.
+        /// <para>
+        /// Called by programs executed via <see cref="Fork(ProgramEntrypoint, string[])"/>
+        /// when the program has initialized itself enough to be ready for testing.
+        /// </para>
+        /// <note>
+        /// This must be called or else <see cref="Fork(ProgramEntrypoint, string[])"/> will
+        /// never return.
+        /// </note>
         /// </summary>
-        public void Terminate()
+        public void ProgramReady()
+        {
+            programIsReady = true;
+            programReadyEvent.Set();
+        }
+
+        /// <summary>
+        /// Terminates the forked program if one is running.
+        /// </summary>
+        public void TerminateFork()
         {
             if (programThread != null)
             {
