@@ -31,6 +31,7 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Kube;
 using Neon.Net;
+using Neon.Xunit;
 
 namespace NShell
 {
@@ -155,6 +156,10 @@ node port.
             Console.WriteLine($" HTTP Proxy: {localEndpoint} --> {nodeEndpoint}");
 
             new ReverseProxy(localEndpoint, nodeEndpoint);
+
+            // Signal [ProgramRunner] (if there is one) that we're ready for any pending tests.
+
+            ProgramRunner.Current?.ProgramReady();
 
             while (true)
             {

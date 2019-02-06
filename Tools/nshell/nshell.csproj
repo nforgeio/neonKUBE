@@ -241,6 +241,10 @@
       <Project>{c23307a1-4e5a-4b83-a8eb-90de334868c6}</Project>
       <Name>Neon.Kube</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj">
+      <Project>{468e440f-2284-483d-a54a-ec540c85f76e}</Project>
+      <Name>Neon.Xunit</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
