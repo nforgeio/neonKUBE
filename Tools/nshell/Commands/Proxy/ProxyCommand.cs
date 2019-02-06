@@ -137,8 +137,8 @@ node port.
             // $todo(jeff.lill:
             //
             // We should query the API server here to identify the current master
-            // nodes and also to help ensure the user has cluster admin rights
-            // and we also need to pass endpoints for all masters to the proxy
+            // nodes and also to help ensure the user has cluster admin rights.
+            // We also need to pass endpoints for all masters to the proxy
             // so it can forward traffic to a healthy master and finally, we
             // we need to use HTTPS to secure traffic forwarded to the cluster:
             //

@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+    <ProjectReference Include="..\..\Tools\nshell\nshell.csproj" />
   </ItemGroup>
 
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />

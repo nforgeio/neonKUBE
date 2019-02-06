@@ -52,7 +52,7 @@ namespace NShell
         /// Program entry point.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
             string usage = $@"
 neonKUBE Shell Utilities: nshell [v{Program.Version}]
@@ -70,14 +70,20 @@ COMMAND SUMMARY:
 
 ARGUMENTS:
 
-    LOCAL-PORT      - local proxy port on 127.0.0.1
-    NODE-PORT       - remote cluster node port
+    LOCAL-PORT      - Local proxy port on 127.0.0.1
+    NODE-PORT       - Remote cluster node port
 
-    SERVICE         - identifies the service being proxied:
+    SERVICE         - Identifies the service being proxied:
 
                          kube-dashboard
 
+OPTIONS:
+
+    --unit-test     - Used internally for unit testing to indicate that the
+                      tool is not running as a process but was invoked 
+                      directly.
 ";
+
             // Disable any logging that might be performed by library classes.
 
             LogManager.Default.LogLevel = LogLevel.None;
@@ -127,6 +133,10 @@ ARGUMENTS:
                     Program.Exit(0);
                 }
 
+                // Process common command line options.
+
+                UnitTestMode = LeftCommandLine.HasOption("--unit-test");
+
                 // Lookup the command.
 
                 command = GetCommand(CommandLine, commands);
@@ -150,15 +160,44 @@ ARGUMENTS:
                 {
                     command.Run(CommandLine.Shift(command.Words.Length));
                 }
+
+                Program.Exit(0);
+            }
+            catch (ProgramExitException e)
+            {
+                if (UnitTestMode)
+                {
+                    return e.ExitCode;
+                }
+                else
+                {
+                    Environment.Exit(e.ExitCode);
+                }
             }
             catch (Exception e)
             {
                 Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
                 Console.Error.WriteLine(string.Empty);
-                Program.Exit(1);
+
+                if (UnitTestMode)
+                {
+                    return 1;
+                }
+                else
+                {
+                    Environment.Exit(1);
+                }
             }
 
-            Program.Exit(0);
+            if (UnitTestMode)
+            {
+                return 0;
+            }
+            else
+            {
+                Environment.Exit(0);
+                return 0;
+            }
         }
 
         /// <summary>
@@ -171,6 +210,13 @@ ARGUMENTS:
         /// or the entire command line if there is no splitter.
         /// </summary>
         public static CommandLine LeftCommandLine { get; private set; }
+        
+        /// <summary>
+        /// Returns <c>true</c> if the <b>--noprocess</b> option was specified indicating
+        /// that the tool is not running as a process but was invoked directly by a unit
+        /// test instead.
+        /// </summary>
+        public static bool UnitTestMode { get; private set; }
 
         /// <summary>
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
@@ -341,7 +387,7 @@ ARGUMENTS:
         /// <param name="exitCode">The exit code.</param>
         public static void Exit(int exitCode)
         {
-            Environment.Exit(exitCode);
+            throw new ProgramExitException(exitCode);
         }
     }
 }

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net.Http;
 using Microsoft.Net.Http.Server;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -125,7 +126,7 @@ namespace Test.NShell
 
                 // Start the nshell proxy.
 
-                NShellAsync($"proxy unit-test {localEndpoint.Port} {remoteEndpoint.Port}");
+                runner.Fork(global::NShell.Program.Main, $"proxy", "unit-test", $"{localEndpoint.Port}", $"{remoteEndpoint.Port}");
             }
 
             public void Dispose()
@@ -142,7 +143,7 @@ namespace Test.NShell
                     client = null;
                 }
 
-                NShellTerminateAsync().Wait();
+                runner.Terminate();
             }
 
             /// <summary>
@@ -225,7 +226,7 @@ namespace Test.NShell
                     operations.Add(opInfo.Id, opInfo);
                 }
 
-                // OnRequest() uses this to correlate requests receievd by the
+                // OnRequest() uses this to correlate requests received by the
                 // server with the operation info.
 
                 request.Headers.Add("X-NEON-TEST-ID", opInfo.Id.ToString());
@@ -239,84 +240,13 @@ namespace Test.NShell
         //---------------------------------------------------------------------
         // Static members
 
-        private static string   nshellPath;
-        private static Process  nshellProcess;
+        private static ProgramRunner runner = new ProgramRunner();
 
         // Select endpoints that are unlikely to be already in use and
         // run the proxy command asynchronously.
 
         private static IPEndPoint localEndpoint  = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 61422);
         private static IPEndPoint remoteEndpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 61423);
-
-        static Test_Proxy()
-        {
-            nshellPath = Path.Combine(Environment.GetEnvironmentVariable("NF_BUILD_NSHELL"), NeonHelper.IsWindows ? "nshell.exe" : "nshell");
-        }
-
-        /// <summary>
-        /// Executes <b>nshell</b> synchronously, passing arguments and returning the result.
-        /// </summary>
-        /// <param name="args">The arguments.</param>
-        /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        private static ExecuteResult NShell(params object[] args)
-        {
-            return NeonHelper.ExecuteCapture(nshellPath, args);
-        }
-
-        /// <summary>
-        /// Executes <b>nshell</b> asynchronously, without waiting for the command to complete.
-        /// This is useful for commands that don't terminate by themselves (like <b>nshell proxy</b>.
-        /// Call <see cref="NShellTerminateAsync()"/> to kill the running nshell process.
-        /// </summary>
-        /// <param name="args">The arguments.</param>
-        /// <returns>The tracking task.</returns>
-        private static void NShellAsync(params object[] args)
-        {
-            NShellAsync(NeonHelper.NormalizeExecArgs(args));
-        }
-
-        /// <summary>
-        /// Executes <b>nshell</b>with arguments formatted as a single string asynchronously, without
-        /// waiting for the command to complete.  This is useful for commands that don't terminate by 
-        /// themselves (like <b>nshell proxy</b>.  Call <see cref="NShellTerminateAsync()"/> to kill
-        /// the running nshell process.
-        /// </summary>
-        /// <param name="args">The arguments.</param>
-        private static void NShellAsync(string args)
-        {
-            if (nshellProcess != null)
-            {
-                throw new InvalidOperationException("Only one [nshell] process can run at a time.");
-            }
-
-            var processInfo = new ProcessStartInfo(nshellPath, args ?? string.Empty);
-
-            processInfo.UseShellExecute        = false;
-            processInfo.RedirectStandardError  = false;
-            processInfo.RedirectStandardOutput = false;
-            processInfo.CreateNoWindow         = true;
-
-            var process = new Process();
-
-            process.StartInfo           = processInfo;
-            process.EnableRaisingEvents = false;
-
-            process.Start();
-
-            nshellProcess = process;
-        }
-
-        /// <summary>
-        /// Terminates the <b>nshell</b> process if one is running.
-        /// </summary>
-        private static async Task NShellTerminateAsync()
-        {
-            if (nshellProcess != null)
-            {
-                nshellProcess.Kill();
-                await NeonHelper.WaitForAsync(async () => await Task.FromResult(nshellProcess == null), TimeSpan.FromSeconds(60));
-            }
-        }
 
         //---------------------------------------------------------------------
         // Instance members
