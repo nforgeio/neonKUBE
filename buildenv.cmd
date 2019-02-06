@@ -27,7 +27,6 @@ REM Configure the environment variables.
 
 set NF_TOOLBIN=%NF_ROOT%\ToolBin
 set NF_BUILD=%NF_ROOT%\Build
-SET NF_BUILD_NSHELL=%NF_BUILD%\nshell
 set NF_TEMP=C:\Temp
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
 set WINSDKPATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\x64
@@ -37,7 +36,6 @@ REM Persist the environment variables.
 setx NF_ROOT "%NF_ROOT%" /M
 setx NF_TOOLBIN "%NF_TOOLBIN%" /M
 setx NF_BUILD "%NF_BUILD%" /M
-setx NF_BUILD_NSHELL "%NF_BUILD_NSHELL%" /M
 setx NF_TEMP "%NF_TEMP%" /M
 
 setx DOTNETPATH "%DOTNETPATH%" /M
@@ -49,7 +47,6 @@ REM Make sure required folders exist.
 if not exist "%NF_TEMP%" mkdir "%NF_TEMP%"
 if not exist "%NF_TOOLBIN%" mkdir "%NF_TOOLBIN%"
 if not exist "%NF_BUILD%" mkdir "%NF_BUILD%"
-if not exist "%NF_BUILD_NSHELL%" mkdir "%NF_BUILD_NSHELL%"
 
 REM Configure the PATH.
 REM
@@ -59,7 +56,6 @@ REM attempt to add both locations to the path and the [pathtool] is
 REM smart enough to only add directories that actually exist.
 
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD%"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD_NSHELL%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%\OpenSSL"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"

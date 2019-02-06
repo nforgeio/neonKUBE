@@ -98,6 +98,10 @@ namespace NShell
                  BaseAddress = new Uri($"http://{remoteEndpoint}/")
             };
 
+            // Allow a reasonable number of remote HTTP connections.
+
+            ServicePointManager.DefaultConnectionLimit = 100;
+
             // Crank up the HTTP listener.
 
             var settings = new WebListenerSettings();
@@ -141,12 +145,16 @@ namespace NShell
             {
                 try
                 {
-                    var context = await listener.AcceptAsync();
+                    var newContext = await listener.AcceptAsync();
 
-                    var task = Task.Run(
-                        async () =>
+                    // Process the request in its own task.
+
+                    var task = Task.Factory.StartNew(
+                        async (object arg) =>
                         {
-                            using (context)
+                            Console.WriteLine("*** REQUEST ***");
+
+                            using (var context = (RequestContext)arg)
                             {
                                 // Let the request handler have a look.
 
@@ -174,7 +182,7 @@ namespace NShell
 
                                 // Copy the remote response headers, body, and other state to the client response.
 
-                                context.Response.StatusCode   = (int)remoteResponse.StatusCode;
+                                context.Response.StatusCode = (int)remoteResponse.StatusCode;
                                 context.Response.ReasonPhrase = remoteResponse.ReasonPhrase;
 
                                 foreach (var header in remoteResponse.Headers)
@@ -193,7 +201,8 @@ namespace NShell
 
                                 responseHandler?.Invoke(context);
                             }
-                        });
+                        },
+                        newContext);
                 }
                 catch (ObjectDisposedException)
                 {

@@ -110,6 +110,7 @@ namespace Test.NShell
         private sealed class ProxyTestFixture : IDisposable
         {
             private object                              syncLock   = new object();
+            private ProgramRunner                       runner;
             private MockHttpServer                      server;
             private HttpClient                          client;
             private Dictionary<int, OperationInfo>      operations = new Dictionary<int, OperationInfo>();
@@ -126,6 +127,7 @@ namespace Test.NShell
 
                 // Start the nshell proxy.
 
+                runner = new ProgramRunner();
                 runner.Fork(global::NShell.Program.Main, $"proxy", "unit-test", $"{localEndpoint.Port}", $"{remoteEndpoint.Port}");
             }
 
@@ -143,7 +145,13 @@ namespace Test.NShell
                     client = null;
                 }
 
-                runner.Terminate();
+                if (runner != null)
+                {
+                    runner.Dispose();
+                    runner = null;
+                }
+
+                runner.TerminateFork();
             }
 
             /// <summary>
@@ -240,8 +248,6 @@ namespace Test.NShell
         //---------------------------------------------------------------------
         // Static members
 
-        private static ProgramRunner runner = new ProgramRunner();
-
         // Select endpoints that are unlikely to be already in use and
         // run the proxy command asynchronously.
 
@@ -259,9 +265,9 @@ namespace Test.NShell
 
             using (var fixture = new ProxyTestFixture())
             {
-                opInfo = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), "Hello World!");
-
                 await Task.Delay(100000000);
+
+                opInfo = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), "Hello World!");
 
                 Assert.Equal(200, opInfo.StatusCode);
                 Assert.Equal("OK", opInfo.ReasonPhrase);
