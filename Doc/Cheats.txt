@@ -1,4 +1,5 @@
 # HOME: tiny
+neon login rm --force root@home-tiny
 neon cluster prepare %NF_ROOT%/devops/home/tiny.cluster.yaml --log-folder=c:/cluster-logs --unredacted
 neon cluster setup --log-folder=c:/cluster-logs --unredacted root@home-tiny
 
