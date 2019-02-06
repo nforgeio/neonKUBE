@@ -77,6 +77,13 @@ safe-apt-get install -yq nano sysstat dstat iotop iptraf apache2-utils daemon jq
 
 timedatectl set-timezone UTC
 
+# We need to blacklist the floppy drive.  Not doing this can cause
+# node failures:
+
+rmmod floppy
+echo "blacklist floppy" | tee /etc/modprobe.d/blacklist-floppy.conf
+dpkg-reconfigure initramfs-tools
+
 # Enable system statistics collection (e.g. Page Faults,...)
 
 sed -i '/^ENABLED="false"/c\ENABLED="true"' /etc/default/sysstat
