@@ -141,29 +141,29 @@ namespace NShell
             {
                 try
                 {
-                    var listenerCtx = await listener.AcceptAsync();
+                    var context = await listener.AcceptAsync();
 
                     var task = Task.Run(
                         async () =>
                         {
-                            using (listenerCtx)
+                            using (context)
                             {
                                 // Let the request handler have a look.
 
-                                requestHandler?.Invoke(listenerCtx);
+                                requestHandler?.Invoke(context);
 
                                 // Copy the headers, body, and other state from the received request to the client request. 
 
-                                var remoteRequest = new HttpRequestMessage(new HttpMethod(listenerCtx.Request.Method), listenerCtx.Request.Path);
+                                var remoteRequest = new HttpRequestMessage(new HttpMethod(context.Request.Method), context.Request.Path);
 
-                                foreach (var header in listenerCtx.Request.Headers)
+                                foreach (var header in context.Request.Headers)
                                 {
                                     remoteRequest.Headers.Add(header.Key, header.Value.ToArray());
                                 }
 
-                                var bodyStream = listenerCtx.Request.Body;
+                                var bodyStream = context.Request.Body;
 
-                                if (bodyStream != null)
+                                if (context.Request.ContentLength > 0)
                                 {
                                     remoteRequest.Content = new StreamContent(bodyStream);
                                 }
@@ -174,24 +174,24 @@ namespace NShell
 
                                 // Copy the remote response headers, body, and other state to the client response.
 
-                                listenerCtx.Response.StatusCode   = (int)remoteResponse.StatusCode;
-                                listenerCtx.Response.ReasonPhrase = remoteResponse.ReasonPhrase;
+                                context.Response.StatusCode   = (int)remoteResponse.StatusCode;
+                                context.Response.ReasonPhrase = remoteResponse.ReasonPhrase;
 
                                 foreach (var header in remoteResponse.Headers)
                                 {
-                                    listenerCtx.Response.Headers.Add(header.Key, header.Value.ToArray());
+                                    context.Response.Headers.Add(header.Key, header.Value.ToArray());
                                 }
 
                                 var responseContent = remoteResponse.Content;
 
                                 if (responseContent != null)
                                 {
-                                    await responseContent.CopyToAsync(listenerCtx.Response.Body);
+                                    await responseContent.CopyToAsync(context.Response.Body);
                                 }
 
                                 // Let the response handler have a look.
 
-                                responseHandler?.Invoke(listenerCtx);
+                                responseHandler?.Invoke(context);
                             }
                         });
                 }

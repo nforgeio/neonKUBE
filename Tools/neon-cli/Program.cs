@@ -828,6 +828,7 @@ $@"*** ERROR: Cannot pull: {sourceRegistry}/neon-cli:{imageTag}
         /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
         /// or <c>false</c> to replace any existing log file with a new one.
         /// </param>
+        /// 
         /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the server.</typeparam>
         /// <returns>The <see cref="SshProxy{TMetadata}"/>.</returns>
         public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress, bool appendToLog)

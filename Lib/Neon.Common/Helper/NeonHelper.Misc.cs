@@ -1876,5 +1876,14 @@ namespace Neon.Common
         {
             return value ? "true" : "false";
         }
+
+        /// <summary>
+        /// Do nothing method that is used when you explicitly don't want to
+        /// <c>await</c> a task and you don't want to see warning <b>CS4014</b>.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        public static void NoAwait(Task task)
+        {
+        }
     }
 }

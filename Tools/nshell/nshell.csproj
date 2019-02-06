@@ -64,6 +64,9 @@
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.AppContext, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.AppContext.4.3.0\lib\net463\System.AppContext.dll</HintPath>
@@ -257,6 +260,7 @@
     <PostBuildEvent>if not exist "$(NF_BUILD)" mkdir "$(NF_BUILD)"
 if not exist "$(NF_BUILD_NSHELL)" mkdir "$(NF_BUILD_NSHELL)"
 copy "$(TargetDir)*.exe" "$(NF_BUILD_NSHELL)"
+copy "$(TargetDir)*.exe.config" "$(NF_BUILD_NSHELL)"
 copy "$(TargetDir)*.dll" "$(NF_BUILD_NSHELL)"
 </PostBuildEvent>
   </PropertyGroup>

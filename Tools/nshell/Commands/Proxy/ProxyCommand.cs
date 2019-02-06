@@ -44,8 +44,8 @@ Starts a neonKUBE proxy.
 
 USAGE:
 
-    neon proxy
-    neon proxy SERVICE LOCAL-PORT NODE-PORT
+    nshell proxy
+    nshell proxy SERVICE LOCAL-PORT NODE-PORT
 
 ARGUMENTS:
 
@@ -84,9 +84,11 @@ node port.
                 Program.Exit(0);
             }
 
-            var target       = commandLine.Arguments.ElementAtOrDefault(0);
-            var localPortArg = commandLine.Arguments.ElementAtOrDefault(1);
-            var nodePortArg  = commandLine.Arguments.ElementAtOrDefault(2);
+            var cluster       = Program.GetCluster();
+            var serverAddress = cluster.FirstMaster.PrivateAddress;
+            var target        = commandLine.Arguments.ElementAtOrDefault(0);
+            var localPortArg  = commandLine.Arguments.ElementAtOrDefault(1);
+            var nodePortArg   = commandLine.Arguments.ElementAtOrDefault(2);
 
             if (target == null)
             {
@@ -97,7 +99,7 @@ node port.
             switch (target)
             {
                 case "kube-dashboard":
-                case "unit-test":   // Used internally for unit testing.
+                case "unit-test":
 
                     break;
 
@@ -144,13 +146,19 @@ node port.
             //
             // See: nshell proxy improvements
 
-            var cluster       = Program.GetCluster();
             var localEndpoint = new IPEndPoint(IPAddress.Loopback, localPort);
-            var nodeEndpoint  = new IPEndPoint(cluster.FirstMaster.PrivateAddress, nodePort);
+            var nodeEndpoint  = new IPEndPoint(serverAddress, nodePort);
 
-            using (var proxy = new ReverseProxy(localEndpoint, nodeEndpoint))
+            // This starts and runs the proxy.  We don't need to dispose it because
+            // the thing is supposed to run until the process is terminated.
+
+            Console.WriteLine($" HTTP Proxy: {localEndpoint} --> {nodeEndpoint}");
+
+            new ReverseProxy(localEndpoint, nodeEndpoint);
+
+            while (true)
             {
-
+                Thread.Sleep(300);
             }
         }
     }
