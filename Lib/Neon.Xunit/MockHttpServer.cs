@@ -40,16 +40,16 @@ namespace Neon.Xunit
     /// <threadsafety instance="true"/>
     public sealed class MockHttpServer : IDisposable
     {
-        private object                  syncLock = new object();
-        private WebListener             listener;
-        private Action<RequestContext>  handler;
+        private object                      syncLock = new object();
+        private WebListener                 listener;
+        private Func<RequestContext, Task>  handler;
 
         /// <summary>
         /// Constuctor.
         /// </summary>
         /// <param name="urlPrefix">Specifies the URL prefixes to be served.</param>
-        /// <param name="handler">The custom request handler.</param>
-        public MockHttpServer(string urlPrefix, Action<RequestContext> handler)
+        /// <param name="handler">The custom asynchronous request handler.</param>
+        public MockHttpServer(string urlPrefix, Func<RequestContext, Task> handler)
         {
             Covenant.Requires<ArgumentNullException>(urlPrefix != null);
             Covenant.Requires<ArgumentNullException>(handler != null);
@@ -102,10 +102,8 @@ namespace Neon.Xunit
                         {
                             using (var context = (RequestContext)arg)
                             {
-                                handler(context);
+                                await handler(context);
                             }
-
-                            await Task.CompletedTask;
                         },
                         newContext);
                 }
@@ -202,7 +200,46 @@ namespace Neon.Xunit
         /// <param name="text">The text to be written.</param>
         public static void Write(this Response response, string text)
         {
-            response.Write(Encoding.UTF8.GetBytes(text));
+            response.Body.Write(Encoding.UTF8.GetBytes(text));
+        }
+
+        /// <summary>
+        /// Asynchronously writes bytes to an HTTP response.
+        /// </summary>
+        /// <param name="response">The response.</param>
+        /// <param name="bytes">The bytes.</param>
+        public static async Task WritAsynce(this Response response, byte[] bytes)
+        {
+            await response.Body.WriteAsync(bytes, 0, bytes.Length);
+        }
+
+        /// <summary>
+        /// Asynchronously writes bytes to an HTTP response.
+        /// </summary>
+        /// <param name="response">The response.</param>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="offset">The offset of the first byte to write.</param>
+        /// <param name="count">The number of bytes to be written.</param>
+        public static async Task WriteAsync(this Response response, byte[] bytes, int offset, int count)
+        {
+            await response.Body.WriteAsync(bytes, offset, count);
+        }
+
+        /// <summary>
+        /// Asynchronously writes a string to an HTTP response using UTF-8 encoding.
+        /// </summary>
+        /// <param name="response">The response.</param>
+        /// <param name="text">The text to be written.</param>
+        public static async Task WriteAsync(this Response response, string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            var bytes = Encoding.UTF8.GetBytes(text);
+
+            await response.WriteAsync(bytes, 0, bytes.Length);
         }
     }
 }

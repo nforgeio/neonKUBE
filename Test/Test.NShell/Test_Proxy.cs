@@ -118,7 +118,7 @@ namespace Test.NShell
 
             public ProxyTestFixture()
             {
-                server = new MockHttpServer($"http://{remoteEndpoint}/", OnRequest);
+                server = new MockHttpServer($"http://{remoteEndpoint}/", OnRequestAsync);
                 client = new HttpClient()
                 {
                     BaseAddress = new Uri($"http://{localEndpoint}/"),
@@ -158,33 +158,34 @@ namespace Test.NShell
             /// Handles requests received by the server.
             /// </summary>
             /// <param name="context">The request context.</param>
-            private void OnRequest(RequestContext context)
+            private async Task OnRequestAsync(RequestContext context)
             {
-                OperationInfo opInfo;
+                OperationInfo   opInfo;
+                string          idHeader;
 
                 var request  = context.Request;
                 var response = context.Response;
 
                 lock (syncLock)
                 {
-                    var idHeader = request.Headers["X-NEON-TEST-ID"].FirstOrDefault();
+                    idHeader = request.Headers["X-NEON-TEST-ID"].FirstOrDefault();
 
                     if (idHeader == null)
                     {
                         response.Body.Write(Encoding.UTF8.GetBytes("TEST-SERVER"));
                         return;
                     }
+                }
 
-                    var opId = int.Parse(idHeader);
+                var opId = int.Parse(idHeader);
 
-                    if (!operations.TryGetValue(opId, out opInfo))
-                    {
-                        response.StatusCode   = 503;
-                        response.ReasonPhrase = $"Operation [ID={opId}] not found.";
+                if (!operations.TryGetValue(opId, out opInfo))
+                {
+                    response.StatusCode   = 503;
+                    response.ReasonPhrase = $"Operation [ID={opId}] not found.";
 
-                        response.Body.Write(Encoding.UTF8.GetBytes(response.ReasonPhrase));
-                        return;
-                    }
+                    await response.Body.WriteAsync(Encoding.UTF8.GetBytes(response.ReasonPhrase));
+                    return;
                 }
 
                 if (opInfo.Hook != null && opInfo.Hook(request, response))
@@ -199,7 +200,7 @@ namespace Test.NShell
 
                 if (!string.IsNullOrEmpty(opInfo.ResponseText))
                 {
-                    response.Body.Write(Encoding.UTF8.GetBytes(opInfo.ResponseText));
+                    await response.Body.WriteAsync(Encoding.UTF8.GetBytes(opInfo.ResponseText));
                 }
             }
 

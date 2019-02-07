@@ -48,7 +48,7 @@ namespace TestCommon
             RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var request  = context.Request;
                     var response = context.Response;
@@ -74,7 +74,7 @@ namespace TestCommon
 
                     response.ContentType = "application/json";
 
-                    response.Write(NeonHelper.JsonSerialize(output));
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -122,7 +122,7 @@ namespace TestCommon
             RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var request = context.Request;
                     var response = context.Response;
@@ -148,7 +148,7 @@ namespace TestCommon
 
                     response.ContentType = "application/json";
 
-                    response.Write(NeonHelper.JsonSerialize(output));
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -179,7 +179,7 @@ namespace TestCommon
             RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var request  = context.Request;
                     var response = context.Response;
@@ -205,7 +205,7 @@ namespace TestCommon
 
                     response.ContentType = "application/not-json";
 
-                    response.Write(NeonHelper.JsonSerialize(output));
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -237,7 +237,7 @@ namespace TestCommon
             RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var request  = context.Request;
                     var response = context.Response;
@@ -264,7 +264,7 @@ namespace TestCommon
 
                     response.ContentType = "application/json";
 
-                    response.Write(NeonHelper.JsonSerialize(output));
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -297,7 +297,7 @@ namespace TestCommon
             RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var request  = context.Request;
                     var response = context.Response;
@@ -323,7 +323,7 @@ namespace TestCommon
 
                     response.ContentType = "application/json";
 
-                    response.Write(NeonHelper.JsonSerialize(output));
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -355,7 +355,7 @@ namespace TestCommon
             RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var request  = context.Request;
                     var response = context.Response;
@@ -381,7 +381,7 @@ namespace TestCommon
 
                     response.ContentType = "application/not-json";
 
-                    response.Write(NeonHelper.JsonSerialize(output));
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -411,11 +411,13 @@ namespace TestCommon
             // Ensure that POST returning a hard error works.
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var response = context.Response;
 
                     response.StatusCode = (int)HttpStatusCode.NotFound;
+
+                    await Task.CompletedTask;
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -443,7 +445,7 @@ namespace TestCommon
             var attemptCount = 0;
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var request  = context.Request;
                     var response = context.Response;
@@ -464,7 +466,7 @@ namespace TestCommon
 
                     response.ContentType = "application/json";
 
-                    response.Write(NeonHelper.JsonSerialize(output));
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -497,7 +499,7 @@ namespace TestCommon
             var attemptCount = 0;
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var request  = context.Request;
                     var response = context.Response;
@@ -516,7 +518,7 @@ namespace TestCommon
 
                     response.ContentType = "application/json";
 
-                    response.Write(NeonHelper.JsonSerialize(output));
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -544,7 +546,7 @@ namespace TestCommon
             var attemptCount = 0;
 
             using (new MockHttpServer(baseUri,
-                context =>
+                async context =>
                 {
                     var request  = context.Request;
                     var response = context.Response;
@@ -563,7 +565,7 @@ namespace TestCommon
 
                     response.ContentType = "application/json";
 
-                    response.Write(NeonHelper.JsonSerialize(output));
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
