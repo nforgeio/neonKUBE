@@ -192,21 +192,30 @@ namespace NShell
 
                                     foreach (var header in remoteResponse.Headers)
                                     {
-                                        response.Headers.Add(header.Key, header.Value.ToArray());
+                                        switch (header.Key.ToLowerInvariant())
+                                        {
+                                            case "transfer-encoding":
+
+                                                // Don't copy this header from the remote response because it
+                                                // will prevent any content from being returned to the client.
+
+                                                break;
+
+                                            case "server":
+
+                                                // Don't copy this one header because it will append the value
+                                                // to the default server name resulting in multiple values.
+
+                                                break;
+
+                                            default:
+
+                                                response.Headers.Add(header.Key, header.Value.ToArray());
+                                                break;
+                                        }
                                     }
 
-                                    // DEBUG CODE: ------------------------------------------
-
-                                    var bytes = Encoding.UTF8.GetBytes("HELLO WORLD!");
-
-                                    response.Headers.Add("X-FOO", "BAR");
-                                    response.ContentType = "text/plain";
-
-                                    await response.Body.WriteAsync(bytes, 0, bytes.Length);
-
-                                    //-------------------------------------------------------
-
-                                    // await response.Body.CopyToAsync(response.Body);
+                                    await remoteResponse.Content.CopyToAsync(response.Body);
 
                                     // Let the response handler have a look.
 

@@ -169,20 +169,30 @@ namespace Test.NShell
                 lock (syncLock)
                 {
                     idHeader = request.Headers["X-NEON-TEST-ID"].FirstOrDefault();
-
-                    if (idHeader == null)
-                    {
-                        response.Body.Write(Encoding.UTF8.GetBytes("TEST-SERVER"));
-                        return;
-                    }
                 }
 
-                var opId = int.Parse(idHeader);
+                if (idHeader == null)
+                {
+                    response.StatusCode   = 503;
+                    response.ReasonPhrase = $"[X-NEON-TEST-ID] header is missing.";
+
+                    await response.Body.WriteAsync(Encoding.UTF8.GetBytes(response.ReasonPhrase));
+                    return;
+                }
+
+                if (!int.TryParse(idHeader, out var opId))
+                {
+                    response.StatusCode   = 503;
+                    response.ReasonPhrase = $"[X-NEON-TEST-ID={idHeader}] is not an integer.";
+
+                    await response.Body.WriteAsync(Encoding.UTF8.GetBytes(response.ReasonPhrase));
+                    return;
+                }
 
                 if (!operations.TryGetValue(opId, out opInfo))
                 {
                     response.StatusCode   = 503;
-                    response.ReasonPhrase = $"Operation [ID={opId}] not found.";
+                    response.ReasonPhrase = $"Operation [X-NEON-TEST-ID={opId}] not found.";
 
                     await response.Body.WriteAsync(Encoding.UTF8.GetBytes(response.ReasonPhrase));
                     return;
@@ -268,8 +278,6 @@ namespace Test.NShell
 
             using (var fixture = new ProxyTestFixture())
             {
-                Thread.Sleep(100000000);
-
                 opInfo = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), "Hello World!");
 
                 Assert.Equal(200, opInfo.StatusCode);
