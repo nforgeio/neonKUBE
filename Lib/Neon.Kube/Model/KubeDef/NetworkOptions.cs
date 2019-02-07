@@ -162,15 +162,6 @@ namespace Neon.Kube
         public string IstioVersion { get; set; } = "default";
 
         /// <summary>
-        /// Enables global mutual TLS for communication between pods via the Istio sidecar proxies.
-        /// This defaults to <c>true</c>
-        /// </summary>
-        [JsonProperty(PropertyName = "IstioMutualTls", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "IstioMutualTls", ApplyNamingConventions = false)]
-        [DefaultValue(true)]
-        public bool IstioMutualTls { get; set; } = true;
-
-        /// <summary>
         /// Used for checking subnet conflicts below.
         /// </summary>
         private class SubnetDefinition

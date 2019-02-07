@@ -1294,7 +1294,7 @@ rm /tmp/calico.yaml
             // We're going to split the bash script into two parts and download
             // and edit the file in the middle.
 
-            var istioConfigPath = cluster.Definition.Network.IstioMutualTls ? "install/kubernetes/istio-demo-auth.yaml" : "install/kubernetes/istio-demo.yaml";
+            var istioConfigPath = "install/kubernetes/istio-demo-auth.yaml";
             var istioScript1 =
 $@"#!/bin/bash
 
@@ -1338,45 +1338,40 @@ kubectl apply -f {istioConfigPath}
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
 
-            if (cluster.Definition.Network.IstioMutualTls)
+            var installYampPath = "/tmp/istio/" + istioConfigPath;
+            var installYaml     = master.DownloadText(installYampPath);
+            var sbYaml          = new StringBuilder();
+
+            using (var reader = new StringReader(installYaml))
             {
-                // We only need to munge the YAML for mutual TLS.
+                // We're going to scan for the first trimmed line starting with "securityContext:",
+                // insert the two additional lines, and then copy the remaining lines.
 
-                var installYampPath = "/tmp/istio/" + istioConfigPath;
-                var installYaml     = master.DownloadText(installYampPath);
-                var sbYaml          = new StringBuilder();
+                var modified = false;
 
-                using (var reader = new StringReader(installYaml))
+                foreach (var line in reader.Lines())
                 {
-                    // We're going to scan for the first trimmed line starting with "securityContext:",
-                    // insert the two additional lines, and then copy the remaining lines.
-
-                    var modified = false;
-
-                    foreach (var line in reader.Lines())
+                    if (!modified && line.TrimStart().StartsWith("securityContext:"))
                     {
-                        if (!modified && line.TrimStart().StartsWith("securityContext:"))
-                        {
-                            sbYaml.AppendLineLinux(line);
-                            sbYaml.AppendLineLinux("          runAsUser: 0");
-                            sbYaml.AppendLineLinux("          runAsNonRoot: false");
+                        sbYaml.AppendLineLinux(line);
+                        sbYaml.AppendLineLinux("          runAsUser: 0");
+                        sbYaml.AppendLineLinux("          runAsNonRoot: false");
 
-                            modified = true;
-                        }
-                        else
-                        {
-                            sbYaml.AppendLineLinux(line);
-                        }
+                        modified = true;
                     }
-
-                    if (!modified)
+                    else
                     {
-                        throw new KubeException("Istio setup YAML moodification failed.");
+                        sbYaml.AppendLineLinux(line);
                     }
                 }
 
-                master.UploadText(installYampPath, sbYaml);
+                if (!modified)
+                {
+                    throw new KubeException("Istio setup YAML moodification failed.");
+                }
             }
+
+            master.UploadText(installYampPath, sbYaml);
 
             master.SudoCommand(CommandBundle.FromScript(istioScript2));
         }
