@@ -165,7 +165,9 @@ namespace Neon.Xunit
             int exitCode = 0;
 
             programThread = new Thread(new ThreadStart(() => exitCode = main(args)));
+            programThread.Start();
             programThread.Join();
+            programThread = null;
 
             return exitCode;
         }
