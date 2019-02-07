@@ -128,7 +128,7 @@ namespace Test.NShell
                 // Start the nshell proxy.
 
                 runner = new ProgramRunner();
-                runner.Fork(global::NShell.Program.Main, $"proxy", "unit-test", $"{localEndpoint.Port}", $"{remoteEndpoint.Port}");
+                runner.Fork(global::NShell.Program.Main, $"proxy", "unit-test", $"{localEndpoint}", $"{remoteEndpoint}");
             }
 
             public void Dispose()
@@ -181,6 +181,8 @@ namespace Test.NShell
                     {
                         response.StatusCode   = 503;
                         response.ReasonPhrase = $"Operation [ID={opId}] not found.";
+
+                        response.Body.Write(Encoding.UTF8.GetBytes(response.ReasonPhrase));
                         return;
                     }
                 }
@@ -265,7 +267,7 @@ namespace Test.NShell
 
             using (var fixture = new ProxyTestFixture())
             {
-                await Task.Delay(100000000);
+                Thread.Sleep(100000000);
 
                 opInfo = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), "Hello World!");
 

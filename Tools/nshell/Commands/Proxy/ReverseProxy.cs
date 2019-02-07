@@ -152,54 +152,72 @@ namespace NShell
                     var task = Task.Factory.StartNew(
                         async (object arg) =>
                         {
-                            Console.WriteLine("*** REQUEST ***");
+                            var context  = (RequestContext)arg;
+                            var request  = context.Request;
+                            var response = context.Response;
 
-                            using (var context = (RequestContext)arg)
+                            using (context)
                             {
-                                // Let the request handler have a look.
-
-                                requestHandler?.Invoke(context);
-
-                                // Copy the headers, body, and other state from the received request to the client request. 
-
-                                var remoteRequest = new HttpRequestMessage(new HttpMethod(context.Request.Method), context.Request.Path);
-
-                                foreach (var header in context.Request.Headers)
+                                try
                                 {
-                                    remoteRequest.Headers.Add(header.Key, header.Value.ToArray());
+                                    // Let the request handler have a look.
+
+                                    requestHandler?.Invoke(context);
+
+                                    // Copy the headers, body, and other state from the received request to the client request. 
+
+                                    var remoteRequest = new HttpRequestMessage(new HttpMethod(request.Method), request.Path);
+
+                                    foreach (var header in request.Headers)
+                                    {
+                                        remoteRequest.Headers.Add(header.Key, header.Value.ToArray());
+                                    }
+
+                                    var bodyStream = request.Body;
+
+                                    if (request.ContentLength > 0)
+                                    {
+                                        remoteRequest.Content = new StreamContent(bodyStream);
+                                    }
+
+                                    // Forward the request.
+
+                                    var remoteResponse = await client.SendAsync(remoteRequest, HttpCompletionOption.ResponseHeadersRead);
+
+                                    // Copy the remote response headers, body, and other state to the client response.
+
+                                    response.StatusCode   = (int)remoteResponse.StatusCode;
+                                    response.ReasonPhrase = remoteResponse.ReasonPhrase;
+
+                                    foreach (var header in remoteResponse.Headers)
+                                    {
+                                        response.Headers.Add(header.Key, header.Value.ToArray());
+                                    }
+
+                                    // DEBUG CODE: ------------------------------------------
+
+                                    var bytes = Encoding.UTF8.GetBytes("HELLO WORLD!");
+
+                                    response.Headers.Add("X-FOO", "BAR");
+                                    response.ContentType = "text/plain";
+
+                                    await response.Body.WriteAsync(bytes, 0, bytes.Length);
+
+                                    //-------------------------------------------------------
+
+                                    // await response.Body.CopyToAsync(response.Body);
+
+                                    // Let the response handler have a look.
+
+                                    responseHandler?.Invoke(context);
                                 }
-
-                                var bodyStream = context.Request.Body;
-
-                                if (context.Request.ContentLength > 0)
+                                catch (Exception e)
                                 {
-                                    remoteRequest.Content = new StreamContent(bodyStream);
+                                    response.StatusCode   = 503;
+                                    response.ReasonPhrase = "service unavailable";
+
+                                    response.Body.Write(Encoding.UTF32.GetBytes(NeonHelper.ExceptionError(e)));
                                 }
-
-                                // Forward the request.
-
-                                var remoteResponse = await client.SendAsync(remoteRequest, HttpCompletionOption.ResponseHeadersRead);
-
-                                // Copy the remote response headers, body, and other state to the client response.
-
-                                context.Response.StatusCode = (int)remoteResponse.StatusCode;
-                                context.Response.ReasonPhrase = remoteResponse.ReasonPhrase;
-
-                                foreach (var header in remoteResponse.Headers)
-                                {
-                                    context.Response.Headers.Add(header.Key, header.Value.ToArray());
-                                }
-
-                                var responseContent = remoteResponse.Content;
-
-                                if (responseContent != null)
-                                {
-                                    await responseContent.CopyToAsync(context.Response.Body);
-                                }
-
-                                // Let the response handler have a look.
-
-                                responseHandler?.Invoke(context);
                             }
                         },
                         newContext);

@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,12 +47,12 @@ Starts a neonKUBE proxy.
 USAGE:
 
     nshell proxy
-    nshell proxy SERVICE LOCAL-PORT NODE-PORT
+    nshell proxy SERVICE LOCAL-ENDPOINT REMOTE-ENDPOINT
 
 ARGUMENTS:
 
-    LOCAL-PORT      - local proxy port on 127.0.0.1
-    NODE-PORT       - remote cluster node port
+    LOCAL-ENDPOINT  - local proxy endpoint (IP:PORT)
+    REMOTE-ENDPOINT - remote endpoint (IP:PORT)
 
     SERVICE         - identifies the service being proxied:
 
@@ -85,11 +86,11 @@ node port.
                 Program.Exit(0);
             }
 
-            var cluster       = Program.GetCluster();
-            var serverAddress = cluster.FirstMaster.PrivateAddress;
-            var target        = commandLine.Arguments.ElementAtOrDefault(0);
-            var localPortArg  = commandLine.Arguments.ElementAtOrDefault(1);
-            var nodePortArg   = commandLine.Arguments.ElementAtOrDefault(2);
+            var cluster           = Program.GetCluster();
+            var serverAddress     = cluster.FirstMaster.PrivateAddress;
+            var target            = commandLine.Arguments.ElementAtOrDefault(0);
+            var localEndpointArg  = commandLine.Arguments.ElementAtOrDefault(1);
+            var remoteEndpointArg = commandLine.Arguments.ElementAtOrDefault(2);
 
             if (target == null)
             {
@@ -111,27 +112,27 @@ node port.
                     break;
             }
 
-            if (localPortArg == null)
+            if (localEndpointArg == null)
             {
-                Console.Error.WriteLine("*** ERROR: LOCAL_PORT argument is required.");
+                Console.Error.WriteLine("*** ERROR: LOCAL-ENDPOINT argument is required.");
                 Program.Exit(1);
             }
 
-            if (!int.TryParse(localPortArg, out var localPort) || !NetHelper.IsValidPort(localPort))
+            if (!TryParseEndpoint(localEndpointArg, out var localEndpoint))
             {
-                Console.Error.WriteLine($"[LOCAL_PORT={localPortArg}] is invalid.");
+                Console.Error.WriteLine($"[LOCAL-ENDPOINT={localEndpointArg}] is invalid.");
                 Program.Exit(1);
             }
 
-            if (nodePortArg == null)
+            if (remoteEndpointArg == null)
             {
-                Console.Error.WriteLine("*** ERROR: NODE_PORT argument is required.");
+                Console.Error.WriteLine("*** ERROR: REMOTE-ENDPOINT argument is required.");
                 Program.Exit(1);
             }
 
-            if (!int.TryParse(nodePortArg, out var nodePort) || !NetHelper.IsValidPort(nodePort))
+            if (!TryParseEndpoint(remoteEndpointArg, out var remoteEndpoint))
             {
-                Console.Error.WriteLine($"*** ERROR: [NODE_PORT={nodePortArg}] is invalid.");
+                Console.Error.WriteLine($"*** ERROR: [REMOTE-ENDPOINT={remoteEndpointArg}] is invalid.");
                 Program.Exit(1);
             }
 
@@ -147,15 +148,12 @@ node port.
             //
             // See: nshell proxy improvements
 
-            var localEndpoint = new IPEndPoint(IPAddress.Loopback, localPort);
-            var nodeEndpoint  = new IPEndPoint(serverAddress, nodePort);
-
             // This starts and runs the proxy.  We don't need to dispose it because
             // the thing is supposed to run until the process is terminated.
 
-            Console.WriteLine($" HTTP Proxy: {localEndpoint} --> {nodeEndpoint}");
+            Console.WriteLine($" HTTP Proxy: {localEndpoint} --> {remoteEndpoint}");
 
-            new ReverseProxy(localEndpoint, nodeEndpoint);
+            new ReverseProxy(localEndpoint, remoteEndpoint);
 
             // Signal [ProgramRunner] (if there is one) that we're ready for any pending tests.
 
@@ -165,6 +163,43 @@ node port.
             {
                 Thread.Sleep(300);
             }
+        }
+
+        /// <summary>
+        /// Attempts to parse an IPv4 endpoint.
+        /// </summary>
+        /// <param name="input">The input text.</param>
+        /// <param name="output">Returns as the parsed <see cref="IPEndPoint"/>.</param>
+        /// <returns><c>true</c> on success.</returns>
+        private bool TryParseEndpoint(string input, out IPEndPoint output)
+        {
+            output = null;
+
+            if (string.IsNullOrEmpty(input))
+            {
+                return false;
+            }
+
+            var fields = input.Split(':');
+
+            if (fields.Length != 2)
+            {
+                return false;
+            }
+
+            if (!IPAddress.TryParse(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork)
+            {
+                return false;
+            }
+
+            if (!int.TryParse(fields[1], out var port) || !NetHelper.IsValidPort(port))
+            {
+                return false;
+            }
+
+            output = new IPEndPoint(address, port);
+
+            return true;
         }
     }
 }

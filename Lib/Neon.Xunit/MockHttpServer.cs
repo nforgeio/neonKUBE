@@ -95,16 +95,19 @@ namespace Neon.Xunit
             {
                 try
                 {
-                    var context = await listener.AcceptAsync();
+                    var newContext = await listener.AcceptAsync();
 
-                    var task = Task.Run(
-                        () =>
+                    var task = Task.Factory.StartNew(
+                        async (object arg) =>
                         {
-                            using (var contextCopy = context)
+                            using (var context = (RequestContext)arg)
                             {
-                                handler(contextCopy);
+                                handler(context);
                             }
-                        });
+
+                            await Task.CompletedTask;
+                        },
+                        newContext);
                 }
                 catch (ObjectDisposedException)
                 {
