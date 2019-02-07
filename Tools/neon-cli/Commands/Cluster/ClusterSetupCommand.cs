@@ -116,6 +116,7 @@ OPTIONS:
         private KubeContextExtension    kubeContextExtensions;
         private ClusterProxy            cluster;
         private KubeSetupInfo           kubeSetupInfo;
+        private HttpClient              httpClient;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -155,274 +156,280 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            if (kubeCluster != null && !kubeContextExtensions.SetupDetails.SetupPending)
+            var handler = new HttpClientHandler()
             {
-                if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more logins reference [{kubeCluster.Name}].  Do you wish to delete these?"))
-                {
-                    Program.Exit(0);
-                }
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            };
 
-                // Remove the cluster from the kubeconfig and remove any 
-                // contexts that reference it.
-
-                KubeHelper.Config.Clusters.Remove(kubeCluster);
-
-                var delList = new List<KubeConfigContext>();
-
-                foreach (var context in KubeHelper.Config.Contexts)
-                {
-                    if (context.Properties.Cluster == kubeCluster.Name)
-                    {
-                        delList.Add(context);
-                    }
-                }
-
-                foreach (var context in delList)
-                {
-                    KubeHelper.Config.Contexts.Remove(context);
-                }
-
-                if (KubeHelper.CurrentContext != null && KubeHelper.CurrentContext.Properties.Cluster == kubeCluster.Name)
-                {
-                    KubeHelper.Config.CurrentContext = null;
-                }
-
-                KubeHelper.Config.Save();
-            }
-
-            kubeContext = new KubeConfigContext(contextName);
-
-            KubeHelper.InitContext(kubeContext);
-
-            // Note that cluster setup appends to existing log files.
-
-            cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
-
-            // Configure global options.
-
-            if (commandLine.HasOption("--unredacted"))
+            using (httpClient = new HttpClient(handler, disposeHandler: true))
             {
-                cluster.SecureRunOptions = RunOptions.None;
-            }
-
-            // Perform the setup operations.
-
-            var controller =
-                new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
+                if (kubeCluster != null && !kubeContextExtensions.SetupDetails.SetupPending)
                 {
-                    ShowStatus  = !Program.Quiet,
-                    MaxParallel = Program.MaxParallel
-                };
-
-            controller.AddGlobalStep("setup details",
-                () =>
-                {
-                    if (kubeContextExtensions.SetupDetails?.SetupInfo != null)
+                    if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more logins reference [{kubeCluster.Name}].  Do you wish to delete these?"))
                     {
-                        kubeSetupInfo = kubeContextExtensions.SetupDetails.SetupInfo;
+                        Program.Exit(0);
                     }
-                    else
+
+                    // Remove the cluster from the kubeconfig and remove any 
+                    // contexts that reference it.
+
+                    KubeHelper.Config.Clusters.Remove(kubeCluster);
+
+                    var delList = new List<KubeConfigContext>();
+
+                    foreach (var context in KubeHelper.Config.Contexts)
                     {
-                        using (var client = new HeadendClient())
+                        if (context.Properties.Cluster == kubeCluster.Name)
                         {
-                            kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
-
-                            kubeContextExtensions.SetupDetails.SetupInfo = kubeSetupInfo;
-                            kubeContextExtensions.Save();
+                            delList.Add(context);
                         }
                     }
-                });
 
-            controller.AddGlobalStep("workstation binaries", () => WorkstationBinaries());
-            controller.AddWaitUntilOnlineStep("connect");
-            controller.AddStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
-            controller.AddStep("verify OS", CommonSteps.VerifyOS);
+                    foreach (var context in delList)
+                    {
+                        KubeHelper.Config.Contexts.Remove(context);
+                    }
 
-            // Write the operation begin marker to all cluster node logs.
+                    if (KubeHelper.CurrentContext != null && KubeHelper.CurrentContext.Properties.Cluster == kubeCluster.Name)
+                    {
+                        KubeHelper.Config.CurrentContext = null;
+                    }
 
-            cluster.LogLine(logBeginMarker);
+                    KubeHelper.Config.Save();
+                }
 
-            // Perform common configuration for the bootstrap node first.
-            // We need to do this so the the package cache will be running
-            // when the remaining nodes are configured.
+                kubeContext = new KubeConfigContext(contextName);
 
-            var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
+                KubeHelper.InitContext(kubeContext);
 
-            controller.AddStep(configureFirstMasterStepLabel,
-                (node, stepDelay) =>
+                // Note that cluster setup appends to existing log files.
+
+                cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+
+                // Configure global options.
+
+                if (commandLine.HasOption("--unredacted"))
                 {
-                    SetupCommon(node, stepDelay);
-                    node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
-                    SetupNode(node);
-                },
-                node => node == cluster.FirstMaster,
-                stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                    cluster.SecureRunOptions = RunOptions.None;
+                }
 
-            // Perform common configuration for the remaining nodes (if any).
+                // Perform the setup operations.
 
-            if (cluster.Definition.Nodes.Count() > 1)
-            {
-                controller.AddStep("setup other nodes",
+                var controller =
+                    new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
+                    {
+                        ShowStatus  = !Program.Quiet,
+                        MaxParallel = Program.MaxParallel
+                    };
+
+                controller.AddGlobalStep("setup details",
+                    () =>
+                    {
+                        if (kubeContextExtensions.SetupDetails?.SetupInfo != null)
+                        {
+                            kubeSetupInfo = kubeContextExtensions.SetupDetails.SetupInfo;
+                        }
+                        else
+                        {
+                            using (var client = new HeadendClient())
+                            {
+                                kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
+
+                                kubeContextExtensions.SetupDetails.SetupInfo = kubeSetupInfo;
+                                kubeContextExtensions.Save();
+                            }
+                        }
+                    });
+
+                controller.AddGlobalStep("workstation binaries", () => WorkstationBinaries());
+                controller.AddWaitUntilOnlineStep("connect");
+                controller.AddStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
+                controller.AddStep("verify OS", CommonSteps.VerifyOS);
+
+                // Write the operation begin marker to all cluster node logs.
+
+                cluster.LogLine(logBeginMarker);
+
+                // Perform common configuration for the bootstrap node first.
+                // We need to do this so the the package cache will be running
+                // when the remaining nodes are configured.
+
+                var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
+
+                controller.AddStep(configureFirstMasterStepLabel,
                     (node, stepDelay) =>
                     {
                         SetupCommon(node, stepDelay);
                         node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                         SetupNode(node);
                     },
-                    node => node != cluster.FirstMaster,
+                    node => node == cluster.FirstMaster,
                     stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
-            }
 
-            //-----------------------------------------------------------------
-            // Kubernetes configuration.
+                // Perform common configuration for the remaining nodes (if any).
 
-            controller.AddStep("setup kubernetes", SetupKubernetes);
-            controller.AddGlobalStep("setup cluster", SetupCluster);
-            controller.AddGlobalStep("label nodes", LabelNodes);
-            controller.AddGlobalStep("setup ceph", SetupCeph);
-
-            //-----------------------------------------------------------------
-            // Verify the cluster.
-
-            controller.AddStep("check masters",
-                (node, stepDelay) =>
+                if (cluster.Definition.Nodes.Count() > 1)
                 {
-                    ClusterDiagnostics.CheckMaster(node, cluster.Definition);
-                },
-                node => node.Metadata.IsMaster);
-
-            controller.AddStep("check workers",
-                (node, stepDelay) =>
-                {
-                    ClusterDiagnostics.CheckWorker(node, cluster.Definition);
-                },
-                node => node.Metadata.IsWorker);
-
-            //-----------------------------------------------------------------
-            // Update the node security to use a strong password and also 
-            // configure the SSH client certificate.
-
-            // $todo(jeff.lill):
-            //
-            // Note that this step isn't entirely idempotent.  The problem happens
-            // when the password change fails on one or more of the nodes and succeeds
-            // on others.  This will result in SSH connection failures for the nodes
-            // that had their passwords changes.
-            //
-            // One solution would be to store credentials in the node definitions
-            // rather than using common credentials across all nodes.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/397
-
-            kubeContextExtensions.SetupDetails.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
-            kubeContextExtensions.Save();
-
-            controller.AddStep("set strong password",
-                (node, stepDelay) =>
-                {
-                    SetStrongPassword(node, TimeSpan.Zero);
-                });
-
-            controller.AddGlobalStep("passwords set",
-                () =>
-                {
-                    // This hidden step sets the SSH provisioning password to NULL to 
-                    // indicate that the final password has been set for all of the nodes.
-
-                    kubeContextExtensions.SshPassword = kubeContextExtensions.SetupDetails.SshStrongPassword;
-                    kubeContextExtensions.SetupDetails.HasStrongSshPassword = true;
-                    kubeContextExtensions.Save();
-                },
-                quiet: true);
-
-            controller.AddGlobalStep("set ssh certs", () => ConfigureSshCerts());
-
-            // This needs to be run last because it will likely disable
-            // SSH username/password authentication which may block
-            // connection attempts.
-            //
-            // It's also handy to do this last so it'll be possible to 
-            // manually login with the original credentials to diagnose
-            // setup issues.
-
-            controller.AddStep("ssh secured", ConfigureSsh);
-
-            // Start setup.
-
-            if (!controller.Run())
-            {
-                // Write the operation end/failed to all cluster node logs.
-
-                cluster.LogLine(logFailedMarker);
-
-                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                Program.Exit(1);
-            }
-
-            // Persist the new strong password and indicate that setup is complete.
-
-            //kubeContextExtension.SshPassword       = kubeContextExtension.SshStrongPassword;
-            //kubeContextExtension.SshStrongPassword = null;
-            kubeContextExtensions.SetupDetails.SetupPending = false;
-            kubeContextExtensions.Save();
-
-            // Write the operation end marker to all cluster node logs.
-
-            cluster.LogLine(logEndMarker);
-
-            // Update the kubeconfig.
-
-            var kubeConfigPath = KubeHelper.KubeConfigPath;
-
-            if (!File.Exists(kubeConfigPath))
-            {
-                File.WriteAllText(kubeConfigPath, kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
-            }
-            else
-            {
-                // The user already has an existing kubeconfig, so we need
-                // to merge in the new config.
-
-                var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
-                var existingConfig = KubeHelper.Config;
-
-                // Remove any existing user, context, and cluster with the same names.
-                // Note that we're assuming that there's only one of each in the config
-                // we downloaded from the cluster.
-
-                var newCluster      = newConfig.Clusters.Single();
-                var newContext      = newConfig.Contexts.Single();
-                var newUser         = newConfig.Users.Single();
-
-                var existingCluster = existingConfig.GetCluster(newCluster.Name);
-                var existingContext = existingConfig.GetContext(newContext.Name);
-                var existingUser    = existingConfig.GetUser(newUser.Name);
-
-                if (existingConfig != null)
-                {
-                    existingConfig.Clusters.Remove(existingCluster);
+                    controller.AddStep("setup other nodes",
+                        (node, stepDelay) =>
+                        {
+                            SetupCommon(node, stepDelay);
+                            node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
+                            SetupNode(node);
+                        },
+                        node => node != cluster.FirstMaster,
+                        stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
                 }
 
-                if (existingContext != null)
+                //-----------------------------------------------------------------
+                // Kubernetes configuration.
+
+                controller.AddStep("setup kubernetes", SetupKubernetes);
+                controller.AddGlobalStep("setup cluster", SetupCluster);
+                controller.AddGlobalStep("label nodes", LabelNodes);
+                controller.AddGlobalStep("setup ceph", SetupCeph);
+
+                //-----------------------------------------------------------------
+                // Verify the cluster.
+
+                controller.AddStep("check masters",
+                    (node, stepDelay) =>
+                    {
+                        ClusterDiagnostics.CheckMaster(node, cluster.Definition);
+                    },
+                    node => node.Metadata.IsMaster);
+
+                controller.AddStep("check workers",
+                    (node, stepDelay) =>
+                    {
+                        ClusterDiagnostics.CheckWorker(node, cluster.Definition);
+                    },
+                    node => node.Metadata.IsWorker);
+
+                //-----------------------------------------------------------------
+                // Update the node security to use a strong password and also 
+                // configure the SSH client certificate.
+
+                // $todo(jeff.lill):
+                //
+                // Note that this step isn't entirely idempotent.  The problem happens
+                // when the password change fails on one or more of the nodes and succeeds
+                // on others.  This will result in SSH connection failures for the nodes
+                // that had their passwords changes.
+                //
+                // One solution would be to store credentials in the node definitions
+                // rather than using common credentials across all nodes.
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/397
+
+                kubeContextExtensions.SetupDetails.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
+                kubeContextExtensions.Save();
+
+                controller.AddStep("set strong password",
+                    (node, stepDelay) =>
+                    {
+                        SetStrongPassword(node, TimeSpan.Zero);
+                    });
+
+                controller.AddGlobalStep("passwords set",
+                    () =>
+                    {
+                        // This hidden step sets the SSH provisioning password to NULL to 
+                        // indicate that the final password has been set for all of the nodes.
+
+                        kubeContextExtensions.SshPassword = kubeContextExtensions.SetupDetails.SshStrongPassword;
+                        kubeContextExtensions.SetupDetails.HasStrongSshPassword = true;
+                        kubeContextExtensions.Save();
+                    },
+                    quiet: true);
+
+                controller.AddGlobalStep("set ssh certs", () => ConfigureSshCerts());
+
+                // This needs to be run last because it will likely disable
+                // SSH username/password authentication which may block
+                // connection attempts.
+                //
+                // It's also handy to do this last so it'll be possible to 
+                // manually login with the original credentials to diagnose
+                // setup issues.
+
+                controller.AddStep("ssh secured", ConfigureSsh);
+
+                // Start setup.
+
+                if (!controller.Run())
                 {
-                    existingConfig.Contexts.Remove(existingContext);
+                    // Write the operation end/failed to all cluster node logs.
+
+                    cluster.LogLine(logFailedMarker);
+
+                    Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
+                    Program.Exit(1);
                 }
 
-                if (existingUser != null)
+                // Indicate that setup is complete.
+
+                kubeContextExtensions.SetupDetails.SetupPending = false;
+                kubeContextExtensions.Save();
+
+                // Write the operation end marker to all cluster node logs.
+
+                cluster.LogLine(logEndMarker);
+
+                // Update the kubeconfig.
+
+                var kubeConfigPath = KubeHelper.KubeConfigPath;
+
+                if (!File.Exists(kubeConfigPath))
                 {
-                    existingConfig.Users.Remove(existingUser);
+                    File.WriteAllText(kubeConfigPath, kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                }
+                else
+                {
+                    // The user already has an existing kubeconfig, so we need
+                    // to merge in the new config.
+
+                    var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                    var existingConfig = KubeHelper.Config;
+
+                    // Remove any existing user, context, and cluster with the same names.
+                    // Note that we're assuming that there's only one of each in the config
+                    // we downloaded from the cluster.
+
+                    var newCluster = newConfig.Clusters.Single();
+                    var newContext = newConfig.Contexts.Single();
+                    var newUser = newConfig.Users.Single();
+
+                    var existingCluster = existingConfig.GetCluster(newCluster.Name);
+                    var existingContext = existingConfig.GetContext(newContext.Name);
+                    var existingUser = existingConfig.GetUser(newUser.Name);
+
+                    if (existingConfig != null)
+                    {
+                        existingConfig.Clusters.Remove(existingCluster);
+                    }
+
+                    if (existingContext != null)
+                    {
+                        existingConfig.Contexts.Remove(existingContext);
+                    }
+
+                    if (existingUser != null)
+                    {
+                        existingConfig.Users.Remove(existingUser);
+                    }
+
+                    existingConfig.Clusters.Add(newCluster);
+                    existingConfig.Contexts.Add(newContext);
+                    existingConfig.Users.Add(newUser);
+
+                    existingConfig.CurrentContext = newContext.Name;
+
+                    KubeHelper.SetConfig(existingConfig);
                 }
 
-                existingConfig.Clusters.Add(newCluster);
-                existingConfig.Contexts.Add(newContext);
-                existingConfig.Users.Add(newUser);
-
-                existingConfig.CurrentContext = newContext.Name;
-
-                KubeHelper.SetConfig(existingConfig);
+                Console.WriteLine();
             }
-
-            Console.WriteLine();
         }
 
         /// <summary>
@@ -430,11 +437,6 @@ OPTIONS:
         /// </summary>
         private async void WorkstationBinaries()
         {
-            var handler = new HttpClientHandler()
-            {
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-            };
-
             var firstMaster       = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", kubeSetupInfo.Versions.Kubernetes);
@@ -470,90 +472,87 @@ OPTIONS:
 
             // Download the components if they're not already cached.
 
-            using (var client = new HttpClient(handler, disposeHandler: true))
+            if (!File.Exists(cachedKubeCtlPath))
             {
-                if (!File.Exists(cachedKubeCtlPath))
-                {
-                    firstMaster.Status = "download: kubectl";
+                firstMaster.Status = "download: kubectl";
 
-                    using (var response = await client.GetStreamAsync(kubeCtlUri))
+                using (var response = await httpClient.GetStreamAsync(kubeCtlUri))
+                {
+                    using (var output = new FileStream(cachedKubeCtlPath, FileMode.Create, FileAccess.ReadWrite))
                     {
-                        using (var output = new FileStream(cachedKubeCtlPath, FileMode.Create, FileAccess.ReadWrite))
+                        await response.CopyToAsync(output);
+                    }
+                }
+            }
+
+            if (!File.Exists(cachedHelmPath))
+            {
+                firstMaster.Status = "download: Helm";
+
+                using (var response = await httpClient.GetStreamAsync(helmUri))
+                {
+                    // This is a [zip] file for Windows and a [tar.gz] file for Linux and OS/X.
+                    // We're going to download to a temporary file so we can extract just the
+                    // Helm binary.
+
+                    var cachedTempHelmPath = cachedHelmPath + ".tmp";
+
+                    try
+                    {
+                        using (var output = new FileStream(cachedTempHelmPath, FileMode.Create, FileAccess.ReadWrite))
                         {
                             await response.CopyToAsync(output);
                         }
-                    }
-                }
 
-                if (!File.Exists(cachedHelmPath))
-                {
-                    firstMaster.Status = "download: Helm";
-
-                    using (var response = await client.GetStreamAsync(helmUri))
-                    {
-                        // This is a [zip] file for Windows and a [tar.gz] file for Linux and OS/X.
-                        // We're going to download to a temporary file so we can extract just the
-                        // Helm binary.
-
-                        var cachedTempHelmPath = cachedHelmPath + ".tmp";
-
-                        try
+                        switch (hostPlatform)
                         {
-                            using (var output = new FileStream(cachedTempHelmPath, FileMode.Create, FileAccess.ReadWrite))
-                            {
-                                await response.CopyToAsync(output);
-                            }
+                            case KubeHostPlatform.Linux:
+                            case KubeHostPlatform.Osx:
 
-                            switch (hostPlatform)
-                            {
-                                case KubeHostPlatform.Linux:
-                                case KubeHostPlatform.Osx:
+                                throw new NotImplementedException($"Unsupported workstation platform [{hostPlatform}]");
 
-                                    throw new NotImplementedException($"Unsupported workstation platform [{hostPlatform}]");
+                            case KubeHostPlatform.Windows:
 
-                                case KubeHostPlatform.Windows:
+                                // The downloaded file is a ZIP archive for Windows.  We're going
+                                // to extract the [windows-amd64/helm.exe] file.
 
-                                    // The downloaded file is a ZIP archive for Windows.  We're going
-                                    // to extract the [windows-amd64/helm.exe] file.
-
-                                    using (var input = new FileStream(cachedTempHelmPath, FileMode.Open, FileAccess.ReadWrite))
+                                using (var input = new FileStream(cachedTempHelmPath, FileMode.Open, FileAccess.ReadWrite))
+                                {
+                                    using (var zip = new ZipFile(input))
                                     {
-                                        using (var zip = new ZipFile(input))
+                                        foreach (ZipEntry zipEntry in zip)
                                         {
-                                            foreach (ZipEntry zipEntry in zip)
+                                            if (!zipEntry.IsFile)
                                             {
-                                                if (!zipEntry.IsFile)
-                                                {
-                                                    continue;
-                                                }
+                                                continue;
+                                            }
 
-                                                if (zipEntry.Name == "windows-amd64/helm.exe")
+                                            if (zipEntry.Name == "windows-amd64/helm.exe")
+                                            {
+                                                using (var zipStream = zip.GetInputStream(zipEntry))
                                                 {
-                                                    using (var zipStream = zip.GetInputStream(zipEntry))
+                                                    using (var output = new FileStream(cachedHelmPath, FileMode.Create, FileAccess.ReadWrite))
                                                     {
-                                                        using (var output = new FileStream(cachedHelmPath, FileMode.Create, FileAccess.ReadWrite))
-                                                        {
-                                                            zipStream.CopyTo(output);
-                                                        }
+                                                        zipStream.CopyTo(output);
                                                     }
-                                                    break;
                                                 }
+                                                break;
                                             }
                                         }
                                     }
-                                    break;
+                                }
+                                break;
 
-                                default:
+                            default:
 
-                                    throw new NotSupportedException($"Unsupported workstation platform [{hostPlatform}]");
-                            }
+                                throw new NotSupportedException($"Unsupported workstation platform [{hostPlatform}]");
                         }
-                        finally
+                    }
+                    finally
+                    {
+                        if (File.Exists(cachedTempHelmPath))
                         {
-                            if (File.Exists(cachedTempHelmPath))
-                            {
-                                File.Delete(cachedTempHelmPath);
-                            }
+                            File.Delete(cachedTempHelmPath);
                         }
                     }
                 }
@@ -1193,7 +1192,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: {KubeConst.RootUser}-user
-  namespace: kube-system+
+  namespace: kube-system
 ";
                             firstMaster.KubeCtlApply(userYaml);
                         });
@@ -1204,6 +1203,17 @@ subjects:
                         () =>
                         {
                             firstMaster.Status = "deploy: kubernetes dashboard";
+
+                            // $todo(jeff.lill):
+                            //
+                            // We need to temporarily expose the dashboard via a NodePort.  This will
+                            // need to be removed after we implement a more general neonKUBE gateway
+                            // solution.
+                            //
+                            // We're going to download and munge the standard dashboard configuration.
+                            // Note that this is somewhat fragile and may break if configuration file
+                            // is changed.
+
                             firstMaster.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
                         });
                 });
