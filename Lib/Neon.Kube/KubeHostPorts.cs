@@ -29,15 +29,28 @@ namespace Neon.Kube
     public static class KubeHostPorts
     {
         /// <summary>
-        /// Kubernetes API server load balancer port exposed by HAProxy
-        /// instances running on each of the master nodes.  This balances
-        /// traffic across all of the masters.
-        /// </summary>
-        public const int ApiServerProxy = 5000;
-
-        /// <summary>
         /// Port exposed by the Kubernetes API servers on the master nodes.
         /// </summary>
         public const int KubeApiServer = 6443;
+
+        /// <summary>
+        /// The first port reserved by Kubernetes for exposing service node ports.
+        /// </summary>
+        public const int KubeFirstNodePort = 30000;
+
+        /// <summary>
+        /// The last port reserved by Kubernetes for exposing service node ports.
+        /// </summary>
+        public const int KubeLastNodePort = 32767;
+
+        // $todo(jeff.lill):
+        //
+        // Remove the [KubeDashboard] definition after we implement
+        // the neonKUBE gateway.
+
+        /// <summary>
+        /// The node port exposed by the Kubernetes dashboard service.
+        /// </summary>
+        public const int KubeDashboard = KubeFirstNodePort;
     }
 }

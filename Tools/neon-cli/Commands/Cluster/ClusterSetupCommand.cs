@@ -1214,7 +1214,78 @@ subjects:
                             // Note that this is somewhat fragile and may break if configuration file
                             // is changed.
 
-                            firstMaster.SudoCommand($"kubectl apply -f {kubeSetupInfo.KubeDashboardUri}");
+                            var formatErrorMessage = $"Unexpected Dashboard configuration format: {kubeContextExtensions.SetupDetails.SetupInfo.KubeDashboardUri}";
+                            var dashboardConfig    = httpClient.GetStringAsync(kubeContextExtensions.SetupDetails.SetupInfo.KubeDashboardUri).Result;
+                            var sbDashboardConfig  = new StringBuilder();
+                            var foundService       = false;
+                            var foundSpec          = false;
+
+                            using (var reader = new StringReader(dashboardConfig))
+                            {
+                                // Copy lines up to including: "kind: Service"
+
+                                while (true)
+                                {
+                                    var line = reader.ReadLine();
+
+                                    if (line == null)
+                                    {
+                                        break;
+                                    }
+
+                                    sbDashboardConfig.AppendLine(line);
+
+                                    if (line == "kind: Service")
+                                    {
+                                        foundService = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!foundService)
+                                {
+                                    throw new KubeException(formatErrorMessage);
+                                }
+
+                                // Copy lines up to and including: "spec:"
+
+                                while (true)
+                                {
+                                    var line = reader.ReadLine();
+
+                                    if (line == null)
+                                    {
+                                        break;
+                                    }
+
+                                    sbDashboardConfig.AppendLine(line);
+
+                                    if (line == "spec:")
+                                    {
+                                        foundSpec = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!foundSpec)
+                                {
+                                    throw new KubeException(formatErrorMessage);
+                                }
+
+                                // Hardcode the remaining config.
+
+                                sbDashboardConfig.AppendLine(
+$@"  type: NodePort
+  ports:
+    - port: 443
+      targetPort: 8443
+      nodePort: {KubeHostPorts.KubeDashboard}
+  selector:
+    k8s-app: kubernetes-dashboard
+");
+                            }
+
+                            firstMaster.KubeCtlApply(sbDashboardConfig);
                         });
                 });
         }
