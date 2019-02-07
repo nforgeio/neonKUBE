@@ -64,6 +64,11 @@ namespace Neon.Xunit
     /// by the unit tests before the tests are executed.
     /// </para>
     /// <note>
+    /// The <see cref="Execute(ProgramEntrypoint, string[])"/> and <see cref="Fork(ProgramEntrypoint, string[])"/>
+    /// methods both prepend the <b>--unit-test</b> option to command line
+    /// arguments passed to the program to indicate that a test in in progress.
+    /// </note>
+    /// <note>
     /// Only one <see cref="ProgramRunner"/> instance can active at any
     /// particular time.
     /// </note>
@@ -219,15 +224,18 @@ namespace Neon.Xunit
             programThread.Start();
 
             // We need to give the program enough time to do enough initialization
-            // so the tests can succeed.  We're going to rely on the program signel
-            // this by calling [ProgramReady()] which will set the event we'll
-            // listen on.
+            // so the tests can succeed.  We're going to rely on the program to
+            // signal this by calling [ProgramReady()] which will set the event 
+            // we'll listen on.
 
-            programReadyEvent.WaitOne(forkTimeout);
+            if (!programReadyEvent.WaitOne(forkTimeout))
+            {
+                throw new TimeoutException($"The program runner timed out before the application called [{nameof(ProgramReady)}].");
+            }
 
             if (programExitBeforeReady)
             {
-                throw new InvalidOperationException($"The program returned with [exitcode={programExitCode}] before calling [{nameof(ProgramReady)}()].");
+                throw new InvalidOperationException($"The program returned with [exitcode={programExitCode}] before calling [{nameof(ProgramReady)}].");
             }
         }
 

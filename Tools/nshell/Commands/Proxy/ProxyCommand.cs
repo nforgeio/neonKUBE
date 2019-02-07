@@ -153,24 +153,25 @@ node port.
 
             Console.WriteLine($" HTTP Proxy: {localEndpoint} --> {remoteEndpoint}");
 
-            new ReverseProxy(localEndpoint, remoteEndpoint);
-
-            // Signal [ProgramRunner] (if there is one) that we're ready for any pending tests
-            // and then wait for the [ProgramRunner] to signal that we need to exit the
-            // program.
-
-            if (ProgramRunner.Current != null)
+            using (new ReverseProxy(localEndpoint, remoteEndpoint))
             {
-                ProgramRunner.Current.ProgramReady();
-                ProgramRunner.Current.WaitForExit();
-            }
-            else
-            {
-                // Otherwise, sleep until the process is killed.
+                // Signal [ProgramRunner] (if there is one) that we're ready for any pending tests
+                // and then wait for the [ProgramRunner] to signal that we need to exit the
+                // program.
 
-                while (true)
+                if (ProgramRunner.Current != null)
                 {
-                    Thread.Sleep(TimeSpan.FromMinutes(300));
+                    ProgramRunner.Current.ProgramReady();
+                    ProgramRunner.Current.WaitForExit();
+                }
+                else
+                {
+                    // Otherwise, sleep until the process is killed.
+
+                    while (true)
+                    {
+                        Thread.Sleep(TimeSpan.FromMinutes(300));
+                    }
                 }
             }
         }

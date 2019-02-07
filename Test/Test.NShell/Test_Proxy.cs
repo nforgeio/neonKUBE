@@ -167,7 +167,7 @@ namespace Test.NShell
                 OperationInfo opInfo;
                 string idHeader;
 
-                var request = context.Request;
+                var request  = context.Request;
                 var response = context.Response;
 
                 lock (syncLock)
