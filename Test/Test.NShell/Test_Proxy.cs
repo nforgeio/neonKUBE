@@ -48,16 +48,16 @@ namespace Test.NShell
 
         /// <summary>
         /// Method signature for an optional hook passed to <see cref="Send"/>.
-        /// This will be called just before the send method sets the response
-        /// status, reason phrase and data.  The hook can modify the response
-        /// if desired and disable any other default processing by returning 
-        /// <c>true</c>.
+        /// This will be called just before the emulated remote endpoint
+        /// returns the response status, reason phrase, headers and data.  
+        /// The hook  an modify the response if desired and disable any 
+        /// other default processing by returning <c>true</c>.
         /// </summary>
         /// <param name="request">The request received by the server.</param>
         /// <param name="response">The response that will be returned by the server.</param>
         /// <returns>
-        /// <c>true</c> if the server <b>should not</b> perform any default request
-        /// processing and just return the reponse as modified by the hook.
+        /// <c>true</c> if the senbd method <b>should not</b> perform any default
+        /// request processing and just return the reponse as modified by the hook.
         /// </returns>
         private delegate bool TestHook(Request request, Response response);
 
@@ -83,6 +83,11 @@ namespace Test.NShell
             public string ReasonPhrase { get; set; } = "OK";
 
             /// <summary>
+            /// Returns any headers to be be returned by the server.
+            /// </summary>
+            public Dictionary<string, string> Headers { get; set; }
+
+            /// <summary>
             /// The optional response text to be returned by the server.
             /// </summary>
             public string ResponseText { get; set; }
@@ -95,7 +100,7 @@ namespace Test.NShell
             /// <summary>
             /// Returns the request response as returned by the proxy.
             /// </summary>
-            public Response ProxyResponse { get; set; }
+            public HttpResponseMessage ProxyResponse { get; set; }
 
             /// <summary>
             /// The test hook for this operation or <c>null</c>.
@@ -159,10 +164,10 @@ namespace Test.NShell
             /// <param name="context">The request context.</param>
             private async Task OnRequestAsync(RequestContext context)
             {
-                OperationInfo   opInfo;
-                string          idHeader;
+                OperationInfo opInfo;
+                string idHeader;
 
-                var request  = context.Request;
+                var request = context.Request;
                 var response = context.Response;
 
                 lock (syncLock)
@@ -172,7 +177,7 @@ namespace Test.NShell
 
                 if (idHeader == null)
                 {
-                    response.StatusCode   = 503;
+                    response.StatusCode = 503;
                     response.ReasonPhrase = $"[X-NEON-TEST-ID] header is missing.";
 
                     await response.Body.WriteAsync(Encoding.UTF8.GetBytes(response.ReasonPhrase));
@@ -181,7 +186,7 @@ namespace Test.NShell
 
                 if (!int.TryParse(idHeader, out var opId))
                 {
-                    response.StatusCode   = 503;
+                    response.StatusCode = 503;
                     response.ReasonPhrase = $"[X-NEON-TEST-ID={idHeader}] is not an integer.";
 
                     await response.Body.WriteAsync(Encoding.UTF8.GetBytes(response.ReasonPhrase));
@@ -190,7 +195,7 @@ namespace Test.NShell
 
                 if (!operations.TryGetValue(opId, out opInfo))
                 {
-                    response.StatusCode   = 503;
+                    response.StatusCode = 503;
                     response.ReasonPhrase = $"Operation [X-NEON-TEST-ID={opId}] not found.";
 
                     await response.Body.WriteAsync(Encoding.UTF8.GetBytes(response.ReasonPhrase));
@@ -204,8 +209,16 @@ namespace Test.NShell
                     return;
                 }
 
-                response.StatusCode   = opInfo.StatusCode;
+                response.StatusCode = opInfo.StatusCode;
                 response.ReasonPhrase = opInfo.ReasonPhrase;
+
+                if (opInfo.Headers != null)
+                {
+                    foreach (var item in opInfo.Headers)
+                    {
+                        response.Headers[item.Key] = item.Value;
+                    }
+                }
 
                 if (!string.IsNullOrEmpty(opInfo.ResponseText))
                 {
@@ -222,14 +235,16 @@ namespace Test.NShell
             /// <param name="responseText">The text to be returned by the server.</param>
             /// <param name="statusCode">The HTTP status to be returned by the server.</param>
             /// <param name="reasonPhrase">The HTTP reason phrase to be returned by the server.</param>
+            /// <param name="headers">Any headers to be included in the server response.</param>
             /// <param name="hook">The optional test hook.</param>
             /// <returns>An <see cref="OperationInfo"/> instance describing what happened.</returns>
             public async Task<OperationInfo> SendAsync(
-                HttpRequestMessage  request, 
-                string              responseText, 
-                int                 statusCode   = 200, 
-                string              reasonPhrase = "OK",
-                TestHook            hook         = null)
+                HttpRequestMessage                  request, 
+                string                              responseText, 
+                int                                 statusCode   = 200, 
+                string                              reasonPhrase = "OK",
+                List<KeyValuePair<string, string>>  headers      = null,
+                TestHook                            hook         = null)
             {
                 OperationInfo opInfo;
 
@@ -243,6 +258,16 @@ namespace Test.NShell
                         ResponseText = responseText
                     };
 
+                    if (headers != null && headers.Count > 0)
+                    {
+                        opInfo.Headers = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+                        foreach (var item in headers)
+                        {
+                            opInfo.Headers[item.Key] = item.Value;
+                        }
+                    }
+
                     operations.Add(opInfo.Id, opInfo);
                 }
 
@@ -251,7 +276,7 @@ namespace Test.NShell
 
                 request.Headers.Add("X-NEON-TEST-ID", opInfo.Id.ToString());
 
-                await client.SendAsync(request);
+                opInfo.ProxyResponse = await client.SendAsync(request);
 
                 return opInfo;
             }
@@ -269,19 +294,112 @@ namespace Test.NShell
         //---------------------------------------------------------------------
         // Instance members
 
+        private static string largeContent;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public Test_Proxy()
+        {
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < 256 * 1024; i++)
+            {
+                sb.Append('a' + (char)(i % 26));
+            }
+
+            largeContent = sb.ToString();
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonShell)]
-        public async Task ProxyBasics()
+        public async Task Basics()
         {
-            OperationInfo opInfo;
+            OperationInfo       opInfo;
+            HttpResponseMessage response;
 
             using (var fixture = new ProxyTestFixture())
             {
-                opInfo = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), "Hello World!");
+                // Verify that receiving a small response works.
 
-                Assert.Equal(200, opInfo.StatusCode);
-                Assert.Equal("OK", opInfo.ReasonPhrase);
-                Assert.Equal("Hello World!", opInfo.ResponseText);
+                opInfo   = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), "Hello World!");
+                response = opInfo.ProxyResponse;
+
+                Assert.Equal(200, (int)response.StatusCode);
+                Assert.Equal("OK", response.ReasonPhrase);
+                Assert.Equal("Hello World!", response.Content.ReadAsStringAsync().Result);
+
+                // Verify that receiving a large response works.
+
+                opInfo   = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), largeContent);
+                response = opInfo.ProxyResponse;
+
+                Assert.Equal(200, (int)response.StatusCode);
+                Assert.Equal("OK", response.ReasonPhrase);
+                Assert.Equal(largeContent, response.Content.ReadAsStringAsync().Result);
+
+                // Verify that custom server headers are returned.
+
+                opInfo = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), "Hello World!",
+                    headers: new List<KeyValuePair<string, string>>()
+                    {
+                        new KeyValuePair<string, string>("X-Foo", "BAR"),
+                        new KeyValuePair<string, string>("X-Hello", "WORLD!")
+                    });
+
+                response = opInfo.ProxyResponse;
+
+                Assert.Equal(200, (int)response.StatusCode);
+                Assert.Equal("OK", response.ReasonPhrase);
+                Assert.Equal("Hello World!", response.Content.ReadAsStringAsync().Result);
+                Assert.Equal("BAR", response.Headers.GetValues("X-Foo").First());
+                Assert.Equal("WORLD!", response.Headers.GetValues("X-Hello").First());
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonShell)]
+        public async Task Load()
+        {
+            // Perform some load testing with parallel requests.
+
+            using (var fixture = new ProxyTestFixture())
+            {
+                var tasks     = new List<Task>();
+                var timeLimit = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+
+                // Small requests task.
+
+                tasks.Add(
+                    Task.Run(
+                        async () =>
+                        {
+                            while (DateTime.UtcNow < timeLimit)
+                            {
+                                var opInfo   = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), "Hello World!");
+                                var response = opInfo.ProxyResponse;
+
+                                Assert.Equal(200, (int)response.StatusCode);
+                                Assert.Equal("OK", response.ReasonPhrase);
+                                Assert.Equal("Hello World!", response.Content.ReadAsStringAsync().Result);
+                            }
+                        }));
+
+                // Large requests task.
+
+                tasks.Add(
+                    Task.Run(
+                        async () =>
+                        {
+                            var opInfo   = await fixture.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"), largeContent);
+                            var response = opInfo.ProxyResponse;
+
+                            Assert.Equal(200, (int)response.StatusCode);
+                            Assert.Equal("OK", response.ReasonPhrase);
+                            Assert.Equal(largeContent, response.Content.ReadAsStringAsync().Result);
+                        }));
+
+                await Task.WhenAll(tasks);
             }
         }
     }
