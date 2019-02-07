@@ -23,6 +23,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Net.Http.Server;
@@ -98,7 +99,7 @@ namespace NShell
                  BaseAddress = new Uri($"http://{remoteEndpoint}/")
             };
 
-            // Allow a reasonable number of remote HTTP connections.
+            // Allow a reasonable number of remote HTTP socket connections.
 
             ServicePointManager.DefaultConnectionLimit = 100;
 

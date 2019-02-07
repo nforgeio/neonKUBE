@@ -105,7 +105,7 @@ namespace Test.NShell
 
         /// <summary>
         /// Creates a mock HTTP server and a wrapped [nshell proxy] instance
-        /// into a form that easily supports easy unit testing.
+        /// into a form that supports easy unit testing.
         /// </summary>
         private sealed class ProxyTestFixture : IDisposable
         {
@@ -227,7 +227,7 @@ namespace Test.NShell
                 {
                     opInfo = new OperationInfo()
                     {
-                        Id           = nextOpID++,
+                        Id           = Interlocked.Increment(ref nextOpID),
                         StatusCode   = statusCode,
                         ReasonPhrase = reasonPhrase,
                         ResponseText = responseText
