@@ -155,13 +155,23 @@ node port.
 
             new ReverseProxy(localEndpoint, remoteEndpoint);
 
-            // Signal [ProgramRunner] (if there is one) that we're ready for any pending tests.
+            // Signal [ProgramRunner] (if there is one) that we're ready for any pending tests
+            // and then wait for the [ProgramRunner] to signal that we need to exit the
+            // program.
 
-            ProgramRunner.Current?.ProgramReady();
-
-            while (true)
+            if (ProgramRunner.Current != null)
             {
-                Thread.Sleep(300);
+                ProgramRunner.Current.ProgramReady();
+                ProgramRunner.Current.WaitForExit();
+            }
+            else
+            {
+                // Otherwise, sleep until the process is killed.
+
+                while (true)
+                {
+                    Thread.Sleep(TimeSpan.FromMinutes(300));
+                }
             }
         }
 

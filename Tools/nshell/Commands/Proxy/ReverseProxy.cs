@@ -58,6 +58,8 @@ namespace NShell
     /// </remarks>
     public sealed class ReverseProxy : IDisposable
     {
+        private const int BufferSize = 16 * 1024;
+
         private object                  syncLock = new object();
         private IPEndPoint              localEndpoint;
         private IPEndPoint              remoteEndpoint;
@@ -65,6 +67,7 @@ namespace NShell
         private Action<RequestContext>  responseHandler;
         private WebListener             listener;
         private HttpClient              client;
+        private Queue<byte[]>           bufferPool;
 
         /// <summary>
         /// Constructs a reverse proxy.
@@ -103,6 +106,11 @@ namespace NShell
 
             ServicePointManager.DefaultConnectionLimit = 100;
 
+            // Initialize the buffer pool.  We're going to use this to reduce
+            // pressure on the garbarge collector.
+
+            bufferPool = new Queue<byte[]>();
+
             // Crank up the HTTP listener.
 
             var settings = new WebListenerSettings();
@@ -133,6 +141,44 @@ namespace NShell
                     listener.Dispose();
                     listener = null;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns a buffer from the pool or allocates a new buffer if
+        /// the pool is empty.
+        /// </summary>
+        private byte[] GetBuffer()
+        {
+            byte[] buffer;
+
+            lock (syncLock)
+            {
+                if (!bufferPool.TryDequeue(out buffer))
+                {
+                    buffer = null;
+                }
+            }
+
+            if (buffer == null)
+            {
+                buffer = new byte[BufferSize];
+            }
+
+            return buffer;
+        }
+
+        /// <summary>
+        /// Releases a buffer by adding it back to the pool.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        private void ReleaseBuffer(byte[] buffer)
+        {
+            Covenant.Requires<ArgumentNullException>(buffer != null);
+
+            lock (syncLock)
+            {
+                bufferPool.Enqueue(buffer);
             }
         }
 
@@ -212,6 +258,33 @@ namespace NShell
 
                                                 response.Headers.Add(header.Key, header.Value.ToArray());
                                                 break;
+                                        }
+                                    }
+
+                                    // Use a buffer from the pool write the data returned from the
+                                    // remote endpoint to the client response.
+
+                                    var buffer = GetBuffer();
+
+                                    using (var remoteStream = await remoteResponse.Content.ReadAsStreamAsync())
+                                    {
+                                        try
+                                        {
+                                            while (true)
+                                            {
+                                                var cb = await remoteStream.ReadAsync(buffer, 0, buffer.Length);
+
+                                                if (cb == 0)
+                                                {
+                                                    break;
+                                                }
+
+                                                await response.Body.WriteAsync(buffer, 0, cb);
+                                            }
+                                        }
+                                        finally
+                                        {
+                                            ReleaseBuffer(buffer);
                                         }
                                     }
 

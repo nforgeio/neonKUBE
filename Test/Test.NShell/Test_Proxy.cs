@@ -151,7 +151,6 @@ namespace Test.NShell
                     runner = null;
                 }
 
-                runner.TerminateFork();
             }
 
             /// <summary>

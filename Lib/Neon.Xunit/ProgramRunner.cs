@@ -67,6 +67,14 @@ namespace Neon.Xunit
     /// Only one <see cref="ProgramRunner"/> instance can active at any
     /// particular time.
     /// </note>
+    /// <para>
+    /// Simulated program entry points that will be called by <see cref="Fork(ProgramEntrypoint, string[])"/>
+    /// and that run indefinitely, need to call <see cref="WaitForExit()"/> when
+    /// after its started the operation.  This returns when the <see cref="TerminateFork"/>
+    /// is called.  The simulated program should stop any operations being
+    /// performed, release any important resources and exit cleanly its <c>Main</c>
+    /// method cleanly.
+    /// </para>
     /// <note>
     /// You should call <see cref="Dispose"/> when you're finished with
     /// the runner.
@@ -77,10 +85,6 @@ namespace Neon.Xunit
         //---------------------------------------------------------------------
         // Static memebrs
 
-        private static Thread           programThread;
-        private static AutoResetEvent   programReadyEvent;
-        private static TimeSpan         forkTimeout;
-
         /// <summary>
         /// Returns the current <see cref="ProgramRunner"/> or <c>null</c>.
         /// </summary>
@@ -89,9 +93,13 @@ namespace Neon.Xunit
         //---------------------------------------------------------------------
         // Instance members
 
-        private int     programExitCode;
-        private bool    programIsReady;
-        private bool    programExitBeforeReady;
+        private Thread          programThread;
+        private AutoResetEvent  programReadyEvent;
+        private AutoResetEvent  programExitEvent;
+        private int             programExitCode;
+        private bool            programIsReady;
+        private bool            programExitBeforeReady;
+        private TimeSpan        forkTimeout;
 
         /// <summary>
         /// Constructor.
@@ -108,24 +116,28 @@ namespace Neon.Xunit
                 forkTimeout = TimeSpan.FromSeconds(30);
             }
 
-            ProgramRunner.forkTimeout       = forkTimeout;
-            ProgramRunner.programReadyEvent = new AutoResetEvent(false);
-            ProgramRunner.Current           = this;
+            this.forkTimeout       = forkTimeout;
+            this.programReadyEvent = new AutoResetEvent(false);
+            this.programExitEvent  = new AutoResetEvent(false);
+
+            ProgramRunner.Current  = this;
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (programThread != null)
-            {
-                programThread.Abort();
-                programThread = null;
-            }
+            TerminateFork();
 
             if (programReadyEvent != null)
             {
                 programReadyEvent.Dispose();
                 programReadyEvent = null;
+            }
+
+            if (programExitEvent != null)
+            {
+                programExitEvent.Dispose();
+                programExitEvent = null;
             }
 
             Current = null;
@@ -159,9 +171,16 @@ namespace Neon.Xunit
         }
 
         /// <summary>
+        /// <para>
         /// Executes a program entry point asynchronously, without waiting for the command to complete.
         /// This is useful for commands that don't terminate by themselves (like <b>nshell proxy</b>).
         /// Call <see cref="TerminateFork()"/> to kill the running command.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> The <paramref name="main"/> simulated entry point must call
+        /// <see cref="WaitForExit()"/>.  This will block until the <see cref="TerminateFork"/>
+        /// is called, returning when the program is expected to terminate itself.
+        /// </note>
         /// </summary>
         /// <param name="main">The program entry point.</param>
         /// <param name="args">The arguments.</param>
@@ -233,9 +252,22 @@ namespace Neon.Xunit
         {
             if (programThread != null)
             {
-                programThread.Abort();
+                programExitEvent.Set();
+                programThread.Join();
+
                 programThread = null;
             }
+        }
+
+        /// <summary>
+        /// Called by the emulated program entry point for operations that are
+        /// initiated via <see cref="Fork(ProgramEntrypoint, string[])"/>.  This
+        /// method will block until <see cref="TerminateFork"/> is called.  The
+        /// emulated program must exit cleanly when this returns.
+        /// </summary>
+        public void WaitForExit()
+        {
+            programExitEvent.WaitOne();
         }
     }
 }
