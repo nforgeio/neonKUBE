@@ -89,7 +89,7 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Intercept the window close event an minimize it instead.
+        /// Intercept the window close event and minimize it instead.
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="args">The arguments.</param>
