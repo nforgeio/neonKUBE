@@ -46,7 +46,21 @@ namespace Neon
         /// <summary>
         /// The product version.
         /// </summary>
+#if DEBUG
         public const string ProductVersion = "0.1.0+1902-alpha-0";
+#else
+        public const string ProductVersion = "0.1.0+1902.debug-alpha-0";
+#endif
+
+        /// <summary>
+        /// The product license.
+        /// </summary>
+        public const string ProductLicense = "Apache License, Version 2.0";
+
+        /// <summary>
+        /// The product license URL.
+        /// </summary>
+        public const string ProductLicenseUrl = "http://www.apache.org/licenses/LICENSE-2.0";
 
         /// <summary>
         /// The build configuration.
