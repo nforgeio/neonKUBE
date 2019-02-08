@@ -36,6 +36,10 @@ namespace WinDesktop
     /// </summary>
     public partial class MainForm : Form
     {
+        private Icon disconnectedIcon;
+        private Icon connectingIcon;
+        private Icon connectedIcon;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -44,6 +48,12 @@ namespace WinDesktop
             InitializeComponent();
 
             Load += MainForm_Load;
+
+            // Preload the notification tray icons for better performance.
+
+            disconnectedIcon = new Icon(@"Images\disconnected.ico");
+            connectingIcon   = new Icon(@"Images\connecting.ico");
+            connectedIcon    = new Icon(@"Images\connected.ico");
         }
 
         /// <summary>
@@ -57,13 +67,14 @@ namespace WinDesktop
             // this because the form should remain hidden but we'll put something
             // here just in case.
 
-            productNameLabel.Text = $"{Build.ProductName}  (v{Build.ProductVersion})";
+            productNameLabel.Text = $"{Build.ProductName}  v{Build.ProductVersion}";
             copyrightLabel.Text   = Build.Copyright;
             licenseLinkLabel.Text = Build.ProductLicense;
 
             // Configure the notify icon.
 
             notifyIcon.Text    = Build.ProductName;
+            notifyIcon.Icon    = disconnectedIcon;
             notifyIcon.Visible = true;
         }
 
