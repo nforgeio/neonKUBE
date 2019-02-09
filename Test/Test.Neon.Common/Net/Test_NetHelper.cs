@@ -540,5 +540,22 @@ namespace TestCommon
 
             Assert.Empty(NetHelper.GetReachableHosts(new string[] { badHost0, badHost1, badHost2 }));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void TryParseIPv4Endpoint()
+        {
+            IPEndPoint endpoint;
+
+            Assert.True(NetHelper.TryParseIPv4Endpoint("127.0.0.1:80", out endpoint));
+            Assert.Equal("127.0.0.1", endpoint.Address.ToString());
+            Assert.Equal(80, endpoint.Port);
+
+            Assert.False(NetHelper.TryParseIPv4Endpoint("127.0.0.1100000000:80", out endpoint));
+            Assert.False(NetHelper.TryParseIPv4Endpoint("127.0.0.1:1000000", out endpoint));
+            Assert.False(NetHelper.TryParseIPv4Endpoint("127.0.0.1", out endpoint));
+            Assert.False(NetHelper.TryParseIPv4Endpoint("", out endpoint));
+            Assert.False(NetHelper.TryParseIPv4Endpoint(null, out endpoint));
+        }
     }
 }

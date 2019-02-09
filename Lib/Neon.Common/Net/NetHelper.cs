@@ -736,6 +736,43 @@ namespace Neon.Net
 
             return mss;
         }
+
+        /// <summary>
+        /// Attempts to parse an IPv4 network endpoint.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <param name="endpoint">Returns as the parsed endpoint.</param>
+        /// <returns><c>true</c> on success.</returns>
+        public static bool TryParseIPv4Endpoint(string input, out IPEndPoint endpoint)
+        {
+            endpoint = null;
+
+            if (string.IsNullOrEmpty(input))
+            {
+                return false;
+            }
+
+            var fields = input.Split(new char[] { ':' }, 2);
+
+            if (fields.Length != 2)
+            {
+                return false;
+            }
+
+            if (!IPAddress.TryParse(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork)
+            {
+                return false;
+            }
+
+            if (!int.TryParse(fields[1], out var port) || !IsValidPort(port))
+            {
+                return false;
+            }
+
+            endpoint = new IPEndPoint(address, port);
+
+            return true;
+        }
     }
 }
 
