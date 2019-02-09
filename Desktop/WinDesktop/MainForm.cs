@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -36,25 +37,51 @@ namespace WinDesktop
     /// </summary>
     public partial class MainForm : Form
     {
-        private Icon disconnectedIcon;
-        private Icon connectingIcon;
-        private Icon connectedIcon;
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Returns the current (and only) main form instance so that other
+        /// parts of the app can manipulate the UI.
+        /// </summary>
+        public static MainForm Current { get; private set; }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private double animationFrameRate = 2;
+
+        private Icon            disconnectedIcon;
+        private Icon            connectedIcon;
+        private AnimatedIcon    connectingAnimation;
+        private AnimatedIcon    workingAnimation;
+        private int             animationNesting;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public MainForm()
         {
+            MainForm.Current = this;
+
             InitializeComponent();
 
             Load += MainForm_Load;
 
-            // Preload the notification tray icons for better performance.
+            // Preload the notification icons and animations for better performance.
 
-            disconnectedIcon = new Icon(@"Images\disconnected.ico");
-            connectingIcon   = new Icon(@"Images\connecting.ico");
-            connectedIcon    = new Icon(@"Images\connected.ico");
+            connectedIcon       = new Icon(@"Images\connected.ico");
+            disconnectedIcon    = new Icon(@"Images\disconnected.ico");
+            connectingAnimation = AnimatedIcon.Load("Images", "connecting", animationFrameRate);
+            workingAnimation    = AnimatedIcon.Load("Images", "working", animationFrameRate);
+
+            IsConnected = false;
         }
+
+        /// <summary>
+        /// Indicates whether the application is connected to a cluster.
+        /// </summary>
+        public bool IsConnected { get; private set; }
 
         /// <summary>
         /// Handles form initialization.
@@ -71,11 +98,15 @@ namespace WinDesktop
             copyrightLabel.Text   = Build.Copyright;
             licenseLinkLabel.Text = Build.ProductLicense;
 
-            // Configure the notify icon.
+            // Initialize the notify icon.
 
             notifyIcon.Text    = Build.ProductName;
             notifyIcon.Icon    = disconnectedIcon;
             notifyIcon.Visible = true;
+
+            // Test the animation.
+
+            StartNotifyAnimation(connectingAnimation);
         }
 
         /// <summary>
@@ -99,6 +130,53 @@ namespace WinDesktop
             // implement this just in case.
 
             args.Cancel = true;
+        }
+
+        /// <summary>
+        /// Starts a notify icon animation.
+        /// </summary>
+        /// <param name="animatedIcon">The icon animation.</param>
+        /// <remarks>
+        /// Calls to this method may be recursed and should be matched 
+        /// with a call to <see cref="StopWorkingAnimnation"/>.  The
+        /// amimation will actually stop when the last matching
+        /// <see cref="StartWorkingAnimation"/> call was matched with
+        /// the last <see cref="StopWorkingAnimnation"/>.
+        /// </remarks>
+        public void StartNotifyAnimation(AnimatedIcon animatedIcon)
+        {
+            Covenant.Requires<ArgumentNullException>(animatedIcon != null);
+
+            if (animationNesting == 0)
+            {
+                animationTimer.Interval = (int)TimeSpan.FromSeconds(1 / animatedIcon.FrameRate).TotalMilliseconds;
+                animationTimer.Tick    +=
+                    (s, a) =>
+                    {
+                        notifyIcon.Icon = animatedIcon.GetNextFrame();
+                    };
+
+                animationTimer.Start();
+            }
+
+            animationNesting++;
+        }
+
+        /// <summary>
+        /// Stops the notify icon animation.
+        /// </summary>
+        public void StopNotifyAnimation()
+        {
+            if (animationNesting == 0)
+            {
+                throw new InvalidOperationException("StopNotifyAnimation: Stack underflow.");
+            }
+
+            if (--animationNesting == 0)
+            {
+                animationTimer.Stop();
+                notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+            }
         }
     }
 }
