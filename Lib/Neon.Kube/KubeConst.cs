@@ -133,5 +133,12 @@ namespace Neon.Kube
         /// the Kubernetes and neonKUBE files will be located.
         /// </summary>
         public const string TestModeFolderVar = "NF_TESTMODE_FOLDER";
+
+        /// <summary>
+        /// The network endpoint for the neonKUBE desktop API used
+        /// by the <b>neon-cli</b> tool for communicating with the
+        /// neonKUBE desktop.
+        /// </summary>
+        public const string DesktopApiEndpoint = "127.0.0.1:1214";
     }
 }

@@ -61,6 +61,8 @@ namespace Neon.Kube
         private static string               cachedClustersFolder;
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
+        private static string               cachedDesktopFolder;
+        private static KubeClientConfig      cachedClientState;
 
         /// <summary>
         /// Static constructor.
@@ -93,6 +95,8 @@ namespace Neon.Kube
             cachedClustersFolder     = null;
             cachedPasswordsFolder    = null;
             cachedCacheFolder        = null;
+            cachedDesktopFolder      = null;
+            cachedClientState        = null;
         }
 
         /// <summary>
@@ -154,6 +158,67 @@ namespace Neon.Kube
         /// Returns <c>true</c> if the class is running in test mode.
         /// </summary>
         public static bool IsTestMode => testFolder != null;
+
+        /// <summary>
+        /// Accesses the neonKUBE desktop client configuration.
+        /// </summary>
+        public static KubeClientConfig ClientConfig
+        {
+            get
+            {
+                if (cachedClientState != null)
+                {
+                    return cachedClientState;
+                }
+
+                var clientStatePath = Path.Combine(KubeHelper.DesktopFolder, "config.json");
+
+                try
+                {
+                    cachedClientState = NeonHelper.JsonDeserialize<KubeClientConfig>(File.ReadAllText(clientStatePath));
+                    ClientConfig.Validate();
+                }
+                catch
+                {
+                    // The file doesn't exist yet or could not be parsed, so we'll
+                    // generate a new file with default settings.
+
+                    cachedClientState = new KubeClientConfig();
+
+                    SaveClientState();
+                }
+
+                return cachedClientState;
+            }
+
+            set
+            {
+                Covenant.Requires<ArgumentNullException>(value != null);
+
+                value.Validate();
+                cachedClientState = value;
+                SaveClientState();
+            }
+        }
+
+        /// <summary>
+        /// Loads the <see cref="ClientConfig"/>.
+        /// </summary>
+        public static KubeClientConfig LoadClientConfig()
+        {
+            return ClientConfig;
+        }
+
+        /// <summary>
+        /// Persists the <see cref="ClientConfig"/> to disk.
+        /// </summary>
+        public static void SaveClientState()
+        {
+            var clientStatePath = Path.Combine(KubeHelper.DesktopFolder, "config.json");
+
+            ClientConfig.Validate();
+            File.WriteAllText(clientStatePath, NeonHelper.JsonSerialize(cachedClientState, Formatting.Indented));
+        }
 
         /// <summary>
         /// Encrypts a file or directory when supported by the underlying operating system
@@ -470,6 +535,27 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedPasswordsFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns path to the neonKUBE desktop application state folder.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string DesktopFolder
+        {
+            get
+            {
+                if (cachedDesktopFolder != null)
+                {
+                    return cachedDesktopFolder;
+                }
+
+                var path = Path.Combine(GetNeonKubeUserFolder(), "desktop");
+
+                Directory.CreateDirectory(path);
+
+                return cachedDesktopFolder = path;
             }
         }
 

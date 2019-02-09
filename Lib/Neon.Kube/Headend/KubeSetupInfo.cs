@@ -41,7 +41,7 @@ using Neon.Time;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Holds information required to setup a Kubernetes cluster.
+    /// Describes the details required to setup a Kubernetes cluster.
     /// </summary>
     public class KubeSetupInfo
     {

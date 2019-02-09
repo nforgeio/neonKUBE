@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.Contracts;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,6 +57,7 @@ namespace WinDesktop
         private AnimatedIcon    connectingAnimation;
         private AnimatedIcon    workingAnimation;
         private int             animationNesting;
+        private ContextMenu     menu;
 
         /// <summary>
         /// Constructor.
@@ -66,7 +68,8 @@ namespace WinDesktop
 
             InitializeComponent();
 
-            Load += MainForm_Load;
+            Load  += MainForm_Load;
+            Shown += (s, a) => Visible = false; // The main form should always be hidden
 
             // Preload the notification icons and animations for better performance.
 
@@ -76,12 +79,22 @@ namespace WinDesktop
             workingAnimation    = AnimatedIcon.Load("Images", "working", animationFrameRate);
 
             IsConnected = false;
+
+            // Initialize the client state.
+
+            Headend = new HeadendClient();
+            KubeHelper.LoadClientConfig();
         }
 
         /// <summary>
         /// Indicates whether the application is connected to a cluster.
         /// </summary>
         public bool IsConnected { get; private set; }
+
+        /// <summary>
+        /// Returns the neonKUBE head client to be used to query the headend services.
+        /// </summary>
+        public HeadendClient Headend { get; private set; }
 
         /// <summary>
         /// Handles form initialization.
@@ -94,19 +107,18 @@ namespace WinDesktop
             // this because the form should remain hidden but we'll put something
             // here just in case.
 
-            productNameLabel.Text = $"{Build.ProductName}  v{Build.ProductVersion}";
-            copyrightLabel.Text   = Build.Copyright;
-            licenseLinkLabel.Text = Build.ProductLicense;
+            productNameLabel.Text  = $"{Build.ProductName}  v{Build.ProductVersion}";
+            copyrightLabel.Text    = Build.Copyright;
+            licenseLinkLabel.Text  = Build.ProductLicense;
 
-            // Initialize the notify icon.
+            // Initialize the notify icon and its context memu.
+            
+            notifyIcon.Text        = Build.ProductName;
+            notifyIcon.Icon        = disconnectedIcon;
+            notifyIcon.Visible     = true;
+            notifyIcon.ContextMenu = menu = new ContextMenu();
 
-            notifyIcon.Text    = Build.ProductName;
-            notifyIcon.Icon    = disconnectedIcon;
-            notifyIcon.Visible = true;
-
-            // Test the animation.
-
-            StartNotifyAnimation(connectingAnimation);
+            menu.Popup            += Menu_Popup;
         }
 
         /// <summary>
@@ -129,7 +141,8 @@ namespace WinDesktop
             // The main form should always be hidden but we'll 
             // implement this just in case.
 
-            args.Cancel = true;
+            args.Cancel  = true;
+            this.Visible = false;
         }
 
         /// <summary>
@@ -143,7 +156,7 @@ namespace WinDesktop
         /// <see cref="StartWorkingAnimation"/> call was matched with
         /// the last <see cref="StopWorkingAnimnation"/>.
         /// </remarks>
-        public void StartNotifyAnimation(AnimatedIcon animatedIcon)
+        private void StartNotifyAnimation(AnimatedIcon animatedIcon)
         {
             Covenant.Requires<ArgumentNullException>(animatedIcon != null);
 
@@ -165,8 +178,19 @@ namespace WinDesktop
         /// <summary>
         /// Stops the notify icon animation.
         /// </summary>
-        public void StopNotifyAnimation()
+        /// <param name="force">Optionally force the animation to stop regardless of the nesting level.</param>
+        private void StopNotifyAnimation(bool force = false)
         {
+            if (force)
+            {
+                if (animationNesting > 0)
+                {
+                    animationTimer.Stop();
+                    notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+                    animationNesting = 0;
+                }
+            }
+
             if (animationNesting == 0)
             {
                 throw new InvalidOperationException("StopNotifyAnimation: Stack underflow.");
@@ -177,6 +201,111 @@ namespace WinDesktop
                 animationTimer.Stop();
                 notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
             }
+        }
+
+        //---------------------------------------------------------------------
+        // Menu commands
+
+        /// <summary>
+        /// Poulates the context menu when it is clicked, based on the current
+        /// application state.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void Menu_Popup(object sender, EventArgs args)
+        {
+            menu.MenuItems.Clear();
+
+            menu.MenuItems.Add("-");
+            menu.MenuItems.Add(new MenuItem("GitHub", OnGitHubCommand));
+            menu.MenuItems.Add(new MenuItem("Help", OnHelpCommand));
+            menu.MenuItems.Add(new MenuItem("About", OnAboutCommand));
+            menu.MenuItems.Add("-");
+            menu.MenuItems.Add(new MenuItem("Settings", OnSettingsCommand));
+            menu.MenuItems.Add(new MenuItem("Check for Updates", OnCheckForUpdatesCommand));
+            menu.MenuItems.Add("-");
+            menu.MenuItems.Add(new MenuItem("Quit neonKUBE", OnQuitCommand));
+        }
+
+        /// <summary>
+        /// Handles the <b>Github</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnGitHubCommand(object sender, EventArgs args)
+        {
+        }
+
+        /// <summary>
+        /// Handles the <b>Help</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnHelpCommand(object sender, EventArgs args)
+        {
+        }
+
+        /// <summary>
+        /// Handles the <b>About</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnAboutCommand(object sender, EventArgs args)
+        {
+        }
+
+        /// <summary>
+        /// Handles the <b>Settings</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnSettingsCommand(object sender, EventArgs args)
+        {
+        }
+
+        /// <summary>
+        /// Handles the <b>Settings</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private async void OnCheckForUpdatesCommand(object sender, EventArgs args)
+        {
+            StartNotifyAnimation(workingAnimation);
+
+            try
+            {
+                var clientInfo = await Headend.GetClientInfoAsync();
+
+                if (clientInfo.UpdateVersion == null)
+                {
+                    MessageBox.Show("The latest version of neonKUBE is installed.", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Update check failed", Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            finally
+            {
+                StopNotifyAnimation();
+            }
+        }
+
+        /// <summary>
+        /// Handles the <b>Quit</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnQuitCommand(object sender, EventArgs args)
+        {
+            StopNotifyAnimation();
+            notifyIcon.Visible = false;
+            Environment.Exit(0);
         }
     }
 }

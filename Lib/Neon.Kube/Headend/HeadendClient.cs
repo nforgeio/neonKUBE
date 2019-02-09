@@ -278,6 +278,25 @@ namespace Neon.Kube
             return setupInfo;
         }
 
+        /// <summary>
+        /// Returns client related information such as the location of the help and GitHub
+        /// repo pages and the availability of updates.
+        /// </summary>
+        /// <returns>A <see cref="KubeClientInfo"/>.</returns>
+        public async Task<KubeClientInfo> GetClientInfoAsync()
+        {
+            await Task.CompletedTask;
+
+            return new KubeClientInfo()
+            {
+                GitHubUrl             = "https://github.com/nforgeio/neonKUBE",
+                HelpUrl               = "https://github.com/nforgeio/neonKUBE",
+                ReleaseNotesUrl       = "https://github.com/nforgeio/neonKUBE",
+                UpdateReleaseNotesUrl = null,
+                UpdateUrl             = null
+            };
+        }
+
         /// <inheritdoc/>
         public void Dispose()
         {
