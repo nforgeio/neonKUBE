@@ -91,6 +91,7 @@ namespace Neon.Kube
         public HeadendClient()
         {
             jsonClient = new JsonClient();
+            jsonClient.HttpClient.Timeout = TimeSpan.FromSeconds(10);
 
             // $hack(jeff.lill):
             //

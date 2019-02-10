@@ -50,7 +50,8 @@ namespace WinDesktop
         //---------------------------------------------------------------------
         // Instance members
 
-        private double animationFrameRate = 2;
+        private const double animationFrameRate = 2;
+        private const string headendError       = "Unable to contact the neonKUBE headend service.";
 
         private Icon            disconnectedIcon;
         private Icon            connectedIcon;
@@ -115,8 +116,8 @@ namespace WinDesktop
             
             notifyIcon.Text        = Build.ProductName;
             notifyIcon.Icon        = disconnectedIcon;
-            notifyIcon.Visible     = true;
             notifyIcon.ContextMenu = menu = new ContextMenu();
+            notifyIcon.Visible     = true;
 
             menu.Popup            += Menu_Popup;
         }
@@ -224,7 +225,7 @@ namespace WinDesktop
             menu.MenuItems.Add(new MenuItem("Settings", OnSettingsCommand));
             menu.MenuItems.Add(new MenuItem("Check for Updates", OnCheckForUpdatesCommand));
             menu.MenuItems.Add("-");
-            menu.MenuItems.Add(new MenuItem("Quit neonKUBE", OnQuitCommand));
+            menu.MenuItems.Add(new MenuItem("Exit", OnExitCommand));
         }
 
         /// <summary>
@@ -232,8 +233,25 @@ namespace WinDesktop
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="args">The arguments.</param>
-        private void OnGitHubCommand(object sender, EventArgs args)
+        private async void OnGitHubCommand(object sender, EventArgs args)
         {
+            StartNotifyAnimation(workingAnimation);
+
+            try
+            {
+                var clientInfo = await Headend.GetClientInfoAsync();
+
+                NeonHelper.OpenBrowser(clientInfo.GitHubUrl);
+            }
+            catch
+            {
+                MessageBox.Show(headendError, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            finally
+            {
+                StopNotifyAnimation();
+            }
         }
 
         /// <summary>
@@ -241,8 +259,25 @@ namespace WinDesktop
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="args">The arguments.</param>
-        private void OnHelpCommand(object sender, EventArgs args)
+        private async void OnHelpCommand(object sender, EventArgs args)
         {
+            StartNotifyAnimation(workingAnimation);
+
+            try
+            {
+                var clientInfo = await Headend.GetClientInfoAsync();
+
+                NeonHelper.OpenBrowser(clientInfo.HelpUrl);
+            }
+            catch
+            {
+                MessageBox.Show(headendError, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            finally
+            {
+                StopNotifyAnimation();
+            }
         }
 
         /// <summary>
@@ -252,6 +287,9 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnAboutCommand(object sender, EventArgs args)
         {
+            var aboutBox = new AboutBox();
+
+            aboutBox.ShowDialog();
         }
 
         /// <summary>
@@ -297,11 +335,11 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Handles the <b>Quit</b> command.
+        /// Handles the <b>Exit</b> command.
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="args">The arguments.</param>
-        private void OnQuitCommand(object sender, EventArgs args)
+        private void OnExitCommand(object sender, EventArgs args)
         {
             StopNotifyAnimation();
             notifyIcon.Visible = false;
