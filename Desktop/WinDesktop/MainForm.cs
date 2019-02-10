@@ -219,6 +219,34 @@ namespace WinDesktop
         {
             menu.MenuItems.Clear();
 
+            // Append menus for each of the cluster contexts that have
+            // neonKUBE extensions.  We're not going to try to manage 
+            // non-neonKUBE clusters.
+            //
+            // Put a check mark next to the logged in cluster (if there
+            // is one) and also enable [Logout] if we're logged in.
+
+            var loggedIn = false;
+
+            foreach (var context in KubeHelper.Config.Contexts
+                .Where(c => c.Extensions != null)
+                .OrderBy(c => c.Name))
+            {
+                var menuItem = new MenuItem(context.Name, OnClusterContext);
+
+                if (KubeHelper.Config.CurrentContext == context.Name)
+                {
+                    loggedIn         = true;
+                    menuItem.Checked = true;
+                }
+
+                menu.MenuItems.Add(menuItem);
+            }
+
+            menu.MenuItems.Add(new MenuItem("Logout", OnLogoutCommand) { Enabled = loggedIn });
+
+            // Append the static commands.
+            
             menu.MenuItems.Add("-");
             menu.MenuItems.Add(new MenuItem("GitHub", OnGitHubCommand));
             menu.MenuItems.Add(new MenuItem("Help", OnHelpCommand));
@@ -334,6 +362,24 @@ namespace WinDesktop
             {
                 StopNotifyAnimation();
             }
+        }
+
+        /// <summary>
+        /// Handles cluster context commands.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnClusterContext(object sender, EventArgs args)
+        {
+        }
+
+        /// <summary>
+        /// Handles the <b>Logout</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnLogoutCommand(object sender, EventArgs args)
+        {
         }
 
         /// <summary>
