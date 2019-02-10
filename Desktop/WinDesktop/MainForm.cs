@@ -53,12 +53,13 @@ namespace WinDesktop
         private const double animationFrameRate = 2;
         private const string headendError       = "Unable to contact the neonKUBE headend service.";
 
+        private Icon            appIcon;
         private Icon            disconnectedIcon;
         private Icon            connectedIcon;
         private AnimatedIcon    connectingAnimation;
         private AnimatedIcon    workingAnimation;
         private int             animationNesting;
-        private ContextMenu     menu;
+        private ContextMenu     contextMenu;
 
         /// <summary>
         /// Constructor.
@@ -74,12 +75,15 @@ namespace WinDesktop
 
             // Preload the notification icons and animations for better performance.
 
+            appIcon             = new Icon(@"Images\app.ico");
             connectedIcon       = new Icon(@"Images\connected.ico");
             disconnectedIcon    = new Icon(@"Images\disconnected.ico");
             connectingAnimation = AnimatedIcon.Load("Images", "connecting", animationFrameRate);
             workingAnimation    = AnimatedIcon.Load("Images", "working", animationFrameRate);
 
-            IsConnected = false;
+            // Initialize the cluster hosting provider components.
+
+            HostingLoader.Initialize();
 
             // Initialize the client state.
 
@@ -90,7 +94,7 @@ namespace WinDesktop
         /// <summary>
         /// Indicates whether the application is connected to a cluster.
         /// </summary>
-        public bool IsConnected { get; private set; }
+        public bool IsConnected => KubeHelper.CurrentContext != null;
 
         /// <summary>
         /// Returns the neonKUBE head client to be used to query the headend services.
@@ -116,10 +120,11 @@ namespace WinDesktop
             
             notifyIcon.Text        = Build.ProductName;
             notifyIcon.Icon        = disconnectedIcon;
-            notifyIcon.ContextMenu = menu = new ContextMenu();
+            notifyIcon.ContextMenu = contextMenu = new ContextMenu();
             notifyIcon.Visible     = true;
+            contextMenu.Popup     += Menu_Popup;
 
-            menu.Popup            += Menu_Popup;
+            SetNotifyState();
         }
 
         /// <summary>
@@ -144,6 +149,23 @@ namespace WinDesktop
 
             args.Cancel  = true;
             this.Visible = false;
+        }
+
+        /// <summary>
+        /// Sets the notify icon and tooltip text based on the current application state.
+        /// </summary>
+        private void SetNotifyState()
+        {
+            notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+
+            if (IsConnected)
+            {
+                notifyIcon.Text = $"{Text}: {KubeHelper.CurrentContextName}";
+            }
+            else
+            {
+                notifyIcon.Text = $"{Text}: disconnected";
+            }
         }
 
         /// <summary>
@@ -187,7 +209,7 @@ namespace WinDesktop
                 if (animationNesting > 0)
                 {
                     animationTimer.Stop();
-                    notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+                    SetNotifyState();
                     animationNesting = 0;
                 }
 
@@ -202,7 +224,69 @@ namespace WinDesktop
             if (--animationNesting == 0)
             {
                 animationTimer.Stop();
-                notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+                SetNotifyState();
+            }
+        }
+
+        /// <summary>
+        /// Displays the notify icon's balloon.
+        /// </summary>
+        /// <param name="text">The balloon message text.</param>
+        /// <param name="title">The ballon title text (defaults to the application name).</param>
+        /// <param name="icon">The optional tool tip icon (defaults to <see cref="ToolTipIcon.Info"/>).</param>
+        private void ShowBalloon(string text, string title = null, ToolTipIcon icon = ToolTipIcon.Info)
+        {
+            notifyIcon.ShowBalloonTip(0, title ?? this.Text, text, icon);
+        }
+
+        /// <summary>
+        /// Indicates that an operation is starting by optionally displaying a working
+        /// animation and displaying a status balloon.
+        /// </summary>
+        /// <param name="animatedIcon">The optional notify icon animation.</param>
+        /// <param name="balloonText">The optional balloon text.</param>
+        private void StartOperation(AnimatedIcon animatedIcon = null, string balloonText = null)
+        {
+            if (animatedIcon != null)
+            {
+                StartNotifyAnimation(animatedIcon);
+            }
+
+            if (!string.IsNullOrEmpty(balloonText))
+            {
+                ShowBalloon(balloonText);
+            }
+        }
+
+        /// <summary>
+        /// Indicates that the current operation has been stopped.
+        /// </summary>
+        private void StopOperation()
+        {
+            if (animationNesting > 0)
+            {
+                StopNotifyAnimation(force: true);
+            }
+
+            SetNotifyState();
+        }
+
+        /// <summary>
+        /// Indicates that the current operation failed.
+        /// </summary>
+        /// <param name="balloonErrorText">The optional balloon error text.</param>
+        private void StopFailedOperation(string balloonErrorText = null)
+        {
+            if (animationNesting > 0)
+            {
+                StopNotifyAnimation(force: true);
+            }
+
+            SetNotifyState();
+
+            if (!string.IsNullOrEmpty(balloonErrorText))
+            {
+                ShowBalloon(balloonErrorText, icon: ToolTipIcon.Error);
             }
         }
 
@@ -217,7 +301,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void Menu_Popup(object sender, EventArgs args)
         {
-            menu.MenuItems.Clear();
+            contextMenu.MenuItems.Clear();
 
             // Append submenus for each of the cluster contexts that have
             // neonKUBE extensions.  We're not going to try to manage 
@@ -236,7 +320,7 @@ namespace WinDesktop
 
             if (contexts.Length > 0)
             {
-                var contextsMenu = new MenuItem(loggedIn ? currentContextName : "login to cluster") { Checked = loggedIn };
+                var contextsMenu = new MenuItem(loggedIn ? currentContextName : "Login to") { Checked = loggedIn };
 
                 contextsMenu.RadioCheck = loggedIn;
 
@@ -261,65 +345,68 @@ namespace WinDesktop
                 contextsMenu.MenuItems.Add("-");
                 contextsMenu.MenuItems.Add(new MenuItem("Logout", OnLogoutCommand) { Enabled = loggedIn });
 
-                menu.MenuItems.Add(contextsMenu);
+                contextMenu.MenuItems.Add(contextsMenu);
             }
 
             // Append cluster-specific menus.
 
-            menu.MenuItems.Add("-");
-
-            var dashboardsMenu = new MenuItem("Dashboard") { Enabled = loggedIn };
-
-            dashboardsMenu.MenuItems.Add(new MenuItem("Kubernetes", OnKubernetesDashboardCommand) { Enabled = loggedIn });
-
-            var addedDashboardSeparator = false;
-
-            if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.Ceph.Enabled)
+            if (loggedIn)
             {
-                if (!addedDashboardSeparator)
+                contextMenu.MenuItems.Add("-");
+
+                var dashboardsMenu = new MenuItem("Dashboard") { Enabled = loggedIn };
+
+                dashboardsMenu.MenuItems.Add(new MenuItem("Kubernetes", OnKubernetesDashboardCommand) { Enabled = loggedIn });
+
+                var addedDashboardSeparator = false;
+
+                if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.Ceph.Enabled)
                 {
-                    dashboardsMenu.MenuItems.Add(new MenuItem("-"));
-                    addedDashboardSeparator = true;
+                    if (!addedDashboardSeparator)
+                    {
+                        dashboardsMenu.MenuItems.Add(new MenuItem("-"));
+                        addedDashboardSeparator = true;
+                    }
+
+                    dashboardsMenu.MenuItems.Add(new MenuItem("Ceph", OnCephDashboardCommand) { Enabled = loggedIn });
                 }
 
-                dashboardsMenu.MenuItems.Add(new MenuItem("Ceph", OnCephDashboardCommand) { Enabled = loggedIn });
-            }
-
-            if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.EFK.Enabled)
-            {
-                if (!addedDashboardSeparator)
+                if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.EFK.Enabled)
                 {
-                    dashboardsMenu.MenuItems.Add(new MenuItem("-"));
-                    addedDashboardSeparator = true;
+                    if (!addedDashboardSeparator)
+                    {
+                        dashboardsMenu.MenuItems.Add(new MenuItem("-"));
+                        addedDashboardSeparator = true;
+                    }
+
+                    dashboardsMenu.MenuItems.Add(new MenuItem("Kibana", OnKibanaDashboardCommand) { Enabled = loggedIn });
                 }
 
-                dashboardsMenu.MenuItems.Add(new MenuItem("Kibana", OnKibanaDashboardCommand) { Enabled = loggedIn });
-            }
-
-            if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.Prometheus.Enabled)
-            {
-                if (!addedDashboardSeparator)
+                if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.Prometheus.Enabled)
                 {
-                    dashboardsMenu.MenuItems.Add(new MenuItem("-"));
-                    addedDashboardSeparator = true;
+                    if (!addedDashboardSeparator)
+                    {
+                        dashboardsMenu.MenuItems.Add(new MenuItem("-"));
+                        addedDashboardSeparator = true;
+                    }
+
+                    dashboardsMenu.MenuItems.Add(new MenuItem("Prometheus", OnPrometheusDashboardCommand) { Enabled = loggedIn });
                 }
 
-                dashboardsMenu.MenuItems.Add(new MenuItem("Prometheus", OnPrometheusDashboardCommand) { Enabled = loggedIn });
+                contextMenu.MenuItems.Add(dashboardsMenu);
             }
-
-            menu.MenuItems.Add(dashboardsMenu);
 
             // Append the static commands.
 
-            menu.MenuItems.Add("-");
-            menu.MenuItems.Add(new MenuItem("GitHub", OnGitHubCommand));
-            menu.MenuItems.Add(new MenuItem("Help", OnHelpCommand));
-            menu.MenuItems.Add(new MenuItem("About", OnAboutCommand));
-            menu.MenuItems.Add("-");
-            menu.MenuItems.Add(new MenuItem("Settings", OnSettingsCommand));
-            menu.MenuItems.Add(new MenuItem("Check for Updates", OnCheckForUpdatesCommand));
-            menu.MenuItems.Add("-");
-            menu.MenuItems.Add(new MenuItem("Exit", OnExitCommand));
+            contextMenu.MenuItems.Add("-");
+            contextMenu.MenuItems.Add(new MenuItem("GitHub", OnGitHubCommand));
+            contextMenu.MenuItems.Add(new MenuItem("Help", OnHelpCommand));
+            contextMenu.MenuItems.Add(new MenuItem("About", OnAboutCommand));
+            contextMenu.MenuItems.Add("-");
+            contextMenu.MenuItems.Add(new MenuItem("Settings", OnSettingsCommand));
+            contextMenu.MenuItems.Add(new MenuItem("Check for Updates", OnCheckForUpdatesCommand));
+            contextMenu.MenuItems.Add("-");
+            contextMenu.MenuItems.Add(new MenuItem("Exit", OnExitCommand));
         }
 
         /// <summary>
@@ -329,7 +416,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private async void OnGitHubCommand(object sender, EventArgs args)
         {
-            StartNotifyAnimation(workingAnimation);
+            StartOperation(workingAnimation);
 
             try
             {
@@ -339,12 +426,12 @@ namespace WinDesktop
             }
             catch
             {
-                MessageBox.Show(headendError, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                StopFailedOperation(headendError);
                 return;
             }
             finally
             {
-                StopNotifyAnimation();
+                StopOperation();
             }
         }
 
@@ -355,7 +442,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private async void OnHelpCommand(object sender, EventArgs args)
         {
-            StartNotifyAnimation(workingAnimation);
+            StartOperation(workingAnimation);
 
             try
             {
@@ -365,12 +452,12 @@ namespace WinDesktop
             }
             catch
             {
-                MessageBox.Show(headendError, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                StopFailedOperation(headendError);
                 return;
             }
             finally
             {
-                StopNotifyAnimation();
+                StopOperation();
             }
         }
 
@@ -393,6 +480,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnSettingsCommand(object sender, EventArgs args)
         {
+            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         /// <summary>
@@ -402,7 +490,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private async void OnCheckForUpdatesCommand(object sender, EventArgs args)
         {
-            StartNotifyAnimation(workingAnimation);
+            StartOperation(workingAnimation);
 
             try
             {
@@ -419,12 +507,12 @@ namespace WinDesktop
             }
             catch
             {
-                MessageBox.Show("Update check failed", Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                StopFailedOperation("Update check failed");
                 return;
             }
             finally
             {
-                StopNotifyAnimation();
+                StopOperation();
             }
         }
 
@@ -435,6 +523,25 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnClusterContext(object sender, EventArgs args)
         {
+            // The cluster context name is the text of the sending menu item.
+
+            var menuItem    = (MenuItem)sender;
+            var contextName = menuItem.Text;
+
+            StartOperation(workingAnimation, $"Logging into: {contextName}");
+
+            try
+            {
+                KubeHelper.SetCurrentContext(contextName);
+            }
+            catch
+            {
+                StopFailedOperation($"Cannot log into: {contextName}");
+            }
+            finally
+            {
+                StopOperation();
+            }
         }
 
         /// <summary>
@@ -444,6 +551,11 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnLogoutCommand(object sender, EventArgs args)
         {
+            if (KubeHelper.CurrentContext != null)
+            {
+                ShowBalloon($"Logging out of: {KubeHelper.CurrentContext.Name}");
+                KubeHelper.SetCurrentContext((string)null);
+            }
         }
 
         /// <summary>

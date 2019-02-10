@@ -103,6 +103,10 @@ namespace Neon.Kube
                 {
                     cachedExtensions = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(extensionsPath));
 
+                    // Validate the extension's cluster definition.
+
+                    cachedExtensions.ClusterDefinition.Validate();
+
                     // We need to fixup some references.
 
                     foreach (var nodeDefinition in cachedExtensions.ClusterDefinition.NodeDefinitions.Values)

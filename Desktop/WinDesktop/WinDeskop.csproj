@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=1.0.7.0, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SharpZipLib.NETStandard.1.0.7\lib\net45\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.DependencyInjection, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.Extensions.DependencyInjection.2.2.0\lib\net461\Microsoft.Extensions.DependencyInjection.dll</HintPath>
     </Reference>
@@ -44,6 +47,9 @@
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -111,13 +117,52 @@
       <Project>{8d3bd5ba-aaf6-4233-879f-69a63eb6cda1}</Project>
       <Name>Neon.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj">
+      <Project>{592ffce1-0d8c-4797-9b3a-5f5f7e5e935b}</Project>
+      <Name>Neon.Kube.Aws</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj">
+      <Project>{cd08b37a-614c-4deb-9805-adbd77da3f8e}</Project>
+      <Name>Neon.Kube.Azure</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj">
+      <Project>{8315c918-4c26-435c-ac32-47a87cb2792e}</Project>
+      <Name>Neon.Kube.Google</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj">
+      <Project>{08b7000c-f261-4543-b611-5710d12263db}</Project>
+      <Name>Neon.Kube.Hosting</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperVLocal\Neon.Kube.HyperVLocal.csproj">
+      <Project>{8b2b63ba-ac1f-4f34-ae1a-ed4c08642e82}</Project>
+      <Name>Neon.Kube.HyperVLocal</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj">
+      <Project>{803a4763-4b6e-42af-adbb-61227369b5ae}</Project>
+      <Name>Neon.Kube.HyperV</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Machine\Neon.Kube.Machine.csproj">
+      <Project>{fc110ebb-25e9-49ac-9d21-dbd956090ed1}</Project>
+      <Name>Neon.Kube.Machine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj">
+      <Project>{22ca72ee-ffa9-412a-b995-d51c617b8fef}</Project>
+      <Name>Neon.Kube.XenServer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj">
       <Project>{c23307a1-4e5a-4b83-a8eb-90de334868c6}</Project>
       <Name>Neon.Kube</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.XenServer\Neon.XenServer.csproj">
+      <Project>{1a6c061d-83fd-4b53-8e96-80a1546c8f4b}</Project>
+      <Name>Neon.XenServer</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="Images\app.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Images\connected.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
