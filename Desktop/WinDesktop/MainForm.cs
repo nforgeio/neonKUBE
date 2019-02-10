@@ -219,34 +219,98 @@ namespace WinDesktop
         {
             menu.MenuItems.Clear();
 
-            // Append menus for each of the cluster contexts that have
+            // Append submenus for each of the cluster contexts that have
             // neonKUBE extensions.  We're not going to try to manage 
             // non-neonKUBE clusters.
             //
             // Put a check mark next to the logged in cluster (if there
             // is one) and also enable [Logout] if we're logged in.
 
-            var loggedIn = false;
-
-            foreach (var context in KubeHelper.Config.Contexts
+            var contexts = KubeHelper.Config.Contexts
                 .Where(c => c.Extensions != null)
-                .OrderBy(c => c.Name))
-            {
-                var menuItem = new MenuItem(context.Name, OnClusterContext);
+                .OrderBy(c => c.Name)
+                .ToArray();
 
-                if (KubeHelper.Config.CurrentContext == context.Name)
+            var currentContextName = (string)KubeHelper.CurrentContextName;
+            var loggedIn           = !string.IsNullOrEmpty(currentContextName);;
+
+            if (contexts.Length > 0)
+            {
+                var contextsMenu = new MenuItem(loggedIn ? currentContextName : "login to cluster") { Checked = loggedIn };
+
+                contextsMenu.RadioCheck = loggedIn;
+
+                if (loggedIn)
                 {
-                    loggedIn         = true;
-                    menuItem.Checked = true;
+                    contextsMenu.MenuItems.Add(new MenuItem(currentContextName) { Checked = true });
                 }
 
-                menu.MenuItems.Add(menuItem);
+                var addedContextsSeparator = false;
+
+                foreach (var context in contexts.Where(c => c.Name != currentContextName))
+                {
+                    if (!addedContextsSeparator)
+                    {
+                        contextsMenu.MenuItems.Add("-");
+                        addedContextsSeparator = true;
+                    }
+
+                    contextsMenu.MenuItems.Add(new MenuItem(context.Name, OnClusterContext));
+                }
+
+                contextsMenu.MenuItems.Add("-");
+                contextsMenu.MenuItems.Add(new MenuItem("Logout", OnLogoutCommand) { Enabled = loggedIn });
+
+                menu.MenuItems.Add(contextsMenu);
             }
 
-            menu.MenuItems.Add(new MenuItem("Logout", OnLogoutCommand) { Enabled = loggedIn });
+            // Append cluster-specific menus.
+
+            menu.MenuItems.Add("-");
+
+            var dashboardsMenu = new MenuItem("Dashboard") { Enabled = loggedIn };
+
+            dashboardsMenu.MenuItems.Add(new MenuItem("Kubernetes", OnKubernetesDashboardCommand) { Enabled = loggedIn });
+
+            var addedDashboardSeparator = false;
+
+            if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.Ceph.Enabled)
+            {
+                if (!addedDashboardSeparator)
+                {
+                    dashboardsMenu.MenuItems.Add(new MenuItem("-"));
+                    addedDashboardSeparator = true;
+                }
+
+                dashboardsMenu.MenuItems.Add(new MenuItem("Ceph", OnCephDashboardCommand) { Enabled = loggedIn });
+            }
+
+            if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.EFK.Enabled)
+            {
+                if (!addedDashboardSeparator)
+                {
+                    dashboardsMenu.MenuItems.Add(new MenuItem("-"));
+                    addedDashboardSeparator = true;
+                }
+
+                dashboardsMenu.MenuItems.Add(new MenuItem("Kibana", OnKibanaDashboardCommand) { Enabled = loggedIn });
+            }
+
+            if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.Prometheus.Enabled)
+            {
+                if (!addedDashboardSeparator)
+                {
+                    dashboardsMenu.MenuItems.Add(new MenuItem("-"));
+                    addedDashboardSeparator = true;
+                }
+
+                dashboardsMenu.MenuItems.Add(new MenuItem("Prometheus", OnPrometheusDashboardCommand) { Enabled = loggedIn });
+            }
+
+            menu.MenuItems.Add(dashboardsMenu);
 
             // Append the static commands.
-            
+
             menu.MenuItems.Add("-");
             menu.MenuItems.Add(new MenuItem("GitHub", OnGitHubCommand));
             menu.MenuItems.Add(new MenuItem("Help", OnHelpCommand));
@@ -380,6 +444,46 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnLogoutCommand(object sender, EventArgs args)
         {
+        }
+
+        /// <summary>
+        /// Handles the <b>Kubernetes Dashboard</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnKubernetesDashboardCommand(object sender, EventArgs args)
+        {
+            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        /// <summary>
+        /// Handles the <b>Ceph Dashboard</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnCephDashboardCommand(object sender, EventArgs args)
+        {
+            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        /// <summary>
+        /// Handles the <b>Kibana Dashboard</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnKibanaDashboardCommand(object sender, EventArgs args)
+        {
+            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        /// <summary>
+        /// Handles the <b>Prometheus Dashboard</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnPrometheusDashboardCommand(object sender, EventArgs args)
+        {
+            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         /// <summary>
