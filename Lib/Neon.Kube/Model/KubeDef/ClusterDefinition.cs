@@ -258,6 +258,24 @@ namespace Neon.Kube
         public CephOptions Ceph { get; set; } = new CephOptions();
 
         /// <summary>
+        /// Returns the options to be used for configuring the cluster integrated
+        /// Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+        /// </summary>
+        [JsonProperty(PropertyName = "EFK", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "EFK", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public EFKOptions EFK { get; set; } = new EFKOptions();
+
+        /// <summary>
+        /// Returns the options to be used for configuring the cluster integrated
+        /// Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+        /// </summary>
+        [JsonProperty(PropertyName = "Prometheus", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Prometheus", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public PrometheusOptions Prometheus { get; set; } = new PrometheusOptions();
+
+        /// <summary>
         /// <para>
         /// Returns the prefix for block devices that will be attached to
         /// the host machines.  For many hosting environments this will be
@@ -522,7 +540,9 @@ namespace Neon.Kube
             Provisioner = Provisioner ?? defaultProvisioner;
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
-            Ceph        = Ceph ?? new CephOptions();
+            Ceph        = Ceph ?? new CephOptions() { Enabled = false };
+            EFK         = EFK ?? new EFKOptions() { Enabled = false };
+            Prometheus  = Prometheus ?? new PrometheusOptions() { Enabled = false };
             DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
@@ -532,6 +552,8 @@ namespace Neon.Kube
             Kubernetes.Validate(this);
             Docker.Validate(this);
             Ceph.Validate(this);
+            EFK.Validate(this);
+            Prometheus.Validate(this);
             Setup.Validate(this);
             Network.Validate(this);
             Hosting.Validate(this);
