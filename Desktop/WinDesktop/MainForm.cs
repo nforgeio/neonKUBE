@@ -190,6 +190,8 @@ namespace WinDesktop
                     notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
                     animationNesting = 0;
                 }
+
+                return;
             }
 
             if (animationNesting == 0)
@@ -341,7 +343,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnExitCommand(object sender, EventArgs args)
         {
-            StopNotifyAnimation();
+            StopNotifyAnimation(force: true);
             notifyIcon.Visible = false;
             Environment.Exit(0);
         }
