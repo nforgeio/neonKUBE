@@ -130,6 +130,10 @@ USER@CLUSTER[/NAMESPACE is not specified.
 
             KubeHelper.Config.RemoveContext(context);
             Console.WriteLine($"Removed: {contextName}");
+
+            // Notify the desktop application.
+
+            KubeHelper.Desktop.UpdateUIAsync().Wait();
         }
     }
 }

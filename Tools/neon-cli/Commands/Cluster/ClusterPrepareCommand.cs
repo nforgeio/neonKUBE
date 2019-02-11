@@ -215,222 +215,231 @@ Server Requirements:
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
-            //-----------------------------------------------------------------
-            // Try to ensure that no servers are already deployed on the IP addresses defined
-            // for cluster nodes because provisoning over an existing cluster will likely
-            // corrupt the existing cluster and also probably prevent the new cluster from
-            // provisioning correctly.
-            //
-            // Note that we're not going to perform this check for the [Machine] hosting 
-            // environment because we're expecting the bare machines to be already running 
-            // with the assigned addresses and we're also not going to do this for cloud
-            // environments because we're assuming that the cluster will run in its own
-            // private network so there'll ne no possibility of conflicts.
-
-            if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine && 
-                !cluster.Definition.Hosting.IsCloudProvider)
+            try
             {
-                Console.WriteLine();
-                Console.WriteLine(" Scanning for IP address conflicts...");
-                Console.WriteLine();
+                KubeHelper.Desktop.StartOperationAsync($"preparing [{cluster.Name}]").Wait();
 
-                var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
-                var pingTimeout   = TimeSpan.FromSeconds(2);
-                var pingConflicts = new List<NodeDefinition>();
-                var pingAttempts  = 2;
+                //-----------------------------------------------------------------
+                // Try to ensure that no servers are already deployed on the IP addresses defined
+                // for cluster nodes because provisoning over an existing cluster will likely
+                // corrupt the existing cluster and also probably prevent the new cluster from
+                // provisioning correctly.
+                //
+                // Note that we're not going to perform this check for the [Machine] hosting 
+                // environment because we're expecting the bare machines to be already running 
+                // with the assigned addresses and we're also not going to do this for cloud
+                // environments because we're assuming that the cluster will run in its own
+                // private network so there'll ne no possibility of conflicts.
 
-                // I'm going to use up to 20 threads at a time here for simplicity
-                // rather then doing this as async operations.
-
-                var parallelOptions = new ParallelOptions()
+                if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine && 
+                    !cluster.Definition.Hosting.IsCloudProvider)
                 {
-                    MaxDegreeOfParallelism = 20
-                };
+                    Console.WriteLine();
+                    Console.WriteLine(" Scanning for IP address conflicts...");
+                    Console.WriteLine();
 
-                Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
-                    node =>
+                    var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
+                    var pingTimeout   = TimeSpan.FromSeconds(2);
+                    var pingConflicts = new List<NodeDefinition>();
+                    var pingAttempts  = 2;
+
+                    // I'm going to use up to 20 threads at a time here for simplicity
+                    // rather then doing this as async operations.
+
+                    var parallelOptions = new ParallelOptions()
                     {
-                        using (var ping = new Ping())
+                        MaxDegreeOfParallelism = 20
+                    };
+
+                    Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
+                        node =>
                         {
-                            // We're going to try pinging up to [pingAttempts] times for each node
-                            // just in case the network it sketchy and we're losing reply packets.
-
-                            for (int i = 0; i < pingAttempts; i++)
+                            using (var ping = new Ping())
                             {
-                                var reply = ping.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
+                                // We're going to try pinging up to [pingAttempts] times for each node
+                                // just in case the network it sketchy and we're losing reply packets.
 
-                                if (reply.Status == IPStatus.Success)
+                                for (int i = 0; i < pingAttempts; i++)
                                 {
-                                    lock (pingConflicts)
-                                    {
-                                        pingConflicts.Add(node);
-                                    }
+                                    var reply = ping.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
 
-                                    break;
+                                    if (reply.Status == IPStatus.Success)
+                                    {
+                                        lock (pingConflicts)
+                                        {
+                                            pingConflicts.Add(node);
+                                        }
+
+                                        break;
+                                    }
                                 }
                             }
+                        });
+
+                    if (pingConflicts.Count > 0)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Cannot provision the cluster because [{pingConflicts.Count}] other");
+                        Console.Error.WriteLine($"***        machines conflict with the following cluster nodes:");
+                        Console.Error.WriteLine();
+
+                        foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.PrivateAddress))))
+                        {
+                            Console.Error.WriteLine($"{node.PrivateAddress, 16}:    {node.Name}");
+                        }
+
+                        Program.Exit(1);
+                    }
+                }
+
+                //-----------------------------------------------------------------
+                // Perform basic environment provisioning.  This creates basic cluster components
+                // such as virtual machines, networks, load balancers, public IP addresses, security
+                // groups,... as required for the environment.
+
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetMaster(cluster, Program.LogPath);
+
+                if (hostingManager == null)
+                {
+                    Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] hosting environment could be located.");
+                    Program.Exit(1);
+                }
+
+                hostingManager.HostUsername = Program.MachineUsername;
+                hostingManager.HostPassword = Program.MachinePassword;
+                hostingManager.ShowStatus   = !Program.Quiet;
+                hostingManager.MaxParallel  = Program.MaxParallel;
+                hostingManager.WaitSeconds  = Program.WaitSeconds;
+
+                if (hostingManager.RequiresAdminPrivileges)
+                {
+                    Program.VerifyAdminPrivileges($"Provisioning to [{cluster.Definition.Hosting.Environment}] requires elevated administrator privileges.");
+                }
+
+                if (!hostingManager.Provision(force))
+                {
+                    Program.Exit(1);
+                }
+
+                // Get the mounted drive prefix from the hosting manager.
+
+                cluster.Definition.DrivePrefix = hostingManager.DrivePrefix;
+
+                // Ensure that the nodes have valid IP addresses.
+
+                cluster.Definition.ValidatePrivateNodeAddresses();
+
+                var ipAddressToServer = new Dictionary<IPAddress, SshProxy<NodeDefinition>>();
+
+                foreach (var node in cluster.Nodes.OrderBy(n => n.Name))
+                {
+                    SshProxy<NodeDefinition> duplicateServer;
+
+                    if (node.PrivateAddress == IPAddress.Any)
+                    {
+                        throw new ArgumentException($"Node [{node.Name}] has not been assigned an IP address.");
+                    }
+
+                    if (ipAddressToServer.TryGetValue(node.PrivateAddress, out duplicateServer))
+                    {
+                        throw new ArgumentException($"Nodes [{duplicateServer.Name}] and [{node.Name}] have the same IP address [{node.Metadata.PrivateAddress}].");
+                    }
+
+                    ipAddressToServer.Add(node.PrivateAddress, node);
+                }
+
+                // We're going to use the masters as package caches unless the user
+                // specifies something else.
+
+                packageCaches = commandLine.GetOption("--package-cache");     // This overrides the cluster definition, if specified.
+
+                if (!string.IsNullOrEmpty(packageCaches))
+                {
+                    cluster.Definition.PackageProxy = packageCaches;
+                }
+
+                if (string.IsNullOrEmpty(cluster.Definition.PackageProxy))
+                {
+                    var sbProxies = new StringBuilder();
+
+                    foreach (var master in cluster.Masters)
+                    {
+                        sbProxies.AppendWithSeparator($"{master.PrivateAddress}:{NetworkPorts.AppCacherNg}");
+                    }
+
+                    cluster.Definition.PackageProxy = sbProxies.ToString();
+                }
+
+                //-----------------------------------------------------------------
+                // Prepare the cluster.
+
+                // Write the operation begin marker to all cluster node logs.
+
+                cluster.LogLine(logBeginMarker);
+
+                var nodesText = cluster.Nodes.Count() == 1 ? "node" : "nodes";
+                var operation = $"Preparing [{cluster.Definition.Name}] {nodesText}";
+
+                var controller = 
+                    new SetupController<NodeDefinition>(operation, cluster.Nodes)
+                    {
+                        ShowStatus  = !Program.Quiet,
+                        MaxParallel = Program.MaxParallel
+                    };
+
+                controller.AddGlobalStep("setup details",
+                    () =>
+                    {
+                        using (var client = new HeadendClient())
+                        {
+                            kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
                         }
                     });
 
-                if (pingConflicts.Count > 0)
-                {
-                    Console.Error.WriteLine($"*** ERROR: Cannot provision the cluster because [{pingConflicts.Count}] other");
-                    Console.Error.WriteLine($"***        machines conflict with the following cluster nodes:");
-                    Console.Error.WriteLine();
+                // Prepare the nodes.
 
-                    foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.PrivateAddress))))
+                controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
+                hostingManager.AddPostProvisionSteps(controller);
+                controller.AddStep("verify OS", CommonSteps.VerifyOS);
+
+                controller.AddStep("prepare", 
+                    (node, stepDelay) =>
                     {
-                        Console.Error.WriteLine($"{node.PrivateAddress, 16}:    {node.Name}");
-                    }
+                        Thread.Sleep(stepDelay);
+                        CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, shutdown: false);
+                    },
+                    stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+            
+                if (!controller.Run())
+                {
+                    // Write the operation end/failed marker to all cluster node logs.
 
+                    cluster.LogLine(logFailedMarker);
+
+                    Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                     Program.Exit(1);
                 }
-            }
 
-            //-----------------------------------------------------------------
-            // Perform basic environment provisioning.  This creates basic cluster components
-            // such as virtual machines, networks, load balancers, public IP addresses, security
-            // groups,... as required for the environment.
+                // Persist the cluster context extension.
 
-            hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetMaster(cluster, Program.LogPath);
-
-            if (hostingManager == null)
-            {
-                Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] hosting environment could be located.");
-                Program.Exit(1);
-            }
-
-            hostingManager.HostUsername = Program.MachineUsername;
-            hostingManager.HostPassword = Program.MachinePassword;
-            hostingManager.ShowStatus   = !Program.Quiet;
-            hostingManager.MaxParallel  = Program.MaxParallel;
-            hostingManager.WaitSeconds  = Program.WaitSeconds;
-
-            if (hostingManager.RequiresAdminPrivileges)
-            {
-                Program.VerifyAdminPrivileges($"Provisioning to [{cluster.Definition.Hosting.Environment}] requires elevated administrator privileges.");
-            }
-
-            if (!hostingManager.Provision(force))
-            {
-                Program.Exit(1);
-            }
-
-            // Get the mounted drive prefix from the hosting manager.
-
-            cluster.Definition.DrivePrefix = hostingManager.DrivePrefix;
-
-            // Ensure that the nodes have valid IP addresses.
-
-            cluster.Definition.ValidatePrivateNodeAddresses();
-
-            var ipAddressToServer = new Dictionary<IPAddress, SshProxy<NodeDefinition>>();
-
-            foreach (var node in cluster.Nodes.OrderBy(n => n.Name))
-            {
-                SshProxy<NodeDefinition> duplicateServer;
-
-                if (node.PrivateAddress == IPAddress.Any)
+                var contextExtensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+                var contextExtension      = new KubeContextExtension(contextExtensionsPath)
                 {
-                    throw new ArgumentException($"Node [{node.Name}] has not been assigned an IP address.");
-                }
-
-                if (ipAddressToServer.TryGetValue(node.PrivateAddress, out duplicateServer))
-                {
-                    throw new ArgumentException($"Nodes [{duplicateServer.Name}] and [{node.Name}] have the same IP address [{node.Metadata.PrivateAddress}].");
-                }
-
-                ipAddressToServer.Add(node.PrivateAddress, node);
-            }
-
-            // We're going to use the masters as package caches unless the user
-            // specifies something else.
-
-            packageCaches = commandLine.GetOption("--package-cache");     // This overrides the cluster definition, if specified.
-
-            if (!string.IsNullOrEmpty(packageCaches))
-            {
-                cluster.Definition.PackageProxy = packageCaches;
-            }
-
-            if (string.IsNullOrEmpty(cluster.Definition.PackageProxy))
-            {
-                var sbProxies = new StringBuilder();
-
-                foreach (var master in cluster.Masters)
-                {
-                    sbProxies.AppendWithSeparator($"{master.PrivateAddress}:{NetworkPorts.AppCacherNg}");
-                }
-
-                cluster.Definition.PackageProxy = sbProxies.ToString();
-            }
-
-            //-----------------------------------------------------------------
-            // Prepare the cluster.
-
-            // Write the operation begin marker to all cluster node logs.
-
-            cluster.LogLine(logBeginMarker);
-
-            var nodesText = cluster.Nodes.Count() == 1 ? "node" : "nodes";
-            var operation = $"Preparing [{cluster.Definition.Name}] {nodesText}";
-
-            var controller = 
-                new SetupController<NodeDefinition>(operation, cluster.Nodes)
-                {
-                    ShowStatus  = !Program.Quiet,
-                    MaxParallel = Program.MaxParallel
+                    ClusterDefinition = clusterDefinition,
+                    SshUsername       = Program.MachineUsername,
+                    SshPassword       = Program.MachinePassword,
+                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                 };
 
-            controller.AddGlobalStep("setup details",
-                () =>
-                {
-                    using (var client = new HeadendClient())
-                    {
-                        kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
-                    }
-                });
+                contextExtension.Save();
 
-            // Prepare the nodes.
+                // Write the operation end marker to all cluster node logs.
 
-            controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
-            hostingManager.AddPostProvisionSteps(controller);
-            controller.AddStep("verify OS", CommonSteps.VerifyOS);
-
-            controller.AddStep("prepare", 
-                (node, stepDelay) =>
-                {
-                    Thread.Sleep(stepDelay);
-                    CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, shutdown: false);
-                },
-                stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
-            
-            if (!controller.Run())
-            {
-                // Write the operation end/failed marker to all cluster node logs.
-
-                cluster.LogLine(logFailedMarker);
-
-                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                Program.Exit(1);
+                cluster.LogLine(logEndMarker);
             }
-
-            // Persist the cluster context extension.
-
-            var contextExtensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-            var contextExtension      = new KubeContextExtension(contextExtensionsPath)
+            finally
             {
-                ClusterDefinition = clusterDefinition,
-                SshUsername       = Program.MachineUsername,
-                SshPassword       = Program.MachinePassword,
-                SetupDetails      = new KubeSetupDetails() { SetupPending = true }
-            };
-
-            contextExtension.Save();
-
-            // Write the operation end marker to all cluster node logs.
-
-            cluster.LogLine(logEndMarker);
+                KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready to be setup.").Wait();
+            }
         }
     }
 }

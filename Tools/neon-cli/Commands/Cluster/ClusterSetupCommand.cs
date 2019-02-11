@@ -67,9 +67,9 @@ namespace NeonCli
             /// <param name="owner">Optional file owner.</param>
             public RemoteFile(string path, string permissions = "600", string owner = "root:root")
             {
-                this.Path        = path;
+                this.Path = path;
                 this.Permissions = permissions;
-                this.Owner       = owner;
+                this.Owner = owner;
             }
 
             /// <summary>
@@ -108,15 +108,15 @@ OPTIONS:
     --force             - Don't prompt before removing existing contexts
                           that reference the target cluster.
 ";
-        private const string logBeginMarker  = "# CLUSTER-BEGIN-SETUP ############################################################";
-        private const string logEndMarker    = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
+        private const string logBeginMarker = "# CLUSTER-BEGIN-SETUP ############################################################";
+        private const string logEndMarker = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
         private const string logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
 
-        private KubeConfigContext       kubeContext;
-        private KubeContextExtension    kubeContextExtensions;
-        private ClusterProxy            cluster;
-        private KubeSetupInfo           kubeSetupInfo;
-        private HttpClient              httpClient;
+        private KubeConfigContext kubeContext;
+        private KubeContextExtension kubeContextExtensions;
+        private ClusterProxy cluster;
+        private KubeSetupInfo kubeSetupInfo;
+        private HttpClient httpClient;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -206,226 +206,235 @@ OPTIONS:
 
                 cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
-                // Configure global options.
-
-                if (commandLine.HasOption("--unredacted"))
+                try
                 {
-                    cluster.SecureRunOptions = RunOptions.None;
-                }
+                    KubeHelper.Desktop.StartOperationAsync($"creating [{cluster.Name}]").Wait();
 
-                // Perform the setup operations.
+                    // Configure global options.
 
-                var controller =
-                    new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
+                    if (commandLine.HasOption("--unredacted"))
                     {
-                        ShowStatus  = !Program.Quiet,
-                        MaxParallel = Program.MaxParallel
-                    };
+                        cluster.SecureRunOptions = RunOptions.None;
+                    }
 
-                controller.AddGlobalStep("setup details",
-                    () =>
-                    {
-                        if (kubeContextExtensions.SetupDetails?.SetupInfo != null)
+                    // Perform the setup operations.
+
+                    var controller =
+                        new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
                         {
-                            kubeSetupInfo = kubeContextExtensions.SetupDetails.SetupInfo;
-                        }
-                        else
+                            ShowStatus  = !Program.Quiet,
+                            MaxParallel = Program.MaxParallel
+                        };
+
+                    controller.AddGlobalStep("setup details",
+                        () =>
                         {
-                            using (var client = new HeadendClient())
+                            if (kubeContextExtensions.SetupDetails?.SetupInfo != null)
                             {
-                                kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
-
-                                kubeContextExtensions.SetupDetails.SetupInfo = kubeSetupInfo;
-                                kubeContextExtensions.Save();
+                                kubeSetupInfo = kubeContextExtensions.SetupDetails.SetupInfo;
                             }
-                        }
-                    });
+                            else
+                            {
+                                using (var client = new HeadendClient())
+                                {
+                                    kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
 
-                controller.AddGlobalStep("workstation binaries", () => WorkstationBinaries());
-                controller.AddWaitUntilOnlineStep("connect");
-                controller.AddStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
-                controller.AddStep("verify OS", CommonSteps.VerifyOS);
+                                    kubeContextExtensions.SetupDetails.SetupInfo = kubeSetupInfo;
+                                    kubeContextExtensions.Save();
+                                }
+                            }
+                        });
 
-                // Write the operation begin marker to all cluster node logs.
+                    controller.AddGlobalStep("workstation binaries", () => WorkstationBinaries());
+                    controller.AddWaitUntilOnlineStep("connect");
+                    controller.AddStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
+                    controller.AddStep("verify OS", CommonSteps.VerifyOS);
 
-                cluster.LogLine(logBeginMarker);
+                    // Write the operation begin marker to all cluster node logs.
 
-                // Perform common configuration for the bootstrap node first.
-                // We need to do this so the the package cache will be running
-                // when the remaining nodes are configured.
+                    cluster.LogLine(logBeginMarker);
 
-                var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
+                    // Perform common configuration for the bootstrap node first.
+                    // We need to do this so the the package cache will be running
+                    // when the remaining nodes are configured.
 
-                controller.AddStep(configureFirstMasterStepLabel,
-                    (node, stepDelay) =>
-                    {
-                        SetupCommon(node, stepDelay);
-                        node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
-                        SetupNode(node);
-                    },
-                    node => node == cluster.FirstMaster,
-                    stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
+                    var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
-                // Perform common configuration for the remaining nodes (if any).
-
-                if (cluster.Definition.Nodes.Count() > 1)
-                {
-                    controller.AddStep("setup other nodes",
+                    controller.AddStep(configureFirstMasterStepLabel,
                         (node, stepDelay) =>
                         {
                             SetupCommon(node, stepDelay);
                             node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                             SetupNode(node);
                         },
-                        node => node != cluster.FirstMaster,
+                        node => node == cluster.FirstMaster,
                         stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
-                }
 
-                //-----------------------------------------------------------------
-                // Kubernetes configuration.
+                    // Perform common configuration for the remaining nodes (if any).
 
-                controller.AddStep("setup kubernetes", SetupKubernetes);
-                controller.AddGlobalStep("setup cluster", SetupCluster);
-                controller.AddGlobalStep("label nodes", LabelNodes);
-                controller.AddGlobalStep("setup ceph", SetupCeph);
-
-                //-----------------------------------------------------------------
-                // Verify the cluster.
-
-                controller.AddStep("check masters",
-                    (node, stepDelay) =>
+                    if (cluster.Definition.Nodes.Count() > 1)
                     {
-                        ClusterDiagnostics.CheckMaster(node, cluster.Definition);
-                    },
-                    node => node.Metadata.IsMaster);
-
-                controller.AddStep("check workers",
-                    (node, stepDelay) =>
-                    {
-                        ClusterDiagnostics.CheckWorker(node, cluster.Definition);
-                    },
-                    node => node.Metadata.IsWorker);
-
-                //-----------------------------------------------------------------
-                // Update the node security to use a strong password and also 
-                // configure the SSH client certificate.
-
-                // $todo(jeff.lill):
-                //
-                // Note that this step isn't entirely idempotent.  The problem happens
-                // when the password change fails on one or more of the nodes and succeeds
-                // on others.  This will result in SSH connection failures for the nodes
-                // that had their passwords changes.
-                //
-                // One solution would be to store credentials in the node definitions
-                // rather than using common credentials across all nodes.
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/397
-
-                kubeContextExtensions.SetupDetails.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
-                kubeContextExtensions.Save();
-
-                controller.AddStep("set strong password",
-                    (node, stepDelay) =>
-                    {
-                        SetStrongPassword(node, TimeSpan.Zero);
-                    });
-
-                controller.AddGlobalStep("passwords set",
-                    () =>
-                    {
-                        // This hidden step sets the SSH provisioning password to NULL to 
-                        // indicate that the final password has been set for all of the nodes.
-
-                        kubeContextExtensions.SshPassword = kubeContextExtensions.SetupDetails.SshStrongPassword;
-                        kubeContextExtensions.SetupDetails.HasStrongSshPassword = true;
-                        kubeContextExtensions.Save();
-                    },
-                    quiet: true);
-
-                controller.AddGlobalStep("set ssh certs", () => ConfigureSshCerts());
-
-                // This needs to be run last because it will likely disable
-                // SSH username/password authentication which may block
-                // connection attempts.
-                //
-                // It's also handy to do this last so it'll be possible to 
-                // manually login with the original credentials to diagnose
-                // setup issues.
-
-                controller.AddStep("ssh secured", ConfigureSsh);
-
-                // Start setup.
-
-                if (!controller.Run())
-                {
-                    // Write the operation end/failed to all cluster node logs.
-
-                    cluster.LogLine(logFailedMarker);
-
-                    Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                    Program.Exit(1);
-                }
-
-                // Indicate that setup is complete.
-
-                kubeContextExtensions.SetupDetails.SetupPending = false;
-                kubeContextExtensions.Save();
-
-                // Write the operation end marker to all cluster node logs.
-
-                cluster.LogLine(logEndMarker);
-
-                // Update the kubeconfig.
-
-                var kubeConfigPath = KubeHelper.KubeConfigPath;
-
-                if (!File.Exists(kubeConfigPath))
-                {
-                    File.WriteAllText(kubeConfigPath, kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
-                }
-                else
-                {
-                    // The user already has an existing kubeconfig, so we need
-                    // to merge in the new config.
-
-                    var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
-                    var existingConfig = KubeHelper.Config;
-
-                    // Remove any existing user, context, and cluster with the same names.
-                    // Note that we're assuming that there's only one of each in the config
-                    // we downloaded from the cluster.
-
-                    var newCluster = newConfig.Clusters.Single();
-                    var newContext = newConfig.Contexts.Single();
-                    var newUser = newConfig.Users.Single();
-
-                    var existingCluster = existingConfig.GetCluster(newCluster.Name);
-                    var existingContext = existingConfig.GetContext(newContext.Name);
-                    var existingUser = existingConfig.GetUser(newUser.Name);
-
-                    if (existingConfig != null)
-                    {
-                        existingConfig.Clusters.Remove(existingCluster);
+                        controller.AddStep("setup other nodes",
+                            (node, stepDelay) =>
+                            {
+                                SetupCommon(node, stepDelay);
+                                node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
+                                SetupNode(node);
+                            },
+                            node => node != cluster.FirstMaster,
+                            stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
                     }
 
-                    if (existingContext != null)
+                    //-----------------------------------------------------------------
+                    // Kubernetes configuration.
+
+                    controller.AddStep("setup kubernetes", SetupKubernetes);
+                    controller.AddGlobalStep("setup cluster", SetupCluster);
+                    controller.AddGlobalStep("label nodes", LabelNodes);
+                    controller.AddGlobalStep("setup ceph", SetupCeph);
+
+                    //-----------------------------------------------------------------
+                    // Verify the cluster.
+
+                    controller.AddStep("check masters",
+                        (node, stepDelay) =>
+                        {
+                            ClusterDiagnostics.CheckMaster(node, cluster.Definition);
+                        },
+                        node => node.Metadata.IsMaster);
+
+                    controller.AddStep("check workers",
+                        (node, stepDelay) =>
+                        {
+                            ClusterDiagnostics.CheckWorker(node, cluster.Definition);
+                        },
+                        node => node.Metadata.IsWorker);
+
+                    //-----------------------------------------------------------------
+                    // Update the node security to use a strong password and also 
+                    // configure the SSH client certificate.
+
+                    // $todo(jeff.lill):
+                    //
+                    // Note that this step isn't entirely idempotent.  The problem happens
+                    // when the password change fails on one or more of the nodes and succeeds
+                    // on others.  This will result in SSH connection failures for the nodes
+                    // that had their passwords changes.
+                    //
+                    // One solution would be to store credentials in the node definitions
+                    // rather than using common credentials across all nodes.
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/397
+
+                    kubeContextExtensions.SetupDetails.SshStrongPassword = NeonHelper.GetRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
+                    kubeContextExtensions.Save();
+
+                    controller.AddStep("set strong password",
+                        (node, stepDelay) =>
+                        {
+                            SetStrongPassword(node, TimeSpan.Zero);
+                        });
+
+                    controller.AddGlobalStep("passwords set",
+                        () =>
+                        {
+                            // This hidden step sets the SSH provisioning password to NULL to 
+                            // indicate that the final password has been set for all of the nodes.
+
+                            kubeContextExtensions.SshPassword = kubeContextExtensions.SetupDetails.SshStrongPassword;
+                            kubeContextExtensions.SetupDetails.HasStrongSshPassword = true;
+                            kubeContextExtensions.Save();
+                        },
+                        quiet: true);
+
+                    controller.AddGlobalStep("set ssh certs", () => ConfigureSshCerts());
+
+                    // This needs to be run last because it will likely disable
+                    // SSH username/password authentication which may block
+                    // connection attempts.
+                    //
+                    // It's also handy to do this last so it'll be possible to 
+                    // manually login with the original credentials to diagnose
+                    // setup issues.
+
+                    controller.AddStep("ssh secured", ConfigureSsh);
+
+                    // Start setup.
+
+                    if (!controller.Run())
                     {
-                        existingConfig.Contexts.Remove(existingContext);
+                        // Write the operation end/failed to all cluster node logs.
+
+                        cluster.LogLine(logFailedMarker);
+
+                        Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
+                        Program.Exit(1);
                     }
 
-                    if (existingUser != null)
+                    // Indicate that setup is complete.
+
+                    kubeContextExtensions.SetupDetails.SetupPending = false;
+                    kubeContextExtensions.Save();
+
+                    // Write the operation end marker to all cluster node logs.
+
+                    cluster.LogLine(logEndMarker);
+
+                    // Update the kubeconfig.
+
+                    var kubeConfigPath = KubeHelper.KubeConfigPath;
+
+                    if (!File.Exists(kubeConfigPath))
                     {
-                        existingConfig.Users.Remove(existingUser);
+                        File.WriteAllText(kubeConfigPath, kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
                     }
+                    else
+                    {
+                        // The user already has an existing kubeconfig, so we need
+                        // to merge in the new config.
 
-                    existingConfig.Clusters.Add(newCluster);
-                    existingConfig.Contexts.Add(newContext);
-                    existingConfig.Users.Add(newUser);
+                        var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtensions.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                        var existingConfig = KubeHelper.Config;
 
-                    existingConfig.CurrentContext = newContext.Name;
+                        // Remove any existing user, context, and cluster with the same names.
+                        // Note that we're assuming that there's only one of each in the config
+                        // we downloaded from the cluster.
 
-                    KubeHelper.SetConfig(existingConfig);
+                        var newCluster = newConfig.Clusters.Single();
+                        var newContext = newConfig.Contexts.Single();
+                        var newUser    = newConfig.Users.Single();
+
+                        var existingCluster = existingConfig.GetCluster(newCluster.Name);
+                        var existingContext = existingConfig.GetContext(newContext.Name);
+                        var existingUser = existingConfig.GetUser(newUser.Name);
+
+                        if (existingConfig != null)
+                        {
+                            existingConfig.Clusters.Remove(existingCluster);
+                        }
+
+                        if (existingContext != null)
+                        {
+                            existingConfig.Contexts.Remove(existingContext);
+                        }
+
+                        if (existingUser != null)
+                        {
+                            existingConfig.Users.Remove(existingUser);
+                        }
+
+                        existingConfig.Clusters.Add(newCluster);
+                        existingConfig.Contexts.Add(newContext);
+                        existingConfig.Users.Add(newUser);
+
+                        existingConfig.CurrentContext = newContext.Name;
+
+                        KubeHelper.SetConfig(existingConfig);
+                    }
+                }
+                finally
+                {
+                    KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] is ready for use.").Wait();
                 }
 
                 Console.WriteLine();

@@ -17,7 +17,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,6 +27,7 @@ using Microsoft.Net.Http.Server;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Net;
 
 // IMPLEMENTATION NOTE:
 // --------------------
@@ -148,6 +151,16 @@ namespace WinDesktop
 
                                                 await OnUpdateUIAsync(request, response);
                                                 break;
+
+                                            case "/start-operation":
+
+                                                await OnStartOperation(request, response);
+                                                break;
+
+                                            case "/end-operation":
+
+                                                await OnEndOperation(request, response);
+                                                break;
                                         }
                                         break;
 
@@ -169,7 +182,35 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Handles updating the UI state.
+        /// Parse the request body as a JSON document.
+        /// </summary>
+        /// <typeparam name="TResult">The document type.</typeparam>
+        /// <param name="request">The request.</param>
+        /// <returns>The parsed body.</returns>
+        private static async Task<TResult> ParseBodyAsync<TResult>(Request request)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var buffer = new byte[16 * 1024];
+
+                while (true)
+                {
+                    var cb = await request.Body.ReadAsync(buffer, 0, buffer.Length);
+
+                    if (cb == 0)
+                    {
+                        break;
+                    }
+
+                    ms.Write(buffer, 0, cb);
+                }
+
+                return NeonHelper.JsonDeserialize<TResult>(Encoding.UTF8.GetString(ms.ToArray()));
+            }            
+        }
+
+        /// <summary>
+        /// Called to update the UI state.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="response">The response.</param>
@@ -177,6 +218,30 @@ namespace WinDesktop
         private static async Task OnUpdateUIAsync(Request request, Response response)
         {
             MainForm.Current.SetNotifyState();
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Called to signal the start of a long-running operation.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="response">The response.</param>
+        /// <returns>Th tracking <see cref="Task"/>.</returns>
+        private static async Task OnStartOperation(Request request, Response response)
+        {
+            MainForm.Current.StartOperation(await ParseBodyAsync<CliOperation>(request));
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Called to signal the end of a long-running operation.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="response">The response.</param>
+        /// <returns>Th tracking <see cref="Task"/>.</returns>
+        private static async Task OnEndOperation(Request request, Response response)
+        {
+            MainForm.Current.EndOperation(await ParseBodyAsync<CliOperation>(request));
             await Task.CompletedTask;
         }
     }

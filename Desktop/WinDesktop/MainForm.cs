@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.IO;
@@ -61,6 +62,7 @@ namespace WinDesktop
         private int                 animationNesting;
         private ContextMenu         contextMenu;
         private bool                operationInProgress;
+        private CliOperation        cliOperation;
 
         /// <summary>
         /// Constructor.
@@ -186,34 +188,6 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Sets the notify icon and tooltip text based on the current application state.
-        /// </summary>
-        public void SetNotifyState()
-        {
-            InvokeOnUIThread(
-                () =>
-                {
-                    KubeHelper.LoadConfig();
-
-                    if (operationInProgress)
-                    {
-                        return;
-                    }
-
-                    notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
-
-                    if (IsConnected)
-                    {
-                        notifyIcon.Text = $"{Text}: {KubeHelper.CurrentContextName}";
-                    }
-                    else
-                    {
-                        notifyIcon.Text = $"{Text}: disconnected";
-                    }
-                });
-        }
-
-        /// <summary>
         /// Starts a notify icon animation.
         /// </summary>
         /// <param name="animatedIcon">The icon animation.</param>
@@ -274,23 +248,23 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Displays the notify icon's balloon.
+        /// Displays the notify icon's balloon (AKA toast).
         /// </summary>
-        /// <param name="text">The balloon message text.</param>
+        /// <param name="text">The message text.</param>
         /// <param name="title">The ballon title text (defaults to the application name).</param>
         /// <param name="icon">The optional tool tip icon (defaults to <see cref="ToolTipIcon.Info"/>).</param>
-        private void ShowBalloon(string text, string title = null, ToolTipIcon icon = ToolTipIcon.Info)
+        private void ShowToast(string text, string title = null, ToolTipIcon icon = ToolTipIcon.Info)
         {
             notifyIcon.ShowBalloonTip(0, title ?? this.Text, text, icon);
         }
 
         /// <summary>
         /// Indicates that an operation is starting by optionally displaying a working
-        /// animation and displaying a status balloon.
+        /// animation and optionally displaying a status toast.
         /// </summary>
         /// <param name="animatedIcon">The optional notify icon animation.</param>
-        /// <param name="balloonText">The optional balloon text.</param>
-        private void StartOperation(AnimatedIcon animatedIcon = null, string balloonText = null)
+        /// <param name="toastText">The optional toast text.</param>
+        private void StartOperation(AnimatedIcon animatedIcon = null, string toastText = null)
         {
             if (operationInProgress)
             {
@@ -304,9 +278,9 @@ namespace WinDesktop
                 StartNotifyAnimation(animatedIcon);
             }
 
-            if (!string.IsNullOrEmpty(balloonText))
+            if (!string.IsNullOrEmpty(toastText))
             {
-                ShowBalloon(balloonText);
+                ShowToast(toastText);
             }
         }
 
@@ -325,14 +299,16 @@ namespace WinDesktop
                 StopNotifyAnimation(force: true);
             }
 
+            operationInProgress = false;
+
             SetNotifyState();
         }
 
         /// <summary>
         /// Indicates that the current operation failed.
         /// </summary>
-        /// <param name="balloonErrorText">The optional balloon error text.</param>
-        private void StopFailedOperation(string balloonErrorText = null)
+        /// <param name="toastErrorText">The optional toast error text.</param>
+        private void StopFailedOperation(string toastErrorText = null)
         {
             if (animationNesting > 0)
             {
@@ -341,10 +317,140 @@ namespace WinDesktop
 
             SetNotifyState();
 
-            if (!string.IsNullOrEmpty(balloonErrorText))
+            if (!string.IsNullOrEmpty(toastErrorText))
             {
-                ShowBalloon(balloonErrorText, icon: ToolTipIcon.Error);
+                ShowToast(toastErrorText, icon: ToolTipIcon.Error);
             }
+        }
+
+        //---------------------------------------------------------------------
+        // These methods are called by DesktopApiService (and perhaps from some
+        // other places):
+
+        /// <summary>
+        /// Sets the notify icon and tooltip text based on the current application state.
+        /// </summary>
+        public void SetNotifyState()
+        {
+            InvokeOnUIThread(
+                () =>
+                {
+                    KubeHelper.LoadConfig();
+
+                    if (!operationInProgress)
+                    {
+                        if (IsConnected)
+                        {
+                            notifyIcon.Text = $"{Text}: {KubeHelper.CurrentContextName}";
+                        }
+                        else
+                        {
+                            notifyIcon.Text = $"{Text}: disconnected";
+                        }
+
+                        return;
+                    }
+
+                    if (cliOperation != null)
+                    {
+                        if (Process.GetProcessById(cliOperation.ProcessId) == null)
+                        {
+                            // The original [neon-cli] process is no longer running;
+                            // it must have terminated before signalling the end
+                            // of the operation.  We're going to terminate the
+                            // operation status.
+                            //
+                            // This is an important fail-safe.
+
+                            StopOperation();
+                            return;
+                        }
+
+                        notifyIcon.Text = $"{Text}: {cliOperation.Summary}";
+                    }
+                    else
+                    {
+                        notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+
+                        if (IsConnected)
+                        {
+                            notifyIcon.Text = $"{Text}: {KubeHelper.CurrentContextName}";
+                        }
+                        else
+                        {
+                            notifyIcon.Text = $"{Text}: disconnected";
+                        }
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Signals the start of a long-running operation.
+        /// </summary>
+        /// <param name="operation">The <b>neon-cli</b> operation information.</param>
+        public void StartOperation(CliOperation operation)
+        {
+            InvokeOnUIThread(
+                () =>
+                {
+                    if (operationInProgress)
+                    {
+                        // Another operation is already in progress.  If the current
+                        // operation was initiated by the same [neon-cli] process then
+                        // we'll just substitute the new operation info otherwise
+                        // we'll start a new operation.
+                        //
+                        // If the operation was initiated by the Desktop app then
+                        // we'll ignore the new operation.
+
+                        if (cliOperation != null && cliOperation.ProcessId == operation.ProcessId)
+                        {
+                            cliOperation = operation;
+                            SetNotifyState();
+                        }
+                        else
+                        {
+                            cliOperation = operation;
+                            StartOperation(workingAnimation);
+                        }
+
+                        return;
+                    }
+                    else
+                    {
+                        cliOperation = operation;
+                        StartOperation(workingAnimation);
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Signals the end of a long-running operation.
+        /// </summary>
+        /// <param name="operation">The <b>neon-cli</b> operation information.</param>
+        public void EndOperation(CliOperation operation)
+        {
+            InvokeOnUIThread(
+                () =>
+                {
+                    if (operationInProgress)
+                    {
+                        // Stop the operation only if the the current operation
+                        // was initiated by the same [neon-cli] process that
+                        // started the operation.
+
+                        if (cliOperation != null && cliOperation.ProcessId == operation.ProcessId)
+                        {
+                            cliOperation = null;
+                            StopOperation();
+
+                            if (!string.IsNullOrEmpty(operation.CompletedToast))
+                            {
+                                ShowToast(operation.CompletedToast);
+                            }
+                        }
+                    }
+                });
         }
 
         //---------------------------------------------------------------------
@@ -610,7 +716,7 @@ namespace WinDesktop
         {
             if (KubeHelper.CurrentContext != null)
             {
-                ShowBalloon($"Logging out of: {KubeHelper.CurrentContext.Name}");
+                ShowToast($"Logging out of: {KubeHelper.CurrentContext.Name}");
                 KubeHelper.SetCurrentContext((string)null);
                 SetNotifyState();
             }

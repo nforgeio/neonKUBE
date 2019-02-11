@@ -106,5 +106,68 @@ namespace Neon.Kube
                 // Intentionally ignoring this.
             }
         }
+
+        /// <summary>
+        /// Signals the desktop application that a long-running operation such
+        /// as cluster setup is starting.
+        /// </summary>
+        /// <param name="summary">A brief summary of the operation.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method will fail silently if the desktop application does
+        /// not respond.
+        /// </note>
+        /// </remarks>
+        public async Task StartOperationAsync(string summary)
+        {
+            var operation = new CliOperation()
+            {
+                Summary   = summary,
+                ProcessId = Process.GetCurrentProcess().Id
+            };
+
+            try
+            {
+                await client.PostAsync("start-operation", operation);
+            }
+            catch
+            {
+                // Intentionally ignoring this.
+            }
+        }
+
+        /// <summary>
+        /// Signals the desktop application the a long-running operation has
+        /// completed.
+        /// </summary>
+        /// <param name="completedToast">
+        /// Optionally specifies text to be displayed as toast by the 
+        /// desktop application.
+        /// </param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method will fail silently if the desktop application does
+        /// not respond.
+        /// </note>
+        /// </remarks>
+        public async Task EndOperationAsync(string completedToast = null)
+        {
+            var operation = new CliOperation()
+            {
+                ProcessId      = Process.GetCurrentProcess().Id,
+                CompletedToast = completedToast
+            };
+
+            try
+            {
+                await client.PostAsync("end-operation", operation);
+            }
+            catch
+            {
+                // Intentionally ignoring this.
+            }
+        }
     }
 }

@@ -111,6 +111,10 @@ ARGUMENTS:
 
             KubeHelper.SetCurrentContext(newContextName);
             Console.WriteLine($"*** Logged into [{newContextName}].");
+
+            // Notify the desktop application.
+
+            KubeHelper.Desktop.UpdateUIAsync().Wait();
         }
     }
 }

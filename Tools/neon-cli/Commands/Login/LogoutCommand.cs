@@ -74,6 +74,10 @@ USAGE:
             Console.WriteLine($"Logging out of: {KubeHelper.CurrentContext.Name}");
             KubeHelper.SetCurrentContext((string)null);
             Console.WriteLine("");
+
+            // Notify the desktop application.
+
+            KubeHelper.Desktop.UpdateUIAsync().Wait();
         }
     }
 }

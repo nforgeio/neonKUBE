@@ -80,12 +80,12 @@ namespace Neon.Kube
 
         /// <summary>
         /// The interval the desktop application uses to poll for changes to the Kubernetes
-        /// cluster configuration state.  This defaults to <b>10 seconds</b>.
+        /// cluster configuration state.  This defaults to <b>1 second</b>.
         /// </summary>
         [JsonProperty(PropertyName = "StatusPollSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "StatusPollSeconds", ApplyNamingConventions = false)]
-        [DefaultValue(10)]
-        public int StatusPollSeconds { get; set; } = 10;
+        [DefaultValue(1)]
+        public int StatusPollSeconds { get; set; } = 1;
 
         /// <summary>
         /// Ensures that the state is valid.
