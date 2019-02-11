@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CliOperation.cs
+// FILE:	    RemoteOperation.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -50,7 +50,7 @@ namespace Neon.Kube
     /// The payload passed to the desktop API server via <see cref="DesktopClient.StartOperationAsync(string)"/>
     /// and <see cref="DesktopClient.EndOperationAsync"/>.
     /// </summary>
-    public class CliOperation
+    public class RemoteOperation
     {
         /// <summary>
         /// The caller's process ID.  The desktop application uses this to

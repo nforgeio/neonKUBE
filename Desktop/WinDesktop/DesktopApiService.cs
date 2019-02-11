@@ -222,26 +222,26 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Called to signal the start of a long-running operation.
+        /// Called to signal the start of a long-running remote operation.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="response">The response.</param>
         /// <returns>Th tracking <see cref="Task"/>.</returns>
         private static async Task OnStartOperation(Request request, Response response)
         {
-            MainForm.Current.StartOperation(await ParseBodyAsync<CliOperation>(request));
+            MainForm.Current.StartOperation(await ParseBodyAsync<RemoteOperation>(request));
             await Task.CompletedTask;
         }
 
         /// <summary>
-        /// Called to signal the end of a long-running operation.
+        /// Called to signal the end of a long-running remote operation.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="response">The response.</param>
         /// <returns>Th tracking <see cref="Task"/>.</returns>
         private static async Task OnEndOperation(Request request, Response response)
         {
-            MainForm.Current.EndOperation(await ParseBodyAsync<CliOperation>(request));
+            MainForm.Current.EndOperation(await ParseBodyAsync<RemoteOperation>(request));
             await Task.CompletedTask;
         }
     }

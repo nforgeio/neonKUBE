@@ -121,7 +121,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task StartOperationAsync(string summary)
         {
-            var operation = new CliOperation()
+            var operation = new RemoteOperation()
             {
                 Summary   = summary,
                 ProcessId = Process.GetCurrentProcess().Id
@@ -154,7 +154,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task EndOperationAsync(string completedToast = null)
         {
-            var operation = new CliOperation()
+            var operation = new RemoteOperation()
             {
                 ProcessId      = Process.GetCurrentProcess().Id,
                 CompletedToast = completedToast

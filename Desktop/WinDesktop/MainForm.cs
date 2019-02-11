@@ -62,7 +62,7 @@ namespace WinDesktop
         private int                 animationNesting;
         private ContextMenu         contextMenu;
         private bool                operationInProgress;
-        private CliOperation        cliOperation;
+        private RemoteOperation     remoteOperation;
 
         /// <summary>
         /// Constructor.
@@ -351,9 +351,9 @@ namespace WinDesktop
                         return;
                     }
 
-                    if (cliOperation != null)
+                    if (remoteOperation != null)
                     {
-                        if (Process.GetProcessById(cliOperation.ProcessId) == null)
+                        if (Process.GetProcessById(remoteOperation.ProcessId) == null)
                         {
                             // The original [neon-cli] process is no longer running;
                             // it must have terminated before signalling the end
@@ -366,7 +366,7 @@ namespace WinDesktop
                             return;
                         }
 
-                        notifyIcon.Text = $"{Text}: {cliOperation.Summary}";
+                        notifyIcon.Text = $"{Text}: {remoteOperation.Summary}";
                     }
                     else
                     {
@@ -388,7 +388,7 @@ namespace WinDesktop
         /// Signals the start of a long-running operation.
         /// </summary>
         /// <param name="operation">The <b>neon-cli</b> operation information.</param>
-        public void StartOperation(CliOperation operation)
+        public void StartOperation(RemoteOperation operation)
         {
             InvokeOnUIThread(
                 () =>
@@ -403,14 +403,14 @@ namespace WinDesktop
                         // If the operation was initiated by the Desktop app then
                         // we'll ignore the new operation.
 
-                        if (cliOperation != null && cliOperation.ProcessId == operation.ProcessId)
+                        if (remoteOperation != null && remoteOperation.ProcessId == operation.ProcessId)
                         {
-                            cliOperation = operation;
+                            remoteOperation = operation;
                             SetNotifyState();
                         }
                         else
                         {
-                            cliOperation = operation;
+                            remoteOperation = operation;
                             StartOperation(workingAnimation);
                         }
 
@@ -418,7 +418,7 @@ namespace WinDesktop
                     }
                     else
                     {
-                        cliOperation = operation;
+                        remoteOperation = operation;
                         StartOperation(workingAnimation);
                     }
                 });
@@ -428,7 +428,7 @@ namespace WinDesktop
         /// Signals the end of a long-running operation.
         /// </summary>
         /// <param name="operation">The <b>neon-cli</b> operation information.</param>
-        public void EndOperation(CliOperation operation)
+        public void EndOperation(RemoteOperation operation)
         {
             InvokeOnUIThread(
                 () =>
@@ -439,9 +439,9 @@ namespace WinDesktop
                         // was initiated by the same [neon-cli] process that
                         // started the operation.
 
-                        if (cliOperation != null && cliOperation.ProcessId == operation.ProcessId)
+                        if (remoteOperation != null && remoteOperation.ProcessId == operation.ProcessId)
                         {
-                            cliOperation = null;
+                            remoteOperation = null;
                             StopOperation();
 
                             if (!string.IsNullOrEmpty(operation.CompletedToast))
