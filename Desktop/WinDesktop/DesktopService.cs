@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DesktopApiService.cs
+// FILE:	    DesktopService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -47,7 +47,7 @@ namespace WinDesktop
     /// The client must set the <b>Authorization</b> header to the <see cref="KubeClientConfig.InstallationId"/>
     /// as a bearer token.
     /// </remarks>
-    public static class DesktopApiService
+    public static class DesktopService
     {
         private static object       syncLock = new object();
         private static WebListener  listener;

@@ -139,7 +139,7 @@ namespace WinDesktop
             // Start the desktop API service that [neon-cli] will use
             // to communicate with the desktop application.
 
-            DesktopApiService.Start();
+            DesktopService.Start();
         }
 
         /// <summary>
@@ -324,7 +324,7 @@ namespace WinDesktop
         }
 
         //---------------------------------------------------------------------
-        // These methods are called by DesktopApiService (and perhaps from some
+        // These methods are called by [DesktopService] (and perhaps from some
         // other places):
 
         /// <summary>
@@ -771,7 +771,7 @@ namespace WinDesktop
         {
             StopNotifyAnimation(force: true);
             notifyIcon.Visible = false;
-            DesktopApiService.Stop();
+            DesktopService.Stop();
 
             Environment.Exit(0);
         }
