@@ -79,6 +79,15 @@ namespace Neon.Kube
         public string DesktopApiEndpoint { get; set; } = KubeConst.DesktopApiEndpoint;
 
         /// <summary>
+        /// The interval the desktop application uses to poll for changes to the Kubernetes
+        /// cluster configuration state.  This defaults to <b>10 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "StatusPollSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "StatusPollSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(10)]
+        public int StatusPollSeconds { get; set; } = 10;
+
+        /// <summary>
         /// Ensures that the state is valid.
         /// </summary>
         public void Validate()
@@ -97,6 +106,11 @@ namespace Neon.Kube
             if (NetHelper.TryParseIPv4Endpoint(DesktopApiEndpoint, out var endpoint))
             {
                 DesktopApiEndpoint = KubeConst.DesktopApiEndpoint;
+            }
+
+            if (StatusPollSeconds <= 0)
+            {
+                StatusPollSeconds = 10;
             }
         }
     }

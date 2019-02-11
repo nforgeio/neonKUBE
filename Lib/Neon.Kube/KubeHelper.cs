@@ -40,6 +40,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Retry;
 using Neon.Windows;
 
 namespace Neon.Kube
@@ -160,6 +161,61 @@ namespace Neon.Kube
         public static bool IsTestMode => testFolder != null;
 
         /// <summary>
+        /// Reads a file as text, retrying if the file is already open.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <returns>The file text.</returns>
+        /// <remarks>
+        /// It's possible for the configuration file to be temporarily opened
+        /// by another process (e.g. the neonKUBE Desktop application or a 
+        /// command line tool).  Rather than throw an exception, we're going
+        /// to retry the operation a few times.
+        /// </remarks>
+        internal static string ReadFileTextWithRetry(string path)
+        {
+            var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(200));
+            var text = string.Empty;
+
+            retry.InvokeAsync(
+                async () => 
+                {
+                    await Task.CompletedTask;
+
+                    text = File.ReadAllText(path);
+
+                }).Wait();
+
+            return text;
+        }
+
+        /// <summary>
+        /// Writes a file as text, retrying if the file is already open.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <param name="text">The text to be written.</param>
+        /// <remarks>
+        /// It's possible for the configuration file to be temporarily opened
+        /// by another process (e.g. the neonKUBE Desktop application or a 
+        /// command line tool).  Rather than throw an exception, we're going
+        /// to retry the operation a few times.
+        /// </remarks>
+        internal static string WriteFileTextWithRetry(string path, string text)
+        {
+            var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(200));
+
+            retry.InvokeAsync(
+                async () =>
+                {
+                    await Task.CompletedTask;
+
+                    File.WriteAllText(path, text);
+
+                }).Wait();
+
+            return text;
+        }
+
+        /// <summary>
         /// Accesses the neonKUBE desktop client configuration.
         /// </summary>
         public static KubeClientConfig ClientConfig
@@ -175,7 +231,7 @@ namespace Neon.Kube
 
                 try
                 {
-                    cachedClientState = NeonHelper.JsonDeserialize<KubeClientConfig>(File.ReadAllText(clientStatePath));
+                    cachedClientState = NeonHelper.JsonDeserialize<KubeClientConfig>(ReadFileTextWithRetry(clientStatePath));
                     ClientConfig.Validate();
                 }
                 catch
@@ -217,7 +273,7 @@ namespace Neon.Kube
             var clientStatePath = Path.Combine(KubeHelper.DesktopFolder, "config.json");
 
             ClientConfig.Validate();
-            File.WriteAllText(clientStatePath, NeonHelper.JsonSerialize(cachedClientState, Formatting.Indented));
+            WriteFileTextWithRetry(clientStatePath, NeonHelper.JsonSerialize(cachedClientState, Formatting.Indented));
         }
 
         /// <summary>
@@ -678,7 +734,7 @@ namespace Neon.Kube
                 return null;
             }
 
-            var extension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path));
+            var extension = NeonHelper.YamlDeserialize<KubeContextExtension>(ReadFileTextWithRetry(path));
 
             extension.SetPath(path);
             extension.ClusterDefinition?.Validate();
@@ -745,7 +801,7 @@ namespace Neon.Kube
 
                 if (File.Exists(configPath))
                 {
-                    return cachedConfig = NeonHelper.YamlDeserialize<KubeConfig>(File.ReadAllText(configPath));
+                    return cachedConfig = NeonHelper.YamlDeserialize<KubeConfig>(ReadFileTextWithRetry(configPath));
                 }
 
                 return cachedConfig = new KubeConfig();
@@ -762,7 +818,7 @@ namespace Neon.Kube
 
             cachedConfig = config;
 
-            File.WriteAllText(KubeConfigPath, NeonHelper.YamlSerialize(config));
+            WriteFileTextWithRetry(KubeConfigPath, NeonHelper.YamlSerialize(config));
         }
 
         /// <summary>

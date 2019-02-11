@@ -66,7 +66,7 @@ namespace Neon.Kube
 
             if (File.Exists(configPath))
             {
-                var config = NeonHelper.YamlDeserialize<KubeConfig>(File.ReadAllText(configPath));
+                var config = NeonHelper.YamlDeserialize<KubeConfig>(KubeHelper.ReadFileTextWithRetry(configPath));
 
                 config.Validate();
 
@@ -78,7 +78,7 @@ namespace Neon.Kube
 
                     if (File.Exists(extensionPath))
                     {
-                        context.Extensions = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(extensionPath));
+                        context.Extensions = NeonHelper.YamlDeserialize<KubeContextExtension>(KubeHelper.ReadFileTextWithRetry(extensionPath));
                     }
                     else
                     {

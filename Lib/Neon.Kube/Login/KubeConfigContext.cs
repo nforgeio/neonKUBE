@@ -101,7 +101,7 @@ namespace Neon.Kube
 
                 if (File.Exists(extensionsPath))
                 {
-                    cachedExtensions = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(extensionsPath));
+                    cachedExtensions = NeonHelper.YamlDeserialize<KubeContextExtension>(KubeHelper.ReadFileTextWithRetry(extensionsPath));
 
                     // Validate the extension's cluster definition.
 
