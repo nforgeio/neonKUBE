@@ -557,5 +557,18 @@ namespace TestCommon
             Assert.False(NetHelper.TryParseIPv4Endpoint("", out endpoint));
             Assert.False(NetHelper.TryParseIPv4Endpoint(null, out endpoint));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ParseIPv4Endpoint()
+        {
+            Assert.Equal(new IPEndPoint(IPAddress.Loopback, 80), NetHelper.ParseIPv4Endpoint("127.0.0.1:80"));
+
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint("127.0.0.1100000000:80"));
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint("127.0.0.1:1000000"));
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint("127.0.0.1"));
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint(""));
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint(null));
+        }
     }
 }

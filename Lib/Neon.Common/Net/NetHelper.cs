@@ -773,6 +773,24 @@ namespace Neon.Net
 
             return true;
         }
+
+        /// <summary>
+        /// Parses an IPv4 endpoint from a string.
+        /// </summary>
+        /// <param name="input">The input.</param>
+        /// <returns>The parsed <see cref="IPEndPoint"/>.</returns>
+        /// <exception cref="FormatException">Thrown if the input is not valid.</exception>
+        public static IPEndPoint ParseIPv4Endpoint(string input)
+        {
+            if (TryParseIPv4Endpoint(input, out var endpoint))
+            {
+                return endpoint;
+            }
+            else
+            {
+                throw new FormatException($"[{input}] is not a valid IPv4 endpoint.");
+            }
+        }
     }
 }
 
