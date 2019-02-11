@@ -58,7 +58,31 @@ namespace Neon.Kube
     /// </remarks>
     public sealed class ReverseProxy : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private const int BufferSize = 16 * 1024;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static ReverseProxy()
+        {
+            // Allow a reasonable number of remote HTTP socket connections.
+
+            if (ServicePointManager.DefaultConnectionLimit < 100)
+            {
+                ServicePointManager.DefaultConnectionLimit = 100;
+            }
+
+            // Explicitly specify the TLS protocol versions we're going to support
+            // to all known protocols (as of 02-2019).
+
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         private object                  syncLock = new object();
         private IPEndPoint              localEndpoint;
@@ -74,12 +98,14 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="localEndpoint">The local endpoint.</param>
         /// <param name="remoteEndpoint">The remote endpoint.</param>
+        /// <param name="remoteTls">Optionally indicates that the remote endpoint required TLS.</param>
         /// <param name="requestHandler">Optional request hook.</param>
         /// <param name="responseHandler">Optional response hook.</param>
         public ReverseProxy(
             IPEndPoint              localEndpoint,
             IPEndPoint              remoteEndpoint,
-            Action<RequestContext>  requestHandler = null, 
+            bool                    remoteTls       = false,
+            Action<RequestContext>  requestHandler  = null, 
             Action<RequestContext>  responseHandler = null)
         {
             Covenant.Requires<ArgumentNullException>(localEndpoint != null);
@@ -97,14 +123,25 @@ namespace Neon.Kube
 
             // Create the client.
 
-            client = new HttpClient()
+            var remoteScheme = remoteTls ? "https" : "http";
+            var httpHandler  = new HttpClientHandler();
+
+            httpHandler.ServerCertificateCustomValidationCallback =
+                (request, certificate, chain, policyErrors) =>
+                {
+                    // $todo(jeff.lill): IMPORTANT!
+                    //
+                    // This is a bad security hole and must be replaced with
+                    // code that actually verifies the remote certificate
+                    // against a fingerprint or something.
+
+                    return true;
+                };
+
+            client = new HttpClient(httpHandler, disposeHandler: true)
             {
-                 BaseAddress = new Uri($"http://{remoteEndpoint}/")
+                 BaseAddress = new Uri($"{remoteScheme}://{remoteEndpoint}/")
             };
-
-            // Allow a reasonable number of remote HTTP socket connections.
-
-            ServicePointManager.DefaultConnectionLimit = 100;
 
             // Initialize the buffer pool.  We're going to use this to reduce
             // pressure on the garbarge collector.
@@ -212,14 +249,29 @@ namespace Neon.Kube
 
                                     foreach (var header in request.Headers)
                                     {
-                                        remoteRequest.Headers.Add(header.Key, header.Value.ToArray());
+                                        switch (header.Key.ToLowerInvariant())
+                                        {
+                                            case "host":
+                                            case "content-length":
+                                            case "transfer-encoding":
+
+                                                // Don't copy these headers to the remote request.
+
+                                                break;
+
+                                            default:
+
+                                                remoteRequest.Headers.Add(header.Key, header.Value.ToArray());
+                                                break;
+                                        }
                                     }
 
-                                    var bodyStream = request.Body;
-
-                                    if (request.ContentLength > 0)
+                                    if (request.ContentLength.HasValue && response.ContentLength > 0 || 
+                                        request.Headers.TryGetValue("Transfer-Encoding", out var values))
                                     {
-                                        remoteRequest.Content = new StreamContent(bodyStream);
+                                        // Looks like the client is transmitting content.
+
+                                        remoteRequest.Content = new StreamContent(request.Body);
                                     }
 
                                     // Forward the request.
@@ -235,9 +287,10 @@ namespace Neon.Kube
                                     {
                                         switch (header.Key.ToLowerInvariant())
                                         {
+                                            case "content-length":
                                             case "transfer-encoding":
 
-                                                // Don't copy this header from the remote response because it
+                                                // Don't copy these headers from the remote response because they
                                                 // will prevent any content from being returned to the client.
 
                                                 break;

@@ -77,7 +77,7 @@ USAGE:
 
             // Notify the desktop application.
 
-            KubeHelper.Desktop.UpdateUIAsync().Wait();
+            KubeHelper.Desktop.Logout().Wait();
         }
     }
 }

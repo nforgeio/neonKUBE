@@ -69,16 +69,6 @@ namespace Neon.Kube
         public string InstallationId { get; set; }
 
         /// <summary>
-        /// The network endpoint where the neonKUBE desktop application exposes
-        /// the desktop API service that providing integration with the <b>neon-cli</b>
-        /// command line tool.  This defaults to <see cref="KubeConst.DesktopApiEndpoint"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "DesktopApiEndpoint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "DesktopApiEndpoint", ApplyNamingConventions = false)]
-        [DefaultValue(KubeConst.DesktopApiEndpoint)]
-        public string DesktopApiEndpoint { get; set; } = KubeConst.DesktopApiEndpoint;
-
-        /// <summary>
         /// The interval the desktop application uses to poll for changes to the Kubernetes
         /// cluster configuration state.  This defaults to <b>1 second</b>.
         /// </summary>
@@ -86,6 +76,26 @@ namespace Neon.Kube
         [YamlMember(Alias = "StatusPollSeconds", ApplyNamingConventions = false)]
         [DefaultValue(1)]
         public int StatusPollSeconds { get; set; } = 1;
+
+        /// <summary>
+        /// The local network endpoint where the neonKUBE desktop application exposes
+        /// the desktop service providing integration for the <b>neon-cli</b>
+        /// command line tool.  This defaults to <see cref="KubeConst.DesktopServiceEndpoint"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "DesktopServiceEndpoint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "DesktopServiceEndpoint", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.DesktopServiceEndpoint)]
+        public string DesktopServiceEndpoint { get; set; } = KubeConst.DesktopServiceEndpoint;
+
+        /// <summary>
+        /// The local network endpoint used for proxying requests to
+        /// the Kubernetes dashboard for the current cluster.  This 
+        /// defaults to <see cref="KubeConst.KubeDashboardProxyEndpoint"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "KubeDashboardEndpoint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "KubeDashboardEndpoint", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.KubeDashboardProxyEndpoint)]
+        public string KubeDashboardEndpoint { get; set; } = KubeConst.KubeDashboardProxyEndpoint;
 
         /// <summary>
         /// Ensures that the state is valid.
@@ -101,16 +111,23 @@ namespace Neon.Kube
 
             // Ensure that the desktop API endpoint is valid.
 
-            DesktopApiEndpoint = DesktopApiEndpoint ?? KubeConst.DesktopApiEndpoint;
-            
-            if (NetHelper.TryParseIPv4Endpoint(DesktopApiEndpoint, out var endpoint))
-            {
-                DesktopApiEndpoint = KubeConst.DesktopApiEndpoint;
-            }
+            DesktopServiceEndpoint = DesktopServiceEndpoint ?? KubeConst.DesktopServiceEndpoint;
 
             if (StatusPollSeconds <= 0)
             {
                 StatusPollSeconds = 10;
+            }
+
+            IPEndPoint endpoint;
+
+            if (NetHelper.TryParseIPv4Endpoint(DesktopServiceEndpoint, out endpoint))
+            {
+                DesktopServiceEndpoint = KubeConst.DesktopServiceEndpoint;
+            }
+
+            if (NetHelper.TryParseIPv4Endpoint(KubeDashboardEndpoint, out endpoint))
+            {
+                KubeDashboardEndpoint = KubeConst.KubeDashboardProxyEndpoint;
             }
         }
     }

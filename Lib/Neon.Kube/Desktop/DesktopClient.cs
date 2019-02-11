@@ -108,6 +108,52 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Signals to the Desktop application that the workstation has logged
+        /// into a cluster.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method will fail silently if the desktop application does
+        /// not respond.
+        /// </note>
+        /// </remarks>
+        public async Task Login()
+        {
+            try
+            {
+                await client.PostAsync("login", true);
+            }
+            catch
+            {
+                // Intentionally ignoring this.
+            }
+        }
+
+        /// <summary>
+        /// Signals to the Desktop application that the workstation has logged
+        /// out of a cluster.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method will fail silently if the desktop application does
+        /// not respond.
+        /// </note>
+        /// </remarks>
+        public async Task Logout()
+        {
+            try
+            {
+                await client.PostAsync("logout", true);
+            }
+            catch
+            {
+                // Intentionally ignoring this.
+            }
+        }
+
+        /// <summary>
         /// Signals the desktop application that a long-running operation such
         /// as cluster setup is starting.
         /// </summary>

@@ -65,6 +65,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Set to a globally unique ID to identify the cluster.  This defaults to 
+        /// a gewnerated unique value.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ClusterId", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public Guid ClusterId { get; set; } = Guid.NewGuid();
+
+        /// <summary>
         /// The cluster definition.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterDefinition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -175,6 +184,11 @@ namespace Neon.Kube
         {
             lock (syncRoot)
             {
+                if (ClusterId == Guid.Empty)
+                {
+                    ClusterId = Guid.NewGuid();
+                }
+
                 File.WriteAllText(path, NeonHelper.YamlSerialize(this));
             }
         }

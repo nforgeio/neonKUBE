@@ -114,7 +114,7 @@ ARGUMENTS:
 
             // Notify the desktop application.
 
-            KubeHelper.Desktop.UpdateUIAsync().Wait();
+            KubeHelper.Desktop.Login().Wait();
         }
     }
 }

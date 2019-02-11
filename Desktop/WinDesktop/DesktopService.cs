@@ -38,7 +38,7 @@ using Neon.Net;
 namespace WinDesktop
 {
     /// <summary>
-    /// Exposes a very simple HTTP API service on <see cref="KubeClientConfig.DesktopApiEndpoint"/>
+    /// Exposes a very simple HTTP API service on <see cref="KubeClientConfig.DesktopServiceEndpoint"/>
     /// that is queried by the <b>neon-cli</b> via the <see cref="DesktopClient"/>.
     /// </summary>
     /// <remarks>
@@ -68,7 +68,7 @@ namespace WinDesktop
                 {
                     var settings = new WebListenerSettings();
 
-                    settings.UrlPrefixes.Add($"http://{KubeHelper.ClientConfig.DesktopApiEndpoint}/");
+                    settings.UrlPrefixes.Add($"http://{KubeHelper.ClientConfig.DesktopServiceEndpoint}/");
 
                     listener = new WebListener(settings);
                     listener.Start();
@@ -161,6 +161,16 @@ namespace WinDesktop
 
                                                 await OnEndOperation(request, response);
                                                 break;
+
+                                            case "/login":
+
+                                                await OnLogin(request, response);
+                                                break;
+
+                                            case "/logout":
+
+                                                await OnLogout(request, response);
+                                                break;
                                         }
                                         break;
 
@@ -217,7 +227,7 @@ namespace WinDesktop
         /// <returns>Th tracking <see cref="Task"/>.</returns>
         private static async Task OnUpdateUIAsync(Request request, Response response)
         {
-            MainForm.Current.SetNotifyState();
+            MainForm.Current.UpdateUIState();
             await Task.CompletedTask;
         }
 
@@ -229,7 +239,7 @@ namespace WinDesktop
         /// <returns>Th tracking <see cref="Task"/>.</returns>
         private static async Task OnStartOperation(Request request, Response response)
         {
-            MainForm.Current.StartOperation(await ParseBodyAsync<RemoteOperation>(request));
+            MainForm.Current.OnStartOperation(await ParseBodyAsync<RemoteOperation>(request));
             await Task.CompletedTask;
         }
 
@@ -241,7 +251,31 @@ namespace WinDesktop
         /// <returns>Th tracking <see cref="Task"/>.</returns>
         private static async Task OnEndOperation(Request request, Response response)
         {
-            MainForm.Current.EndOperation(await ParseBodyAsync<RemoteOperation>(request));
+            MainForm.Current.OnEndOperation(await ParseBodyAsync<RemoteOperation>(request));
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Called to signal that the workstation has logged into a new cluster.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="response">The response.</param>
+        /// <returns>Th tracking <see cref="Task"/>.</returns>
+        private static async Task OnLogin(Request request, Response response)
+        {
+            MainForm.Current.OnLogin();
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Called to signal that the workstation has logged out of a cluster.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="response">The response.</param>
+        /// <returns>Th tracking <see cref="Task"/>.</returns>
+        private static async Task OnLogout(Request request, Response response)
+        {
+            MainForm.Current.OnLogout();
             await Task.CompletedTask;
         }
     }

@@ -126,6 +126,7 @@ USER@CLUSTER[/NAMESPACE is not specified.
             if (KubeHelper.CurrentContextName == contextName)
             {
                 Console.WriteLine($"Logging out of: {contextName}");
+                KubeHelper.Desktop.Logout().Wait();
             }
 
             KubeHelper.Config.RemoveContext(context);

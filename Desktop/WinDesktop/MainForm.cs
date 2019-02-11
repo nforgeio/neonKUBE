@@ -24,6 +24,7 @@ using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -31,6 +32,7 @@ using System.Windows.Forms;
 using Neon;
 using Neon.Common;
 using Neon.Kube;
+using Neon.Net;
 
 namespace WinDesktop
 {
@@ -52,17 +54,19 @@ namespace WinDesktop
         // Instance members
 
         private const double animationFrameRate = 2;
-        private const string headendError       = "Unable to contact the neonKUBE headend service.";
+        private const string headendError = "Unable to contact the neonKUBE headend service.";
 
-        private Icon                appIcon;
-        private Icon                disconnectedIcon;
-        private Icon                connectedIcon;
-        private AnimatedIcon        connectingAnimation;
-        private AnimatedIcon        workingAnimation;
-        private int                 animationNesting;
-        private ContextMenu         contextMenu;
-        private bool                operationInProgress;
-        private RemoteOperation     remoteOperation;
+        private Icon appIcon;
+        private Icon disconnectedIcon;
+        private Icon connectedIcon;
+        private AnimatedIcon connectingAnimation;
+        private AnimatedIcon workingAnimation;
+        private int animationNesting;
+        private ContextMenu contextMenu;
+        private bool operationInProgress;
+        private RemoteOperation remoteOperation;
+        private List<ReverseProxy> proxies = new List<ReverseProxy>();
+        private KubeConfigContext proxiedContext;
 
         /// <summary>
         /// Constructor.
@@ -73,16 +77,16 @@ namespace WinDesktop
 
             InitializeComponent();
 
-            Load  += MainForm_Load;
+            Load += MainForm_Load;
             Shown += (s, a) => Visible = false; // The main form should always be hidden
 
             // Preload the notification icons and animations for better performance.
 
-            appIcon             = new Icon(@"Images\app.ico");
-            connectedIcon       = new Icon(@"Images\connected.ico");
-            disconnectedIcon    = new Icon(@"Images\disconnected.ico");
+            appIcon = new Icon(@"Images\app.ico");
+            connectedIcon = new Icon(@"Images\connected.ico");
+            disconnectedIcon = new Icon(@"Images\disconnected.ico");
             connectingAnimation = AnimatedIcon.Load("Images", "connecting", animationFrameRate);
-            workingAnimation    = AnimatedIcon.Load("Images", "working", animationFrameRate);
+            workingAnimation = AnimatedIcon.Load("Images", "working", animationFrameRate);
 
             // Initialize the cluster hosting provider components.
 
@@ -115,25 +119,25 @@ namespace WinDesktop
             // this because the form should remain hidden but we'll put something
             // here just in case.
 
-            productNameLabel.Text  = $"{Build.ProductName}  v{Build.ProductVersion}";
-            copyrightLabel.Text    = Build.Copyright;
-            licenseLinkLabel.Text  = Build.ProductLicense;
+            productNameLabel.Text = $"{Build.ProductName}  v{Build.ProductVersion}";
+            copyrightLabel.Text = Build.Copyright;
+            licenseLinkLabel.Text = Build.ProductLicense;
 
             // Initialize the notify icon and its context memu.
-            
-            notifyIcon.Text        = Build.ProductName;
-            notifyIcon.Icon        = disconnectedIcon;
+
+            notifyIcon.Text = Build.ProductName;
+            notifyIcon.Icon = disconnectedIcon;
             notifyIcon.ContextMenu = contextMenu = new ContextMenu();
-            notifyIcon.Visible     = true;
-            contextMenu.Popup     += Menu_Popup;
+            notifyIcon.Visible = true;
+            contextMenu.Popup += Menu_Popup;
 
             // Set the initial notify icon state and setup a timer
             // to periodically keep the UI in sync with any changes.
 
-            SetNotifyState();
+            UpdateUIState();
 
             statusTimer.Interval = (int)TimeSpan.FromSeconds(KubeHelper.ClientConfig.StatusPollSeconds).TotalMilliseconds;
-            statusTimer.Tick    += (s, a) => SetNotifyState();
+            statusTimer.Tick += (s, a) => UpdateUIState();
             statusTimer.Start();
 
             // Start the desktop API service that [neon-cli] will use
@@ -162,7 +166,7 @@ namespace WinDesktop
             // The main form should always be hidden but we'll 
             // implement this just in case.
 
-            args.Cancel  = true;
+            args.Cancel = true;
             this.Visible = false;
         }
 
@@ -205,7 +209,7 @@ namespace WinDesktop
             if (animationNesting == 0)
             {
                 animationTimer.Interval = (int)TimeSpan.FromSeconds(1 / animatedIcon.FrameRate).TotalMilliseconds;
-                animationTimer.Tick    +=
+                animationTimer.Tick +=
                     (s, a) =>
                     {
                         notifyIcon.Icon = animatedIcon.GetNextFrame();
@@ -228,7 +232,7 @@ namespace WinDesktop
                 if (animationNesting > 0)
                 {
                     animationTimer.Stop();
-                    SetNotifyState();
+                    UpdateUIState();
                     animationNesting = 0;
                 }
 
@@ -243,7 +247,7 @@ namespace WinDesktop
             if (--animationNesting == 0)
             {
                 animationTimer.Stop();
-                SetNotifyState();
+                UpdateUIState();
             }
         }
 
@@ -301,7 +305,7 @@ namespace WinDesktop
 
             operationInProgress = false;
 
-            SetNotifyState();
+            UpdateUIState();
         }
 
         /// <summary>
@@ -315,11 +319,74 @@ namespace WinDesktop
                 StopNotifyAnimation(force: true);
             }
 
-            SetNotifyState();
+            UpdateUIState();
 
             if (!string.IsNullOrEmpty(toastErrorText))
             {
                 ShowToast(toastErrorText, icon: ToolTipIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Stops any running reverse proxies.
+        /// </summary>
+        private void StopProxies()
+        {
+            foreach (var proxy in proxies)
+            {
+                proxy.Dispose();
+            }
+
+            proxies.Clear();
+        }
+
+        /// <summary>
+        /// Updates the running proxies to match the current cluster 
+        /// (if there is one).
+        /// </summary>
+        private void UpdateProxies()
+        {
+            if (KubeHelper.CurrentContext == null)
+            {
+                StopProxies();
+            }
+            else
+            {
+                var cluster = Program.GetCluster();
+
+                // We're going to use the current Kubenetes context name and cluster ID
+                // to determine whether we're still connected to the same cluster.
+
+                if (proxiedContext != null)
+                {
+                    if (proxiedContext.Name == KubeHelper.CurrentContext.Name &&
+                        proxiedContext.Extensions.ClusterId == KubeHelper.CurrentContext.Extensions.ClusterId)
+                    {
+                        // We're still proxying the same cluster so no changes 
+                        // are required.
+
+                        return;
+                    }
+                }
+
+                StopProxies();
+
+                // The Kubernetes dashboard reverse proxy:
+
+                var localKubeDashboardEndpoint  = NetHelper.ParseIPv4Endpoint(KubeHelper.ClientConfig.KubeDashboardEndpoint);
+                var remoteKubeDashboardEndpoint = new IPEndPoint(cluster.GetReachableMaster().PrivateAddress, KubeHostPorts.KubeDashboard);
+
+                var kubeDashboardProxy = 
+                    new ReverseProxy(
+                        localEndpoint: localKubeDashboardEndpoint,
+                        remoteEndpoint: remoteKubeDashboardEndpoint,
+                        remoteTls: true);
+
+                proxies.Add(kubeDashboardProxy);
+
+                // Remember which context we're proxying.
+
+                proxiedContext = KubeHelper.CurrentContext;
             }
         }
 
@@ -328,17 +395,21 @@ namespace WinDesktop
         // other places):
 
         /// <summary>
-        /// Sets the notify icon and tooltip text based on the current application state.
+        /// Synchronizes the UI state with the current cluster configuration.
         /// </summary>
-        public void SetNotifyState()
+        public void UpdateUIState()
         {
             InvokeOnUIThread(
                 () =>
                 {
                     KubeHelper.LoadConfig();
 
+                    UpdateProxies();
+
                     if (!operationInProgress)
                     {
+                        notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+
                         if (IsConnected)
                         {
                             notifyIcon.Text = $"{Text}: {KubeHelper.CurrentContextName}";
@@ -388,7 +459,7 @@ namespace WinDesktop
         /// Signals the start of a long-running operation.
         /// </summary>
         /// <param name="operation">The <b>neon-cli</b> operation information.</param>
-        public void StartOperation(RemoteOperation operation)
+        public void OnStartOperation(RemoteOperation operation)
         {
             InvokeOnUIThread(
                 () =>
@@ -406,7 +477,7 @@ namespace WinDesktop
                         if (remoteOperation != null && remoteOperation.ProcessId == operation.ProcessId)
                         {
                             remoteOperation = operation;
-                            SetNotifyState();
+                            UpdateUIState();
                         }
                         else
                         {
@@ -428,7 +499,7 @@ namespace WinDesktop
         /// Signals the end of a long-running operation.
         /// </summary>
         /// <param name="operation">The <b>neon-cli</b> operation information.</param>
-        public void EndOperation(RemoteOperation operation)
+        public void OnEndOperation(RemoteOperation operation)
         {
             InvokeOnUIThread(
                 () =>
@@ -450,6 +521,30 @@ namespace WinDesktop
                             }
                         }
                     }
+                });
+        }
+
+        /// <summary>
+        /// Signals that the workstation has logged into a cluster.
+        /// </summary>
+        public void OnLogin()
+        {
+            InvokeOnUIThread(
+                () =>
+                {
+                    UpdateUIState();
+                });
+        }
+
+        /// <summary>
+        /// Signals that the workstation has logged out of a cluster.
+        /// </summary>
+        public void OnLogout()
+        {
+            InvokeOnUIThread(
+                () =>
+                {
+                    UpdateUIState();
                 });
         }
 
@@ -718,7 +813,7 @@ namespace WinDesktop
             {
                 ShowToast($"Logging out of: {KubeHelper.CurrentContext.Name}");
                 KubeHelper.SetCurrentContext((string)null);
-                SetNotifyState();
+                UpdateUIState();
             }
         }
 

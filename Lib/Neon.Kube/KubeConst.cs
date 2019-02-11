@@ -134,11 +134,26 @@ namespace Neon.Kube
         /// </summary>
         public const string TestModeFolderVar = "NF_TESTMODE_FOLDER";
 
+        //---------------------------------------------------------------------
+        // The following constants define the default network endpoints exposed
+        // by the neonKUBE Desktop application.  These can be customized by
+        // editing the [KubeClientConfig] file persisted on the client
+        // workstation.  I tried to select ports that would be unlikely
+        // to conflict with important registrations:
+        //
+        //      https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
+
         /// <summary>
-        /// The network endpoint for the neonKUBE desktop API used
-        /// by the <b>neon-cli</b> tool for communicating with the
-        /// neonKUBE desktop.
+        /// The local network endpoint for the neonKUBE desktop API
+        /// used by the <b>neon-cli</b> tool for communicating with
+        /// the neonKUBE desktop.
         /// </summary>
-        public const string DesktopApiEndpoint = "127.0.0.1:1214";
+        public const string DesktopServiceEndpoint = "127.0.0.1:1058";
+
+        /// <summary>
+        /// The local network endpoint used for proxying requests to
+        /// the Kubernetes dashboard for the current cluster.
+        /// </summary>
+        public const string KubeDashboardProxyEndpoint = "127.0.0.1:1059";
     }
 }

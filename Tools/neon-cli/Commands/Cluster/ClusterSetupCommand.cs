@@ -208,7 +208,7 @@ OPTIONS:
 
                 try
                 {
-                    KubeHelper.Desktop.StartOperationAsync($"creating [{cluster.Name}]").Wait();
+                    KubeHelper.Desktop.StartOperationAsync($"setting up [{cluster.Name}]").Wait();
 
                     // Configure global options.
 

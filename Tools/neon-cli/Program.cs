@@ -670,11 +670,6 @@ OPTIONS:
                 Console.Error.WriteLine("*** ERROR: You are not logged into a cluster.");
                 Program.Exit(1);
             }
-            else if (KubeHelper.CurrentContext == null)
-            {
-                Console.Error.WriteLine("*** ERROR: You are not logged into a neonKUBE cluster.");
-                Program.Exit(1);
-            }
 
             return new ClusterProxy(KubeHelper.CurrentContext, Program.CreateNodeProxy<NodeDefinition>);
         }
