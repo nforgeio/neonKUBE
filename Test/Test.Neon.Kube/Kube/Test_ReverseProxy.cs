@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Proxy.cs
+// FILE:	    Test_ReverseProxy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,11 +21,13 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
-using Microsoft.Net.Http.Server;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.Net.Http.Server;
 
 using Neon.Common;
 using Neon.Kube;
@@ -34,14 +36,10 @@ using Neon.Xunit;
 using Neon.Xunit.Kube;
 
 using Xunit;
-using System.Net;
 
-namespace Test.NShell
+namespace TestKube
 {
-    /// <summary>
-    /// Tests the <b>nshell proxy</b> command.
-    /// </summary>
-    public class Test_Proxy
+    public class Test_ReversProxy
     {
         //---------------------------------------------------------------------
         // Private types
@@ -115,7 +113,7 @@ namespace Test.NShell
         private sealed class ProxyTestFixture : IDisposable
         {
             private object                              syncLock   = new object();
-            private ProgramRunner                       runner;
+            private ReverseProxy                        proxy;
             private MockHttpServer                      server;
             private HttpClient                          client;
             private Dictionary<int, OperationInfo>      operations = new Dictionary<int, OperationInfo>();
@@ -130,10 +128,9 @@ namespace Test.NShell
                     Timeout     = TimeSpan.FromSeconds(2)
                 };
 
-                // Start the nshell proxy.
+                // Start the proxy.
 
-                runner = new ProgramRunner();
-                runner.Fork(global::NShell.Program.Main, $"proxy", "unit-test", $"{localEndpoint}", $"{remoteEndpoint}");
+                proxy = new ReverseProxy(localEndpoint, remoteEndpoint);
             }
 
             public void Dispose()
@@ -150,12 +147,11 @@ namespace Test.NShell
                     client = null;
                 }
 
-                if (runner != null)
+                if (proxy != null)
                 {
-                    runner.Dispose();
-                    runner = null;
+                    proxy.Dispose();
+                    proxy = null;
                 }
-
             }
 
             /// <summary>
@@ -299,7 +295,7 @@ namespace Test.NShell
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Test_Proxy()
+        public Test_ReversProxy()
         {
             var sb = new StringBuilder();
 

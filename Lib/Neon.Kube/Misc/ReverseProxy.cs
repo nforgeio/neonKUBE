@@ -30,7 +30,7 @@ using Microsoft.Net.Http.Server;
 
 using Neon.Common;
 
-namespace NShell
+namespace Neon.Kube
 {
     /// <summary>
     /// <para>
@@ -150,22 +150,17 @@ namespace NShell
         /// </summary>
         private byte[] GetBuffer()
         {
-            byte[] buffer;
+            byte[] buffer = null;
 
             lock (syncLock)
             {
-                if (!bufferPool.TryDequeue(out buffer))
+                if (bufferPool.Count > 0)
                 {
-                    buffer = null;
+                    buffer = bufferPool.Dequeue();
                 }
             }
 
-            if (buffer == null)
-            {
-                buffer = new byte[BufferSize];
-            }
-
-            return buffer;
+            return buffer ?? new byte[BufferSize];
         }
 
         /// <summary>

@@ -65,17 +65,11 @@ USAGE:
 COMMAND SUMMARY:
 
     nshell help     COMMAND
-    nshell proxy    SERVICE LOCAL-PORT NODE-PORT
     nshell version  [-n] [--git]
 
 ARGUMENTS:
 
-    LOCAL-PORT      - Local proxy port on 127.0.0.1
-    NODE-PORT       - Remote cluster node port
-
-    SERVICE         - Identifies the service being proxied:
-
-                         kube-dashboard
+    COMMAND         - A command or subcommand
 
 OPTIONS:
 
@@ -105,7 +99,6 @@ OPTIONS:
 
                 var commands = new List<ICommand>()
                 {
-                    new ProxyCommand(),
                     new VersionCommand()
                 };
 
