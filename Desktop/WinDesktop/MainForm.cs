@@ -60,6 +60,7 @@ namespace WinDesktop
         private AnimatedIcon    workingAnimation;
         private int             animationNesting;
         private ContextMenu     contextMenu;
+        private bool            operationInProgress;
 
         /// <summary>
         /// Constructor.
@@ -124,7 +125,14 @@ namespace WinDesktop
             notifyIcon.Visible     = true;
             contextMenu.Popup     += Menu_Popup;
 
+            // Set the initial notify icon state and setup a timer
+            // to periodically keep the UI in sync with any changes.
+
             SetNotifyState();
+
+            statusTimer.Interval = (int)TimeSpan.FromSeconds(KubeHelper.ClientConfig.StatusPollSeconds).TotalMilliseconds;
+            statusTimer.Tick    += (s, a) => SetNotifyState();
+            statusTimer.Start();
         }
 
         /// <summary>
@@ -247,6 +255,13 @@ namespace WinDesktop
         /// <param name="balloonText">The optional balloon text.</param>
         private void StartOperation(AnimatedIcon animatedIcon = null, string balloonText = null)
         {
+            if (operationInProgress)
+            {
+                throw new InvalidOperationException("Another operation is already in progress.");
+            }
+
+            operationInProgress = true;
+
             if (animatedIcon != null)
             {
                 StartNotifyAnimation(animatedIcon);
@@ -263,6 +278,11 @@ namespace WinDesktop
         /// </summary>
         private void StopOperation()
         {
+            if (!operationInProgress)
+            {
+                throw new InvalidOperationException("No operation is in progress.");
+            }
+
             if (animationNesting > 0)
             {
                 StopNotifyAnimation(force: true);
@@ -528,7 +548,7 @@ namespace WinDesktop
             var menuItem    = (MenuItem)sender;
             var contextName = menuItem.Text;
 
-            StartOperation(workingAnimation, $"Logging into: {contextName}");
+            StartOperation(connectingAnimation, $"Logging into: {contextName}");
 
             try
             {
@@ -555,6 +575,7 @@ namespace WinDesktop
             {
                 ShowBalloon($"Logging out of: {KubeHelper.CurrentContext.Name}");
                 KubeHelper.SetCurrentContext((string)null);
+                SetNotifyState();
             }
         }
 

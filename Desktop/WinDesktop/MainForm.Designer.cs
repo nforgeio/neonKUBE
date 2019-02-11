@@ -35,6 +35,7 @@
             this.licenseLinkLabel = new System.Windows.Forms.LinkLabel();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.animationTimer = new System.Windows.Forms.Timer(this.components);
+            this.statusTimer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // productNameLabel
@@ -100,6 +101,7 @@
         private System.Windows.Forms.LinkLabel licenseLinkLabel;
         private System.Windows.Forms.NotifyIcon notifyIcon;
         private System.Windows.Forms.Timer animationTimer;
+        private System.Windows.Forms.Timer statusTimer;
     }
 }
 
