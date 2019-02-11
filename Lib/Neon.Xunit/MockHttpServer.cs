@@ -56,7 +56,7 @@ namespace Neon.Xunit
 
             if (!NeonHelper.IsWindows)
             {
-                throw new NotSupportedException($"[{nameof(MockHttpServer)}] works only on Windows.");
+                throw new NotImplementedException($"[{nameof(MockHttpServer)}] works only on Windows.");
             }
 
             var settings = new WebListenerSettings();

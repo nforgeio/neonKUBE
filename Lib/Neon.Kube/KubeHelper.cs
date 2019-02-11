@@ -53,6 +53,7 @@ namespace Neon.Kube
         private static INeonLogger          log = LogManager.Default.GetLogger(typeof(KubeHelper));
         private static string               orgKUBECONFIG;
         private static string               testFolder;
+        private static DesktopClient        desktopClient;
         private static KubeConfig           cachedConfig;
         private static KubeConfigContext    cachedContext;
         private static HeadendClient        cachedHeadendClient;
@@ -63,7 +64,7 @@ namespace Neon.Kube
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
         private static string               cachedDesktopFolder;
-        private static KubeClientConfig      cachedClientState;
+        private static KubeClientConfig     cachedClientConfig;
 
         /// <summary>
         /// Static constructor.
@@ -97,7 +98,7 @@ namespace Neon.Kube
             cachedPasswordsFolder    = null;
             cachedCacheFolder        = null;
             cachedDesktopFolder      = null;
-            cachedClientState        = null;
+            cachedClientConfig        = null;
         }
 
         /// <summary>
@@ -161,6 +162,23 @@ namespace Neon.Kube
         public static bool IsTestMode => testFolder != null;
 
         /// <summary>
+        /// Returns the <see cref="DesktopClient"/> suitable for communicating
+        /// with the neonKUBE desktop application.
+        /// </summary>
+        public static DesktopClient Desktop
+        {
+            get
+            {
+                if (desktopClient == null)
+                {
+                    desktopClient = new DesktopClient($"http://{ClientConfig.DesktopApiEndpoint}/");
+                }
+
+                return desktopClient;
+            }
+        }
+
+        /// <summary>
         /// Reads a file as text, retrying if the file is already open.
         /// </summary>
         /// <param name="path">The file path.</param>
@@ -222,16 +240,16 @@ namespace Neon.Kube
         {
             get
             {
-                if (cachedClientState != null)
+                if (cachedClientConfig != null)
                 {
-                    return cachedClientState;
+                    return cachedClientConfig;
                 }
 
                 var clientStatePath = Path.Combine(KubeHelper.DesktopFolder, "config.json");
 
                 try
                 {
-                    cachedClientState = NeonHelper.JsonDeserialize<KubeClientConfig>(ReadFileTextWithRetry(clientStatePath));
+                    cachedClientConfig = NeonHelper.JsonDeserialize<KubeClientConfig>(ReadFileTextWithRetry(clientStatePath));
                     ClientConfig.Validate();
                 }
                 catch
@@ -239,12 +257,12 @@ namespace Neon.Kube
                     // The file doesn't exist yet or could not be parsed, so we'll
                     // generate a new file with default settings.
 
-                    cachedClientState = new KubeClientConfig();
+                    cachedClientConfig = new KubeClientConfig();
 
                     SaveClientState();
                 }
 
-                return cachedClientState;
+                return cachedClientConfig;
             }
 
             set
@@ -252,16 +270,18 @@ namespace Neon.Kube
                 Covenant.Requires<ArgumentNullException>(value != null);
 
                 value.Validate();
-                cachedClientState = value;
+                cachedClientConfig = value;
                 SaveClientState();
             }
         }
 
         /// <summary>
-        /// Loads the <see cref="ClientConfig"/>.
+        /// Loads or reloads the <see cref="ClientConfig"/>.
         /// </summary>
         public static KubeClientConfig LoadClientConfig()
         {
+            cachedClientConfig = null;
+
             return ClientConfig;
         }
 
@@ -273,7 +293,7 @@ namespace Neon.Kube
             var clientStatePath = Path.Combine(KubeHelper.DesktopFolder, "config.json");
 
             ClientConfig.Validate();
-            WriteFileTextWithRetry(clientStatePath, NeonHelper.JsonSerialize(cachedClientState, Formatting.Indented));
+            WriteFileTextWithRetry(clientStatePath, NeonHelper.JsonSerialize(cachedClientConfig, Formatting.Indented));
         }
 
         /// <summary>
@@ -784,6 +804,16 @@ namespace Neon.Kube
         /// Returns the path to the neonKUBE program folder.
         /// </summary>
         public static string ProgramFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "neonKUBE");
+
+        /// <summary>
+        /// Loads or reloads the Kubernetes configuration.
+        /// </summary>
+        /// <returns>The <see cref="Config"/>.</returns>
+        public static KubeConfig LoadConfig()
+        {
+            cachedConfig = null;
+            return Config;
+        }
 
         /// <summary>
         /// Returns the user's current <see cref="Config"/>.

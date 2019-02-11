@@ -53,14 +53,14 @@ namespace WinDesktop
         private const double animationFrameRate = 2;
         private const string headendError       = "Unable to contact the neonKUBE headend service.";
 
-        private Icon            appIcon;
-        private Icon            disconnectedIcon;
-        private Icon            connectedIcon;
-        private AnimatedIcon    connectingAnimation;
-        private AnimatedIcon    workingAnimation;
-        private int             animationNesting;
-        private ContextMenu     contextMenu;
-        private bool            operationInProgress;
+        private Icon                appIcon;
+        private Icon                disconnectedIcon;
+        private Icon                connectedIcon;
+        private AnimatedIcon        connectingAnimation;
+        private AnimatedIcon        workingAnimation;
+        private int                 animationNesting;
+        private ContextMenu         contextMenu;
+        private bool                operationInProgress;
 
         /// <summary>
         /// Constructor.
@@ -133,6 +133,11 @@ namespace WinDesktop
             statusTimer.Interval = (int)TimeSpan.FromSeconds(KubeHelper.ClientConfig.StatusPollSeconds).TotalMilliseconds;
             statusTimer.Tick    += (s, a) => SetNotifyState();
             statusTimer.Start();
+
+            // Start the desktop API service that [neon-cli] will use
+            // to communicate with the desktop application.
+
+            DesktopApiService.Start();
         }
 
         /// <summary>
@@ -160,20 +165,52 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Sets the notify icon and tooltip text based on the current application state.
+        /// Ensures that an action is performed on the UI thread.
         /// </summary>
-        private void SetNotifyState()
+        /// <param name="action">The action.</param>
+        private void InvokeOnUIThread(Action action)
         {
-            notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
-
-            if (IsConnected)
+            if (action == null)
             {
-                notifyIcon.Text = $"{Text}: {KubeHelper.CurrentContextName}";
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                Invoke(action);
             }
             else
             {
-                notifyIcon.Text = $"{Text}: disconnected";
+                action();
             }
+        }
+
+        /// <summary>
+        /// Sets the notify icon and tooltip text based on the current application state.
+        /// </summary>
+        public void SetNotifyState()
+        {
+            InvokeOnUIThread(
+                () =>
+                {
+                    KubeHelper.LoadConfig();
+
+                    if (operationInProgress)
+                    {
+                        return;
+                    }
+
+                    notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+
+                    if (IsConnected)
+                    {
+                        notifyIcon.Text = $"{Text}: {KubeHelper.CurrentContextName}";
+                    }
+                    else
+                    {
+                        notifyIcon.Text = $"{Text}: disconnected";
+                    }
+                });
         }
 
         /// <summary>
@@ -340,13 +377,13 @@ namespace WinDesktop
 
             if (contexts.Length > 0)
             {
-                var contextsMenu = new MenuItem(loggedIn ? currentContextName : "Login to") { Checked = loggedIn };
+                var contextsMenu = new MenuItem(loggedIn ? currentContextName : "Login to") { Checked = loggedIn, Enabled = !operationInProgress };
 
                 contextsMenu.RadioCheck = loggedIn;
 
                 if (loggedIn)
                 {
-                    contextsMenu.MenuItems.Add(new MenuItem(currentContextName) { Checked = true });
+                    contextsMenu.MenuItems.Add(new MenuItem(currentContextName) { Checked = true, Enabled = !operationInProgress });
                 }
 
                 var addedContextsSeparator = false;
@@ -359,11 +396,11 @@ namespace WinDesktop
                         addedContextsSeparator = true;
                     }
 
-                    contextsMenu.MenuItems.Add(new MenuItem(context.Name, OnClusterContext));
+                    contextsMenu.MenuItems.Add(new MenuItem(context.Name, OnClusterContext) { Enabled = !operationInProgress });
                 }
 
                 contextsMenu.MenuItems.Add("-");
-                contextsMenu.MenuItems.Add(new MenuItem("Logout", OnLogoutCommand) { Enabled = loggedIn });
+                contextsMenu.MenuItems.Add(new MenuItem("Logout", OnLogoutCommand) { Enabled = loggedIn && !operationInProgress });
 
                 contextMenu.MenuItems.Add(contextsMenu);
             }
@@ -374,9 +411,9 @@ namespace WinDesktop
             {
                 contextMenu.MenuItems.Add("-");
 
-                var dashboardsMenu = new MenuItem("Dashboard") { Enabled = loggedIn };
+                var dashboardsMenu = new MenuItem("Dashboard") { Enabled = loggedIn && !operationInProgress };
 
-                dashboardsMenu.MenuItems.Add(new MenuItem("Kubernetes", OnKubernetesDashboardCommand) { Enabled = loggedIn });
+                dashboardsMenu.MenuItems.Add(new MenuItem("Kubernetes", OnKubernetesDashboardCommand) { Enabled = loggedIn && !operationInProgress });
 
                 var addedDashboardSeparator = false;
 
@@ -388,7 +425,7 @@ namespace WinDesktop
                         addedDashboardSeparator = true;
                     }
 
-                    dashboardsMenu.MenuItems.Add(new MenuItem("Ceph", OnCephDashboardCommand) { Enabled = loggedIn });
+                    dashboardsMenu.MenuItems.Add(new MenuItem("Ceph", OnCephDashboardCommand) { Enabled = loggedIn && !operationInProgress });
                 }
 
                 if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.EFK.Enabled)
@@ -399,7 +436,7 @@ namespace WinDesktop
                         addedDashboardSeparator = true;
                     }
 
-                    dashboardsMenu.MenuItems.Add(new MenuItem("Kibana", OnKibanaDashboardCommand) { Enabled = loggedIn });
+                    dashboardsMenu.MenuItems.Add(new MenuItem("Kibana", OnKibanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
                 }
 
                 if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.Prometheus.Enabled)
@@ -410,7 +447,7 @@ namespace WinDesktop
                         addedDashboardSeparator = true;
                     }
 
-                    dashboardsMenu.MenuItems.Add(new MenuItem("Prometheus", OnPrometheusDashboardCommand) { Enabled = loggedIn });
+                    dashboardsMenu.MenuItems.Add(new MenuItem("Prometheus", OnPrometheusDashboardCommand) { Enabled = loggedIn && !operationInProgress });
                 }
 
                 contextMenu.MenuItems.Add(dashboardsMenu);
@@ -424,7 +461,7 @@ namespace WinDesktop
             contextMenu.MenuItems.Add(new MenuItem("About", OnAboutCommand));
             contextMenu.MenuItems.Add("-");
             contextMenu.MenuItems.Add(new MenuItem("Settings", OnSettingsCommand));
-            contextMenu.MenuItems.Add(new MenuItem("Check for Updates", OnCheckForUpdatesCommand));
+            contextMenu.MenuItems.Add(new MenuItem("Check for Updates", OnCheckForUpdatesCommand) { Enabled = !operationInProgress });
             contextMenu.MenuItems.Add("-");
             contextMenu.MenuItems.Add(new MenuItem("Exit", OnExitCommand));
         }
@@ -628,6 +665,8 @@ namespace WinDesktop
         {
             StopNotifyAnimation(force: true);
             notifyIcon.Visible = false;
+            DesktopApiService.Stop();
+
             Environment.Exit(0);
         }
     }
