@@ -61,7 +61,46 @@ namespace Neon.Kube
     /// </remarks>
     public sealed class ReverseProxy : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private const int BufferSize = 16 * 1024;
+
+        private static HashSet<string>  ignoredRequestHeaders;
+        private static HashSet<string>  ignoredResponseHeaders;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static ReverseProxy()
+        {
+            // These headers will not be included from the client request
+            // when we forward them to the remote endpoint.  We're letting
+            // the HTTPClient manage these as required when transmitting
+            // requests.
+
+            ignoredRequestHeaders = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                "Connection",
+                "Content-Length",
+                "Host",
+                "Transfer-Encoding"
+            };
+
+            // These headers will not be included in the from the remote
+            // response when we forward them back to the client.  We're
+            // letting the WebListener manage these as required when 
+            // transmitting responses.
+
+            ignoredResponseHeaders = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                "Content-Encoding",
+                "Transfer-Encoding"
+            };
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         private object                  syncLock = new object();
         private int                     localPort;
@@ -268,24 +307,10 @@ namespace Neon.Kube
 
                                     remoteRequest.Version = request.ProtocolVersion;
 
-                                    foreach (var header in request.Headers)
+                                    foreach (var header in request.Headers
+                                        .Where(h => !ignoredRequestHeaders.Contains(h.Key)))
                                     {
-                                        switch (header.Key.ToLowerInvariant())
-                                        {
-                                            // Don't copy these headers to the remote request.
-
-                                            case "connection":
-                                            case "content-length":
-                                            case "host":
-                                            case "transfer-encoding":
-
-                                                break;
-
-                                            default:
-
-                                                remoteRequest.Headers.Add(header.Key, header.Value.ToArray());
-                                                break;
-                                        }
+                                        remoteRequest.Headers.Add(header.Key, header.Value.ToArray());
                                     }
 
                                     if (request.ContentLength.HasValue && response.ContentLength > 0 || 
@@ -309,7 +334,7 @@ namespace Neon.Kube
                                     response.ReasonPhrase = remoteResponse.ReasonPhrase;
                                     
                                     foreach (var header in remoteResponse.Headers
-                                        .Where(h => !h.Key.Equals("Server", StringComparison.InvariantCultureIgnoreCase)))
+                                        .Where(h => !ignoredResponseHeaders.Contains(h.Key)))
                                     {
                                         response.Headers.Add(header.Key, header.Value.ToArray());
                                     }
