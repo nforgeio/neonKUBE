@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,31 +59,7 @@ namespace Neon.Kube
     /// </remarks>
     public sealed class ReverseProxy : IDisposable
     {
-        //---------------------------------------------------------------------
-        // Static members
-
         private const int BufferSize = 16 * 1024;
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static ReverseProxy()
-        {
-            // Allow a reasonable number of remote HTTP socket connections.
-
-            if (ServicePointManager.DefaultConnectionLimit < 100)
-            {
-                ServicePointManager.DefaultConnectionLimit = 100;
-            }
-
-            // Explicitly specify the TLS protocol versions we're going to support
-            // to all known protocols (as of 02-2019).
-
-            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
 
         private object                  syncLock = new object();
         private IPEndPoint              localEndpoint;
@@ -124,7 +101,12 @@ namespace Neon.Kube
             // Create the client.
 
             var remoteScheme = remoteTls ? "https" : "http";
-            var httpHandler  = new HttpClientHandler();
+            var httpHandler =
+                new HttpClientHandler()
+                {
+                    SslProtocols            = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12,
+                    MaxConnectionsPerServer = 100
+                };
 
             httpHandler.ServerCertificateCustomValidationCallback =
                 (request, certificate, chain, policyErrors) =>
