@@ -133,21 +133,17 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="localPort">The local port.</param>
         /// <param name="remotePort">The remote port.</param>
+        /// <param name="remoteHost">Optionally specifies the remote hostname or IP address.</param>
         /// <param name="remoteTls">Optionally indicates that the remote endpoint required TLS.</param>
         /// <param name="requestHandler">Optional request hook.</param>
         /// <param name="responseHandler">Optional response hook.</param>
-        /// <param name="kubectlProxy">
-        /// Optionally specifies that a <b>kubectl proxy</b> instance should
-        /// be started at <see cref="localPort"/> and that this reverse 
-        /// proxy should route through that proxy process.
-        /// </param>
         public ReverseProxy(
             int                     localPort,
             int                     remotePort,
+            string                  remoteHost      = "localhost",
             bool                    remoteTls       = false,
             Action<RequestContext>  requestHandler  = null, 
-            Action<RequestContext>  responseHandler = null,
-            bool                    kubectlProxy    = false)
+            Action<RequestContext>  responseHandler = null)
         {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
@@ -161,13 +157,6 @@ namespace Neon.Kube
             this.remotePort      = remotePort;
             this.requestHandler  = requestHandler;
             this.responseHandler = responseHandler;
-
-            // Launch [kubectl proxy] if requested.
-
-            if (kubectlProxy)
-            {
-                kubectlProxyProcess = NeonHelper.Fork("kubectl", "proxy", $"--port={remotePort}");
-            }
 
             // Create the client.
 
@@ -192,7 +181,7 @@ namespace Neon.Kube
 
             client = new HttpClient(httpHandler, disposeHandler: true)
             {
-                 BaseAddress = new Uri($"{remoteScheme}://localhost:{remotePort}/")
+                 BaseAddress = new Uri($"{remoteScheme}://{remoteHost}:{remotePort}/")
             };
 
             // Initialize the buffer pool.  We're going to use this to reduce
@@ -204,6 +193,9 @@ namespace Neon.Kube
 
             var settings = new WebListenerSettings();
 
+            // $todo(jeff.lill): IMPORTANT DELETE THIS: Use localhost only.
+
+            //settings.UrlPrefixes.Add($"http://*:{localPort}/");
             settings.UrlPrefixes.Add($"http://localhost:{localPort}/");
 
             this.listener = new WebListener(settings);
@@ -379,8 +371,9 @@ namespace Neon.Kube
                                 {
                                     response.StatusCode   = 503;
                                     response.ReasonPhrase = "service unavailable";
+                                    response.ContentType  = "text/plain";
 
-                                    response.Body.Write(Encoding.UTF32.GetBytes(NeonHelper.ExceptionError(e)));
+                                    response.Body.Write(Encoding.UTF8.GetBytes(NeonHelper.ExceptionError(e)));
                                 }
                             }
                         },
