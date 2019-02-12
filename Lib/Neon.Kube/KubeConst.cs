@@ -144,16 +144,22 @@ namespace Neon.Kube
         //      https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 
         /// <summary>
-        /// The local network endpoint for the neonKUBE desktop API
+        /// The default local network port for the neonKUBE desktop API
         /// used by the <b>neon-cli</b> tool for communicating with
         /// the neonKUBE desktop.
         /// </summary>
-        public const string DesktopServiceEndpoint = "127.0.0.1:1058";
+        public const int DesktopServicePort = 1058;
 
         /// <summary>
-        /// The local network endpoint used for proxying requests to
+        /// The default local network port where <b>kubectl proxy</b> will 
+        /// listen and forward traffic to the Kubernetes API server.
+        /// </summary>
+        public const int KubectlProxyPort = 1059;
+
+        /// <summary>
+        /// The default local network port used for proxying requests to
         /// the Kubernetes dashboard for the current cluster.
         /// </summary>
-        public const string KubeDashboardProxyEndpoint = "127.0.0.1:1059";
+        public const int KubeDashboardProxyPort = 1060;
     }
 }

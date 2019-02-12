@@ -38,7 +38,7 @@ using Neon.Net;
 namespace WinDesktop
 {
     /// <summary>
-    /// Exposes a very simple HTTP API service on <see cref="KubeClientConfig.DesktopServiceEndpoint"/>
+    /// Exposes a very simple HTTP API service on <see cref="KubeClientConfig.DesktopServicePort"/>
     /// that is queried by the <b>neon-cli</b> via the <see cref="DesktopClient"/>.
     /// </summary>
     /// <remarks>
@@ -68,7 +68,7 @@ namespace WinDesktop
                 {
                     var settings = new WebListenerSettings();
 
-                    settings.UrlPrefixes.Add($"http://{KubeHelper.ClientConfig.DesktopServiceEndpoint}/");
+                    settings.UrlPrefixes.Add($"http://localhost:{KubeHelper.ClientConfig.DesktopServicePort}/");
 
                     listener = new WebListener(settings);
                     listener.Start();

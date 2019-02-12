@@ -121,16 +121,16 @@ namespace TestKube
 
             public ProxyTestFixture()
             {
-                server = new MockHttpServer($"http://{remoteEndpoint}/", OnRequestAsync);
+                server = new MockHttpServer($"http://localhost:{remotePort}/", OnRequestAsync);
                 client = new HttpClient()
                 {
-                    BaseAddress = new Uri($"http://{localEndpoint}/"),
+                    BaseAddress = new Uri($"http://localhost:{localPort}/"),
                     Timeout     = TimeSpan.FromSeconds(2)
                 };
 
                 // Start the proxy.
 
-                proxy = new ReverseProxy(localEndpoint, remoteEndpoint);
+                proxy = new ReverseProxy(localPort, remotePort);
             }
 
             public void Dispose()
@@ -284,8 +284,8 @@ namespace TestKube
         // Select endpoints that are unlikely to be already in use and
         // run the proxy command asynchronously.
 
-        private static IPEndPoint localEndpoint  = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 61422);
-        private static IPEndPoint remoteEndpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 61423);
+        private static int localPort  = 61422;
+        private static int remotePort = 61423;
 
         //---------------------------------------------------------------------
         // Instance members

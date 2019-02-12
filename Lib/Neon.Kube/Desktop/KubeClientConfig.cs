@@ -78,24 +78,34 @@ namespace Neon.Kube
         public int StatusPollSeconds { get; set; } = 1;
 
         /// <summary>
-        /// The local network endpoint where the neonKUBE desktop application exposes
+        /// The local network port where the neonKUBE desktop application exposes
         /// the desktop service providing integration for the <b>neon-cli</b>
-        /// command line tool.  This defaults to <see cref="KubeConst.DesktopServiceEndpoint"/>.
+        /// command line tool.  This defaults to <see cref="KubeConst.DesktopServicePort"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "DesktopServiceEndpoint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "DesktopServiceEndpoint", ApplyNamingConventions = false)]
-        [DefaultValue(KubeConst.DesktopServiceEndpoint)]
-        public string DesktopServiceEndpoint { get; set; } = KubeConst.DesktopServiceEndpoint;
+        [JsonProperty(PropertyName = "DesktopServicePort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "DesktopServicePort", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.DesktopServicePort)]
+        public int DesktopServicePort { get; set; } = KubeConst.DesktopServicePort;
 
         /// <summary>
-        /// The local network endpoint used for proxying requests to
-        /// the Kubernetes dashboard for the current cluster.  This 
-        /// defaults to <see cref="KubeConst.KubeDashboardProxyEndpoint"/>.
+        /// The local network port where <b>kubectl proxy</b> will listen
+        /// and forward traffic to the Kubernetes API server.  This 
+        /// defaults to <see cref="KubeConst.KubectlProxyPort"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "KubeDashboardEndpoint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeDashboardEndpoint", ApplyNamingConventions = false)]
-        [DefaultValue(KubeConst.KubeDashboardProxyEndpoint)]
-        public string KubeDashboardEndpoint { get; set; } = KubeConst.KubeDashboardProxyEndpoint;
+        [JsonProperty(PropertyName = "KubectlProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "KubectlProxyPort", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.KubectlProxyPort)]
+        public int KubectlProxyPort { get; set; } = KubeConst.KubectlProxyPort;
+
+        /// <summary>
+        /// The local network port used for proxying requests to
+        /// the Kubernetes dashboard for the current cluster.  This 
+        /// defaults to <see cref="KubeConst.KubeDashboardProxyPort"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "KubeDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "KubeDashboardProxyPort", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.KubeDashboardProxyPort)]
+        public int KubeDashboardProxyPort { get; set; } = KubeConst.KubeDashboardProxyPort;
 
         /// <summary>
         /// Ensures that the state is valid.
@@ -109,25 +119,26 @@ namespace Neon.Kube
                 InstallationId = Guid.NewGuid().ToString("D").ToLowerInvariant();
             }
 
-            // Ensure that the desktop API endpoint is valid.
-
-            DesktopServiceEndpoint = DesktopServiceEndpoint ?? KubeConst.DesktopServiceEndpoint;
-
             if (StatusPollSeconds <= 0)
             {
                 StatusPollSeconds = 10;
             }
 
-            IPEndPoint endpoint;
+            // Ensure that the proxy ports are valid.
 
-            if (NetHelper.TryParseIPv4Endpoint(DesktopServiceEndpoint, out endpoint))
+            if (!NetHelper.IsValidPort(DesktopServicePort))
             {
-                DesktopServiceEndpoint = KubeConst.DesktopServiceEndpoint;
+                DesktopServicePort = KubeConst.DesktopServicePort;
             }
 
-            if (NetHelper.TryParseIPv4Endpoint(KubeDashboardEndpoint, out endpoint))
+            if (!NetHelper.IsValidPort(KubectlProxyPort))
             {
-                KubeDashboardEndpoint = KubeConst.KubeDashboardProxyEndpoint;
+                KubectlProxyPort = KubeConst.KubectlProxyPort;
+            }
+
+            if (!NetHelper.IsValidPort(KubeDashboardProxyPort))
+            {
+                KubeDashboardProxyPort = KubeConst.KubeDashboardProxyPort;
             }
         }
     }

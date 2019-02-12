@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -30,6 +31,7 @@ using System.Threading.Tasks;
 using Microsoft.Net.Http.Server;
 
 using Neon.Common;
+using Neon.Net;
 
 namespace Neon.Kube
 {
@@ -62,49 +64,78 @@ namespace Neon.Kube
         private const int BufferSize = 16 * 1024;
 
         private object                  syncLock = new object();
-        private IPEndPoint              localEndpoint;
-        private IPEndPoint              remoteEndpoint;
+        private int                     localPort;
+        private int                     remotePort;
         private Action<RequestContext>  requestHandler;
         private Action<RequestContext>  responseHandler;
         private WebListener             listener;
         private HttpClient              client;
         private Queue<byte[]>           bufferPool;
 
+        // I was unable to get [ReverseProxy] request forwarding to the
+        // Kubernetes dashboard to work.  I believe it's a problem with
+        // the self-signed certificate generated for the dashboard.  The
+        // HTTP handler's certificate validation function is never called
+        // either.
+        //
+        // I'm going to work around this by launching [kubectl proxy]
+        // to manage the dashboard proxy, setting this to the process,
+        // and then configuring the reverse proxy so that it forwards
+        // requests to [kubectl proxy] which then forwards them on to
+        // the dashboard service in the cluster.
+        //
+        // We still need the reverse proxy so we can inject a token
+        // via an authentication header.
+
+        private Process kubectlProxyProcess;
+
         /// <summary>
         /// Constructs a reverse proxy.
         /// </summary>
-        /// <param name="localEndpoint">The local endpoint.</param>
-        /// <param name="remoteEndpoint">The remote endpoint.</param>
+        /// <param name="localPort">The local port.</param>
+        /// <param name="remotePort">The remote port.</param>
         /// <param name="remoteTls">Optionally indicates that the remote endpoint required TLS.</param>
         /// <param name="requestHandler">Optional request hook.</param>
         /// <param name="responseHandler">Optional response hook.</param>
+        /// <param name="kubectlProxy">
+        /// Optionally specifies that a <b>kubectl proxy</b> instance should
+        /// be started at <see cref="localPort"/> and that this reverse 
+        /// proxy should route through that proxy process.
+        /// </param>
         public ReverseProxy(
-            IPEndPoint              localEndpoint,
-            IPEndPoint              remoteEndpoint,
+            int                     localPort,
+            int                     remotePort,
             bool                    remoteTls       = false,
             Action<RequestContext>  requestHandler  = null, 
-            Action<RequestContext>  responseHandler = null)
+            Action<RequestContext>  responseHandler = null,
+            bool                    kubectlProxy    = false)
         {
-            Covenant.Requires<ArgumentNullException>(localEndpoint != null);
-            Covenant.Requires<ArgumentNullException>(remoteEndpoint != null);
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
 
             if (!NeonHelper.IsWindows)
             {
                 throw new NotSupportedException($"[{nameof(ReverseProxy)}] is only supported on Windows.");
             }
 
-            this.localEndpoint   = localEndpoint;
-            this.remoteEndpoint  = remoteEndpoint;
+            this.localPort       = localPort;
+            this.remotePort      = remotePort;
             this.requestHandler  = requestHandler;
             this.responseHandler = responseHandler;
+
+            // Launch [kubectl proxy] if requested.
+
+            if (kubectlProxy)
+            {
+                kubectlProxyProcess = NeonHelper.Fork("kubectl", "proxy", $"--port={remotePort}");
+            }
 
             // Create the client.
 
             var remoteScheme = remoteTls ? "https" : "http";
-            var httpHandler =
+            var httpHandler  =
                 new HttpClientHandler()
                 {
-                    SslProtocols            = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12,
                     MaxConnectionsPerServer = 100
                 };
 
@@ -122,7 +153,7 @@ namespace Neon.Kube
 
             client = new HttpClient(httpHandler, disposeHandler: true)
             {
-                 BaseAddress = new Uri($"{remoteScheme}://{remoteEndpoint}/")
+                 BaseAddress = new Uri($"{remoteScheme}://localhost:{remotePort}/")
             };
 
             // Initialize the buffer pool.  We're going to use this to reduce
@@ -134,7 +165,7 @@ namespace Neon.Kube
 
             var settings = new WebListenerSettings();
 
-            settings.UrlPrefixes.Add($"http://{localEndpoint}/");
+            settings.UrlPrefixes.Add($"http://localhost:{localPort}/");
 
             this.listener = new WebListener(settings);
             this.listener.Start();
@@ -159,6 +190,12 @@ namespace Neon.Kube
                 {
                     listener.Dispose();
                     listener = null;
+                }
+
+                if (kubectlProxyProcess != null)
+                {
+                    kubectlProxyProcess.Kill();
+                    kubectlProxyProcess = null;
                 }
             }
         }
@@ -209,7 +246,7 @@ namespace Neon.Kube
                     var newContext = await listener.AcceptAsync();
 
                     // Process the request in its own task.
-
+                    
                     var task = Task.Factory.StartNew(
                         async (object arg) =>
                         {
@@ -225,19 +262,22 @@ namespace Neon.Kube
 
                                     requestHandler?.Invoke(context);
 
-                                    // Copy the headers, body, and other state from the received request to the client request. 
+                                    // Copy the headers, body, and other state from the received request to the remote request. 
 
                                     var remoteRequest = new HttpRequestMessage(new HttpMethod(request.Method), request.Path);
+
+                                    remoteRequest.Version = request.ProtocolVersion;
 
                                     foreach (var header in request.Headers)
                                     {
                                         switch (header.Key.ToLowerInvariant())
                                         {
-                                            case "host":
-                                            case "content-length":
-                                            case "transfer-encoding":
+                                            // Don't copy these headers to the remote request.
 
-                                                // Don't copy these headers to the remote request.
+                                            case "connection":
+                                            case "content-length":
+                                            case "host":
+                                            case "transfer-encoding":
 
                                                 break;
 
@@ -256,39 +296,27 @@ namespace Neon.Kube
                                         remoteRequest.Content = new StreamContent(request.Body);
                                     }
 
-                                    // Forward the request.
+                                    // Forward the request to the remote endpoint.
 
                                     var remoteResponse = await client.SendAsync(remoteRequest, HttpCompletionOption.ResponseHeadersRead);
 
                                     // Copy the remote response headers, body, and other state to the client response.
+                                    //
+                                    // Don't copy the "Server" header because the [WebListener] adds its own server
+                                    // header and we'd end up with multiple values.
 
                                     response.StatusCode   = (int)remoteResponse.StatusCode;
                                     response.ReasonPhrase = remoteResponse.ReasonPhrase;
-
-                                    foreach (var header in remoteResponse.Headers)
+                                    
+                                    foreach (var header in remoteResponse.Headers
+                                        .Where(h => !h.Key.Equals("Server", StringComparison.InvariantCultureIgnoreCase)))
                                     {
-                                        switch (header.Key.ToLowerInvariant())
-                                        {
-                                            case "content-length":
-                                            case "transfer-encoding":
+                                        response.Headers.Add(header.Key, header.Value.ToArray());
+                                    }
 
-                                                // Don't copy these headers from the remote response because they
-                                                // will prevent any content from being returned to the client.
-
-                                                break;
-
-                                            case "server":
-
-                                                // Don't copy this one header because it will append the value
-                                                // to the default server name resulting in multiple values.
-
-                                                break;
-
-                                            default:
-
-                                                response.Headers.Add(header.Key, header.Value.ToArray());
-                                                break;
-                                        }
+                                    foreach (var header in remoteResponse.Content.Headers)
+                                    {
+                                        response.Headers.Add(header.Key, header.Value.ToArray());
                                     }
 
                                     // Use a buffer from the pool write the data returned from the
@@ -317,8 +345,6 @@ namespace Neon.Kube
                                             ReleaseBuffer(buffer);
                                         }
                                     }
-
-                                    await remoteResponse.Content.CopyToAsync(response.Body);
 
                                     // Let the response handler have a look.
 

@@ -194,7 +194,7 @@ namespace Neon.Common
         /// <param name="path">Path to the executable file.</param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
         /// <returns>The <see cref="Process"/> information.</returns>
-        public static Process Fork(string path, object[] args)
+        public static Process Fork(string path, params object[] args)
         {
             var processInfo = new ProcessStartInfo(GetProgramPath(path), NormalizeExecArgs(args));
 

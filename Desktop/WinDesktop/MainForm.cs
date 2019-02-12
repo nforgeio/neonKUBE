@@ -56,17 +56,17 @@ namespace WinDesktop
         private const double animationFrameRate = 2;
         private const string headendError = "Unable to contact the neonKUBE headend service.";
 
-        private Icon appIcon;
-        private Icon disconnectedIcon;
-        private Icon connectedIcon;
-        private AnimatedIcon connectingAnimation;
-        private AnimatedIcon workingAnimation;
-        private int animationNesting;
-        private ContextMenu contextMenu;
-        private bool operationInProgress;
-        private RemoteOperation remoteOperation;
-        private List<ReverseProxy> proxies = new List<ReverseProxy>();
-        private KubeConfigContext proxiedContext;
+        private Icon                appIcon;
+        private Icon                disconnectedIcon;
+        private Icon                connectedIcon;
+        private AnimatedIcon        connectingAnimation;
+        private AnimatedIcon        workingAnimation;
+        private int                 animationNesting;
+        private ContextMenu         contextMenu;
+        private bool                operationInProgress;
+        private RemoteOperation     remoteOperation;
+        private List<ReverseProxy>  proxies;
+        private KubeConfigContext   proxiedContext;
 
         /// <summary>
         /// Constructor.
@@ -77,16 +77,16 @@ namespace WinDesktop
 
             InitializeComponent();
 
-            Load += MainForm_Load;
+            Load  += MainForm_Load;
             Shown += (s, a) => Visible = false; // The main form should always be hidden
 
             // Preload the notification icons and animations for better performance.
 
-            appIcon = new Icon(@"Images\app.ico");
-            connectedIcon = new Icon(@"Images\connected.ico");
-            disconnectedIcon = new Icon(@"Images\disconnected.ico");
+            appIcon             = new Icon(@"Images\app.ico");
+            connectedIcon       = new Icon(@"Images\connected.ico");
+            disconnectedIcon    = new Icon(@"Images\disconnected.ico");
             connectingAnimation = AnimatedIcon.Load("Images", "connecting", animationFrameRate);
-            workingAnimation = AnimatedIcon.Load("Images", "working", animationFrameRate);
+            workingAnimation    = AnimatedIcon.Load("Images", "working", animationFrameRate);
 
             // Initialize the cluster hosting provider components.
 
@@ -94,6 +94,7 @@ namespace WinDesktop
 
             // Initialize the client state.
 
+            proxies = new List<ReverseProxy>();
             Headend = new HeadendClient();
             KubeHelper.LoadClientConfig();
         }
@@ -119,17 +120,17 @@ namespace WinDesktop
             // this because the form should remain hidden but we'll put something
             // here just in case.
 
-            productNameLabel.Text = $"{Build.ProductName}  v{Build.ProductVersion}";
-            copyrightLabel.Text = Build.Copyright;
-            licenseLinkLabel.Text = Build.ProductLicense;
+            productNameLabel.Text  = $"{Build.ProductName}  v{Build.ProductVersion}";
+            copyrightLabel.Text    = Build.Copyright;
+            licenseLinkLabel.Text  = Build.ProductLicense;
 
             // Initialize the notify icon and its context memu.
 
-            notifyIcon.Text = Build.ProductName;
-            notifyIcon.Icon = disconnectedIcon;
+            notifyIcon.Text        = Build.ProductName;
+            notifyIcon.Icon        = disconnectedIcon;
             notifyIcon.ContextMenu = contextMenu = new ContextMenu();
-            notifyIcon.Visible = true;
-            contextMenu.Popup += Menu_Popup;
+            notifyIcon.Visible     = true;
+            contextMenu.Popup     += Menu_Popup;
 
             // Set the initial notify icon state and setup a timer
             // to periodically keep the UI in sync with any changes.
@@ -137,7 +138,7 @@ namespace WinDesktop
             UpdateUIState();
 
             statusTimer.Interval = (int)TimeSpan.FromSeconds(KubeHelper.ClientConfig.StatusPollSeconds).TotalMilliseconds;
-            statusTimer.Tick += (s, a) => UpdateUIState();
+            statusTimer.Tick    += (s, a) => UpdateUIState();
             statusTimer.Start();
 
             // Start the desktop API service that [neon-cli] will use
@@ -371,20 +372,20 @@ namespace WinDesktop
 
                 StopProxies();
 
-                // The Kubernetes dashboard reverse proxy:
-
-                var localKubeDashboardEndpoint  = NetHelper.ParseIPv4Endpoint(KubeHelper.ClientConfig.KubeDashboardEndpoint);
-                var remoteKubeDashboardEndpoint = new IPEndPoint(cluster.GetReachableMaster().PrivateAddress, KubeHostPorts.KubeDashboard);
+                // The Kubernetes dashboard reverse proxy.  Note that we're going
+                // to proxy this via [kubectl proxy] because we couldn't get a
+                // direct [ReverseProxy] connection to the Kubernetes API server 
+                // to work.
 
                 var kubeDashboardProxy = 
                     new ReverseProxy(
-                        localEndpoint: localKubeDashboardEndpoint,
-                        remoteEndpoint: remoteKubeDashboardEndpoint,
-                        remoteTls: true);
+                        localPort:      KubeHelper.ClientConfig.KubeDashboardProxyPort,
+                        remotePort:     KubeHelper.ClientConfig.KubectlProxyPort,
+                        kubectlProxy:   true);
 
                 proxies.Add(kubeDashboardProxy);
 
-                // Remember which context we're proxying.
+                // Remember which cluster context we're proxying.
 
                 proxiedContext = KubeHelper.CurrentContext;
             }
@@ -786,11 +787,12 @@ namespace WinDesktop
             var menuItem    = (MenuItem)sender;
             var contextName = menuItem.Text;
 
-            StartOperation(connectingAnimation, $"Logging into: {contextName}");
+            StartOperation(connectingAnimation);
 
             try
             {
                 KubeHelper.SetCurrentContext(contextName);
+                ShowToast($"Logged into: {contextName}");
             }
             catch
             {
@@ -824,7 +826,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnKubernetesDashboardCommand(object sender, EventArgs args)
         {
-            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            NeonHelper.OpenBrowser($"http://localhost:{KubeHelper.ClientConfig.KubeDashboardProxyPort}/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/");
         }
 
         /// <summary>
