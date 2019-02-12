@@ -78,7 +78,7 @@ namespace Neon.Kube
             // Explicitly specify the TLS protocol versions we're going to support
             // to all known protocols (as of 02-2019).
 
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
         }
 
         //---------------------------------------------------------------------
