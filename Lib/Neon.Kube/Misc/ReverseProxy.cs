@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -135,6 +136,7 @@ namespace Neon.Kube
         /// <param name="remotePort">The remote port.</param>
         /// <param name="remoteHost">Optionally specifies the remote hostname or IP address.</param>
         /// <param name="remoteTls">Optionally indicates that the remote endpoint required TLS.</param>
+        /// <param name="certificate">Optionally specifies a client certificate.  Passing on implies <paramref name="remoteTls"/><c>=true</c>.</param>
         /// <param name="requestHandler">Optional request hook.</param>
         /// <param name="responseHandler">Optional response hook.</param>
         public ReverseProxy(
@@ -142,11 +144,17 @@ namespace Neon.Kube
             int                     remotePort,
             string                  remoteHost      = "localhost",
             bool                    remoteTls       = false,
+            X509Certificate2        certificate     = null,
             Action<RequestContext>  requestHandler  = null, 
             Action<RequestContext>  responseHandler = null)
         {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
+
+            if (certificate != null)
+            {
+                remoteTls = true;
+            }
 
             if (!NeonHelper.IsWindows)
             {
@@ -167,8 +175,14 @@ namespace Neon.Kube
                     MaxConnectionsPerServer = 100
                 };
 
+            if (certificate != null)
+            {
+                httpHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
+                httpHandler.ClientCertificates.Add(certificate);
+            }
+            
             httpHandler.ServerCertificateCustomValidationCallback =
-                (request, certificate, chain, policyErrors) =>
+                (request, serverCertificate, chain, policyErrors) =>
                 {
                     // $todo(jeff.lill): IMPORTANT!
                     //
@@ -184,8 +198,9 @@ namespace Neon.Kube
                  BaseAddress = new Uri($"{remoteScheme}://{remoteHost}:{remotePort}/")
             };
 
-            // Initialize the buffer pool.  We're going to use this to reduce
-            // pressure on the garbarge collector.
+            // Initialize the buffer pool.  We're going to use this to share
+            // bufferes across requests to reduce pressure on the garbage 
+            // collector.
 
             bufferPool = new Queue<byte[]>();
 

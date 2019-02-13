@@ -81,6 +81,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Images", "Images\Images.csproj", "{78A69CC0-1CA5-4D1A-889F-765212271A9A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}"
+	ProjectSection(SolutionItems) = preProject
+		External\innosetup-qsp-5.6.1-unicode.exe = External\innosetup-qsp-5.6.1-unicode.exe
+		External\SHFBInstaller_v2015.1.12.0.zip = External\SHFBInstaller_v2015.1.12.0.zip
+		External\XenCenterSetup.msi = External\XenCenterSetup.msi
+		External\zenburn-ligh-putty.reg = External\zenburn-ligh-putty.reg
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "User", "User", "{DB3EE5E6-94C8-4298-AABB-FB46E820C00F}"
 EndProject

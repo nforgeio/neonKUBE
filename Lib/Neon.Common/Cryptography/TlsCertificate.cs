@@ -143,6 +143,46 @@ namespace Neon.Cryptography
         }
 
         /// <summary>
+        /// Constructs an instance by parsing the certificate and private key PEM encoded
+        /// parts passed.
+        /// </summary>
+        /// <param name="certPem">The certificate PEM text.</param>
+        /// <param name="keyPem">The private key PEM text.</param>
+        /// <remarks>
+        /// <note>
+        /// The parts passed must include the <b>-----BEGIN CERTIFICATE-----</b>
+        /// and <b>-----BEGIN PRIVATE KEY-----</b> related headers and footers.
+        /// </note>
+        /// </remarks>
+        public static TlsCertificate FromPemParts(string certPem, string keyPem)
+        {
+            return new TlsCertificate(certPem, keyPem);
+        }
+
+        /// <summary>
+        /// Constructs an instance by parsing the certificate and private key PEM
+        /// base-64 encoded component strings.
+        /// </summary>
+        /// <param name="certPem">The certificate PEM base-64 text.</param>
+        /// <param name="keyPem">The private key PEM base-64 text.</param>
+        public static TlsCertificate FromPemBase64(string certPem, string keyPem)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(certPem));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPem));
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine("-----BEGIN CERTIFICATE-----");
+            sb.AppendLine(certPem);
+            sb.AppendLine("-----END CERTIFICATE-----");
+            sb.AppendLine("-----BEGIN PRIVATE KEY-----");
+            sb.AppendLine(keyPem);
+            sb.AppendLine("-----END PRIVATE KEY-----");
+
+            return Parse(sb.ToString());
+        }
+
+        /// <summary>
         /// Normalizes PEM encoded text to have Linux style (LF) line endings.
         /// </summary>
         /// <param name="input">The input text.</param>
@@ -153,7 +193,7 @@ namespace Neon.Cryptography
 
             // Strip out any blank lines (some services like Namecheap.com will
             // generate certificates with blank lines between the certificates
-            // in the CA bunbdle.
+            // in the CA bunbdle).
 
             var sb = new StringBuilder();
 
@@ -214,12 +254,12 @@ namespace Neon.Cryptography
         /// <param name="issuedTo">Optionally specifies who/what the certificate is issued for.</param>
         /// <returns>The new <see cref="TlsCertificate"/>.</returns>
         public static TlsCertificate CreateSelfSigned(
-            string hostname, 
-            int bitCount = 2048, 
-            int validDays = 365000, 
-            Wildcard wildcard = Wildcard.None, 
-            string issuedBy = null,
-            string issuedTo = null)
+            string      hostname, 
+            int         bitCount  = 2048, 
+            int         validDays = 365000, 
+            Wildcard    wildcard  = Wildcard.None, 
+            string      issuedBy  = null,
+            string      issuedTo  = null)
         {
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname));
             Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096);
@@ -363,10 +403,10 @@ subjectAltName         = @alt_names
         /// <returns>The new <see cref="TlsCertificate"/>.</returns>
         public static TlsCertificate CreateSelfSigned(
             IEnumerable<string> hostnames, 
-            int bitCount = 2048, 
-            int validDays = 365000, 
-            string issuedBy = null,
-            string issuedTo = null)
+            int         bitCount  = 2048, 
+            int         validDays = 365000, 
+            string      issuedBy  = null,
+            string      issuedTo  = null)
         {
             Covenant.Requires<ArgumentNullException>(hostnames != null && hostnames.Count() > 0);
             Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096);

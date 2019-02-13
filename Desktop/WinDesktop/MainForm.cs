@@ -25,12 +25,14 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using Neon;
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Kube;
 using Neon.Net;
 
@@ -377,12 +379,18 @@ namespace WinDesktop
                 // direct [ReverseProxy] connection to the Kubernetes API server 
                 // to work.
 
+                var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
+                var certPem     = userContext.Properties.ClientCertificateData;
+                var keyPem      = userContext.Properties.ClientKeyData;
+                var tlsCert     = TlsCertificate.FromPemBase64(certPem, keyPem);
+                var clientCert  = tlsCert.ToX509Certificate2();
+
                 var kubeDashboardProxy = 
                     new ReverseProxy(
-                        localPort:  KubeHelper.ClientConfig.KubeDashboardProxyPort,
-                        remotePort: KubeHostPorts.KubeDashboard,
-                        remoteHost: cluster.GetReachableMaster().PrivateAddress.ToString(),
-                        remoteTls:  true);
+                        localPort:   KubeHelper.ClientConfig.KubeDashboardProxyPort,
+                        remotePort:  KubeHostPorts.KubeDashboard,
+                        remoteHost:  cluster.GetReachableMaster().PrivateAddress.ToString(),
+                        certificate: clientCert);
 
                 proxies.Add(kubeDashboardProxy);
 
@@ -827,7 +835,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnKubernetesDashboardCommand(object sender, EventArgs args)
         {
-            NeonHelper.OpenBrowser($"http://localhost:{KubeHelper.ClientConfig.KubeDashboardProxyPort}/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/");
+            NeonHelper.OpenBrowser($"http://localhost:{KubeHelper.ClientConfig.KubeDashboardProxyPort}/");
         }
 
         /// <summary>
