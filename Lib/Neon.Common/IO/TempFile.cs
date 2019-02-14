@@ -44,7 +44,7 @@ namespace Neon.IO
         /// Constructor.
         /// </summary>
         /// <param name="suffix">
-        /// Optioonally specifies the file suffix (including the leading period) to be
+        /// Optionally specifies the file suffix (including the leading period) to be
         /// appended to the generated file name.  This defaults to <b>.tmp</b>.
         /// </param>
         /// <param name="folder">

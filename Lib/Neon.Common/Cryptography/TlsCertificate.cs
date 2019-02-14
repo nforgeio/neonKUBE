@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -147,39 +148,16 @@ namespace Neon.Cryptography
         /// parts passed.
         /// </summary>
         /// <param name="certPem">The certificate PEM text.</param>
-        /// <param name="keyPem">The private key PEM text.</param>
+        /// <param name="keyPem">The optional private key PEM text.</param>
         /// <remarks>
         /// <note>
         /// The parts passed must include the <b>-----BEGIN CERTIFICATE-----</b>
         /// and <b>-----BEGIN PRIVATE KEY-----</b> related headers and footers.
         /// </note>
         /// </remarks>
-        public static TlsCertificate FromPemParts(string certPem, string keyPem)
+        public static TlsCertificate FromPem(string certPem, string keyPem = null)
         {
             return new TlsCertificate(certPem, keyPem);
-        }
-
-        /// <summary>
-        /// Constructs an instance by parsing the certificate and private key PEM
-        /// base-64 encoded component strings.
-        /// </summary>
-        /// <param name="certPem">The certificate PEM base-64 text.</param>
-        /// <param name="keyPem">The private key PEM base-64 text.</param>
-        public static TlsCertificate FromPemBase64(string certPem, string keyPem)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(certPem));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPem));
-
-            var sb = new StringBuilder();
-
-            sb.AppendLine("-----BEGIN CERTIFICATE-----");
-            sb.AppendLine(certPem);
-            sb.AppendLine("-----END CERTIFICATE-----");
-            sb.AppendLine("-----BEGIN PRIVATE KEY-----");
-            sb.AppendLine(keyPem);
-            sb.AppendLine("-----END PRIVATE KEY-----");
-
-            return Parse(sb.ToString());
         }
 
         /// <summary>
@@ -193,7 +171,7 @@ namespace Neon.Cryptography
 
             // Strip out any blank lines (some services like Namecheap.com will
             // generate certificates with blank lines between the certificates
-            // in the CA bunbdle).
+            // in the CA bundle).
 
             var sb = new StringBuilder();
 
@@ -509,7 +487,7 @@ subjectAltName         = @alt_names
         }
 
         /// <summary>
-        /// Verifies a certificate file.
+        /// Validates a certificate file.
         /// </summary>
         /// <param name="path">Path to the certificate.</param>
         /// <exception cref="ArgumentException">Thrown if the certificate is not valid.</exception>
@@ -619,10 +597,10 @@ subjectAltName         = @alt_names
 
             if (keyPos == -1)
             {
-                throw new ArgumentException($"[{nameof(pemCombined)}] does not include a private key.");
+                keyPos = pemCombined.IndexOf("-----BEGIN RSA PRIVATE KEY-----");
             }
 
-            if (keyPos < certPos)
+            if (keyPos != -1 && keyPos < certPos)
             {
                 throw new ArgumentException($"[{nameof(pemCombined)}] is improperly formatted: The private key must be after the certificate.");
             }
@@ -632,8 +610,15 @@ subjectAltName         = @alt_names
                 throw new ArgumentException($"[{nameof(pemCombined)}] is improperly formatted: There is extra text before the certificate.");
             }
 
-            CertPem = NormalizePem(pemCombined.Substring(0, keyPos));
-            KeyPem  = NormalizePem(pemCombined.Substring(keyPos));
+            if (keyPos != -1)
+            {
+                CertPem = NormalizePem(pemCombined.Substring(0, keyPos));
+                KeyPem  = NormalizePem(pemCombined.Substring(keyPos));
+            }
+            else
+            {
+                CertPem = pemCombined;
+            }
         }
 
         /// <summary>
@@ -641,24 +626,29 @@ subjectAltName         = @alt_names
         /// text passed.
         /// </summary>
         /// <param name="certPem">The certificate PEM text.</param>
-        /// <param name="keyPem">The private key PEM text.</param>
-        public TlsCertificate(string certPem, string keyPem)
+        /// <param name="keyPem">The optional private key PEM text.</param>
+        public TlsCertificate(string certPem, string keyPem = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(certPem));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPem));
 
             if (!certPem.StartsWith("-----BEGIN CERTIFICATE-----"))
             {
                 throw new ArgumentException($"[{nameof(certPem)}] is improperly formatted.");
             }
 
-            if (!keyPem.StartsWith("-----BEGIN PRIVATE KEY-----"))
+            if (keyPem != null &&
+                !keyPem.StartsWith("-----BEGIN PRIVATE KEY-----") && 
+                !keyPem.StartsWith("-----BEGIN RSA PRIVATE KEY-----"))
             {
                 throw new ArgumentException($"[{nameof(keyPem)}] is improperly formatted.");
             }
 
             CertPem = NormalizePem(certPem);
-            KeyPem  = NormalizePem(keyPem);
+
+            if (keyPem != null)
+            {
+                KeyPem = NormalizePem(keyPem);
+            }
         }
 
         /// <summary>
@@ -689,14 +679,16 @@ subjectAltName         = @alt_names
         }
 
         /// <summary>
-        /// The private key as PEM encoded text.
+        /// The private key as PEM encoded text or <c>null</c> if the private key
+        /// is not present.
         /// </summary>
         [JsonProperty(PropertyName = "KeyPem", Required = Required.Always | Required.DisallowNull)]
         [YamlMember(Alias = "KeyPem", ApplyNamingConventions = false)]
         public string KeyPem { get; set; }
 
         /// <summary>
-        /// The private key as PEM encoded text normalized with Linux-style line endings.
+        /// The private key as PEM encoded text normalized with Linux-style line endings
+        /// or <c>null</c> if the private key is not present.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -722,7 +714,7 @@ subjectAltName         = @alt_names
         [YamlIgnore]
         public string CombinedPem
         {
-            get { return CertPem + KeyPem; }
+            get { return CertPem + KeyPem ?? string.Empty; }
         }
 
         /// <summary>
@@ -742,7 +734,7 @@ subjectAltName         = @alt_names
                 }
                 else
                 {
-                    return NormalizePem(CertPem + KeyPem);
+                    return NormalizePem(CertPem + KeyPem ?? string.Empty);
                 }
             }
         }
@@ -1258,6 +1250,8 @@ subjectAltName         = @alt_names
             }
         }
 
+
+
         /// <summary>
         /// <para>
         /// Converts the <see cref="TlsCertificate"/> into a <see cref="X509Certificate2"/>.
@@ -1268,37 +1262,24 @@ subjectAltName         = @alt_names
         /// </note>
         /// </summary>
         /// <returns>The new <see cref="X509Certificate2"/>.</returns>
-        public X509Certificate2 ToX509Certificate2()
+        public X509Certificate2 ToX509Certificate()
         {
             Covenant.Assert(!string.IsNullOrEmpty(CertPem));
 
-            // We're going to extract the base-64 encoded certificate lines into a single
-            // long line of text, decode that into raw bytes and then use that to construct
-            // the X509Certificate2.
-
-            var sb = new StringBuilder();
-
-            using (var reader = new StringReader(CertPem))
+            using (var tempFile = new TempFile(".pem"))
             {
-                foreach (var l in reader.Lines())
+                // Write the certificate PEM to a temporary file and then
+                // construct a certificate from that file.
+
+                File.WriteAllText(tempFile.Path, CertPem);
+
+                var x509Cert = new X509Certificate2(tempFile.Path, (string)null)
                 {
-                    var line = l.Trim();
+                    FriendlyName = this.FriendlyName
+                };
 
-                    if (line.Length == 0 || line.StartsWith("-----BEGIN ") || line.StartsWith("-----END "))
-                    {
-                        continue;
-                    }
-
-                    sb.Append(line);
-                }
+                return x509Cert;
             }
-
-            var bytes    = Convert.FromBase64String(sb.ToString());
-            var x509Cert = new X509Certificate2(bytes, (string)null, X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-
-            x509Cert.FriendlyName = this.FriendlyName;
-
-            return x509Cert;
         }
     }
 }

@@ -379,11 +379,13 @@ namespace WinDesktop
                 // direct [ReverseProxy] connection to the Kubernetes API server 
                 // to work.
 
+                var cert = KubeHelper.ClusterCertificate;
+
                 var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
-                var certPem     = userContext.Properties.ClientCertificateData;
-                var keyPem      = userContext.Properties.ClientKeyData;
-                var tlsCert     = TlsCertificate.FromPemBase64(certPem, keyPem);
-                var clientCert  = tlsCert.ToX509Certificate2();
+                var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
+                var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
+                var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
+                var clientCert  = tlsCert.ToX509Certificate();
 
                 var kubeDashboardProxy = 
                     new ReverseProxy(

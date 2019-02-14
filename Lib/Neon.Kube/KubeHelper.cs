@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -42,6 +43,7 @@ using Neon.Diagnostics;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Windows;
+using Neon.Cryptography;
 
 namespace Neon.Kube
 {
@@ -65,6 +67,8 @@ namespace Neon.Kube
         private static string               cachedCacheFolder;
         private static string               cachedDesktopFolder;
         private static KubeClientConfig     cachedClientConfig;
+        private static X509Certificate2     cachedClusterCertificate;
+        private static X509Certificate2     cachedClientCertificate;
 
         /// <summary>
         /// Static constructor.
@@ -98,7 +102,9 @@ namespace Neon.Kube
             cachedPasswordsFolder    = null;
             cachedCacheFolder        = null;
             cachedDesktopFolder      = null;
-            cachedClientConfig        = null;
+            cachedClientConfig       = null;
+            cachedClusterCertificate = null;
+            cachedClientCertificate  = null;
         }
 
         /// <summary>
@@ -887,6 +893,9 @@ namespace Neon.Kube
                 Config.CurrentContext = (string)contextName;
             }
 
+            cachedClusterCertificate = null;
+            cachedClientCertificate  = null;
+
             Config.Save();
         }
 
@@ -929,6 +938,60 @@ namespace Neon.Kube
         /// if there's no current context.
         /// </summary>
         public static KubeContextName CurrentContextName => CurrentContext == null ? null : KubeContextName.Parse(CurrentContext.Name);
+
+        /// <summary>
+        /// Returns the Kuberneties API service certificate for the current
+        /// cluster context or <c>null</c> if we're not connected to a cluster.
+        /// </summary>
+        public static X509Certificate2 ClusterCertificate
+        {
+            get
+            {
+                if (cachedClusterCertificate != null)
+                {
+                    return cachedClusterCertificate;
+                }
+
+                if (CurrentContext == null)
+                {
+                    return null;
+                }
+
+                var cluster = KubeHelper.Config.GetCluster(KubeHelper.CurrentContext.Properties.Cluster);
+                var certPem = Encoding.UTF8.GetString(Convert.FromBase64String(cluster.Properties.CertificateAuthorityData));
+                var tlsCert = TlsCertificate.FromPem(certPem);
+
+                return cachedClusterCertificate = tlsCert.ToX509Certificate();
+            }
+        }
+
+        /// <summary>
+        /// Returns the Kuberneties API client certificate for the current
+        /// cluster context or <c>null</c> if we're not connected to a cluster.
+        /// </summary>
+        public static X509Certificate2 ClientCertificate
+        {
+            get
+            {
+                if (cachedClusterCertificate != null)
+                {
+                    return cachedClusterCertificate;
+                }
+
+                if (CurrentContext == null)
+                {
+                    return null;
+                }
+
+                var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
+                var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
+                var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
+                var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
+                var clientCert  = tlsCert.ToX509Certificate();
+
+                return null;
+            }
+        }
 
         /// <summary>
         /// Looks for a certificate with a friendly name.
