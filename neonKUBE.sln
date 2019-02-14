@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28606.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C4-490A-9519-4702DF7A4E15}"
 	ProjectSection(SolutionItems) = preProject
@@ -156,12 +156,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "nshell", "Tools\nshell\nshe
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{33866B5A-71FB-4430-9C0B-019B20644653}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinDeskop", "Desktop\WinDesktop\WinDeskop.csproj", "{3D9790F9-FF79-475E-AA03-C53A63313C6A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinDesktop", "Desktop\WinDesktop\WinDesktop.csproj", "{5D78856A-397E-432C-9B1F-61D27C5C4CBF}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
-		Lib\Neon.Global\Neon.Global.projitems*{3d9790f9-ff79-475e-aa03-c53a63313c6a}*SharedItemsImports = 4
 		Lib\Neon.Global\Neon.Global.projitems*{4c0bca49-f217-436c-877f-40a606989af4}*SharedItemsImports = 13
 		Lib\Neon.Global\Neon.Global.projitems*{756fb86b-29bc-4c6b-a19b-a624a9e9d367}*SharedItemsImports = 4
 		Lib\Neon.Couchbase.Lite.shared\Neon.Couchbase.Lite.shared.projitems*{8d7fe880-9006-488f-bab3-3a82011cd699}*SharedItemsImports = 13
@@ -545,18 +544,18 @@ Global
 		{6F8E1822-4037-47D3-8CF9-025B6CCF6A14}.Release|x64.Build.0 = Release|Any CPU
 		{6F8E1822-4037-47D3-8CF9-025B6CCF6A14}.Release|x86.ActiveCfg = Release|Any CPU
 		{6F8E1822-4037-47D3-8CF9-025B6CCF6A14}.Release|x86.Build.0 = Release|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Debug|x64.Build.0 = Debug|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Debug|x86.Build.0 = Debug|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Release|x64.ActiveCfg = Release|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Release|x64.Build.0 = Release|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Release|x86.ActiveCfg = Release|Any CPU
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A}.Release|x86.Build.0 = Release|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Debug|x64.Build.0 = Debug|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Debug|x86.Build.0 = Debug|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Release|x64.ActiveCfg = Release|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Release|x64.Build.0 = Release|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Release|x86.ActiveCfg = Release|Any CPU
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -599,7 +598,7 @@ Global
 		{BA132F50-1C79-4FF4-A596-16BBC7CD6BAC} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{3025BD0B-6150-4367-BD85-433519D24A9D} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{6F8E1822-4037-47D3-8CF9-025B6CCF6A14} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
-		{3D9790F9-FF79-475E-AA03-C53A63313C6A} = {33866B5A-71FB-4430-9C0B-019B20644653}
+		{5D78856A-397E-432C-9B1F-61D27C5C4CBF} = {33866B5A-71FB-4430-9C0B-019B20644653}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

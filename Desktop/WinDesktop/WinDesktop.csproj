@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="5.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.HyperV\Neon.HyperV.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperVLocal\Neon.Kube.HyperVLocal.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Machine\Neon.Kube.Machine.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.XenServer\Neon.XenServer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Images\about-logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Images\app.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Images\connected.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Images\connecting-0.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Images\connecting-1.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Images\disconnected.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Images\working-0.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Images\working-1.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
+
+</Project>
