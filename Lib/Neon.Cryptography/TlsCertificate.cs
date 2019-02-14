@@ -1291,14 +1291,34 @@ subjectAltName         = @alt_names
         }
 
         /// <summary>
-        /// Reads a RSA key from the <see cref="KeyPem"/>.
+        /// <para>
+        /// Extracts and decodes the base-64 encoded bytes within PEM text.
+        /// </para>
+        /// <note>
+        /// This work only if the PEM text includes only one <b>BEGIN...END</b>
+        /// section.
+        /// </note>
         /// </summary>
-        /// <returns>The RSA key (or <c>null</c>).</returns>
-        private RSA ParseRSAKeyPem()
+        /// <param name="pem">The PEM text.</param>
+        /// <returns>The extracted bytes.</returns>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="pem"/> includes more than one base-64 encoded section.</exception>
+        private byte[] ExtractPemBytes(string pem)
         {
-            if (string.IsNullOrEmpty(KeyPem))
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pem));
+
+            // Verify that we don't have multiple base-64 sections.
+
+            var pattern   = "-----BEGIN ";
+            var posBegin1 = pem.IndexOf(pattern);
+
+            if (posBegin1 != -1)
             {
-                return null;
+                var posBegin2 = pem.IndexOf(pattern, posBegin1 + pattern.Length);
+
+                if (posBegin2 != -1)
+                {
+                    throw new ArgumentException("Cannot extract bytes from PEM with more than one base-64 encoded section.");
+                }
             }
 
             // Strip the key marker lines and group all of the base-64 data
@@ -1319,7 +1339,21 @@ subjectAltName         = @alt_names
                 }
             }
 
-            var bytes = Convert.FromBase64String(sb.ToString());
+            return Convert.FromBase64String(sb.ToString());
+        }
+
+        /// <summary>
+        /// Reads a RSA key from the <see cref="KeyPem"/>.
+        /// </summary>
+        /// <returns>The RSA key (or <c>null</c>).</returns>
+        private RSA ParseRSAKeyPem()
+        {
+            if (string.IsNullOrEmpty(KeyPem))
+            {
+                return null;
+            }
+
+            var bytes = ExtractPemBytes(KeyPem);
 
             // $todo(jeff.lill):
             //
