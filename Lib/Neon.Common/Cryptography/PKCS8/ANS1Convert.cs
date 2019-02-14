@@ -29,13 +29,14 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
+#define INSIDE_CORLIB
+#pragma warning disable 1591
+
 using System;
 using System.Collections;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-
-#pragma warning disable 1591
 
 namespace Neon.Cryptography
 {

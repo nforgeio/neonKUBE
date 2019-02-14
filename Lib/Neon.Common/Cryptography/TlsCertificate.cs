@@ -1279,7 +1279,7 @@ subjectAltName         = @alt_names
 
                 if (!string.IsNullOrEmpty(KeyPem))
                 {
-                    x509Cert.PrivateKey = ParseRSAKeyPem();
+                    // x509Cert = x509Cert.CopyWithPrivateKey(ParseRSAKeyPem());
                 }
 
                 return x509Cert;
@@ -1290,7 +1290,7 @@ subjectAltName         = @alt_names
         /// Reads a RSA key from the <see cref="KeyPem"/>.
         /// </summary>
         /// <returns>The RSA key (or <c>null</c>).</returns>
-        private RSACryptoServiceProvider ParseRSAKeyPem()
+        private RSA ParseRSAKeyPem()
         {
             if (string.IsNullOrEmpty(KeyPem))
             {
@@ -1326,9 +1326,22 @@ subjectAltName         = @alt_names
             //
             //      https://tools.ietf.org/html/rfc5208
 
-            RSAParameters rsaParams;
+            try
+            {
+                if (PKCS8.GetType(bytes) != PKCS8.KeyInfo.PrivateKey)
+                {
+                    throw new CryptographicException("Expecting an unencrypted private RSA key.");
+                }
+            }
+            catch
+            {
+                throw new CryptographicException("Expecting private RSA key.");
+            }
 
-            return null;
+            var rsa       = PKCS8.PrivateKeyInfo.DecodeRSA(bytes);
+            var rsaParams = rsa.ExportParameters(true);
+
+            return rsa;
         }
     }
 }
