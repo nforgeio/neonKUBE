@@ -19,7 +19,7 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The ASP.NET Core image tag (e.g. "2.1")
+#   VERSION         - The ASP.NET Core image tag (e.g. "2.1-aspnetcore-runtime-alpine3.7")
 #
 # NOTE:
 #
@@ -29,7 +29,7 @@
 # rebuild the image to pick up the latest point release.
 
 ARG         VERSION
-FROM        microsoft/dotnet:${VERSION}-aspnetcore-runtime-alpine3.7
+FROM        microsoft/dotnet:${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
