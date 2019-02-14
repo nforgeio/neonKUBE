@@ -1270,40 +1270,65 @@ subjectAltName         = @alt_names
                 // construct a certificate from those file.
 
                 var certPath = Path.Combine(tempFolder.Path, "cert.pem");
-                var keyPath  = Path.Combine(tempFolder.Path, "key.pem");
 
                 File.WriteAllText(certPath, CertPem);
-                File.WriteAllText(keyPath, KeyPem);
 
                 var x509Cert = new X509Certificate2(certPath);
 
                 x509Cert.FriendlyName = this.FriendlyName;
-                x509Cert.PrivateKey   = ReadRSAKeyFromFile(keyPath);
+
+                if (!string.IsNullOrEmpty(KeyPem))
+                {
+                    x509Cert.PrivateKey = ParseRSAKeyPem();
+                }
 
                 return x509Cert;
             }
         }
 
         /// <summary>
-        /// Reads a RSA key from a file.
+        /// Reads a RSA key from the <see cref="KeyPem"/>.
         /// </summary>
-        /// <param name="path">The file path.</param>
-        /// <returns>The RSA key.</returns>
-        private RSACryptoServiceProvider ReadRSAKeyFromFile(string path)
+        /// <returns>The RSA key (or <c>null</c>).</returns>
+        private RSACryptoServiceProvider ParseRSAKeyPem()
         {
-            byte[] rawBytes;
-
-            using (var fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            if (string.IsNullOrEmpty(KeyPem))
             {
-                rawBytes = new byte[fs.Length];
-                fs.Read(rawBytes, 0, rawBytes.Length);
+                return null;
             }
 
-            var rsa = new RSACryptoServiceProvider();
+            // Strip the key marker lines and group all of the base-64 data
+            // into a single line so we can decode it.
 
-            rsa.ImportCspBlob(rawBytes);
+            var sb = new StringBuilder();
 
-            return rsa;
+            using (var reader = new StringReader(KeyPem))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (line.StartsWith("-----") || string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    sb.Append(line);
+                }
+            }
+
+            var bytes = Convert.FromBase64String(sb.ToString());
+
+            // $todo(jeff.lill):
+            //
+            // Hopefully we we'll be able to use the standard library once
+            // .NET Standard 2.1 is released.
+
+            // Parse the raw bytes.  This article describes what we're doing:
+            //
+            //      https://tools.ietf.org/html/rfc5208
+
+            RSAParameters rsaParams;
+
+            return null;
         }
     }
 }
