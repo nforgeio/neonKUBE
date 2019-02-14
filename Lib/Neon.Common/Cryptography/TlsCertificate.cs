@@ -1250,8 +1250,6 @@ subjectAltName         = @alt_names
             }
         }
 
-
-
         /// <summary>
         /// <para>
         /// Converts the <see cref="TlsCertificate"/> into a <see cref="X509Certificate2"/>.
@@ -1266,20 +1264,46 @@ subjectAltName         = @alt_names
         {
             Covenant.Assert(!string.IsNullOrEmpty(CertPem));
 
-            using (var tempFile = new TempFile(".pem"))
+            using (var tempFolder = new TempFolder())
             {
-                // Write the certificate PEM to a temporary file and then
-                // construct a certificate from that file.
+                // Write the certificate PEM to temporary files and then
+                // construct a certificate from those file.
 
-                File.WriteAllText(tempFile.Path, CertPem);
+                var certPath = Path.Combine(tempFolder.Path, "cert.pem");
+                var keyPath  = Path.Combine(tempFolder.Path, "key.pem");
 
-                var x509Cert = new X509Certificate2(tempFile.Path, (string)null)
-                {
-                    FriendlyName = this.FriendlyName
-                };
+                File.WriteAllText(certPath, CertPem);
+                File.WriteAllText(keyPath, KeyPem);
+
+                var x509Cert = new X509Certificate2(certPath);
+
+                x509Cert.FriendlyName = this.FriendlyName;
+                x509Cert.PrivateKey   = ReadRSAKeyFromFile(keyPath);
 
                 return x509Cert;
             }
+        }
+
+        /// <summary>
+        /// Reads a RSA key from a file.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <returns>The RSA key.</returns>
+        private RSACryptoServiceProvider ReadRSAKeyFromFile(string path)
+        {
+            byte[] rawBytes;
+
+            using (var fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                rawBytes = new byte[fs.Length];
+                fs.Read(rawBytes, 0, rawBytes.Length);
+            }
+
+            var rsa = new RSACryptoServiceProvider();
+
+            rsa.ImportCspBlob(rawBytes);
+
+            return rsa;
         }
     }
 }
