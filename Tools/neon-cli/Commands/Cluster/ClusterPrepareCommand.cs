@@ -231,6 +231,18 @@ Server Requirements:
                 // environments because we're assuming that the cluster will run in its own
                 // private network so there'll ne no possibility of conflicts.
 
+                // $todo(jeff.lill):
+                //
+                // The [Ping] class is failing after porting this to .NET Core 3.0 witt 
+                // this error: 
+                // 
+                //      Win32Exception: Error due to lack of resources
+                //
+                // I'm going to temporarily comment this out.  Here's the tracking issue:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/437
+
+#if DOESNT_WORK
                 if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine && 
                     !cluster.Definition.Hosting.IsCloudProvider)
                 {
@@ -290,6 +302,7 @@ Server Requirements:
                         Program.Exit(1);
                     }
                 }
+#endif // DOESNT_WORK
 
                 //-----------------------------------------------------------------
                 // Perform basic environment provisioning.  This creates basic cluster components
