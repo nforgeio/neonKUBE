@@ -70,6 +70,10 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
 
 5. **Calico**: [releases](https://github.com/projectcalico/calico/releases) - current: **3.4.0**
 
-  **NOTE:** You'll needs to update the two URLs in `HeadendClient`.
+  **NOTE:** You'll need to update the two URLs in `HeadendClient`.
 
+# Other Components
 
+1. **OpenSSL**: [releases](https://indy.fulgan.com/SSL/) - current: **1.0.2q** (March 2018)
+  
+  **NOTE:** Download and extract the files to `$/external/OpenSSL/*`

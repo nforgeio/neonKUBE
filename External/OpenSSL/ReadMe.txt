@@ -1,10 +1,10 @@
 =============================================================================
-OpenSSL v1.0.2a                                Precompiled Binaries for Win64
+OpenSSL v1.0.2q                                Precompiled Binaries for Win64
 -----------------------------------------------------------------------------
 
                          *** Release Information ***
 
-Release Date:     Mrz 20, 2015
+Release Date:     Nov 22, 2018
 
 Author:           Frederik A. Winkelsdorf (opendec.wordpress.com)
                   for the Indy Project (www.indyproject.org)
@@ -15,7 +15,7 @@ Dependencies:     The libraries have no noteworthy dependencies
 
 Installation:     Copy both DLL files into your application directory
 
-Supported OS:     Windows XP x64 up to Windows 8 x64
+Supported OS:     Windows XP x64 up to Windows 10 x64
 
 -----------------------------------------------------------------------------
 
@@ -42,10 +42,10 @@ SOFTWARE AND/OR PATENTS.
                        *** Build Information Win64 ***
 
 Built with:       Windows Server 2003 SP1 Platform SDK for x64
-                  The Netwide Assembler (NASM) v2.11.05 Win32
-                  Strawberry Perl v5.20.0.1 Win32 Portable
+                  The Netwide Assembler (NASM) v2.11.08 Win32
+                  Strawberry Perl v5.22.0.1 Win32 Portable
                   Windows PowerShell
-                  FinalBuilder 7 Embarcadero Edition
+                  FinalBuilder 7
 
 Shell:            Windows XP x64 Build Environment (Retail)
 

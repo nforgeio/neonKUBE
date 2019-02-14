@@ -158,7 +158,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{3386
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinDesktop", "Desktop\WinDesktop\WinDesktop.csproj", "{5D78856A-397E-432C-9B1F-61D27C5C4CBF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Cryptography", "Lib\Neon.Cryptography\Neon.Cryptography.csproj", "{E77C7D25-275F-4DD6-B572-7317FED20393}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Cryptography", "Lib\Neon.Cryptography\Neon.Cryptography.csproj", "{E77C7D25-275F-4DD6-B572-7317FED20393}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenSSL", "OpenSSL", "{23E8D775-B5CA-440B-ACF2-1F7C212FE5C3}"
+	ProjectSection(SolutionItems) = preProject
+		External\OpenSSL\DOWNLOAD.md = External\OpenSSL\DOWNLOAD.md
+		External\OpenSSL\HashInfo.txt = External\OpenSSL\HashInfo.txt
+		External\OpenSSL\libeay32.dll = External\OpenSSL\libeay32.dll
+		External\OpenSSL\OpenSSL License.txt = External\OpenSSL\OpenSSL License.txt
+		External\OpenSSL\openssl.cnf = External\OpenSSL\openssl.cnf
+		External\OpenSSL\openssl.exe = External\OpenSSL\openssl.exe
+		External\OpenSSL\ReadMe.txt = External\OpenSSL\ReadMe.txt
+		External\OpenSSL\ssleay32.dll = External\OpenSSL\ssleay32.dll
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -614,6 +626,7 @@ Global
 		{6F8E1822-4037-47D3-8CF9-025B6CCF6A14} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 		{5D78856A-397E-432C-9B1F-61D27C5C4CBF} = {33866B5A-71FB-4430-9C0B-019B20644653}
 		{E77C7D25-275F-4DD6-B572-7317FED20393} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
+		{23E8D775-B5CA-440B-ACF2-1F7C212FE5C3} = {1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

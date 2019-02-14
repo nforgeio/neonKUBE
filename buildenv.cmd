@@ -57,7 +57,7 @@ REM smart enough to only add directories that actually exist.
 
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%\OpenSSL"
+%NF_TOOLBIN%\pathtool -dedup -system -add "%NF_ROOT%\External\OpenSSL"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\7-Zip"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\7-Zip"
@@ -70,6 +70,10 @@ REM Configure the neonKUBE program folder and add it to the PATH.
 
 if not exist "%ProgramFiles%\neonKUBE" mkdir "%ProgramFiles%\neonKUBE"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\neonKUBE"
+
+REM Remove obsolete paths if they exist.
+
+%NF_TOOLBIN%\pathtool --dedup -del "%NF_TOOLBIN%\OpenSSL"
 
 REM Configure the neonKUBE kubeconfig path (as a USER environment variable).
 
