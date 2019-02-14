@@ -32,7 +32,6 @@ using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
-using Neon.Cryptography;
 
 namespace Neon.Common
 {

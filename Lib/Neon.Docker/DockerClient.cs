@@ -100,7 +100,13 @@ namespace Neon.Docker
                     {
                         var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
 
-                        await sock.ConnectAsync(new UnixDomainSocketEndPoint(settings.Uri.LocalPath));
+                        // $todo(jeff.lill):
+                        //
+                        // It looks like .NET Core 3.0 (and presumably .NET Standard 2.1 in the near future
+                        // implements this as [System.Net.Sockets.UnixDomainSocketEndPoint].  Look into
+                        // converting to this standard class in the future and dumping my hacked implementation.
+
+                        await sock.ConnectAsync(new Microsoft.Net.Http.Client.UnixDomainSocketEndPoint(settings.Uri.LocalPath));
 
                         return sock;
                     });

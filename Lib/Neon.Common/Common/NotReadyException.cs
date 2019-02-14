@@ -31,7 +31,6 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Cryptography;
 
 namespace Neon.Common
 {

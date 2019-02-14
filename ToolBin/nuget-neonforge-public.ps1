@@ -36,6 +36,7 @@ function Publish
 
 SetVersion Neon.Common
 SetVersion Neon.Couchbase
+SetVersion Neon.Cryptography
 SetVersion Neon.Docker
 SetVersion Neon.HyperV
 SetVersion Neon.Kube
@@ -55,7 +56,8 @@ SetVersion Neon.Xunit.Kube
 # Build and publish the projects.
 
 Publish Neon.Common
-Publush Neon.Couchbase
+Publish Neon.Couchbase
+Publish Neon.Cryptography
 Publish Neon.Docker
 Publish Neon.HyperV
 Publish Neon.Kube

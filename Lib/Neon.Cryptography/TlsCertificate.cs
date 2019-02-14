@@ -62,6 +62,10 @@ using Neon.IO;
 //    return sanList;
 //}
 
+// $todo(jeff.lill):
+//
+// Look into using [SecureString] for the [KeyPem] property.
+
 namespace Neon.Cryptography
 {
     /// <summary>
@@ -897,7 +901,7 @@ subjectAltName         = @alt_names
                 {
                     if (string.Equals(certHost, hostname, StringComparison.OrdinalIgnoreCase))
                     {
-                        return true;    // Wen have a match
+                        return true;    // We have a match
                     }
                 }
             }
@@ -1279,7 +1283,7 @@ subjectAltName         = @alt_names
 
                 if (!string.IsNullOrEmpty(KeyPem))
                 {
-                    // x509Cert = x509Cert.CopyWithPrivateKey(ParseRSAKeyPem());
+                    x509Cert = x509Cert.CopyWithPrivateKey(ParseRSAKeyPem());
                 }
 
                 return x509Cert;
