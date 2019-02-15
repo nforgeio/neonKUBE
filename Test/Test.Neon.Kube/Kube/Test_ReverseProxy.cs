@@ -39,7 +39,7 @@ using Xunit;
 
 namespace TestKube
 {
-    public class Test_ReversProxy
+    public class Test_ReverseProxy
     {
         //---------------------------------------------------------------------
         // Private types
@@ -295,7 +295,7 @@ namespace TestKube
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Test_ReversProxy()
+        public Test_ReverseProxy()
         {
             var sb = new StringBuilder();
 
