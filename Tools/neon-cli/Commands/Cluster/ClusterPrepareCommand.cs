@@ -231,18 +231,6 @@ Server Requirements:
                 // environments because we're assuming that the cluster will run in its own
                 // private network so there'll ne no possibility of conflicts.
 
-                // $todo(jeff.lill):
-                //
-                // The [Ping] class is failing after porting this to .NET Core 3.0 witt 
-                // this error: 
-                // 
-                //      Win32Exception: Error due to lack of resources
-                //
-                // I'm going to temporarily comment this out.  Here's the tracking issue:
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/437
-
-#if DOESNT_WORK
                 if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine && 
                     !cluster.Definition.Hosting.IsCloudProvider)
                 {
@@ -266,14 +254,14 @@ Server Requirements:
                     Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
                         node =>
                         {
-                            using (var ping = new Ping())
+                            using (var pinger = new Pinger())
                             {
                                 // We're going to try pinging up to [pingAttempts] times for each node
                                 // just in case the network it sketchy and we're losing reply packets.
 
                                 for (int i = 0; i < pingAttempts; i++)
                                 {
-                                    var reply = ping.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
+                                    var reply = pinger.SendPingAsync(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds).Result;
 
                                     if (reply.Status == IPStatus.Success)
                                     {
@@ -302,7 +290,6 @@ Server Requirements:
                         Program.Exit(1);
                     }
                 }
-#endif // DOESNT_WORK
 
                 //-----------------------------------------------------------------
                 // Perform basic environment provisioning.  This creates basic cluster components

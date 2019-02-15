@@ -135,9 +135,9 @@ namespace Neon.Net
         /// Pings a IP address.
         /// </summary>
         /// <param name="address">The target address.</param>
-        /// <param name="timeout">The timeout in milliseconds.</param>
+        /// <param name="timeoutMilliseconds">Optional timeout in milliseconds (defaults to 2000).</param>
         /// <returns>A <see cref="PingReply"/>.</returns>
-        public async Task<PingReply> SendPingAsync(IPAddress address, int timeout)
+        public async Task<PingReply> SendPingAsync(IPAddress address, int timeoutMilliseconds = 2000)
         {
             Ping ping;
 
@@ -160,7 +160,7 @@ namespace Neon.Net
 
             try
             {
-                return await ping.SendPingAsync(address);
+                return await ping.SendPingAsync(address, timeoutMilliseconds);
             }
             finally
             {
@@ -176,6 +176,17 @@ namespace Neon.Net
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Pings a IP address passed as a <c>string</c>.
+        /// </summary>
+        /// <param name="address">The target address.</param>
+        /// <param name="timeoutMilliseconds">Optional timeout in milliseconds (defaults to 2000).</param>
+        /// <returns>A <see cref="PingReply"/>.</returns>
+        public async Task<PingReply> SendPingAsync(string address, int timeoutMilliseconds = 2000)
+        {
+            return await SendPingAsync(IPAddress.Parse(address), timeoutMilliseconds);
         }
     }
 }
