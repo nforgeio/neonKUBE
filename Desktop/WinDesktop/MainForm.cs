@@ -379,22 +379,22 @@ namespace WinDesktop
                 // direct [ReverseProxy] connection to the Kubernetes API server 
                 // to work.
 
-                //var cert = KubeHelper.ClusterCertificate;
+                var cert = KubeHelper.ClusterCertificate;
 
-                //var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
-                //var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
-                //var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
-                //var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
-                //var clientCert  = tlsCert.ToX509();
+                var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
+                var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
+                var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
+                var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
+                var clientCert  = tlsCert.ToX509();
 
-                //var kubeDashboardProxy = 
-                //    new ReverseProxy(
-                //        localPort:   KubeHelper.ClientConfig.KubeDashboardProxyPort,
-                //        remotePort:  KubeHostPorts.KubeDashboard,
-                //        remoteHost:  cluster.GetReachableMaster().PrivateAddress.ToString(),
-                //        certificate: clientCert);
+                var kubeDashboardProxy =
+                    new ReverseProxy(
+                        localPort:   KubeHelper.ClientConfig.KubeDashboardProxyPort,
+                        remotePort:  KubeHostPorts.KubeDashboard,
+                        remoteHost:  cluster.GetReachableMaster().PrivateAddress.ToString(),
+                        certificate: clientCert);
 
-                //proxies.Add(kubeDashboardProxy);
+                proxies.Add(kubeDashboardProxy);
 
                 // Remember which cluster context we're proxying.
 

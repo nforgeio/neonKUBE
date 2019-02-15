@@ -501,74 +501,72 @@ subjectAltName         = @alt_names
 
             var certificate = TlsCertificate.Load(path);
 
-            // We're going to split the certificate into two files, the issued
-            // certificate and the certificate authority's certificate chain
-            // (AKA the CA bundle).
-
-            var tempCertPath = Path.GetTempFileName();
-            var tempCaPath   = Path.GetTempFileName();
-            var tool         = "openssl";
-
-            try
+            using (var tempFolder = new TempFolder())
             {
-                var pos = certificate.CertPem.IndexOf("-----END CERTIFICATE-----");
+                // We're going to split the certificate into two files, the issued
+                // certificate and the certificate authority's certificate chain
+                // (AKA the CA bundle).
 
-                if (pos == -1)
+                var tempCertPath = Path.Combine(tempFolder.Path, "cert.pem");
+                var tempCaPath   = Path.Combine(tempFolder.Path, "ca.pem");
+                var tool         = "openssl";
+
+                try
                 {
-                    throw new ArgumentNullException("The certificate is not formatted properly.");
-                }
+                    var pos = certificate.CertPem.IndexOf("-----END CERTIFICATE-----");
 
-                pos = certificate.CertPem.IndexOf("-----BEGIN CERTIFICATE-----", pos);
-
-                var issuedCert = certificate.CertPem.Substring(0, pos);
-                var caBundle   = certificate.CertPem.Substring(pos);
-
-                File.WriteAllText(tempCertPath, issuedCert);
-                File.WriteAllText(tempCaPath, caBundle);
-
-                var sbArgs = new StringBuilder();
-
-                // We're going to use [certutil] for Windows and [OpenSSL]
-                // for everything else.
-
-                if (NeonHelper.IsWindows)
-                {
-                    tool = "certutil";
-
-                    sbArgs.Append("-verify ");
-                    sbArgs.Append($"\"{tempCertPath}\" ");
-                    sbArgs.Append($"\"{tempCaPath}\"");
-
-                    var result = NeonHelper.ExecuteCapture("certutil", sbArgs.ToString());
-
-                    if (result.ExitCode != 0)
+                    if (pos == -1)
                     {
-                        throw new ArgumentException("Invalid certificate.");
+                        throw new ArgumentNullException("The certificate is not formatted properly.");
+                    }
+
+                    pos = certificate.CertPem.IndexOf("-----BEGIN CERTIFICATE-----", pos);
+
+                    var issuedCert = certificate.CertPem.Substring(0, pos);
+                    var caBundle   = certificate.CertPem.Substring(pos);
+
+                    File.WriteAllText(tempCertPath, issuedCert);
+                    File.WriteAllText(tempCaPath, caBundle);
+
+                    var sbArgs = new StringBuilder();
+
+                    // We're going to use [certutil] for Windows and [OpenSSL]
+                    // for everything else.
+
+                    if (NeonHelper.IsWindows)
+                    {
+                        tool = "certutil";
+
+                        sbArgs.Append("-verify ");
+                        sbArgs.Append($"\"{tempCertPath}\" ");
+                        sbArgs.Append($"\"{tempCaPath}\"");
+
+                        var result = NeonHelper.ExecuteCapture("certutil", sbArgs.ToString());
+
+                        if (result.ExitCode != 0)
+                        {
+                            throw new ArgumentException("Invalid certificate.");
+                        }
+                    }
+                    else
+                    {
+                        sbArgs.Append("verify ");
+                        sbArgs.Append("-purpose sslserver ");
+                        sbArgs.Append($"-CAfile \"{tempCaPath}\" ");
+                        sbArgs.Append($"\"{tempCertPath}\"");
+
+                        var result = NeonHelper.ExecuteCapture("openssl", sbArgs.ToString());
+
+                        if (result.ExitCode != 0)
+                        {
+                            throw new ArgumentException("Invalid certificate.");
+                        }
                     }
                 }
-                else
+                catch (Win32Exception)
                 {
-                    sbArgs.Append("verify ");
-                    sbArgs.Append("-purpose sslserver ");
-                    sbArgs.Append($"-CAfile \"{tempCaPath}\" ");
-                    sbArgs.Append($"\"{tempCertPath}\"");
-
-                    var result = NeonHelper.ExecuteCapture("openssl", sbArgs.ToString());
-
-                    if (result.ExitCode != 0)
-                    {
-                        throw new ArgumentException("Invalid certificate.");
-                    }
+                    throw new ArgumentException($"INTERNAL ERROR: Cannot find the [{tool}] SSL certificate utility on the PATH.");
                 }
-            }
-            catch (Win32Exception)
-            {
-                throw new ArgumentException($"INTERNAL ERROR: Cannot find the [{tool}] SSL certificate utility on the PATH.");
-            }
-            finally
-            {
-                File.Delete(tempCertPath);
-                File.Delete(tempCaPath);
             }
         }
 
@@ -1176,81 +1174,80 @@ subjectAltName         = @alt_names
         /// <exception cref="FormatException">Thrown if the certificate cannot be parsed.</exception>
         public void Parse()
         {
-            // We need to load the certificate's thumbprint.
-
-            var tempPath = Path.GetTempFileName();
-
-            File.WriteAllText(tempPath, CombinedPemNormalized);
-
-            try
+            using (var tempFolder = new TempFolder())
             {
-                using (var cert = new X509Certificate2(tempPath))
+                // We need to load the certificate's thumbprint.
+
+                var tempPath = Path.Combine(tempFolder.Path, "combined.pem");
+
+                File.WriteAllText(tempPath, CombinedPemNormalized);
+
+                try
                 {
-                    Thumbprint = cert.Thumbprint.ToLowerInvariant();
-                }
-            }
-            finally
-            {
-                File.Delete(tempPath);
-            }
-
-            // $todo(jeff.lill):
-            //
-            // Hacking this using the [CertUtil] and [OpenSSL] tools until we completely port
-            // to using X509Certificate.  The main thing we need to do to accomplish this is
-            // to be able to parse the subject/subject alt names.  See the comment at the top
-            // of this file.
-
-            var tempCertPath = Path.GetTempFileName();
-            var tool         = "openssl";
-
-            try
-            {
-                File.WriteAllText(tempCertPath, this.CombinedPemNormalized);
-
-                var sbArgs = new StringBuilder();
-
-                // We're going to use [CertUtil] for Windows and [OpenSSL]
-                // for everything else.
-
-                if (NeonHelper.IsWindows)
-                {
-                    tool = "certutil";
-
-                    sbArgs.Append("-dump ");
-                    sbArgs.Append($"\"{tempCertPath}\" ");
-
-                    var result = NeonHelper.ExecuteCapture("certutil", sbArgs.ToString());
-
-                    if (result.ExitCode != 0)
+                    using (var cert = new X509Certificate2(tempPath))
                     {
-                        throw new FormatException($"Cannot parse certificate: {result.ErrorText}");
+                        Thumbprint = cert.Thumbprint.ToLowerInvariant();
                     }
-
-                    ParseCertUtil(result.OutputText);
                 }
-                else
+                finally
                 {
-                    sbArgs.Append($"x509 -in \"{tempCertPath}\" ");
-                    sbArgs.Append("-text");
-
-                    var result = NeonHelper.ExecuteCapture("openssl", sbArgs.ToString());
-
-                    if (result.ExitCode != 0)
-                    {
-                        throw new FormatException($"Cannot parse certificate: {result.ErrorText}");
-                    }
-
-                    ParseOpenSsl(result.OutputText);
+                    File.Delete(tempPath);
                 }
-            }
-            catch (Win32Exception)
-            {
-                throw new Exception($"Cannot find or execute the [{tool}] SSL certificate utility on the PATH.");
-            }
-            finally
-            {
-                File.Delete(tempCertPath);
+
+                // $todo(jeff.lill):
+                //
+                // Hacking this using the [CertUtil] and [OpenSSL] tools until we completely port
+                // to using X509Certificate.  The main thing we need to do to accomplish this is
+                // to be able to parse the subject/subject alt names.  See the comment at the top
+                // of this file.
+
+                var tempCertPath = Path.Combine(tempFolder.Path, "cert.pem");
+                var tool         = "openssl";
+
+                try
+                {
+                    File.WriteAllText(tempCertPath, this.CombinedPemNormalized);
+
+                    var sbArgs = new StringBuilder();
+
+                    // We're going to use [CertUtil] for Windows and [OpenSSL]
+                    // for everything else.
+
+                    if (NeonHelper.IsWindows)
+                    {
+                        tool = "certutil";
+
+                        sbArgs.Append("-dump ");
+                        sbArgs.Append($"\"{tempCertPath}\" ");
+
+                        var result = NeonHelper.ExecuteCapture("certutil", sbArgs.ToString());
+
+                        if (result.ExitCode != 0)
+                        {
+                            throw new FormatException($"Cannot parse certificate: {result.ErrorText}");
+                        }
+
+                        ParseCertUtil(result.OutputText);
+                    }
+                    else
+                    {
+                        sbArgs.Append($"x509 -in \"{tempCertPath}\" ");
+                        sbArgs.Append("-text");
+
+                        var result = NeonHelper.ExecuteCapture("openssl", sbArgs.ToString());
+
+                        if (result.ExitCode != 0)
+                        {
+                            throw new FormatException($"Cannot parse certificate: {result.ErrorText}");
+                        }
+
+                        ParseOpenSsl(result.OutputText);
+                    }
+                }
+                catch (Win32Exception)
+                {
+                    throw new Exception($"Cannot find or execute the [{tool}] SSL certificate utility on the PATH.");
+                }
             }
         }
 

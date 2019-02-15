@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.IO;
 using Neon.Xunit;
 
 using Xunit;
@@ -202,11 +203,11 @@ pu/xO28QOG8=
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Load()
         {
-            var path1 = Path.GetTempFileName();
-            var path2 = Path.GetTempFileName();
-
-            try
+            using (var tempFolder = new TempFolder())
             {
+                var path1 = Path.Combine(tempFolder.Path, "test1");
+                var path2 = Path.Combine(tempFolder.Path, "test2");
+
                 // Separate files with CRLF line endings.
 
                 File.WriteAllText(path1, TestCertPart);
@@ -244,11 +245,6 @@ pu/xO28QOG8=
 
                 File.WriteAllText(path1, TlsCertificate.NormalizePem(TestCertPart));
                 File.WriteAllText(path2, TlsCertificate.NormalizePem(TestKeyPart));
-            }
-            finally
-            {
-                File.Delete(path1);
-                File.Delete(path2);
             }
         }
 

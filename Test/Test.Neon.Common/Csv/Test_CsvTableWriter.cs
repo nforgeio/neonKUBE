@@ -21,6 +21,7 @@ using System.IO;
 using System.Text;
 
 using Neon.Csv;
+using Neon.IO;
 using Neon.Xunit;
 
 using Xunit;
@@ -33,10 +34,10 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvTableWriter_Basic()
         {
-            string path = Path.GetTempFileName();
-
-            try
+            using (var tempFolder = new TempFolder())
             {
+                string path = Path.Combine(tempFolder.Path, "test.csv");
+
                 using (var writer = new CsvTableWriter(new string[] { "Col0", "Col1", "Col2" }, new FileStream(path, FileMode.Create), Encoding.UTF8))
                 {
                     Assert.Equal(0, writer.GetColumnIndex("Col0"));
@@ -73,10 +74,6 @@ namespace TestCommon
 
                     Assert.Null(reader.ReadRow());
                 }
-            }
-            finally
-            {
-                File.Delete(path);
             }
         }
 
