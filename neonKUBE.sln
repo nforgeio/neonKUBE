@@ -157,6 +157,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{33866B5A-71FB-4430-9C0B-019B20644653}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinDesktop", "Desktop\WinDesktop\WinDesktop.csproj", "{5D78856A-397E-432C-9B1F-61D27C5C4CBF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{756FB86B-29BC-4C6B-A19B-A624A9E9D367} = {756FB86B-29BC-4C6B-A19B-A624A9E9D367}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Cryptography", "Lib\Neon.Cryptography\Neon.Cryptography.csproj", "{E77C7D25-275F-4DD6-B572-7317FED20393}"
 EndProject
