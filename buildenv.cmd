@@ -40,7 +40,7 @@ setx NF_TEMP "%NF_TEMP%" /M
 
 setx DOTNETPATH "%DOTNETPATH%" /M
 setx DEV_WORKSTATION 1 /M
-setx OPENSSL_CONF "%NF_TOOLBIN%\OpenSSL\openssl.cnf" /M
+setx OPENSSL_CONF "%NF_ROOT%\External\OpenSSL\openssl.cnf" /M
 
 REM Make sure required folders exist.
 
