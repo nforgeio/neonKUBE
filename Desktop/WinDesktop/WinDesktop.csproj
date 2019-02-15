@@ -4,6 +4,14 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>WinDesktop</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+    <AssemblyName>neonKUBE</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,5 +62,9 @@
   </ItemGroup>
 
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; &quot;$(ConfigurationName)&quot; &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
+  </Target>
 
 </Project>

@@ -67,6 +67,8 @@ namespace Neon.Kube
                 BaseAddress = new Uri(serviceUri)
             };
 
+            client.DefaultRequestHeaders.Host = new Uri(serviceUri).Host;
+
             // We're going to pass the client installation ID as a simple
             // authentication mechanism.
 
