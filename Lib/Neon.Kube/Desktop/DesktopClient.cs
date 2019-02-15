@@ -60,14 +60,21 @@ namespace Neon.Kube
         /// Internal constructor.
         /// </summary>
         /// <param name="serviceUri">Base URI for the desktop API service.</param>
-        internal DesktopClient(string serviceUri)
+        /// <param name="timeout">Optional request timeout (defaults to <b>500ms</b>).</param>
+        internal DesktopClient(string serviceUri, TimeSpan timeout = default)
         {
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromMilliseconds(500);
+            }
+
             client = new JsonClient()
             {
                 BaseAddress = new Uri(serviceUri)
             };
 
             client.DefaultRequestHeaders.Host = new Uri(serviceUri).Host;
+            client.HttpClient.Timeout = timeout;
 
             // We're going to pass the client installation ID as a simple
             // authentication mechanism.
@@ -124,7 +131,7 @@ namespace Neon.Kube
         {
             try
             {
-                await client.PostAsync("login", true);
+                await client.PostAsync(NoRetryPolicy.Instance, "login", true);
             }
             catch
             {
@@ -147,7 +154,7 @@ namespace Neon.Kube
         {
             try
             {
-                await client.PostAsync("logout", true);
+                await client.PostAsync(NoRetryPolicy.Instance, "logout", true);
             }
             catch
             {
@@ -177,7 +184,7 @@ namespace Neon.Kube
 
             try
             {
-                await client.PostAsync("start-operation", operation);
+                await client.PostAsync(NoRetryPolicy.Instance, "start-operation", operation);
             }
             catch
             {
@@ -210,7 +217,7 @@ namespace Neon.Kube
 
             try
             {
-                await client.PostAsync("end-operation", operation);
+                await client.PostAsync(NoRetryPolicy.Instance, "end-operation", operation);
             }
             catch
             {
