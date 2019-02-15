@@ -70,11 +70,9 @@ namespace Neon.Kube
 
             client = new JsonClient()
             {
-                BaseAddress = new Uri(serviceUri)
+                BaseAddress = new Uri(serviceUri),
+                Timeout     = timeout
             };
-
-            client.DefaultRequestHeaders.Host = new Uri(serviceUri).Host;
-            client.HttpClient.Timeout = timeout;
 
             // We're going to pass the client installation ID as a simple
             // authentication mechanism.

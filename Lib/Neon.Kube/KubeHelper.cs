@@ -177,7 +177,7 @@ namespace Neon.Kube
             {
                 if (desktopClient == null)
                 {
-                    desktopClient = new DesktopClient($"http://{ClientConfig.DesktopServicePort}/");
+                    desktopClient = new DesktopClient($"http://localhost:{ClientConfig.DesktopServicePort}/");
                 }
 
                 return desktopClient;
