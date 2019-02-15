@@ -1264,7 +1264,7 @@ subjectAltName         = @alt_names
         /// </note>
         /// </summary>
         /// <returns>The new <see cref="X509Certificate2"/>.</returns>
-        public X509Certificate2 ToX509Certificate()
+        public X509Certificate2 ToX509()
         {
             Covenant.Assert(!string.IsNullOrEmpty(CertPem));
 
@@ -1373,7 +1373,7 @@ subjectAltName         = @alt_names
             }
             catch
             {
-                throw new CryptographicException("Expecting private RSA key.");
+                throw new CryptographicException("Expecting a private RSA key.");
             }
 
             var rsa       = PKCS8.PrivateKeyInfo.DecodeRSA(bytes);

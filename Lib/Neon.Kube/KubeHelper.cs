@@ -961,7 +961,7 @@ namespace Neon.Kube
                 var certPem = Encoding.UTF8.GetString(Convert.FromBase64String(cluster.Properties.CertificateAuthorityData));
                 var tlsCert = TlsCertificate.FromPem(certPem);
 
-                return cachedClusterCertificate = tlsCert.ToX509Certificate();
+                return cachedClusterCertificate = tlsCert.ToX509();
             }
         }
 
@@ -987,7 +987,7 @@ namespace Neon.Kube
                 var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
                 var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
                 var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
-                var clientCert  = tlsCert.ToX509Certificate();
+                var clientCert  = tlsCert.ToX509();
 
                 return null;
             }
