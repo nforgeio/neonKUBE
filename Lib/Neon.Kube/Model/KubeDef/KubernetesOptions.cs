@@ -84,15 +84,6 @@ namespace Neon.Kube
         public string HelmVersion { get; set; } = "default";
 
         /// <summary>
-        /// The version of Istio to be installed.  This defaults to <b>default</b> which
-        /// will install a reasonable version for the Kubernetes release being inbstalled.
-        /// </summary>
-        [JsonProperty(PropertyName = "IstioVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "IstioVersion", ApplyNamingConventions = false)]
-        [DefaultValue("default")]
-        public string IstioVersion { get; set; } = "default";
-
-        /// <summary>
         /// Enable pods to be scheduled on cluster master nodes.  This defaults to <c>null</c>
         /// which will allow pods to be scheduled on masters if the cluster consists only of
         /// master nodes (e.g. for a single node cluster.  This defaults to <c>false</c> for
@@ -189,11 +180,6 @@ namespace Neon.Kube
             if (HelmVersion != "default" && !System.Version.TryParse(HelmVersion, out var vHelm))
             {
                 throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(HelmVersion)}={HelmVersion}] is invalid].");
-            }
-
-            if (IstioVersion != "default" && !System.Version.TryParse(IstioVersion, out var vIstio))
-            {
-                throw new ClusterDefinitionException($"[{nameof(KubernetesOptions)}.{nameof(IstioVersion)}={IstioVersion}] is invalid].");
             }
 
             if (!string.IsNullOrEmpty(ApiLoadBalancer))

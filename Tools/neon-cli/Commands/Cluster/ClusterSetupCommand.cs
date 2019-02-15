@@ -1384,7 +1384,7 @@ rm /tmp/calico.yaml
             // We're going to split the bash script into two parts and download
             // and edit the file in the middle.
 
-            var istioConfigPath = "install/kubernetes/istio-demo-auth.yaml";
+            var istioConfigPath = cluster.Definition.Network.MutualPodTLS ? "install/kubernetes/istio-demo-auth.yaml" : "install/kubernetes/istio-demo.yaml";
             var istioScript1 =
 $@"#!/bin/bash
 

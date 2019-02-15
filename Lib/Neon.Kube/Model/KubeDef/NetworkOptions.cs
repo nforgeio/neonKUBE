@@ -162,6 +162,15 @@ namespace Neon.Kube
         public string IstioVersion { get; set; } = "default";
 
         /// <summary>
+        /// Optionally enable Istio mutual TLS support for cross pod communication.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "MutualPodTLS", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "MutualPodTLS", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool MutualPodTLS { get; set; } = false;
+
+        /// <summary>
         /// Used for checking subnet conflicts below.
         /// </summary>
         private class SubnetDefinition
