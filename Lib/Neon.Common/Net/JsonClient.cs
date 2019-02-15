@@ -150,6 +150,16 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// The default base <see cref="Uri"/> the client will use when relative
+        /// URIs are specified for requests.
+        /// </summary>
+        public TimeSpan Timeout
+        {
+            get { return HttpClient.Timeout; }
+            set { HttpClient.Timeout = value; }
+        }
+
+        /// <summary>
         /// Returns the base client's default request headers property to make it easy
         /// to customize request headers.
         /// </summary>
