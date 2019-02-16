@@ -170,18 +170,21 @@ namespace Neon.Kube
 
             var remoteScheme = remoteTls ? "https" : "http";
             var httpHandler  =
-                new HttpClientHandler()
+                new SocketsHttpHandler()
                 {
+                    AllowAutoRedirect       = false,
+                    AutomaticDecompression  = DecompressionMethods.All,
+                    ConnectTimeout          = TimeSpan.FromSeconds(5),
                     MaxConnectionsPerServer = 100
                 };
 
             if (certificate != null)
             {
-                httpHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
-                httpHandler.ClientCertificates.Add(certificate);
+                httpHandler.SslOptions.ClientCertificates = new X509CertificateCollection();
+                httpHandler.SslOptions.ClientCertificates.Add(certificate);
             }
-            
-            httpHandler.ServerCertificateCustomValidationCallback =
+
+            httpHandler.SslOptions.RemoteCertificateValidationCallback =
                 (request, serverCertificate, chain, policyErrors) =>
                 {
                     // $todo(jeff.lill): IMPORTANT!
