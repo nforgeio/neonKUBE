@@ -14,3 +14,8 @@ neon cluster setup --log-folder=c:/cluster-logs --unredacted root@home-large
 # WRT
 neon cluster prepare %NF_ROOT%/devops/wrt/jeff-small.cluster.yaml --log-folder=c:/cluster-logs --unredacted
 neon cluster setup --log-folder=c:/cluster-logs --unredacted root@wrt-jeff-small
+
+# OFFICE
+neon login rm --force root@office-tiny
+neon cluster prepare %NF_ROOT%/devops/office/tiny.cluster.yaml --log-folder=c:/cluster-logs --unredacted
+neon cluster setup --log-folder=c:/cluster-logs --unredacted root@office-tiny
