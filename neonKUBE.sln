@@ -175,6 +175,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenSSL", "OpenSSL", "{23E8
 		External\OpenSSL\ssleay32.dll = External\OpenSSL\ssleay32.dll
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "office", "office", "{19BEBB72-3462-40E0-BC93-983D10652E54}"
+	ProjectSection(SolutionItems) = preProject
+		Devops\office\large.cluster.yaml = Devops\office\large.cluster.yaml
+		Devops\office\small.cluster.yaml = Devops\office\small.cluster.yaml
+		Devops\office\tiny.cluster.yaml = Devops\office\tiny.cluster.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
@@ -630,6 +637,7 @@ Global
 		{5D78856A-397E-432C-9B1F-61D27C5C4CBF} = {33866B5A-71FB-4430-9C0B-019B20644653}
 		{E77C7D25-275F-4DD6-B572-7317FED20393} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{23E8D775-B5CA-440B-ACF2-1F7C212FE5C3} = {1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}
+		{19BEBB72-3462-40E0-BC93-983D10652E54} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

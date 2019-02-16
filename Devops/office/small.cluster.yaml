@@ -1,5 +1,5 @@
-Name: home-small
-Datacenter: woodinville
+Name: office-small
+Datacenter: fremont
 Environment: development
 TimeSources:
 - pool.ntp.org
@@ -8,23 +8,23 @@ Kubernetes:
   AllowPodsOnMasters: true
 Hosting:
   Environment: hyperv-local
-  VmDriveFolder: D:\\VM
+  VmDriveFolder: C:\\VM
 Network:
-  PremiseSubnet: 10.0.0.0/16
-  NodesSubnet: 10.0.0.0/16
+  PremiseSubnet: 10.50.0.0/16
+  NodesSubnet: 10.50.0.0/16
 NodeOptions:
    Upgrade: none
    PasswordLength: 20
 Nodes:
    master-0:
      Role: master
-     PrivateAddress: 10.0.0.30
+     PrivateAddress: 10.50.0.30
    worker-0:
      Role: worker
-     PrivateAddress: 10.0.0.40
+     PrivateAddress: 10.50.0.40
    worker-1:
      Role: worker
-     PrivateAddress: 10.0.0.41
+     PrivateAddress: 10.50.0.41
    worker-2:
      Role: worker
-     PrivateAddress: 10.0.0.42
+     PrivateAddress: 10.50.0.42
