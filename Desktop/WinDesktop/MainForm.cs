@@ -379,13 +379,15 @@ namespace WinDesktop
                 // direct [ReverseProxy] connection to the Kubernetes API server 
                 // to work.
 
-                var cert = KubeHelper.ClusterCertificate;
+                var cert = KubeHelper.ClientCertificate;
 
                 var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
                 var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
                 var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
                 var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
                 var clientCert  = tlsCert.ToX509();
+
+                clientCert.FriendlyName = $"neonKUBE: {KubeHelper.CurrentContext.Properties.User}";
 
                 var kubeDashboardProxy =
                     new ReverseProxy(
