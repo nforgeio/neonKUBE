@@ -226,7 +226,7 @@ namespace Neon.Kube
 
             var settings = new WebListenerSettings();
 
-            // $todo(jeff.lill): IMPORTANT DELETE THIS: Use localhost only.
+            // $todo(jeff.lill): IMPORTANT DELETE THIS: Use localhost only!
 
             //settings.UrlPrefixes.Add($"http://*:{localPort}/");
             settings.UrlPrefixes.Add($"http://localhost:{localPort}/");
