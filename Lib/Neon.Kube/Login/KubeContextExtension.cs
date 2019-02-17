@@ -128,6 +128,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// The custom certificate generated for the Kubernetes dashboard PEM.
+        /// </summary>
+        [JsonProperty(PropertyName = "KubernetesDashboardCertificate")]
+        [YamlMember(Alias = "KubernetesDashboardCertificate", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string KubernetesDashboardCertificate { get; set; }
+
+        /// <summary>
         /// The SSH RSA private key fingerprint used to secure the cluster nodes.  This is a
         /// MD5 hash encoded as hex bytes separated by colons.
         /// </summary>

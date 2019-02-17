@@ -30,6 +30,7 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
@@ -205,10 +206,21 @@ namespace Neon.Kube
         // Kubernetes Dashboard:
 
         /// <summary>
+        /// <para>
         /// The Kubernetes Dashboard configuration YAML.
+        /// </para>
+        /// <note>
+        /// See the remarks for information on embedded variables.
+        /// </note>
         /// </summary>
+        /// <remarks>
+        /// The YAML returned includes two variables <b>$&lt;CERTIFICATE&gt;</b> and <b>$&lt;PRIVATEKEY&gt;</b> that 
+        /// need to be replaced with the custom certificate and private key the dashboard will use to
+        /// secure the site.  These must be passed as the PEM encoded certificate and key converted into
+        /// a single line of base-64 text.
+        /// </remarks>
         [JsonProperty(PropertyName = "KubeDashboardYaml", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeDashboardYaml", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "KubeDashboardYaml", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubeDashboardYaml { get; set; }
     }

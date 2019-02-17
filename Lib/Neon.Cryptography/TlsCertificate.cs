@@ -136,7 +136,7 @@ namespace Neon.Cryptography
         /// and <b>-----BEGIN PRIVATE KEY-----</b> related headers and footers.
         /// </note>
         /// </remarks>
-        public static TlsCertificate FromPem(string certPem, string keyPem = null)
+        public static TlsCertificate FromPemParts(string certPem, string keyPem = null)
         {
             return new TlsCertificate(certPem, keyPem);
         }

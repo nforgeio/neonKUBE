@@ -1211,8 +1211,63 @@ subjects:
                     firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-dashboard",
                         () =>
                         {
+                            if (kubeContextExtensions.KubernetesDashboardCertificate != null)
+                            {
+                                firstMaster.Status = "generate: dashboard certificate";
+
+                                // We're going to tie the custom certificate to the IP addresses
+                                // of the master nodes only.  This means that only these nodes
+                                // can accept the traffic and also that we'd need to regenerate
+                                // the certificate if we add/remove a master node.
+                                //
+                                // Here's the tracking task:
+                                //
+                                //      https://github.com/nforgeio/neonKUBE/issues/441
+
+                                var managerAddresses = new List<string>();
+
+                                foreach (var master in cluster.Masters)
+                                {
+                                    managerAddresses.Add(master.PrivateAddress.ToString());
+                                }
+
+                                var utcNow     = DateTime.UtcNow;
+                                var utc10Years = utcNow.AddYears(10);
+
+                                var certificate = TlsCertificate.CreateSelfSigned(
+                                    hostnames: managerAddresses,
+                                    validDays: (int)(utc10Years - utcNow).TotalDays,
+                                    issuedBy:  $"kubernetes-{cluster.Name}");
+
+                                kubeContextExtensions.KubernetesDashboardCertificate = certificate.CombinedPem;
+                                kubeContextExtensions.Save();
+                            }
+
+                            // Deploy the dashboard.  Note that we need to insert the base-64
+                            // encoded certificate and key PEM into the dashboard configuration
+                            // YAML first.
+
                             firstMaster.Status = "deploy: kubernetes dashboard";
-                            firstMaster.KubeCtlApply(kubeContextExtensions.SetupDetails.SetupInfo.KubeDashboardYaml);
+
+                            var dashboardYaml = kubeContextExtensions.SetupDetails.SetupInfo.KubeDashboardYaml;
+                            var dashboardCert = TlsCertificate.Parse(kubeContextExtensions.KubernetesDashboardCertificate);
+                            var variables     = new Dictionary<string, string>();
+
+                            variables.Add("CERTIFICATE", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.CertPemNormalized)));
+                            variables.Add("PRIVATEKEY", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.KeyPemNormalized)));
+
+                            using (var preprocessReader = 
+                                new PreprocessReader(dashboardYaml, variables)
+                                {
+                                    StripComments     = false,
+                                    ProcessStatements = false
+                                }
+                            )
+                            {
+                                dashboardYaml = preprocessReader.ReadToEnd();
+                            }
+
+                            firstMaster.KubeCtlApply(dashboardYaml);
                         });
                 });
         }

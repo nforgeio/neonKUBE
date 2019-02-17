@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DashboardConfig.cs
+// FILE:	    KubeDashboardConfig.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,7 +41,7 @@ namespace Neon.Kube
     /// <summary>
     /// Manages the Kubernetes dashboard YAML configurations.
     /// </summary>
-    internal static partial class DashboardConfig
+    internal static partial class KubeDashboardConfig
     {
         /// <summary>
         /// Returns the dashboard configuration to be used for the specified version

@@ -270,10 +270,10 @@ namespace Neon.Kube
 
             setupInfo.Versions.Kubernetes          = kubeVersionString;
 
-            var dashboardConfig                    = DashboardConfig.GetDashboardConfigFor(kubeVersion.ToString());
+            var kubeDashboardConfig                = KubeDashboardConfig.GetDashboardConfigFor(kubeVersion.ToString());
 
-            setupInfo.KubeDashboardYaml            = dashboardConfig.ConfigYaml;
-            setupInfo.Versions.KubernetesDashboard = dashboardConfig.Version;
+            setupInfo.KubeDashboardYaml            = kubeDashboardConfig.ConfigYaml;
+            setupInfo.Versions.KubernetesDashboard = kubeDashboardConfig.Version;
 
             setupInfo.Versions.Docker              = dockerVersion;
             setupInfo.Versions.Helm                = helmVersion;

@@ -384,7 +384,7 @@ namespace WinDesktop
                 var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
                 var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
                 var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
-                var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
+                var tlsCert     = TlsCertificate.FromPemParts(certPem, keyPem);
 
                 var kubeDashboardProxy =
                     new ReverseProxy(

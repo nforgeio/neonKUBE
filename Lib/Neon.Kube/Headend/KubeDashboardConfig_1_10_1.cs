@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DashboardConfig.1.10.1.cs
+// FILE:	    KubeDashboardConfig.1.10.1.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -38,7 +38,7 @@ using Neon.Time;
 
 namespace Neon.Kube
 {
-    internal static partial class DashboardConfig
+    internal static partial class KubeDashboardConfig
     {
         /// <summary>
         /// Modified YAML for Dashboard 1.10.1
@@ -59,7 +59,6 @@ $@"# Copyright 2017 The Kubernetes Authors.
 # limitations under the License.
 
 # ------------------- Dashboard Secret ------------------- #
-# BEGIN-NEONKUBE-MODIFICATION
 
 apiVersion: v1
 kind: Secret
@@ -69,9 +68,9 @@ metadata:
   name: kubernetes-dashboard-certs
   namespace: kube-system
 type: Opaque
-
-# END-NEONKUBE-MODIFICATION
-# -------------------------
+data:
+  cert.pem: $<CERTIFICATE>
+  key.pem: $<PRIVATEKEY>
 
 ---
 # ------------------- Dashboard Service Account ------------------- #
@@ -164,14 +163,12 @@ spec:
         - containerPort: 8443
           protocol: TCP
         args:
-          - --auto-generate-certificates
-# Uncomment the following line to manually specify Kubernetes API server Host
-# If not specified, Dashboard will attempt to auto discover the API server and connect
-# to it. Uncomment only if the default does not work.
-# - --apiserver-host=http://my-address:port
+        - --tls-cert-file=/certs/cert.pem
+        - --tls-key-file=/certs/key.pem
         volumeMounts:
         - name: kubernetes-dashboard-certs
           mountPath: /certs
+          readOnly: true
           # Create on-disk volume to store exec logs
         - mountPath: /tmp
           name: tmp-volume
@@ -196,7 +193,6 @@ spec:
 
 ---
 # ------------------- Dashboard Service ------------------- #
-# BEGIN-NEONKUBE-MODIFICATION
 
 kind: Service
 apiVersion: v1
@@ -213,9 +209,6 @@ spec:
     nodePort: {KubeHostPorts.KubeDashboard}
   selector:
     k8s-app: kubernetes-dashboard
-
-# END-NEONKUBE-MODIFICATION
-# -------------------------
 ";
     }
 }
