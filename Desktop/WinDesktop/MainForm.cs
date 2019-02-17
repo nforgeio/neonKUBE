@@ -385,16 +385,13 @@ namespace WinDesktop
                 var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
                 var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
                 var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
-                var clientCert  = tlsCert.ToX509();
-
-                clientCert.FriendlyName = $"neonKUBE: {KubeHelper.CurrentContext.Properties.User}";
 
                 var kubeDashboardProxy =
                     new ReverseProxy(
                         localPort:   KubeHelper.ClientConfig.KubeDashboardProxyPort,
                         remotePort:  KubeHostPorts.KubeDashboard,
                         remoteHost:  cluster.GetReachableMaster().PrivateAddress.ToString(),
-                        certificate: clientCert);
+                        remoteTls:   true);
 
                 proxies.Add(kubeDashboardProxy);
 

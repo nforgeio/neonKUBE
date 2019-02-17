@@ -137,22 +137,22 @@ namespace Neon.Kube
         /// <param name="remotePort">The remote port.</param>
         /// <param name="remoteHost">Optionally specifies the remote hostname or IP address.</param>
         /// <param name="remoteTls">Optionally indicates that the remote endpoint required TLS.</param>
-        /// <param name="certificate">Optionally specifies a client certificate.  Passing a certificate implies <paramref name="remoteTls"/><c>=true</c>.</param>
+        /// <param name="clientCertificate">Optionally specifies a client certificate.  Passing a certificate implies <paramref name="remoteTls"/><c>=true</c>.</param>
         /// <param name="requestHandler">Optional request hook.</param>
         /// <param name="responseHandler">Optional response hook.</param>
         public ReverseProxy(
             int                     localPort,
             int                     remotePort,
-            string                  remoteHost      = "localhost",
-            bool                    remoteTls       = false,
-            X509Certificate2        certificate     = null,
-            Action<RequestContext>  requestHandler  = null, 
-            Action<RequestContext>  responseHandler = null)
+            string                  remoteHost        = "localhost",
+            bool                    remoteTls         = false,
+            X509Certificate2        clientCertificate = null,
+            Action<RequestContext>  requestHandler    = null, 
+            Action<RequestContext>  responseHandler   = null)
         {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
 
-            if (certificate != null)
+            if (clientCertificate != null)
             {
                 remoteTls = true;
             }
@@ -182,7 +182,7 @@ namespace Neon.Kube
                     ResponseDrainTimeout        = TimeSpan.FromSeconds(10),
                 };
 
-            if (certificate != null)
+            if (clientCertificate != null)
             {
                 // This option lets the operating system decide what versions
                 // of SSL/TLS and certificates/keys to allow.
@@ -190,14 +190,17 @@ namespace Neon.Kube
                 httpHandler.SslOptions.EnabledSslProtocols = SslProtocols.None;
 
                 httpHandler.SslOptions.ClientCertificates = new X509CertificateCollection();
-                httpHandler.SslOptions.ClientCertificates.Add(certificate);
+                httpHandler.SslOptions.ClientCertificates.Add(clientCertificate);
 
                 httpHandler.SslOptions.LocalCertificateSelectionCallback =
                     (sender, targetHost, localCertificates, remoteCertificate, acceptableIssuers) =>
                     {
-                        return certificate;
+                        return clientCertificate;
                     };
+            }
 
+            if (remoteTls)
+            {
                 httpHandler.SslOptions.RemoteCertificateValidationCallback =
                     (request, serverCertificate, chain, policyErrors) =>
                     {
