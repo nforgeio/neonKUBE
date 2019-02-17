@@ -1153,7 +1153,7 @@ networking:
                         {
                             firstMaster.Status = "deploy: helm/tiller";
 
-                            firstMaster.KubeCtlApply(
+                            firstMaster.KubectlApply(
 @"
 apiVersion: v1
 kind: ServiceAccount
@@ -1203,7 +1203,7 @@ subjects:
   name: {KubeConst.RootUser}-user
   namespace: kube-system
 ";
-                            firstMaster.KubeCtlApply(userYaml);
+                            firstMaster.KubectlApply(userYaml);
                         });
 
                     // Install the Kubernetes dashboard:
@@ -1267,7 +1267,7 @@ subjects:
                                 dashboardYaml = preprocessReader.ReadToEnd();
                             }
 
-                            firstMaster.KubeCtlApply(dashboardYaml);
+                            firstMaster.KubectlApply(dashboardYaml);
                         });
                 });
         }
@@ -1598,7 +1598,7 @@ chmod 666 /run/ssh-key*
                 {
                     File.WriteAllText(pemKeyPath, kubeContextExtension.SshClientKey.PrivatePEM);
 
-                    ExecuteResult result;
+                    ExecuteResponse result;
 
                     try
                     {

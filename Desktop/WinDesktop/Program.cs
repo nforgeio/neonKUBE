@@ -79,7 +79,7 @@ namespace WinDesktop
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            var sshCredentials = KubeHelper.CurrentContext.Extensions.SshCredentials; ;
+            var sshCredentials = KubeHelper.CurrentContext.Extension.SshCredentials; ;
 
             return new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials);
         }

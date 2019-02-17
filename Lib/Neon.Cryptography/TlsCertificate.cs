@@ -1237,8 +1237,9 @@ subjectAltName         = @alt_names
         /// key if there is one.
         /// </note>
         /// </summary>
+        /// <param name="publicOnly">Optionally include just the public certificate and exclude any private key.</param>
         /// <returns>The new <see cref="X509Certificate2"/>.</returns>
-        public X509Certificate2 ToX509()
+        public X509Certificate2 ToX509(bool publicOnly = false)
         {
             Covenant.Assert(!string.IsNullOrEmpty(CertPem));
 
@@ -1263,7 +1264,7 @@ subjectAltName         = @alt_names
 
                 x509Cert.FriendlyName = this.FriendlyName;
 
-                if (hasPrivateKey)
+                if (hasPrivateKey && !publicOnly)
                 {
                     x509Cert = x509Cert.CopyWithPrivateKey(ParseRSAKeyPem());
                 }

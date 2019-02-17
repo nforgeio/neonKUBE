@@ -448,7 +448,7 @@ namespace Neon.Common
         /// <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
         /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
         /// <returns>
-        /// The <see cref="ExecuteResult"/> including the process exit code and capture 
+        /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
         /// standard output and error streams.
         /// </returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
@@ -466,7 +466,7 @@ namespace Neon.Common
         /// otherwise it will called only with STDOUT text.
         /// </para>
         /// </remarks>
-        public static ExecuteResult ExecuteCapture(
+        public static ExecuteResponse ExecuteCapture(
             string          path, 
             object[]        args, 
             TimeSpan?       timeout = null,
@@ -493,7 +493,7 @@ namespace Neon.Common
         /// <param name="outputAction">Optional action that will be called when the process outputs some text.</param>
         /// <param name="errorAction">Optional action that will be called when the process outputs some error text.</param>
         /// <returns>
-        /// The <see cref="ExecuteResult"/> including the process exit code and capture 
+        /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
         /// standard output and error streams.
         /// </returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
@@ -511,7 +511,7 @@ namespace Neon.Common
         /// otherwise it will called only with STDOUT text.
         /// </para>
         /// </remarks>
-        public static ExecuteResult ExecuteCapture(
+        public static ExecuteResponse ExecuteCapture(
             string          path, 
             string          args, 
             TimeSpan?       timeout = null,
@@ -569,7 +569,7 @@ namespace Neon.Common
                 redirector.Wait();  // Wait for the standard output/error streams
                                     // to receive all the data
 
-                return new ExecuteResult()
+                return new ExecuteResponse()
                 {
                     ExitCode   = process.ExitCode,
                     OutputText = redirector.sbOutput.ToString(),
@@ -599,7 +599,7 @@ namespace Neon.Common
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
         /// <returns>
-        /// The <see cref="ExecuteResult"/> including the process exit code and capture 
+        /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
         /// standard output and error streams.
         /// </returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
@@ -611,7 +611,7 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<ExecuteResult> ExecuteCaptureAsync(string path, object[] args,
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, object[] args,
                                                                     TimeSpan? timeout = null, Process process = null)
         {
             return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process);
@@ -631,7 +631,7 @@ namespace Neon.Common
         /// The optional <see cref="Process"/> instance to use to launch the process.
         /// </param>
         /// <returns>
-        /// The <see cref="ExecuteResult"/> including the process exit code and capture 
+        /// The <see cref="ExecuteResponse"/> including the process exit code and capture 
         /// standard output and error streams.
         /// </returns>
         /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
@@ -643,7 +643,7 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<ExecuteResult> ExecuteCaptureAsync(string path, string args, 
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, string args, 
                                                                     TimeSpan? timeout = null, Process process = null)
         {
             return await Task.Run(() => ExecuteCapture(path, args, timeout, process));

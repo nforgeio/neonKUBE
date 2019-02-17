@@ -36,7 +36,7 @@ using Neon.Diagnostics;
 namespace Neon.Common
 {
     /// <summary>
-    /// Thrown by <see cref="ExecuteResult.EnsureSuccess"/> if the executed command
+    /// Thrown by <see cref="ExecuteResponse.EnsureSuccess"/> if the executed command
     /// did not return a <b>zero</b> exit code.
     /// </summary>
     public class ExecuteException : Exception

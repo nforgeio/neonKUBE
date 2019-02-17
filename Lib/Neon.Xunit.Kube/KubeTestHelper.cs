@@ -147,8 +147,8 @@ namespace Neon.Xunit.Kube
         /// Executes <b>neon-cli</b> passing optional individual arguments.
         /// </summary>
         /// <param name="args">The command arguments.</param>
-        /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        public static ExecuteResult NeonExec(params object[] args)
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static ExecuteResponse NeonExec(params object[] args)
         {
             return NeonExec(NeonHelper.NormalizeExecArgs(args));
         }
@@ -157,8 +157,8 @@ namespace Neon.Xunit.Kube
         /// Executes <b>neon-cli</b> passing all arguments as a string.
         /// </summary>
         /// <param name="args">The command arguments.</param>
-        /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        public static ExecuteResult NeonExec(string args)
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static ExecuteResponse NeonExec(string args)
         {
             var neonPath = NeonExePath;
 
@@ -176,8 +176,8 @@ namespace Neon.Xunit.Kube
         /// </summary>
         /// <param name="stdIn">The text to be passed as STDIN.</param>
         /// <param name="args">The command arguments.</param>
-        /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        public static ExecuteResult NeonExecStdin(string stdIn, params object[] args)
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static ExecuteResponse NeonExecStdin(string stdIn, params object[] args)
         {
             return NeonExecStdin(stdIn, NeonHelper.NormalizeExecArgs(args));
         }
@@ -188,8 +188,8 @@ namespace Neon.Xunit.Kube
         /// </summary>
         /// <param name="inputText">The text to be passed as STDIN.</param>
         /// <param name="args">The command arguments.</param>
-        /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        public static ExecuteResult NeonExecStdin(string inputText, string args)
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static ExecuteResponse NeonExecStdin(string inputText, string args)
         {
             Covenant.Requires<ArgumentNullException>(inputText != null);
 

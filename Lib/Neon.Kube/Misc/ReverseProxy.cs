@@ -137,7 +137,15 @@ namespace Neon.Kube
         /// <param name="remotePort">The remote port.</param>
         /// <param name="remoteHost">Optionally specifies the remote hostname or IP address.</param>
         /// <param name="remoteTls">Optionally indicates that the remote endpoint required TLS.</param>
-        /// <param name="clientCertificate">Optionally specifies a client certificate.  Passing a certificate implies <paramref name="remoteTls"/><c>=true</c>.</param>
+        /// <param name="validCertificate">
+        /// Optionally specifies an acceptable server certificate.  This can be used 
+        /// as a way to allow access for a specific self-signed certificate.  Passing 
+        /// a certificate implies <paramref name="remoteTls"/><c>=true</c>.
+        /// </param>
+        /// <param name="clientCertificate">
+        /// Optionally specifies a client certificate.  Passing a certificate implies
+        /// <paramref name="remoteTls"/><c>=true</c>.
+        /// </param>
         /// <param name="requestHandler">Optional request hook.</param>
         /// <param name="responseHandler">Optional response hook.</param>
         public ReverseProxy(
@@ -145,6 +153,7 @@ namespace Neon.Kube
             int                     remotePort,
             string                  remoteHost        = "localhost",
             bool                    remoteTls         = false,
+            X509Certificate2        validCertificate  = null,
             X509Certificate2        clientCertificate = null,
             Action<RequestContext>  requestHandler    = null, 
             Action<RequestContext>  responseHandler   = null)
@@ -152,7 +161,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
 
-            if (clientCertificate != null)
+            if (validCertificate != null || clientCertificate != null)
             {
                 remoteTls = true;
             }
@@ -202,15 +211,26 @@ namespace Neon.Kube
             if (remoteTls)
             {
                 httpHandler.SslOptions.RemoteCertificateValidationCallback =
-                    (request, serverCertificate, chain, policyErrors) =>
+                    (request, remoteCertificate, chain, policyErrors) =>
                     {
-                        // $todo(jeff.lill): IMPORTANT!
-                        //
-                        // This is a bad security hole and must be replaced with
-                        // code that actually verifies the remote certificate
-                        // against a fingerprint or something.
+                        var remoteCertificate2 = (X509Certificate2)remoteCertificate;
 
-                        return true;
+                        // If this proxy instance was passed a server certificate,
+                        // we're going to require that the remote certificate
+                        // thumbprint matches that one.
+                        //
+                        // Otherwise, we're going to require that the remote
+                        // certificate has been validated by the operating
+                        // system.
+
+                        if (validCertificate != null)
+                        {
+                            return remoteCertificate2.Thumbprint == validCertificate.Thumbprint;
+                        }
+                        else
+                        {
+                            return policyErrors == SslPolicyErrors.None;
+                        }
                     };
             }
 

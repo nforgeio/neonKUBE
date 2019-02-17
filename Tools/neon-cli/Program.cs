@@ -646,7 +646,7 @@ OPTIONS:
             }
             else if (KubeHelper.CurrentContext != null)
             {
-                sshCredentials = KubeHelper.CurrentContext.Extensions.SshCredentials;
+                sshCredentials = KubeHelper.CurrentContext.Extension.SshCredentials;
             }
             else
             {
@@ -826,7 +826,7 @@ OPTIONS:
         /// </summary>
         /// <param name="args">The arguments.</param>
         /// <returns>The process response.</returns>
-        public static ExecuteResult ExecuteRecurseCaptureStreams(params object[] args)
+        public static ExecuteResponse ExecuteRecurseCaptureStreams(params object[] args)
         {
             // We need to prepend the program assembly path to the arguments.
 
