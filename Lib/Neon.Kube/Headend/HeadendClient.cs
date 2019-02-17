@@ -235,46 +235,52 @@ namespace Neon.Kube
                 throw new KubeException($"[{istioVersion}] is not a supported Istio version.");
             }
 
-            var setupInfo = await Task.FromResult(
-                new KubeSetupInfo()
-                {
-                    KubeAdmLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubeadm",
-                    KubeCtlLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubectl",
-                    KubeletLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubelet",
+            var setupInfo = new KubeSetupInfo()
+            {
+                KubeAdmLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubeadm",
+                KubeCtlLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubectl",
+                KubeletLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubelet",
 
-                    KubeCtlOsxUri               = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/darwin/amd64/kubectl",
+                KubeCtlOsxUri               = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/darwin/amd64/kubectl",
                     
-                    KubeCtlWindowsUri           = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/windows/amd64/kubectl.exe",
+                KubeCtlWindowsUri           = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/windows/amd64/kubectl.exe",
 
-                    DockerPackageUbuntuUri      = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{dockerVersion}-ubuntu-bionic-stable-amd64.deb",
-                    KubeAdmPackageUbuntuVersion = ubuntuKubeAdmPackages[kubeVersion.ToString()],
-                    KubeCtlPackageUbuntuVersion = ubuntuKubeCtlPackages[kubeVersion.ToString()],
-                    KubeletPackageUbuntuVersion = ubuntuKubeletPackages[kubeVersion.ToString()],
+                DockerPackageUbuntuUri      = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{dockerVersion}-ubuntu-bionic-stable-amd64.deb",
+                KubeAdmPackageUbuntuVersion = ubuntuKubeAdmPackages[kubeVersion.ToString()],
+                KubeCtlPackageUbuntuVersion = ubuntuKubeCtlPackages[kubeVersion.ToString()],
+                KubeletPackageUbuntuVersion = ubuntuKubeletPackages[kubeVersion.ToString()],
 
-                    HelmLinuxUri                = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-linux-amd64.tar.gz",
-                    HelmOsxUri                  = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-darwin-amd64.tar.gz",
-                    HelmWindowsUri              = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-windows-amd64.zip",
+                HelmLinuxUri                = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-linux-amd64.tar.gz",
+                HelmOsxUri                  = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-darwin-amd64.tar.gz",
+                HelmWindowsUri              = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-windows-amd64.zip",
 
-                    // $todo(jeff.lill):
-                    //
-                    // I'm a little worried about where the "1.7" in the [CalicoSetupUri] came from.  I suspect that
-                    // this will vary too.  Once the Istio CNI is stable, we'll probably delete this anyway but if 
-                    // we do decide to allow for custom CNIs, we'll need to figure this out.
+                // $todo(jeff.lill):
+                //
+                // I'm a little worried about where the "1.7" in the [CalicoSetupUri] came from.  I suspect that
+                // this will vary too.  Once the Istio CNI is stable, we'll probably delete this anyway but if 
+                // we do decide to allow for custom CNIs, we'll need to figure this out.
 
-                    CalicoRbacYamlUri           = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
-                    CalicoSetupYamUri           = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml",
+                CalicoRbacYamlUri           = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
+                CalicoSetupYamlUri          = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml",
 
-                    IstioLinuxUri               = $"https://github.com/istio/istio/releases/download/{istioVersion}/istio-{istioVersion}-linux.tar.gz",
+                IstioLinuxUri               = $"https://github.com/istio/istio/releases/download/{istioVersion}/istio-{istioVersion}-linux.tar.gz"
+            };
 
-                    KubeDashboardUri            = $"https://raw.githubusercontent.com/kubernetes/dashboard/v{kubeDashboardVersion}/src/deploy/recommended/kubernetes-dashboard.yaml",
-                });
+            var kubeVersionString                  = kubeVersion.ToString();
 
-            setupInfo.Versions.Kubernetes          = kubeVersion.ToString();
-            setupInfo.Versions.KubernetesDashboard = kubeDashboardVersion.ToString();
+            setupInfo.Versions.Kubernetes          = kubeVersionString;
+
+            var dashboardConfig                    = DashboardConfig.GetDashboardConfigFor(kubeVersion.ToString());
+
+            setupInfo.KubeDashboardYaml            = dashboardConfig.ConfigYaml;
+            setupInfo.Versions.KubernetesDashboard = dashboardConfig.Version;
+
             setupInfo.Versions.Docker              = dockerVersion;
             setupInfo.Versions.Helm                = helmVersion;
             setupInfo.Versions.Calico              = calicoVersion;
             setupInfo.Versions.Istio               = istioVersion;
+
+            await Task.CompletedTask;
 
             return setupInfo;
         }

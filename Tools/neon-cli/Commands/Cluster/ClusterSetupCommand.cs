@@ -1212,89 +1212,7 @@ subjects:
                         () =>
                         {
                             firstMaster.Status = "deploy: kubernetes dashboard";
-
-                            // $todo(jeff.lill):
-                            //
-                            // We need to temporarily expose the dashboard via a NodePort.  This will
-                            // need to be removed after we implement a more general neonKUBE gateway
-                            // solution.
-                            //
-                            // We're going to download and munge the standard dashboard configuration.
-                            // Note that this is somewhat fragile and may break if configuration file
-                            // is changed.
-
-                            var formatErrorMessage = $"Unexpected Dashboard configuration format: {kubeContextExtensions.SetupDetails.SetupInfo.KubeDashboardUri}";
-                            var dashboardConfig    = httpClient.GetStringAsync(kubeContextExtensions.SetupDetails.SetupInfo.KubeDashboardUri).Result;
-                            var sbDashboardConfig  = new StringBuilder();
-                            var foundService       = false;
-                            var foundSpec          = false;
-
-                            using (var reader = new StringReader(dashboardConfig))
-                            {
-                                // Copy lines up to including: "kind: Service"
-
-                                while (true)
-                                {
-                                    var line = reader.ReadLine();
-
-                                    if (line == null)
-                                    {
-                                        break;
-                                    }
-
-                                    sbDashboardConfig.AppendLine(line);
-
-                                    if (line == "kind: Service")
-                                    {
-                                        foundService = true;
-                                        break;
-                                    }
-                                }
-
-                                if (!foundService)
-                                {
-                                    throw new KubeException(formatErrorMessage);
-                                }
-
-                                // Copy lines up to and including: "spec:"
-
-                                while (true)
-                                {
-                                    var line = reader.ReadLine();
-
-                                    if (line == null)
-                                    {
-                                        break;
-                                    }
-
-                                    sbDashboardConfig.AppendLine(line);
-
-                                    if (line == "spec:")
-                                    {
-                                        foundSpec = true;
-                                        break;
-                                    }
-                                }
-
-                                if (!foundSpec)
-                                {
-                                    throw new KubeException(formatErrorMessage);
-                                }
-
-                                // Hardcode the remaining config.
-
-                                sbDashboardConfig.AppendLine(
-$@"  type: NodePort
-  ports:
-    - port: 443
-      targetPort: 8443
-      nodePort: {KubeHostPorts.KubeDashboard}
-  selector:
-    k8s-app: kubernetes-dashboard
-");
-                            }
-
-                            firstMaster.KubeCtlApply(sbDashboardConfig);
+                            firstMaster.KubeCtlApply(kubeContextExtensions.SetupDetails.SetupInfo.KubeDashboardYaml);
                         });
                 });
         }
@@ -1320,7 +1238,7 @@ kubectl apply -f {kubeSetupInfo.CalicoRbacYamlUri}
 # We need to edit the setup manifest to specify the 
 # cluster subnet before applying it.
 
-curl {Program.CurlOptions} {kubeSetupInfo.CalicoSetupYamUri} > /tmp/calico.yaml
+curl {Program.CurlOptions} {kubeSetupInfo.CalicoSetupYamlUri} > /tmp/calico.yaml
 sed -i 's;192.168.0.0/16;{cluster.Definition.Network.PodSubnet};' /tmp/calico.yaml
 kubectl apply -f /tmp/calico.yaml
 rm /tmp/calico.yaml

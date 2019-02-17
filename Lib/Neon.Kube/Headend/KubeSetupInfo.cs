@@ -185,10 +185,10 @@ namespace Neon.Kube
         /// <summary>
         /// The Calico setup download (YAML for kubectl).
         /// </summary>
-        [JsonProperty(PropertyName = "CalicoSetupYamUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "CalicoSetupYamUri", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "CalicoSetupYamlUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "CalicoSetupYamlUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string CalicoSetupYamUri { get; set; }
+        public string CalicoSetupYamlUri { get; set; }
 
         //---------------------------------------------------------------------
         // Istio:
@@ -205,11 +205,11 @@ namespace Neon.Kube
         // Kubernetes Dashboard:
 
         /// <summary>
-        /// The Kubernetes Dashboard resource configuration URI.
+        /// The Kubernetes Dashboard configuration YAML.
         /// </summary>
-        [JsonProperty(PropertyName = "KubeDashboardUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeDashboardUri", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "KubeDashboardYaml", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "KubeDashboardYaml", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string KubeDashboardUri { get; set; }
+        public string KubeDashboardYaml { get; set; }
     }
 }
