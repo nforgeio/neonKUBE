@@ -26,12 +26,33 @@ namespace Neon.IO
     /// </summary>
     public sealed class TempFolder : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Optionally specifies the root directory where the temporary folders will
+        /// be created.  This defaults to <see cref="System.IO.Path.GetTempPath()"/>
+        /// when this is <c>null</c> or empty.
+        /// </summary>
+        public static string Root { get; set; }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Creates a temporary folder.
         /// </summary>
         public TempFolder()
         {
-            Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString());
+            if (string.IsNullOrEmpty(Root))
+            {
+                Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString());
+            }
+            else
+            {
+                Directory.CreateDirectory(Root);
+                Path = System.IO.Path.Combine(Root, Guid.NewGuid().ToString());
+            }
 
             Directory.CreateDirectory(Path);
         }
