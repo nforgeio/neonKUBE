@@ -182,6 +182,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "office", "office", "{19BEBB
 		Devops\office\tiny.cluster.yaml = Devops\office\tiny.cluster.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinInstaller", "Desktop\WinInstaller\WinInstaller.csproj", "{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
@@ -592,6 +594,18 @@ Global
 		{E77C7D25-275F-4DD6-B572-7317FED20393}.Release|x64.Build.0 = Release|Any CPU
 		{E77C7D25-275F-4DD6-B572-7317FED20393}.Release|x86.ActiveCfg = Release|Any CPU
 		{E77C7D25-275F-4DD6-B572-7317FED20393}.Release|x86.Build.0 = Release|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Debug|x64.Build.0 = Debug|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Debug|x86.Build.0 = Debug|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Release|x64.ActiveCfg = Release|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Release|x64.Build.0 = Release|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Release|x86.ActiveCfg = Release|Any CPU
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -638,6 +652,7 @@ Global
 		{E77C7D25-275F-4DD6-B572-7317FED20393} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{23E8D775-B5CA-440B-ACF2-1F7C212FE5C3} = {1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}
 		{19BEBB72-3462-40E0-BC93-983D10652E54} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
+		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6} = {33866B5A-71FB-4430-9C0B-019B20644653}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
