@@ -59,7 +59,7 @@ namespace WinDesktop
         // Instance members
 
         private const double animationFrameRate = 2;
-        private const string headendError = "Unable to contact the neonKUBE headend service.";
+        private const string headendError       = "Unable to contact the neonKUBE headend service.";
 
         private Icon                appIcon;
         private Icon                disconnectedIcon;
@@ -88,6 +88,7 @@ namespace WinDesktop
             // Ensure that temporary files are written to the users temporary folder because
             // there's a decent chance that this folder will be encrypted at rest.
 
+            TempFile.Root   = KubeHelper.TempFolder;
             TempFolder.Root = KubeHelper.TempFolder;
 
             // Preload the notification icons and animations for better performance.
