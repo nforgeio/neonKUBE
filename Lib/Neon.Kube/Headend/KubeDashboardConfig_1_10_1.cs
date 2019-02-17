@@ -163,8 +163,9 @@ spec:
         - containerPort: 8443
           protocol: TCP
         args:
-        - --tls-cert-file=/certs/cert.pem
-        - --tls-key-file=/certs/key.pem
+        - --auto-generate-certificates=false
+        - --tls-cert-file=cert.pem
+        - --tls-key-file=key.pem
         volumeMounts:
         - name: kubernetes-dashboard-certs
           mountPath: /certs

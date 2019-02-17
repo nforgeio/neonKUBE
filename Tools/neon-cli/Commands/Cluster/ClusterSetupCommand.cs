@@ -1237,7 +1237,7 @@ subjects:
                                 var certificate = TlsCertificate.CreateSelfSigned(
                                     hostnames: managerAddresses,
                                     validDays: (int)(utc10Years - utcNow).TotalDays,
-                                    issuedBy:  $"kubernetes-{cluster.Name}");
+                                    issuedBy:  "kubernetes-dashboard");
 
                                 kubeContextExtension.KubernetesDashboardCertificate = certificate.CombinedPem;
                                 kubeContextExtension.Save();
