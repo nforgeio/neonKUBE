@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using Neon;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
 
@@ -82,9 +83,14 @@ namespace WinDesktop
             Load  += MainForm_Load;
             Shown += (s, a) => Visible = false; // The main form should always be hidden
 
+            // Ensure that temporary files are written to the users temporary folder because
+            // there's a decent chance that this folder will be encrypted at rest.
+
+            TempFolder.Root = KubeHelper.TempFolder;
+
             // Preload the notification icons and animations for better performance.
 
-            appIcon             = new Icon(@"Images\app.ico");
+            appIcon = new Icon(@"Images\app.ico");
             connectedIcon       = new Icon(@"Images\connected.ico");
             disconnectedIcon    = new Icon(@"Images\disconnected.ico");
             connectingAnimation = AnimatedIcon.Load("Images", "connecting", animationFrameRate);

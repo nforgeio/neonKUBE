@@ -35,6 +35,7 @@ using Neon;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.IO;
 
 namespace NeonCli
 {
@@ -113,6 +114,11 @@ OPTIONS:
             // Disable any logging that might be performed by library classes.
 
             LogManager.Default.LogLevel = LogLevel.None;
+
+            // Ensure that temporary files are written to the users temporary folder because
+            // there's a decent chance that this folder will be encrypted at rest.
+
+            TempFolder.Root = KubeHelper.TempFolder;
 
             // We need to verify that we're running with elevated permissions if we're not
             // shimmed into a Docker container.

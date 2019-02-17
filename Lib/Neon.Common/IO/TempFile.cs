@@ -48,7 +48,7 @@ namespace Neon.IO
         /// appended to the generated file name.  This defaults to <b>.tmp</b>.
         /// </param>
         /// <param name="folder">
-        /// Optionaly specifies the target folder.  This defaults to the standard
+        /// Optionally specifies the target folder.  This defaults to the standard
         /// temporary directory for the current user.
         /// </param>
         public TempFile(string suffix = null, string folder = null)
