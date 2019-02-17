@@ -438,7 +438,7 @@ Server Requirements:
             }
             finally
             {
-                KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready to be setup.").Wait();
+                KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready for setup.").Wait();
             }
         }
     }

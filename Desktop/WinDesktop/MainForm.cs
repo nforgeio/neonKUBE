@@ -383,6 +383,13 @@ namespace WinDesktop
 
                 StopProxies();
 
+                if (KubeHelper.CurrentContext == null)
+                {
+                    // Wr're not logged into a cluster so don't start any proxies.
+
+                    return;
+                }
+
                 //-------------------------------------------------------------
                 // The Kubernetes dashboard reverse proxy.
 
