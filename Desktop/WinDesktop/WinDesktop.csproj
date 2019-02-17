@@ -64,7 +64,7 @@
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if &quot;$(ConfigurationName)&quot;==&quot;Release&quot; (&#xD;&#xA;    if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;    pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; &quot;$(ConfigurationName)&quot; &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot; win10-x64&#xD;&#xA;)&#xD;&#xA;" />
+    <Exec Command="if &quot;$(NF_PUBLISH_BINARIES)&quot;==&quot;true&quot; (&#xD;&#xA;    if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;    pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; &quot;$(ConfigurationName)&quot; &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot; win10-x64&#xD;&#xA;)&#xD;&#xA;" />
   </Target>
 
 </Project>
