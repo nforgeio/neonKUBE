@@ -687,7 +687,14 @@ namespace Neon.Common
 
             if (IsWindows)
             {
-                Process.Start("cmd", $"/C start {uri}");
+                uri = uri.Replace("&", "^&");
+
+                var processStart = new ProcessStartInfo("cmd", $"/C start {uri}")
+                {
+                    CreateNoWindow = true
+                };
+
+                Process.Start(processStart);
             }
             else if (IsOSX)
             {
