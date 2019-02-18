@@ -18,11 +18,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using Neon.Common;
 using Neon.Kube;
 
 namespace WinDesktop
@@ -32,15 +34,58 @@ namespace WinDesktop
     /// </summary>
     public static class Program
     {
+#if DEBUG_LOG
+        //---------------------------------------------------------------------
+        // Use these methods for debugging startup issues.  Note that the log
+        // file and folder are hardcoded.
+        //
+        // IMPORTANT: THIS MUST NOT BE ENABLED FOR PRODUCTION RELEASES.
+
+        private const bool              logEnabled = true;
+        private const string            logFolder  = @"C:\temp";
+        private static readonly string  logPath    = $@"{logFolder}\desktop.log";
+
+        /// <summary>
+        /// Clears the DEBUUG log.
+        /// </summary>
+        public static void LogClear()
+        {
+            Directory.CreateDirectory(logFolder);
+            File.WriteAllText(logPath, string.Empty);
+        }
+
+        /// <summary>
+        /// Appends a line of text to the DEBUG log.
+        /// </summary>
+        /// <param name="text">The text.</param>
+        public static void Log(string text)
+        {
+            File.AppendAllText(logPath, text + "\r\n");
+        }
+#endif
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            try
+            {
+#if DEBUG_LOG
+                Program.LogClear();
+#endif
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new MainForm());
+            }
+            catch (Exception e)
+            {
+#if DEBUG_LOG
+                Program.Log(NeonHelper.ExceptionError(e));
+                Program.Log(e.StackTrace);
+#endif
+            }
         }
 
         /// <summary>
