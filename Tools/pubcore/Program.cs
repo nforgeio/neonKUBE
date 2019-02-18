@@ -173,8 +173,14 @@ or:
                     var process  = new Process();
                     var sbOutput = new StringBuilder();
 
+                    // $todo(jeff.lill):
+                    //
+                    // I'd really like to use [--no-build] here instead of [--no-restore] but that
+                    // doesn't work because [publish] relies on files in the [/obj/] folder that
+                    // the normal solution build doesn't generate.
+
                     process.StartInfo.FileName               = "dotnet.exe";
-                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --no-build --no-dependencies";
+                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --no-restore --no-dependencies";
                     process.StartInfo.CreateNoWindow         = true;
                     process.StartInfo.UseShellExecute        = false;
                     process.StartInfo.RedirectStandardError  = true;
