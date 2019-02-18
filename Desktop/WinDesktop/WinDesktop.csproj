@@ -11,7 +11,7 @@
     <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
-    <AssemblyName>neonKUBE</AssemblyName>
+    <AssemblyName>neonKUBE.Desktop</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
