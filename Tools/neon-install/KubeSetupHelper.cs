@@ -439,7 +439,7 @@ namespace NeonInstall
 
                     if (Directory.GetFiles(CachePowerShellFolder, "*.*", SearchOption.AllDirectories).Length == 0)
                     {
-                        LogLine($"Extract: PowerShell 6x files");
+                        LogLine($"Extract: PowerShell Core files");
                         PowerShellExecute($"Expand-Archive -LiteralPath \"{Path.Combine(ExternalFolder, "PowerShell-win-x86.zip")}\" -DestinationPath \"{this.CachePowerShellFolder}\" -Force");
                     }
 

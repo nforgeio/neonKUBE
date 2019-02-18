@@ -11,7 +11,7 @@
     <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
-    <AssemblyName>neonKUBE.Windows</AssemblyName>
+    <AssemblyName>neonKUBE-win</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

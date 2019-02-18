@@ -9,8 +9,8 @@
 AppName=neonKUBE
 AppVersion={#GetEnv("NF_PRODUCT_VERSION")}
 DefaultDirName={pf}\neonKUBE
-DefaultGroupName=neonKUBE Desktop
-; UninstallDisplayIcon={app}\neonKUBE.Windows\neonKUBE.Desktop.exe
+DefaultGroupName=neonKUBE
+; UninstallDisplayIcon={app}\neonKUBE.Windows\neonKUBE-win.exe
 MinVersion=10.0.16299
 Compression=lzma2
 SolidCompression=no
@@ -47,13 +47,13 @@ Source: {#GetEnv("NF_BUILD")}\nshell.cmd; DestDir: {app}; Flags: recursesubdirs 
 Source: {#GetEnv("NF_BUILD")}\nshell\*.*; DestDir: {app}\nshell; Flags: recursesubdirs replacesameversion
 
 [Icons]
-Name: "{group}\My Program"; Filename: "{app}\neonKUBE.Windows\neonKUBE.Desktop.exe"
+Name: "{group}\My Program"; Filename: "{app}\neonKUBE.Windows\neonKUBE-win.exe"
 
 [Registry]
 Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: """{app}\neonKUBE.Windows\neonKUBE.Windows.exe"""; Flags: uninsdeletevalue
 
 [Run]
-Filename: "{app}\neonKUBE.Windows\neonKUBE.Windows.exe"; Flags: postinstall
+Filename: "{app}\neonKUBE.Windows\neonKUBE-win.exe"; Flags: postinstall
 
 [Code]
 

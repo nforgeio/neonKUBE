@@ -209,10 +209,10 @@ namespace WinDesktop
         /// <param name="animatedIcon">The icon animation.</param>
         /// <remarks>
         /// Calls to this method may be recursed and should be matched 
-        /// with a call to <see cref="StopWorkingAnimnation"/>.  The
+        /// with a call to <see cref="StopNotifyAnimation"/>.  The
         /// amimation will actually stop when the last matching
-        /// <see cref="StartWorkingAnimation"/> call was matched with
-        /// the last <see cref="StopWorkingAnimnation"/>.
+        /// <see cref="StartNotifyAnimation"/> call was matched with
+        /// the last <see cref="StopNotifyAnimation"/>.
         /// </remarks>
         private void StartNotifyAnimation(AnimatedIcon animatedIcon)
         {
