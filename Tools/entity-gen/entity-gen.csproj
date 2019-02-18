@@ -12,10 +12,12 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\entity-gen.xml</DocumentationFile>
+    <OutputPath>bin\Debug</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\entity-gen.xml</DocumentationFile>
+    <OutputPath>bin\Release</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />

@@ -14,6 +14,16 @@
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>bin\Debug</OutputPath>
+    <DocumentationFile>bin\Debug\nshell.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>bin\Release</OutputPath>
+    <DocumentationFile>bin\Release\nshell.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="GitInfo" Version="2.0.20">
       <PrivateAssets>all</PrivateAssets>
