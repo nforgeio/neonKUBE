@@ -1,14 +1,21 @@
-﻿[Setup]
+﻿; This script requires the following environment variables:
+;
+;   NF_BUILD            - The build output folder
+;   NF_CACHE            - The build cache folder
+;   NF_KUBE_VERSION     - The Kubernetes version
+;   NF_PRODUCT_VERSION  - The neonKUBE product version
+
+[Setup]
 AppName=neonKUBE
-AppVersion={#GetEnv("NF_NEONKUBE_VERSION")}
-DefaultDirName={pf}\neonKube
-DefaultGroupName=neonKube
-; UninstallDisplayIcon={app}\neonKUBE.exe
+AppVersion={#GetEnv("NF_PRODUCT_VERSION")}
+DefaultDirName={pf}\neonKUBE
+DefaultGroupName=neonKUBE Desktop
+; UninstallDisplayIcon={app}\neonKUBE.Windows\neonKUBE.Desktop.exe
 MinVersion=10.0.16299
 Compression=lzma2
 SolidCompression=no
 OutputDir={#GetEnv("NF_BUILD")}
-OutputBaseFilename=neonKUBE
+OutputBaseFilename=neonKUBE-setup
 ; "ArchitecturesAllowed=x64" specifies that Setup cannot run on
 ; anything but x64.
 ArchitecturesAllowed=x64
@@ -19,25 +26,47 @@ ArchitecturesInstallIn64BitMode=x64
 AppPublisher=neonFORGE, LLC
 AppPublisherURL=https://neonKUBE.com
 ChangesEnvironment=yes
+PrivilegesRequired=admin
 
 [Files]
-; Source: {#GetEnv("NF_CACHE")}\windows\kubectl\{#GetEnv("NF_KUBE_VERSION")}\kubectl.exe; DestDir: {app}; Flags: recursesubdirs replacesameversion
+
+; Common files
+Source: {#GetEnv("NF_CACHE")}\windows\kubectl\{#GetEnv("NF_KUBE_VERSION")}\kubectl.exe; DestDir: {app}; Flags: recursesubdirs replacesameversion
+Source: {#GetEnv("NF_CACHE")}\windows\powershell\*.*; DestDir: {app}\powershell; Flags: recursesubdirs replacesameversion
+
+; neonKUBE.Windows
+Source: {#GetEnv("NF_BUILD")}\neonKUBE.Windows.cmd; DestDir: {app}; Flags: recursesubdirs replacesameversion
+Source: {#GetEnv("NF_BUILD")}\neonKUBE.Windows\*.*; DestDir: {app}\neonKUBE.Windows; Flags: recursesubdirs replacesameversion
+
+; neon-cli
+Source: {#GetEnv("NF_BUILD")}\neon.cmd; DestDir: {app}; Flags: recursesubdirs replacesameversion
+Source: {#GetEnv("NF_BUILD")}\neon\*.*; DestDir: {app}\neon; Flags: recursesubdirs replacesameversion
+
+; nshell
+Source: {#GetEnv("NF_BUILD")}\nshell.cmd; DestDir: {app}; Flags: recursesubdirs replacesameversion
+Source: {#GetEnv("NF_BUILD")}\nshell\*.*; DestDir: {app}\nshell; Flags: recursesubdirs replacesameversion
 
 [Icons]
-; Name: "{group}\My Program"; Filename: "{app}\neonKUBE.exe"
+Name: "{group}\My Program"; Filename: "{app}\neonKUBE.Windows\neonKUBE.Desktop.exe"
+
+[Registry]
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: """{app}\neonKUBE.Windows\neonKUBE.Windows.exe"""; Flags: uninsdeletevalue
+
+[Run]
+Filename: "{app}\neonKUBE.Windows\neonKUBE.Windows.exe"; Flags: postinstall
 
 [Code]
 
-; =========================================================================
-; Low level Windows API wrappers
-; =============================================================================
+{ ============================================================================= }
+{ Low level Windows API wrappers                                                }
+{ ============================================================================= }
 
 function GetPhysicallyInstalledSystemMemory(var physicalRamKBytes: Int64): BOOL;
   external 'GetPhysicallyInstalledSystemMemory@kernel32.dll stdcall';
 
-; =============================================================================
-; These functions manage the PATH environment variable.
-; =============================================================================
+{ ============================================================================= }
+{ These functions manage the PATH environment variable.                         }
+{ ============================================================================= }
 
 function Replace(Dest, SubStr, Str: string): string;
 var
@@ -56,6 +85,19 @@ begin
       Ok := 0;
   end;
   Result:=Dest;
+end;
+
+procedure PrependToPath();
+var
+  V: string;
+  Str: string;
+begin
+  RegQueryStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'Path', V);
+  Str := ExpandConstant('{app}');
+  V := Replace(V, Str, '');
+  V := Str + ';' + V;
+  V := Replace(V,';;',';');
+  RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'Path', V);
 end;
 
 procedure AppendToPath();
@@ -83,16 +125,16 @@ begin
   RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'Path', V);
 end;
 
-; =============================================================================
-; EVENT Handlers
-; =============================================================================
+{ ============================================================================= }
+{ EVENT Handlers                                                                }
+{ ============================================================================= }
 
 function InitializeSetup: Boolean;
 var
     physicalRamKBytes: Int64;
 begin
 
-    ; Verify that the machine has at least 4GB of RAM
+    { Verify that the machine has at least 4GB of RAM }
 
     GetPhysicallyInstalledSystemMemory(physicalRamKBytes);
 
@@ -108,15 +150,15 @@ end;
 procedure DeinitializeSetup();
 begin
     
-  ; Append the program folder to the PATH
+  { Prepend the program folder to the PATH }
 
-  AppendToPath();
+  PrependToPath();
 end;
 
 procedure DeinitializeUninstall();
 begin
 
-  ; Remove the program folder from the PATH
+  { Remove the program folder from the PATH }
 
   RemoveFromPath();
 end;

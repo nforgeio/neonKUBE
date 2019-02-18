@@ -27,6 +27,7 @@ REM Configure the environment variables.
 
 set NF_TOOLBIN=%NF_ROOT%\ToolBin
 set NF_BUILD=%NF_ROOT%\Build
+set NF_CACHE=%NF_ROOT%\Build\cache
 set NF_TEMP=C:\Temp
 set NF_PUBLISH_BINARIES=1
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
@@ -37,6 +38,7 @@ REM Persist the environment variables.
 setx NF_ROOT "%NF_ROOT%" /M
 setx NF_TOOLBIN "%NF_TOOLBIN%" /M
 setx NF_BUILD "%NF_BUILD%" /M
+setx NF_CACHE "%NF_CACHE%" /M
 setx NF_TEMP "%NF_TEMP%" /M
 setx NF_PUBLISH_BINARIES "%NF_PUBLISH_BINARIES%" /M
 

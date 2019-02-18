@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		.gitignore = .gitignore
 		buildenv.cmd = buildenv.cmd
 		global.json = global.json
+		kube-version.txt = kube-version.txt
 		LICENSE = LICENSE
 		nuget-version.txt = nuget-version.txt
 		passwords.zip = passwords.zip
@@ -183,6 +184,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "office", "office", "{19BEBB
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinInstaller", "Desktop\WinInstaller\WinInstaller.csproj", "{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-install", "Tools\neon-install\neon-install.csproj", "{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}"
+	ProjectSection(ProjectDependencies) = postProject
+		{756FB86B-29BC-4C6B-A19B-A624A9E9D367} = {756FB86B-29BC-4C6B-A19B-A624A9E9D367}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -606,6 +612,18 @@ Global
 		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Release|x64.Build.0 = Release|Any CPU
 		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Release|x86.ActiveCfg = Release|Any CPU
 		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}.Release|x86.Build.0 = Release|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|x64.Build.0 = Debug|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Debug|x86.Build.0 = Debug|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x64.ActiveCfg = Release|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x64.Build.0 = Release|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x86.ActiveCfg = Release|Any CPU
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -653,6 +671,7 @@ Global
 		{23E8D775-B5CA-440B-ACF2-1F7C212FE5C3} = {1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}
 		{19BEBB72-3462-40E0-BC93-983D10652E54} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
 		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6} = {33866B5A-71FB-4430-9C0B-019B20644653}
+		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
