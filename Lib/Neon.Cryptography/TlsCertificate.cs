@@ -1266,7 +1266,15 @@ subjectAltName         = @alt_names
 
                 if (hasPrivateKey && !publicOnly)
                 {
-                    x509Cert = x509Cert.CopyWithPrivateKey(ParseRSAKeyPem());
+                    // $todo(jeff.lill):
+                    //
+                    // Enable this when we upgrade to .NET Standard 2.1
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/new
+
+                    // x509Cert = x509Cert.CopyWithPrivateKey(ParseRSAKeyPem());
+
+                    throw new NotImplementedException("[X509Certificate2.CopyWithPrivateKey()] is not available in .NET Standard 2.0.");
                 }
 
                 return x509Cert;

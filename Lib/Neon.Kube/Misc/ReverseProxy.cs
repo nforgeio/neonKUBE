@@ -168,7 +168,7 @@ namespace Neon.Kube
 
             if (!NeonHelper.IsWindows)
             {
-                throw new NotSupportedException($"[{nameof(ReverseProxy)}] is only supported on Windows.");
+                throw new NotSupportedException($"[{nameof(ReverseProxy)}] is supported only on Windows.");
             }
 
             this.localPort       = localPort;
@@ -179,6 +179,14 @@ namespace Neon.Kube
             // Create the client.
 
             var remoteScheme = remoteTls ? "https" : "http";
+
+            // $todo(jeff.lill):
+            //
+            // Enable this when we upgrade to .NET Standard 2.1
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/new
+
+#if NETSTANDARD_21
             var httpHandler  =
                 new SocketsHttpHandler()
                 {
@@ -206,7 +214,6 @@ namespace Neon.Kube
                     {
                         return clientCertificate;
                     };
-            }
 
             if (remoteTls)
             {
@@ -233,6 +240,40 @@ namespace Neon.Kube
                         }
                     };
             }
+#else
+            var httpHandler = new HttpClientHandler()
+            {
+                    AllowAutoRedirect       = false,
+                    AutomaticDecompression  = DecompressionMethods.Deflate | DecompressionMethods.GZip,
+                    MaxConnectionsPerServer = 100,
+            };
+
+            if (remoteTls)
+            {
+                httpHandler.ServerCertificateCustomValidationCallback =
+                    (request, remoteCertificate, chain, policyErrors) =>
+                    {
+                        var remoteCertificate2 = (X509Certificate2)remoteCertificate;
+
+                        // If this proxy instance was passed a server certificate,
+                        // we're going to require that the remote certificate
+                        // thumbprint matches that one.
+                        //
+                        // Otherwise, we're going to require that the remote
+                        // certificate has been validated by the operating
+                        // system.
+
+                        if (validCertificate != null)
+                        {
+                            return remoteCertificate2.Thumbprint == validCertificate.Thumbprint;
+                        }
+                        else
+                        {
+                            return policyErrors == SslPolicyErrors.None;
+                        }
+                    };
+            }
+#endif
 
             client = new HttpClient(httpHandler, disposeHandler: true)
             {
