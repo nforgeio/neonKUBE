@@ -11,10 +11,11 @@
   `Neon.Global.Build.NuGetVersion` - Version for the libraries published to NuGet
   `Neon.Global.Build.ProductVersion` - Version for the released products and installers
 
-4. Manually clean and rebuild the entire solution: 
+4. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
 
   * Delete the contents of the **$\Build** folder.
-  * Ensure that envionment variable is set to: **NF_PUBLISH_BINARIES=1**
+  * Ensure that this environment variable is set: **NF_PUBLISH_BINARIES=1**
+  * Clean the **RELEASE** configuration.
   * Build the **RELEASE** configuration.
 
 5. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
