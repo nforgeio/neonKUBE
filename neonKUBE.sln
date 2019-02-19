@@ -185,14 +185,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-install", "Tools\neon-
 		{756FB86B-29BC-4C6B-A19B-A624A9E9D367} = {756FB86B-29BC-4C6B-A19B-A624A9E9D367}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinDesktop", "Desktop\WinDesktop\WinDesktop.csproj", "{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinDesktop", "Desktop\WinDesktop\WinDesktop.csproj", "{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Lib\Neon.Global\Neon.Global.projitems*{10be7e1f-0792-4f9e-9e7c-5b9a3739c110}*SharedItemsImports = 4
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
 		Lib\Neon.Global\Neon.Global.projitems*{4c0bca49-f217-436c-877f-40a606989af4}*SharedItemsImports = 13
 		Lib\Neon.Global\Neon.Global.projitems*{756fb86b-29bc-4c6b-a19b-a624a9e9d367}*SharedItemsImports = 4
+		Lib\Neon.Global\Neon.Global.projitems*{81d4c74b-3f7b-499f-8def-da2cb600de0e}*SharedItemsImports = 4
 		Lib\Neon.Couchbase.Lite.shared\Neon.Couchbase.Lite.shared.projitems*{8d7fe880-9006-488f-bab3-3a82011cd699}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -610,18 +610,18 @@ Global
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x64.Build.0 = Release|Any CPU
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x86.ActiveCfg = Release|Any CPU
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x86.Build.0 = Release|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Debug|x64.Build.0 = Debug|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Debug|x86.Build.0 = Debug|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Release|Any CPU.Build.0 = Release|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Release|x64.ActiveCfg = Release|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Release|x64.Build.0 = Release|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Release|x86.ActiveCfg = Release|Any CPU
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110}.Release|x86.Build.0 = Release|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|x64.Build.0 = Debug|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|x86.Build.0 = Debug|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|x64.ActiveCfg = Release|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|x64.Build.0 = Release|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|x86.ActiveCfg = Release|Any CPU
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -669,7 +669,7 @@ Global
 		{19BEBB72-3462-40E0-BC93-983D10652E54} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
 		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6} = {33866B5A-71FB-4430-9C0B-019B20644653}
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
-		{10BE7E1F-0792-4F9E-9E7C-5B9A3739C110} = {33866B5A-71FB-4430-9C0B-019B20644653}
+		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E} = {33866B5A-71FB-4430-9C0B-019B20644653}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

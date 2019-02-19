@@ -70,22 +70,9 @@ namespace WinDesktop
         [STAThread]
         static void Main()
         {
-            try
-            {
-#if DEBUG_LOG
-                Program.LogClear();
-#endif
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new MainForm());
-            }
-            catch (Exception e)
-            {
-#if DEBUG_LOG
-                Program.Log(NeonHelper.ExceptionError(e));
-                Program.Log(e.StackTrace);
-#endif
-            }
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new MainForm());
         }
 
         /// <summary>

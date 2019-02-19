@@ -687,9 +687,7 @@ namespace Neon.Common
 
             if (IsWindows)
             {
-                uri = uri.Replace("&", "^&");
-
-                var processStart = new ProcessStartInfo("cmd", $"/C start {uri}")
+                var processStart = new ProcessStartInfo(uri)
                 {
                     CreateNoWindow = true
                 };
