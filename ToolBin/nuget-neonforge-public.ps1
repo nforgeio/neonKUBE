@@ -26,10 +26,15 @@ function Publish
 
 	$version = Get-Content "$env:NF_ROOT\nuget-version.txt" -First 1
 
-	# We need to run [nuget push] in the context of [neon run] so we can
-	# reference the NuGet API key from the encrypted [secrets.yaml] file.
+	# $todo(jeff.lill):
+    #
+    # We need to use [nshell run ...]  to retrieve the API key from an encrypted
+    # secrets file rather than depending on NUGET_API_KEY environment variable
+    # always being set.
+    #
+    #   https://github.com/nforgeio/neonKUBE/issues/448
 
-	neon run --vault-password-file=neon-git "$env:NF_ROOT\Devops\test\secrets.yaml" -- nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg" %NUGET_API_KEY%
+	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg" %NUGET_API_KEY%
 }
 
 # Update the project versions first.
