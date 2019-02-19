@@ -351,4 +351,10 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets'))" />
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent>if not exist "$(NF_BUILD)" mkdir "$(NF_BUILD)"
+if not exist "$(NF_BUILD)/win-desktop" mkdir "$(NF_BUILD)/win-desktop"
+cp -R "$(TargetDir)/*" "$(NF_BUILD)/win-desktop"
+</PostBuildEvent>
+  </PropertyGroup>
 </Project>

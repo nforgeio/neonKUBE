@@ -34,9 +34,8 @@ PrivilegesRequired=admin
 Source: {#GetEnv("NF_CACHE")}\windows\kubectl\{#GetEnv("NF_KUBE_VERSION")}\kubectl.exe; DestDir: {app}; Flags: recursesubdirs replacesameversion
 Source: {#GetEnv("NF_CACHE")}\windows\powershell\*.*; DestDir: {app}\powershell; Flags: recursesubdirs replacesameversion
 
-; neonKUBE.Windows
-Source: {#GetEnv("NF_BUILD")}\neonKUBE.Windows.cmd; DestDir: {app}; Flags: recursesubdirs replacesameversion
-Source: {#GetEnv("NF_BUILD")}\neonKUBE.Windows\*.*; DestDir: {app}\neonKUBE.Windows; Flags: recursesubdirs replacesameversion
+; WinDesktop
+Source: {#GetEnv("NF_BUILD")}\win-desktop\*.*; DestDir: {app}\win-desktop; Flags: recursesubdirs replacesameversion
 
 ; neon-cli
 Source: {#GetEnv("NF_BUILD")}\neon.cmd; DestDir: {app}; Flags: recursesubdirs replacesameversion
@@ -47,13 +46,13 @@ Source: {#GetEnv("NF_BUILD")}\nshell.cmd; DestDir: {app}; Flags: recursesubdirs 
 Source: {#GetEnv("NF_BUILD")}\nshell\*.*; DestDir: {app}\nshell; Flags: recursesubdirs replacesameversion
 
 [Icons]
-Name: "{group}\My Program"; Filename: "{app}\neonKUBE.Windows\neonKUBE-win.exe"
+Name: "{group}\neonKUBE Desktop"; Filename: "{app}\win-desktop\neonKUBE-win.exe"
 
 [Registry]
-Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: """{app}\neonKUBE.Windows\neonKUBE.Windows.exe"""; Flags: uninsdeletevalue
+; Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: """{app}\win-desktop\neonKUBE-win.exe"""; Flags: uninsdeletevalue
 
 [Run]
-Filename: "{app}\neonKUBE.Windows\neonKUBE-win.exe"; Flags: postinstall
+Filename: "{app}\win-desktop\neonKUBE-win.exe"; Flags: postinstall
 
 [Code]
 
