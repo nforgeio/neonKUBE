@@ -667,8 +667,8 @@ OPTIONS:
                     // Create the container user and group.
 
                     node.Status = "create: container user";
-                    node.SudoCommand($"sudo groupadd --system --gid {KubeConst.ContainerGID} {KubeConst.ContainerGroup}");
-                    node.SudoCommand($"sudo useradd --system --uid {KubeConst.ContainerUID} --gid {KubeConst.ContainerUser} {KubeConst.ContainerGroup}");
+                    node.SudoCommand($"sudo groupadd --gid {KubeConst.ContainerGID} {KubeConst.ContainerGroup}");
+                    node.SudoCommand($"sudo useradd --uid {KubeConst.ContainerUID} --gid {KubeConst.ContainerUser} {KubeConst.ContainerGroup}");
 
                     // $todo(jeff.lill):
                     //

@@ -169,21 +169,30 @@ namespace Neon.Kube
         public const string ContainerUser = "container";
 
         /// <summary>
+        /// <para>
         /// The default host machine container user ID.
-        /// This will be provisioned as a system user.
+        /// </para>
+        /// <note>
+        /// This explictly set to the first valid normal Linux user ID to
+        /// be compatible with as many Docker images as possible.
+        /// </note>
         /// </summary>
-        public const int ContainerUID = 499;
+        public const int ContainerUID = 1000;
 
         /// <summary>
         /// The default host machine container group name.
-        /// This will be provisioned as a system group.
         /// </summary>
         public const string ContainerGroup = "container";
 
         /// <summary>
+        /// <para>
         /// The default host machine container group ID.
-        /// This will be provisioned as a system group.
+        /// </para>
+        /// <note>
+        /// This explictly set to the first valid normal Linux user ID to
+        /// be compatible with as many Docker images as possible.
+        /// </note>
         /// </summary>
-        public const int ContainerGID = 499;
+        public const int ContainerGID = 1000;
     }
 }
