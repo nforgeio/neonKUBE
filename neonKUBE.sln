@@ -112,8 +112,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Kube", "Lib\Neon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Common", "Test\Test.Neon.Common\Test.Neon.Common.csproj", "{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Releases", "Releases", "{2BCF066C-588B-44A5-AF35-527E96C7B7B5}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Aws", "Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj", "{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Azure", "Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj", "{CD08B37A-614C-4DEB-9805-ADBD77DA3F8E}"

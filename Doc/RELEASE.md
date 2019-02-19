@@ -45,6 +45,14 @@
 
 13. Create a new Git branch from PROD named for the release (like **release-1.0.0+1901**) and push to GitHub.
 
+14. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+
+  a. Create the release if it doesn't already exist
+  b. Set **Tag** to the version
+  c. Set **Target** to the release branch
+  d. Add the release setup binary named like: **neonKUBE-setup-1.0+1902-alpha-0.exe**
+  e. Publish the release.
+
 ## Post Release
 
 1. Check out the **MASTER** branch and merge changes from **PROD**.
@@ -55,7 +63,7 @@
 
 4. Merge **MASTER** into the **JEFF** and/or any other development brances and rebuild all of those images, as required.
 
-5. Start the next release notes document.
+5. Create a draft for the next GitHub release.
 
  # Release Version Conventions
 
