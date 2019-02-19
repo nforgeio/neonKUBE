@@ -60,7 +60,7 @@
 
 1. Check out the **MASTER** branch and merge changes from **PROD**.
 
-2. Bump the `neon-cli` version in `Program.cs`.
+2. Bump the version numbers in `$/nuget-version.txt` and `$Lib/Neon.Global/Build.cs`.
 
 3. Merge the changes into the **MASTER** branch and rebuild the solution.
 
