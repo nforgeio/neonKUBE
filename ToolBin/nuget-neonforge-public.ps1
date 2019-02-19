@@ -22,9 +22,13 @@ function Publish
 
 	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_build\nuget"
 
-	# Load the package version number.
+	# Load the package semantic version number and strip off any build
+    # or prerelease labels because [dotnet pack] strips these off the
+    # nuget package files it builds.
 
 	$version = Get-Content "$env:NF_ROOT\nuget-version.txt" -First 1
+    $version = $version.Substring(0, $version.IndexOf('-')) # Removes any preview label
+    $version = $version.Substring(0, $version.IndexOf('+')) # Removes any build metadata label
 
 	# $todo(jeff.lill):
     #
