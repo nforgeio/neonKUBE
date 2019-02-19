@@ -161,5 +161,29 @@ namespace Neon.Kube
         /// the Kubernetes dashboard for the current cluster.
         /// </summary>
         public const int KubeDashboardProxyPort = 1060;
+
+        /// <summary>
+        /// The default host machine container username.
+        /// This will be provisioned as a system user.
+        /// </summary>
+        public const string ContainerUser = "container";
+
+        /// <summary>
+        /// The default host machine container user ID.
+        /// This will be provisioned as a system user.
+        /// </summary>
+        public const int ContainerUID = 499;
+
+        /// <summary>
+        /// The default host machine container group name.
+        /// This will be provisioned as a system group.
+        /// </summary>
+        public const string ContainerGroup = "container";
+
+        /// <summary>
+        /// The default host machine container group ID.
+        /// This will be provisioned as a system group.
+        /// </summary>
+        public const int ContainerGID = 499;
     }
 }
