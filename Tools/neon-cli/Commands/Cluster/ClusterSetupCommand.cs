@@ -245,7 +245,7 @@ OPTIONS:
                             }
                         });
 
-                    controller.AddGlobalStep("workstation binaries", () => WorkstationBinaries());
+                    controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
                     controller.AddStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
                     controller.AddStep("verify OS", CommonSteps.VerifyOS);
@@ -663,6 +663,28 @@ OPTIONS:
 
                     node.Status = "tune: disks";
                     node.SudoCommand("setup-ssd.sh");
+
+                    // Create the container user and group.
+
+                    node.Status = "create: container user";
+                    node.SudoCommand($"sudo groupadd --system --gid {KubeConst.ContainerGID} {KubeConst.ContainerGroup}");
+                    node.SudoCommand($"sudo useradd --system --uid {KubeConst.ContainerUID} --gid {KubeConst.ContainerUser} {KubeConst.ContainerGroup}");
+
+                    // $todo(jeff.lill):
+                    //
+                    // This is a bit of a hack to enable local Persistent Volumes for
+                    // pet-type pods.  We're going to precreate 10 folders and give
+                    // the container user full ownership of them.  We need to do this
+                    // because Kubernetes is unable to create these dynamically yet.
+
+                    node.Status = "create: local persistent volume folders";
+
+                    for (int i = 0; i < 10; i++)
+                    {
+                        node.SudoCommand($"mkdir -p /var/lib/neonkube/volumes/{i}");
+                        node.SudoCommand($"chown {KubeConst.ContainerUser}:{KubeConst.ContainerGroup} /var/lib/neonkube/volumes/{i}");
+                        node.SudoCommand($"chmod 770 /var/lib/neonkube/volumes/{i}");
+                    }
                 });
         }
 
