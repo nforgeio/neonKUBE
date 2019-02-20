@@ -215,7 +215,7 @@ OPTIONS:
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
         /// source code branch.
         /// </summary>
-        public static bool IsProd => ThisAssembly.Git.Branch.Equals("prod", StringComparison.InvariantCultureIgnoreCase);
+        public static bool IsRelease => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Returns the program version as the Git branch and commit and an optional

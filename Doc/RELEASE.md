@@ -4,43 +4,39 @@
 
 1. Merge all desired changes into the **MASTER** branch from the **JEFF** and/or other development branches.
 
-2. Merge **PROD** into **MASTER** to ensure that we have any stray changes from there too.
+2. Update the product versions as required: 
 
-3. Update the product versions as required: 
-
-  `Neon.Global.Build.NuGetVersion` - Version for the libraries published to NuGet
+  `Neon.Global.Build.NuGetVersion` - Version for the libraries published to **nuget.org**
   `Neon.Global.Build.ProductVersion` - Version for the released products and installers
 
-4. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
+3. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
 
   * Delete the contents of the **$\Build** folder.
   * Ensure that this environment variable is set: **NF_PUBLISH_BINARIES=1**
   * Clean the **RELEASE** configuration.
   * Build the **RELEASE** configuration.
 
-5. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+4. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-6. Deploy a test cluster.
+5. Deploy a test cluster.
 
-7. Run all unit tests against the test cluster and fix any bugs until all tests pass.
+6. Run all unit tests against the test cluster and fix any bugs until all tests pass.
 
 ## Release 
 
-1. Select the **PROD** branch.  Merge from **MASTER**.
+1. Update `$/nuget-version.txt` (or `GitHub/nuget-version.txt` in the solution) with the 
+   new package version as required.
 
-2. Open the **Properties** each of the library projects and update the **Release notes**.
+2. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
+   required Kubernetes version as required.
 
-3. Update `$/nuget-version.txt` (or `GitHub/nuget-version.txt` in the solution) with the 
-   new package version.
+3. Open the **Properties** each of the library projects and update the **Release notes**.
 
-4. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
-   required Kubernetes version.
+4. Create a new local `release-VERSION` branch from `MASTER` (where `VERSION` is the same version as saved to `$/nuget-version.txt`).
 
 5. Manually clean and rebuild the entire solution: RELEASE configuration.
 
-6. Ensure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
-
-7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **NuGet.org**.
+7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
 
 8. Commit all changes with a comment like: **RELEASE: 1.0.0+1901** but **DO NOT** push to GitHub yet.
 
@@ -52,15 +48,15 @@
 
 12. Fix any important issues and commit the changes.
 
-13. Push the **PROD** branch to GitHub.
+13. Push the `release-VERSION` branch to GitHub.
 
-14. Create a new Git branch from PROD named for the release (like **release-1.0.0+1901**) and push to GitHub.
+14. Go back to the `MASTER` branch and merge any changes from the `release-VERSION` branch.
 
-14. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+15. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
-  c. Set **Target** to the release branch
+  c. Set **Target** to the `release-VERSION` branch
   d: Check **This is a pre-release** as required
   e. Add the release setup binary named like: **neonKUBE-setup-0.1.0+1902-alpha-0.exe**
   f. Edit the release notes including adding the SH512 for the binaries:
@@ -71,15 +67,11 @@
 
 ## Post Release
 
-1. Check out the **MASTER** branch and merge changes from **PROD**.
+1. Bump the version numbers in `$/nuget-version.txt` and `$Lib/Neon.Global/Build.cs`.
 
-2. Bump the version numbers in `$/nuget-version.txt` and `$Lib/Neon.Global/Build.cs`.
+2. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
 
-3. Merge the changes into the **MASTER** branch and rebuild the solution.
-
-4. Merge **MASTER** into the **JEFF** and/or any other development brances and rebuild all of those images, as required.
-
-5. Create a draft for the next GitHub release.
+3. Create a draft for the next GitHub release.
 
  # Release Version Conventions
 

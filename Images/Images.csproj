@@ -67,7 +67,6 @@
     <None Include="haproxy\Dockerfile" />
     <None Include="haproxy\publish.ps1" />
     <None Include="haproxy\README.md" />
-    <None Include="neon-cli\conf\ssh_config.conf" />
     <Content Include="golang\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -96,16 +95,6 @@
     </None>
     <None Include="alpine\publish.ps1" />
     <None Include="alpine\README.md" />
-    <Content Include="neon-cli\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-cli\build.ps1" />
-    <None Include="neon-cli\docker-entrypoint.sh" />
-    <None Include="neon-cli\Dockerfile">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-cli\publish.ps1" />
-    <None Include="neon-cli\README.md" />
     <Content Include="ubuntu-16.04-dotnet\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

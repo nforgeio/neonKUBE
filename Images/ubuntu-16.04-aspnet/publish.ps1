@@ -51,7 +51,7 @@ function Build
 	. ./build.ps1 -registry $registry -tag $tag -version $dotnetVersion
 	PushImage "${registry}:$tag"
 
-	if (IsProd)
+	if (IsRelease)
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
 		PushImage "${registry}:$dotnetVersion"
@@ -62,7 +62,7 @@ function Build
 
 	if ($latest)
 	{
-		if (IsProd)
+		if (IsRelease)
 		{
 			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 			PushImage "${registry}:latest"

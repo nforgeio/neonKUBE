@@ -570,7 +570,7 @@ OPTIONS:
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
         /// source code branch.
         /// </summary>
-        public static bool IsProd => ThisAssembly.Git.Branch.Equals("prod", StringComparison.InvariantCultureIgnoreCase);
+        public static bool IsRelease => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Returns the username used to secure the cluster nodes before they are setup.  This
@@ -965,7 +965,7 @@ OPTIONS:
                 {
                     image = DockerImageReg + imageWithoutRegistry;
                 }
-                else if (!IsProd)
+                else if (!IsRelease)
                 {
                     image = KubeConst.NeonDevRegistry + imageWithoutRegistry;
                 }
@@ -991,7 +991,7 @@ OPTIONS:
                 {
                     return normalized.Replace(":latest", $":{DockerImageTag}");
                 }
-                else if (IsProd)
+                else if (IsRelease)
                 {
                     return normalized;
                 }

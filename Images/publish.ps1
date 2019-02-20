@@ -131,11 +131,6 @@ if ($dotnetBase)
 	Publish "$image_root\\ubuntu-16.04-aspnet"
 }
 
-if ($dotnet)
-{
-	Publish "$image_root\\neon-cli"
-}
-
 if ($other)
 {
 	Publish "$image_root\\couchbase-test"

@@ -212,13 +212,13 @@ function ImageTag
 }
 
 #------------------------------------------------------------------------------
-# Returns $True if the current Git branch is "prod".
+# Returns $True if the current Git branch is a release (starts with "release-").
 
-function IsProd
+function IsRelease
 {
 	$branch = git rev-parse --abbrev-ref HEAD
 
-	return $branch -eq "prod"
+	return $branch -like "release-*"
 }
 
 #------------------------------------------------------------------------------
@@ -227,7 +227,7 @@ function IsProd
 
 function GetRegistry($image)
 {
-	if (IsProd)
+	if (IsRelease)
 	{
 		return "nkubeio/" + $image
 	}
@@ -242,7 +242,7 @@ function GetRegistry($image)
 
 function DockerOrg
 {
-	if (IsProd)
+	if (IsRelease)
 	{
 		return "nkubeio"
 	}

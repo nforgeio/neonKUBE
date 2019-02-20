@@ -63,11 +63,6 @@ namespace Neon.Kube
         public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(250);
 
         /// <summary>
-        /// Identifies the Git production branch.
-        /// </summary>
-        public const string GitProdBranch = "prod";
-
-        /// <summary>
         /// The root account username baked into the Hyper-V and XenServer cluster
         /// host node virtual machine templates.  This is also used as the username
         /// for hosts provisioned to clouds like Azure, Aws, and Google Cloud. 
