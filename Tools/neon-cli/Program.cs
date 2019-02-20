@@ -78,6 +78,7 @@ COMMAND SUMMARY:
     neon login              COMMAND
     neon logout
     neon password           COMMAND
+    neon prepare            COMMAND
     neon scp                [NODE]
     neon ssh                [NODE]
     neon version            [-n] [--git]
@@ -214,6 +215,8 @@ OPTIONS:
                     new PasswordListCommand(),
                     new PasswordRemoveCommand(),
                     new PasswordSetCommand(),
+                    new PrepareCommand(),
+                    new PrepareNodeTemplateCommand(),
                     new ScpCommand(),
                     new SshCommand(),
                     new VersionCommand()

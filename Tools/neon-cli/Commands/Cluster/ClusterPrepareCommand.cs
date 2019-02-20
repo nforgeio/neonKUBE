@@ -65,7 +65,7 @@ OPTIONS:
     --remove-templates          - Removes any cached local virtual machine 
                                   templates without actually setting up a 
                                   cluster.  You can use this to ensure that 
-                                  cluster will be created  from the most recent
+                                  cluster will be created from the most recent
                                   template.
 
 Server Requirements:

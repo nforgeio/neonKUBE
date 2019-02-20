@@ -666,16 +666,11 @@ OPTIONS:
 
                     // Create the container user and group.
 
-#if TODO
-                    node.Status = "create: container user";
-                    node.SudoCommand($"sudo groupadd --gid {KubeConst.ContainerGID} {KubeConst.ContainerGroup}");
-                    node.SudoCommand($"sudo useradd --uid {KubeConst.ContainerUID} --gid {KubeConst.ContainerUser} {KubeConst.ContainerGroup}");
-
                     // $todo(jeff.lill):
                     //
                     // This is a bit of a hack to enable local Persistent Volumes for
                     // pet-type pods.  We're going to precreate 10 folders and give
-                    // the container user full ownership of them.  We need to do this
+                    // the [container] user full ownership of them.  We need to do this
                     // because Kubernetes is unable to create these dynamically yet.
 
                     node.Status = "create: local persistent volume folders";
@@ -686,23 +681,6 @@ OPTIONS:
                         node.SudoCommand($"chown {KubeConst.ContainerUser}:{KubeConst.ContainerGroup} /var/lib/neonkube/volumes/{i}");
                         node.SudoCommand($"chmod 770 /var/lib/neonkube/volumes/{i}");
                     }
-#else
-                    // $todo(jeff.lill):
-                    //
-                    // This is a bit of a hack to enable local Persistent Volumes for
-                    // pet-type pods.  We're going to precreate 10 folders and give
-                    // the container user full ownership of them.  We need to do this
-                    // because Kubernetes is unable to create these dynamically yet.
-
-                    node.Status = "create: local persistent volume folders";
-
-                    for (int i = 0; i < 10; i++)
-                    {
-                        node.SudoCommand($"mkdir -p /var/lib/neonkube/volumes/{i}");
-                        node.SudoCommand($"chown sysadmin:sysadmin /var/lib/neonkube/volumes/{i}");
-                        node.SudoCommand($"chmod 770 /var/lib/neonkube/volumes/{i}");
-                    }
-#endif
                 });
         }
 

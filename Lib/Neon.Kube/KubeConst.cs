@@ -158,8 +158,27 @@ namespace Neon.Kube
         public const int KubeDashboardProxyPort = 1060;
 
         /// <summary>
+        /// The default host machine sysadmin username.
+        /// </summary>
+        public const string SysAdminUser = "sysadmin";
+
+        /// <summary>
+        /// The default host machine sysadmin user ID.
+        /// </summary>
+        public const int SysAdminUID = 1234;
+
+        /// <summary>
+        /// The default host machine sysadmin group.
+        /// </summary>
+        public const string SysAdminGroup = "sysadmin";
+
+        /// <summary>
+        /// The default host machine sysadmin group ID.
+        /// </summary>
+        public const int SysAdminGID = 1234;
+
+        /// <summary>
         /// The default host machine container username.
-        /// This will be provisioned as a system user.
         /// </summary>
         public const string ContainerUser = "container";
 
