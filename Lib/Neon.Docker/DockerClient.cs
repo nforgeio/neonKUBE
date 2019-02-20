@@ -36,15 +36,6 @@ using Neon.Net;
 using Neon.Retry;
 using System.Threading;
 
-// $todo(jeff.lill): Implement unit/integration tests
-
-// $todo(jeff.lill):
-//
-// I just noticed that Docker has Swagger definitions for the API.
-// I don't know if this is a new thing but it would be really nice
-// to generate the client API from these (or see if somebody has
-// published a .NET Docker NuGet).
-
 namespace Neon.Docker
 {
     /// <summary>
