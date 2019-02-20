@@ -50,8 +50,13 @@
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
   c. Set **Target** to the release branch
-  d. Add the release setup binary named like: **neonKUBE-setup-1.0+1902-alpha-0.exe**
-  e. Publish the release.
+  d: Check **This is a pre-release** as required
+  e. Add the release setup binary named like: **neonKUBE-setup-0.1.0+1902-alpha-0.exe**
+  f. Edit the release notes including adding the SH512 for the binaries:
+
+    `cat <binary-file> | openssl dgst -sha512`
+
+  g. Publish the release
 
 ## Post Release
 
