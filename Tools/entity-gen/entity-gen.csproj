@@ -12,10 +12,12 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\entity-gen.xml</DocumentationFile>
+    <OutputPath>bin\Debug</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\entity-gen.xml</DocumentationFile>
+    <OutputPath>bin\Release</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
@@ -29,7 +31,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; &quot;$(ConfigurationName)&quot; &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
+    <Exec Command="if &quot;$(NF_PUBLISH_BINARIES)&quot;==&quot;1&quot; (&#xD;&#xA;    if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;    pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; &quot;$(ConfigurationName)&quot; &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot; win10-x64&#xD;&#xA;)" />
   </Target>
 
 </Project>

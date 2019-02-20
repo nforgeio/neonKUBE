@@ -129,5 +129,24 @@ namespace TestCommon
             Assert.StartsWith("C:\\temp", tempFile.Path);
             Assert.EndsWith(".txt", tempFile.Path);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void CustomRoot()
+        {
+            TempFile.Root = "C:\\temp";
+
+            try
+            {
+                var tempFile = new TempFile();
+
+                Assert.StartsWith("C:\\temp", tempFile.Path);
+                Assert.EndsWith(".tmp", tempFile.Path);
+            }
+            finally
+            {
+                TempFile.Root = null;
+            }
+        }
     }
 }

@@ -38,6 +38,20 @@ namespace Neon.IO
     /// </summary>
     public sealed class TempFile : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Optionally specifies the root directory where the temporary files will
+        /// be created.  This defaults to <see cref="System.IO.Path.GetTempPath()"/>
+        /// when this is <c>null</c> or empty and can be overridden for specific
+        /// instances by passing a folder path the the constructor.
+        /// </summary>
+        public static string Root { get; set; }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private bool isDisposed = false;
 
         /// <summary>
@@ -48,7 +62,7 @@ namespace Neon.IO
         /// appended to the generated file name.  This defaults to <b>.tmp</b>.
         /// </param>
         /// <param name="folder">
-        /// Optionaly specifies the target folder.  This defaults to the standard
+        /// Optionally specifies the target folder.  This defaults to the standard
         /// temporary directory for the current user.
         /// </param>
         public TempFile(string suffix = null, string folder = null)
@@ -60,6 +74,11 @@ namespace Neon.IO
             else if (suffix.Length > 0 && !suffix.StartsWith("."))
             {
                 throw new ArgumentException($"Non-empty [{nameof(suffix)}] arguments must be prefixed with a period.");
+            }
+
+            if (string.IsNullOrEmpty(folder))
+            {
+                folder = Root;
             }
 
             if (string.IsNullOrEmpty(folder))

@@ -3287,7 +3287,7 @@ network:
         /// <param name="yaml">The YAML file contents.</param>
         /// <param name="runOptions">Optional <see cref="RunOptions"/>.</param>
         /// <returns>The <see cref="CommandResponse"/>.</returns>
-        public CommandResponse KubeCtlApply(string yaml, RunOptions runOptions = RunOptions.Defaults)
+        public CommandResponse KubectlApply(string yaml, RunOptions runOptions = RunOptions.Defaults)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yaml));
 
@@ -3308,7 +3308,7 @@ network:
         {
             Covenant.Requires<ArgumentNullException>(sbYaml != null);
 
-            return KubeCtlApply(sbYaml.ToString());
+            return KubectlApply(sbYaml.ToString());
         }
 
         /// <inheritdoc/>

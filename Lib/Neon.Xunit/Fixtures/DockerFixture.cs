@@ -573,7 +573,7 @@ namespace Neon.Xunit
         /// arguments and returns the results.
         /// </summary>
         /// <param name="args">The <b>docker</b> command arguments.</param>
-        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
         /// <remarks>
         /// <para>
         /// This method formats any arguments passed so they will be suitable 
@@ -587,7 +587,7 @@ namespace Neon.Xunit
         /// the <b>docker</b> within a cluster using <b>neon-cli</b>.
         /// </note>
         /// </remarks>
-        public virtual ExecuteResult DockerExecute(params object[] args)
+        public virtual ExecuteResponse DockerExecute(params object[] args)
         {
             base.CheckDisposed();
 
@@ -599,7 +599,7 @@ namespace Neon.Xunit
         /// argument string and returns the results.
         /// </summary>
         /// <param name="argString">The <b>docker</b> command arguments.</param>
-        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
         /// <remarks>
         /// <para>
         /// This method assumes that the single string argument passed is already
@@ -612,7 +612,7 @@ namespace Neon.Xunit
         /// the <b>docker</b> within a cluster using <b>neon-cli</b>.
         /// </note>
         /// </remarks>
-        public virtual ExecuteResult DockerExecute(string argString)
+        public virtual ExecuteResponse DockerExecute(string argString)
         {
             base.CheckDisposed();
 

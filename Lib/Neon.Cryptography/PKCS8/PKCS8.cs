@@ -311,7 +311,11 @@ namespace Neon.Cryptography
                     // the SYSTEM identity on Windows (e.g. ASP.NET). See
                     // http://bugzilla.ximian.com/show_bug.cgi?id=77559
                     CspParameters csp = new CspParameters();
-                    csp.Flags = CspProviderFlags.UseMachineKeyStore;
+
+                    //csp.Flags = CspProviderFlags.UseMachineKeyStore;
+                    csp.Flags = CspProviderFlags.CreateEphemeralKey;
+                    csp.KeyContainerName = Guid.NewGuid().ToString("D");
+
                     rsa = new RSACryptoServiceProvider(csp);
                     rsa.ImportParameters(param);
 #endif

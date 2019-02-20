@@ -36,7 +36,7 @@ namespace Neon.Xunit
         /// <see cref="AnsiblePlayer"/> play operation.
         /// </summary>
         /// <param name="rawResults">The execution results.</param>
-        internal AnsiblePlayResults(ExecuteResult rawResults)
+        internal AnsiblePlayResults(ExecuteResponse rawResults)
         {
             Covenant.Requires<ArgumentNullException>(rawResults != null);
 
@@ -110,7 +110,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns the raw execution results.
         /// </summary>
-        public ExecuteResult RawResults { get; private set; }
+        public ExecuteResponse RawResults { get; private set; }
 
         /// <summary>
         /// Returns the list of <see cref="AnsibleTaskResult"/> instance in the order

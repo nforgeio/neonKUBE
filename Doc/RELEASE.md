@@ -6,9 +6,17 @@
 
 2. Merge **PROD** into **MASTER** to ensure that we have any stray changes from there too.
 
-3. Update the product version: `Neon.Global.Build.ProductVersion`
+3. Update the product versions as required: 
 
-4. Manually clean and rebuild the entire solution: RELEASE configuration.
+  `Neon.Global.Build.NuGetVersion` - Version for the libraries published to NuGet
+  `Neon.Global.Build.ProductVersion` - Version for the released products and installers
+
+4. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
+
+  * Delete the contents of the **$\Build** folder.
+  * Ensure that this environment variable is set: **NF_PUBLISH_BINARIES=1**
+  * Clean the **RELEASE** configuration.
+  * Build the **RELEASE** configuration.
 
 5. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
@@ -25,25 +33,28 @@
 3. Update `$/nuget-version.txt` (or `GitHub/nuget-version.txt` in the solution) with the 
    new package version.
 
-4. Manually clean and rebuild the entire solution: RELEASE configuration.
+4. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
+   required Kubernetes version.
 
-5. Ensure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
+5. Manually clean and rebuild the entire solution: RELEASE configuration.
 
-6. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **NuGet.org**.
+6. Ensure that the `neon-cli` image is rebuilt with the correct version and is pushed to DockerHub.
 
-7. Commit all changes with a comment like: **RELEASE: 1.0.0+1901** but **DO NOT** push to GitHub yet.
+7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **NuGet.org**.
 
-8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+8. Commit all changes with a comment like: **RELEASE: 1.0.0+1901** but **DO NOT** push to GitHub yet.
 
-9. Upgrade an older cluster and verify by running cluster unit tests.
+9. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-10. Deploy a fresh cluster and verify by running the cluster unit tests.
+10. Upgrade an older cluster and verify by running cluster unit tests.
 
-11. Fix any important issues and commit the changes.
+11. Deploy a fresh cluster and verify by running the cluster unit tests.
 
-12. Push the **PROD** branch to GitHub.
+12. Fix any important issues and commit the changes.
 
-13. Create a new Git branch from PROD named for the release (like **release-1.0.0+1901**) and push to GitHub.
+13. Push the **PROD** branch to GitHub.
+
+14. Create a new Git branch from PROD named for the release (like **release-1.0.0+1901**) and push to GitHub.
 
 14. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
@@ -62,7 +73,7 @@
 
 1. Check out the **MASTER** branch and merge changes from **PROD**.
 
-2. Bump the `neon-cli` version in `Program.cs`.
+2. Bump the version numbers in `$/nuget-version.txt` and `$Lib/Neon.Global/Build.cs`.
 
 3. Merge the changes into the **MASTER** branch and rebuild the solution.
 

@@ -77,3 +77,7 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
 1. **OpenSSL**: [releases](https://indy.fulgan.com/SSL/) - current: **1.0.2q** (March 2018)
   
   **NOTE:** Download and extract the files to `$/external/OpenSSL/*`
+
+2. **PowerShell Core**: [releases](https://github.com/PowerShell/PowerShell/releases) = current: 6.1.1-win-x86
+
+  **NOTE:** Download the ZIP archive and replace the **$/External/Powershell-win-x86.zip** file.

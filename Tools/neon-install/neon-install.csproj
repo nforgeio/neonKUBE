@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <RootNamespace>NeonInstall</RootNamespace>
+    <AssemblyName>neon-install</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>bin\Debug</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>bin\Release</OutputPath>
+    <DocumentationFile>bin\Release\neon-install.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if &quot;$(NF_PUBLISH_BINARIES)&quot;==&quot;1&quot; (&#xD;&#xA;    if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;    pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; &quot;$(ConfigurationName)&quot; &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot; win10-x64&#xD;&#xA;)&#xD;&#xA;" />
+  </Target>
+
+</Project>

@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -136,29 +137,38 @@ namespace Neon.Kube
         /// <param name="remotePort">The remote port.</param>
         /// <param name="remoteHost">Optionally specifies the remote hostname or IP address.</param>
         /// <param name="remoteTls">Optionally indicates that the remote endpoint required TLS.</param>
-        /// <param name="certificate">Optionally specifies a client certificate.  Passing on implies <paramref name="remoteTls"/><c>=true</c>.</param>
+        /// <param name="validCertificate">
+        /// Optionally specifies an acceptable server certificate.  This can be used 
+        /// as a way to allow access for a specific self-signed certificate.  Passing 
+        /// a certificate implies <paramref name="remoteTls"/><c>=true</c>.
+        /// </param>
+        /// <param name="clientCertificate">
+        /// Optionally specifies a client certificate.  Passing a certificate implies
+        /// <paramref name="remoteTls"/><c>=true</c>.
+        /// </param>
         /// <param name="requestHandler">Optional request hook.</param>
         /// <param name="responseHandler">Optional response hook.</param>
         public ReverseProxy(
             int                     localPort,
             int                     remotePort,
-            string                  remoteHost      = "localhost",
-            bool                    remoteTls       = false,
-            X509Certificate2        certificate     = null,
-            Action<RequestContext>  requestHandler  = null, 
-            Action<RequestContext>  responseHandler = null)
+            string                  remoteHost        = "localhost",
+            bool                    remoteTls         = false,
+            X509Certificate2        validCertificate  = null,
+            X509Certificate2        clientCertificate = null,
+            Action<RequestContext>  requestHandler    = null, 
+            Action<RequestContext>  responseHandler   = null)
         {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
 
-            if (certificate != null)
+            if (validCertificate != null || clientCertificate != null)
             {
                 remoteTls = true;
             }
 
             if (!NeonHelper.IsWindows)
             {
-                throw new NotSupportedException($"[{nameof(ReverseProxy)}] is only supported on Windows.");
+                throw new NotSupportedException($"[{nameof(ReverseProxy)}] is supported only on Windows.");
             }
 
             this.localPort       = localPort;
@@ -169,32 +179,101 @@ namespace Neon.Kube
             // Create the client.
 
             var remoteScheme = remoteTls ? "https" : "http";
+
+            // $todo(jeff.lill):
+            //
+            // Enable this when we upgrade to .NET Standard 2.1
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/new
+
+#if NETSTANDARD_21
             var httpHandler  =
                 new SocketsHttpHandler()
                 {
-                    AllowAutoRedirect       = false,
-                    AutomaticDecompression  = DecompressionMethods.All,
-                    ConnectTimeout          = TimeSpan.FromSeconds(5),
-                    MaxConnectionsPerServer = 100
+                    AllowAutoRedirect           = false,
+                    AutomaticDecompression      = DecompressionMethods.All,
+                    ConnectTimeout              = TimeSpan.FromSeconds(5),
+                    MaxConnectionsPerServer     = 100,
+                    PooledConnectionIdleTimeout = TimeSpan.FromSeconds(10),
+                    PooledConnectionLifetime    = TimeSpan.FromSeconds(60),
+                    ResponseDrainTimeout        = TimeSpan.FromSeconds(10),
                 };
 
-            if (certificate != null)
+            if (clientCertificate != null)
             {
+                // This option lets the operating system decide what versions
+                // of SSL/TLS and certificates/keys to allow.
+
+                httpHandler.SslOptions.EnabledSslProtocols = SslProtocols.None;
+
                 httpHandler.SslOptions.ClientCertificates = new X509CertificateCollection();
-                httpHandler.SslOptions.ClientCertificates.Add(certificate);
+                httpHandler.SslOptions.ClientCertificates.Add(clientCertificate);
+
+                httpHandler.SslOptions.LocalCertificateSelectionCallback =
+                    (sender, targetHost, localCertificates, remoteCertificate, acceptableIssuers) =>
+                    {
+                        return clientCertificate;
+                    };
+
+            if (remoteTls)
+            {
+                httpHandler.SslOptions.RemoteCertificateValidationCallback =
+                    (request, remoteCertificate, chain, policyErrors) =>
+                    {
+                        var remoteCertificate2 = (X509Certificate2)remoteCertificate;
+
+                        // If this proxy instance was passed a server certificate,
+                        // we're going to require that the remote certificate
+                        // thumbprint matches that one.
+                        //
+                        // Otherwise, we're going to require that the remote
+                        // certificate has been validated by the operating
+                        // system.
+
+                        if (validCertificate != null)
+                        {
+                            return remoteCertificate2.Thumbprint == validCertificate.Thumbprint;
+                        }
+                        else
+                        {
+                            return policyErrors == SslPolicyErrors.None;
+                        }
+                    };
             }
+#else
+            var httpHandler = new HttpClientHandler()
+            {
+                    AllowAutoRedirect       = false,
+                    AutomaticDecompression  = DecompressionMethods.Deflate | DecompressionMethods.GZip,
+                    MaxConnectionsPerServer = 100,
+            };
 
-            httpHandler.SslOptions.RemoteCertificateValidationCallback =
-                (request, serverCertificate, chain, policyErrors) =>
-                {
-                    // $todo(jeff.lill): IMPORTANT!
-                    //
-                    // This is a bad security hole and must be replaced with
-                    // code that actually verifies the remote certificate
-                    // against a fingerprint or something.
+            if (remoteTls)
+            {
+                httpHandler.ServerCertificateCustomValidationCallback =
+                    (request, remoteCertificate, chain, policyErrors) =>
+                    {
+                        var remoteCertificate2 = (X509Certificate2)remoteCertificate;
 
-                    return true;
-                };
+                        // If this proxy instance was passed a server certificate,
+                        // we're going to require that the remote certificate
+                        // thumbprint matches that one.
+                        //
+                        // Otherwise, we're going to require that the remote
+                        // certificate has been validated by the operating
+                        // system.
+
+                        if (validCertificate != null)
+                        {
+                            return remoteCertificate2.Thumbprint == validCertificate.Thumbprint;
+                        }
+                        else
+                        {
+                            return policyErrors == SslPolicyErrors.None;
+                        }
+                    };
+            }
+#endif
 
             client = new HttpClient(httpHandler, disposeHandler: true)
             {
@@ -211,7 +290,7 @@ namespace Neon.Kube
 
             var settings = new WebListenerSettings();
 
-            // $todo(jeff.lill): IMPORTANT DELETE THIS: Use localhost only.
+            // $todo(jeff.lill): IMPORTANT DELETE THIS: Use localhost only!
 
             //settings.UrlPrefixes.Add($"http://*:{localPort}/");
             settings.UrlPrefixes.Add($"http://localhost:{localPort}/");

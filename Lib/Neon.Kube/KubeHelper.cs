@@ -959,7 +959,7 @@ namespace Neon.Kube
 
                 var cluster = KubeHelper.Config.GetCluster(KubeHelper.CurrentContext.Properties.Cluster);
                 var certPem = Encoding.UTF8.GetString(Convert.FromBase64String(cluster.Properties.CertificateAuthorityData));
-                var tlsCert = TlsCertificate.FromPem(certPem);
+                var tlsCert = TlsCertificate.FromPemParts(certPem);
 
                 return cachedClusterCertificate = tlsCert.ToX509();
             }
@@ -986,7 +986,7 @@ namespace Neon.Kube
                 var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
                 var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
                 var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
-                var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
+                var tlsCert     = TlsCertificate.FromPemParts(certPem, keyPem);
                 var clientCert  = tlsCert.ToX509();
 
                 return null;
@@ -1232,6 +1232,16 @@ namespace Neon.Kube
 
                     throw new NotImplementedException($"[{hostPlatform}] support is not implemented.");
             }
+        }
+
+        /// <summary>
+        /// Executes a <b>kubectl</b> command on the local workstation.
+        /// </summary>
+        /// <param name="args">The command arguments.</param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static ExecuteResponse Kubectl(params object[] args)
+        {
+            return NeonHelper.ExecuteCapture("kubectl", args);
         }
     }
 }

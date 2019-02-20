@@ -90,7 +90,7 @@ namespace Neon.Kube
             bool                appendToLog       = false,
             RunOptions          defaultRunOptions = RunOptions.None)
 
-            : this(kubeContext.Extensions.ClusterDefinition, nodeProxyCreator, appendToLog: appendToLog, defaultRunOptions: defaultRunOptions)
+            : this(kubeContext.Extension.ClusterDefinition, nodeProxyCreator, appendToLog: appendToLog, defaultRunOptions: defaultRunOptions)
         {
             Covenant.Requires<ArgumentNullException>(kubeContext != null);
 
@@ -134,9 +134,9 @@ namespace Neon.Kube
                     {
                         var context = KubeHelper.CurrentContext;
 
-                        if (context != null && context.Extensions != null)
+                        if (context != null && context.Extension != null)
                         {
-                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, context.Extensions.SshCredentials);
+                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, context.Extension.SshCredentials);
                         }
                         else
                         {

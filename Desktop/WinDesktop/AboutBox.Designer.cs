@@ -32,9 +32,9 @@
             this.logoPictureBox = new System.Windows.Forms.PictureBox();
             this.productNameLabel = new System.Windows.Forms.Label();
             this.versionLabel = new System.Windows.Forms.Label();
-            this.copyrightLabel = new System.Windows.Forms.Label();
             this.descriptionBox = new System.Windows.Forms.TextBox();
             this.okButton = new System.Windows.Forms.Button();
+            this.copyrightLabel = new System.Windows.Forms.Label();
             this.licenseLink = new System.Windows.Forms.LinkLabel();
             this.tableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.logoPictureBox)).BeginInit();
@@ -62,7 +62,7 @@
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            this.tableLayoutPanel.Size = new System.Drawing.Size(536, 265);
+            this.tableLayoutPanel.Size = new System.Drawing.Size(522, 265);
             this.tableLayoutPanel.TabIndex = 0;
             // 
             // logoPictureBox
@@ -72,56 +72,45 @@
             this.logoPictureBox.Location = new System.Drawing.Point(3, 3);
             this.logoPictureBox.Name = "logoPictureBox";
             this.tableLayoutPanel.SetRowSpan(this.logoPictureBox, 6);
-            this.logoPictureBox.Size = new System.Drawing.Size(170, 259);
+            this.logoPictureBox.Size = new System.Drawing.Size(166, 259);
+            this.logoPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.logoPictureBox.TabIndex = 12;
             this.logoPictureBox.TabStop = false;
             // 
-            // labelProductName
+            // productNameLabel
             // 
             this.productNameLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.productNameLabel.Location = new System.Drawing.Point(182, 0);
+            this.productNameLabel.Location = new System.Drawing.Point(178, 0);
             this.productNameLabel.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.productNameLabel.MaximumSize = new System.Drawing.Size(0, 17);
-            this.productNameLabel.Name = "labelProductName";
-            this.productNameLabel.Size = new System.Drawing.Size(351, 17);
+            this.productNameLabel.Name = "productNameLabel";
+            this.productNameLabel.Size = new System.Drawing.Size(341, 17);
             this.productNameLabel.TabIndex = 19;
             this.productNameLabel.Text = "Product Name";
             this.productNameLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // labelVersion
+            // versionLabel
             // 
             this.versionLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.versionLabel.Location = new System.Drawing.Point(182, 26);
+            this.versionLabel.Location = new System.Drawing.Point(178, 26);
             this.versionLabel.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
             this.versionLabel.MaximumSize = new System.Drawing.Size(0, 17);
-            this.versionLabel.Name = "labelVersion";
-            this.versionLabel.Size = new System.Drawing.Size(351, 17);
+            this.versionLabel.Name = "versionLabel";
+            this.versionLabel.Size = new System.Drawing.Size(341, 17);
             this.versionLabel.TabIndex = 0;
             this.versionLabel.Text = "Version";
             this.versionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // labelCopyright
-            // 
-            this.copyrightLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.copyrightLabel.Location = new System.Drawing.Point(182, 52);
-            this.copyrightLabel.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
-            this.copyrightLabel.MaximumSize = new System.Drawing.Size(0, 17);
-            this.copyrightLabel.Name = "labelCopyright";
-            this.copyrightLabel.Size = new System.Drawing.Size(351, 17);
-            this.copyrightLabel.TabIndex = 21;
-            this.copyrightLabel.Text = "Copyright";
-            this.copyrightLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // textBoxDescription
+            // descriptionBox
             // 
             this.descriptionBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.descriptionBox.Location = new System.Drawing.Point(182, 107);
+            this.descriptionBox.Location = new System.Drawing.Point(178, 107);
             this.descriptionBox.Margin = new System.Windows.Forms.Padding(6, 3, 3, 3);
             this.descriptionBox.Multiline = true;
-            this.descriptionBox.Name = "textBoxDescription";
+            this.descriptionBox.Name = "descriptionBox";
             this.descriptionBox.ReadOnly = true;
             this.descriptionBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.descriptionBox.Size = new System.Drawing.Size(351, 126);
+            this.descriptionBox.Size = new System.Drawing.Size(341, 126);
             this.descriptionBox.TabIndex = 23;
             this.descriptionBox.TabStop = false;
             this.descriptionBox.Text = "Description";
@@ -130,31 +119,40 @@
             // 
             this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.okButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.okButton.Location = new System.Drawing.Point(458, 239);
+            this.okButton.Location = new System.Drawing.Point(444, 239);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
             this.okButton.TabIndex = 24;
             this.okButton.Text = "&OK";
             // 
+            // copyrightLabel
+            // 
+            this.copyrightLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.copyrightLabel.Location = new System.Drawing.Point(178, 52);
+            this.copyrightLabel.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
+            this.copyrightLabel.MaximumSize = new System.Drawing.Size(0, 17);
+            this.copyrightLabel.Name = "copyrightLabel";
+            this.copyrightLabel.Size = new System.Drawing.Size(341, 17);
+            this.copyrightLabel.TabIndex = 21;
+            this.copyrightLabel.Text = "Copyright";
+            this.copyrightLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // licenseLink
             // 
             this.licenseLink.AutoSize = true;
-            this.licenseLink.Location = new System.Drawing.Point(182, 78);
-            this.licenseLink.Margin = new System.Windows.Forms.Padding(6, 0, 3, 0);
+            this.licenseLink.Location = new System.Drawing.Point(175, 78);
             this.licenseLink.Name = "licenseLink";
-            this.licenseLink.Size = new System.Drawing.Size(67, 13);
+            this.licenseLink.Size = new System.Drawing.Size(55, 13);
             this.licenseLink.TabIndex = 25;
             this.licenseLink.TabStop = true;
-            this.licenseLink.Text = "License Link";
-            this.licenseLink.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.licenseLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.licenseLink_LinkClicked);
+            this.licenseLink.Text = "linkLabel1";
             // 
             // AboutBox
             // 
             this.AcceptButton = this.okButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(554, 283);
+            this.ClientSize = new System.Drawing.Size(540, 283);
             this.Controls.Add(this.tableLayoutPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -163,8 +161,8 @@
             this.Padding = new System.Windows.Forms.Padding(9);
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "About neonKUBE";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "AboutBox1";
             this.tableLayoutPanel.ResumeLayout(false);
             this.tableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.logoPictureBox)).EndInit();

@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Docker</RootNamespace>
-    <Version>18.11.1-alpha.6</Version>
+    <Version>0.1.0+1902-alpha-0</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
     <Description>neonFORGE simple Docker REST API wrapper.</Description>

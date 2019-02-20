@@ -46,7 +46,7 @@ namespace Test.NeonCli
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Password()
         {
-            ExecuteResult result;
+            ExecuteResponse result;
 
             using (new KubeTestManager())
             {
@@ -80,7 +80,7 @@ namespace Test.NeonCli
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void PasswordBasics()
         {
-            ExecuteResult result;
+            ExecuteResponse result;
 
             // Verify basic password operations: get, set, list|ls, and remove|rm:
 
@@ -162,7 +162,7 @@ pwd-3
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void PasswordSet()
         {
-            ExecuteResult result;
+            ExecuteResponse result;
 
             using (var manager = new KubeTestManager())
             {
@@ -296,7 +296,7 @@ pwd-3
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void PasswordGenerate()
         {
-            ExecuteResult result;
+            ExecuteResponse result;
 
             using (var manager = new KubeTestManager())
             {
@@ -365,7 +365,7 @@ pwd-3
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void PasswordRemove()
         {
-            ExecuteResult result;
+            ExecuteResponse result;
 
             using (var manager = new KubeTestManager())
             {
@@ -442,7 +442,7 @@ pwd-3
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void PasswordList()
         {
-            ExecuteResult result;
+            ExecuteResponse result;
 
             using (var manager = new KubeTestManager())
             {
@@ -496,7 +496,7 @@ pwd-3
         {
             const string zipPassword = "zip-password";
 
-            ExecuteResult result;
+            ExecuteResponse result;
 
             using (var manager = new KubeTestManager())
             {

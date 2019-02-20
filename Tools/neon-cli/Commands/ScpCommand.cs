@@ -73,7 +73,7 @@ ARGUMENTS:
             }
 
             var cluster    = Program.GetCluster();
-            var extensions = KubeHelper.CurrentContext.Extensions;
+            var extensions = KubeHelper.CurrentContext.Extension;
 
             NodeDefinition node;
 

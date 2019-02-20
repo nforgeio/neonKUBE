@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cryptography</RootNamespace>
-    <Version>18.11.1-alpha.6</Version>
+    <Version>0.1.0+1902-alpha-0</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonKUBE cryptography library.</Description>
@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="System.Security.Cryptography.Cng" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>

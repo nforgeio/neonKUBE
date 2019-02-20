@@ -316,7 +316,7 @@ OPTIONS:
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            var sshCredentials = KubeHelper.CurrentContext.Extensions.SshCredentials; ;
+            var sshCredentials = KubeHelper.CurrentContext.Extension.SshCredentials; ;
 
             return new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials);
         }
@@ -352,8 +352,8 @@ OPTIONS:
         /// the argument string.
         /// </summary>
         /// <param name="args">The argumuments.</param>
-        /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        public static ExecuteResult Kubectl(string args)
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static ExecuteResponse Kubectl(string args)
         {
             // $todo(jeff.lill):
             //
@@ -368,8 +368,8 @@ OPTIONS:
         /// individual arguments..
         /// </summary>
         /// <param name="args">The argumuments.</param>
-        /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        public static ExecuteResult Kubectl(params object[] args)
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static ExecuteResponse Kubectl(params object[] args)
         {
             return Kubectl(NeonHelper.NormalizeExecArgs(args));
         }

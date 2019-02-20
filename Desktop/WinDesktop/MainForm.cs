@@ -30,9 +30,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using Microsoft.Net.Http.Server;
+
 using Neon;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
 
@@ -56,7 +59,7 @@ namespace WinDesktop
         // Instance members
 
         private const double animationFrameRate = 2;
-        private const string headendError = "Unable to contact the neonKUBE headend service.";
+        private const string headendError       = "Unable to contact the neonKUBE headend service.";
 
         private Icon                appIcon;
         private Icon                disconnectedIcon;
@@ -81,6 +84,12 @@ namespace WinDesktop
 
             Load  += MainForm_Load;
             Shown += (s, a) => Visible = false; // The main form should always be hidden
+
+            // Ensure that temporary files are written to the users temporary folder because
+            // there's a decent chance that this folder will be encrypted at rest.
+
+            TempFile.Root   = KubeHelper.TempFolder;
+            TempFolder.Root = KubeHelper.TempFolder;
 
             // Preload the notification icons and animations for better performance.
 
@@ -200,10 +209,10 @@ namespace WinDesktop
         /// <param name="animatedIcon">The icon animation.</param>
         /// <remarks>
         /// Calls to this method may be recursed and should be matched 
-        /// with a call to <see cref="StopWorkingAnimnation"/>.  The
+        /// with a call to <see cref="StopNotifyAnimation"/>.  The
         /// amimation will actually stop when the last matching
-        /// <see cref="StartWorkingAnimation"/> call was matched with
-        /// the last <see cref="StopWorkingAnimnation"/>.
+        /// <see cref="StartNotifyAnimation"/> call was matched with
+        /// the last <see cref="StopNotifyAnimation"/>.
         /// </remarks>
         private void StartNotifyAnimation(AnimatedIcon animatedIcon)
         {
@@ -363,7 +372,7 @@ namespace WinDesktop
                 if (proxiedContext != null)
                 {
                     if (proxiedContext.Name == KubeHelper.CurrentContext.Name &&
-                        proxiedContext.Extensions.ClusterId == KubeHelper.CurrentContext.Extensions.ClusterId)
+                        proxiedContext.Extension.ClusterId == KubeHelper.CurrentContext.Extension.ClusterId)
                     {
                         // We're still proxying the same cluster so no changes 
                         // are required.
@@ -374,28 +383,93 @@ namespace WinDesktop
 
                 StopProxies();
 
-                // The Kubernetes dashboard reverse proxy.  Note that we're going
-                // to proxy this via [kubectl proxy] because we couldn't get a
-                // direct [ReverseProxy] connection to the Kubernetes API server 
-                // to work.
+                if (KubeHelper.CurrentContext == null)
+                {
+                    // Wr're not logged into a cluster so don't start any proxies.
 
-                var cert = KubeHelper.ClusterCertificate;
+                    return;
+                }
 
-                var userContext = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
-                var certPem     = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
-                var keyPem      = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
-                var tlsCert     = TlsCertificate.FromPem(certPem, keyPem);
-                var clientCert  = tlsCert.ToX509();
+                //-------------------------------------------------------------
+                // The Kubernetes dashboard reverse proxy.
+
+                // Setup a callback that transparently adds an [Authentication] header
+                // to all requests with the correct bearer token.  We'll need to
+                // obtain the token secret via two steps:
+                //
+                //      1. Identify the dashboard token secret by listing all secrets
+                //         in the [kube-system] namespace looking for one named like
+                //         [root-user-token-*].
+                //
+                //      2. Reading that secret and extracting the value.
+
+                var response       = KubeHelper.Kubectl("--namespace", "kube-system", "get", "secrets", "-o=name");
+                var secretName     = string.Empty;
+                var dashboardToken = string.Empty;
+
+                if (response.ExitCode != 0)
+                {
+                    // $todo(jeff.lill):
+                    //
+                    // We're going to throw an exception here for now, but in the
+                    // future it would probably be better to notify the user of
+                    // the problem and periodically retry.
+
+                    response.EnsureSuccess();
+                }
+
+                // Step 1: Determine the secret name.
+
+                using (var reader = new StringReader(response.OutputText))
+                {
+                    const string secretPrefix = "secret/";
+
+                    secretName = reader.Lines().FirstOrDefault(line => line.StartsWith($"{secretPrefix}root-user-token-"));
+
+                    Covenant.Assert(!string.IsNullOrEmpty(secretName));
+
+                    secretName = secretName.Substring(secretPrefix.Length);
+                }
+
+                // Step 2: Describe the secret and extract the token value.  This
+                //         is a bit of a hack because I'm making assumptions about
+                //         the output format.
+
+                response = KubeHelper.Kubectl("--namespace", "kube-system", "describe", "secret", secretName);
+
+                using (var reader = new StringReader(response.OutputText))
+                {
+                    var tokenLine = reader.Lines().FirstOrDefault(line => line.StartsWith("token:"));
+
+                    Covenant.Assert(!string.IsNullOrEmpty(tokenLine));
+
+                    dashboardToken = tokenLine.Split(new char[] { ' ' }, 2).Skip(1).First().Trim();
+                }
+
+                Action<RequestContext> dashboardRequestHandler =
+                    context =>
+                    {
+                        context.Request.Headers.Add("Authorization", $"Bearer {dashboardToken}");
+                    };
+
+                // Start the proxy.
+
+                var userContext   = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
+                var certPem       = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
+                var keyPem        = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
+                var dashboardCert = TlsCertificate.Parse(KubeHelper.CurrentContext.Extension.KubernetesDashboardCertificate).ToX509(publicOnly: true);
 
                 var kubeDashboardProxy =
                     new ReverseProxy(
-                        localPort:   KubeHelper.ClientConfig.KubeDashboardProxyPort,
-                        remotePort:  KubeHostPorts.KubeDashboard,
-                        remoteHost:  cluster.GetReachableMaster().PrivateAddress.ToString(),
-                        certificate: clientCert);
+                        localPort:        KubeHelper.ClientConfig.KubeDashboardProxyPort,
+                        remotePort:       KubeHostPorts.KubeDashboard,
+                        remoteHost:       cluster.GetReachableMaster().PrivateAddress.ToString(),
+                        validCertificate: dashboardCert,
+                        requestHandler:   dashboardRequestHandler);
 
                 proxies.Add(kubeDashboardProxy);
 
+                //-------------------------------------------------------------
                 // Remember which cluster context we're proxying.
 
                 proxiedContext = KubeHelper.CurrentContext;
@@ -581,7 +655,7 @@ namespace WinDesktop
             // is one) and also enable [Logout] if we're logged in.
 
             var contexts = KubeHelper.Config.Contexts
-                .Where(c => c.Extensions != null)
+                .Where(c => c.Extension != null)
                 .OrderBy(c => c.Name)
                 .ToArray();
 
@@ -630,7 +704,7 @@ namespace WinDesktop
 
                 var addedDashboardSeparator = false;
 
-                if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.Ceph.Enabled)
+                if (KubeHelper.CurrentContext.Extension.ClusterDefinition.Ceph.Enabled)
                 {
                     if (!addedDashboardSeparator)
                     {
@@ -641,7 +715,7 @@ namespace WinDesktop
                     dashboardsMenu.MenuItems.Add(new MenuItem("Ceph", OnCephDashboardCommand) { Enabled = loggedIn && !operationInProgress });
                 }
 
-                if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.EFK.Enabled)
+                if (KubeHelper.CurrentContext.Extension.ClusterDefinition.EFK.Enabled)
                 {
                     if (!addedDashboardSeparator)
                     {
@@ -652,7 +726,7 @@ namespace WinDesktop
                     dashboardsMenu.MenuItems.Add(new MenuItem("Kibana", OnKibanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
                 }
 
-                if (KubeHelper.CurrentContext.Extensions.ClusterDefinition.Prometheus.Enabled)
+                if (KubeHelper.CurrentContext.Extension.ClusterDefinition.Prometheus.Enabled)
                 {
                     if (!addedDashboardSeparator)
                     {

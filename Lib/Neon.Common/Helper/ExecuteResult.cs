@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        ExecuteResult.cs
+// FILE:        ExecuteResponse.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -24,12 +24,12 @@ namespace Neon.Common
     /// Holds the process exit code and captured standard output from a process
     /// launched by <see cref="NeonHelper.ExecuteCapture(string, string, TimeSpan?, Process, Action{string}, Action{string})"/>.
     /// </summary>
-    public class ExecuteResult
+    public class ExecuteResponse
     {
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        internal ExecuteResult()
+        internal ExecuteResponse()
         {
         }
 
