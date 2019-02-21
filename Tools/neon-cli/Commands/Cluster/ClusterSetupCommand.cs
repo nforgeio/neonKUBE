@@ -669,13 +669,13 @@ OPTIONS:
                     // $todo(jeff.lill):
                     //
                     // This is a bit of a hack to enable local Persistent Volumes for
-                    // pet-type pods.  We're going to precreate 10 folders and give
+                    // pet-type pods.  We're going to precreate 100 folders and give
                     // the [container] user full ownership of them.  We need to do this
                     // because Kubernetes is unable to create these dynamically yet.
 
                     node.Status = "create: local persistent volume folders";
 
-                    for (int i = 0; i < 10; i++)
+                    for (int i = 0; i < 100; i++)
                     {
                         node.SudoCommand($"mkdir -p /var/lib/neonkube/volumes/{i}");
                         node.SudoCommand($"chown {KubeConst.ContainerUser}:{KubeConst.ContainerGroup} /var/lib/neonkube/volumes/{i}");

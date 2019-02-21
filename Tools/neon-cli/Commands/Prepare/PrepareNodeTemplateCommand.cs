@@ -140,6 +140,9 @@ node template.
 
             Covenant.Assert(Program.MachineUsername == KubeConst.SysAdminUser);
 
+            Console.WriteLine("** Preparing VM Template ***");
+            Console.WriteLine();
+
             using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
                 Console.WriteLine("Connecting...");
@@ -209,7 +212,7 @@ useradd --uid 5000 --create-home --groups root temp
 echo 'temp:{Program.MachinePassword}' | chpasswd
 adduser temp sudo
 
-# Create the minimum set of folders required by [SshProxy].
+# Create the minimum set of home folders required by [SshProxy].
 
 mkdir -f /home/temp/.exec
 chown temp:temp /home/temp/.exec
@@ -236,15 +239,16 @@ chown temp:temp /home/temp/.upload
                 var sysadminUserScript =
 $@"#!/bin/bash
 
+# Update all file references from the old to new [sysadmin]
+# user and group IDs:
+
+find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGroup} {{}} \;
+find / -user 1000 -exec chown -h {KubeConst.SysAdminUser} {{}} \;
+
 # Relocate the user ID:
 
-usermod -u {KubeConst.SysAdminUID} {KubeConst.SysAdminUser}
-groupmod -g {KubeConst.SysAdminGID} {KubeConst.SysAdminUser}
-
-# Update all file references to the UID:
-
-find / -user 1000 -exec chown -h {KubeConst.SysAdminUser}{{}} \;
-find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGID}{{}} \;
+groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
+usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUser}
 ";
                 Console.WriteLine("Relocating the [sysadmin] user...");
                 server.SudoCommand(CommandBundle.FromScript(sysadminUserScript));
@@ -292,8 +296,14 @@ update-initramfs -u
                     Console.WriteLine("Installing guest integration services...");
                     server.SudoCommand(CommandBundle.FromScript(guestServicesScript));
                 }
+                else if (xenserver)
+                {
+                    // NOTE: We need to to install guest integration services manually
+                    // for XenServer because we need to manually mount the guest services
+                    // DVD to the VM.
+                }
 
-                // Clean cached packages, DHCP leases, and zero the disk so
+                // Clean cached packages, DHCP leases, and then zero the disk so
                 // the image will compress better.
 
                 var cleanScript =
