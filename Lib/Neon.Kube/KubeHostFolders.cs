@@ -49,46 +49,51 @@ namespace Neon.Kube
     public static class KubeHostFolders
     {
         /// <summary>
+        /// Path to the <see cref="KubeConst.SysAdminUser"/>'s home directory.
+        /// </summary>
+        public static readonly string Home = $"/home/{KubeConst.SysAdminUser}";
+
+        /// <summary>
         /// Path to the cluster archive directory.
         /// </summary>
-        public const string Archive = "${HOME}/.archive";
+        public static readonly string Archive = $"{KubeHostFolders.Home}/.archive";
 
         /// <summary>
         /// Path to the cluster executable files directory.
         /// </summary>
-        public const string Bin = "/lib/neonkube/bin";
+        public static readonly string Bin = $"/lib/neonkube/bin";
 
         /// <summary>
         /// Path to the cluster configuration directory.
         /// </summary>
-        public const string Config = "/etc/neonkube";
+        public static readonly string Config = $"/etc/neonkube";
 
         /// <summary>
         /// The folder where cluster tools can upload, unpack, and then
         /// execute <see cref="CommandBundle"/>s as well as store temporary
         /// command output files.
         /// </summary>
-        public const string Exec = "${HOME}/.exec";
+        public static readonly string Exec = $"{KubeHostFolders.Home}/.exec";
 
         /// <summary>
         /// Path to the cluster management scripts directory.
         /// </summary>
-        public const string Scripts = "/lib/neonkube/scripts";
+        public static readonly string Scripts = $"/lib/neonkube/scripts";
 
         /// <summary>
         /// Path to the cluster setup scripts directory.
         /// </summary>
-        public const string Setup = "/lib/neonkube/setup";
+        public static readonly string Setup = $"/lib/neonkube/setup";
 
         /// <summary>
         /// Path to the cluster setup state directory.
         /// </summary>
-        public const string State = "/var/local/neonkube";
+        public static readonly string State = $"/var/local/neonkube";
 
         /// <summary>
         /// Root folder on the local tmpfs (shared memory) folder where 
         /// cluster will persist misc temporary files.
         /// </summary>
-        public const string Tmpfs = "/dev/shm/neonkube";
+        public static readonly string Tmpfs = $"/dev/shm/neonkube";
     }
 }
