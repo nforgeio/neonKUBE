@@ -78,6 +78,11 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
   
   **NOTE:** Download and extract the files to `$/external/OpenSSL/*`
 
-2. **PowerShell Core**: [releases](https://github.com/PowerShell/PowerShell/releases) = current: 6.1.1-win-x86
+2. **PowerShell Core**: [releases](https://github.com/PowerShell/PowerShell/releases) = current: **6.1.1-win-x86**
 
   **NOTE:** Download the ZIP archive and replace the **$/External/Powershell-win-x86.zip** file.
+
+3. **Ubuntu Node Disk Templates:** - current **18.04.1**
+
+  Check for new Ubuntu 18.04 releases and build new templates
+

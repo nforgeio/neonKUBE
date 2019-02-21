@@ -265,10 +265,17 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
                 Console.WriteLine("Reconnecting...");
                 server.WaitForBoot();
 
+                // Ensure that the owner and group for files in the [sysadmin]
+                // home folder are correct.
+
+                Console.WriteLine("Setting [sysadmin] home folder owner...");
+                server.SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*");
+
                 // Remove the [temp] user.
 
                 Console.WriteLine("Removing the [temp] user...");
                 server.SudoCommand($"userdel --remove temp");
+                server.SudoCommand($"rm -rf /home/temp");
 
                 // Create the [container] user with no home directory.  This
                 // means that the [container] user will have no chance of

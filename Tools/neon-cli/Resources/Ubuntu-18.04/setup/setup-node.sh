@@ -56,6 +56,12 @@ fi
 
 startsetup node
 
+# Ensure that the home directory for the [temp] user prepare created
+# to relocate the [sysadmin] user ID is deleted.  Older builds of the
+# [neon prepare node-template] command didn't delete this.
+
+rm -rf /home/temp
+
 # Install some common packages:
 #
 #   nano                Text editor
