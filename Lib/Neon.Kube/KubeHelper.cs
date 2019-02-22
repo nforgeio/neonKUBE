@@ -69,6 +69,8 @@ namespace Neon.Kube
         private static KubeClientConfig     cachedClientConfig;
         private static X509Certificate2     cachedClusterCertificate;
         private static X509Certificate2     cachedClientCertificate;
+        private static string               cachedProgramFolder;
+        private static string               cachedPwshPath;
 
         /// <summary>
         /// Static constructor.
@@ -105,6 +107,8 @@ namespace Neon.Kube
             cachedClientConfig       = null;
             cachedClusterCertificate = null;
             cachedClientCertificate  = null;
+            cachedProgramFolder      = null;
+            cachedPwshPath           = null;
         }
 
         /// <summary>
@@ -809,7 +813,63 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the path to the neonKUBE program folder.
         /// </summary>
-        public static string ProgramFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "neonKUBE");
+        public static string ProgramFolder
+        {
+            get
+            {
+                if (cachedProgramFolder != null)
+                {
+                    return cachedProgramFolder;
+                }
+
+                cachedProgramFolder = Environment.GetEnvironmentVariable("NEONKUBE_PROGRAM_FOLDER");
+
+                if (cachedProgramFolder == null)
+                {
+                    cachedProgramFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "neonKUBE");
+
+                    // For some reason, [SpecialFolder.ProgramFiles] is returning: 
+                    //
+                    //      C:\Program Files (x86)
+                    //
+                    // We're going to strip off the " (x86)" part if present.
+
+                    cachedProgramFolder = cachedProgramFolder.Replace(" (x86)", string.Empty);
+                }
+
+                return cachedProgramFolder;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the Powershell Core executable to be used.
+        /// This will first examine the <b>NEONKUBE_PROGRAM_FOLDER</b> environment
+        /// variable to see if the installed version of Powershell Core should
+        /// be used, otherwise it will simply return <b>pwsh.exe</b> so that
+        /// the <b>PATH</b> will be searched.
+        /// </summary>
+        public static string PwshPath
+        {
+            get
+            {
+                if (cachedPwshPath != null)
+                {
+                    return cachedPwshPath;
+                }
+
+                if (!string.IsNullOrEmpty(ProgramFolder))
+                {
+                    var pwshPath = Path.Combine(ProgramFolder, "powershell", "pwsh.exe");
+
+                    if (File.Exists(pwshPath))
+                    {
+                        return cachedPwshPath = pwshPath;
+                    }
+                }
+
+                return cachedPwshPath = "pwsh.exe";
+            }
+        }
 
         /// <summary>
         /// Loads or reloads the Kubernetes configuration.

@@ -35,6 +35,7 @@ using Neon;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
+using Neon.Windows;
 
 namespace NShell
 {
@@ -81,6 +82,11 @@ OPTIONS:
             // Disable any logging that might be performed by library classes.
 
             LogManager.Default.LogLevel = LogLevel.None;
+
+            // Use the version of Powershell Core installed with the application,
+            // if present.
+
+            PowerShell.PwshPath = KubeHelper.PwshPath;
 
             // Process the command line.
 

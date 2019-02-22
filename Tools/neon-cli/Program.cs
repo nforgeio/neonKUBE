@@ -36,6 +36,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.IO;
+using Neon.Windows;
 
 namespace NeonCli
 {
@@ -121,6 +122,11 @@ OPTIONS:
 
             TempFile.Root   = KubeHelper.TempFolder;
             TempFolder.Root = KubeHelper.TempFolder;
+
+            // Use the version of Powershell Core installed with the application,
+            // if present.
+
+            PowerShell.PwshPath = KubeHelper.PwshPath;
 
             // We need to verify that we're running with elevated permissions if we're not
             // shimmed into a Docker container.

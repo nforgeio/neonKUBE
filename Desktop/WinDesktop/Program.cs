@@ -27,6 +27,7 @@ using System.Windows.Forms;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Windows;
 
 namespace WinDesktop
 {
@@ -82,6 +83,13 @@ namespace WinDesktop
             }
 
             Environment.CurrentDirectory = ProgramFolder;
+
+            // Use the version of Powershell Core installed with the application,
+            // if present.
+
+            PowerShell.PwshPath = KubeHelper.PwshPath;
+
+            // Start the app.
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
