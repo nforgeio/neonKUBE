@@ -32,7 +32,7 @@ namespace Neon.Kube
     public class XenServerOptions
     {
         private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-ubuntu-18.04.latest.xva";
-        private const string defaultTemplate          = "xenserver-ubuntu-18.04-template";
+        private const string defaultTemplate          = "neonkube-ubuntu-18.04";
         private const string defaultStorageRepository = "Local storage";
         private const bool   defaultSnapshot          = false;
 

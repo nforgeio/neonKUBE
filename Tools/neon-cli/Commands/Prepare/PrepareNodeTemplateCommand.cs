@@ -306,6 +306,8 @@ sfill -fllz /
                     Console.WriteLine("*** IMPORTANT: You need to manually complete the remaining steps ***");
                 }
             }
+
+            Program.Exit(0);
         }
     }
 }
