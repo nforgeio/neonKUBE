@@ -637,6 +637,69 @@ namespace Neon.Kube
         public TMetadata Metadata { get; set; }
 
         /// <summary>
+        /// <para>
+        /// Prevents <b>sudo</b> from prompting for passwords.
+        /// </para>
+        /// <note>
+        /// The connected user must already be a member of the <b>root</b> group.
+        /// </note>
+        /// <note>
+        /// You do not need to call <see cref="Connect(TimeSpan)"/> or <see cref="WaitForBoot(TimeSpan?, bool)"/>
+        /// before calling this method (in fact, calling those methods will probably fail).
+        /// </note>
+        /// </summary>
+        /// <param name="password">The current user's password.</param>
+        public void DisableSudoPrompt(string password)
+        {
+            Covenant.Requires<ArgumentNullException>(password != null);
+
+            var connectionInfo = GetConnectionInfo();
+
+            using (var sshClient = new SshClient(connectionInfo))
+            {
+                sshClient.Connect();
+
+                using (var scpClient = new ScpClient(connectionInfo))
+                {
+                    scpClient.Connect();
+
+                    var sudoDisableScript =
+$@"#!/bin/bash
+
+cat <<EOF > {KubeHostFolders.Home(Username)}/sudo-disable-prompt
+#!/bin/bash
+echo ""%sudo    ALL=NOPASSWD: ALL"" > /etc/sudoers.d/nopasswd
+EOF
+chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable-prompt
+
+cat <<EOF > {KubeHostFolders.Home(Username)}/askpass
+#!/bin/bash
+echo {password}
+EOF
+chmod 770 {KubeHostFolders.Home(Username)}/askpass
+
+export SUDO_ASKPASS={KubeHostFolders.Home(Username)}/askpass
+
+sudo -A {KubeHostFolders.Home(Username)}/sudo-disable-prompt
+rm {KubeHostFolders.Home(Username)}/sudo-disable-prompt
+rm {KubeHostFolders.Home(Username)}/askpass
+";
+                    using (var stream = new MemoryStream())
+                    {
+                        stream.Write(Encoding.UTF8.GetBytes(sudoDisableScript.Replace("\r", string.Empty)));
+                        stream.Position = 0;
+
+                        scpClient.Upload(stream, $"{KubeHostFolders.Home(Username)}/sudo-disable");
+                        sshClient.RunCommand($"chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable");
+                    }
+
+                    sshClient.RunCommand($"{KubeHostFolders.Home(Username)}/sudo-disable");
+                    sshClient.RunCommand($"rm {KubeHostFolders.Home(Username)}/sudo-disable");
+                }
+            }
+        }
+
+        /// <summary>
         /// Shutdown the server.
         /// </summary>
         public void Shutdown()
@@ -905,6 +968,7 @@ namespace Neon.Kube
         /// Waits for the server to boot by continuously attempting to establish an SSH session.
         /// </summary>
         /// <param name="timeout">The operation timeout (defaults to <b>10 minutes</b>).</param>
+        /// <param name="createHomeFolders">Optionally ensure that the required HOME folders for the user account exist.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <para>
@@ -913,7 +977,7 @@ namespace Neon.Kube
         /// SSH client will be rethrown.
         /// </para>
         /// </remarks>
-        public void WaitForBoot(TimeSpan? timeout = null)
+        public void WaitForBoot(TimeSpan? timeout = null, bool createHomeFolders = false)
         {
             Covenant.Requires<ArgumentException>(timeout != null ? timeout >= TimeSpan.Zero : true);
 
@@ -930,6 +994,13 @@ namespace Neon.Kube
                         lock (GetConnectLock(sshClient.ConnectionInfo.Host))
                         {
                             sshClient.Connect();
+                        }
+
+                        if (createHomeFolders)
+                        {
+                            sshClient.RunCommand($"mkdir -f /home/{Username}/.download");
+                            sshClient.RunCommand($"mkdir -f /home/{Username}/.exec");
+                            sshClient.RunCommand($"mkdir -f /home/{Username}/.upload");
                         }
 
                         // We need to verify that the [/dev/shm/neonkube/rebooting] file is not present
@@ -1334,22 +1405,22 @@ namespace Neon.Kube
             // SudoCommand/RunCommand methods because those methods depend on the 
             // existence of this folder.
 
-            var result = sshClient.RunCommand($"sudo mkdir -p {KubeHostFolders.Exec}");
+            var result = sshClient.RunCommand($"sudo mkdir -p {KubeHostFolders.Exec(Username)}");
 
             if (result.ExitStatus != 0)
             {
-                Log($"Cannot create folder [{KubeHostFolders.Exec}]\n");
+                Log($"Cannot create folder [{KubeHostFolders.Exec(Username)}]\n");
                 Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
                 Log(result.Error);
                 Log("END-ERROR:\n");
                 throw new IOException(result.Error);
             }
 
-            result = sshClient.RunCommand($"sudo chmod 777 {KubeHostFolders.Exec}");        // $todo(jeff.lill): Is this a potential security problem?
-                                                                                            //                   SCP uploads fail for 770
+            result = sshClient.RunCommand($"sudo chmod 777 {KubeHostFolders.Exec(Username)}");  // $todo(jeff.lill): Is this a potential security problem?
+                                                                                                //                   SCP uploads fail for 770
             if (result.ExitStatus != 0)
             {
-                Log($"Cannot chmod folder [{KubeHostFolders.Exec}]\n");
+                Log($"Cannot chmod folder [{KubeHostFolders.Exec(Username)}]\n");
                 Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
                 Log(result.Error);
                 Log("END-ERROR:\n");
@@ -1358,14 +1429,20 @@ namespace Neon.Kube
 
             // Create the folders.
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Archive}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+
+            SudoCommand($"mkdir -p {KubeHostFolders.Download(Username)}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Download(Username)}", RunOptions.LogOnErrorOnly);
+
+            SudoCommand($"mkdir -p {KubeHostFolders.Exec(Username)}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Exec(Username)}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
@@ -1375,6 +1452,9 @@ namespace Neon.Kube
 
             SudoCommand($"mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+
+            SudoCommand($"mkdir -p {KubeHostFolders.Upload(Username)}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Upload(Username)}", RunOptions.LogOnErrorOnly);
 
             // $hack(jeff.lill):
             //
@@ -1991,7 +2071,7 @@ namespace Neon.Kube
 
                 // Upload the ZIP file to a temporary folder.
 
-                var bundleFolder = $"{KubeHostFolders.Exec}/{Guid.NewGuid().ToString("D")}";
+                var bundleFolder = $"{KubeHostFolders.Exec(Username)}/{Guid.NewGuid().ToString("D")}";
                 var zipPath      = LinuxPath.Combine(bundleFolder, "__bundle.zip");
 
                 SudoCommand($"mkdir -p", RunOptions.LogOnErrorOnly, bundleFolder);
@@ -2220,7 +2300,7 @@ namespace Neon.Kube
 
             // Create the command folder.
 
-            var execFolder = $"{KubeHostFolders.Exec}/cmd";
+            var execFolder = $"{KubeHostFolders.Exec(Username)}/cmd";
             var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("D"));
 
             SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));
