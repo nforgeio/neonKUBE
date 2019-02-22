@@ -256,7 +256,7 @@ namespace Neon.Kube
                     }
                 });
 
-            controller.AddStep("node folders", (node, stepDelay) => node.CreateHostFolders());
+            controller.AddStep("host folders", (node, stepDelay) => node.CreateHostFolders());
             controller.AddStep("verify readiness", (node, stepDelay) => VerifyReady(node));
             controller.AddStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
             controller.AddStep("virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));

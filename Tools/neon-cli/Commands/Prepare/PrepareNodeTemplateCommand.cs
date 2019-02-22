@@ -140,45 +140,30 @@ node template.
 
             Covenant.Assert(Program.MachineUsername == KubeConst.SysAdminUser);
 
-            Console.WriteLine("** Preparing VM Template ***");
+            Console.WriteLine();
+            Console.WriteLine("** Prepare VM Template ***");
             Console.WriteLine();
 
             using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
-                Console.WriteLine("Connecting...");
-                server.WaitForBoot();
-
-                // $todo(jeff.lill):
-                //
-                // It would be really nice to automate this step, but this needs to
-                // be done without [SshProxy] because that class depends on sudo
-                // password prompting already being disabled.
-#if TODO
                 // Disable sudo password prompts.
 
-                var sudoPromptScript =
-$@"#!/bin/bash
+                Console.WriteLine("Disable [sudo] password");
+                server.DisableSudoPrompt(Program.MachinePassword);
+            }
 
-cat <<EOF >> /tmp/sudo-disable-prompt
-echo ""%sudo    ALL=NOPASSWD: ALL"" > /etc/sudoers.d/nopasswd
-EOF
+            using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
+            {
+                Console.WriteLine($"Connect as [{KubeConst.SysAdminUser}]");
+                server.WaitForBoot();
 
-chmod 770 /tmp/sudo-disable-prompt
-echo {Program.MachinePassword} | sudo -S /tmp/sudo-disable-prompt
-rm /tmp/sudo-disable-prompt
-";
+                // Install required packages:
 
-                Console.WriteLine("Disabling sudo password prompts...");
-                server.SudoCommand(CommandBundle.FromScript(sudoPromptScript));
-#endif
+                Console.WriteLine("Install packages");
+                server.SudoCommand("apt-get update", RunOptions.FaultOnError);
+                server.SudoCommand("apt-get install -yq zip secure-delete", RunOptions.FaultOnError);
 
-                // Install required packages.
-
-                Console.WriteLine("Installing packages...");
-                server.SudoCommand("apt-get update");
-                server.SudoCommand("apt-get install -yq zip secure-delete");
-
-                // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
+                // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line:
 
                 var sbFsTab = new StringBuilder();
 
@@ -193,7 +178,7 @@ rm /tmp/sudo-disable-prompt
                     }
                 }
 
-                Console.WriteLine("Disabling SWAP...");
+                Console.WriteLine("Disable SWAP");
                 server.UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
 
                 // We need to relocate the [sysadmin] UID/GID to 1234 so we
@@ -201,7 +186,7 @@ rm /tmp/sudo-disable-prompt
                 // need to create a temporary user with root permissions to
                 // delete and then recreate the [sysadmin] account.
 
-                Console.WriteLine("Creating [container] user...");
+                Console.WriteLine("Create [temp] user");
 
                 var tempUserScript =
 $@"#!/bin/bash
@@ -211,19 +196,9 @@ $@"#!/bin/bash
 useradd --uid 5000 --create-home --groups root temp
 echo 'temp:{Program.MachinePassword}' | chpasswd
 adduser temp sudo
-
-# Create the minimum set of home folders required by [SshProxy].
-
-mkdir -f /home/temp/.exec
-chown temp:temp /home/temp/.exec
-
-mkdir -f /home/temp/.download
-chown temp:temp /home/temp/.download
-
-mkdir -f /home/temp/.upload
-chown temp:temp /home/temp/.upload
+chown temp:temp /home/temp
 ";
-                server.SudoCommand(CommandBundle.FromScript(tempUserScript));
+                server.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
             }
 
             // We need to reconnect with the new temporary account so
@@ -233,8 +208,8 @@ chown temp:temp /home/temp/.upload
 
             using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
-                Console.WriteLine("Reconnecting...");
-                server.WaitForBoot();
+                Console.WriteLine($"Connecting as [temp]");
+                server.WaitForBoot(createHomeFolders: true);
 
                 var sysadminUserScript =
 $@"#!/bin/bash
@@ -250,8 +225,8 @@ find / -user 1000 -exec chown -h {KubeConst.SysAdminUser} {{}} \;
 groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
 usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUser}
 ";
-                Console.WriteLine("Relocating the [sysadmin] user...");
-                server.SudoCommand(CommandBundle.FromScript(sysadminUserScript));
+                Console.WriteLine("Relocate [sysadmin] user");
+                server.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
             }
 
             // We need to reconnect again with [sysadmin] so we can remove
@@ -262,33 +237,31 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
 
             using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
-                Console.WriteLine("Reconnecting...");
+                Console.WriteLine($"Connect as [{KubeConst.SysAdminUser}]");
                 server.WaitForBoot();
 
                 // Ensure that the owner and group for files in the [sysadmin]
                 // home folder are correct.
 
-                Console.WriteLine("Setting [sysadmin] home folder owner...");
-                server.SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*");
+                Console.WriteLine("Set [sysadmin] home folder owner");
+                server.SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
 
                 // Remove the [temp] user.
 
-                Console.WriteLine("Removing the [temp] user...");
-                server.SudoCommand($"userdel --remove temp");
-                server.SudoCommand($"rm -rf /home/temp");
+                Console.WriteLine("Remove [temp] user");
+                server.SudoCommand($"userdel temp", RunOptions.FaultOnError);
+                server.SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
 
                 // Create the [container] user with no home directory.  This
                 // means that the [container] user will have no chance of
                 // logging into the machine.
 
-                Console.WriteLine("Creating the [container] user...");
-                server.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUser}");
+                Console.WriteLine("Create [container] user", RunOptions.FaultOnError);
+                server.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUser}", RunOptions.FaultOnError);
 
-                if (hyperv)
-                {
-                    // Configure the Linux guest integration services.
+                // Configure the Linux guest integration services.
 
-                    var guestServicesScript =
+                var guestServicesScript =
 @"#!/bin/bash
 cat <<EOF >> /etc/initramfs-tools/modules
 hv_vmbus
@@ -300,36 +273,38 @@ EOF
 apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
 update-initramfs -u
 ";
-                    Console.WriteLine("Installing guest integration services...");
-                    server.SudoCommand(CommandBundle.FromScript(guestServicesScript));
-                }
-                else if (xenserver)
+                Console.WriteLine("Install guest integration services");
+                server.SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
+                if (hyperv)
                 {
-                    // NOTE: We need to to install guest integration services manually
-                    // for XenServer because we need to manually mount the guest services
-                    // DVD to the VM.
-                }
+                    // Clean cached packages, DHCP leases, and then zero the disk so
+                    // the image will compress better.
 
-                // Clean cached packages, DHCP leases, and then zero the disk so
-                // the image will compress better.
-
-                var cleanScript =
+                    var cleanScript =
 @"#!/bin/bash
 apt-get clean
 rm -rf /var/lib/dhcp/*
 sfill -fllz /
 ";
-                Console.WriteLine("Cleaning up...");
-                server.SudoCommand(CommandBundle.FromScript(cleanScript));
+                    Console.WriteLine("Clean up");
+                    server.SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
+                 
+                    // Shut the the VM down so the user can compress and upload
+                    // the disk image.
 
-                // Shut the the VM down so the user can compress and upload
-                // the disk image.
+                    Console.WriteLine("Shut down");
+                    server.Shutdown();
 
-                Console.WriteLine("Shutting down...");
-                server.Shutdown();
+                    Console.WriteLine();
+                    Console.WriteLine("*** Node template is ready ***");
+                }
+                else if (xenserver)
+                {
+                    // NOTE: We need to to install the XenCenter tools manually.
 
-                Console.WriteLine();
-                Console.WriteLine("*** Node template is ready ***");
+                    Console.WriteLine();
+                    Console.WriteLine("*** IMPORTANT: You need to manually complete the remaining steps ***");
+                }
             }
         }
     }

@@ -67,7 +67,7 @@ USAGE:
 
             if (KubeHelper.CurrentContext == null)
             {
-                Console.WriteLine($"You're not logged into a cluster.");
+                Console.WriteLine($"You are not logged into a cluster.");
                 return;
             }
 
