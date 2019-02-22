@@ -49,51 +49,66 @@ namespace Neon.Kube
     public static class KubeHostFolders
     {
         /// <summary>
-        /// Path to the <see cref="KubeConst.SysAdminUser"/>'s home directory.
+        /// Path to a user archive directory.
         /// </summary>
-        public static readonly string Home = $"/home/{KubeConst.SysAdminUser}";
-
-        /// <summary>
-        /// Path to the cluster archive directory.
-        /// </summary>
-        public static readonly string Archive = $"{KubeHostFolders.Home}/.archive";
+        /// <param name="username">The username.</param>
+        public static string Archive(string username) => $"/home/{username}/.archive";
 
         /// <summary>
         /// Path to the cluster executable files directory.
         /// </summary>
-        public static readonly string Bin = $"/lib/neonkube/bin";
+        public const string Bin = "/lib/neonkube/bin";
 
         /// <summary>
         /// Path to the cluster configuration directory.
         /// </summary>
-        public static readonly string Config = $"/etc/neonkube";
+        public const string Config = "/etc/neonkube";
 
         /// <summary>
-        /// The folder where cluster tools can upload, unpack, and then
+        /// Path to the user download directory.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        public static string Download(string username) => $"/home/{username}/.download";
+
+        /// <summary>
+        /// The user folder where cluster tools can upload, unpack, and then
         /// execute <see cref="CommandBundle"/>s as well as store temporary
         /// command output files.
         /// </summary>
-        public static readonly string Exec = $"{KubeHostFolders.Home}/.exec";
+        /// <param name="username">The username.</param>
+        public static string Exec(string username) => $"/home/{username}/.exec";
+
+        /// <summary>
+        /// Path to a user archive directory.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        public static string Home(string username) => $"/home/{username}";
 
         /// <summary>
         /// Path to the cluster management scripts directory.
         /// </summary>
-        public static readonly string Scripts = $"/lib/neonkube/scripts";
+        public const string Scripts = "/lib/neonkube/scripts";
 
         /// <summary>
         /// Path to the cluster setup scripts directory.
         /// </summary>
-        public static readonly string Setup = $"/lib/neonkube/setup";
+        public const string Setup = "/lib/neonkube/setup";
 
         /// <summary>
         /// Path to the cluster setup state directory.
         /// </summary>
-        public static readonly string State = $"/var/local/neonkube";
+        public const string State = "/var/local/neonkube";
 
         /// <summary>
         /// Root folder on the local tmpfs (shared memory) folder where 
         /// cluster will persist misc temporary files.
         /// </summary>
-        public static readonly string Tmpfs = $"/dev/shm/neonkube";
+        public const string Tmpfs = "/dev/shm/neonkube";
+
+        /// <summary>
+        /// Path to a user upload directory.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        public static string Upload(string username) => $"/home/{username}/.upload";
     }
 }
