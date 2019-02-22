@@ -49,10 +49,15 @@ Source: {#GetEnv("NF_BUILD")}\nshell\*.*; DestDir: {app}\nshell; Flags: recurses
 Name: "{group}\neonKUBE Desktop"; Filename: "{app}\win-desktop\neonKUBE-win.exe"
 
 [Registry]
-; Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: """{app}\win-desktop\neonKUBE-win.exe"""; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: "{app}\win-desktop\neonKUBE-win.exe"; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "NEONKUBE_PROGRAM_FOLDER"; ValueData: "{app}"; Flags: uninsdeletevalue
 
 [Run]
-Filename: "{app}\win-desktop\neonKUBE-win.exe"; Flags: postinstall
+Filename: "{app}\win-desktop\neonKUBE-win.exe"; Description: "neonKUBE Desktop"; Flags: postinstall
+
+[UninstallRun]
+; Kill the neonKUBE Desktop app if it is running.
+Filename: "{cmd}"; Parameters: "/C ""taskkill /im neonKUBE-win.exe /f /t"
 
 [Code]
 

@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -70,10 +71,27 @@ namespace WinDesktop
         [STAThread]
         static void Main()
         {
+            // Change the current directory to the program folder because we
+            // use relative references to the Icon and other resource files.
+
+            ProgramFolder = Path.GetFullPath(NeonHelper.GetAssemblyFolder(Assembly.GetExecutingAssembly()));
+
+            if (ProgramFolder.EndsWith("\\") || ProgramFolder.EndsWith("/"))
+            {
+                ProgramFolder = ProgramFolder.Substring(0, ProgramFolder.Length - 1);
+            }
+
+            Environment.CurrentDirectory = ProgramFolder;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
         }
+
+        /// <summary>
+        /// Returns the absolute path to the program folder.
+        /// </summary>
+        public static string ProgramFolder { get; private set; }
 
         /// <summary>
         /// Returns a <see cref="ClusterProxy"/> for the current 

@@ -47,7 +47,7 @@ namespace Neon
         /// The published nuget library version.
         /// </summary>
 #if DEBUG
-        public const string NugetVersion = "0.1.0+1902.debug-alpha-1";
+        public const string NugetVersion = "0.1.0+1902.debug-alpha-2";
 #else
         public const string NugetVersion = "0.1.0+1902-alpha-2";
 #endif
@@ -56,7 +56,7 @@ namespace Neon
         /// The released product version.
         /// </summary>
 #if DEBUG
-        public const string ProductVersion = "0.1.0+1902.debug-alpha-1";
+        public const string ProductVersion = "0.1.0+1902.debug-alpha-2";
 #else
         public const string ProductVersion = "0.1.0+1902-alpha-2";
 #endif

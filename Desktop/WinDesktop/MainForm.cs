@@ -127,6 +127,23 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void MainForm_Load(object sender, EventArgs args)
         {
+            // Start the desktop API service that [neon-cli] will use
+            // to communicate with the desktop application.  Note that
+            // this will fail if another instance of the desktop is 
+            // running.
+
+            try
+            {
+                DesktopService.Start();
+            }
+            catch
+            {
+                MessageBox.Show($"Another neonKUBE Desktop instance is already running or another application is already listening on [127.0.0.1:{KubeHelper.ClientConfig.DesktopServicePort}].",
+                    "neonKUBE Desktop", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                Environment.Exit(1);
+            }
+
             // Set the text labels on the main form.  Nobody should ever see
             // this because the form should remain hidden but we'll put something
             // here just in case.
@@ -151,11 +168,6 @@ namespace WinDesktop
             statusTimer.Interval = (int)TimeSpan.FromSeconds(KubeHelper.ClientConfig.StatusPollSeconds).TotalMilliseconds;
             statusTimer.Tick    += (s, a) => UpdateUIState();
             statusTimer.Start();
-
-            // Start the desktop API service that [neon-cli] will use
-            // to communicate with the desktop application.
-
-            DesktopService.Start();
         }
 
         /// <summary>
@@ -166,20 +178,6 @@ namespace WinDesktop
         private void licenseLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs args)
         {
             NeonHelper.OpenBrowser(Build.ProductLicenseUrl);
-        }
-
-        /// <summary>
-        /// Intercept the window close event and minimize it instead.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The arguments.</param>
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs args)
-        {
-            // The main form should always be hidden but we'll 
-            // implement this just in case.
-
-            args.Cancel = true;
-            this.Visible = false;
         }
 
         /// <summary>

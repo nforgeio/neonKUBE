@@ -43,7 +43,27 @@ namespace Neon.Windows
     /// </summary>
     public class PowerShell : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private const int PowershellBufferWidth = 16192;
+
+        /// <summary>
+        /// Optional path to the Powershell Core <b>pwsh</b> executable.  The <b>PATH</b>
+        /// environment variable will be searched by default.
+        /// </summary>
+        public static string PwshPath { get; set; }
+
+        /// <summary>
+        /// Returns the path to the Powershell Core <b>pwsh</b> executable.
+        /// </summary>
+        private static string GetPwshPath()
+        {
+            return PwshPath ?? "pwsh.exe";
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         private Action<string>  outputAction;
         private Action<string>  errorAction;
@@ -120,9 +140,9 @@ namespace Neon.Windows
                 {
                     // $hack(jeff.lill):
                     //
-                    // Some common Windows enmvironment variables names include characters
-                    // like parens that are not compatible with PreprocessReader.  We're
-                    // just going to catch the exceptions and ignore these.
+                    // Some common Windows environment variables names include characters
+                    // like parens that are not compatible with [PreprocessReader].  We're
+                    // just going to catch the exceptions and ignore them.
 
                     var key = (string)item.Key;
 
@@ -161,7 +181,7 @@ catch [Exception] {{
     exit 1
 }}
 ");
-                var result = NeonHelper.ExecuteCapture("pwsh.exe", $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
+                var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
 
                 // $hack(jeff.lill):
                 //
@@ -222,7 +242,7 @@ catch [Exception] {{
     exit 1
 }}
 ");
-                var result = NeonHelper.ExecuteCapture("pwsh.exe", $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
+                var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
 
                 // $hack(jeff.lill):
                 //
