@@ -38,30 +38,29 @@
 
 7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
 
-8. Commit all changes with a comment like: **RELEASE: 1.0.0+1901** but **DO NOT** push to GitHub yet.
+8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-9. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+9. Upgrade an older cluster and verify by running cluster unit tests.
 
-10. Upgrade an older cluster and verify by running cluster unit tests.
+10. Deploy a fresh cluster and verify by running the cluster unit tests.
 
-11. Deploy a fresh cluster and verify by running the cluster unit tests.
+11. Fix any important issues and commit the changes.
 
-12. Fix any important issues and commit the changes.
+12. Push the `release-VERSION` branch to GitHub.
 
-13. Push the `release-VERSION` branch to GitHub.
+13. Go back to the `MASTER` branch and merge any changes from the `release-VERSION` branch.
 
-14. Go back to the `MASTER` branch and merge any changes from the `release-VERSION` branch.
-
-15. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+14. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
   c. Set **Target** to the `release-VERSION` branch
   d: Check **This is a pre-release** as required
+  e. Build setup via: `neon-install build-installer windows`
   e. Add the release setup binary named like: **neonKUBE-setup-0.1.0+1902-alpha-0.exe**
   f. Edit the release notes including adding the SH512 for the binaries:
 
-    `cat <binary-file> | openssl dgst -sha512`
+    `cat "$NF_BUILD%\neonKUBE-setup.exe" | openssl dgst -sha512`
 
   g. Publish the release
 
