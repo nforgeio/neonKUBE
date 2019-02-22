@@ -675,12 +675,16 @@ OPTIONS:
 
                     node.Status = "create: local persistent volume folders";
 
+                    var sbVolumesScript = new StringBuilder();
+
                     for (int i = 0; i < 100; i++)
                     {
-                        node.SudoCommand($"mkdir -p /var/lib/neonkube/volumes/{i}");
-                        node.SudoCommand($"chown {KubeConst.ContainerUser}:{KubeConst.ContainerGroup} /var/lib/neonkube/volumes/{i}");
-                        node.SudoCommand($"chmod 770 /var/lib/neonkube/volumes/{i}");
+                        sbVolumesScript.AppendLineLinux($"mkdir -p /var/lib/neonkube/volumes/{i}");
+                        sbVolumesScript.AppendLineLinux($"chown {KubeConst.ContainerUser}:{KubeConst.ContainerGroup} /var/lib/neonkube/volumes/{i}");
+                        sbVolumesScript.AppendLineLinux($"chmod 770 /var/lib/neonkube/volumes/{i}");
                     }
+
+                    node.SudoCommand(CommandBundle.FromScript(sbVolumesScript));
                 });
         }
 
