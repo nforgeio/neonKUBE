@@ -80,6 +80,7 @@ wwwroot/
 # NOTE: This assumes that we'll never want to commit folders
 #		    named [bin] or [obj]
 
-/build/**
+/Build/**
+/Build-Cache/**
 **/bin/**
 **/obj/**
