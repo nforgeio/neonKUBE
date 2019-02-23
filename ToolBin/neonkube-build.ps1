@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# FILE:         publish.ps1
+# FILE:         neonkube-build.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
@@ -25,12 +25,14 @@
 #
 #       -debug      - Builds the DEBUG version (this is the default)
 #       -release    - Builds the RELEASE version
+#       -nobuild    - Don't build the solution; just publish
 #       -installer  - Builds installer binaries
 
 param 
 (
 	[switch]$debug     = $False,
 	[switch]$release   = $False,
+	[switch]$nobuild   = $False,
 	[switch]$installer = $False
 )
 
@@ -97,54 +99,57 @@ function PublishCore
 $originalDir = $pwd
 cd $nfRoot
 
-# Build the solution.
-
-""
-"**********************************************************"
-"***                   CLEAN SOLUTION                   ***"
-"**********************************************************"
-""
-
-& "$msbuild" $buildConfig "-t:Clean"
-
-if (-not $?)
+if (-not $nobuild)
 {
-    ""
-    "*** CLEAN FAILED ***"
-    ""
-    exit 1
-}
+    # Build the solution.
 
-""
-"**********************************************************"
-"***                  RESTORE PACKAGES                  ***"
-"**********************************************************"
-""
-
-& "$msbuild" /restore
-
-if (-not $?)
-{
     ""
-    "*** RESTORE FAILED ***"
+    "**********************************************************"
+    "***                   CLEAN SOLUTION                   ***"
+    "**********************************************************"
     ""
-    exit 1
-}
 
-""
-"**********************************************************"
-"***                   BUILD SOLUTION                   ***"
-"**********************************************************"
-""
+    & "$msbuild" $buildConfig "-t:Clean"
 
-& "$msbuild" $buildConfig "-t:Compile"
+    if (-not $?)
+    {
+        ""
+        "*** CLEAN FAILED ***"
+        ""
+        exit 1
+    }
 
-if (-not $?)
-{
     ""
-    "*** BUILD FAILED ***"
+    "**********************************************************"
+    "***                  RESTORE PACKAGES                  ***"
+    "**********************************************************"
     ""
-    exit 1
+
+    & "$msbuild" /restore
+
+    if (-not $?)
+    {
+        ""
+        "*** RESTORE FAILED ***"
+        ""
+        exit 1
+    }
+
+    ""
+    "**********************************************************"
+    "***                   BUILD SOLUTION                   ***"
+    "**********************************************************"
+    ""
+
+    & "$msbuild" $buildConfig "-t:Compile"
+
+    if (-not $?)
+    {
+        ""
+        "*** BUILD FAILED ***"
+        ""
+        exit 1
+    }
 }
 
 # Publish the .NET Core binaries.
@@ -154,8 +159,6 @@ PublishCore "Tools\neon-cli\neon-cli.csproj"         "neon"
 PublishCore "Tools\neon-install\neon-install.csproj" "neon-install"
 PublishCore "Tools\nshell\nshell.csproj"             "nshell"
 PublishCore "Tools\text\text.csproj"                 "text"
-
-$installer = $true
 
 if ($installer)
 {
