@@ -700,6 +700,7 @@ namespace WinDesktop
 
                 dashboardsMenu.MenuItems.Add(new MenuItem("Kubernetes", OnKubernetesDashboardCommand) { Enabled = loggedIn && !operationInProgress });
 
+#if TODO
                 var addedDashboardSeparator = false;
 
                 if (KubeHelper.CurrentContext.Extension.ClusterDefinition.Ceph.Enabled)
@@ -734,6 +735,7 @@ namespace WinDesktop
 
                     dashboardsMenu.MenuItems.Add(new MenuItem("Prometheus", OnPrometheusDashboardCommand) { Enabled = loggedIn && !operationInProgress });
                 }
+#endif
 
                 contextMenu.MenuItems.Add(dashboardsMenu);
             }
