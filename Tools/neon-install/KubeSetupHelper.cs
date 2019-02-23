@@ -139,6 +139,8 @@ namespace NeonInstall
         /// </summary>
         /// <param name="platform">The target client platform as a string.</param>
         /// <param name="commandLine">The command line where version and other options are parsed.</param>
+        /// <param name="outputAction">Optional action to be called when text lines are written to STDOUT.</param>
+        /// <param name="errorAction">Optional action to be called when text lines are written to STDERR.</param>
         /// <exception cref="KubeSetupException">Thrown when required environment variables aren't set or are invalid or if the platform is not valid.</exception>
         public KubeSetupHelper(string platform, CommandLine commandLine, Action<string> outputAction = null, Action<string> errorAction = null)
             : this(ParsePlatform(platform), commandLine, outputAction, errorAction)
