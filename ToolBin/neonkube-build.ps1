@@ -101,6 +101,10 @@ cd $nfRoot
 
 if (-not $nobuild)
 {
+    # Clear the NF_BUILD folder:
+
+    & rm -r "$nfBuild/*"
+
     # Build the solution.
 
     ""
@@ -169,6 +173,7 @@ if ($installer)
     ""
 
     & neon-install build-installer windows
+    cat "$NF_BUILD%\neonKUBE-setup.exe" | openssl dgst -sha512 > "$NF_BUILD%\neonKUBE-setup.exe.sha512"
 }
 
 cd $originalDir
