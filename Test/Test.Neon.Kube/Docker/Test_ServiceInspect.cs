@@ -32,6 +32,12 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
+// $todo(jeff.lill):
+//
+// Not sure how relevant these test are anymore.
+
+#if TODO
+
 namespace TestKube
 {
     /// <summary>
@@ -711,3 +717,5 @@ namespace TestKube
         }
     }
 }
+
+#endif
