@@ -47,9 +47,7 @@
 
 12. Push the `release-VERSION` branch to GitHub.
 
-13. Go back to the `MASTER` branch and merge any changes from the `release-VERSION` branch.
-
-14. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+13. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
@@ -64,11 +62,13 @@
 
 ## Post Release
 
-1. Bump the version numbers in `$/nuget-version.txt` and `$Lib/Neon.Global/Build.cs`.
+1. Merge any changes from the RELEASE branch back into MASTER.
 
-2. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
+2. Bump the version numbers in `$/nuget-version.txt` and `$Lib/Neon.Global/Build.cs`.
 
-3. Create a draft for the next GitHub release.
+3. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
+
+4. Create a draft for the next GitHub release.
 
  # Release Version Conventions
 
