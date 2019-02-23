@@ -158,11 +158,17 @@ if (-not $nobuild)
 
 # Publish the .NET Core binaries.
 
-PublishCore "Tools\entity-gen\entity-gen.csproj"     "entity-gen"
 PublishCore "Tools\neon-cli\neon-cli.csproj"         "neon"
 PublishCore "Tools\neon-install\neon-install.csproj" "neon-install"
 PublishCore "Tools\nshell\nshell.csproj"             "nshell"
-PublishCore "Tools\text\text.csproj"                 "text"
+
+# $todo(jeff.lill):
+#
+# These two apps don't publish for some reason so I'll comment
+# them out for now (we don't really need them anyway).
+
+# PublishCore "Tools\entity-gen\entity-gen.csproj"     "entity-gen"
+# PublishCore "Tools\text\text.csproj"                 "text"
 
 if ($installer)
 {
@@ -173,7 +179,8 @@ if ($installer)
     ""
 
     & neon-install build-installer windows
-    cat "$NF_BUILD%\neonKUBE-setup.exe" | openssl dgst -sha512 > "$NF_BUILD%\neonKUBE-setup.exe.sha512"
+    "Generating windows installer sha512..."
+    & cat "$nfBuild\neonKUBE-setup.exe" | openssl dgst -sha512 > "$nfBuild\neonKUBE-setup.exe.sha512"
 }
 
 cd $originalDir

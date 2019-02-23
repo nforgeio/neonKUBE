@@ -11,10 +11,7 @@
 
 3. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
 
-  * Delete the contents of the **$\Build** folder.
-  * Ensure that this environment variable is set: **NF_PUBLISH_BINARIES=1**
-  * Clean the **RELEASE** configuration.
-  * Build the **RELEASE** configuration.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build `
 
 4. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
@@ -34,7 +31,9 @@
 
 4. Create a new local `release-VERSION` branch from `MASTER` (where `VERSION` is the same version as saved to `$/nuget-version.txt`).
 
-5. Manually clean and rebuild the entire solution: RELEASE configuration.
+5. Rebuild the RELEASE version via:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
 7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
 
@@ -55,12 +54,11 @@
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
   c. Set **Target** to the `release-VERSION` branch
-  d: Check **This is a pre-release** as required
-  e. Build setup via: `neon-install build-installer windows`
-  e. Add the release setup binary named like: **neonKUBE-setup-0.1.0+1902-alpha-0.exe**
-  f. Edit the release notes including adding the SH512 for the binaries:
+  e: Check **This is a pre-release** as required
+  f. Add the release setup binary named like: **neonKUBE-setup-0.1.0+1902-alpha-0.exe**
+  g. Edit the release notes including adding the SH512 for the setup from:
 
-    `cat "$NF_BUILD%\neonKUBE-setup.exe" | openssl dgst -sha512`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`"$NF_BUILD%\neonKUBE-setup.exe.sha512`
 
   g. Publish the release
 

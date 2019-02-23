@@ -5,7 +5,9 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RootNamespace>EntityGen</RootNamespace>
     <LangVersion>latest</LangVersion>
-    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
