@@ -59,11 +59,12 @@ namespace WinDesktop
         // Instance members
 
         private const double animationFrameRate = 2;
-        private const string headendError       = "Unable to contact the neonKUBE headend service.";
+        private const string headendError = "Unable to contact the neonKUBE headend service.";
 
         private Icon                appIcon;
         private Icon                disconnectedIcon;
         private Icon                connectedIcon;
+        private Icon                errorIcon;
         private AnimatedIcon        connectingAnimation;
         private AnimatedIcon        workingAnimation;
         private int                 animationNesting;
@@ -88,7 +89,7 @@ namespace WinDesktop
             // Ensure that temporary files are written to the users temporary folder because
             // there's a decent chance that this folder will be encrypted at rest.
 
-            TempFile.Root   = KubeHelper.TempFolder;
+            TempFile.Root = KubeHelper.TempFolder;
             TempFolder.Root = KubeHelper.TempFolder;
 
             // Preload the notification icons and animations for better performance.
@@ -96,6 +97,7 @@ namespace WinDesktop
             appIcon             = new Icon(@"Images\app.ico");
             connectedIcon       = new Icon(@"Images\connected.ico");
             disconnectedIcon    = new Icon(@"Images\disconnected.ico");
+            errorIcon           = new Icon(@"Images\error.ico");
             connectingAnimation = AnimatedIcon.Load("Images", "connecting", animationFrameRate);
             workingAnimation    = AnimatedIcon.Load("Images", "working", animationFrameRate);
 
@@ -114,6 +116,24 @@ namespace WinDesktop
         /// Indicates whether the application is connected to a cluster.
         /// </summary>
         public bool IsConnected => KubeHelper.CurrentContext != null;
+
+        /// <summary>
+        /// Returns the current connection state.
+        /// </summary>
+        public ConnectionState ConnectionState
+        {
+            get
+            {
+                if (!IsConnected)
+                {
+                    return ConnectionState.Disconnected;
+                }
+                else
+                {
+                    return ConnectionState.Disconnected;
+                }
+            }
+        }
 
         /// <summary>
         /// Returns the neonKUBE head client to be used to query the headend services.

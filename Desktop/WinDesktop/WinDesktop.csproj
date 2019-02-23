@@ -57,6 +57,7 @@
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
     <Compile Include="AnimatedIcon.cs" />
+    <Compile Include="ConnectionState.cs" />
     <Compile Include="DesktopService.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -111,6 +112,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\disconnected.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\error.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\working-0.ico">
