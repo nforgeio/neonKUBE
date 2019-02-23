@@ -837,6 +837,11 @@ namespace Neon.Kube
                     cachedProgramFolder = cachedProgramFolder.Replace(" (x86)", string.Empty);
                 }
 
+                if (!Directory.Exists(cachedProgramFolder))
+                {
+                    Directory.CreateDirectory(cachedProgramFolder);
+                }
+
                 return cachedProgramFolder;
             }
         }
