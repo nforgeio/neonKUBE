@@ -163,7 +163,7 @@ if ($installer)
     "**********************************************************"
     ""
 
-    & neon-installer build-installer windows
+    & neon-install build-installer windows
 }
 
 cd $originalDir
