@@ -54,7 +54,7 @@ else
     $buildConfig = "-p:Configuration=Release"
 }
 
-function Publish
+function PublishCore
 {
     param (
         [Parameter(Position=0, Mandatory=1)]
@@ -79,6 +79,8 @@ function Publish
     "**********************************************************"
     "*** PUBLISH: $targetName"
     "**********************************************************"
+    ""
+    "pubcore ""$projectPath"" ""$targetName"" ""$config"" ""$targetPath"" ""$nfBuild"" win10-x64"
     ""
 
     pubcore "$projectPath" "$targetName" "$config" "$targetPath" "$nfBuild" win10-x64
@@ -147,11 +149,11 @@ if (-not $?)
 
 # Publish the .NET Core binaries.
 
-Publish "Tools\entity-gen\entity-gen.csproj"     "entity-gen"
-Publish "Tools\neon-cli\neon-cli.csproj"         "neon"
-Publish "Tools\neon-install\neon-install.csproj" "neon-install"
-Publish "Tools\nshell\nshell.csproj"             "nshell"
-Publish "Tools\text\text.csproj"                 "text"
+PublishCore "Tools\entity-gen\entity-gen.csproj"     "entity-gen"
+PublishCore "Tools\neon-cli\neon-cli.csproj"         "neon"
+PublishCore "Tools\neon-install\neon-install.csproj" "neon-install"
+PublishCore "Tools\nshell\nshell.csproj"             "nshell"
+PublishCore "Tools\text\text.csproj"                 "text"
 
 $installer = $true
 
