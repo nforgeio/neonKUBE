@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -85,6 +86,7 @@ namespace Neon.Kube
             {
                 "Connection",
                 "Content-Length",
+                "Content-Type",
                 "Host",
                 "Transfer-Encoding"
             };
@@ -290,9 +292,6 @@ namespace Neon.Kube
 
             var settings = new WebListenerSettings();
 
-            // $todo(jeff.lill): IMPORTANT DELETE THIS: Use localhost only!
-
-            //settings.UrlPrefixes.Add($"http://*:{localPort}/");
             settings.UrlPrefixes.Add($"http://localhost:{localPort}/");
 
             this.listener = new WebListener(settings);
@@ -402,12 +401,33 @@ namespace Neon.Kube
                                         remoteRequest.Headers.Add(header.Key, header.Value.ToArray());
                                     }
 
-                                    if (request.ContentLength.HasValue && response.ContentLength > 0 || 
+                                    if (request.ContentLength.HasValue && request.ContentLength > 0 || 
                                         request.Headers.TryGetValue("Transfer-Encoding", out var values))
                                     {
                                         // Looks like the client is transmitting content.
 
                                         remoteRequest.Content = new StreamContent(request.Body);
+
+                                        // Copy the important content related headers.
+
+                                        if (request.Headers.TryGetValue("Content-Length", out var requestContentLengthHeader) && 
+                                            long.TryParse(requestContentLengthHeader.First(), out var requestContentLength))
+                                        {
+                                            remoteRequest.Content.Headers.ContentLength = requestContentLength;
+                                        }
+
+                                        if (request.Headers.TryGetValue("Content-Type", out var requestContentTypeHeader))
+                                        {
+                                            remoteRequest.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(requestContentTypeHeader.First());
+                                        }
+
+                                        // $todo(jeff.lill): 
+                                        //
+                                        // Not going to worry about these for now.  This will probably
+                                        // never be an issue.
+
+                                        //remoteRequest.Content.Headers.ContentMD5
+                                        //remoteRequest.Content.Headers.ContentRange
                                     }
 
                                     // Forward the request to the remote endpoint.
