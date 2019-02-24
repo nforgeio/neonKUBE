@@ -199,6 +199,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DEVELOPER", "DEVELOPER", "{
 		Doc\Images\DEVELOPER\WinSCPHiddenFiles.png = Doc\Images\DEVELOPER\WinSCPHiddenFiles.png
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ImageSource", "ImageSource", "{9C2A58E3-0686-4E98-80EB-30981CA48359}"
+	ProjectSection(SolutionItems) = preProject
+		Doc\ImageSource\README.md = Doc\ImageSource\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Wiki", "Wiki", "{44128640-6436-4822-B5C7-850E20A09DA6}"
+	ProjectSection(SolutionItems) = preProject
+		Doc\ImageSource\Wiki\README.md = Doc\ImageSource\Wiki\README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
@@ -684,6 +694,8 @@ Global
 		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E} = {33866B5A-71FB-4430-9C0B-019B20644653}
 		{254E352F-B0B7-4044-BF5D-4944CDC2CE45} = {2CFE7466-98C4-490A-9519-4702DF7A4E15}
 		{C825B67A-D3D3-4404-83E2-A8CED1C595E2} = {254E352F-B0B7-4044-BF5D-4944CDC2CE45}
+		{9C2A58E3-0686-4E98-80EB-30981CA48359} = {2CFE7466-98C4-490A-9519-4702DF7A4E15}
+		{44128640-6436-4822-B5C7-850E20A09DA6} = {9C2A58E3-0686-4E98-80EB-30981CA48359}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
