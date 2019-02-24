@@ -103,7 +103,7 @@ Follow the steps below to configure a development or test workstation:
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the CMD window when the script is finished
 
-17. Restart Visual Studio (to pick up any environment changes).
+17. Restart Visual Studio (to pick up the environment changes).
 
 18. Confirm that the solution builds:
 
@@ -121,12 +121,14 @@ Follow the steps below to configure a development or test workstation:
   
     ![WinSCP Hidden Files](Images/DEVELOPER/WinSCPHiddenFiles.png?raw=true)
 
-20. *Optional*: Install **OpenVPN**
+20. Install **OpenVPN**
 
    * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
    * Run this command as administrator in a CMD window to install a second TAP interface:
 
    `"%PROGRAMFILES%\Tap-Windows\bin\addtap.bat"`
+
+   * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
 21. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
@@ -143,20 +145,22 @@ Follow the steps below to configure a development or test workstation:
 
 25. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-# Git Branches and Docker Image Tagging Conventions
+# Branches
 
-We're going to standardize on some conventions for managing source control branches and published Docker image tags.
+neonKUBE conventions for GitHub branches:
 
-## Branches
+* **master:** Includes the most recent relatively stable commits.
 
-Four branches in the repo are to be used for specific purposes:
+  Developers will merge any changes here after confirming that the changes appear to work.  The **master** branch should always build and pass unit tests and will generally act as the candidate for test, staging, and production releases.
 
-* **master:** Includes the most recent relatively stable commits.  Developers will merge any changes here after confirming that the changes appear to work.  The **master** branch should always build and pass unit tests and will generally act as the candidate for test, staging, and production releases.
+* **release-***version*: Tracks released software.
 
-* **prod:** Includes commits that will be deployed into production. 
+  Release branches should generally not be modified after the release has been made.  When minor changes are required, a new release branch (incrementing the PATCH version) should be created from the current release branch and the new release should be built and published.
 
-* **stage:** Includes commits that will be deployed info a staging environment.
+* **developer** branches:
 
-* **test:** Includes commits that will be deployed into a production environment.
+  Developers will generally have one or more branches prefixed by their first name (lowercase), e.g. *jeff*, *jeff-experimental*,...
+  
+* **feature** branches:
 
-Developers will generally have one or more branches prefixed by their first name (lowercase), e.g. *jeff*, *jeff-experimental*,...  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches like *feature-coolstuff*.  Most development work will happen in a developer or feature branch.
+  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches named like *feature-coolstuff*.  Most development work will happen in a developer or feature branch.
