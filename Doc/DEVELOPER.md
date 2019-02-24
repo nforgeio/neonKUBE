@@ -145,22 +145,22 @@ Follow the steps below to configure a development or test workstation:
 
 25. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-# Branches
+# Git Branches
 
 neonKUBE conventions for GitHub branches:
 
-* **master:** Includes the most recent relatively stable commits.
+* **master:**
 
-  Developers will merge any changes here after confirming that the changes appear to work.  The **master** branch should always build and pass unit tests and will generally act as the candidate for test, staging, and production releases.
+  Includes the most recent relatively stable commits.  Developers will merge any changes here after confirming that the changes appear to work.  The **master** branch should always build and pass unit tests and will generally act as the candidate for test, staging, and production releases.
 
-* **release-***version*: Tracks released software.
+* **release-version:**
 
-  Release branches should generally not be modified after the release has been made.  When minor changes are required, a new release branch (incrementing the PATCH version) should be created from the current release branch and the new release should be built and published.
+  These are used to track released software.  Release branches should generally not be modified after the release has been made.  When minor changes are required, a new release branch (incrementing the PATCH version) should be created from the current release branch and the new release should be built and published.
 
-* **developer** branches:
+* **developer:**
 
   Developers will generally have one or more branches prefixed by their first name (lowercase), e.g. *jeff*, *jeff-experimental*,...
   
-* **feature** branches:
+* **feature:**
 
   When developers need to colloborate on a feature over an extended period of time, we'll create feature branches named like *feature-coolstuff*.  Most development work will happen in a developer or feature branch.
