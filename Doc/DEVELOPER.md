@@ -1,9 +1,11 @@
 ﻿# neonKUBE Developer Setup
 
+This page describes how to get started with neonKUBE development.
+
 ## Workstation Requirements
 
 * Windows 10 Professional (64-bit) with at least 16GB RAM
-* Visual Studio 2019 Community Edition
+* Visual Studio 2019 Community Edition (or better)
 
 Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machin.
 
