@@ -187,6 +187,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-install", "Tools\neon-
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinDesktop", "Desktop\WinDesktop\WinDesktop.csproj", "{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Images", "Images", "{254E352F-B0B7-4044-BF5D-4944CDC2CE45}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DEVELOPER", "DEVELOPER", "{C825B67A-D3D3-4404-83E2-A8CED1C595E2}"
+	ProjectSection(SolutionItems) = preProject
+		Doc\Images\DEVELOPER\DockerLogo.png = Doc\Images\DEVELOPER\DockerLogo.png
+		Doc\Images\DEVELOPER\DockerNetwork.png = Doc\Images\DEVELOPER\DockerNetwork.png
+		Doc\Images\DEVELOPER\DockerSysTray.png = Doc\Images\DEVELOPER\DockerSysTray.png
+		Doc\Images\DEVELOPER\SkypeConnections.png = Doc\Images\DEVELOPER\SkypeConnections.png
+		Doc\Images\DEVELOPER\VisualStudioClone.png = Doc\Images\DEVELOPER\VisualStudioClone.png
+		Doc\Images\DEVELOPER\WinSCPHiddenFiles.png = Doc\Images\DEVELOPER\WinSCPHiddenFiles.png
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
@@ -670,6 +682,8 @@ Global
 		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6} = {33866B5A-71FB-4430-9C0B-019B20644653}
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E} = {33866B5A-71FB-4430-9C0B-019B20644653}
+		{254E352F-B0B7-4044-BF5D-4944CDC2CE45} = {2CFE7466-98C4-490A-9519-4702DF7A4E15}
+		{C825B67A-D3D3-4404-83E2-A8CED1C595E2} = {254E352F-B0B7-4044-BF5D-4944CDC2CE45}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

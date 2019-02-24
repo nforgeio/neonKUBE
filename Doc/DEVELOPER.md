@@ -28,7 +28,7 @@ Follow the steps below to configure a development or test workstation:
   * Select the **Advanced/Connection** tab on the left.
   * **Uncheck**: Use **port 80 and 443** for additional incoming connections.
   
-    ![Skype Connections](/Doc/Images/README/SkypeConnections.png)
+    ![Skype Connections](Images/DEVELOPER/SkypeConnections.png?raw=true)
   * **Restart Skype**
 
 4. Ensure that hardware virtualization is enabled in your BIOS.
@@ -62,7 +62,7 @@ Follow the steps below to configure a development or test workstation:
   * Use the **Stable** channel unless you have a specific need for bleeding edge features
   * **Right-click** the Docker icon in the system tray and select **Settings...*
 
-    ![System Tray](/Doc/Images/README/DockerSysTray.png)
+    ![System Tray](Images/DEVELOPER/DockerSysTray.png?raw=true)
   * Select the **Shared Drives** tab and **share** the drive where you'll clone the project source code (typically drive C:)
   * You'll need to enter your workstation **credentials**
   * Select the **Daemon** tab on the left and make sure that **Experimental** is **unchecked**
@@ -77,7 +77,7 @@ Follow the steps below to configure a development or test workstation:
   * **Right-click** the Docker again in the system tray and select **Settings...*
   * Click **Network** on the left, select Fixed DNS Server and then **Apply**
 
-    ![Docker Network Settings](/Doc/Images/README/DockerNetwork.png)
+    ![Docker Network Settings](Images/DEVELOPER/DockerNetwork.png?raw=true)
 
 13. **Clone** the source repository on your workstation:
 
@@ -89,7 +89,7 @@ Follow the steps below to configure a development or test workstation:
   * A *Launch Application* dialog will appear.  Select **Microsoft Visual Studio Protocol Handler Selector** and click **Open Link**
   * Choose or enter the directory where the repository will be cloned.  This defaults to a user-specific folder.  I typically change this to a global folder to keep the file paths short.
   
-    ![Video Studio Clone](/Doc/Images/README/VisualStudioClone.png)
+    ![Video Studio Clone](Images/DEVELOPER/VisualStudioClone.png?raw=true)
   * Click **Clone**
 
 14. **Close** any running instances of **Visual Studio**
@@ -119,7 +119,7 @@ Follow the steps below to configure a development or test workstation:
   * *Optional*: The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** and selecting **Merge**
   * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **Tools/Preferences...", and then click **Panels** on the left and check **Show hidden files**:
   
-    ![WinSCP Hidden Files](/Doc/Images/README/WinSCPHiddenFiles.png)
+    ![WinSCP Hidden Files](Images/DEVELOPER/WinSCPHiddenFiles.png?raw=true)
 
 20. *Optional*: Install **OpenVPN**
 
