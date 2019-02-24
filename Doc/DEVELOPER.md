@@ -159,8 +159,24 @@ neonKUBE conventions for GitHub branches:
 
 * **developer:**
 
-  Developers will generally have one or more branches prefixed by their first name (lowercase), e.g. *jeff*, *jeff-experimental*,...
+  Developers will generally have one or more branches prefixed by their first name (lowercase), like: **jeff**, **jeff-experimental**,...
   
 * **feature:**
 
-  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches named like *feature-coolstuff*.  Most development work will happen in a developer or feature branch.
+  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches named like **feature-coolstuff**.  Most development work will happen in a developer or feature branch.
+
+# Coding Conventions
+
+We'll be generally following the [Microsoft C# Coding Conventions](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/coding-conventions).
+
+# Code Comments
+
+In general, all public types, methods, and properties should have reasonable code comments describing the basic functionality.  Please use the C# &lt;see&gt;, &lt;paramref&gt;, &lt;typeparam&gt;, &lt;para&gt;, &lt;b&gt;  &lt;i&gt; &lt;c&gt; markup elements so that the generated web pages will look nice.  This is especially true for REST APIs so that Swagger can generate nice documentation for developers looking at the API.
+
+# Unit Tests
+
+Each important class library and application should have its own **xunit** based unit test project.  This should be named like **Test.PROJECT** where **PROJECT** is the name of the component being test.  For example we'd create a test project named **Test.Loopie.Common** for the **Loopie.Common** library.
+
+The C# namespace for each test project should be the same as the project name (e.g. **Test.Neon.Common**) and each test class name should be prefixed by **Test_** to avoid namespace conflicts with the classes you need to test against.
+
+Test methods should ne organized into categories using the xunit **[Trait(...)]** attribute.
