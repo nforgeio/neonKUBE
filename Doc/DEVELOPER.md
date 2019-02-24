@@ -145,7 +145,7 @@ Follow the steps below to configure a development or test workstation:
 
 25. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-# Git Branches
+## Git Branches
 
 neonKUBE conventions for GitHub branches:
 
@@ -165,15 +165,15 @@ neonKUBE conventions for GitHub branches:
 
   When developers need to colloborate on a feature over an extended period of time, we'll create feature branches named like **feature-coolstuff**.  Most development work will happen in a developer or feature branch.
 
-# Coding Conventions
+## Coding Conventions
 
 We'll be generally following the [Microsoft C# Coding Conventions](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/coding-conventions).
 
-# Code Comments
+## Code Comments
 
 In general, all public types, methods, and properties should have reasonable code comments describing the basic functionality.  Please use the C# &lt;see&gt;, &lt;paramref&gt;, &lt;typeparam&gt;, &lt;para&gt;, &lt;b&gt;  &lt;i&gt; &lt;c&gt; markup elements so that the generated web pages will look nice.  This is especially true for REST APIs so that Swagger can generate nice documentation for developers looking at the API.
 
-# Unit Tests
+## Unit Tests
 
 Each important class library and application should have its own **xunit** based unit test project.  This should be named like **Test.PROJECT** where **PROJECT** is the name of the component being test.  For example we'd create a test project named **Test.Loopie.Common** for the **Loopie.Common** library.
 
