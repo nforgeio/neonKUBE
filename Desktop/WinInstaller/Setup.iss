@@ -53,7 +53,7 @@ Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "NEONKUBE_PROGRAM_FOLDER"; ValueData: "{app}"; Flags: uninsdeletevalue
 
 [Run]
-Filename: "{app}\win-desktop\neonKUBE-win.exe"; Description: "neonKUBE Desktop"; Flags: postinstall
+Filename: "{app}\win-desktop\neonKUBE-win.exe"; Description: "neonKUBE Desktop"; Flags: postinstall nowait
 
 [UninstallRun]
 ; Kill the neonKUBE Desktop app if it is running.

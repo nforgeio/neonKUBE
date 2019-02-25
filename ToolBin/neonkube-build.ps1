@@ -179,8 +179,25 @@ if ($installer)
     ""
 
     & neon-install build-installer windows
+
+    if (-not $?)
+    {
+        ""
+        "*** Windows Installer: Build failed ***"
+        ""
+        exit 1
+    }
+
     "Generating windows installer sha512..."
     & cat "$nfBuild\neonKUBE-setup.exe" | openssl dgst -sha512 > "$nfBuild\neonKUBE-setup.exe.sha512"
+
+    if (-not $?)
+    {
+        ""
+        "*** Windows Installer: Build SHA512 failed ***"
+        ""
+        exit 1
+    }
 }
 
 cd $originalDir
