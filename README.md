@@ -2,5 +2,5 @@
 
 This project is in the early stages of becoming yet another Kubernetes Distribution.
 
-Developers: See [DEVELOPER.md](Doc/DEVLOPER.md) for setup instructions.
+Developers: See [DEVELOPER.md](Doc/DEVELOPER.md) for setup instructions.
 
