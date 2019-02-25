@@ -49,7 +49,7 @@ namespace Neon
 #if DEBUG
         public const string NugetVersion = "0.1.0+1902.debug-alpha-3";
 #else
-        public const string NugetVersion = "0.1.0+1902-alpha-2";
+        public const string NugetVersion = "0.1.0+1902-alpha-3";
 #endif
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace Neon
 #if DEBUG
         public const string ProductVersion = "0.1.0+1902.debug-alpha-3";
 #else
-        public const string ProductVersion = "0.1.0+1902-alpha-2";
+        public const string ProductVersion = "0.1.0+1902-alpha-3";
 #endif
 
         /// <summary>
