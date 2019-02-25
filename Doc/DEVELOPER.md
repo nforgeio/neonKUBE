@@ -5,6 +5,7 @@ This page describes how to get started with neonKUBE development.
 ## Workstation Requirements
 
 * Windows 10 Professional (64-bit) with at least 16GB RAM
+* Virtualization cpapable workstation
 * Visual Studio 2019 Community Edition (or better)
 
 Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machin.
@@ -33,7 +34,25 @@ Follow the steps below to configure a development or test workstation:
     ![Skype Connections](Images/DEVELOPER/SkypeConnections.png?raw=true)
   * **Restart Skype**
 
-4. Ensure that hardware virtualization is enabled in your BIOS.
+4. Ensure that Hyper-V is installed and enabled:
+
+  a. Run the following command in a **cmd** window to verify that your workstation is capable of virtualization and that it's enabled.
+
+    `systeminfo`
+
+    You're looking for output like:
+
+   ![Virtualization Info](Images/DEVELOPER/virtualization.png?raw=true)
+
+    or a message saying that: **A hypervisor has been detected.**
+
+  b. Press the Windows key and enter: **windows features** and press ENTER.
+
+  c. Ensure that the check boxes highligvhted in red below are checked:
+
+   ![Hyper-V Features](Images/DEVELOPER/hyper-v.png?raw=true) 
+
+  d. Reboot your machine as required.
 
 5. Install the latest **32-bit** production release of PowerShell Core from: [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
 
