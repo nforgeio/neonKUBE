@@ -46,12 +46,12 @@ namespace Neon
         /// <summary>
         /// The published nuget library version.
         /// </summary>
-        public const string NugetVersion = "0.1.0+1902-alpha.3";
+        public const string NugetVersion = "0.2.0-alpha";
 
         /// <summary>
         /// The released product version.
         /// </summary>
-        public const string ProductVersion = "0.1.0-alpha.3";
+        public const string ProductVersion = "0.2.0-alpha";
 
         /// <summary>
         /// The product license.
