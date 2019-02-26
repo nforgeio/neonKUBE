@@ -164,11 +164,10 @@ PublishCore "Tools\nshell\nshell.csproj"             "nshell"
 
 # $todo(jeff.lill):
 #
-# These two apps don't publish for some reason so I'll comment
+# This app doesn't publish for some reason so I'll comment
 # them out for now (we don't really need them anyway).
 
 # PublishCore "Tools\entity-gen\entity-gen.csproj"     "entity-gen"
-# PublishCore "Tools\text\text.csproj"                 "text"
 
 if ($installer)
 {
