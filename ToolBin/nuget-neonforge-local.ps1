@@ -33,7 +33,7 @@ function SetVersion
         [string]$project
     )
 
-	text pack-version "$env:NF_ROOT\release-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
+	text pack-version "$env:NF_ROOT\product-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
 }
 
 function Publish

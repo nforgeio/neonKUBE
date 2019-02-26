@@ -76,10 +76,10 @@ namespace NeonInstall
             //      NF_KUBE_VERSION     - The Kubernetes version
             //      NF_PRODUCT_VERSION  - The neonKUBE product version
 
-            var releaseVersion = File.ReadLines(Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "release-version.txt")).First().Trim();
+            var productVersion = File.ReadLines(Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "product-version.txt")).First().Trim();
 
             Environment.SetEnvironmentVariable("NF_KUBE_VERSION", Helper.KubeVersion);
-            Environment.SetEnvironmentVariable("NF_PRODUCT_VERSION", releaseVersion);
+            Environment.SetEnvironmentVariable("NF_PRODUCT_VERSION", productVersion);
 
             // Run the Inno Setup compiler.  Note that we're assuming that it's installed
             // to the default folder.

@@ -178,7 +178,7 @@ neonKUBE conventions for GitHub branches:
 
   Includes the most recent relatively stable commits.  Developers will merge any changes here after confirming that the changes appear to work.  The **master** branch should always build and pass unit tests and will generally act as the candidate for test, staging, and production releases.
 
-* **release-version:**
+* **product-version:**
 
   These are used to track released software.  Release branches should generally not be modified after the release has been made.  When minor changes are required, a new release branch (incrementing the PATCH version) should be created from the current release branch and the new release should be built and published.
 

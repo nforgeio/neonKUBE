@@ -171,7 +171,7 @@ if ($installer)
     "**********************************************************"
     ""
 
-    $version = Get-Content "$env:NF_ROOT\release-version.txt" -First 1
+    $version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
 
     & neon-install build-installer windows
 

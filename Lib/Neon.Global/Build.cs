@@ -44,14 +44,9 @@ namespace Neon
         public const string ProductName = "neonKUBE";
 
         /// <summary>
-        /// The published nuget library version.
-        /// </summary>
-        public const string NugetVersion = "0.2.0-alpha";
-
-        /// <summary>
         /// The released product version.
         /// </summary>
-        public const string ProductVersion = "0.2.0-alpha";
+        public const string ProductVersion = "0.2.1-alpha";
 
         /// <summary>
         /// The product license.
