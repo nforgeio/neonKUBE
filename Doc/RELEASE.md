@@ -53,7 +53,7 @@
   b. Set **Tag** to the version
   c. Set **Target** to the `release-VERSION` branch
   e: Check **This is a pre-release** as required
-  f. Add the release setup binary named like: **neonKUBE-setup-0.1.0-alpha.0.exe**
+  f. Add the release setup binary named like: **neonKUBE-setup-0.1.0-alpha.exe**
   g. Edit the release notes including adding the SH512 for the setup from:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`"$NF_BUILD%\neonKUBE-setup.exe.sha512`
