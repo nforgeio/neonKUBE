@@ -166,6 +166,10 @@ Follow the steps below to configure a development or test workstation:
 
 25. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
+26. *Optional*: Developers who will be publishing **nuget packages* will need to obtain a nuget API key from a senior developer and install the key on their workstation via:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`nuget SetApiKey APIKEY`
+
 ## Git Branches
 
 neonKUBE conventions for GitHub branches:
