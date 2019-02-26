@@ -89,7 +89,7 @@ namespace WinDesktop
             // Ensure that temporary files are written to the users temporary folder because
             // there's a decent chance that this folder will be encrypted at rest.
 
-            TempFile.Root = KubeHelper.TempFolder;
+            TempFile.Root   = KubeHelper.TempFolder;
             TempFolder.Root = KubeHelper.TempFolder;
 
             // Preload the notification icons and animations for better performance.
