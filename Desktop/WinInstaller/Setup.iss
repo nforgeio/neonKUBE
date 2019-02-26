@@ -15,7 +15,7 @@ MinVersion=10.0.16299
 Compression=lzma2
 SolidCompression=no
 OutputDir={#GetEnv("NF_BUILD")}
-OutputBaseFilename=neonKUBE-setup
+OutputBaseFilename=neonKUBE-setup-{#GetEnv("NF_PRODUCT_VERSION")}
 ; "ArchitecturesAllowed=x64" specifies that Setup cannot run on
 ; anything but x64.
 ArchitecturesAllowed=x64

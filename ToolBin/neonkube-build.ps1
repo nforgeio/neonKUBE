@@ -178,6 +178,8 @@ if ($installer)
     "**********************************************************"
     ""
 
+    $version = Get-Content "$env:NF_ROOT\release-version.txt" -First 1
+
     & neon-install build-installer windows
 
     if (-not $?)
@@ -189,7 +191,7 @@ if ($installer)
     }
 
     "Generating windows installer sha512..."
-    & cat "$nfBuild\neonKUBE-setup.exe" | openssl dgst -sha512 > "$nfBuild\neonKUBE-setup.exe.sha512"
+    & cat "$nfBuild\neonKUBE-setup-$version.exe" | openssl dgst -sha512 > "$nfBuild\neonKUBE-setup-$version.sha512.txt"
 
     if (-not $?)
     {

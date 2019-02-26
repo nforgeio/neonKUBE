@@ -21,7 +21,7 @@
 
 ## Release 
 
-1. Update `$/nuget-version.txt` (or `GitHub/nuget-version.txt` in the solution) with the 
+1. Update `$/release-version.txt` (or `GitHub/release-version.txt` in the solution) with the 
    new package version as required.
 
 2. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
@@ -29,7 +29,7 @@
 
 3. Open the **Properties** each of the library projects and update the **Release notes**.
 
-4. Create a new local `release-VERSION` branch from `MASTER` (where `VERSION` is the same version as saved to `$/nuget-version.txt`).
+4. Create a new local `release-VERSION` branch from `MASTER` (where `VERSION` is the same version as saved to `$/release-version.txt`).
 
 5. Rebuild the RELEASE version via:
 
@@ -56,7 +56,7 @@
   f. Add the release setup binary named like: **neonKUBE-setup-0.1.0-alpha.exe**
   g. Edit the release notes including adding the SH512 for the setup from:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`"$NF_BUILD%\neonKUBE-setup.exe.sha512`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`"$NF_BUILD%\neonKUBE-setup.sha512.txt`
 
   g. Publish the release
 
@@ -64,7 +64,7 @@
 
 1. Merge any changes from the RELEASE branch back into MASTER.
 
-2. Bump the version numbers in `$/nuget-version.txt` and `$Lib/Neon.Global/Build.cs`.
+2. Bump the version numbers in `$/release-version.txt` and `$Lib/Neon.Global/Build.cs`.
 k
 3. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
 

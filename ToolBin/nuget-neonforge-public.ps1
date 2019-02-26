@@ -33,7 +33,7 @@ function SetVersion
         [string]$project
     )
 
-	text pack-version "$env:NF_ROOT\nuget-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
+	text pack-version "$env:NF_ROOT\release-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
 }
 
 function Publish
@@ -46,7 +46,7 @@ function Publish
 
 	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_build\nuget"
 
-	$version = Get-Content "$env:NF_ROOT\nuget-version.txt" -First 1
+	$version = Get-Content "$env:NF_ROOT\release-version.txt" -First 1
 
 	# $todo(jeff.lill):
     #

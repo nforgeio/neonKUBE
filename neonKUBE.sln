@@ -22,9 +22,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		global.json = global.json
 		kube-version.txt = kube-version.txt
 		LICENSE = LICENSE
-		nuget-version.txt = nuget-version.txt
 		passwords.zip = passwords.zip
 		README.md = README.md
+		release-version.txt = release-version.txt
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
