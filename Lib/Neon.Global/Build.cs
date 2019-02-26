@@ -46,20 +46,12 @@ namespace Neon
         /// <summary>
         /// The published nuget library version.
         /// </summary>
-#if DEBUG
-        public const string NugetVersion = "0.1.0+1902.debug-alpha-3";
-#else
-        public const string NugetVersion = "0.1.0+1902-alpha-3";
-#endif
+        public const string NugetVersion = "0.1.0+1902-alpha.3";
 
         /// <summary>
         /// The released product version.
         /// </summary>
-#if DEBUG
-        public const string ProductVersion = "0.1.0+1902.debug-alpha-3";
-#else
-        public const string ProductVersion = "0.1.0+1902-alpha-3";
-#endif
+        public const string ProductVersion = "0.1.0-alpha.3";
 
         /// <summary>
         /// The product license.

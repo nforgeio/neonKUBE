@@ -52,7 +52,6 @@ function Publish
 
 	$version = Get-Content "$env:NF_ROOT\nuget-version.txt" -First 1
     $version = $version.Substring(0, $version.IndexOf('-')) # Removes any preview label
-    $version = $version.Substring(0, $version.IndexOf('+')) # Removes any build metadata label
 
 	# $todo(jeff.lill):
     #
