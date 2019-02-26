@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cryptography</RootNamespace>
-    <Version>0.1.0+1902-alpha-0</Version>
+    <Version>0.1.0+1902-alpha-3</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonKUBE cryptography library.</Description>
