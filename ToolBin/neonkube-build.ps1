@@ -158,16 +158,10 @@ if (-not $nobuild)
 
 # Publish the .NET Core binaries.
 
+PublishCore "Tools\entity-gen\entity-gen.csproj"     "entity-gen"
 PublishCore "Tools\neon-cli\neon-cli.csproj"         "neon"
 PublishCore "Tools\neon-install\neon-install.csproj" "neon-install"
 PublishCore "Tools\nshell\nshell.csproj"             "nshell"
-
-# $todo(jeff.lill):
-#
-# This app doesn't publish for some reason so I'll comment
-# them out for now (we don't really need them anyway).
-
-# PublishCore "Tools\entity-gen\entity-gen.csproj"     "entity-gen"
 
 if ($installer)
 {
