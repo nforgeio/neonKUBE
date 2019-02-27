@@ -4,12 +4,7 @@
 
 1. Merge all desired changes into the **MASTER** branch from the **JEFF** and/or other development branches.
 
-2. Update the product versions as required: 
-
-  `Neon.Global.Build.NuGetVersion` - Version for the libraries published to **nuget.org**
-  `Neon.Global.Build.ProductVersion` - Version for the released products and installers
-
-3. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
+2. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build`
 
@@ -24,14 +19,16 @@
 1. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
    new package version as required.
 
-2. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
+2. Update the product version here too: `Neon.Global.Build.NuGetVersion`
+
+3. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
    required Kubernetes version as required.
 
-3. Open the **Properties** each of the library projects and update the **Release notes**.
+4. Open the **Properties** each of the library projects and update the **Release notes**.
 
-4. Create a new local `release-VERSION` branch from `MASTER` (where `VERSION` is the same version as saved to `$/product-version.txt`).
+5. Create a new local `release-VERSION` branch from `MASTER` (where `VERSION` is the same version as saved to `$/product-version.txt`).
 
-5. Rebuild the RELEASE version via:
+6. Rebuild the RELEASE version via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
