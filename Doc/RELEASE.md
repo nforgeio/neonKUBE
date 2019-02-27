@@ -19,7 +19,7 @@
 1. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
    new package version as required.
 
-2. Update the product version here too: `Neon.Global.Build.NuGetVersion`
+2. Update the product version here too: `$/Lib/Neon.Global/Build.cs`
 
 3. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
    required Kubernetes version as required.
@@ -61,7 +61,7 @@
 
 1. Merge any changes from the RELEASE branch back into MASTER.
 
-2. Bump the version numbers in `$/product-version.txt` and `$Lib/Neon.Global/Build.cs`.
+2. Bump the version numbers in `$/product-version.txt` and `$/Lib/Neon.Global/Build.cs`.
 k
 3. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
 
