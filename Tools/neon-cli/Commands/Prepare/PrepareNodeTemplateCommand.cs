@@ -161,7 +161,7 @@ node template.
 
                 Console.WriteLine("Install packages");
                 server.SudoCommand("apt-get update", RunOptions.FaultOnError);
-                server.SudoCommand("apt-get install -yq zip secure-delete", RunOptions.FaultOnError);
+                server.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
 
                 // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line:
 
@@ -270,7 +270,7 @@ hv_blkvsc
 hv_netvsc
 EOF
 
-apt-get install -yq linux-virtual linux-cloud-tools-virtual linux-tools-virtual
+apt-get install -yq --allow-downgrades linux-virtual linux-cloud-tools-virtual linux-tools-virtual
 update-initramfs -u
 ";
                 Console.WriteLine("Install guest integration services");

@@ -33,7 +33,7 @@ ARG         VERSION
 # Git and Nano layer
 
 RUN apt-get update \
-    && apt-get install -yq git nano \
+    && apt-get install -yq --allow-downgrades  git nano \
     && apt-get clean -yq
 
 # Go layer

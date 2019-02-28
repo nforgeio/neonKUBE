@@ -77,7 +77,7 @@ rm -rf /home/temp
 #   ca-certificates     Latest certificate authority certs
 
 safe-apt-get update
-safe-apt-get install -yq nano sysstat dstat iotop iptraf apache2-utils daemon jq aptitude gdebi-core mmv ca-certificates
+safe-apt-get install -yq --allow-downgrades nano sysstat dstat iotop iptraf apache2-utils daemon jq aptitude gdebi-core mmv ca-certificates
 
 # All Neon servers will be configured for UTC time.
 
