@@ -267,18 +267,26 @@ OPTIONS:
                 LogPath = LeftCommandLine.GetOption("--log-folder");
                 Quiet   = LeftCommandLine.GetFlag("--quiet");
 
-                if (!string.IsNullOrEmpty(LogPath))
+                if (KubeHelper.InToolContainer)
                 {
-                    if (KubeHelper.InToolContainer)
-                    {
-                        // We hardcode logging to [/log] inside [neon-cli] containers.
+                    // We hardcode logging to [/log] inside [neon-cli] containers.
 
-                        LogPath = "/log";
-                    }
-
+                    LogPath = "/log";
+                }
+                else if (!string.IsNullOrEmpty(LogPath))
+                {
                     LogPath = Path.GetFullPath(LogPath);
 
                     Directory.CreateDirectory(LogPath);
+                }
+                else
+                {
+                    LogPath = KubeHelper.LogFolder;
+
+                    // We can clear this folder because we know that there shouldn't be
+                    // any other files in here.
+
+                    NeonHelper.DeleteFolderContents(LogPath);
                 }
 
                 //-------------------------------------------------------------

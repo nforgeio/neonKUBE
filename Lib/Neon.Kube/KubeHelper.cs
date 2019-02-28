@@ -62,6 +62,7 @@ namespace Neon.Kube
         private static string               cachedNeonKubeUserFolder;
         private static string               cachedKubeUserFolder;
         private static string               cachedRunFolder;
+        private static string               cachedLogFolder;
         private static string               cachedClustersFolder;
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
@@ -100,6 +101,7 @@ namespace Neon.Kube
             cachedNeonKubeUserFolder = null;
             cachedKubeUserFolder     = null;
             cachedRunFolder          = null;
+            cachedLogFolder          = null;
             cachedClustersFolder     = null;
             cachedPasswordsFolder    = null;
             cachedCacheFolder        = null;
@@ -547,7 +549,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the root path where the [neon run CMD ...] will copy secrets and run the command.
+        /// Returns the directory path where the [neon run CMD ...] will copy secrets and run the command.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string RunFolder
@@ -564,6 +566,27 @@ namespace Neon.Kube
                 Directory.CreateDirectory(path);
 
                 return cachedRunFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Returns the default directory path neon-cli logs will be written.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string LogFolder
+        {
+            get
+            {
+                if (cachedLogFolder != null)
+                {
+                    return cachedLogFolder;
+                }
+
+                var path = Path.Combine(GetNeonKubeUserFolder(), "log");
+
+                Directory.CreateDirectory(path);
+
+                return cachedLogFolder = path;
             }
         }
 

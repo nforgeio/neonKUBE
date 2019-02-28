@@ -1,24 +1,24 @@
 # HOME: tiny
 neon login rm --force root@home-tiny
-neon cluster prepare %NF_ROOT%/devops/home/tiny.cluster.yaml --log-folder=c:/cluster-logs --unredacted
-neon cluster setup --log-folder=c:/cluster-logs --unredacted root@home-tiny
+neon cluster prepare %NF_ROOT%/devops/home/tiny.cluster.yaml --unredacted
+neon cluster setup --unredacted root@home-tiny
 
 # HOME: small
 neon login rm --force root@home-small
-neon cluster prepare %NF_ROOT%/devops/home/small.cluster.yaml --log-folder=c:/cluster-logs --unredacted
-neon cluster setup --log-folder=c:/cluster-logs --unredacted root@home-small
+neon cluster prepare %NF_ROOT%/devops/home/small.cluster.yaml --unredacted
+neon cluster setup --unredacted root@home-small
 
 # HOME: large
 neon login rm --force root@home-large
-neon cluster prepare %NF_ROOT%/devops/home/large.cluster.yaml --log-folder=c:/cluster-logs --unredacted
-neon cluster setup --log-folder=c:/cluster-logs --unredacted root@home-large
+neon cluster prepare %NF_ROOT%/devops/home/large.cluster.yaml -unredacted
+neon cluster setup --unredacted root@home-large
 
 # WRT
 neon logout
-neon cluster prepare %NF_ROOT%/devops/wrt/jeff-small.cluster.yaml --log-folder=c:/cluster-logs --unredacted
-neon cluster setup --log-folder=c:/cluster-logs --unredacted root@wrt-jeff-small
+neon cluster prepare %NF_ROOT%/devops/wrt/jeff-small.cluster.yaml --unredacted
+neon cluster setup --unredacted root@wrt-jeff-small
 
 # OFFICE
 neon login rm --force root@office-tiny
-neon cluster prepare %NF_ROOT%/devops/office/tiny.cluster.yaml --log-folder=c:/cluster-logs --unredacted
-neon cluster setup --log-folder=c:/cluster-logs --unredacted root@office-tiny
+neon cluster prepare %NF_ROOT%/devops/office/tiny.cluster.yaml --unredacted
+neon cluster setup --unredacted root@office-tiny
