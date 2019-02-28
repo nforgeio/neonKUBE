@@ -103,7 +103,8 @@ namespace Neon.Cryptography
     /// used to encrypt the data.
     /// </item>
     /// <item>
-    /// Call one of <see cref="Dec"/>
+    /// Call one of <see cref="DecryptBytesFromBase64(byte[])"/>, <see cref="DecryptStringFromBase64(string)"/>,
+    /// or <see cref="DecryptToStream(Stream, Stream)"/> to decrypt data.
     /// </item>
     /// </list>
     /// </remarks>

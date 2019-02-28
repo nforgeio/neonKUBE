@@ -5,6 +5,7 @@
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <IsPackable>false</IsPackable>
     <RootNamespace>TestKube</RootNamespace>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

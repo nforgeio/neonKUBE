@@ -29,7 +29,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-namespace TestCommon
+namespace TestCryptography
 {
     public class Test_TlsCertificate
     {
@@ -165,7 +165,7 @@ pu/xO28QOG8=
 -----END PRIVATE KEY-----
 ";
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void NormalizePem()
         {
             Assert.Equal("abcde\n", TlsCertificate.NormalizePem("abcde"));
@@ -174,7 +174,7 @@ pu/xO28QOG8=
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void Constructor()
         {
             var cert = new TlsCertificate(TestCertPart + TestKeyPart);
@@ -191,7 +191,7 @@ pu/xO28QOG8=
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void ConstructorErrors()
         {
             Assert.Throws<ArgumentException>(() => new TlsCertificate("not a cert"));
@@ -200,7 +200,7 @@ pu/xO28QOG8=
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void Load()
         {
             using (var tempFolder = new TempFolder())
@@ -249,7 +249,7 @@ pu/xO28QOG8=
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void ParseCertUtil_SAN()
         {
             // Verify a [CertUtil] dump of a SAN certificate.
@@ -404,7 +404,7 @@ CertUtil: -dump command completed successfully.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void ParseCertUtil()
         {
             // Verify a [CertUtil] dump of a non-SAN certificate.
@@ -559,7 +559,7 @@ CertUtil: -dump command completed successfully.
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void ParseOpenSSL_SAN()
         {
             // Verify an [OpenSSL] dump of a SAN certificate.
@@ -686,7 +686,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void Verify()
         {
             // Verify basic fields.
@@ -729,7 +729,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void SelfSigned_Host()
         {
             var cert = TlsCertificate.CreateSelfSigned("foo.com");
@@ -742,7 +742,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void SelfSigned_SubdomainsOnly()
         {
             var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.SubdomainsOnly);
@@ -755,7 +755,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void SelfSigned_RootAndSubdomains()
         {
             var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.RootAndSubdomains);
@@ -769,7 +769,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void SelfSigned_OtherFields()
         {
             var cert = TlsCertificate.CreateSelfSigned("foo.com", wildcard: Wildcard.RootAndSubdomains);
@@ -783,7 +783,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void SelfSigned_MultiHosts()
         {
             var cert = TlsCertificate.CreateSelfSigned(
@@ -806,7 +806,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         }
 
         [Fact(Skip = "ToX509Certificate() Doesn't work for some reason.")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void X509_SelfSigned()
         {
             // $todo(jeff.lill):
@@ -842,7 +842,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void X509_NoPrivateKey()
         {
             // Verify that we can load a certificate generated by 
@@ -879,7 +879,7 @@ NOrsafukaeMnu7sKsM5jeCimps8GlBJUM6bVrlbAgUuPl5B0oWg=
         }
 
         [Fact(Skip = "Enable for .NET Standard 2.0")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void X509_WithPrivateKey()
         {
             // $todo(jeff.lill):
