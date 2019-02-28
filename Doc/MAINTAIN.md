@@ -32,7 +32,7 @@ The easiest way to to accomplish this is visit the Docker package repo at:
 
    b. Configure the Kubernetes package  repo:
 ```
-apt-get update && apt-get install -y apt-transport-https curl
+apt-get update && apt-get install -y --allow-downgrades apt-transport-https curl
 curl - s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
 ```

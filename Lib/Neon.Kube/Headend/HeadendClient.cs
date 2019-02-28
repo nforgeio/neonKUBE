@@ -102,7 +102,7 @@ namespace Neon.Kube
             // These versions were obtained by starting an Ubuntu server
             // and running these commands:
             //
-            //      apt-get update && apt-get install -y apt-transport-https curl
+            //      apt-get update && apt-get install -yq --allow-downgrades apt-transport-https curl
             //      curl - s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
             //      echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
             //
