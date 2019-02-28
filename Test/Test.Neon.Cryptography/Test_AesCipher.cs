@@ -38,9 +38,9 @@ namespace TestCryptography
         public void GenerateKeys()
         {
             var sizes = new int[] { 128, 192, 256 };
-            var count = 100;
+            var count = 1000;
 
-            // Generate a number of keys of each valid size and ensure that ech key is unique.
+            // Generate a number of keys of each valid size and ensure that each key is unique.
 
             foreach (var size in sizes)
             {
