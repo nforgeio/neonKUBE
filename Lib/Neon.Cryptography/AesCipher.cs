@@ -248,33 +248,17 @@ namespace Neon.Cryptography
         {
             Covenant.Requires<ArgumentNullException>(stream != null);
 
-            var orgPos = stream.Position;
-            var ms     = stream as MemoryStream;
+            var orgPos      = stream.Position;
+            var cbRemaining = stream.Length;
 
-            if (ms != null)
+            stream.Position = 0;
+
+            while (cbRemaining > 0)
             {
-                // Optimize memory streams.
+                var cbWritten = (int)Math.Min(zeros.Length, cbRemaining);
 
-                var buffer = ms.GetBuffer();
-
-                for (int i = 0; i < buffer.Length; i++)
-                {
-                    buffer[i] = 0;
-                }
-            }
-            else
-            {
-                var cbRemaining = stream.Length;
-
-                stream.Position = 0;
-
-                while (cbRemaining > 0)
-                {
-                    var cbWritten = (int)Math.Min(zeros.Length, cbRemaining);
-
-                    stream.Write(zeros, 0, cbWritten);
-                    cbRemaining -= cbWritten;
-                }
+                stream.Write(zeros, 0, cbWritten);
+                cbRemaining -= cbWritten;
             }
 
             stream.Position = orgPos;
@@ -348,26 +332,23 @@ namespace Neon.Cryptography
         {
             Covenant.Requires<ArgumentNullException>(decryptedBytes != null);
 
-            using (var input = new MemoryStream())
+            using (var decrypted = new MemoryStream(decryptedBytes))
             {
-                using (var output = new MemoryStream())
+                using (var encrypted = new MemoryStream())
                 {
                     try
                     {
-                        input.Write(decryptedBytes);
-                        input.Position = 0;
+                        EncryptToStream(decrypted, encrypted);
 
-                        EncryptToStream(input, output);
-
-                        output.Position = 0;
-                        return output.ReadBytes((int)(output.Length - output.Position));
+                        encrypted.Position = 0;
+                        return encrypted.ReadBytes((int)(encrypted.Length));
                     }
                     finally
                     {
                         // Zero the input stream so that sensitive data won't be 
                         // hanging around in RAM.
 
-                        Zero(input);
+                        Zero(decrypted);
 
                         if (zeroDecrypted)
                         {
@@ -393,33 +374,21 @@ namespace Neon.Cryptography
 
             try
             {
-                using (var ivStream = new MemoryStream())
+                using (var writer = new BinaryWriter(encrypted, Encoding.UTF8, leaveOpen: true))
                 {
-                    using (var writer = new BinaryWriter(ivStream, Encoding.UTF8, leaveOpen: true))
-                    {
-                        // Write the IV:
+                    // Write the IV to the encrypted output first in the clear.
+                    // We'll need to be able to read this before decrypting.
 
-                        writer.Write((short)aes.IV.Length);
-                        writer.Write(aes.IV);
-                        writer.Flush();
+                    writer.Write((short)aes.IV.Length);
+                    writer.Write(aes.IV);
+                    writer.Flush();
 
-                        // Encrypt the IV and data:
+                    // Encrypt the IV and data:
 
-                        // $todo(jeff.lill):
-                        //
-                        // I'd like to put the [encryptor] in a using statement here but
-                        // that didn't work because disposing the encryptor also disposed
-                        // the underlying streams.
-                        //
-                        // Investigate whether this is going to be a problem.
-
-                        var encryptor = new CryptoStream(encrypted, aes.CreateEncryptor(aes.Key, aes.IV), CryptoStreamMode.Write);
+                    var encryptor = new CryptoStream(encrypted, aes.CreateEncryptor(aes.Key, aes.IV), CryptoStreamMode.Write);
                        
-                        ivStream.Position = 0;
-
-                        ivStream.CopyTo(encryptor);
-                        decrypted.CopyTo(encryptor);
-                    }
+                    decrypted.CopyTo(encryptor);
+                    encryptor.FlushFinalBlock();
                 }
             }
             finally
@@ -464,26 +433,23 @@ namespace Neon.Cryptography
         {
             Covenant.Requires<ArgumentNullException>(encryptedBase64 != null);
 
-            using (var input = new MemoryStream())
+            using (var encrypted = new MemoryStream(Convert.FromBase64String(encryptedBase64)))
             {
-                using (var output = new MemoryStream())
+                using (var decrypted = new MemoryStream())
                 {
                     try
                     {
-                        input.Write(Convert.FromBase64String(encryptedBase64));
-                        input.Position = 0;
+                        DecryptToStream(encrypted, decrypted);
 
-                        DecryptToStream(input, output);
-
-                        output.Position = 0;
-                        return output.ReadBytes((int)(output.Length - output.Position));
+                        decrypted.Position = 0;
+                        return decrypted.ReadBytes((int)(decrypted.Length));
                     }
                     finally
                     {
                         // Zero the output stream so that sensitive data won't be 
                         // hanging around in RAM.
 
-                        Zero(output);
+                        Zero(decrypted);
                     }
                 }
             }
@@ -498,26 +464,23 @@ namespace Neon.Cryptography
         {
             Covenant.Requires<ArgumentNullException>(encryptedBytes != null);
 
-            using (var input = new MemoryStream())
+            using (var encrypted = new MemoryStream(encryptedBytes))
             {
-                using (var output = new MemoryStream())
+                using (var decrypted = new MemoryStream())
                 {
                     try
                     {
-                        input.Write(encryptedBytes);
-                        input.Position = 0;
+                        DecryptToStream(encrypted, decrypted);
 
-                        DecryptToStream(input, output);
-
-                        output.Position = 0;
-                        return output.ReadBytes((int)(output.Length - output.Position));
+                        decrypted.Position = 0;
+                        return decrypted.ReadBytes((int)(decrypted.Length));
                     }
                     finally
                     {
                         // Zero the output stream so that sensitive data won't be 
                         // hanging around in RAM.
 
-                        Zero(output);
+                        Zero(decrypted);
                     }
                 }
             }
@@ -542,12 +505,11 @@ namespace Neon.Cryptography
                 var ivLength = reader.ReadInt16();
                 var ivBytes  = reader.ReadBytes(ivLength);
 
-                // Encrypt the data:
+                // Decrypt the data:
 
-                using (var decryptor = new CryptoStream(encrypted, aes.CreateEncryptor(aes.Key, ivBytes), CryptoStreamMode.Read))
-                {
-                    decryptor.CopyTo(encrypted);
-                }
+                var decryptor = new CryptoStream(encrypted, aes.CreateEncryptor(aes.Key, ivBytes), CryptoStreamMode.Read);
+
+                decryptor.CopyTo(decrypted);
             }
         }
     }

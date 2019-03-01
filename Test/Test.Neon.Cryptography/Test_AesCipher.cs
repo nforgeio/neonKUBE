@@ -84,6 +84,8 @@ namespace TestCryptography
                 var decrypted = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
                 var encrypted = cipher.EncryptToBytes(decrypted);
 
+                var bytes = cipher.DecryptBytes(encrypted);
+
                 Assert.Equal(decrypted, cipher.DecryptBytes(encrypted));
             }
         }
