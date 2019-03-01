@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonSetupException.cs
+// FILE:        KubeClientPlatform.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,22 +16,24 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace NeonInstall
+namespace NeonBuild
 {
     /// <summary>
-    /// Thrown for Kubernetes setup related problems.
+    /// Enumerates the supported Kubernetes client platforms.
     /// </summary>
-    public class KubeSetupException : Exception
+    public enum KubeClientPlatform
     {
         /// <summary>
-        /// Constructor.
+        /// Windows.
         /// </summary>
-        /// <param name="message">The exception message.</param>
-        /// <param name="innerException">Optionally specifies an inner exception.</param>
-        public KubeSetupException(string message, Exception innerException = null)
-            : base(message, innerException)
-        {
-        }
+        Windows,
+
+        /// <summary>
+        /// OSX (aka macOS)
+        /// </summary>
+        Osx
     }
 }

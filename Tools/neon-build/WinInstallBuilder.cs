@@ -28,7 +28,7 @@ using Neon;
 using Neon.Common;
 using Neon.Windows;
 
-namespace NeonInstall
+namespace NeonBuild
 {
     /// <summary>
     /// Builds the <b>ksetup</b> installer for Windows.

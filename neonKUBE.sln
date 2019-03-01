@@ -175,7 +175,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "office", "office", "{19BEBB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinInstaller", "Desktop\WinInstaller\WinInstaller.csproj", "{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-install", "Tools\neon-install\neon-install.csproj", "{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-build", "Tools\neon-build\neon-build.csproj", "{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}"
 	ProjectSection(ProjectDependencies) = postProject
 		{756FB86B-29BC-4C6B-A19B-A624A9E9D367} = {756FB86B-29BC-4C6B-A19B-A624A9E9D367}
 	EndProjectSection
@@ -203,7 +203,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "text", "Tools\text\text.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Service", "Lib\Neon.Kube.Service\Neon.Kube.Service.csproj", "{A26FC706-862F-4690-A626-B83A988A9411}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Cryptography", "Test\Test.Neon.Cryptography\Test.Neon.Cryptography.csproj", "{274B582D-10B8-4030-9F0C-3337C5509D03}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cryptography", "Test\Test.Neon.Cryptography\Test.Neon.Cryptography.csproj", "{274B582D-10B8-4030-9F0C-3337C5509D03}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

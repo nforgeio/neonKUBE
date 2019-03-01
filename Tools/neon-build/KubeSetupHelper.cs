@@ -29,7 +29,7 @@ using Neon.Windows;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace NeonInstall
+namespace NeonBuild
 {
     /// <summary>
     /// Kubernetes setup related information and actions (for <b>ksetup</b>).

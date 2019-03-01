@@ -3,8 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <RootNamespace>NeonInstall</RootNamespace>
-    <AssemblyName>neon-install</AssemblyName>
+    <RootNamespace>NeonBuild</RootNamespace>
+    <AssemblyName>neon-build</AssemblyName>
     <LangVersion>latest</LangVersion>
     <ServerGarbageCollection>false</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
@@ -19,7 +19,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>bin\Release</OutputPath>
-    <DocumentationFile>bin\Release\neon-install.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\neon-build.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

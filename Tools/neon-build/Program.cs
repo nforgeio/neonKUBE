@@ -21,7 +21,7 @@ using System.Linq;
 
 using Neon.Common;
 
-namespace NeonInstall
+namespace NeonBuild
 {
     /// <summary>
     /// Hosts the program entrypoint.
@@ -34,15 +34,15 @@ Internal KSETUP project build related utilities.
 
 Builds a neonKUBE Installer
 ---------------------------
-neon-install build-installer PLATFORM [--kube-version=VERSION]
+neon-build build-installer PLATFORM [--kube-version=VERSION]
 
 Removes cached components
 -------------------------
-neon-install clear PLATFORM
+neon-build clear PLATFORM
 
 Downloads KUBE PLATFORM components (if not already present)
 -----------------------------------------------------------
-neon-install download PLATFORM [--kube-version=VERSION]
+neon-build download PLATFORM [--kube-version=VERSION]
 
 ARGUMENTS:
 
