@@ -68,6 +68,20 @@ namespace Neon.Net
     /// retry policy for specific requests using the methods that take an <see cref="IRetryPolicy"/> as their first
     /// parameter.
     /// </note>
+    /// <note>
+    /// <para>
+    /// The <see cref="JsonClientPayload"/> class can be used to customize both the <b>Content-Type</b> header
+    /// and the actual payload uploaded with <b>POST</b> and <b>PUT</b> requests.  This can be used for those
+    /// <i>special</i> REST APIs that don't accept JSON payloads.
+    /// </para>
+    /// <para>
+    /// All you need to do is construct a <see cref="JsonClientPayload"/> instance, specifying the value to
+    /// be used as the <b>Content-Type</b> header and the payload data as text or a byte array and then pass
+    /// this as the <b>document</b> parameter to the methods that upload content.  The methods will recognize
+    /// this special type and just send the specified data rather than attempting to serailize the document
+    /// to JSON.
+    /// </para>
+    /// </note>
     /// </remarks>
     public class JsonClient : IDisposable
     {
@@ -276,26 +290,45 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// <para>
         /// Converts the object passed into JSON content suitable for transmitting in
         /// an HTTP request.
+        /// </para>
+        /// <note>
+        /// This method handles <see cref="JsonClientPayload"/> documents specially 
+        /// as described in the <see cref="JsonClient"/> remarks.
+        /// </note>
         /// </summary>
         /// <param name="document">The document object or JSON text.</param>
         /// <returns>Tne <see cref="HttpContent"/>.</returns>
-        private HttpContent CreateJsonContent(object document)
+        private HttpContent CreateContent(object document)
         {
-            var json = document as string;
+            var custom = document as JsonClientPayload;
 
-            if (json == null)
+            if (custom != null)
             {
-                var jObject = document as JObject;
+                var content = new ByteArrayContent(custom.ContentBytes);
 
-                if (jObject != null)
-                {
-                    json = jObject.ToString(Formatting.None);
-                }
+                content.Headers.ContentType = new MediaTypeHeaderValue(custom.ContentType);
+
+                return content;
             }
+            else
+            {
+                var json = document as string;
 
-            return new StringContent(json ?? NeonHelper.JsonSerialize(document), Encoding.UTF8, DocumentType);
+                if (json == null)
+                {
+                    var jObject = document as JObject;
+
+                    if (jObject != null)
+                    {
+                        json = jObject.ToString(Formatting.None);
+                    }
+                }
+
+                return new StringContent(json ?? NeonHelper.JsonSerialize(document), Encoding.UTF8, DocumentType);
+            }
         }
 
         /// <summary>
@@ -552,7 +585,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, activity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -598,7 +631,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, activity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -649,7 +682,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, activity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -693,7 +726,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateContent(document), cancellationToken, activity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -738,7 +771,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, activity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -781,7 +814,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -828,7 +861,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -880,7 +913,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -925,7 +958,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -971,7 +1004,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }

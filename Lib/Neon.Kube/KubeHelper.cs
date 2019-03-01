@@ -570,7 +570,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the default directory path neon-cli logs will be written.
+        /// Returns the default directory path where neon-cli logs will be written.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string LogFolder
