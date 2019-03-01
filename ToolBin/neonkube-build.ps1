@@ -105,7 +105,7 @@ if (-not $nobuild)
 
     & rm -r "$nfBuild/*"
 
-    # Build the solution.
+    # Clean and build the solution.
 
     ""
     "**********************************************************"
@@ -173,7 +173,7 @@ if ($installer)
 
     $version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
 
-    & neon-install build-installer windows
+    & neon-build installer windows
 
     if (-not $?)
     {
