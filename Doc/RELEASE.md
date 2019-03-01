@@ -61,11 +61,9 @@
 
 1. Merge any changes from the RELEASE branch back into MASTER.
 
-2. Bump the version numbers in `$/product-version.txt` and `$/Lib/Neon.Global/Build.cs`.
-k
-3. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
+2. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
 
-4. Create a draft for the next GitHub release.
+3. Create a draft for the next GitHub release.
 
  # Release Version Conventions
 
