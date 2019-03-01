@@ -393,17 +393,31 @@ namespace Neon.Cryptography
 
             try
             {
-                using (var writer = new BinaryWriter(decrypted))
+                using (var ivStream = new MemoryStream())
                 {
-                    // Write the IV:
-
-                    writer.Write((short)aes.IV.Length);
-                    writer.Write(aes.IV);
-
-                    // Encrypt the data:
-
-                    using (var encryptor = new CryptoStream(encrypted, aes.CreateEncryptor(aes.Key, aes.IV), CryptoStreamMode.Write))
+                    using (var writer = new BinaryWriter(ivStream, Encoding.UTF8, leaveOpen: true))
                     {
+                        // Write the IV:
+
+                        writer.Write((short)aes.IV.Length);
+                        writer.Write(aes.IV);
+                        writer.Flush();
+
+                        // Encrypt the IV and data:
+
+                        // $todo(jeff.lill):
+                        //
+                        // I'd like to put the [encryptor] in a using statement here but
+                        // that didn't work because disposing the encryptor also disposed
+                        // the underlying streams.
+                        //
+                        // Investigate whether this is going to be a problem.
+
+                        var encryptor = new CryptoStream(encrypted, aes.CreateEncryptor(aes.Key, aes.IV), CryptoStreamMode.Write);
+                       
+                        ivStream.Position = 0;
+
+                        ivStream.CopyTo(encryptor);
                         decrypted.CopyTo(encryptor);
                     }
                 }
@@ -433,7 +447,7 @@ namespace Neon.Cryptography
 
             try
             {
-                return Convert.ToBase64String(DecryptBytesFromBase64(bytes));
+                return Convert.ToBase64String(DecryptBytes(bytes));
             }
             finally
             {
@@ -442,11 +456,45 @@ namespace Neon.Cryptography
         }
 
         /// <summary>
+        /// Decrypts the encrypted base-64 text passed returning the result as a byte array.
+        /// </summary>
+        /// <param name="encryptedBase64">The encrypted base-64 text.</param>
+        /// <returns>The encrypted result as base-64.</returns>
+        public byte[] DecryptBytesFromBase64(string encryptedBase64)
+        {
+            Covenant.Requires<ArgumentNullException>(encryptedBase64 != null);
+
+            using (var input = new MemoryStream())
+            {
+                using (var output = new MemoryStream())
+                {
+                    try
+                    {
+                        input.Write(Convert.FromBase64String(encryptedBase64));
+                        input.Position = 0;
+
+                        DecryptToStream(input, output);
+
+                        output.Position = 0;
+                        return output.ReadBytes((int)(output.Length - output.Position));
+                    }
+                    finally
+                    {
+                        // Zero the output stream so that sensitive data won't be 
+                        // hanging around in RAM.
+
+                        Zero(output);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Decrypts the encrypted bytes passed returning the result as a byte array.
         /// </summary>
         /// <param name="encryptedBytes">The unencrypted bytes.</param>
         /// <returns>The encrypted result as base-64.</returns>
-        public byte[] DecryptBytesFromBase64(byte[] encryptedBytes)
+        public byte[] DecryptBytes(byte[] encryptedBytes)
         {
             Covenant.Requires<ArgumentNullException>(encryptedBytes != null);
 
@@ -487,7 +535,7 @@ namespace Neon.Cryptography
             Covenant.Requires<ArgumentNullException>(encrypted != null);
             Covenant.Requires<ArgumentNullException>(decrypted != null);
 
-            using (var reader = new BinaryReader(encrypted))
+            using (var reader = new BinaryReader(encrypted, Encoding.UTF8, leaveOpen: true))
             {
                 // Read the IV:
 

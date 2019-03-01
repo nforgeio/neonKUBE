@@ -33,11 +33,12 @@ namespace TestCryptography
 {
     public class Test_AesCipher
     {
+        private int[] sizes = new int[] { 128, 192, 256 };
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void GenerateKeys()
         {
-            var sizes = new int[] { 128, 192, 256 };
             var count = 1000;
 
             // Generate a number of keys of each valid size and ensure that each key is unique.
@@ -60,6 +61,37 @@ namespace TestCryptography
                     keys.Add(key);
                 }
             }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void DefaultKey()
+        {
+            // Verify that the default key size is 256 bits.
+
+            var key = AesCipher.GenerateKey();
+
+            Assert.NotNull(key);
+            Assert.Equal(256, Convert.FromBase64String(key).Length * 8);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void Base64_Bytes()
+        {
+            using (var cipher = new AesCipher())
+            {
+                var decrypted = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                var encrypted = cipher.EncryptToBytes(decrypted);
+
+                Assert.Equal(decrypted, cipher.DecryptBytes(encrypted));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void Base64_String()
+        {
         }
     }
 }
