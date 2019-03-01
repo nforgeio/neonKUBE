@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -94,6 +95,59 @@ namespace TestCryptography
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void Base64_String()
         {
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void LowLevel()
+        {
+            // Encrypt/decrypt using low-level methods to understand how this works.
+
+            using (var aes = new AesManaged())
+            {
+                var key          = aes.Key;
+                var IV           = aes.IV;
+                var orgDecrypted = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                var decrypted    = (byte[])null;
+                var encrypted    = (byte[])null;
+
+                using (var encryptor = aes.CreateEncryptor())
+                {
+                    using (var msEncrypted = new MemoryStream())
+                    {
+                        msEncrypted.Write(IV);
+
+                        using (var csEncrypted = new CryptoStream(msEncrypted, encryptor, CryptoStreamMode.Write))
+                        {
+                            csEncrypted.Write(orgDecrypted, 0, orgDecrypted.Length);
+
+                            if (!csEncrypted.HasFlushedFinalBlock)
+                            {
+                                csEncrypted.FlushFinalBlock();
+                            }
+                        }
+
+                        encrypted = msEncrypted.ToArray();
+                    }
+                }
+
+                Assert.NotEqual(orgDecrypted, encrypted);
+
+                using (var decryptor = aes.CreateDecryptor())
+                {
+                    using (var msDecrypted = new MemoryStream(encrypted))
+                    {
+                        aes.IV = msDecrypted.ReadBytes(16);
+
+                        using (var csDecrypted = new CryptoStream(msDecrypted, decryptor, CryptoStreamMode.Read))
+                        {
+                            decrypted = csDecrypted.ReadBytes(10);
+                        }
+                    }
+                }
+
+                Assert.Equal(orgDecrypted, decrypted);
+            }
         }
     }
 }

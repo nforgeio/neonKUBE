@@ -264,6 +264,23 @@ namespace Neon.Cryptography
             stream.Position = orgPos;
         }
 
+        private void Copy(Stream input, Stream output)
+        {
+            var buffer = new byte[8192];
+
+            while (true)
+            {
+                var cb = input.Read(buffer, 0, buffer.Length);
+
+                if (cb == 0)
+                {
+                    break;
+                }
+
+                output.Write(buffer, 0, cb);
+            }
+        }
+
         //---------------------------------------------------------------------
         // Encryption methods:
 
@@ -348,10 +365,9 @@ namespace Neon.Cryptography
                         // Zero the input stream so that sensitive data won't be 
                         // hanging around in RAM.
 
-                        Zero(decrypted);
-
                         if (zeroDecrypted)
                         {
+                            Zero(decrypted);
                             Zero(decryptedBytes);
                         }
                     }
@@ -387,7 +403,7 @@ namespace Neon.Cryptography
 
                     var encryptor = new CryptoStream(encrypted, aes.CreateEncryptor(aes.Key, aes.IV), CryptoStreamMode.Write);
                        
-                    decrypted.CopyTo(encryptor);
+                    Copy(decrypted, encryptor);
                     encryptor.FlushFinalBlock();
                 }
             }
@@ -414,14 +430,7 @@ namespace Neon.Cryptography
 
             var bytes = Convert.FromBase64String(encryptedBase64);
 
-            try
-            {
-                return Convert.ToBase64String(DecryptBytes(bytes));
-            }
-            finally
-            {
-                Zero(bytes);
-            }
+            return Convert.ToBase64String(DecryptBytes(bytes));
         }
 
         /// <summary>
@@ -509,7 +518,7 @@ namespace Neon.Cryptography
 
                 var decryptor = new CryptoStream(encrypted, aes.CreateEncryptor(aes.Key, ivBytes), CryptoStreamMode.Read);
 
-                decryptor.CopyTo(decrypted);
+                Copy(decryptor, decrypted);
             }
         }
     }
