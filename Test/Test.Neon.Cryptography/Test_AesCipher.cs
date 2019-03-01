@@ -36,66 +36,6 @@ namespace TestCryptography
     {
         private int[] sizes = new int[] { 128, 192, 256 };
 
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
-        public void GenerateKeys()
-        {
-            var count = 1000;
-
-            // Generate a number of keys of each valid size and ensure that each key is unique.
-
-            foreach (var size in sizes)
-            {
-                var keys = new HashSet<string>();
-
-                for (int i = 0; i < count; i++)
-                {
-                    var key = AesCipher.GenerateKey(size);
-
-                    Assert.NotNull(key);
-
-                    var keyBytes = Convert.FromBase64String(key);
-
-                    Assert.Equal(size, keyBytes.Length * 8);
-                    Assert.DoesNotContain(key, keys);
-
-                    keys.Add(key);
-                }
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
-        public void DefaultKey()
-        {
-            // Verify that the default key size is 256 bits.
-
-            var key = AesCipher.GenerateKey();
-
-            Assert.NotNull(key);
-            Assert.Equal(256, Convert.FromBase64String(key).Length * 8);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
-        public void Base64_Bytes()
-        {
-            using (var cipher = new AesCipher())
-            {
-                var decrypted = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-                var encrypted = cipher.EncryptToBytes(decrypted);
-
-                var bytes = cipher.DecryptBytes(encrypted);
-
-                Assert.Equal(decrypted, cipher.DecryptBytes(encrypted));
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
-        public void Base64_String()
-        {
-        }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
@@ -147,6 +87,124 @@ namespace TestCryptography
                 }
 
                 Assert.Equal(orgDecrypted, decrypted);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void GenerateKeys()
+        {
+            const int iterations = 1000;
+
+            // Generate a number of keys of each valid size and ensure that each key is unique.
+
+            foreach (var size in sizes)
+            {
+                var keys = new HashSet<string>();
+
+                for (int i = 0; i < iterations; i++)
+                {
+                    var key = AesCipher.GenerateKey(size);
+
+                    Assert.NotNull(key);
+
+                    var keyBytes = Convert.FromBase64String(key);
+
+                    Assert.Equal(size, keyBytes.Length * 8);
+                    Assert.DoesNotContain(key, keys);
+
+                    keys.Add(key);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void DefaultKey()
+        {
+            // Verify that the default key size is 256 bits.
+
+            var key = AesCipher.GenerateKey();
+
+            Assert.NotNull(key);
+            Assert.Equal(256, Convert.FromBase64String(key).Length * 8);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void Encrypt_ToBytes()
+        {
+            // Encrypt a byte array:
+
+            using (var cipher = new AesCipher())
+            {
+                var decrypted = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                var encrypted = cipher.EncryptToBytes(decrypted);
+
+                Assert.Equal(decrypted, cipher.DecryptBytesFrom(encrypted));
+            }
+
+            // Encrypt a string:
+
+            using (var cipher = new AesCipher())
+            {
+                var decrypted = "Hello World!";
+                var encrypted = cipher.EncryptToBytes(decrypted);
+
+                Assert.Equal(decrypted, cipher.DecryptStringFrom(encrypted));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void Encrypt_ToBase64()
+        {
+            // Encrypt a byte array:
+
+            using (var cipher = new AesCipher())
+            {
+                var decrypted = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                var encrypted = cipher.EncryptToBase64(decrypted);
+
+                Assert.Equal(decrypted, cipher.DecryptBytesFrom(encrypted));
+            }
+
+            // Encrypt a string:
+
+            using (var cipher = new AesCipher())
+            {
+                var decrypted = "1234567890";
+                var encrypted = cipher.EncryptToBase64(decrypted);
+
+                Assert.Equal(decrypted, cipher.DecryptStringFrom(encrypted));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void Uniqueness()
+        {
+            // Verify that we generate and use a unique IV for
+            // every encryption run such that encrypting the same
+            // data will return different results.  This is an
+            // important security best practice.
+
+            const int iterations = 1000;
+
+            var decrypted   = "We hold these truths to be self-evident, that all men are created equal.";
+            var encryptions = new HashSet<string>();
+
+            for (int i = 0; i < iterations; i++)
+            {
+                using (var cipher = new AesCipher())
+                {
+                    var encrypted = cipher.EncryptToBase64(decrypted);
+
+                    Assert.DoesNotContain(encrypted, encryptions);
+                    Assert.Equal(decrypted, cipher.DecryptStringFrom(encrypted));
+
+                    encryptions.Add(encrypted);
+                }
             }
         }
     }
