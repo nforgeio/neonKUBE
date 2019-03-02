@@ -29,7 +29,7 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
-        private static Random                   rand = null;
+        private static Random                   rand       = null;
         private static RandomNumberGenerator    randCrypto = null;
 
         /// <summary>
