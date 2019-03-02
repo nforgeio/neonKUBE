@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -70,11 +71,11 @@ namespace Neon.Cryptography
     /// when this happens.
     /// </para>
     /// <para>
-    /// This class provides several convient methods for encrypting and decrypting
-    /// files.  Encrypted files are encoded as ASCII and are formatted like:
+    /// Encrypted files are encoded as ASCII and are formatted like:
     /// </para>
     /// <code>
-    /// $NEON_VAULT;4c823a36774ca4ac760f31dd8abe7bd3;1.0;AES256;mypassword
+    /// $NEON_VAULT;4C823A36774CA4AC760F31DD8ABE7BD3;1.0;AES256;PASSWORD-NAME
+    /// HMAC512:84d323032634452714e5467314e7a4131627a4e47527a6859564730724e3368
     /// 4c5330744c5331435255644a5469424452564a5553555a4a51304655525330744c533074436b314a
     /// 53554e3552454e4451574a445a30463353554a425a306c4351555242546b4a6e6133466f61326c48
     /// 4f586377516b465263305a425245465754564a4e64305652575552575556464552586477636d5258
@@ -95,149 +96,52 @@ namespace Neon.Cryptography
     /// <para>
     /// The first line of the file holds metadata that is used to identify encrypted files
     /// and also to identify the encryption method and name of the password to be used
-    /// for decryption.  The remaining lines is the encrypted data formatted as HEX split
-    /// across 80 character lines.
+    /// for decryption.  The second line is an HMAC-512 over the entire file and the remaining
+    /// lines is the encrypted data formatted as HEX split across 80 character lines.
     /// </para>
     /// <para>
-    /// This class considers files starting <b>$NEON_VAULT;4c823a36774ca4ac760f31dd8abe7bd3</b>
+    /// This class considers files starting <b>$NEON_VAULT;4C823A36774CA4AC760F31DD8ABE7BD3</b>
     /// to be encrypted.  This essentially acts as a very unique magic number.  This is followed 
     /// by the NeonVault format version (currently <b>1.0</b>), the encryption cypher (currently
     /// <b>AES256</b>), and the name of the password that was used for encryption.
     /// </para>
     /// <para>
-    /// The decrypt method are smart enough to determine whether a file is not encrypted
+    /// The decrypt methods are smart enough to determine whether a file is not encrypted
     /// and simply write the unencrypted data to the target.  This means that you can
     /// safely call these methods on unencrypted data.
     /// </para>
+    /// <para>
+    /// This class provides several methods to encrypt and decrypt data given a password.
+    /// </para>
+    /// <note>
+    /// Source <see cref="Stream"/> instances passed to encryption and decryption methods
+    /// must support reading and seeking and target <see cref="Stream"/> instances must
+    /// support writing as well as reading and seeking (to support HMAC generation).
+    /// </note>
     /// </remarks>
     public class NeonVault
     {
         //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Implements file encryption.
-        /// </summary>
-        private class EncryptStream : Stream
-        {
-            private Stream      target;
-
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="target">The target stream.</param>
-            /// <param name="password">The encryption password.</param>
-            public EncryptStream(Stream target, string password)
-            {
-                Covenant.Requires<ArgumentNullException>(target != null);
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password));
-            }
-
-            protected override void Dispose(bool disposing)
-            {
-                if (target != null)
-                {
-                    target.Flush();
-                    target.Dispose();
-                    target = null;
-                }
-            }
-
-            public override bool CanRead => false;
-            public override bool CanSeek => false;
-            public override bool CanWrite => true;
-            public override long Length => throw new NotImplementedException();
-            public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-            public override void Flush()
-            {
-                throw new NotImplementedException();
-            }
-
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override long Seek(long offset, SeekOrigin origin)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void SetLength(long value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Write(byte[] buffer, int offset, int count)
-            {
-                // IMPLEMENT THIS!
-            }
-        }
-
-        /// <summary>
-        /// Implements file decryption.
-        /// </summary>
-        private class DecryptStream : Stream
-        {
-            private bool        isEncrypted;
-            private Stream      source;
-
-            /// <summary>
-            /// Constuctor.
-            /// </summary>
-            /// <param name="source">The source stream.</param>
-            public DecryptStream(Stream source)
-            {
-                Covenant.Requires<ArgumentNullException>(source != null);
-            }
-
-            protected override void Dispose(bool disposing)
-            {
-                if (source != null)
-                {
-                    source.Flush();
-                    source.Dispose();
-                    source = null;
-                }
-            }
-
-            public override bool CanRead => true;
-            public override bool CanSeek => false;
-            public override bool CanWrite => false;
-            public override long Length => throw new NotImplementedException();
-            public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-            public override void Flush()
-            {
-                throw new NotImplementedException();
-            }
-
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                // IMPLEMENT THIS!
-
-                return 0;
-            }
-
-            public override long Seek(long offset, SeekOrigin origin)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void SetLength(long value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Write(byte[] buffer, int offset, int count)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        //---------------------------------------------------------------------
         // Static members
+
+        /// <summary>
+        /// The string at the beginning of all files encrypted by <see cref="NeonVault"/>.
+        /// This is used to identify these files.
+        /// </summary>
+        public const string MagicString = "$NEON_VAULT;4C823A36774CA4AC760F31DD8ABE7BD3;";
+
+        /// <summary>
+        /// Returns <see cref="MagicString"/> encoded as a byte array for ease of use.
+        /// </summary>
+        public static byte[] MagicBytes { get; private set; }
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static NeonVault()
+        {
+            MagicBytes = Encoding.UTF8.GetBytes(MagicString);
+        }
 
         /// <summary>
         /// Ensures that a password name is valid.
@@ -266,7 +170,8 @@ namespace Neon.Cryptography
         //---------------------------------------------------------------------
         // Instance members
 
-        private Func<string, string> passwordProvider;
+        private Func<string, string>    passwordProvider;
+        private string                  lineEnding;
 
         /// <summary>
         /// Constructor.
@@ -275,20 +180,35 @@ namespace Neon.Cryptography
         /// Specifies the function that returns the password value for 
         /// a named password.
         /// </param>
-        public NeonVault(Func<string, string> passwordProvider)
+        /// <param name="lineEnding">
+        /// Optionally specifies line ending to be used when writing the output
+        /// file.  This defaults to the current platform's line ending: "\r\n"
+        /// for Windows and "\n" for Linux, OS/X, etc.
+        /// </param>
+        public NeonVault(Func<string, string> passwordProvider, string lineEnding = null)
         {
             Covenant.Requires<ArgumentNullException>(passwordProvider != null);
+            Covenant.Requires<ArgumentException>(lineEnding == null || lineEnding == "\r\n" || lineEnding == "\r");
+
+            if (lineEnding == null)
+            {
+                this.lineEnding = NeonHelper.LineEnding;
+            }
+            else
+            {
+                this.lineEnding = lineEnding;
+            }
 
             this.passwordProvider = passwordProvider;
         }
 
         /// <summary>
-        /// Looks up a password.
+        /// Looks up a password and generates an AES256 key from it.
         /// </summary>
         /// <param name="passwordName">The password name.</param>
         /// <returns>The password value.</returns>
         /// <exception cref="NeonVaultException">Thrown for problems.</exception>
-        private string LookupPassword(string passwordName)
+        private byte[] GetKeyFromPassword(string passwordName)
         {
             try
             {
@@ -299,7 +219,14 @@ namespace Neon.Cryptography
 
                 passwordName = ValidatePasswordName(passwordName);
 
-                return passwordProvider(passwordName);
+                var password = passwordProvider(passwordName);
+
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    throw new NeonVaultException("Password cannot be [null], blank, or whitespace.");
+                }
+
+                return NeonHelper.pass
             }
             catch (NeonVaultException)
             {
@@ -311,81 +238,8 @@ namespace Neon.Cryptography
             }
         }
 
-        /// <summary>
-        /// Decrypts a stream as a byte array.
-        /// </summary>
-        /// <param name="source">The source.</param>
-        /// <returns>The decrypted byte array.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
-        public byte[] DecryptAsBytes(Stream source)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// Decrypte a file as a byte array.
-        /// </summary>
-        /// <param name="sourcePath">The source path.</param>
-        /// <returns>The decrypted bytes.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
-        public byte[] DecryptAsBytes(string sourcePath)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// Decrypts a stream as a string.
-        /// </summary>
-        /// <param name="source">The source stream.</param>
-        /// <param name="encoding">Optionally specifies the encoding (defaults to <see cref="Encoding.ASCII"/>).</param>
-        /// <returns>The decrypted string.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
-        public string DecryptAsString(Stream source, Encoding encoding = default)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// Decrypts a file as a string.
-        /// </summary>
-        /// <param name="sourcePath">The source path.</param>
-        /// <param name="encoding">Optionally specifies the encoding (defaults to <see cref="Encoding.ASCII"/>).</param>
-        /// <returns>The decrypted string.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
-        public string DecryptAsString(string sourcePath, Encoding encoding = default)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// Decrypts a stream to another stream.
-        /// </summary>
-        /// <param name="source">The source stream.</param>
-        /// <param name="target">The target stream.</param>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
-        public void DecryptTo(Stream source, Stream target)
-        {
-        }
-
-        /// <summary>
-        /// Decrypts a file to a stream.
-        /// </summary>
-        /// <param name="sourcePath">The source path.</param>
-        /// <param name="target">The target stream.</param>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
-        public void DecryptTo(string sourcePath, Stream target)
-        {
-        }
-
-        /// <summary>
-        /// Decrypts a file to another file.
-        /// </summary>
-        /// <param name="sourcePath">The source path.</param>
-        /// <param name="targetPath">The target path.</param>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
-        public void DecryptTo(string sourcePath, string targetPath)
-        {
-        }
+        //---------------------------------------------------------------------
+        // Encryption methods
 
         /// <summary>
         /// Encrypts a stream to a byte array.
@@ -394,7 +248,7 @@ namespace Neon.Cryptography
         /// <param name="passwordName">Identifies the password.</param>
         /// <returns>The encrypted bytes.</returns>
         /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
-        public byte[] EncryptAsBytes(Stream source, string passwordName)
+        public byte[] Encrypt(Stream source, string passwordName)
         {
             return null;
         }
@@ -406,31 +260,7 @@ namespace Neon.Cryptography
         /// <param name="passwordName">Identifies the password.</param>
         /// <returns>The encrypted bytes.</returns>
         /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
-        public byte[] EncryptAsBytes(string sourcePath, string passwordName)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// Encrypts a stream to a string.
-        /// </summary>
-        /// <param name="source">The source stream.</param>
-        /// <param name="passwordName">Identifies the password.</param>
-        /// <returns>The encrypted string.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
-        public string EncryptAsString(Stream source, string passwordName)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// Encrypts a file to a string.
-        /// </summary>
-        /// <param name="sourcePath">The source path.</param>
-        /// <param name="passwordName">Identifies the password.</param>
-        /// <returns>The encrypted string.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
-        public string EncryptAsString(string sourcePath, string passwordName)
+        public byte[] Encrypt(string sourcePath, string passwordName)
         {
             return null;
         }
@@ -442,8 +272,35 @@ namespace Neon.Cryptography
         /// <param name="target">The target stream.</param>
         /// <param name="passwordName">Identifies the password.</param>
         /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
-        public void EncryptTo(Stream source, Stream target, string passwordName)
+        public void Encrypt(Stream source, Stream target, string passwordName)
         {
+            Covenant.Requires<ArgumentNullException>(source != null);
+            Covenant.Requires<ArgumentException>(source.CanRead && source.CanSeek);
+            Covenant.Requires<ArgumentNullException>(target != null);
+            Covenant.Requires<ArgumentException>(source.CanRead && source.CanWrite && source.CanSeek);
+
+            // Here's how this works:
+            //
+            //      1. Write the header line.
+            //
+            //      2. The next line will be the HMAC line.  We haven't generated
+            //         the HMAC yet so we'll make a note of the current stream position
+            //         (which will be the first character of the HMAC line).
+            //
+            //      3. Write a HMAC line with all zeros.  We'll come back and replace
+            //         this after we've computed the HMAC.
+            //
+            //      4. Encrypt the data and write it out as 80 character lines of HEX.
+            //         We'll also be computing the HMAC at the same time.  The HMAC
+            //         computation will include the first line, skip the second HMAC
+            //         line, and then include the encrypted data.  Note that the HMAC
+            //         does not include the line endings, so these can be changed
+            //         as required for different platforms and tools.
+            //
+            //      5. After all of the data has been encrypted and the HMAC is computed
+            //         we'll seek the output stream back to the beginning of the HMAC
+            //         line and rewrite the line with the computed value.
+
         }
 
         /// <summary>
@@ -453,7 +310,7 @@ namespace Neon.Cryptography
         /// <param name="targetPath">The target path.</param>
         /// <param name="passwordName">Identifies the password.</param>
         /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
-        public void EncryptTo(Stream source, string targetPath, string passwordName)
+        public void Encrypt(Stream source, string targetPath, string passwordName)
         {
         }
 
@@ -464,7 +321,62 @@ namespace Neon.Cryptography
         /// <param name="targetPath">The target path.</param>
         /// <param name="passwordName">Identifies the password.</param>
         /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
-        public void EncryptTo(string sourcePath, string targetPath, string passwordName)
+        public void Encrypt(string sourcePath, string targetPath, string passwordName)
+        {
+        }
+
+        //---------------------------------------------------------------------
+        // Decryption methods
+
+        /// <summary>
+        /// Decrypts a stream to a byte array.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <returns>The decrypted byte array.</returns>
+        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        public byte[] Decrypt(Stream source)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// Decrypts file to a byte array.
+        /// </summary>
+        /// <param name="sourcePath">The source path.</param>
+        /// <returns>The decrypted bytes.</returns>
+        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        public byte[] Decrypt(string sourcePath)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// Decrypts a stream to another stream.
+        /// </summary>
+        /// <param name="source">The source stream.</param>
+        /// <param name="target">The target stream.</param>
+        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        public void Decrypt(Stream source, Stream target)
+        {
+        }
+
+        /// <summary>
+        /// Decrypts a file to a stream.
+        /// </summary>
+        /// <param name="sourcePath">The source path.</param>
+        /// <param name="target">The target stream.</param>
+        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        public void Decrypt(string sourcePath, Stream target)
+        {
+        }
+
+        /// <summary>
+        /// Decrypts a file to another file.
+        /// </summary>
+        /// <param name="sourcePath">The source path.</param>
+        /// <param name="targetPath">The target path.</param>
+        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        public void Decrypt(string sourcePath, string targetPath)
         {
         }
     }
