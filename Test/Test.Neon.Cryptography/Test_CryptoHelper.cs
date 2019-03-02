@@ -371,7 +371,7 @@ namespace TestCryptography
 
             Assert.Equal(key, CryptoHelper.DeriveKeyFromPassword("test", 256));
 
-            // Verify that the key looks reasonable (e.g. has at least one non-zero byte).
+            // Verify that the key looks reasonable (e.g. it has at least one non-zero byte).
 
             Assert.True(key.Where(b => b != 0).Count() > 0);
         }
