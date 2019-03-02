@@ -226,7 +226,7 @@ namespace Neon.Cryptography
                     throw new NeonVaultException("Password cannot be [null], blank, or whitespace.");
                 }
 
-                return NeonHelper.pass
+                return null;
             }
             catch (NeonVaultException)
             {
