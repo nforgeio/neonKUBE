@@ -36,7 +36,6 @@ namespace TestCryptography
     {
         private int[] sizes = new int[] { 128, 192, 256 };
 
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void LowLevel()
@@ -92,7 +91,50 @@ namespace TestCryptography
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
-        public void GenerateKeys()
+        public void ActuallyEncrypted()
+        {
+            // Attempt to verify that the encrypted output doesn't actually
+            // include the plaintext data.
+
+            using (var cipher = new AesCipher())
+            {
+                var decrypted = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                var encrypted = cipher.EncryptToBytes(decrypted);
+                var pos       = 0;
+                var match     = false;
+
+                while (pos <= encrypted.Length - decrypted.Length)
+                {
+                    match = true;
+
+                    for (int i = 0; i < decrypted.Length; i++)
+                    {
+                        if (encrypted[pos + i] != decrypted[i])
+                        {
+                            match = false;
+                            break;
+                        }
+                    }
+
+                    if (match)
+                    {
+                        break;
+                    }
+
+                    pos++;
+                }
+
+                // If we reach this and [match==true] then we found the
+                // original plaintext embedded in the encypted output
+                // (which is bad).
+
+                Assert.False(match);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void UniqueKeys()
         {
             const int iterations = 1000;
 
@@ -120,7 +162,32 @@ namespace TestCryptography
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
-        public void DefaultKey()
+        public void UniqueInstanceKeyIVs()
+        {
+            const int iterations = 1000;
+
+            // Instantiate a number of AesCipher instances and verify that
+            // the each start out with a unique key and IV.
+
+            var keys = new HashSet<string>();
+            var IVs  = new HashSet<string>();
+
+            for (int i = 0; i < iterations; i++)
+            {
+                using (var aes = new AesCipher())
+                {
+                    Assert.DoesNotContain(aes.Key, keys);
+                    keys.Add(aes.Key);
+
+                    Assert.DoesNotContain(aes.IV, keys);
+                    IVs.Add(aes.IV);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void DefaultKeySize()
         {
             // Verify that the default key size is 256 bits.
 
@@ -182,7 +249,63 @@ namespace TestCryptography
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
-        public void Uniqueness()
+        public void Streams()
+        {
+            // Verify that we can encrypt and decrypt streams.
+
+            var decryptedBytes = new byte[32 * 1024];
+            var encryptedBytes = (byte[])null;
+            var key            = String.Empty;
+
+            // Encrypt some bytes.
+
+            for (int i = 0; i < decryptedBytes.Length; i++)
+            {
+                decryptedBytes[i] = (byte)i;
+            }
+
+            using (var decryptedStream = new MemoryStream(decryptedBytes))
+            {
+                using (var encryptedStream = new MemoryStream())
+                {
+                    using (var cipher = new AesCipher())
+                    {
+                        cipher.EncryptStream(decryptedStream, encryptedStream);
+
+                        // Save the key and encrypted data so we can test decryption below.
+
+                        encryptedBytes = encryptedStream.ToArray();
+                        key            = cipher.Key;
+                    }
+
+                    // Verify that the two streams haven't been dispoed.
+
+                    decryptedStream.Position = 0;
+                    encryptedStream.Position = 0;
+                }
+            }
+
+            // Decrypt the encypted data and verify.
+
+            using (var encryptedStream = new MemoryStream(encryptedBytes))
+            {
+                using (var decryptedStream = new MemoryStream())
+                {
+                    using (var cipher = new AesCipher(key))
+                    {
+                        cipher.DecryptStream(encryptedStream, decryptedStream);
+                    }
+
+                    // Verify that the decrypted data matches the original.
+
+                    Assert.Equal(decryptedBytes, decryptedStream.ToArray());
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void UniqueOutput()
         {
             // Verify that we generate and use a unique IV for
             // every encryption run such that encrypting the same
@@ -206,6 +329,15 @@ namespace TestCryptography
                     encryptions.Add(encrypted);
                 }
             }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void BadKeySize()
+        {
+            // Verify that we throw for an invalid key size.
+
+            Assert.Throws<ArgumentException>(() => new AesCipher(11));
         }
     }
 }
