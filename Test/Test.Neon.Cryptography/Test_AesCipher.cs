@@ -317,9 +317,9 @@ namespace TestCryptography
             var decrypted   = "We hold these truths to be self-evident, that all men are created equal.";
             var encryptions = new HashSet<string>();
 
-            for (int i = 0; i < iterations; i++)
+            using (var cipher = new AesCipher())
             {
-                using (var cipher = new AesCipher())
+                for (int i = 0; i < iterations; i++)
                 {
                     var encrypted = cipher.EncryptToBase64(decrypted);
 

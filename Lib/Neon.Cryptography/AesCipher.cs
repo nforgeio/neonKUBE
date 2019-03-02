@@ -260,6 +260,8 @@ namespace Neon.Cryptography
         {
             Covenant.Requires<ArgumentNullException>(decryptedBytes != null);
 
+            aes.GenerateIV();   // Always generate a new IV before enrypting.
+
             using (var encryptor = aes.CreateEncryptor())
             {
                 using (var msEncrypted = new MemoryStream())
@@ -337,6 +339,8 @@ namespace Neon.Cryptography
         {
             Covenant.Requires<ArgumentNullException>(decrypted != null);
             Covenant.Requires<ArgumentNullException>(encrypted != null);
+
+            aes.GenerateIV();   // Always generate a new IV before enrypting.
 
             // Wrap the input and output streams with [RelayStream] instances
             // so that we can prevent the [CryptoStream] instances from disposing 
