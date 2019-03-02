@@ -119,5 +119,230 @@ namespace TestCryptography
                 Assert.NotEqual(hash1String, CryptoHelper.ComputeMD5String(ms));
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void ComputeSHA1()
+        {
+            var zeroString = new string('0', CryptoHelper.SHA1ByteSize * 2);
+            var zeroBytes  = new byte[CryptoHelper.SHA1ByteSize];
+
+            // Verify that we get a zero hash when there's no input data.
+
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String((string)null));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String(string.Empty));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String((byte[])null));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String(new byte[0]));
+
+            using (var ms = new MemoryStream())
+            {
+                Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String(ms));
+            }
+
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes((string)null));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes(string.Empty));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes((byte[])null));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes(new byte[0]));
+
+            using (var ms = new MemoryStream())
+            {
+                Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes(ms));
+            }
+
+            // Verify that we get a decent looking hash when there's input data.
+
+            var hash1Bytes  = CryptoHelper.ComputeSHA1Bytes(hashInputString1);
+            var hash1String = NeonHelper.ToHex(hash1Bytes);
+
+            Assert.NotEmpty(hash1Bytes);
+            Assert.Equal(CryptoHelper.SHA1ByteSize, hash1Bytes.Length);
+            Assert.True(hash1Bytes.Where(b => b != 0).Count() > 0);       // Ensure that there's at least 1 non-zero byte.
+
+            // Verify that all methods return the same hash for the same input.
+
+            Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA1Bytes(hashInputBytes1));
+            Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA1Bytes(hashInputString1));
+
+            using (var ms = new MemoryStream(hashInputBytes1))
+            {
+                Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA1Bytes(ms));
+            }
+
+            Assert.Equal(hash1String, CryptoHelper.ComputeSHA1String(hashInputBytes1));
+            Assert.Equal(hash1String, CryptoHelper.ComputeSHA1String(hashInputString1));
+
+            using (var ms = new MemoryStream(hashInputBytes1))
+            {
+                Assert.Equal(hash1String, CryptoHelper.ComputeSHA1String(ms));
+            }
+
+            // Verify that we get a different hash for a different input.
+
+            Assert.NotEqual(hash1Bytes, CryptoHelper.ComputeSHA1Bytes(hashInputBytes2));
+            Assert.NotEqual(hash1Bytes, CryptoHelper.ComputeSHA1Bytes(hashInputString2));
+
+            using (var ms = new MemoryStream(hashInputBytes1))
+            {
+                Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA1Bytes(ms));
+            }
+
+            Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA1String(hashInputBytes2));
+            Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA1String(hashInputString2));
+
+            using (var ms = new MemoryStream(hashInputBytes2))
+            {
+                Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA1String(ms));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void ComputeSHA256()
+        {
+            var zeroString = new string('0', CryptoHelper.SHA256ByteSize * 2);
+            var zeroBytes = new byte[CryptoHelper.SHA256ByteSize];
+
+            // Verify that we get a zero hash when there's no input data.
+
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String((string)null));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String(string.Empty));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String((byte[])null));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String(new byte[0]));
+
+            using (var ms = new MemoryStream())
+            {
+                Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String(ms));
+            }
+
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes((string)null));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes(string.Empty));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes((byte[])null));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes(new byte[0]));
+
+            using (var ms = new MemoryStream())
+            {
+                Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes(ms));
+            }
+
+            // Verify that we get a decent looking hash when there's input data.
+
+            var hash1Bytes  = CryptoHelper.ComputeSHA256Bytes(hashInputString1);
+            var hash1String = NeonHelper.ToHex(hash1Bytes);
+
+            Assert.NotEmpty(hash1Bytes);
+            Assert.Equal(CryptoHelper.SHA256ByteSize, hash1Bytes.Length);
+            Assert.True(hash1Bytes.Where(b => b != 0).Count() > 0);       // Ensure that there's at least 1 non-zero byte.
+
+            // Verify that all methods return the same hash for the same input.
+
+            Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA256Bytes(hashInputBytes1));
+            Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA256Bytes(hashInputString1));
+
+            using (var ms = new MemoryStream(hashInputBytes1))
+            {
+                Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA256Bytes(ms));
+            }
+
+            Assert.Equal(hash1String, CryptoHelper.ComputeSHA256String(hashInputBytes1));
+            Assert.Equal(hash1String, CryptoHelper.ComputeSHA256String(hashInputString1));
+
+            using (var ms = new MemoryStream(hashInputBytes1))
+            {
+                Assert.Equal(hash1String, CryptoHelper.ComputeSHA256String(ms));
+            }
+
+            // Verify that we get a different hash for a different input.
+
+            Assert.NotEqual(hash1Bytes, CryptoHelper.ComputeSHA256Bytes(hashInputBytes2));
+            Assert.NotEqual(hash1Bytes, CryptoHelper.ComputeSHA256Bytes(hashInputString2));
+
+            using (var ms = new MemoryStream(hashInputBytes1))
+            {
+                Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA256Bytes(ms));
+            }
+
+            Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA256String(hashInputBytes2));
+            Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA256String(hashInputString2));
+
+            using (var ms = new MemoryStream(hashInputBytes2))
+            {
+                Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA256String(ms));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void ComputeSHA512()
+        {
+            var zeroString = new string('0', CryptoHelper.SHA512ByteSize * 2);
+            var zeroBytes = new byte[CryptoHelper.SHA512ByteSize];
+
+            // Verify that we get a zero hash when there's no input data.
+
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String((string)null));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String(string.Empty));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String((byte[])null));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String(new byte[0]));
+
+            using (var ms = new MemoryStream())
+            {
+                Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String(ms));
+            }
+
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes((string)null));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes(string.Empty));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes((byte[])null));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes(new byte[0]));
+
+            using (var ms = new MemoryStream())
+            {
+                Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes(ms));
+            }
+
+            // Verify that we get a decent looking hash when there's input data.
+
+            var hash1Bytes  = CryptoHelper.ComputeSHA512Bytes(hashInputString1);
+            var hash1String = NeonHelper.ToHex(hash1Bytes);
+
+            Assert.NotEmpty(hash1Bytes);
+            Assert.Equal(CryptoHelper.SHA512ByteSize, hash1Bytes.Length);
+            Assert.True(hash1Bytes.Where(b => b != 0).Count() > 0);       // Ensure that there's at least 1 non-zero byte.
+
+            // Verify that all methods return the same hash for the same input.
+
+            Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA512Bytes(hashInputBytes1));
+            Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA512Bytes(hashInputString1));
+
+            using (var ms = new MemoryStream(hashInputBytes1))
+            {
+                Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA512Bytes(ms));
+            }
+
+            Assert.Equal(hash1String, CryptoHelper.ComputeSHA512String(hashInputBytes1));
+            Assert.Equal(hash1String, CryptoHelper.ComputeSHA512String(hashInputString1));
+
+            using (var ms = new MemoryStream(hashInputBytes1))
+            {
+                Assert.Equal(hash1String, CryptoHelper.ComputeSHA512String(ms));
+            }
+
+            // Verify that we get a different hash for a different input.
+
+            Assert.NotEqual(hash1Bytes, CryptoHelper.ComputeSHA512Bytes(hashInputBytes2));
+            Assert.NotEqual(hash1Bytes, CryptoHelper.ComputeSHA512Bytes(hashInputString2));
+
+            using (var ms = new MemoryStream(hashInputBytes1))
+            {
+                Assert.Equal(hash1Bytes, CryptoHelper.ComputeSHA512Bytes(ms));
+            }
+
+            Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA512String(hashInputBytes2));
+            Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA512String(hashInputString2));
+
+            using (var ms = new MemoryStream(hashInputBytes2))
+            {
+                Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA512String(ms));
+            }
+        }
     }
 }
