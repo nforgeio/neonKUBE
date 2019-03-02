@@ -344,5 +344,36 @@ namespace TestCryptography
                 Assert.NotEqual(hash1String, CryptoHelper.ComputeSHA512String(ms));
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void DeriveKeyFromPassword()
+        {
+            // Verify the argument error cases.
+
+            Assert.Throws<ArgumentNullException>(() => CryptoHelper.DeriveKeyFromPassword(null, 256));
+            Assert.Throws<ArgumentNullException>(() => CryptoHelper.DeriveKeyFromPassword(string.Empty, 256));
+            Assert.Throws<ArgumentException>(() => CryptoHelper.DeriveKeyFromPassword("test", 0));
+            Assert.Throws<ArgumentException>(() => CryptoHelper.DeriveKeyFromPassword("test", -1));
+            Assert.Throws<ArgumentException>(() => CryptoHelper.DeriveKeyFromPassword("test", 1));
+            Assert.Throws<ArgumentException>(() => CryptoHelper.DeriveKeyFromPassword("test", 7));
+            Assert.Throws<ArgumentException>(() => CryptoHelper.DeriveKeyFromPassword("test", 512 + 8));
+
+            // Verify that keys are generated with the correct size.
+
+            Assert.Equal(128 / 8, CryptoHelper.DeriveKeyFromPassword("test", 128).Length);
+            Assert.Equal(256 / 8, CryptoHelper.DeriveKeyFromPassword("test", 256).Length);
+            Assert.Equal(512 / 8, CryptoHelper.DeriveKeyFromPassword("test", 512).Length);
+
+            // Generate keys from the same password and verify that they match.
+
+            var key = CryptoHelper.DeriveKeyFromPassword("test", 256);
+
+            Assert.Equal(key, CryptoHelper.DeriveKeyFromPassword("test", 256));
+
+            // Verify that the key looks reasonable (e.g. has at least one non-zero byte).
+
+            Assert.True(key.Where(b => b != 0).Count() > 0);
+        }
     }
 }

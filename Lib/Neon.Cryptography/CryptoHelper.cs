@@ -62,7 +62,15 @@ namespace Neon.Cryptography
             // extract the required number of bytes from the the beginning of
             // the hash output.
 
-            return null;
+            var hash = ComputeSHA512Bytes(password);
+            var key  = new byte[keySize / 8];
+
+            for (int i = 0; i < key.Length; i++)
+            {
+                key[i] = hash[i];
+            }
+
+            return key;
         }
     }
 }
