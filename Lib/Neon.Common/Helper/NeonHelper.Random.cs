@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonHelper.Rand.cs
+// FILE:	    NeonHelper.Random.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -241,6 +241,18 @@ namespace Neon.Common
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Creates a <see cref="Random"/> pseudo random number generated
+        /// with a cryptographically random seed.
+        /// </summary>
+        /// <returns>A <see cref="Random"/>.</returns>
+        public static Random CreateSecureRandom()
+        {
+            var seedBytes = CryptoRandomBytes(4);
+
+            return new Random(BitConverter.ToInt32(seedBytes, 0));
         }
     }
 }
