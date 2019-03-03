@@ -29,47 +29,57 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
+        private static object                   randLock   = new object();
         private static Random                   rand       = null;
         private static RandomNumberGenerator    randCrypto = null;
 
         /// <summary>
         /// Returns an integer pseudo random number.
         /// </summary>
-        public static int RandInt()
+        public static int PseudoRandomInt()
         {
-            if (rand == null)
+            lock (randLock)
             {
-                rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
-            }
+                if (rand == null)
+                {
+                    rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
+                }
 
-            return rand.Next();
+                return rand.Next();
+            }
         }
 
         /// <summary>
         /// Returns a double pseudo random number between 0.0 and +1.0
         /// </summary>
-        public static double RandDouble()
+        public static double PseudoRandomDouble()
         {
-            if (rand == null)
+            lock (randLock)
             {
-                rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
-            }
+                if (rand == null)
+                {
+                    rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
+                }
 
-            return rand.NextDouble();
+                return rand.NextDouble();
+            }
         }
 
         /// <summary>
         /// Returns a double pseudo random number between 0.0 and the specified limit.
         /// </summary>
         /// <param name="limit">The limit.</param>
-        public static double RandDouble(double limit)
+        public static double PseudoRandomDouble(double limit)
         {
-            if (rand == null)
+            lock (randLock)
             {
-                rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
-            }
+                if (rand == null)
+                {
+                    rand = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
+                }
 
-            return rand.NextDouble() * limit;
+                return rand.NextDouble() * limit;
+            }
         }
 
         /// <summary>
@@ -77,9 +87,9 @@ namespace Neon.Common
         /// </summary>
         /// <param name="limit">The value returned will not exceed one less than this value.</param>
         /// <returns>The random number.</returns>
-        public static int Rand(int limit)
+        public static int PseudoRandomInt(int limit)
         {
-            int v = RandInt();
+            int v = PseudoRandomInt();
 
             if (v == int.MinValue)
             {
@@ -99,14 +109,14 @@ namespace Neon.Common
         /// <param name="length">The array length.</param>
         /// <returns>The random index.</returns>
         /// <exception cref="IndexOutOfRangeException">Thrown if length is &lt;= 0.</exception>
-        public static int RandIndex(int length)
+        public static int PseudoRandomIndex(int length)
         {
             if (length <= 0)
             {
                 throw new IndexOutOfRangeException();
             }
 
-            return RandInt() % length;
+            return PseudoRandomInt() % length;
         }
 
         /// <summary>
@@ -119,11 +129,11 @@ namespace Neon.Common
         /// in a delay before performing an activity like retrying an operation or performing
         /// a background task.
         /// </remarks>
-        public static TimeSpan RandTimespan(TimeSpan maxInterval)
+        public static TimeSpan PseudoRandomTimespan(TimeSpan maxInterval)
         {
             Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero);
 
-            return TimeSpan.FromSeconds(maxInterval.TotalSeconds * RandDouble());
+            return TimeSpan.FromSeconds(maxInterval.TotalSeconds * PseudoRandomDouble());
         }
 
         /// <summary>
@@ -149,7 +159,7 @@ namespace Neon.Common
         /// a background task.
         /// </para>
         /// </remarks>
-        public static TimeSpan RandTimespan(TimeSpan baseInterval, double fraction)
+        public static TimeSpan PseudoRandomTimespan(TimeSpan baseInterval, double fraction)
         {
             Covenant.Requires<ArgumentException>(baseInterval >= TimeSpan.Zero);
             Covenant.Requires<ArgumentException>(fraction >= 0.0);
@@ -159,7 +169,7 @@ namespace Neon.Common
                 return baseInterval;
             }
 
-            return baseInterval + RandTimespan(TimeSpan.FromSeconds(baseInterval.TotalSeconds * fraction));
+            return baseInterval + PseudoRandomTimespan(TimeSpan.FromSeconds(baseInterval.TotalSeconds * fraction));
         }
 
         /// <summary>
@@ -169,7 +179,7 @@ namespace Neon.Common
         /// <param name="minInterval">The minimum interval.</param>
         /// <param name="maxInterval">The maximum interval.</param>
         /// <returns>The randomized time span.</returns>
-        public static TimeSpan RandTimespan(TimeSpan minInterval, TimeSpan maxInterval)
+        public static TimeSpan PseudoRandomTimespan(TimeSpan minInterval, TimeSpan maxInterval)
         {
             Covenant.Requires<ArgumentException>(minInterval >= TimeSpan.Zero);
             Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero);
@@ -193,20 +203,44 @@ namespace Neon.Common
         /// </summary>
         /// <param name="count">The number of random bytes to be generated.</param>
         /// <returns>The random byte array.</returns>
-        public static byte[] RandBytes(int count)
+        public static byte[] CryptoRandomBytes(int count)
         {
             Covenant.Requires<ArgumentException>(count > 0);
 
             var bytes = new byte[count];
 
-            if (randCrypto == null)
+            lock (randLock)
             {
-                randCrypto = RandomNumberGenerator.Create();
+                if (randCrypto == null)
+                {
+                    randCrypto = RandomNumberGenerator.Create();
+                }
+
+                randCrypto.GetBytes(bytes);
             }
 
-            randCrypto.GetBytes(bytes);
-
             return bytes;
+        }
+
+        /// <summary>
+        /// Generates a cryptographically random password.
+        /// </summary>
+        /// <param name="length">The password length.</param>
+        /// <returns>The generated password.</returns>
+        public static string CryptoRandomPassword(int length)
+        {
+            Covenant.Requires<ArgumentException>(length > 0);
+
+            var sb    = new StringBuilder(length);
+            var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var bytes = CryptoRandomBytes(length);
+
+            foreach (var v in bytes)
+            {
+                sb.Append(chars[v % chars.Length]);
+            }
+
+            return sb.ToString();
         }
     }
 }

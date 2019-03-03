@@ -77,7 +77,7 @@ namespace TestCommon
                                     {
                                         Interlocked.Increment(ref refCount);
 
-                                        await Task.Delay(NeonHelper.RandTimespan(TimeSpan.FromMilliseconds(250)));
+                                        await Task.Delay(NeonHelper.PseudoRandomTimespan(TimeSpan.FromMilliseconds(250)));
                                     }
                                     finally
                                     {

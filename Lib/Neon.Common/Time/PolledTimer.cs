@@ -189,7 +189,7 @@ namespace Neon.Time
                     throw new InvalidOperationException(BadTimerMsg);
                 }
 
-                this.fireTime = SysTime.Now + NeonHelper.RandTimespan(interval);
+                this.fireTime = SysTime.Now + NeonHelper.PseudoRandomTimespan(interval);
                 this.disabled = false;
             }
         }
@@ -211,7 +211,7 @@ namespace Neon.Time
                     throw new InvalidOperationException(BadTimerMsg);
                 }
 
-                this.fireTime = fireTime + NeonHelper.RandTimespan(interval);
+                this.fireTime = fireTime + NeonHelper.PseudoRandomTimespan(interval);
                 this.disabled = false;
             }
         }

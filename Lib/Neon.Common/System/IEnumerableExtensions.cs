@@ -64,7 +64,7 @@ namespace System.Collections.Generic
 
             for (int i = 0; i < count; i++)
             {
-                var index = NeonHelper.RandIndex(sourceValues.Count);
+                var index = NeonHelper.PseudoRandomIndex(sourceValues.Count);
 
                 outputValues.Add(sourceValues[index]);
                 sourceValues.RemoveAt(index);

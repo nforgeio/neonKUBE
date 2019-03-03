@@ -57,7 +57,7 @@ namespace Neon.Kube
         /// large number of entities will tend to perform an operation at
         /// nearly the same time (e.g. when a message signalling that an
         /// operation should be performed is broadcast to a large number
-        /// of listeners.  Components can pass this to <see cref="NeonHelper.RandTimespan(TimeSpan)"/>
+        /// of listeners.  Components can pass this to <see cref="NeonHelper.PseudoRandomTimespan(TimeSpan)"/>
         /// to obtain a random delay timespan.
         /// </summary>
         public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(250);

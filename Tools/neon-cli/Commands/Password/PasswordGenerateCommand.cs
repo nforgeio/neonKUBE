@@ -87,7 +87,7 @@ The generated password will be written to standard output.
                 }
             }
 
-            Console.Write(NeonHelper.GetRandomPassword(length));
+            Console.Write(NeonHelper.CryptoRandomPassword(length));
             Program.Exit(0);
         }
     }

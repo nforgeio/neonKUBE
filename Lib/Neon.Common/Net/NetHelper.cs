@@ -171,7 +171,7 @@ namespace Neon.Net
 
             while (true)
             {
-                var addressBytes = NeonHelper.RandBytes(4);
+                var addressBytes = NeonHelper.CryptoRandomBytes(4);
 
                 if (addressBytes[0] == 0 || addressBytes[0] >= 240)
                 {
@@ -290,7 +290,7 @@ namespace Neon.Net
             //      https://github.com/nforgeio/neonKUBE/issues/271
 
             var updateHost    = section != null ? $"{section.ToLowerInvariant()}.neonforge-marker" : $"H-{Guid.NewGuid().ToString("D")}.neonforge-marker";
-            var addressBytes  = NeonHelper.RandBytes(4);
+            var addressBytes  = NeonHelper.CryptoRandomBytes(4);
             var updateAddress = GetRandomAddress();
             var lines         = new List<string>();
             var existingHosts = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);

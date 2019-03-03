@@ -925,27 +925,6 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Generates a cryptographically random password.
-        /// </summary>
-        /// <param name="length">The password length.</param>
-        /// <returns>The generated password.</returns>
-        public static string GetRandomPassword(int length)
-        {
-            Covenant.Requires<ArgumentException>(length > 0);
-
-            var sb    = new StringBuilder(length);
-            var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var bytes = RandBytes(length);
-
-            foreach (var v in bytes)
-            {
-                sb.Append(chars[v % chars.Length]);
-            }
-
-            return sb.ToString();
-        }
-
-        /// <summary>
         /// Determines whether two byte arrays contain the same values in the same order.
         /// </summary>
         /// <param name="v1">Byte array #1.</param>
