@@ -45,6 +45,16 @@ namespace Neon.Cryptography
     public static partial class CryptoHelper
     {
         /// <summary>
+        /// The size of an HMAC256 in bytes.
+        /// </summary>
+        public const int HMAC256ByteCount = 256 / 8;
+
+        /// <summary>
+        /// The size of an HMAC512 in bytes.
+        /// </summary>
+        public const int HMAC512ByteCount = 512 / 8;
+
+        /// <summary>
         /// Generates a symmetric encryption key from a password string.
         /// </summary>
         /// <param name="password">The input password.</param>

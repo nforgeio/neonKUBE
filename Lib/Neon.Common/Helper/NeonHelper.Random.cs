@@ -104,9 +104,9 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Returns a random index into an array whose length is specified.
+        /// Returns a random index into a sequence whose length is specified.
         /// </summary>
-        /// <param name="length">The array length.</param>
+        /// <param name="length">The sequence length.</param>
         /// <returns>The random index.</returns>
         /// <exception cref="IndexOutOfRangeException">Thrown if length is &lt;= 0.</exception>
         public static int PseudoRandomIndex(int length)

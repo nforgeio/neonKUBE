@@ -304,19 +304,19 @@ namespace Neon.Cryptography
         /// </summary>
         /// <param name="passwordName">The password name.</param>
         /// <returns>The password name converted to lowercase.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the name is invalid.</exception>
+        /// <exception cref="CryptographicException">Thrown if the name is invalid.</exception>
         public static string ValidatePasswordName(string passwordName)
         {
             if (string.IsNullOrEmpty(passwordName))
             {
-                throw new NeonVaultException("Password name cannot be empty.");
+                throw new CryptographicException("Password name cannot be empty.");
             }
 
             foreach (var ch in passwordName)
             {
                 if (!char.IsLetterOrDigit(ch) && ch != '.' && ch != '-' && ch != '_')
                 {
-                    throw new NeonVaultException($"Password name [{passwordName}] contains invalid characters.  Only letters, digits, underscores, dashs and dots are allowed.");
+                    throw new CryptographicException($"Password name [{passwordName}] contains invalid characters.  Only letters, digits, underscores, dashs and dots are allowed.");
                 }
             }
 
@@ -408,7 +408,7 @@ namespace Neon.Cryptography
         /// </summary>
         /// <param name="passwordName">The password name.</param>
         /// <returns>The password value.</returns>
-        /// <exception cref="NeonVaultException">Thrown for problems.</exception>
+        /// <exception cref="CryptographicException">Thrown for problems.</exception>
         private byte[] GetKeyFromPassword(string passwordName)
         {
             try
@@ -424,18 +424,18 @@ namespace Neon.Cryptography
 
                 if (string.IsNullOrWhiteSpace(password))
                 {
-                    throw new NeonVaultException("Password cannot be [null], blank, or whitespace.");
+                    throw new CryptographicException("Password cannot be [null], blank, or whitespace.");
                 }
 
                 return CryptoHelper.DeriveKeyFromPassword(password, KeySize);
             }
-            catch (NeonVaultException)
+            catch (CryptographicException)
             {
                 throw;
             }
             catch (Exception e)
             {
-                throw new NeonVaultException(e.Message, e);
+                throw new CryptographicException(e.Message, e);
             }
         }
 
@@ -448,7 +448,7 @@ namespace Neon.Cryptography
         /// <param name="source">The source stream.</param>
         /// <param name="passwordName">Identifies the password.</param>
         /// <returns>The encrypted bytes.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other encryption problems.</exception>
         public byte[] Encrypt(Stream source, string passwordName)
         {
             return null;
@@ -460,7 +460,7 @@ namespace Neon.Cryptography
         /// <param name="sourcePath">The source path.</param>
         /// <param name="passwordName">Identifies the password.</param>
         /// <returns>The encrypted bytes.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other encryption problems.</exception>
         public byte[] Encrypt(string sourcePath, string passwordName)
         {
             return null;
@@ -472,7 +472,7 @@ namespace Neon.Cryptography
         /// <param name="source">The source stream.</param>
         /// <param name="target">The target stream.</param>
         /// <param name="passwordName">Identifies the password.</param>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other encryption problems.</exception>
         public void Encrypt(Stream source, Stream target, string passwordName)
         {
             Covenant.Requires<ArgumentNullException>(source != null);
@@ -576,7 +576,7 @@ namespace Neon.Cryptography
         /// <param name="source">The source stream.</param>
         /// <param name="targetPath">The target path.</param>
         /// <param name="passwordName">Identifies the password.</param>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other encryption problems.</exception>
         public void Encrypt(Stream source, string targetPath, string passwordName)
         {
         }
@@ -587,7 +587,7 @@ namespace Neon.Cryptography
         /// <param name="sourcePath">The source path.</param>
         /// <param name="targetPath">The target path.</param>
         /// <param name="passwordName">Identifies the password.</param>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other encryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other encryption problems.</exception>
         public void Encrypt(string sourcePath, string targetPath, string passwordName)
         {
         }
@@ -600,7 +600,7 @@ namespace Neon.Cryptography
         /// </summary>
         /// <param name="source">The source.</param>
         /// <returns>The decrypted byte array.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other decryption problems.</exception>
         public byte[] Decrypt(Stream source)
         {
             return null;
@@ -611,7 +611,7 @@ namespace Neon.Cryptography
         /// </summary>
         /// <param name="sourcePath">The source path.</param>
         /// <returns>The decrypted bytes.</returns>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other decryption problems.</exception>
         public byte[] Decrypt(string sourcePath)
         {
             return null;
@@ -622,7 +622,7 @@ namespace Neon.Cryptography
         /// </summary>
         /// <param name="source">The source stream.</param>
         /// <param name="target">The target stream.</param>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other decryption problems.</exception>
         public void Decrypt(Stream source, Stream target)
         {
         }
@@ -632,7 +632,7 @@ namespace Neon.Cryptography
         /// </summary>
         /// <param name="sourcePath">The source path.</param>
         /// <param name="target">The target stream.</param>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other decryption problems.</exception>
         public void Decrypt(string sourcePath, Stream target)
         {
         }
@@ -642,7 +642,7 @@ namespace Neon.Cryptography
         /// </summary>
         /// <param name="sourcePath">The source path.</param>
         /// <param name="targetPath">The target path.</param>
-        /// <exception cref="NeonVaultException">Thrown if the password was not found or for other decryption problems.</exception>
+        /// <exception cref="CryptographicException">Thrown if the password was not found or for other decryption problems.</exception>
         public void Decrypt(string sourcePath, string targetPath)
         {
         }

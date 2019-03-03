@@ -35,7 +35,8 @@ namespace Neon.Cryptography
 {
     /// <summary>
     /// Implements a convienent wrapper over <see cref="AesManaged"/> that handles
-    /// the encryption and decryption of data using the AES algorthim.
+    /// the encryption and decryption of data using the AES algorthim using many
+    /// security best practices.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -43,30 +44,54 @@ namespace Neon.Cryptography
     /// output and <see cref="BinaryReader"/> to read it.
     /// </para>
     /// <para>
-    /// The encrypted data is formatted like:
+    /// The data is formatted with an unencrypted header that specifies the
+    /// initialization vector (IV), as well as the HMAC512 that will be used
+    /// to validate the encrypted data.  The encrypted data includes 4 bytes
+    /// cryptographic salt followed by a variable length psuedo random padding
+    /// and then finally, the encrypted user data.
     /// </para>
     /// <code>
+    ///  Header (plaintext)
     /// +------------------+
     /// |    0x3BBAA035    |    32-bit magic number (for verification)
     /// +------------------+
     /// |     IV Size      |    16-bits
     /// +------------------+
     /// |                  |
-    /// |                  |
     /// |     IV Bytes     |    IV Size bytes
     /// |                  |
+    /// +------------------+
+    /// |    HMAC Size     |    16-bits
+    /// +------------------+
+    /// |                  |
+    /// |    HMAC Bytes    |    HMAC Size bytes
+    /// |                  |
+    /// +-------------------
+    /// 
+    ///   AES256 Encrypted:
+    /// +------------------+
+    /// |                  |
+    /// |    SALT Bytes    |    4 SALT Size bytes
+    /// |                  |
+    /// +------------------+
+    /// |   Padding Size   |    16-bits
+    /// +------------------+
+    /// |                  |
+    /// |   Padding Bytes  |    Padding Size bytes
     /// |                  |
     /// +------------------+
     /// |                  |
     /// |                  |
-    /// |    Data Bytes    |    Data bytes
+    /// |                  |
+    /// |    User Data     |
+    /// |                  |
     /// |                  |
     /// |                  |
     /// +------------------+
     /// </code>
     /// <note>
-    /// Note that this encodes multi-byte integers using little endian byte ordering
-    /// via <see cref="BinaryWriter"/> and <see cref="BinaryReader"/>.
+    /// Note that this encodes multi-byte integers using <b>little endian</b>
+    /// byte ordering via <see cref="BinaryWriter"/> and <see cref="BinaryReader"/>.
     /// </note>
     /// <para>
     /// This class automatically generates a new initialization vector for every
@@ -111,10 +136,13 @@ namespace Neon.Cryptography
     /// </item>
     /// </list>
     /// </remarks>
+    /// <threadsafety instance="false"/>
     public sealed class AesCipher : IDisposable
     {
         //---------------------------------------------------------------------
         // Static members
+
+        private static byte[] hmacZeros = new byte[CryptoHelper.HMAC512ByteCount];
 
         /// <summary>
         /// The 32-bit magic number that will be written in plaintext to the
@@ -149,15 +177,22 @@ namespace Neon.Cryptography
         //---------------------------------------------------------------------
         // Instance members
 
-        private AesManaged aes;
+        private AesManaged  aes;
+        private int         maxPaddingBytes;
+        private Random      random;
 
         /// <summary>
         /// Constructs an AES cypher using a specific encryption key.
         /// </summary>
         /// <param name="key">The base-64 encoded key.</param>
-        public AesCipher(string key)
+        /// <param name="maxPaddingBytes">
+        /// The maximum number of padding bytes.  This must be less than or equal
+        /// to 32767.  This defaults to 64.
+        /// </param>
+        public AesCipher(string key, int maxPaddingBytes = 64)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
+            Covenant.Requires<ArgumentException>(0 <= maxPaddingBytes && maxPaddingBytes <= short.MaxValue);
 
             var keyBytes = Convert.FromBase64String(key);
 
@@ -178,19 +213,27 @@ namespace Neon.Cryptography
             {
                 Key = keyBytes
             };
+
+            this.maxPaddingBytes = maxPaddingBytes;
+            this.random          = NeonHelper.CreateSecureRandom();
         }
 
         /// <summary>
         /// Constructs an AES cypher using a randomly generated encyption key.
         /// </summary>
         /// <param name="keySize">Optionally specifies the key size (defaults to <b>256 bits</b>).</param>
+        /// <param name="maxPaddingBytes">
+        /// The maximum number of padding bytes.  This must be less than or equal
+        /// to 32767.  This defaults to 64.
+        /// </param>
         /// <remarks>
         /// Note that only these key sizes are currently supported: <b>128</b>, <b>192</b>,
         /// and <b>256</b> bits.  Only 256 bits is currently considered to be secure.
         /// </remarks>
-        public AesCipher(int keySize = 256)
+        public AesCipher(int keySize = 256, int maxPaddingBytes = 64)
         {
             Covenant.Requires<ArgumentException>(keySize == 128 || keySize == 192 || keySize == 256);
+            Covenant.Requires<ArgumentException>(0 <= maxPaddingBytes && maxPaddingBytes <= short.MaxValue);
 
             aes = new AesManaged()
             {
@@ -198,6 +241,9 @@ namespace Neon.Cryptography
             };
 
             aes.GenerateKey();
+
+            this.maxPaddingBytes = maxPaddingBytes;
+            this.random          = NeonHelper.CreateSecureRandom();
         }
 
         /// <inheritdoc/>
@@ -260,31 +306,13 @@ namespace Neon.Cryptography
         {
             Covenant.Requires<ArgumentNullException>(decryptedBytes != null);
 
-            aes.GenerateIV();   // Always generate a new IV before encrypting.
-
-            using (var encryptor = aes.CreateEncryptor())
+            using (var decrypted = new MemoryStream(decryptedBytes))
             {
-                using (var msEncrypted = new MemoryStream())
+                using (var encrypted = new MemoryStream())
                 {
-                    using (var writer = new BinaryWriter(msEncrypted, Encoding.UTF8, leaveOpen: true))
-                    {
-                        writer.Write((int)Magic);
-                        writer.Write((short)aes.IV.Length);
-                        writer.Write(aes.IV);
-                        writer.Flush();
-                    }
+                    EncryptStream(decrypted, encrypted);
 
-                    using (var encryptorStream = new CryptoStream(msEncrypted, encryptor, CryptoStreamMode.Write))
-                    {
-                        encryptorStream.Write(decryptedBytes, 0, decryptedBytes.Length);
-
-                        if (!encryptorStream.HasFlushedFinalBlock)
-                        {
-                            encryptorStream.FlushFinalBlock();
-                        }
-                    }
-
-                    return msEncrypted.ToArray();
+                    return encrypted.ToArray();
                 }
             }
         }
@@ -346,27 +374,72 @@ namespace Neon.Cryptography
             // so that we can prevent the [CryptoStream] instances from disposing 
             // them (since these don't implement [leaveOpen]).
 
-            using (var decryptedRelay = new RelayStream(decrypted, leaveOpen: true))
+            using (var hmac = new HMACSHA512(aes.Key))
             {
-                using (var encryptedRelay = new RelayStream(encrypted, leaveOpen: true))
+                using (var decryptedRelay = new RelayStream(decrypted, leaveOpen: true))
                 {
-                    // Write the magic number and IV to the output stream.
-
-                    using (var writer = new BinaryWriter(encryptedRelay, Encoding.UTF8, leaveOpen: true))
+                    using (var encryptedRelay = new RelayStream(encrypted, leaveOpen: true))
                     {
-                        writer.Write((int)Magic);
-                        writer.Write((short)aes.IV.Length);
-                        writer.Write(aes.IV);
-                    }
+                        long    hmacPos;
 
-                    // Encrypt the input stream to the output.
+                        // Write the unencrypted header.
 
-                    using (var encryptor = aes.CreateEncryptor())
-                    {
-                        using (var encryptorStream = new CryptoStream(encryptedRelay, encryptor, CryptoStreamMode.Write))
+                        using (var writer = new BinaryWriter(encryptedRelay, Encoding.UTF8, leaveOpen: true))
                         {
-                            decryptedRelay.CopyTo(encryptorStream);
+                            // Write the magic number and IV to the output stream.
+
+                            writer.Write((int)Magic);
+                            writer.Write((short)aes.IV.Length);
+                            writer.Write(aes.IV);
+
+                            // Write the HMAC512 length followed by that many zeros
+                            // as a placeholder for the computed HMAC.  We'll record
+                            // the absolute position of these bytes so we can easily 
+                            // go back and overwrite them with the actual HMAC after 
+                            // we completed the data encryption.
+
+                            writer.Write((short)hmacZeros.Length);
+                            writer.Flush();     // Ensure that the underlying stream position is up-to-date
+
+                            hmacPos = encryptedRelay.Position;
+
+                            writer.Write(hmacZeros);
                         }
+
+                        // Encrypt the input stream to the output while also computing the HMAC.
+
+                        using (var hmacStream = new CryptoStream(encryptedRelay, hmac, CryptoStreamMode.Write))
+                        {
+                            using (var encryptor = aes.CreateEncryptor())
+                            {
+                                using (var encryptorStream = new CryptoStream(hmacStream, encryptor, CryptoStreamMode.Write))
+                                {
+                                    // Write the variable length random padding.
+
+                                    var paddingLength = random.NextIndex(maxPaddingBytes);
+                                    var paddingBytes  = new byte[paddingLength];
+
+                                    random.NextBytes(paddingBytes);
+
+                                    using (var writer = new BinaryWriter(encryptorStream, Encoding.UTF8, leaveOpen: true))
+                                    {
+                                        writer.Write((short)paddingLength);
+                                        writer.Write(paddingBytes);
+                                    }
+
+                                    // Encrypt the user data:
+
+                                    decryptedRelay.CopyTo(encryptorStream);
+                                }
+                            }
+                        }
+
+                        // Go back and persist the computed HMAC.
+
+                        encryptedRelay.Position = hmacPos;
+
+                        Covenant.Assert(hmac.Hash.Length == CryptoHelper.HMAC512ByteCount);
+                        encrypted.Write(hmac.Hash);
                     }
                 }
             }
@@ -385,42 +458,13 @@ namespace Neon.Cryptography
         {
             Covenant.Requires<ArgumentNullException>(encryptedBytes != null);
 
-            using (var msDecrypted = new MemoryStream())
+            using (var encrypted = new MemoryStream(encryptedBytes))
             {
-                using (var msEncrypted = new MemoryStream(encryptedBytes))
+                using (var decrypted = new MemoryStream())
                 {
-                    using (var reader = new BinaryReader(msEncrypted, Encoding.UTF8, leaveOpen: true))
-                    {
-                        // Read and verify the unencrypted magic number:
+                    DecryptStream(encrypted, decrypted);
 
-                        try
-                        {
-                            if (reader.ReadInt32() != Magic)
-                            {
-                                throw new FormatException($"The encrypted data was not generated by [{nameof(AesCipher)}].");
-                            }
-                        }
-                        catch (IOException e)
-                        {
-                            throw new FormatException($"The encrypted data has been truncated or was not generated by [{nameof(AesCipher)}].", e);
-                        }
-
-                        // Read the unencrypted IV:
-
-                        var ivLength = reader.ReadInt16();
-
-                        aes.IV = reader.ReadBytes(ivLength);
-                    }
-
-                    using (var decryptor = aes.CreateDecryptor())
-                    {
-                        using (var decryptorStream = new CryptoStream(msEncrypted, decryptor, CryptoStreamMode.Read))
-                        {
-                            decryptorStream.CopyTo(msDecrypted);
-                        }
-
-                        return msDecrypted.ToArray();
-                    }
+                    return decrypted.ToArray();
                 }
             }
         }
@@ -483,44 +527,93 @@ namespace Neon.Cryptography
             // so that we can prevent the [CryptoStream] instances from disposing 
             // them (since these don't implement [leaveOpen]).
 
-            using (var encryptedRelay = new RelayStream(encrypted, leaveOpen: true))
+            using (var hmac = new HMACSHA512(aes.Key))
             {
-                using (var decryptedRelay = new RelayStream(decrypted, leaveOpen: true))
+                byte[]  persistedHMAC;
+
+                using (var encryptedRelay = new RelayStream(encrypted, leaveOpen: true))
                 {
-                    // Read the magic number and IV from the input stream.
-
-                    using (var reader = new BinaryReader(encryptedRelay, Encoding.UTF8, leaveOpen: true))
+                    using (var decryptedRelay = new RelayStream(decrypted, leaveOpen: true))
                     {
-                        // Read and verify the unencrypted magic number:
+                        // Process the encrypted header.
 
-                        try
+                        using (var reader = new BinaryReader(encryptedRelay, Encoding.UTF8, leaveOpen: true))
                         {
-                            if (reader.ReadInt32() != Magic)
+                            // Read and verify the unencrypted magic number:
+
+                            try
                             {
-                                throw new FormatException($"The encrypted data was not generated by [{nameof(AesCipher)}].");
+                                if (reader.ReadInt32() != Magic)
+                                {
+                                    throw new FormatException($"The encrypted data was not generated by [{nameof(AesCipher)}].");
+                                }
+                            }
+                            catch (IOException e)
+                            {
+                                throw new FormatException($"The encrypted data has been truncated or was not generated by [{nameof(AesCipher)}].", e);
+                            }
+
+                            // Read IV:
+
+                            var ivLength = reader.ReadInt16();
+
+                            if (ivLength < 0 || ivLength > 1024)
+                            {
+                                throw new FormatException("Invalid IV length.");
+                            }
+
+                            aes.IV = reader.ReadBytes(ivLength);
+
+                            // Read the HMAC:
+
+                            var hmacLength = reader.ReadInt16();
+
+                            if (hmacLength < 0 || hmacLength > 1024)
+                            {
+                                throw new FormatException("Invalid HMAC length.");
+                            }
+
+                            persistedHMAC = reader.ReadBytes(hmacLength);
+                        }
+
+                        // Decrypt the input stream to the output while also 
+                        // computing the HMAC.
+
+                        using (var hmacStream = new CryptoStream(encryptedRelay, hmac, CryptoStreamMode.Read))
+                        {
+                            using (var decryptor = aes.CreateDecryptor())
+                            {
+                                using (var decryptorStream = new CryptoStream(hmacStream, decryptor, CryptoStreamMode.Read))
+                                {
+                                    // Decrypt the random padding.
+
+                                    using (var reader = new BinaryReader(decryptorStream, Encoding.UTF8, leaveOpen: true))
+                                    {
+                                        var paddingLength = reader.ReadInt16();
+
+                                        if (paddingLength < 0 || paddingLength > short.MaxValue)
+                                        {
+                                            throw new CryptographicException("The encrypted data has been tampered with or is corrupt: Invalid padding size.");
+                                        }
+
+                                        reader.ReadBytes(paddingLength);
+                                    }
+
+                                    // Decrypt the user data:
+
+                                    decryptorStream.CopyTo(decryptedRelay);
+                                }
                             }
                         }
-                        catch (IOException e)
-                        {
-                            throw new FormatException($"The encrypted data has been truncated or was not generated by [{nameof(AesCipher)}].", e);
-                        }
-
-                        // Read the unencrypted IV:
-
-                        var ivLength = reader.ReadInt16();
-
-                        aes.IV = reader.ReadBytes(ivLength);
                     }
+                }
 
-                    // Encrypt the input stream to the output.
+                // Ensure that the encrypted data hasn't been tampered with by
+                // comparing the peristed and computed HMAC values.
 
-                    using (var decryptor = aes.CreateDecryptor())
-                    {
-                        using (var decryptorStream = new CryptoStream(encryptedRelay, decryptor, CryptoStreamMode.Read))
-                        {
-                            decryptorStream.CopyTo(decryptedRelay);
-                        }
-                    }
+                if (!NeonHelper.ArrayEquals(persistedHMAC, hmac.Hash))
+                {
+                    throw new CryptographicException("The encrypted data has been tampered with or is corrupt: The persisted and computed HMAC hashes don't match.  ");
                 }
             }
         }

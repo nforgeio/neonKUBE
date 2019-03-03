@@ -339,5 +339,100 @@ namespace TestCryptography
 
             Assert.Throws<ArgumentException>(() => new AesCipher(11));
         }
+
+        /// <summary>
+        /// Makes a copy of a byte array. 
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        private byte[] Clone(byte[] bytes)
+        {
+            var clone = new byte[bytes.Length];
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                clone[i] = bytes[i];
+            }
+
+            return clone;
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void TamperDetection()
+        {
+            // Tamper with an encrypted payload and verify that this
+            // is detected via the HMAC signature.
+
+            using (var cipher = new AesCipher())
+            {
+                var decrypted = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                var encrypted = cipher.EncryptToBytes(decrypted);
+
+                Assert.Equal(decrypted, cipher.DecryptBytesFrom(encrypted));
+
+                // Modify the last byte and ensure that decryption fails.
+
+                var tampered = Clone(encrypted);
+
+                tampered[encrypted.Length - 1] = (byte)(~tampered[encrypted.Length - 1]);
+
+                Assert.Throws<CryptographicException>(() => cipher.DecryptBytesFrom(tampered));
+
+                // Remove the last byte and ensure that decryption fails.
+
+                tampered = new byte[encrypted.Length - 1];
+
+                for (int i = 0; i < tampered.Length; i++)
+                {
+                    tampered[i] = encrypted[i];
+                }
+
+                Assert.Throws<CryptographicException>(() => cipher.DecryptBytesFrom(tampered));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
+        public void Padding()
+        {
+            // Ensure that [AesCypher] adding the requested random padding.
+            // We're going to do this by requesting 2K of padding and doing
+            // a bunch of encryption runs recording the sizes of the resulting
+            // encrypted data.
+            //
+            // Then we'll verify that we're seeing at least 256 bytes of 
+            // variation in the encrypted lengthss.
+
+            // $note(jeff.lill):
+            //
+            // There's a very slight chance that this will fail if we're
+            // incredibly unlucky and [AesCipher] happens to randomly 
+            // add padding with lengths closer together than this.
+
+            const int iterations = 1000;
+
+            var minSize = int.MaxValue;
+            var maxSize = int.MinValue;
+
+            for (int i = 0; i < iterations; i++)
+            {
+                using (var cipher = new AesCipher(maxPaddingBytes: 2048))
+                {
+                    var encrypted = cipher.EncryptToBytes("the quick brown fox jumped over the lazy dog.");
+
+                    minSize = Math.Min(minSize, encrypted.Length);
+                    maxSize = Math.Max(maxSize, encrypted.Length);
+                }
+            }
+
+            // Verify that padding was actually added.
+
+            Assert.True(maxSize > 256);
+
+            // Verify that the padding size is randmonized.
+
+            Assert.True(maxSize - minSize >= 256);
+        }
     }
 }
