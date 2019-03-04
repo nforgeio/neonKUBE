@@ -61,22 +61,11 @@ neonKUBE Shell Utilities: nshell [v{Program.Version}]
 
 USAGE:
 
-    nshell [OPTIONS] COMMAND [ARG...]
-
-COMMAND SUMMARY:
-
-    nshell help     COMMAND
-    nshell version  [-n] [--git]
-
-ARGUMENTS:
-
-    COMMAND         - A command or subcommand
-
-OPTIONS:
-
-    --unit-test     - Used internally for unit testing to indicate that the
-                      tool is not running as a process but was invoked 
-                      directly.
+    nshell help         COMMAND         - Help for a command
+    nshell file         COMMAND         - Manages file encryption
+    nshell version      [-n] [--git]    - Prints version
+    nshell password     COMMAND         - Manages passwords
+    nshell run --       COMMAND         - Runs a command with secrets
 ";
 
             // Disable any logging that might be performed by library classes.
@@ -105,6 +94,11 @@ OPTIONS:
 
                 var commands = new List<ICommand>()
                 {
+                    new FileCommand(),
+                    new FileCreateCommand(),
+                    new FileDecryptCommand(),
+                    new FileEditCommand(),
+                    new FileEncryptCommand(),
                     new VersionCommand()
                 };
 
@@ -378,6 +372,75 @@ OPTIONS:
         public static ExecuteResponse Kubectl(params object[] args)
         {
             return Kubectl(NeonHelper.NormalizeExecArgs(args));
+        }
+
+        /// <summary>
+        /// Searches the directory holding a file as well as any ancestor directories
+        /// for the first <b>.password-name</b> file specifying a default password name.
+        /// </summary>
+        /// <param name="filePath">The file path.</param>
+        /// <returns>The default password name if one was found or <c>null</c>.</returns>
+        public static string GetDefaultPasswordName(string filePath)
+        {
+            var folderPath = Path.GetDirectoryName(Path.GetFullPath(filePath));
+
+            try
+            {
+                while (true)
+                {
+                    var passwordNamePath = Path.Combine(folderPath, ".password-name");
+
+                    if (File.Exists(passwordNamePath))
+                    {
+                        var passwordName = File.ReadLines(passwordNamePath).First().Trim();
+
+                        if (passwordName == string.Empty)
+                        {
+                            // An empty [.password-name] file will block further searching.
+
+                            return null;
+                        }
+                    }
+
+                    if (Path.GetPathRoot(folderPath) == folderPath)
+                    {
+                        // We're at the file system root.
+
+                        return null;
+                    }
+
+                    // Advance to the parent folder.
+
+                    folderPath = Path.GetFullPath(Path.Combine(folderPath, ".."));
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // We will see this if the current user doesn't have permissions to
+                // walk the file directories all the way up to the root of the
+                // file system.  We'll just return NULL in this case.
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Returns a password based on its name.
+        /// </summary>
+        /// <param name="passwordName">The password name.</param>
+        /// <returns>The password or <c>null</c> if the named password doesn't exist.</returns>
+        public static string LookupPassword(string passwordName)
+        {
+            var passwordPath = Path.Combine(KubeHelper.PasswordsFolder, passwordName);
+
+            if (File.Exists(passwordPath))
+            {
+                return File.ReadLines(passwordPath).First().Trim();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>

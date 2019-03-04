@@ -1848,5 +1848,37 @@ namespace Neon.Common
         public static void NoAwait(Task task)
         {
         }
+
+        /// <summary>
+        /// Launches the platform text editor to create or edit a file.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <remarks>
+        /// <para>
+        /// This method will launch the editor specified in the <b>EDITOR</b>
+        /// environment variable otherwise it will launch NotePad on Windows
+        /// and Vim on Linux and OS/X.
+        /// </para>
+        /// <para>
+        /// This method will block until the editor is closed.
+        /// </para>
+        /// </remarks>
+        public static void OpenEditor(string path)
+        {
+            var editor = Environment.GetEnvironmentVariable("EDITOR");
+
+            if (!string.IsNullOrEmpty(editor))
+            {
+                Execute(editor, path);
+            }
+            else if (IsWindows)
+            {
+                Execute("notepad.exe", path);
+            }
+            else
+            {
+                Execute("vim", path);
+            }
+        }
     }
 }
