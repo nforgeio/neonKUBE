@@ -46,9 +46,8 @@ namespace Neon.Cryptography
     /// <para>
     /// The data is formatted with an unencrypted header that specifies the
     /// initialization vector (IV), as well as the HMAC512 that will be used
-    /// to validate the encrypted data.  The encrypted data includes 4 bytes
-    /// cryptographic salt followed by a variable length psuedo random padding
-    /// and then finally, the encrypted user data.
+    /// to validate the encrypted data.  The encrypted data includes variable
+    /// length psuedo random padding followed by the encrypted user data.
     /// </para>
     /// <code>
     ///  Header (plaintext)
@@ -69,10 +68,6 @@ namespace Neon.Cryptography
     /// +-------------------
     /// 
     ///   AES256 Encrypted:
-    /// +------------------+
-    /// |                  |
-    /// |    SALT Bytes    |    4 SALT Size bytes
-    /// |                  |
     /// +------------------+
     /// |   Padding Size   |    16-bits
     /// +------------------+

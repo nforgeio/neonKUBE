@@ -32,13 +32,12 @@ namespace Neon.Common
         /// Converts the byte buffer passed into a hex encoded string.
         /// </summary>
         /// <param name="buf">The buffer</param>
+        /// <param name="uppercase">Optionally renders the hex digits in uppercase.</param>
         /// <returns>The hex encoded string.</returns>
-        /// <remarks>
-        /// Note that the HEX digits A-F will be rendered in lowercase.
-        /// </remarks>
-        public static string ToHex(byte[] buf)
+        public static string ToHex(byte[] buf, bool uppercase = false)
         {
-            var sb = new StringBuilder(buf.Length * 2);
+            var sb       = new StringBuilder(buf.Length * 2);
+            var tenDigit = uppercase ? 'A' : 'a';
 
             for (int i = 0; i < buf.Length; i++)
             {
@@ -54,7 +53,7 @@ namespace Neon.Common
                 }
                 else
                 {
-                    ch = Convert.ToChar('a' + digit - 10);
+                    ch = Convert.ToChar(tenDigit + digit - 10);
                 }
 
                 sb.Append(ch);
@@ -67,7 +66,7 @@ namespace Neon.Common
                 }
                 else
                 {
-                    ch = Convert.ToChar('a' + digit - 10);
+                    ch = Convert.ToChar(tenDigit + digit - 10);
                 }
 
                 sb.Append(ch);

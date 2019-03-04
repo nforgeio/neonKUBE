@@ -300,7 +300,7 @@ namespace TestCommon
 
             for (int i = 1; i < 100; i++)
             {
-                Assert.Equal(i, NeonHelper.CryptoRandomPassword(i).Length);
+                Assert.Equal(i, NeonHelper.GetCryptoRandomPassword(i).Length);
             }
 
             // Generate a bunch of passwords and verify that we don't 
@@ -310,7 +310,7 @@ namespace TestCommon
 
             for (int i = 0; i < 1000; i++)
             {
-                var password = NeonHelper.CryptoRandomPassword(20);
+                var password = NeonHelper.GetCryptoRandomPassword(20);
 
                 Assert.DoesNotContain(password, existing);
 

@@ -203,7 +203,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="count">The number of random bytes to be generated.</param>
         /// <returns>The random byte array.</returns>
-        public static byte[] CryptoRandomBytes(int count)
+        public static byte[] GetCryptoRandomBytes(int count)
         {
             Covenant.Requires<ArgumentException>(count > 0);
 
@@ -227,13 +227,13 @@ namespace Neon.Common
         /// </summary>
         /// <param name="length">The password length.</param>
         /// <returns>The generated password.</returns>
-        public static string CryptoRandomPassword(int length)
+        public static string GetCryptoRandomPassword(int length)
         {
             Covenant.Requires<ArgumentException>(length > 0);
 
             var sb    = new StringBuilder(length);
             var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var bytes = CryptoRandomBytes(length);
+            var bytes = GetCryptoRandomBytes(length);
 
             foreach (var v in bytes)
             {
@@ -250,7 +250,7 @@ namespace Neon.Common
         /// <returns>A <see cref="Random"/>.</returns>
         public static Random CreateSecureRandom()
         {
-            var seedBytes = CryptoRandomBytes(4);
+            var seedBytes = GetCryptoRandomBytes(4);
 
             return new Random(BitConverter.ToInt32(seedBytes, 0));
         }

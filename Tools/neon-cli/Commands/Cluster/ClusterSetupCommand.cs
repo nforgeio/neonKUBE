@@ -326,7 +326,7 @@ OPTIONS:
                     //
                     //      https://github.com/nforgeio/neonKUBE/issues/397
 
-                    kubeContextExtension.SetupDetails.SshStrongPassword = NeonHelper.CryptoRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
+                    kubeContextExtension.SetupDetails.SshStrongPassword = NeonHelper.GetCryptoRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
                     kubeContextExtension.Save();
 
                     controller.AddStep("set strong password",

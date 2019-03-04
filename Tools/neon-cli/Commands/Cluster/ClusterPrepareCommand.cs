@@ -190,7 +190,7 @@ Server Requirements:
 
             if (clusterDefinition.Hosting.IsCloudProvider && Program.MachinePassword == KubeConst.DefaulVmTemplatePassword)
             {
-                Program.MachinePassword = NeonHelper.CryptoRandomPassword(20);
+                Program.MachinePassword = NeonHelper.GetCryptoRandomPassword(20);
 
                 // Append a string that guarantees that the generated password meets
                 // cloud minimum requirements.

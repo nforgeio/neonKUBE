@@ -96,7 +96,7 @@ This command creates or updates a named password.
             {
                 // Generate a 20 character password.
 
-                password = NeonHelper.CryptoRandomPassword(20);
+                password = NeonHelper.GetCryptoRandomPassword(20);
             }
             else if (sourceArg == "-")
             {
