@@ -177,9 +177,9 @@ namespace Neon.Cryptography
 
             foreach (var ch in passwordName)
             {
-                if (!char.IsLetterOrDigit(ch) && ch != '.' && ch != '-' && ch != '_')
+                if (!char.IsLetterOrDigit(ch) && ch != '.' && ch != '-' && ch != '_' || (int)ch > 127)
                 {
-                    throw new CryptographicException($"Password name [{passwordName}] contains invalid characters.  Only letters, digits, underscores, dashs and dots are allowed.");
+                    throw new CryptographicException($"Password name [{passwordName}] contains invalid characters.  Only ASCII letters, digits, underscores, dashs and dots are allowed.");
                 }
             }
 
