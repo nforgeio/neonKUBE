@@ -29,9 +29,7 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Xunit;
 
-using Xunit;
-
-namespace Neon.Xunit
+namespace Neon.Common
 {
     /// <summary>
     /// Program main entry point method signature.
@@ -63,11 +61,6 @@ namespace Neon.Xunit
     /// to ensure that program has completed the activities required 
     /// by the unit tests before the tests are executed.
     /// </para>
-    /// <note>
-    /// The <see cref="Execute(ProgramEntrypoint, string[])"/> and <see cref="Fork(ProgramEntrypoint, string[])"/>
-    /// methods both prepend the <b>--unit-test</b> option to command line
-    /// arguments passed to the program to indicate that a test in in progress.
-    /// </note>
     /// <note>
     /// Only one <see cref="ProgramRunner"/> instance can active at any
     /// particular time.
@@ -164,8 +157,8 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="main">The program entry point.</param>
         /// <param name="args">The arguments.</param>
-        /// <returns>The exit code.</returns>
-        public int Execute(ProgramEntrypoint main, params string[] args)
+        /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
+        public ExecuteResponse Execute(ProgramEntrypoint main, params string[] args)
         {
             Covenant.Requires(main != null);
 
@@ -174,18 +167,48 @@ namespace Neon.Xunit
                 throw new InvalidOperationException("Only one simulated [program] can run at a time.");
             }
 
-            // Prepend the [--unit-test] flag to the arguments.
+            var orgSTDOUT = Console.Out;
+            var orgSTDERR = Console.Error;
 
-            args = (new string[] { "--unit-test" }).Union(args).ToArray();
+            try
+            {
+                // Capture standard output and error.
 
-            int exitCode = 0;
+                var sbOut = new StringBuilder();
+                var sbErr = new StringBuilder();
 
-            programThread = new Thread(new ThreadStart(() => exitCode = main(args)));
-            programThread.Start();
-            programThread.Join();
-            programThread = null;
+                using (var stdOutCapture = new StringWriter(sbOut))
+                {
+                    using (var stdErrCapture = new StringWriter(sbErr))
+                    {
+                        var exitCode = 0;
 
-            return exitCode;
+                        Console.SetOut(stdOutCapture);
+                        Console.SetError(stdErrCapture);
+
+                        // Simulate executing the program.
+
+                        programThread = new Thread(new ThreadStart(() => exitCode = main(args)));
+                        programThread.Start();
+                        programThread.Join();
+                        programThread = null;
+
+                        return new ExecuteResponse()
+                        {
+                            ExitCode   = exitCode,
+                            OutputText = sbOut.ToString(),
+                            ErrorText  = sbErr.ToString()
+                        };
+                    }
+                }
+            }
+            finally
+            {
+                // Restore the standard files.
+
+                Console.SetOut(orgSTDOUT);
+                Console.SetError(orgSTDERR);
+            }
         }
 
         /// <summary>
@@ -210,10 +233,6 @@ namespace Neon.Xunit
             {
                 throw new InvalidOperationException("Only one simulated [program] can run at a time.");
             }
-
-            // Prepend the [--unit-test] flag to the arguments.
-
-            args = (new string[] { "--unit-test" }).Union(args).ToArray();
 
             programIsReady         = false;
             programExitBeforeReady = false;

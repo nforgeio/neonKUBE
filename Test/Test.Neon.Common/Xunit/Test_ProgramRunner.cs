@@ -45,10 +45,14 @@ namespace TestCommon
             {
                 case "pass":
 
+                    Console.Out.Write("PASS: STDOUT");
+                    Console.Error.Write("PASS: STDERR");
                     return 0;
 
                 case "fail":
 
+                    Console.Out.Write("FAIL: STDOUT");
+                    Console.Error.Write("FAIL: STDERR");
                     return 1;
 
                 case "fork":
@@ -68,14 +72,23 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Execute()
         {
+            ExecuteResponse result;
+
             using (var runner = new ProgramRunner())
             {
                 mainExecuted = false;
-                Assert.Equal(0, runner.Execute(Main, "pass"));
+
+                result = runner.Execute(Main, "pass");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Equal("PASS: STDOUT", result.OutputText);
+                Assert.Equal("PASS: STDERR", result.ErrorText);
                 Assert.True(mainExecuted);
 
                 mainExecuted = false;
-                Assert.Equal(1, runner.Execute(Main, "fail"));
+                result = runner.Execute(Main, "fail");
+                Assert.Equal(1, result.ExitCode);
+                Assert.Equal("FAIL: STDOUT", result.OutputText);
+                Assert.Equal("FAIL: STDERR", result.ErrorText);
                 Assert.True(mainExecuted);
             }
         }
