@@ -119,5 +119,10 @@ namespace Neon.IO
         /// Returns the fully qualified path to the temporary file.
         /// </summary>
         public string Path { get; private set; }
+
+        /// <summary>
+        /// Returns the file name only.
+        /// </summary>
+        public string Name => System.IO.Path.GetFileName(Path);
     }
 }
