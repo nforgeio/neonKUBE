@@ -53,7 +53,7 @@ namespace NShell
         /// Program entry point.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
-        public static int Main(string[] args)
+        public static int Main(params string[] args)
         {
             string usage = $@"
 neonKUBE Shell Utilities: nshell [v{Program.Version}]

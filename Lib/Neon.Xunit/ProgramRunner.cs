@@ -80,6 +80,11 @@ namespace Neon.Xunit
     /// performed, release any important resources and exit cleanly its <c>Main</c>
     /// method cleanly.
     /// </para>
+    /// <para>
+    /// The <see cref="Arguments"/> dictionary can be used to pass additional
+    /// arguments into the program being tested.  This maps case insensitve keys
+    /// to <c>object</c> values.
+    /// </para>
     /// <note>
     /// You should call <see cref="Dispose"/> when you're finished with
     /// the runner.
@@ -147,6 +152,12 @@ namespace Neon.Xunit
 
             Current = null;
         }
+
+        /// <summary>
+        /// Returns a case insensitve dictionary of additional unit test related arguments
+        /// that can be passed to the program being tested.
+        /// </summary>
+        public Dictionary<string, object> Arguments { get; private set; } = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Executes a program entry point synchronously, passing arguments and returning the result.

@@ -61,7 +61,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         /// <returns>The exit code.</returns>
-        public static int Main(string[] args)
+        public static int Main(params string[] args)
         {
             string usage = $@"
 neonKUBE Management Tool: neon [v{Program.Version}]

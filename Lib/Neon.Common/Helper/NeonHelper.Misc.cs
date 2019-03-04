@@ -1850,6 +1850,14 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Used for implementing unit tests against the <see cref="OpenEditor(string)"/>
+        /// method.  <see cref="OpenEditor(string)"/> will call this action when it's
+        /// non-null passing the file path, rather than actually opening the file in
+        /// an editor.  The handler can then simulate editing the file.
+        /// </summary>
+        public static Action<string> OpenEditorHandler { get; set; }
+
+        /// <summary>
         /// Launches the platform text editor to create or edit a file.
         /// </summary>
         /// <param name="path">The file path.</param>
@@ -1862,9 +1870,20 @@ namespace Neon.Common
         /// <para>
         /// This method will block until the editor is closed.
         /// </para>
+        /// <note>
+        /// For unit testing, you may set <see cref="OpenEditorHandler"/> to
+        /// an action that will simulate editing the file.  This action will
+        /// be called instead of actually opening an editor when set.
+        /// </note>
         /// </remarks>
         public static void OpenEditor(string path)
         {
+            if (OpenEditorHandler != null)
+            {
+                OpenEditorHandler(path);
+                return;
+            }
+
             var editor = Environment.GetEnvironmentVariable("EDITOR");
 
             if (!string.IsNullOrEmpty(editor))
