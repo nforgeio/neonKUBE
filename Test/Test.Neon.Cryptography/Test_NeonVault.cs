@@ -257,6 +257,9 @@ ask the blind man, he saw it, too.
 
                     Assert.Equal(unencryptedBytes, decrypted);
                 }
+
+                Assert.False(NeonVault.IsEncrypted(sourcePath));
+                Assert.True(NeonVault.IsEncrypted(targetPath));
             }
         }
 
@@ -378,6 +381,8 @@ ask the blind man, he saw it, too.
                 vault.Decrypt(sourcePath, targetPath);
 
                 Assert.Equal(unencryptedText, File.ReadAllText(targetPath));
+                Assert.False(NeonVault.IsEncrypted(sourcePath));
+                Assert.False(NeonVault.IsEncrypted(targetPath));
             }
         }
 
