@@ -106,10 +106,6 @@ OPTIONS:
                                           username: sysadmin
     -q, --quiet                         - Disables operation progress
 
-    --unit-test                         - Used internally for unit testing to 
-                                          indicate that the tool is not running 
-                                          as a process but was invoked directly.
-
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster stablization 
                                           (defaults to 60s).
 ";
@@ -193,7 +189,6 @@ OPTIONS:
                 validOptions.Add("--quiet");
                 validOptions.Add("-w");
                 validOptions.Add("--wait");
-                validOptions.Add("--unit-test");
 
                 if (CommandLine.Arguments.Length == 0)
                 {
@@ -296,7 +291,6 @@ OPTIONS:
 
                 MachineUsername = LeftCommandLine.GetOption("--machine-username", "sysadmin");
                 MachinePassword = LeftCommandLine.GetOption("--machine-password", "sysadmin0000");
-                UnitTestMode    = CommandLine.HasOption("--unit-test");
 
                 // Handle the other options.
 
@@ -406,7 +400,7 @@ OPTIONS:
             }
             catch (ProgramExitException e)
             {
-                if (UnitTestMode)
+                if (ProgramRunner.Current != null)
                 {
                     return e.ExitCode;
                 }
@@ -422,7 +416,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            if (UnitTestMode)
+            if (ProgramRunner.Current != null)
             {
                 return 0;
             }
@@ -575,13 +569,6 @@ OPTIONS:
         /// or the entire command line if there is no splitter.
         /// </summary>
         public static CommandLine LeftCommandLine { get; private set; }
-
-        /// <summary>
-        /// Returns <c>true</c> if the <b>--noprocess</b> option was specified indicating
-        /// that the tool is not running as a process but was invoked directly by a unit
-        /// test instead.
-        /// </summary>
-        public static bool UnitTestMode { get; private set; }
 
         /// <summary>
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
