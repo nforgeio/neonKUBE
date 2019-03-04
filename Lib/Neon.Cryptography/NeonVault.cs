@@ -287,7 +287,7 @@ namespace Neon.Cryptography
 
                 if (string.IsNullOrWhiteSpace(password))
                 {
-                    throw new CryptographicException("Password cannot be [null], blank, or whitespace.");
+                    throw new CryptographicException($"Password named [{passwordName}] not found or is blank, or whitespace.");
                 }
 
                 return Convert.ToBase64String(CryptoHelper.DeriveKeyFromPassword(password, KeySize));

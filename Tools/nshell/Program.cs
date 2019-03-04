@@ -126,10 +126,6 @@ USAGE:
                     Program.Exit(0);
                 }
 
-                // Process common command line options.
-
-                UnitTestMode = LeftCommandLine.HasOption("--unit-test");
-
                 // Lookup the command.
 
                 command = GetCommand(CommandLine, commands);
@@ -158,7 +154,7 @@ USAGE:
             }
             catch (ProgramExitException e)
             {
-                if (UnitTestMode)
+                if (ProgramRunner.Current != null)
                 {
                     return e.ExitCode;
                 }
@@ -172,7 +168,7 @@ USAGE:
                 Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
                 Console.Error.WriteLine(string.Empty);
 
-                if (UnitTestMode)
+                if (ProgramRunner.Current != null)
                 {
                     return 1;
                 }
@@ -182,7 +178,7 @@ USAGE:
                 }
             }
 
-            if (UnitTestMode)
+            if (ProgramRunner.Current != null)
             {
                 return 0;
             }
@@ -204,13 +200,6 @@ USAGE:
         /// </summary>
         public static CommandLine LeftCommandLine { get; private set; }
         
-        /// <summary>
-        /// Returns <c>true</c> if the <b>--noprocess</b> option was specified indicating
-        /// that the tool is not running as a process but was invoked directly by a unit
-        /// test instead.
-        /// </summary>
-        public static bool UnitTestMode { get; private set; }
-
         /// <summary>
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
         /// source code branch.
@@ -400,6 +389,8 @@ USAGE:
 
                             return null;
                         }
+
+                        return passwordName;
                     }
 
                     if (Path.GetPathRoot(folderPath) == folderPath)

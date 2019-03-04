@@ -42,7 +42,7 @@ Prints the [nshell] version.
 
 USAGE:
 
-    nshell version [-n] [--get]
+    nshell version [-n] [--git]
 
 OPTIONS:
 
