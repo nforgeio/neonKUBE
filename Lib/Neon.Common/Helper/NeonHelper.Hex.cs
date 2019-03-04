@@ -306,12 +306,14 @@ namespace Neon.Common
         /// Converts a single byte into its hexidecimal equivalent.
         /// </summary>
         /// <param name="value">The input byte.</param>
+        /// <param name="uppercase">Optionally return the hex value as uppercase.</param>
         /// <returns>The hex string.</returns>
-        public static string ToHex(byte value)
+        public static string ToHex(byte value, bool uppercase = false)
         {
             int     digit;
             char    ch1;
             char    ch2;
+            char    tenDigit = uppercase ? 'A' : 'a';
 
             digit = value >> 4;
 
@@ -321,7 +323,7 @@ namespace Neon.Common
             }
             else
             {
-                ch1 = Convert.ToChar('a' + digit - 10);
+                ch1 = Convert.ToChar(tenDigit + digit - 10);
             }
 
             digit = value & 0x0F;
@@ -332,7 +334,7 @@ namespace Neon.Common
             }
             else
             {
-                ch2 = Convert.ToChar('a' + digit - 10);
+                ch2 = Convert.ToChar(tenDigit + digit - 10);
             }
 
             return new String(new char[] { ch1, ch2 });

@@ -1720,7 +1720,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <param name="owner">Optionally specifies the file owner (must be <c>chown</c> compatible).</param>
         /// <remarks>
         /// <note>
-        /// Any Unicode Byte Order Markers (BOM) at start of the input stream will be removed.
+        /// Any Unicode Byte Order Marker (BOM) at start of the input stream will be removed.
         /// </note>
         /// <note>
         /// <para>

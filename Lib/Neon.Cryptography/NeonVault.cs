@@ -120,299 +120,20 @@ namespace Neon.Cryptography
     /// </remarks>
     public class NeonVault
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Handles serializing byte data as 80 character lines of HEX digits.
-        /// </summary>
-        private sealed class HexLineStream : Stream
-        {
-            //-----------------------------------------------------------------
-            // Static members
-
-            /// <summary>
-            /// Creates a <see cref="HexLineStream"/> for writing.
-            /// </summary>
-            /// <param name="output">The output stream.</param>
-            /// <param name="lineEnding">The line ending to use.</param>
-            /// <returns>The <see cref="HexLineStream"/>.</returns>
-            public static HexLineStream Create(Stream output, string lineEnding)
-            {
-                return new HexLineStream(output, lineEnding);
-            }
-
-            /// <summary>
-            /// Creates a <see cref="HexLineStream"/> for reading.
-            /// </summary>
-            /// <param name="input">The input stream.</param>
-            /// <returns>The <see cref="HexLineStream"/>.</returns>
-            public static HexLineStream Open(Stream input)
-            {
-                return new HexLineStream(input);
-            }
-
-            //-----------------------------------------------------------------
-            // Instance members
-
-            private byte[] lineBuffer = new byte[40];  // 80 HEX digits == 40 bytes
-            private int bufferPos = 0;
-            private Stream output;
-            private Stream input;
-            private string lineEnding;
-
-            /// <summary>
-            /// Constructs an instance for writing.
-            /// </summary>
-            /// <param name="input">The output stream.</param>
-            /// <param name="lineEnding">The line ending to use.</param>
-            private HexLineStream(Stream output, string lineEnding)
-            {
-                this.output = output;
-                this.lineEnding = lineEnding;
-            }
-
-            /// <summary>
-            /// Constructs an instance for reading.
-            /// </summary>
-            /// <param name="input">The input stream.</param>
-            private HexLineStream(Stream input)
-            {
-                this.input = input;
-            }
-
-            /// <inheritdoc/>
-            protected override void Dispose(bool disposing)
-            {
-                if (bufferPos != 0)
-                {
-                    FlushLastLine();
-                    bufferPos = 0;
-                }
-            }
-
-            /// <summary>
-            /// Writes bytes to the output stream.
-            /// </summary>
-            /// <param name="bytes">The bytes to be written.</param>
-            /// <param name="offset">The position of the first byte to write.</param>
-            /// <param name="count">The number of bytes to write.</param>
-            public override void Write(byte[] bytes, int offset, int count)
-            {
-                Covenant.Requires<ArgumentNullException>(bytes != null);
-                Covenant.Requires<ArgumentException>(count == 0 || 0 <= offset && offset < bytes.Length);
-                Covenant.Requires<ArgumentException>(offset + count <= bytes.Length);
-
-                if (count == 0)
-                {
-                    return;
-                }
-
-                // $hack(jeff.lill):
-                //
-                // I'm creating an extra buffer to make the code more understandable.
-                // This could be optimized out in the future (if necessary).
-
-                var outputBytes = new byte[count];
-
-                for (int i = 0; i < count; i++)
-                {
-                    outputBytes[i] = bytes[offset + i];
-                }
-
-                var outputPos = 0;
-
-                while (outputPos < outputBytes.Length)
-                {
-                    // Copy as many bytes as will fit to the line buffer.
-
-                    var cbCopied = Math.Min(lineBuffer.Length - bufferPos, outputBytes.Length - outputPos);
-
-                    for (int i = outputPos; i < cbCopied; i++)
-                    {
-                        lineBuffer[bufferPos] = outputBytes[i];
-                        bufferPos++;
-                    }
-
-                    // Write the buffered line as HEX if it's full.
-
-                    if (bufferPos >= lineBuffer.Length)
-                    {
-                        output.Write(Encoding.ASCII.GetBytes(NeonHelper.ToHex(lineBuffer, uppercase: true) + lineEnding));
-                        bufferPos = 0;
-                    }
-
-                    outputPos += cbCopied;
-                }
-            }
-
-            /// <summary>
-            /// Reads bytes from the output stream.
-            /// </summary>
-            /// <param name="bytes">The bytes to be written.</param>
-            /// <param name="offset">The position of the first byte to write.</param>
-            /// <param name="count">The number of bytes to write.</param>
-            /// <returns>The number of bytes read or <b>0</b> when the end of the stream has been reached.</returns>
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                Covenant.Requires<ArgumentNullException>(buffer != null);
-                Covenant.Requires<ArgumentException>(0 <= offset && offset < buffer.Length);
-                Covenant.Requires<ArgumentException>(offset + count < buffer.Length);
-
-                // We're going to keep this simple by reading the hex digits 
-                // from the underling stream (two at a time).  This will be
-                // somewhat slow and we should look into improving this in
-                // the future via buffered reads.
-
-                var cbRead = 0;
-
-                for (int i = 0; i < count; i++)
-                {
-                    char firstHex;
-                    char secondHex;
-
-                    // Read the first hex digit (ignoring any whitespace, like CRLF).
-
-                    while (true)
-                    {
-                        if (input.Read(lineBuffer, 0, 1) == 0)
-                        {
-                            return cbRead;
-                        }
-
-                        firstHex = (char)lineBuffer[0];
-                        firstHex = char.ToUpperInvariant(firstHex);
-
-                        if (char.IsWhiteSpace(firstHex))
-                        {
-                            continue;
-                        }
-
-                        if ('0' <= firstHex && firstHex <= '9' ||
-                            'A' <= firstHex && firstHex <= 'F')
-                        {
-                            break;
-                        }
-
-                        throw new CryptographicException($"Invalid HEX character in [{nameof(NeonVault)}] input.");
-                    }
-
-                    // Read the second hex digit (ignoring any whitespace, like CRLF).
-
-                    while (true)
-                    {
-                        if (input.Read(lineBuffer, 0, 1) == 0)
-                        {
-                            throw new CryptographicException($"Odd number of HEX characters in [{nameof(NeonVault)}] input.");
-                        }
-
-                        secondHex = (char)lineBuffer[0];
-                        secondHex = char.ToUpperInvariant(secondHex);
-
-                        if (char.IsWhiteSpace(secondHex))
-                        {
-                            continue;
-                        }
-
-                        if ('0' <= secondHex && secondHex <= '9' ||
-                            'A' <= secondHex && secondHex <= 'F')
-                        {
-                            break;
-                        }
-
-                        throw new CryptographicException($"Invalid HEX character in [{nameof(NeonVault)}] input.");
-                    }
-
-                    buffer[cbRead++] = (byte)((NeonHelper.HexValue(firstHex) << 4) | NeonHelper.HexValue(secondHex));
-                }
-
-                return cbRead;
-            }
-
-            /// <summary>
-            /// Flushes any remaining buffered data to the output stream.
-            /// </summary>
-            public void FlushLastLine()
-            {
-                if (bufferPos > 0)
-                {
-                    var partialLine = new byte[bufferPos];
-
-                    for (int i = 0; i < bufferPos; i++)
-                    {
-                        partialLine[i] = lineBuffer[i];
-                    }
-
-                    output.Write(Encoding.ASCII.GetBytes(NeonHelper.ToHex(partialLine, uppercase: true) + lineEnding));
-                    bufferPos = 0;
-                }
-            }
-
-            /// <inheritdoc/>
-            public override bool CanRead => true;
-
-            /// <inheritdoc/>
-            public override bool CanSeek => output != null;
-
-            /// <inheritdoc/>
-            public override bool CanWrite => true;
-
-            /// <inheritdoc/>
-            public override void Flush()
-            {
-                if (output != null)
-                {
-                    output.Flush();
-                }
-            }
-
-            /// <inheritdoc/>
-            public override long Position
-            {
-                get
-                {
-                    if (output == null)
-                    {
-                        throw new NotImplementedException();
-                    }
-
-                    return output.Position;
-                }
-
-                set
-                {
-                    if (output == null)
-                    {
-                        throw new NotImplementedException();
-                    }
-
-                    output.Position = value;
-                }
-            }
-
-            /// <inheritdoc/>
-            public override long Seek(long offset, SeekOrigin origin)
-            {
-                if (output == null)
-                {
-                    throw new NotImplementedException();
-                }
-
-                return output.Seek(offset, origin);
-            }
-
-            //-----------------------------------------------------------------
-            // Unimplemented stream members.
-
-            /// <inheritdoc/>
-            public override long Length => throw new NotImplementedException();
-
-            /// <inheritdoc/>
-            public override void SetLength(long value)
-            {
-                throw new NotImplementedException();
-            }
-        }
+        // $todo(jeff.lill):
+        //
+        // I'm not super happy with this implementation because it first encrypts
+        // the data to a MemoryStream and then it writes the header line followed
+        // by the encypted data formatted as lines of HEX.
+        // 
+        // This won't work well for large files and probably won't scale thay well
+        // for services.
+        //
+        // I tried implementing a tricky stream that wrote the HEX lines directly
+        // in a single pass, but it couldn't handle the first (non-HEX) line and
+        // the seek AesCipher does to write the HMAC was also a problem.  I don't
+        // want to mess with this right now.  Perhaps something to look into again
+        // in the future.
 
         //---------------------------------------------------------------------
         // Static members
@@ -531,7 +252,7 @@ namespace Neon.Cryptography
         public NeonVault(Func<string, string> passwordProvider, string lineEnding = null)
         {
             Covenant.Requires<ArgumentNullException>(passwordProvider != null);
-            Covenant.Requires<ArgumentException>(lineEnding == null || lineEnding == "\r\n" || lineEnding == "\r");
+            Covenant.Requires<ArgumentException>(lineEnding == null || lineEnding == "\r\n" || lineEnding == "\n");
 
             if (lineEnding == null)
             {
@@ -628,15 +349,46 @@ namespace Neon.Cryptography
             Covenant.Requires<ArgumentNullException>(source != null);
             Covenant.Requires<ArgumentException>(source.CanRead && source.CanSeek);
             Covenant.Requires<ArgumentNullException>(target != null);
-            Covenant.Requires<ArgumentException>(source.CanRead && source.CanWrite && source.CanSeek);
 
             var key = GetKeyFromPassword(passwordName);
 
+            passwordName = passwordName.ToLowerInvariant();
+
             using (var cipher = new AesCipher(key, maxPaddingBytes: 128))
             {
-                using (var hexEncrypted = HexLineStream.Create(target, lineEnding))
+                using (var encrypted = new MemoryStream())
                 {
-                    cipher.EncryptStream(source, hexEncrypted);
+                    cipher.EncryptStream(source, encrypted);
+
+                    // Write the header line to the target.
+
+                    var header = $"{MagicString}1.0;AES256;{passwordName}{lineEnding}";
+
+                    target.Write(Encoding.ASCII.GetBytes(header));
+
+                    // Write the encrypted data as HEX (80 characters per line).
+
+                    var buffer     = new byte[1];
+                    var lineLength = 0;
+
+                    encrypted.Position = 0;
+
+                    while (true)
+                    {
+                        if (encrypted.Read(buffer, 0, 1) == 0)
+                        {
+                            break;
+                        }
+
+                        target.Write(Encoding.ASCII.GetBytes(NeonHelper.ToHex(buffer[0], uppercase: true)));
+                        lineLength += 2;
+
+                        if (lineLength == 80)
+                        {
+                            target.Write(Encoding.ASCII.GetBytes(lineEnding));
+                            lineLength = 0;
+                        }
+                    }
                 }
             }
         }
@@ -650,7 +402,7 @@ namespace Neon.Cryptography
         /// <exception cref="CryptographicException">Thrown if the password was not found or for other encryption problems.</exception>
         public void Encrypt(Stream source, string targetPath, string passwordName)
         {
-            using (var target = new FileStream(targetPath, FileMode.Open, FileAccess.Read))
+            using (var target = new FileStream(targetPath, FileMode.Create, FileAccess.ReadWrite))
             {
                 Encrypt(source, target, passwordName);
             }
@@ -667,7 +419,7 @@ namespace Neon.Cryptography
         {
             using (var source = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
             {
-                using (var target = new FileStream(targetPath, FileMode.Open, FileAccess.Read))
+                using (var target = new FileStream(targetPath, FileMode.Create, FileAccess.ReadWrite))
                 {
                     Encrypt(source, target, passwordName);
                 }
@@ -791,18 +543,77 @@ namespace Neon.Cryptography
                 throw new CryptographicException($"Unsupported [{nameof(NeonVault)}] file: Unexpected cipher: {fields[3]}");
             }
 
-            var passwordName = fields[4];
+            var passwordName = fields[4].ToLowerInvariant();
             var key          = GetKeyFromPassword(passwordName);
 
-            // We're going to read and parse the HEX lines using [HexLineStream].
+            // Read the HEX lines and convert them into bytes and then write then
+            // to a MemoryStream to be decrypted.
 
-            source.Position = startPos + lfPos + 1;
+            source.Position = startPos + lfPos;
 
-            using (var cipher = new AesCipher(key))
+            using (var encrypted = new MemoryStream())
             {
-                using (var hexEncrypted = HexLineStream.Open(source))
+                while (true)
                 {
-                    cipher.DecryptStream(hexEncrypted, target);
+                    if (source.Read(buffer, 0, 1) == 0)
+                    {
+                        break;
+                    }
+
+                    var firstHex = char.ToUpperInvariant((char)buffer[0]);
+
+                    if (char.IsWhiteSpace(firstHex))
+                    {
+                        continue;
+                    }
+
+                    if (source.Read(buffer, 0, 1) == 0)
+                    {
+                        throw new CryptographicException($"Invalid [{nameof(NeonVault)}] file: Odd numer of HEX digits on a line.");
+                    }
+
+                    var secondHex = char.ToUpperInvariant((char)buffer[0]);
+
+                    if (char.IsWhiteSpace(firstHex))
+                    {
+                        throw new CryptographicException($"Invalid [{nameof(NeonVault)}] file: Odd numer of HEX digits on a line.");
+                    }
+
+                    if (!NeonHelper.IsHex(firstHex) || !NeonHelper.IsHex(secondHex))
+                    {
+                        throw new CryptographicException($"Invalid [{nameof(NeonVault)}] file: Invalid HEX digit.");
+                    }
+
+                    byte value;
+
+                    if ('0' <= firstHex && firstHex <= '9')
+                    {
+                        value = (byte)(firstHex - '0');
+                    }
+                    else
+                    {
+                        value = (byte)(firstHex - 'A' + 10);
+                    }
+
+                    value <<= 4;
+
+                    if ('0' <= secondHex && secondHex <= '9')
+                    {
+                        value |= (byte)(secondHex - '0');
+                    }
+                    else
+                    {
+                        value |= (byte)(secondHex - 'A' + 10);
+                    }
+
+                    encrypted.WriteByte(value);
+                }
+
+                encrypted.Position = 0;
+
+                using (var cipher = new AesCipher(key))
+                {
+                    cipher.DecryptStream(encrypted, target);
                 }
             }
         }
@@ -831,7 +642,7 @@ namespace Neon.Cryptography
         {
             using (var source = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
             {
-                using (var target = new FileStream(targetPath, FileMode.Open, FileAccess.Read))
+                using (var target = new FileStream(targetPath, FileMode.Create, FileAccess.ReadWrite))
                 {
                     Decrypt(source, target);
                 }

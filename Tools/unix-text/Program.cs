@@ -34,10 +34,10 @@ namespace UnixText
     /// <remarks>
     /// <para>
     /// Examines one or more text files specified on the command line for Unicode
-    /// UTF-8 byte order markers as well as Windows style CR-LF line endings.  If any
-    /// of these are present, the file will be rewritten stripping out the byte
-    /// order markers (BOM) and converting to Unix style (LF only) line endings 
-    /// with the file being generated using the UTF-8 encoding.
+    /// UTF-8 byte order marker (BOM) as well as Windows style CR-LF line endings.  
+    /// If any of these are present, the file will be rewritten stripping out the
+    /// (BOM) and converting to Unix style (LF only) line endings with the file 
+    /// being generated using the UTF-8 encoding.
     /// </para>
     /// <para>
     /// When no files are specified, the tool simply process standard input and
@@ -104,8 +104,8 @@ output when no files are specified.
 
 Converts a text file into a Unix/Linux compatible form by:
 
-    * Removing Unicode Byte Order Markers from the beginning of 
-      the file if present
+    * Removing any Unicode Byte Order Marker (BOM) from the 
+      beginning of the file if present
 
     * Converting CR-LF line endings to just LF
 
