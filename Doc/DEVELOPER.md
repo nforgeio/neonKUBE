@@ -170,6 +170,8 @@ Follow the steps below to configure a development or test workstation:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`nuget SetApiKey APIKEY`
 
+27. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+
 ## Git Branches
 
 neonKUBE conventions for GitHub branches:
