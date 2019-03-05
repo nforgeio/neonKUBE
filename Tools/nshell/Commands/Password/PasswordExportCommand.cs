@@ -33,7 +33,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 
-namespace NeonCli
+namespace NShell
 {
     /// <summary>
     /// Implements the <b>password export</b> command.

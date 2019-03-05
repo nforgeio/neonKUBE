@@ -67,7 +67,6 @@ USAGE:
     nshell password     COMMAND         - Manages passwords
     nshell run --       COMMAND         - Runs a command with secrets
 ";
-
             // Disable any logging that might be performed by library classes.
 
             LogManager.Default.LogLevel = LogLevel.None;
@@ -100,6 +99,14 @@ USAGE:
                     new FileEditCommand(),
                     new FileEncryptCommand(),
                     new FilePasswordCommand(),
+                    new PasswordCommand(),
+                    new PasswordExportCommand(),
+                    new PasswordGenerateCommand(),
+                    new PasswordGetCommand(),
+                    new PasswordImportCommand(),
+                    new PasswordListCommand(),
+                    new PasswordRemoveCommand(),
+                    new PasswordSetCommand(),
                     new VersionCommand()
                 };
 
@@ -413,6 +420,40 @@ USAGE:
                 // file system.  We'll just return NULL in this case.
 
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Presents the user with a yes/no question and waits for a response.
+        /// </summary>
+        /// <param name="prompt">The question prompt.</param>
+        /// <returns><c>true</c> if the answer is yes, <b>false</b> for no.</returns>
+        public static bool PromptYesNo(string prompt)
+        {
+            try
+            {
+                while (true)
+                {
+                    Console.WriteLine();
+                    Console.Write($"{prompt} [y/n]: ");
+
+                    var key = Console.ReadKey().KeyChar;
+
+                    Console.WriteLine();
+
+                    if (key == 'y' || key == 'Y')
+                    {
+                        return true;
+                    }
+                    else if (key == 'n' || key == 'N')
+                    {
+                        return false;
+                    }
+                }
+            }
+            finally
+            {
+                Console.WriteLine();
             }
         }
 

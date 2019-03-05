@@ -212,6 +212,74 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Executes a program entry point synchronously, streaming some text as standard input,
+        /// passing arguments and returning the result.
+        /// </summary>
+        /// <param name="main">The program entry point.</param>
+        /// <param name="inputText">The text to be passed as standard input.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
+        public ExecuteResponse ExecuteWithInput(ProgramEntrypoint main, string inputText, params string[] args)
+        {
+            Covenant.Requires(main != null);
+
+            if (programThread != null)
+            {
+                throw new InvalidOperationException("Only one simulated [program] can run at a time.");
+            }
+
+            var orgSTDIN  = Console.In;
+            var orgSTDOUT = Console.Out;
+            var orgSTDERR = Console.Error;
+
+            try
+            {
+                // Capture standard output and error and stream the input 
+                // text as STDIN.
+
+                var sbOut = new StringBuilder();
+                var sbErr = new StringBuilder();
+
+                using (var stdIn = new StringReader(inputText))
+                {
+                    using (var stdOutCapture = new StringWriter(sbOut))
+                    {
+                        using (var stdErrCapture = new StringWriter(sbErr))
+                        {
+                            var exitCode = 0;
+
+                            Console.SetIn(stdIn);
+                            Console.SetOut(stdOutCapture);
+                            Console.SetError(stdErrCapture);
+
+                            // Simulate executing the program.
+
+                            programThread = new Thread(new ThreadStart(() => exitCode = main(args)));
+                            programThread.Start();
+                            programThread.Join();
+                            programThread = null;
+
+                            return new ExecuteResponse()
+                            {
+                                ExitCode = exitCode,
+                                OutputText = sbOut.ToString(),
+                                ErrorText = sbErr.ToString()
+                            };
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                // Restore the standard files.
+
+                Console.SetIn(orgSTDIN);
+                Console.SetOut(orgSTDOUT);
+                Console.SetError(orgSTDERR);
+            }
+        }
+
+        /// <summary>
         /// <para>
         /// Executes a program entry point asynchronously, without waiting for the command to complete.
         /// This is useful for commands that don't terminate by themselves (like <b>nshell proxy</b>).

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PasswordListCommand.cs
+// FILE:	    PasswordCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,34 +29,43 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
-using Neon.Cryptography;
 using Neon.Kube;
 
-namespace NeonCli
+namespace NShell
 {
     /// <summary>
-    /// Implements the <b>password list</b> command.
+    /// Implements the <b>password</b> command.
     /// </summary>
-    public class PasswordListCommand : CommandBase
+    public class PasswordCommand : CommandBase
     {
         private const string usage = @"
-Lists passwords.
+Manages neonKUBE passwords.
 
 USAGE:
 
+    neon password
+    neon password export PATH NAME...
+    neon password export PATH *
+    neon password generate [LENGTH]
+    neon password import PATH
     neon password list|ls
+    neon password remove|rm NAME
+    neon password remove|rm *
+    neon password set NAME [PATH|-]
+
+ARGUMENTS:
+
+    LENGTH      - Length of the desired password (default=20)
+    NAME        - Password name
+    PATH        - Input or output file path
+    -           - Read from standard input
+    *           - Process all passwords
 ";
 
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "password", "list" }; }
-        }
-
-        /// <inheritdoc/>
-        public override string[] AltWords
-        {
-            get { return new string[] { "password", "ls" }; }
+            get { return new string[] { "password" }; }
         }
 
         /// <inheritdoc/>
@@ -68,18 +77,17 @@ USAGE:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            if (commandLine.HasHelpOption)
+            if (commandLine.HasHelpOption || commandLine.Arguments.Length == 0)
             {
                 Console.WriteLine(usage);
                 Program.Exit(0);
             }
 
-            foreach (var path in Directory.GetFiles(KubeHelper.PasswordsFolder).OrderBy(p => p.ToLowerInvariant()))
+            if (commandLine.Arguments.Length > 0)
             {
-                Console.WriteLine(Path.GetFileName(path));
+                Console.Error.WriteLine($"*** ERROR: Unexpected [{commandLine.Arguments[0]}] command.");
+                Program.Exit(1);
             }
-
-            Program.Exit(0);
         }
     }
 }

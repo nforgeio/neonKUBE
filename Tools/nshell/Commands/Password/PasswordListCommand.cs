@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PasswordCommand.cs
+// FILE:	    PasswordListCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,43 +29,34 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Kube;
 
-namespace NeonCli
+namespace NShell
 {
     /// <summary>
-    /// Implements the <b>password</b> command.
+    /// Implements the <b>password list</b> command.
     /// </summary>
-    public class PasswordCommand : CommandBase
+    public class PasswordListCommand : CommandBase
     {
         private const string usage = @"
-Manages neonKUBE passwords.
+Lists passwords.
 
 USAGE:
 
-    neon password
-    neon password export PATH NAME...
-    neon password export PATH *
-    neon password generate [LENGTH]
-    neon password import PATH
     neon password list|ls
-    neon password remove|rm NAME
-    neon password remove|rm *
-    neon password set NAME [PATH|-]
-
-ARGUMENTS:
-
-    LENGTH      - Length of the desired password (default=20)
-    NAME        - Password name
-    PATH        - Input or output file path
-    -           - Read from standard input
-    *           - Process all passwords
 ";
 
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "password" }; }
+            get { return new string[] { "password", "list" }; }
+        }
+
+        /// <inheritdoc/>
+        public override string[] AltWords
+        {
+            get { return new string[] { "password", "ls" }; }
         }
 
         /// <inheritdoc/>
@@ -77,7 +68,18 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            Console.WriteLine(usage);
+            if (commandLine.HasHelpOption)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(0);
+            }
+
+            foreach (var path in Directory.GetFiles(KubeHelper.PasswordsFolder).OrderBy(p => p.ToLowerInvariant()))
+            {
+                Console.WriteLine(Path.GetFileName(path));
+            }
+
+            Program.Exit(0);
         }
     }
 }

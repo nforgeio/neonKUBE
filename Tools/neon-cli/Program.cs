@@ -78,7 +78,6 @@ COMMAND SUMMARY:
     neon cluster setup      [CLUSTER-DEF]
     neon login              COMMAND
     neon logout
-    neon password           COMMAND
     neon prepare            COMMAND
     neon scp                [NODE]
     neon ssh                [NODE]
@@ -208,14 +207,6 @@ OPTIONS:
                     new LoginListCommand(),
                     new LoginRemoveCommand(),
                     new LogoutCommand(),
-                    new PasswordCommand(),
-                    new PasswordExportCommand(),
-                    new PasswordGenerateCommand(),
-                    new PasswordGetCommand(),
-                    new PasswordImportCommand(),
-                    new PasswordListCommand(),
-                    new PasswordRemoveCommand(),
-                    new PasswordSetCommand(),
                     new PrepareCommand(),
                     new PrepareNodeTemplateCommand(),
                     new ScpCommand(),

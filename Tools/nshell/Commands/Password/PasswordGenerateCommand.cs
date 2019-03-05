@@ -31,7 +31,7 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Kube;
 
-namespace NeonCli
+namespace NShell
 {
     /// <summary>
     /// Implements the <b>password generate</b> command.

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PasswordRemoveCommand.cs
+// FILE:	    PasswordSetCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,20 +32,21 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 
-namespace NeonCli
+namespace NShell
 {
     /// <summary>
-    /// Implements the <b>password remove</b> command.
+    /// Implements the <b>password set</b> command.
     /// </summary>
-    public class PasswordRemoveCommand : CommandBase
+    public class PasswordSetCommand : CommandBase
     {
         private const string usage = @"
-Removes a specific named password or all passwords.
+Creates or modifies a named password.
 
 USAGE:
 
-    neon password remove|rm [--force] NAME  - Removes the named password
-    neon password remove|rm [--force] *     - Removes all named passwords
+    neon password set NAME          - Generates and sets a password
+    neon password set NAME PATH     - Sets a password from a file
+    neon password set NAME -        - Sets a password from STDIN
 
 ARGUMENTS:
 
@@ -53,31 +54,15 @@ ARGUMENTS:
     PATH        - path to the source file
     -           - read password from STDIN
 
-OPTIONS:
-
-    --force     - don't prompt to confirm removal.
-
 REMARKS:
 
-This command removes a named password or all passwords.
+This command creates or updates a named password.
 ";
 
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "password", "remove" }; }
-        }
-
-        /// <inheritdoc/>
-        public override string[] AltWords
-        {
-            get { return new string[] { "password", "rm" }; }
-        }
-
-        /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--force" }; }
+            get { return new string[] { "password", "set" }; }
         }
 
         /// <inheritdoc/>
@@ -95,8 +80,8 @@ This command removes a named password or all passwords.
                 Program.Exit(0);
             }
 
-            var nameArg = commandLine.Arguments.ElementAtOrDefault(0);
-            var force   = commandLine.HasOption("--force");
+            var nameArg   = commandLine.Arguments.ElementAtOrDefault(0);
+            var sourceArg = commandLine.Arguments.ElementAtOrDefault(1);
 
             if (nameArg == null)
             {
@@ -104,39 +89,47 @@ This command removes a named password or all passwords.
                 Program.Exit(1);
             }
 
-            if (nameArg == "*")
-            {
-                if (!force && !Program.PromptYesNo("Are you sure you want to remove all passwords?"))
-                {
-                    Program.Exit(0);
-                }
+            var passwordName = NeonVault.ValidatePasswordName(nameArg);
+            var password     = string.Empty;
 
-                foreach (var path in Directory.GetFiles(KubeHelper.PasswordsFolder))
+            if (sourceArg == null)
+            {
+                // Generate a 20 character password.
+
+                password = NeonHelper.GetCryptoRandomPassword(20);
+            }
+            else if (sourceArg == "-")
+            {
+                // Read the password from STDIN and trim.
+
+                using (var stdin = Console.OpenStandardInput())
                 {
-                    File.Delete(path);
+                    using (var reader = new StreamReader(stdin))
+                    {
+                        password = reader.ReadLine().Trim();
+                    }
                 }
             }
             else
             {
-                var passwordName = NeonVault.ValidatePasswordName(nameArg);
-                var passwordPath = Path.Combine(KubeHelper.PasswordsFolder, passwordName);
+                // Read the first line from the file.
 
-                if (!File.Exists(passwordPath))
+                using (var input = new FileStream(sourceArg, FileMode.Open, FileAccess.Read))
                 {
-                    Console.Error.WriteLine($"*** ERROR: The [{passwordName}] password does not exist.");
-                    Program.Exit(1);
-                }
-                else
-                {
-                    if (!force && !Program.PromptYesNo($"Are you sure you want to remove the [{passwordName}] password?"))
+                    using (var reader = new StreamReader(input))
                     {
-                        Program.Exit(0);
+                        password = reader.ReadLine().Trim();
                     }
-
-                    File.Delete(passwordPath);
                 }
             }
 
+            if (password.Length == 0)
+            {
+                Console.Error.WriteLine($"*** ERROR: The password cannot be blank.");
+                Program.Exit(1);
+            }
+
+            File.WriteAllText(Path.Combine(KubeHelper.PasswordsFolder, passwordName), password);
             Program.Exit(0);
         }
     }
