@@ -110,7 +110,7 @@ ZIP archive.
             {
                 // Read the password from STDIN and trim.
 
-                using (var stdin = Console.OpenStandardInput())
+                using (var stdin = NeonHelper.OpenStandardInput())
                 {
                     using (var reader = new StreamReader(stdin))
                     {

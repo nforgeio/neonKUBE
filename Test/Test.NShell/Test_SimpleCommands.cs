@@ -69,7 +69,7 @@ namespace Test.NShell
                 result = runner.Execute(Program.Main, "version", "-n", "--git");
 
                 Assert.Equal(0, result.ExitCode);
-                Assert.Equal($"{Build.ProductVersion}/{ThisAssembly.Git.Commit}", result.OutputText.Trim());
+                Assert.Equal($"{Build.ProductVersion}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
             }
         }

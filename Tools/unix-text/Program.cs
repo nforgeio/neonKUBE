@@ -187,7 +187,7 @@ Converts a text file into a Unix/Linux compatible form by:
             // Read the file line-by-line and generate an in-memory byte representation
             // without the BOM and with Unix style line endings.
 
-            using (var inputStream = Console.OpenStandardInput())
+            using (var inputStream = NeonHelper.OpenStandardInput())
             {
                 using (var reader = new StreamReader(inputStream))
                 {

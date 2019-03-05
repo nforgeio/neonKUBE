@@ -222,7 +222,7 @@ pwd-3
                     result = runner.ExecuteWithInput(Program.Main, "three", "password", "set", "pwd-3", "-");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = runner.Execute(Program.Main, "passwor", " get", "pwd-1");
+                    result = runner.Execute(Program.Main, "password", "get", "pwd-1");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Equal("one", result.OutputText.Trim());
 
@@ -242,11 +242,11 @@ pwd-3
                     result = runner.ExecuteWithInput(Program.Main, "one", "password", "set", "pwd-1", "-");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = runner.Execute(Program.Main, "password get", "pwd-1");
+                    result = runner.Execute(Program.Main, "password", "get", "pwd-1");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Equal("one", result.OutputText.Trim());
 
-                    result = runner.ExecuteWithInput(Program.Main, "1", "password", "se", "pwd-1", "-");
+                    result = runner.ExecuteWithInput(Program.Main, "1", "password", "set", "pwd-1", "-");
                     Assert.Equal(0, result.ExitCode);
 
                     result = runner.Execute(Program.Main, "password", "get", "pwd-1");
@@ -261,7 +261,7 @@ pwd-3
                     result = runner.ExecuteWithInput(Program.Main, "password", "password", "set", "a.1_2-3", "-");
                     Assert.Equal(0, result.ExitCode);
 
-                    result = runner.Execute(Program.Main, "password get a.1_2-3");
+                    result = runner.Execute(Program.Main, "password", "get", "a.1_2-3");
                     Assert.Equal(0, result.ExitCode);
                     Assert.Equal("password", result.OutputText.Trim());
 
