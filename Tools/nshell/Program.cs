@@ -65,7 +65,8 @@ USAGE:
     nshell file         COMMAND         - Manages file encryption
     nshell version      [-n] [--git]    - Prints version
     nshell password     COMMAND         - Manages passwords
-    nshell run --       COMMAND         - Runs a command with secrets
+    nshell run --       COMMAND         - Runs a command, injecting 
+                                          settings and secrets
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -107,6 +108,7 @@ USAGE:
                     new PasswordListCommand(),
                     new PasswordRemoveCommand(),
                     new PasswordSetCommand(),
+                    new RunCommand(),
                     new VersionCommand()
                 };
 
