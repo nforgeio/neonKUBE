@@ -1,5 +1,6 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    FilePasswordCommand.cs
+﻿
+//-----------------------------------------------------------------------------
+// FILE:	    FilePasswordNameCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,16 +36,16 @@ using Neon.IO;
 namespace NShell
 {
     /// <summary>
-    /// Implements the <b>file password</b> command.
+    /// Implements the <b>file password-name</b> command.
     /// </summary>
-    public class FilePasswordCommand : CommandBase
+    public class FilePasswordNameCommand : CommandBase
     {
         private const string usage = @"
 Returns the name of the password used to encrypt a file.
 
 USAGE:
 
-    nshell file password [-n] PATH
+    nshell file password-name [-n] PATH
 
 ARGUMENTS:
 
@@ -64,7 +65,7 @@ The command returns a non-zero exit code for unencrypted files.
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "file", "password" }; }
+            get { return new string[] { "file", "password-name" }; }
         }
 
         /// <inheritdoc/>

@@ -423,7 +423,7 @@ namespace Test.NShell
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void FilePassword()
+        public void FilePasswordName()
         {
             using (var tempFolder = new TempFolder())
             {
@@ -444,7 +444,7 @@ namespace Test.NShell
                         {
                             // Verify that the PATH argument is required.
 
-                            var result = runner.Execute(Program.Main, "file", "password");
+                            var result = runner.Execute(Program.Main, "file", "password-name");
 
                             Assert.NotEqual(0, result.ExitCode);
                             Assert.Contains("*** ERROR: The PATH argument is required.", result.ErrorText);
@@ -461,7 +461,7 @@ namespace Test.NShell
 
                             // Verify that we can get the password with a line ending.
 
-                            result = runner.Execute(Program.Main, "file", "password", "test1.txt", passwordFile.Name);
+                            result = runner.Execute(Program.Main, "file", "password-name", "test1.txt", passwordFile.Name);
 
                             Assert.Equal(0, result.ExitCode);
                             Assert.Contains(passwordFile.Name, result.OutputText);
@@ -469,7 +469,7 @@ namespace Test.NShell
 
                             // Verify that we can get the password without a line ending.
 
-                            result = runner.Execute(Program.Main, "file", "password", "-n", "test1.txt", passwordFile.Name);
+                            result = runner.Execute(Program.Main, "file", "password-name", "-n", "test1.txt", passwordFile.Name);
 
                             Assert.Equal(0, result.ExitCode);
                             Assert.Equal(passwordFile.Name, result.OutputText);

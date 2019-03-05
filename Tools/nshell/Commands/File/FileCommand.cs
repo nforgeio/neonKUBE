@@ -48,7 +48,7 @@ USAGE:
     nshell file edit PATH
     nshell file encrypt PATH [--password=PASSWORD-NAME]
     nshell file encrypt SOURCE TARGET [PASSWORD-NAME]
-    nshell file password PATH
+    nshell file password-name PATH
 
 REMARKS:
 

@@ -98,7 +98,7 @@ USAGE:
                     new FileDecryptCommand(),
                     new FileEditCommand(),
                     new FileEncryptCommand(),
-                    new FilePasswordCommand(),
+                    new FilePasswordNameCommand(),
                     new PasswordCommand(),
                     new PasswordExportCommand(),
                     new PasswordGenerateCommand(),
