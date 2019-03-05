@@ -29,6 +29,8 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
 
 namespace NShell
 {
@@ -38,11 +40,26 @@ namespace NShell
     public class FileDecryptCommand : CommandBase
     {
         private const string usage = @"
-Prints the [nshell] version.
+Decrypts a file to another location.
 
 USAGE:
 
-    nshell version [-n] [--get]
+    nshell file decrypt SOURCE TARGET
+
+ARGUMENTS:
+
+    SOURCE      - Path to the encrypted file
+    TARGET      - Path to the new decrypted file
+
+REMARKS:
+
+This command decrypts the SOURCE file to TARGET using the password named
+within the SOURCE file.
+
+NOTE: We explicitly don't support decrypting a file in-place to discourage
+      temporarily decrypting a sensitive file within a source repository
+      and then potentially accidentially commiting the unencrypted file
+      (which is really easy to do).
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -64,6 +81,31 @@ USAGE:
                 Console.WriteLine(usage);
                 Program.Exit(0);
             }
+
+            var sourcePath = commandLine.Arguments.ElementAtOrDefault(0);
+            var targetPath = commandLine.Arguments.ElementAtOrDefault(1);
+
+            if (string.IsNullOrEmpty(sourcePath))
+            {
+                Console.Error.WriteLine("*** ERROR: The SOURCE argument is required.");
+                Program.Exit(1);
+            }
+
+            if (string.IsNullOrEmpty(targetPath))
+            {
+                Console.Error.WriteLine("*** ERROR: The TARGET argument is required.");
+                Program.Exit(1);
+            }
+
+            if (!NeonVault.IsEncrypted(sourcePath))
+            {
+                Console.Error.WriteLine($"*** ERROR: The [{sourcePath}] file is not encrypted.");
+                Program.Exit(1);
+            }
+
+            var vault = new NeonVault(Program.LookupPassword);
+
+            vault.Decrypt(sourcePath, targetPath);
 
             Program.Exit(0);
         }

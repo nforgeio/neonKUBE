@@ -99,6 +99,7 @@ USAGE:
                     new FileDecryptCommand(),
                     new FileEditCommand(),
                     new FileEncryptCommand(),
+                    new FilePasswordCommand(),
                     new VersionCommand()
                 };
 

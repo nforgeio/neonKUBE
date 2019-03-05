@@ -29,6 +29,8 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
 
 namespace NShell
 {
@@ -38,16 +40,45 @@ namespace NShell
     public class FileEncryptCommand : CommandBase
     {
         private const string usage = @"
-Prints the [nshell] version.
+Encrypts a file using a named password.
 
 USAGE:
 
-    nshell version [-n] [--get]
+    nshell file encrypt PATH [--password-name=PASSWORD-NAME]
+    nshell file encrypt SOURCE TARGET [PASSWORD-NAME]
+
+ARGUMENTS:
+
+    PATH            - Path to the file to encrypted in-place
+    SOURCE          - Unencrypted source file path
+    TARGET          - Unencrypted target file path
+    PASSWORD-NAME   - optional password name
+
+OPTIONS:
+
+    --password-name - Optionally specifies the password name when 
+                      encrypting a file in-place.
+
+REMARKS:
+
+This command encrypts an existing file in-place or by encrypting the
+file to another location.  You may explicitly specify a password or
+or have the command search the current and ancestor directories
+for a [.password-name] file with the default password name.
+
+NOTE: The search for the [.password-name] file will start from the
+      directory where the encrypted file will be written.
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
             get { return new string[] { "file", "encrypt" }; }
+        }
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions
+        {
+            get { return new string[] { "--password-name" }; }
         }
 
         /// <inheritdoc/>
@@ -63,6 +94,66 @@ USAGE:
             {
                 Console.WriteLine(usage);
                 Program.Exit(0);
+            }
+
+            var sourcePath   = commandLine.Arguments.ElementAtOrDefault(0);
+            var targetPath   = commandLine.Arguments.ElementAtOrDefault(1);
+            var passwordName = commandLine.Arguments.ElementAtOrDefault(2);
+            var inPlace      = false;
+
+            if (string.IsNullOrEmpty(sourcePath))
+            {
+                Console.Error.WriteLine("*** ERROR: The PATH argument is required.");
+                Program.Exit(1);
+            }
+
+            if (string.IsNullOrEmpty(targetPath))
+            {
+                targetPath = sourcePath;
+                inPlace    = true;
+            }
+
+            if (string.IsNullOrEmpty(targetPath) || string.IsNullOrEmpty(passwordName))
+            {
+                passwordName = commandLine.GetOption("--password-name");
+            }
+
+            if (NeonVault.IsEncrypted(sourcePath))
+            {
+                Console.Error.WriteLine($"*** ERROR: The [{sourcePath}] file is already encrypted.");
+                Program.Exit(1);
+            }
+
+            if (string.IsNullOrEmpty(passwordName))
+            {
+                passwordName = Program.GetDefaultPasswordName(targetPath);
+            }
+
+            if (string.IsNullOrEmpty(passwordName))
+            {
+                Console.Error.WriteLine("*** ERROR: A PASSWORD-NAME argument or [.password-name] file is required.");
+                Program.Exit(1);
+            }
+
+            var vault = new NeonVault(Program.LookupPassword);
+
+            if (inPlace)
+            {
+                // For in-place encryption, we'll first copy the file to
+                // a secure folder and then encrypt from there to overwrite
+                // the original file.
+
+                using (var tempFile = new TempFile())
+                {
+                    File.Copy(sourcePath, tempFile.Path);
+                    vault.Encrypt(tempFile.Path, sourcePath, passwordName);
+                }
+            }
+            else
+            {
+                // Otherwise, we can simply encrypt from the source to the target.
+
+                vault.Encrypt(sourcePath, targetPath, passwordName);
             }
 
             Program.Exit(0);

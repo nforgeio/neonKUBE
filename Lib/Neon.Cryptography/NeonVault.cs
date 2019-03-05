@@ -193,9 +193,21 @@ namespace Neon.Cryptography
         /// <returns><c>true</c> if the file is encrypted.</returns>
         public static bool IsEncrypted(string path)
         {
+            return IsEncrypted(path, out var passwordName);
+        }
+
+        /// <summary>
+        /// Determines if a file is encrypted via <see cref="NeonVault"/> and returns
+        /// the name of the password used.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <param name="passwordName">For encrypted files, this returns as the name of the password used.</param>
+        /// <returns><c>true</c> if the file is encrypted.</returns>
+        public static bool IsEncrypted(string path, out string passwordName)
+        {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                return IsEncrypted(stream);
+                return IsEncrypted(stream, out passwordName);
             }
         }
 
@@ -211,7 +223,26 @@ namespace Neon.Cryptography
         /// </remarks>
         public static bool IsEncrypted(Stream stream)
         {
+            return IsEncrypted(stream, out var passwordName);
+        }
+
+        /// <summary>
+        /// Determines if a stream is encrypted via <see cref="NeonVault"/> and returns
+        /// the name of the password used.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="passwordName">For encrypted files, this returns as the name of the password used.</param>
+        /// <returns><c>true</c> if the stream is encrypted.</returns>
+        /// <remarks>
+        /// <note>
+        /// The stream position must be at the beginning of the stream for this to work.
+        /// </note>
+        /// </remarks>
+        public static bool IsEncrypted(Stream stream, out string passwordName)
+        {
             Covenant.Requires<ArgumentNullException>(stream != null);
+
+            passwordName = null;
 
             if (stream.Position != 0)
             {
@@ -227,7 +258,23 @@ namespace Neon.Cryptography
                     return false;
                 }
 
-                return line.StartsWith(MagicString);
+                if (!line.StartsWith(MagicString))
+                {
+                    return false;
+                }
+
+                // Extract the password name:
+
+                var fields = line.Split(';');
+
+                if (fields.Length < 5)
+                {
+                    throw new CryptographicException("Invalid encrypted file format.");
+                }
+
+                passwordName = fields[4];
+
+                return true;
             }
         }
 

@@ -46,15 +46,20 @@ USAGE:
 
     nshell file create PATH [PASSWORD-NAME]
 
+ARGUMENTS:
+
+    PATH            - path to the file being created
+    PASSWORD-NAME   - optional password name
+
 REMARKS:
 
 This command creates a new file at PATH using an explicitly named password
-or by searching the current and ancestor directories for PATH for a 
+or have the command search the current and ancestor directories for a
 [.password-name] file with the default password name.
 
-The command decrypts the file to a temporary folder and launched a text
+The command decrypts the file to a temporary folder and launches a text
 editor enabling you to edit the file.  Once the editor exits, the temporary
-file will be encrypted to PATH and then be deleted.
+file will be encrypted to back PATH and then be deleted.
 
 The default platform editor will be launched (NotePad.exe for Windows or 
 Vim for OS/x and Linux).  You can customize the editor by setting the EDITOR 

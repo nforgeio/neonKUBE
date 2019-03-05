@@ -44,10 +44,11 @@ USAGE:
 
     nshell file
     nshell file create PATH [PASSWORD-NAME]
-    nshell file decrypt FROM-PATH TO-PATH
+    nshell file decrypt SOURCE TARGET
     nshell file edit PATH
-    nshell file encypt PATH [PASSWORD-NAME]
-    nshell file encrypt FROM-PATH TO-PATH  [PASSWORD-NAME]
+    nshell file encrypt PATH [--password=PASSWORD-NAME]
+    nshell file encrypt SOURCE TARGET [PASSWORD-NAME]
+    nshell file password PATH
 
 REMARKS:
 

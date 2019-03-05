@@ -29,6 +29,8 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
 
 namespace NShell
 {
@@ -38,11 +40,30 @@ namespace NShell
     public class FileEditCommand : CommandBase
     {
         private const string usage = @"
-Prints the [nshell] version.
+Edits an encypted file.
 
 USAGE:
 
-    nshell version [-n] [--get]
+    nshell file edit PATH
+
+ARGUMENTS:
+
+    PATH    - path to the file being created
+
+REMARKS:
+
+This command edits an existing encrypted file at PATH.
+
+The command decrypts the file to a temporary folder and launches a text
+editor enabling you to edit the file.  Once the editor exits, the temporary
+file will be encrypted back to PATH and then be deleted.
+
+The default platform editor will be launched (NotePad.exe for Windows or 
+Vim for OS/x and Linux).  You can customize the editor by setting the EDITOR 
+environment variable to the path to the editor executable file.
+
+NOTE: You don't need to specify a password name for this command 
+      because the password name is saved within encrypted files.
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -63,6 +84,35 @@ USAGE:
             {
                 Console.WriteLine(usage);
                 Program.Exit(0);
+            }
+
+            var path = commandLine.Arguments.ElementAtOrDefault(0);
+
+            if (string.IsNullOrEmpty(path))
+            {
+                Console.Error.WriteLine("*** ERROR: The PATH argument is required.");
+                Program.Exit(1);
+            }
+
+            if (!NeonVault.IsEncrypted(path, out var passwordName))
+            {
+                Console.Error.WriteLine($"*** ERROR: The [{path}] file is not encrypted.");
+                Program.Exit(1);
+            }
+
+            var vault    = new NeonVault(Program.LookupPassword);
+            var fileName = Path.GetFileName(path);
+
+            using (var tempFolder = new TempFolder())
+            {
+                var tempPath = Path.Combine(tempFolder.Path, fileName);
+
+                // Decrypt the file to a secure temporary folder, launch the
+                // editor and re-encrypt the file after the editor returns.
+
+                vault.Decrypt(path, tempPath);
+                NeonHelper.OpenEditor(tempPath);
+                vault.Encrypt(tempPath, path, passwordName);
             }
 
             Program.Exit(0);
