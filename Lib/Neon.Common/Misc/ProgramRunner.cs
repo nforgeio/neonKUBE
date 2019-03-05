@@ -103,6 +103,7 @@ namespace Neon.Common
         private bool            programIsReady;
         private bool            programExitBeforeReady;
         private TimeSpan        forkTimeout;
+        private byte[]          inputBytes;
 
         /// <summary>
         /// Constructor.
@@ -212,23 +213,44 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Executes a program entry point synchronously, streaming some text as standard input,
+        /// Opens the standard input stream.  This will return a stream with the
+        /// input specified when <see cref="ExecuteWithInput(ProgramEntrypoint, byte[], string[])"/>
+        /// or <see cref="ExecuteWithInput(ProgramEntrypoint, string, string[])"/> were called
+        /// or else it will simply return the result of <see cref="Console.OpenStandardInput()"/>.
+        /// </summary>
+        /// <returns>The input <see cref="Stream"/>.</returns>
+        public Stream OpenStandardInput()
+        {
+            if (inputBytes == null)
+            {
+                return Console.OpenStandardInput();
+            }
+            else
+            {
+                return new MemoryStream(inputBytes);
+            }
+        }
+
+        /// <summary>
+        /// Executes a program entry point synchronously, streaming some bytes as standard input,
         /// passing arguments and returning the result.
         /// </summary>
         /// <param name="main">The program entry point.</param>
-        /// <param name="inputText">The text to be passed as standard input.</param>
+        /// <param name="inputBytes">The bytes to be passed as standard input.</param>
         /// <param name="args">The arguments.</param>
         /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
-        public ExecuteResponse ExecuteWithInput(ProgramEntrypoint main, string inputText, params string[] args)
+        public ExecuteResponse ExecuteWithInput(ProgramEntrypoint main, byte[] inputBytes, params string[] args)
         {
             Covenant.Requires(main != null);
+            Covenant.Requires<ArgumentNullException>(inputBytes != null);
+
+            this.inputBytes = inputBytes;
 
             if (programThread != null)
             {
                 throw new InvalidOperationException("Only one simulated [program] can run at a time.");
             }
 
-            var orgSTDIN  = Console.In;
             var orgSTDOUT = Console.Out;
             var orgSTDERR = Console.Error;
 
@@ -240,32 +262,28 @@ namespace Neon.Common
                 var sbOut = new StringBuilder();
                 var sbErr = new StringBuilder();
 
-                using (var stdIn = new StringReader(inputText))
+                using (var stdOutCapture = new StringWriter(sbOut))
                 {
-                    using (var stdOutCapture = new StringWriter(sbOut))
+                    using (var stdErrCapture = new StringWriter(sbErr))
                     {
-                        using (var stdErrCapture = new StringWriter(sbErr))
+                        var exitCode = 0;
+
+                        Console.SetOut(stdOutCapture);
+                        Console.SetError(stdErrCapture);
+
+                        // Simulate executing the program.
+
+                        programThread = new Thread(new ThreadStart(() => exitCode = main(args)));
+                        programThread.Start();
+                        programThread.Join();
+                        programThread = null;
+
+                        return new ExecuteResponse()
                         {
-                            var exitCode = 0;
-
-                            Console.SetIn(stdIn);
-                            Console.SetOut(stdOutCapture);
-                            Console.SetError(stdErrCapture);
-
-                            // Simulate executing the program.
-
-                            programThread = new Thread(new ThreadStart(() => exitCode = main(args)));
-                            programThread.Start();
-                            programThread.Join();
-                            programThread = null;
-
-                            return new ExecuteResponse()
-                            {
-                                ExitCode = exitCode,
-                                OutputText = sbOut.ToString(),
-                                ErrorText = sbErr.ToString()
-                            };
-                        }
+                            ExitCode = exitCode,
+                            OutputText = sbOut.ToString(),
+                            ErrorText = sbErr.ToString()
+                        };
                     }
                 }
             }
@@ -273,10 +291,25 @@ namespace Neon.Common
             {
                 // Restore the standard files.
 
-                Console.SetIn(orgSTDIN);
                 Console.SetOut(orgSTDOUT);
                 Console.SetError(orgSTDERR);
             }
+        }
+
+        /// <summary>
+        /// Executes a program entry point synchronously, streaming some text as standard input,
+        /// passing arguments and returning the result.
+        /// </summary>
+        /// <param name="main">The program entry point.</param>
+        /// <param name="inputText">The text to be passed as standard input.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
+        public ExecuteResponse ExecuteWithInput(ProgramEntrypoint main, string inputText, params string[] args)
+        {
+            Covenant.Requires(main != null);
+            Covenant.Requires<ArgumentNullException>(inputText != null);
+
+            return ExecuteWithInput(main, Encoding.UTF8.GetBytes(inputText), args);
         }
 
         /// <summary>
