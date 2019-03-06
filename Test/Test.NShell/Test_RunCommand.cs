@@ -40,7 +40,7 @@ namespace Test.NShell
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Basic()
+        public void ReadVariables_Decrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
 
@@ -65,7 +65,7 @@ namespace Test.NShell
                             File.WriteAllText(".password-name", "test");
 
                             //-------------------------------------------------
-                            // Verify that we can read settings from a couple of 
+                            // Verify that we can read variables from a couple of 
                             // unencrypted variable files.
 
                             File.WriteAllText("test.cmd", "echo %* > output.txt");
@@ -95,6 +95,41 @@ TEST_D=D-VALUE
                             File.Delete("output.txt");
                             File.Delete("var1.txt");
                             File.Delete("var2.txt");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Environment.CurrentDirectory = orgDirectory;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void ReadVariables_Ecrypted()
+        {
+            var orgDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                using (var manager = new KubeTestManager())
+                {
+                    using (var runner = new ProgramRunner())
+                    {
+                        using (var tempFolder = new TempFolder())
+                        {
+                            Environment.CurrentDirectory = tempFolder.Path;
+
+                            var vault = new NeonVault(Program.LookupPassword);
+
+                            // Create a test password and a [.password-name] file in the
+                            // temp test folder.
+
+                            var result = runner.Execute(Program.Main, $"password", "set", "test");
+                            Assert.Equal(0, result.ExitCode);
+
+                            File.WriteAllText(".password-name", "test");
 
                             //-------------------------------------------------
                             // Verify that we can read settings from a couple of 
@@ -123,7 +158,7 @@ TEST_D=D-VALUE
                             result = runner.Execute(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "^TEST_A", "^TEST_B", "^TEST_C", "^TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
-                            output = File.ReadAllText("output.txt");
+                            var output = File.ReadAllText("output.txt");
 
                             Assert.Contains("A-VALUE", output);
                             Assert.Contains("B-VALUE", output);
@@ -132,22 +167,82 @@ TEST_D=D-VALUE
                             File.Delete("output.txt");
                             File.Delete("var1.txt");
                             File.Delete("var2.txt");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Environment.CurrentDirectory = orgDirectory;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void VariableOptions()
+        {
+            var orgDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                using (var manager = new KubeTestManager())
+                {
+                    using (var runner = new ProgramRunner())
+                    {
+                        using (var tempFolder = new TempFolder())
+                        {
+                            Environment.CurrentDirectory = tempFolder.Path;
+
+                            var vault = new NeonVault(Program.LookupPassword);
 
                             //-------------------------------------------------
                             // Verify that we can process [--name=value] run command options.
 
                             File.WriteAllText("test.cmd", "echo %* > output.txt");
 
-                            result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "^TEST_A", "^TEST_B", "^TEST_C", "^TEST_D");
+                            var result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "^TEST_A", "^TEST_B", "^TEST_C", "^TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
-                            output = File.ReadAllText("output.txt");
+                            var output = File.ReadAllText("output.txt");
 
                             Assert.Contains("A-VALUE", output);
                             Assert.Contains("B-VALUE", output);
                             Assert.Contains("C-VALUE", output);
                             Assert.Contains("D-VALUE", output);
                             File.Delete("output.txt");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Environment.CurrentDirectory = orgDirectory;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void VariableInjectDecrypted()
+        {
+            var orgDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                using (var manager = new KubeTestManager())
+                {
+                    using (var runner = new ProgramRunner())
+                    {
+                        using (var tempFolder = new TempFolder())
+                        {
+                            Environment.CurrentDirectory = tempFolder.Path;
+
+                            var vault = new NeonVault(Program.LookupPassword);
+
+                            // Create a test password and a [.password-name] file in the
+                            // temp test folder.
+
+                            var result = runner.Execute(Program.Main, $"password", "set", "test");
+                            Assert.Equal(0, result.ExitCode);
 
                             //-------------------------------------------------
                             // Verify that we can inject variables into an
@@ -165,7 +260,7 @@ $<<TEST_D>>
                             result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "^^file.txt");
                             Assert.Equal(0, result.ExitCode);
 
-                            output = File.ReadAllText("output.txt");
+                            var output = File.ReadAllText("output.txt");
 
                             Assert.Contains("A-VALUE", output);
                             Assert.Contains("B-VALUE", output);
@@ -173,6 +268,39 @@ $<<TEST_D>>
                             Assert.Contains("D-VALUE", output);
                             File.Delete("output.txt");
                             File.Delete("file.txt");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Environment.CurrentDirectory = orgDirectory;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void VariableInjectEncrypted()
+        {
+            var orgDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                using (var manager = new KubeTestManager())
+                {
+                    using (var runner = new ProgramRunner())
+                    {
+                        using (var tempFolder = new TempFolder())
+                        {
+                            Environment.CurrentDirectory = tempFolder.Path;
+
+                            var vault = new NeonVault(Program.LookupPassword);
+
+                            // Create a test password and a [.password-name] file in the
+                            // temp test folder.
+
+                            var result = runner.Execute(Program.Main, $"password", "set", "test");
+                            Assert.Equal(0, result.ExitCode);
 
                             //-------------------------------------------------
                             // Verify that we can inject variables into an
@@ -193,7 +321,7 @@ $<<TEST_D>>
                             result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "^^file.txt");
                             Assert.Equal(0, result.ExitCode);
 
-                            output = File.ReadAllText("output.txt");
+                            var output = File.ReadAllText("output.txt");
 
                             Assert.Contains("A-VALUE", output);
                             Assert.Contains("B-VALUE", output);
@@ -201,6 +329,39 @@ $<<TEST_D>>
                             Assert.Contains("D-VALUE", output);
                             File.Delete("output.txt");
                             File.Delete("file.txt");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Environment.CurrentDirectory = orgDirectory;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void DecryptFile()
+        {
+            var orgDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                using (var manager = new KubeTestManager())
+                {
+                    using (var runner = new ProgramRunner())
+                    {
+                        using (var tempFolder = new TempFolder())
+                        {
+                            Environment.CurrentDirectory = tempFolder.Path;
+
+                            var vault = new NeonVault(Program.LookupPassword);
+
+                            // Create a test password and a [.password-name] file in the
+                            // temp test folder.
+
+                            var result = runner.Execute(Program.Main, $"password", "set", "test");
+                            Assert.Equal(0, result.ExitCode);
 
                             //-------------------------------------------------
                             // Verify that we can decrypt a file.
@@ -216,7 +377,7 @@ $<<TEST_D>>
                             result = runner.Execute(Program.Main, $"run", "--", "test.cmd", "@file.txt");
                             Assert.Equal(0, result.ExitCode);
 
-                            output = File.ReadAllText("output.txt");
+                            var output = File.ReadAllText("output.txt");
 
                             Assert.Contains(plainText, output);
                             File.Delete("output.txt");
