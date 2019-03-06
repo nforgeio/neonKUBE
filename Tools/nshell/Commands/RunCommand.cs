@@ -211,11 +211,11 @@ Pass a potentially encrypted file:
                     });
             }
 
-            // Any left command line options also specify environment variables.
+            // Any left command line options with a "--" prefix also specify environment variables.
 
-            foreach (var option in leftCommandLine.Options)
+            foreach (var option in leftCommandLine.Options.Where(o => o.Key.StartsWith("--")))
             {
-                Environment.SetEnvironmentVariable(option.Key, option.Value);
+                Environment.SetEnvironmentVariable(option.Key.Substring(2), option.Value);
             }
 
             // We've read all of the variable files and left command line options
@@ -261,19 +261,19 @@ Pass a potentially encrypted file:
                         subcommand[i] = path;
 
                         // Perform the subsitutions.
-
-                        var unprocessed = File.ReadAllText(path);
-                        var processed = string.Empty;
+                        
+                        var unprocessed      = File.ReadAllText(path);
+                        var processed        = string.Empty;
                         var linuxLineEndings = !unprocessed.Contains("\r\n");
 
                         using (var reader = new StreamReader(path))
                         {
                             using (var preprocessor = new PreprocessReader(reader))
                             {
-                                preprocessor.ExpandVariables = true;
-                                preprocessor.LineEnding = linuxLineEndings ? LineEnding.LF : LineEnding.CRLF;
-                                preprocessor.ProcessStatements = false;
-                                preprocessor.StripComments = false;
+                                preprocessor.ExpandVariables        = true;
+                                preprocessor.LineEnding             = linuxLineEndings ? LineEnding.LF : LineEnding.CRLF;
+                                preprocessor.ProcessStatements      = false;
+                                preprocessor.StripComments          = false;
                                 preprocessor.VariableExpansionRegex = PreprocessReader.AngleVariableExpansionRegex;
 
                                 processed = preprocessor.ReadToEnd();
