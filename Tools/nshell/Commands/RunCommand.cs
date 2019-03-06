@@ -154,7 +154,7 @@ Pass a potentially encrypted file:
                 Program.Exit(0);
             }
 
-            var splitCommandLine = commandLine.Split(SplitItem);
+            var splitCommandLine = commandLine.Split("--");
             var leftCommandLine  = splitCommandLine.Left;
             var rightCommandLine = splitCommandLine.Right;
 
@@ -314,7 +314,7 @@ Pass a potentially encrypted file:
                         if (valuePos != -1)
                         {
                             var optionPart = arg.Substring(0, valuePos);
-                            var name = arg.Substring(valuePos + 2);
+                            var name       = arg.Substring(valuePos + 2);
 
                             if (name == string.Empty)
                             {
@@ -364,18 +364,18 @@ Pass a potentially encrypted file:
 
                         subcommand[i] = Environment.ExpandEnvironmentVariables(subcommand[i]);
                     }
-
-                    // Execute the subcommand.
-
-                    var subcommandArgs = new List<object>();
-
-                    foreach (var subcommandArg in subcommand.Skip(1))
-                    {
-                        subcommandArgs.Add(subcommandArg);
-                    }
-
-                    Program.Exit(NeonHelper.Execute(subcommand[0], subcommandArgs.ToArray()));
                 }
+
+                // Execute the subcommand.
+
+                var subcommandArgs = new List<object>();
+
+                foreach (var subcommandArg in subcommand.Skip(1))
+                {
+                    subcommandArgs.Add(subcommandArg);
+                }
+
+                Program.Exit(NeonHelper.Execute(subcommand[0], subcommandArgs.ToArray()));
             }
             finally
             {
