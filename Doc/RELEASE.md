@@ -63,7 +63,11 @@
 
 2. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
 
-3. Create a draft for the next GitHub release.
+3. Create the next release branch and push it.
+
+4. Create a draft for the next GitHub release.
+
+    * Be sure to set the branch to the new release branch.
 
  # Release Version Conventions
 
