@@ -629,5 +629,48 @@ namespace TestCommon
                 }
             };
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task PostAsync_NullPayloadAsync()
+        {
+            // Ensure that POST uploading a NULL payload works.
+
+            using (new MockHttpServer(baseUri,
+                async context =>
+                {
+                    var request = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "POST")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = "Hello World!"
+                    };
+
+                    response.ContentType = "application/json";
+
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
+                }))
+            {
+                using (var jsonClient = new JsonClient())
+                {
+                    var doc = new JsonClientPayload("application/x-www-form-urlencoded", "key1=value1&key2=value2");
+
+                    await jsonClient.PostAsync(baseUri + "info", doc);
+                }
+            };
+        }
     }
 }
