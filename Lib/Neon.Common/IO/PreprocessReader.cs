@@ -220,7 +220,7 @@ namespace Neon.IO
 
         /// <summary>
         /// A variable expansion <see cref="Regex"/> that matches normal variables like <b>$&lt;test&gt;</b> and environment
-        /// variables like <b>$$lt;&lt;test&gt;&gt;</b>.
+        /// variables like <b>&lt;&lt;test&gt;&gt;&gt;</b>.
         /// </summary>
         public static Regex AngleVariableExpansionRegex { get; private set; } = new Regex(@"\$<(?<name><{0,1}[a-z0-9_\.\-]+>{0,1})>", regexIgnoreCaseOptions);
 
