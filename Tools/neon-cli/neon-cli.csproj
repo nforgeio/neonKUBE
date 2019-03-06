@@ -23,8 +23,6 @@
     <OutputPath>bin\Release</OutputPath>
   </PropertyGroup>
 
-  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
-
   <ItemGroup>
     <Compile Remove="Resources\Ubuntu-18.04\source\**" />
     <Compile Remove="Resources\Ubuntu-18.04\updates\**" />

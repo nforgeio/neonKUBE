@@ -20,8 +20,6 @@
     <OutputPath>bin\Release</OutputPath>
   </PropertyGroup>
 
-  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
-
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>

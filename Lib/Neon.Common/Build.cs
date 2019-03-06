@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TestCategory.cs
+// FILE:	    Build.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,57 +21,51 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Neon.Xunit
+namespace Neon
 {
     /// <summary>
-    /// Defines constants used to help categorize unit tests and avoid
-    /// spelling errors and inconsistencies.
+    /// Neon build constants.
     /// </summary>
-    internal static class TestCategory
+    public static partial class Build
     {
         /// <summary>
-        /// Identifies the trait.
+        /// The company name to use for all Neon assemblies.
         /// </summary>
-        public const string CategoryTrait = "Category";
+        public const string Company = "neonFORGE, LLC";
 
         /// <summary>
-        /// Identifies sample tests.
+        /// The copyright statement to be included in all assemblies.
         /// </summary>
-        public const string Sample = "Sample";
+        public const string Copyright = "Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.";
 
         /// <summary>
-        /// Identifies <b>Neon.Common</b> tests.
+        /// The product name.
         /// </summary>
-        public const string NeonCommon = "Neon.Common";
+        public const string ProductName = "neonKUBE";
 
         /// <summary>
-        /// Identifies <b>Neon.Cryptography</b> tests.
+        /// The released product version.
         /// </summary>
-        public const string NeonCryptography = "Neon.Cryptography";
+        public const string ProductVersion = "0.2.5-alpha";
 
         /// <summary>
-        /// Identifies <b>Neon.Kube</b> tests.
+        /// The product license.
         /// </summary>
-        public const string NeonKube = "Neon.Kube";
+        public const string ProductLicense = "Apache License, Version 2.0";
 
         /// <summary>
-        /// Identifies <b>Neon.Couchbase</b> tests.
+        /// The product license URL.
         /// </summary>
-        public const string NeonCouchbase = "Neon.Couchbase";
+        public const string ProductLicenseUrl = "http://www.apache.org/licenses/LICENSE-2.0";
 
         /// <summary>
-        /// Identifies <b>neon-cli</b> tests.
+        /// The build configuration.
         /// </summary>
-        public const string NeonCli = "neon-cli";
-
-        /// <summary>
-        /// Identifies <b>neon-shell</b> tests.
-        /// </summary>
-        public const string NeonShell = "neon-shell";
-
-        /// <summary>
-        /// Identifies <b>neon-desktop</b> tests.
-        /// </summary>
-        public const string NeonDesktop = "neon-desktop";
+        public const string Configuration =
+#if DEBUG
+            "Debug";
+#else
+            "Release";
+#endif
     }
 }

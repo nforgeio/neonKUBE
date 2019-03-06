@@ -20,8 +20,8 @@ using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("pubcore")]
 [assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration(Neon.Build.Configuration)]
-[assembly: AssemblyCompany(Neon.Build.Company)]
-[assembly: AssemblyCopyright(Neon.Build.Copyright)]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -28,6 +28,4 @@
     <ProjectReference Include="..\..\Tools\nshell\nshell.csproj" />
   </ItemGroup>
 
-  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
-
 </Project>

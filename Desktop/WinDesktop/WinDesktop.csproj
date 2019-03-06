@@ -330,7 +330,6 @@
       <Version>5.4.0</Version>
     </PackageReference>
   </ItemGroup>
-  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if not exist "$(NF_BUILD)" mkdir "$(NF_BUILD)"

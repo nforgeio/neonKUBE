@@ -27,7 +27,6 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
-using Neon.Xunit;
 
 namespace Neon.Common
 {

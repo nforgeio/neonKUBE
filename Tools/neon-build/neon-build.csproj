@@ -27,6 +27,4 @@
     <ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
   </ItemGroup>
 
-  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
-
 </Project>

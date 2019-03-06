@@ -22,8 +22,6 @@
     <OutputPath>bin\Release</OutputPath>
   </PropertyGroup>
 
-  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
-
   <ItemGroup>
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -30,8 +30,6 @@
     <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0</DefineConstants>
     <DocumentationFile>bin\Release\Neon.Docker.xml</DocumentationFile>
   </PropertyGroup>
-
-  <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />

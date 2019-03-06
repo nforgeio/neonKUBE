@@ -29,8 +29,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Neon.Global", "Lib\Neon.Global\Neon.Global.shproj", "{4C0BCA49-F217-436C-877F-40A606989AF4}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Common", "Lib\Neon.Common\Neon.Common.csproj", "{8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube", "Lib\Neon.Kube\Neon.Kube.csproj", "{C23307A1-4E5A-4B83-A8EB-90DE334868C6}"
@@ -208,10 +206,6 @@ EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
-		Lib\Neon.Global\Neon.Global.projitems*{407e3c67-f529-4d4a-811d-6d448a8b1311}*SharedItemsImports = 4
-		Lib\Neon.Global\Neon.Global.projitems*{4c0bca49-f217-436c-877f-40a606989af4}*SharedItemsImports = 13
-		Lib\Neon.Global\Neon.Global.projitems*{756fb86b-29bc-4c6b-a19b-a624a9e9d367}*SharedItemsImports = 4
-		Lib\Neon.Global\Neon.Global.projitems*{81d4c74b-3f7b-499f-8def-da2cb600de0e}*SharedItemsImports = 4
 		Lib\Neon.Couchbase.Lite.shared\Neon.Couchbase.Lite.shared.projitems*{8d7fe880-9006-488f-bab3-3a82011cd699}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -670,7 +664,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{4C0BCA49-F217-436C-877F-40A606989AF4} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{C23307A1-4E5A-4B83-A8EB-90DE334868C6} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{893C943F-C1A7-448B-AACF-825DB9560AB4} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}

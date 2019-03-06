@@ -21,8 +21,6 @@
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>
 
-  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
-
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="echo &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\Test.Neon.Models.Shared\Couchbase.Lite.g.cs&quot; --register=Test.Neon.Models.ModelTypes --quiet" />
     <Exec Command="entity-gen &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\Test.Neon.Models.Shared\Couchbase.Lite.g.cs&quot; --register=Test.Neon.Models.ModelTypes --quiet" />
