@@ -8,18 +8,18 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build`
 
-4. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+3. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-5. Deploy a test cluster.
+4. Deploy a test cluster.
 
-6. Run all unit tests against the test cluster and fix any bugs until all tests pass.
+5. Run all unit tests against the test cluster and fix any bugs until all tests pass.
 
 ## Release 
 
 1. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
    new package version as required.
 
-2. Update the product version here too: `$/Lib/Neon.Global/Build.cs`
+2. Update the product version here too: `$/Lib/Neon.Common/Build.cs`
 
 3. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
    required Kubernetes version as required.
