@@ -29,6 +29,8 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
 
 namespace NShell
 {
@@ -125,6 +127,9 @@ Pass a potentially encrypted file:
 
     nshell nshell run -- type @encrypted.txt
 ";
+
+        NeonVault vault = new NeonVault(Program.LookupPassword);
+
         /// <inheritdoc/>
         public override string[] Words
         {
@@ -149,7 +154,244 @@ Pass a potentially encrypted file:
                 Program.Exit(0);
             }
 
+            var splitCommandLine = commandLine.Split(SplitItem);
+            var leftCommandLine  = splitCommandLine.Left;
+            var rightCommandLine = splitCommandLine.Right;
+
+            if (rightCommandLine.Arguments.Length == 0)
+            {
+                Console.Error.WriteLine("*** ERROR: Expected a command after a [--] argument.");
+                Program.Exit(1);
+            }
+
+            // All arguments on the left command line should be VARIABLES files.
+            // We're going to open each of these and set any enviroment variables
+            // like [NAME=VALUE] we find.
+            //
+            // Note that these files may be encrypted.  If any are, we'll decrypt
+            // to a temporary file before we read them.
+
+            foreach (var path in leftCommandLine.Arguments)
+            {
+                if (!File.Exists(path))
+                {
+                    Console.Error.WriteLine($"*** ERROR: File [{path}] does not exist.");
+                    Program.Exit(1);
+                }
+
+                DecryptWithAction(path,
+                    decryptedPath =>
+                    {
+                        var lineNumber = 1;
+
+                        foreach (var line in File.ReadAllLines(decryptedPath))
+                        {
+                            var trimmed = line.Trim();
+
+                            if (line == string.Empty || line.StartsWith("#"))
+                            {
+                                continue;
+                            }
+
+                            var fields = line.Split(new char[] { '=' }, 2);
+
+                            if (fields.Length != 2 || fields[0] == string.Empty)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{path}:{lineNumber}] is not formatted like: NAME=VALUE");
+                                Program.Exit(1);
+                            }
+
+                            var name = fields[0].Trim();
+                            var value = fields[1].Trim();
+
+                            Environment.SetEnvironmentVariable(name, value);
+
+                            lineNumber++;
+                        }
+                    });
+            }
+
+            // Any left command line options also specify environment variables.
+
+            foreach (var option in leftCommandLine.Options)
+            {
+                Environment.SetEnvironmentVariable(option.Key, option.Value);
+            }
+
+            // We've read all of the variable files and left command line options
+            // and initialized all environment variables.  Now we need to process
+            // and then execute the right command line.
+
+            var tempFiles = new List<TempFile>();
+
+            try
+            {
+                var subcommand = rightCommandLine.Items;
+
+                // Note that the first element of the subcommand specifies the
+                // executable so we don't need to process that.
+
+                for (int i = 1; i < subcommand.Length; i++)
+                {
+                    var arg = subcommand[i];
+
+                    if (arg.StartsWith("^^"))
+                    {
+                        // Argument is a reference to a potentially encrypted text file
+                        // with environment variable references we'll need to update.
+
+                        var path = arg.Substring(2);
+
+                        if (!File.Exists(path))
+                        {
+                            Console.Error.WriteLine($"*** ERROR: File [{path}] does not exist.");
+                            Program.Exit(1);
+                        }
+
+                        if (NeonVault.IsEncrypted(path))
+                        {
+                            var tempFile = new TempFile();
+
+                            tempFiles.Add(tempFile);
+                            vault.Decrypt(path, tempFile.Path);
+
+                            path = tempFile.Path;
+                        }
+
+                        subcommand[i] = path;
+
+                        // Perform the subsitutions.
+
+                        var unprocessed      = File.ReadAllText(path);
+                        var processed        = string.Empty;
+                        var linuxLineEndings = !unprocessed.Contains("\r\n");
+
+                        using (var reader = new StreamReader(path))
+                        {
+                            using (var preprocessor = new PreprocessReader(reader))
+                            {
+                                preprocessor.ExpandVariables        = true;
+                                preprocessor.LineEnding             = linuxLineEndings ? LineEnding.LF : LineEnding.CRLF;
+                                preprocessor.ProcessStatements      = false;
+                                preprocessor.StripComments          = false;
+                                preprocessor.VariableExpansionRegex = PreprocessReader.AngleVariableExpansionRegex;
+
+                                processed = preprocessor.ReadToEnd();
+                            }
+                        }
+
+                        File.WriteAllText(path, processed);
+                    }
+                    else if (arg.StartsWith("^"))
+                    {
+                        // Argument is a reference to an environment variable.
+
+                        var name = arg.Substring(1);
+
+                        if (name == string.Empty)
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Subcommand argument [{arg}] is not valid.");
+                            Program.Exit(1);
+                        }
+
+                        var value = Environment.GetEnvironmentVariable(name);
+
+                        if (value == null)
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Subcommand argument [{arg}] references an undefined environment variable.");
+                            Program.Exit(1);
+                        }
+
+                        subcommand[i] = value;
+                    }
+                    else if (arg.StartsWith("-"))
+                    {
+                        // Argument is a command line option.  We'll check to see if
+                        // it contains a reference to an environment variable.
+
+                        var valuePos = arg.IndexOf("=^");
+
+                        if (valuePos != -1)
+                        {
+                            var optionPart = arg.Substring(0, valuePos);
+                            var name       = arg.Substring(valuePos + 2);
+
+                            if (name == string.Empty)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: Subcommand argument [{arg}] is not valid.");
+                                Program.Exit(1);
+                            }
+
+                            var value = Environment.GetEnvironmentVariable(name);
+
+                            if (value == null)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: Subcommand argument [{arg}] references an undefined environment variable.");
+                                Program.Exit(1);
+                            }
+
+                            subcommand[i] = $"{optionPart}={value}";
+                        }
+                    }
+                    else if (arg.StartsWith("@"))
+                    {
+                        // Argument is a reference to a potentially encrypted 
+                        // file that needs to be passed decrypted.
+
+                        var path = arg.Substring(1);
+
+                        if (!File.Exists(path))
+                        {
+                            Console.Error.WriteLine($"*** ERROR: File [{path}] does not exist.");
+                            Program.Exit(1);
+                        }
+
+                        if (NeonVault.IsEncrypted(path))
+                        {
+                            var tempFile = new TempFile();
+
+                            tempFiles.Add(tempFile);
+                            vault.Decrypt(path, tempFile.Path);
+
+                            path = tempFile.Path;
+                        }
+
+                        subcommand[i] = path;
+                    }
+                }
+            }
+            finally
+            {
+                foreach (var tempFile in tempFiles)
+                {
+                    tempFile.Dispose();
+                }
+            }
+
             Program.Exit(0);
+        }
+
+        /// <summary>
+        /// Examines the file at <paramref name="path"/>, decrypting it to a temporary file
+        /// if necessary.  The method will then call <paramref name="action"/> passing the
+        /// path to the original file (if it wasn't encrypted or to the decrypted file.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <param name="action">Called with the path to a decrypted file.</param>
+        private void DecryptWithAction(string path, Action<string> action)
+        {
+            if (!NeonVault.IsEncrypted(path))
+            {
+                action(path);
+            }
+            else
+            {
+                using (var tempFile = new TempFile())
+                {
+                    vault.Decrypt(path, tempFile.Path);
+                    action(tempFile.Path);
+                }
+            }
         }
     }
 }
