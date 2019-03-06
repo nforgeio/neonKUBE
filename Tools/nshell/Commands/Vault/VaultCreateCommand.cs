@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FileCreateCommand.cs
+// FILE:	    VaultCreateCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,16 +35,16 @@ using Neon.IO;
 namespace NShell
 {
     /// <summary>
-    /// Implements the <b>file create</b> command.
+    /// Implements the <b>vault create</b> command.
     /// </summary>
-    public class FileCreateCommand : CommandBase
+    public class VaultCreateCommand : CommandBase
     {
         private const string usage = @"
 Creates an encrypted file and opens it in a text editor.
 
 USAGE:
 
-    nshell file create PATH [PASSWORD-NAME]
+    nshell vault create PATH [PASSWORD-NAME]
 
 ARGUMENTS:
 
@@ -68,7 +68,7 @@ environment variable to the path to the editor executable file.
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "file", "create" }; }
+            get { return new string[] { "vault", "create" }; }
         }
 
         /// <inheritdoc/>

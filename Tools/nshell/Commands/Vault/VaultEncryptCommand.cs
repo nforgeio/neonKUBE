@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FileEncryptCommand.cs
+// FILE:	    VaultEncryptCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,17 +35,17 @@ using Neon.IO;
 namespace NShell
 {
     /// <summary>
-    /// Implements the <b>file encrypt</b> command.
+    /// Implements the <b>vault encrypt</b> command.
     /// </summary>
-    public class FileEncryptCommand : CommandBase
+    public class VaultEncryptCommand : CommandBase
     {
         private const string usage = @"
 Encrypts a file using a named password.
 
 USAGE:
 
-    nshell file encrypt PATH [--password-name=PASSWORD-NAME]
-    nshell file encrypt SOURCE TARGET [PASSWORD-NAME]
+    nshell vault encrypt PATH [--password-name=PASSWORD-NAME]
+    nshell vault encrypt SOURCE TARGET [PASSWORD-NAME]
 
 ARGUMENTS:
 
@@ -72,7 +72,7 @@ NOTE: The search for the [.password-name] file will start from the
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "file", "encrypt" }; }
+            get { return new string[] { "vault", "encrypt" }; }
         }
 
         /// <inheritdoc/>

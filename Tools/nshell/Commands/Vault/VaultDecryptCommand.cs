@@ -1,6 +1,5 @@
-﻿
-//-----------------------------------------------------------------------------
-// FILE:	    FilePasswordNameCommand.cs
+﻿//-----------------------------------------------------------------------------
+// FILE:	    VaultDecryptCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -36,42 +35,36 @@ using Neon.IO;
 namespace NShell
 {
     /// <summary>
-    /// Implements the <b>file password-name</b> command.
+    /// Implements the <b>vault decrypt</b> command.
     /// </summary>
-    public class FilePasswordNameCommand : CommandBase
+    public class VaultDecryptCommand : CommandBase
     {
         private const string usage = @"
-Returns the name of the password used to encrypt a file.
+Decrypts a file to another location.
 
 USAGE:
 
-    nshell file password-name [-n] PATH
+    nshell vault decrypt SOURCE TARGET
 
 ARGUMENTS:
 
-    PATH    - Path to the encrypted file
-
-OPTIONS:
-
-    -n      - Don't write a newline after password
+    SOURCE      - Path to the encrypted file
+    TARGET      - Path to the new decrypted file
 
 REMARKS:
 
-This command determines a file is encrypted.  For encypted files, the command
-returns 0 exit code and writes the password name to the output.
+This command decrypts the SOURCE file to TARGET using the password named
+within the SOURCE file.
 
-The command returns a non-zero exit code for unencrypted files.
+NOTE: We explicitly don't support decrypting a file in-place to discourage
+      temporarily decrypting a sensitive file within a source repository
+      and then potentially accidentially commiting the unencrypted file
+      (which is really easy to do).
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "file", "password-name" }; }
-        }
-
-        /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "-n" }; }
+            get { return new string[] { "vault", "decrypt" }; }
         }
 
         /// <inheritdoc/>
@@ -89,27 +82,30 @@ The command returns a non-zero exit code for unencrypted files.
                 Program.Exit(0);
             }
 
-            var path = commandLine.Arguments.ElementAtOrDefault(0);
+            var sourcePath = commandLine.Arguments.ElementAtOrDefault(0);
+            var targetPath = commandLine.Arguments.ElementAtOrDefault(1);
 
-            if (string.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(sourcePath))
             {
-                Console.Error.WriteLine("*** ERROR: The PATH argument is required.");
+                Console.Error.WriteLine("*** ERROR: The SOURCE argument is required.");
                 Program.Exit(1);
             }
 
-            if (NeonVault.IsEncrypted(path, out var passwordName))
+            if (string.IsNullOrEmpty(targetPath))
             {
-                Console.Write(passwordName);
-
-                if (!commandLine.HasOption("-n"))
-                {
-                    Console.WriteLine();
-                }
-            }
-            else
-            {
+                Console.Error.WriteLine("*** ERROR: The TARGET argument is required.");
                 Program.Exit(1);
             }
+
+            if (!NeonVault.IsEncrypted(sourcePath))
+            {
+                Console.Error.WriteLine($"*** ERROR: The [{sourcePath}] file is not encrypted.");
+                Program.Exit(1);
+            }
+
+            var vault = new NeonVault(Program.LookupPassword);
+
+            vault.Decrypt(sourcePath, targetPath);
 
             Program.Exit(0);
         }

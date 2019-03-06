@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FileEditCommand.cs
+// FILE:	    VaultEditCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,16 +35,16 @@ using Neon.IO;
 namespace NShell
 {
     /// <summary>
-    /// Implements the <b>file edit</b> command.
+    /// Implements the <b>vault edit</b> command.
     /// </summary>
-    public class FileEditCommand : CommandBase
+    public class VaultEditCommand : CommandBase
     {
         private const string usage = @"
 Edits an encypted file.
 
 USAGE:
 
-    nshell file edit PATH
+    nshell vault edit PATH
 
 ARGUMENTS:
 
@@ -68,7 +68,7 @@ NOTE: You don't need to specify a password name for this command
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "file", "edit" }; }
+            get { return new string[] { "vault", "edit" }; }
         }
 
         /// <inheritdoc/>

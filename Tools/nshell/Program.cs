@@ -62,7 +62,7 @@ neonKUBE Shell Utilities: nshell [v{Program.Version}]
 USAGE:
 
     nshell help         COMMAND         - Help for a command
-    nshell file         COMMAND         - Manages file encryption
+    nshell vault        COMMAND         - Manages file encryption
     nshell version      [-n] [--git]    - Prints version
     nshell password     COMMAND         - Manages passwords
     nshell run --       COMMAND         - Runs a command, injecting 
@@ -94,12 +94,6 @@ USAGE:
 
                 var commands = new List<ICommand>()
                 {
-                    new FileCommand(),
-                    new FileCreateCommand(),
-                    new FileDecryptCommand(),
-                    new FileEditCommand(),
-                    new FileEncryptCommand(),
-                    new FilePasswordNameCommand(),
                     new PasswordCommand(),
                     new PasswordExportCommand(),
                     new PasswordGenerateCommand(),
@@ -109,6 +103,12 @@ USAGE:
                     new PasswordRemoveCommand(),
                     new PasswordSetCommand(),
                     new RunCommand(),
+                    new VaultCommand(),
+                    new VaultCreateCommand(),
+                    new VaultDecryptCommand(),
+                    new VaultEditCommand(),
+                    new VaultEncryptCommand(),
+                    new VaultPasswordNameCommand(),
                     new VersionCommand()
                 };
 

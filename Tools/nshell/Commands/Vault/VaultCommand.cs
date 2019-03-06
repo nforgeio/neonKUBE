@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FileCommand.cs
+// FILE:	    VaultCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,22 +33,22 @@ using Neon.Common;
 namespace NShell
 {
     /// <summary>
-    /// Implements the <b>file</b> command.
+    /// Implements the <b>vault</b> command.
     /// </summary>
-    public class FileCommand : CommandBase
+    public class VaultCommand : CommandBase
     {
         private const string usage = @"
 Manages encrypted files.
 
 USAGE:
 
-    nshell file
-    nshell file create PATH [PASSWORD-NAME]
-    nshell file decrypt SOURCE TARGET
-    nshell file edit PATH
-    nshell file encrypt PATH [--password=PASSWORD-NAME]
-    nshell file encrypt SOURCE TARGET [PASSWORD-NAME]
-    nshell file password-name PATH
+    nshell vault
+    nshell vault create PATH [PASSWORD-NAME]
+    nshell vault decrypt SOURCE TARGET
+    nshell vault edit PATH
+    nshell vault encrypt PATH [--password=PASSWORD-NAME]
+    nshell vault encrypt SOURCE TARGET [PASSWORD-NAME]
+    nshell vault password-name PATH
 
 REMARKS:
 
@@ -72,7 +72,7 @@ is used as the name to identify each password.  The file commands use
 password names to explicitly or implictly identify the password to be
 used to manage specific files.  For example:
 
-    nshell file create foo.txt default
+    nshell vault create foo.txt default
 
 creates an encrypted file named [foo.txt] using the password named [default].
 The [default] password must already exist in the current user's passwords
@@ -98,7 +98,7 @@ exspelcitly specified.  The [.password-name] file simply holds the name
 of the password.  This is a convenient way to specified default passwords
 for a project.
 
-File commands like [create] and [edit] will decrypt and launch a text
+Vault commands like [create] and [edit] will decrypt and launch a text
 editor so that the file can be edited.  The default platform editor will
 be launched (NotePad.exe for Windows or Vim for OS/x and Linux).  You can
 customize the editor by setting the EDITOR environment variable to the path
@@ -107,7 +107,7 @@ to the editor executable file.
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "file" }; }
+            get { return new string[] { "vault" }; }
         }
 
         /// <inheritdoc/>
