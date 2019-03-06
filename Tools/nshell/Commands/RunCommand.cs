@@ -262,18 +262,18 @@ Pass a potentially encrypted file:
 
                         // Perform the subsitutions.
 
-                        var unprocessed      = File.ReadAllText(path);
-                        var processed        = string.Empty;
+                        var unprocessed = File.ReadAllText(path);
+                        var processed = string.Empty;
                         var linuxLineEndings = !unprocessed.Contains("\r\n");
 
                         using (var reader = new StreamReader(path))
                         {
                             using (var preprocessor = new PreprocessReader(reader))
                             {
-                                preprocessor.ExpandVariables        = true;
-                                preprocessor.LineEnding             = linuxLineEndings ? LineEnding.LF : LineEnding.CRLF;
-                                preprocessor.ProcessStatements      = false;
-                                preprocessor.StripComments          = false;
+                                preprocessor.ExpandVariables = true;
+                                preprocessor.LineEnding = linuxLineEndings ? LineEnding.LF : LineEnding.CRLF;
+                                preprocessor.ProcessStatements = false;
+                                preprocessor.StripComments = false;
                                 preprocessor.VariableExpansionRegex = PreprocessReader.AngleVariableExpansionRegex;
 
                                 processed = preprocessor.ReadToEnd();
@@ -314,7 +314,7 @@ Pass a potentially encrypted file:
                         if (valuePos != -1)
                         {
                             var optionPart = arg.Substring(0, valuePos);
-                            var name       = arg.Substring(valuePos + 2);
+                            var name = arg.Substring(valuePos + 2);
 
                             if (name == string.Empty)
                             {
@@ -358,6 +358,23 @@ Pass a potentially encrypted file:
 
                         subcommand[i] = path;
                     }
+                    else
+                    {
+                        // Otherwise, expand any envrionment variable references.
+
+                        subcommand[i] = Environment.ExpandEnvironmentVariables(subcommand[i]);
+                    }
+
+                    // Execute the subcommand.
+
+                    var subcommandArgs = new List<object>();
+
+                    foreach (var subcommandArg in subcommand.Skip(1))
+                    {
+                        subcommandArgs.Add(subcommandArg);
+                    }
+
+                    Program.Exit(NeonHelper.Execute(subcommand[0], subcommandArgs.ToArray()));
                 }
             }
             finally

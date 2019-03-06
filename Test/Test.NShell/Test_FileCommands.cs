@@ -25,14 +25,14 @@ using System.Threading.Tasks;
 
 using Neon;
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Kube;
 using Neon.IO;
-using NShell;
 using Neon.Xunit;
 using Neon.Xunit.Kube;
 
 using Xunit;
-using Neon.Cryptography;
+using NShell;
 
 namespace Test.NShell
 {

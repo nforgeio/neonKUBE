@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_SimpleCommands.cs
+// FILE:	    Test_BasicCommands.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,15 +27,15 @@ using Neon;
 using Neon.Common;
 using Neon.Kube;
 using Neon.IO;
-using NShell;
 using Neon.Xunit;
 using Neon.Xunit.Kube;
 
 using Xunit;
+using NShell;
 
 namespace Test.NShell
 {
-    public class Test_SimpleCommands
+    public class Test_BasicCommands
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
