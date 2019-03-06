@@ -28,6 +28,7 @@ REM Configure the environment variables.
 set NF_TOOLBIN=%NF_ROOT%\ToolBin
 set NF_BUILD=%NF_ROOT%\Build
 set NF_CACHE=%NF_ROOT%\Build-cache
+set NF_TEST=%NF_ROOT%\Test
 set NF_TEMP=C:\Temp
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
 set WINSDKPATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\x64
@@ -38,6 +39,7 @@ setx NF_ROOT "%NF_ROOT%" /M
 setx NF_TOOLBIN "%NF_TOOLBIN%" /M
 setx NF_BUILD "%NF_BUILD%" /M
 setx NF_CACHE "%NF_CACHE%" /M
+setx NF_TEST "%NF_TEST%" /M
 setx NF_TEMP "%NF_TEMP%" /M
 
 setx DOTNETPATH "%DOTNETPATH%" /M
