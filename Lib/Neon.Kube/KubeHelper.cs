@@ -1331,5 +1331,25 @@ namespace Neon.Kube
         {
             return NeonHelper.ExecuteCapture("kubectl", args);
         }
+
+        /// <summary>
+        /// Looks up a password given its name.
+        /// </summary>
+        /// <param name="passwordName">The password name.</param>
+        /// <returns>The password value.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the password doesn't exist.</exception>
+        public static string LookupPassword(string passwordName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(passwordName));
+
+            var path = Path.Combine(PasswordsFolder, passwordName);
+
+            if (!File.Exists(path))
+            {
+                throw new KeyNotFoundException(passwordName);
+            }
+
+            return File.ReadAllText(path).Trim();
+        }
     }
 }

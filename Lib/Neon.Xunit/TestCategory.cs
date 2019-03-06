@@ -73,5 +73,10 @@ namespace Neon.Xunit
         /// Identifies <b>neon-desktop</b> tests.
         /// </summary>
         public const string NeonDesktop = "neon-desktop";
+
+        /// <summary>
+        /// Identifies <b>neon-xunit</b> tests.
+        /// </summary>
+        public const string NeonXunit = "neon-xunit";
     }
 }
