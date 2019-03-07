@@ -32,7 +32,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 
-namespace NShell
+namespace NeonCli
 {
     /// <summary>
     /// Implements the <b>run</b> command.

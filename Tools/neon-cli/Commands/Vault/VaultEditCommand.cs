@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VaultCreateCommand.cs
+// FILE:	    VaultEditCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,43 +32,43 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 
-namespace NShell
+namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>vault create</b> command.
+    /// Implements the <b>vault edit</b> command.
     /// </summary>
-    public class VaultCreateCommand : CommandBase
+    public class VaultEditCommand : CommandBase
     {
         private const string usage = @"
-Creates an encrypted file and opens it in a text editor.
+Edits an encypted file.
 
 USAGE:
 
-    nshell vault create PATH [PASSWORD-NAME]
+    nshell vault edit PATH
 
 ARGUMENTS:
 
-    PATH            - path to the file being created
-    PASSWORD-NAME   - optional password name
+    PATH    - path to the file being created
 
 REMARKS:
 
-This command creates a new file at PATH using an explicitly named password
-or have the command search the current and ancestor directories for a
-[.password-name] file with the default password name.
+This command edits an existing encrypted file at PATH.
 
 The command decrypts the file to a temporary folder and launches a text
 editor enabling you to edit the file.  Once the editor exits, the temporary
-file will be encrypted to back PATH and then be deleted.
+file will be encrypted back to PATH and then be deleted.
 
 The default platform editor will be launched (NotePad.exe for Windows or 
 Vim for OS/x and Linux).  You can customize the editor by setting the EDITOR 
 environment variable to the path to the editor executable file.
+
+NOTE: You don't need to specify a password name for this command 
+      because the password name is saved within encrypted files.
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "vault", "create" }; }
+            get { return new string[] { "vault", "edit" }; }
         }
 
         /// <inheritdoc/>
@@ -86,8 +86,7 @@ environment variable to the path to the editor executable file.
                 Program.Exit(0);
             }
 
-            var path         = commandLine.Arguments.ElementAtOrDefault(0);
-            var passwordName = commandLine.Arguments.ElementAtOrDefault(1);
+            var path = commandLine.Arguments.ElementAtOrDefault(0);
 
             if (string.IsNullOrEmpty(path))
             {
@@ -95,14 +94,9 @@ environment variable to the path to the editor executable file.
                 Program.Exit(1);
             }
 
-            if (string.IsNullOrEmpty(passwordName))
+            if (!NeonVault.IsEncrypted(path, out var passwordName))
             {
-                passwordName = Program.GetDefaultPasswordName(path);
-            }
-
-            if (string.IsNullOrEmpty(passwordName))
-            {
-                Console.Error.WriteLine("*** ERROR: A PASSWORD-NAME argument or [.password-name] file is required.");
+                Console.Error.WriteLine($"*** ERROR: The [{path}] file is not encrypted.");
                 Program.Exit(1);
             }
 
@@ -113,15 +107,11 @@ environment variable to the path to the editor executable file.
             {
                 var tempPath = Path.Combine(tempFolder.Path, fileName);
 
-                // Create an empty temporary file, encrypt it to the target
-                // file, and then launch the editor on the temporary file.
+                // Decrypt the file to a secure temporary folder, launch the
+                // editor and re-encrypt the file after the editor returns.
 
-                File.WriteAllBytes(tempPath, new byte[0]);
-                vault.Encrypt(tempPath, path, passwordName);
+                vault.Decrypt(path, tempPath);
                 NeonHelper.OpenEditor(tempPath);
-
-                // Re-encrypt the just edited temporary file to the target.
-
                 vault.Encrypt(tempPath, path, passwordName);
             }
 

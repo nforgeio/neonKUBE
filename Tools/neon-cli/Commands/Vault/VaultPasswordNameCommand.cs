@@ -1,5 +1,6 @@
-﻿//-----------------------------------------------------------------------------
-// FILE:	    VersionCommand.cs
+﻿
+//-----------------------------------------------------------------------------
+// FILE:	    VaultPasswordNameCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,36 +30,48 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.IO;
 
-namespace NShell
+namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>version</b> command.
+    /// Implements the <b>vault password-name</b> command.
     /// </summary>
-    public class VersionCommand : CommandBase
+    public class VaultPasswordNameCommand : CommandBase
     {
         private const string usage = @"
-Prints the [nshell] version.
+Returns the name of the password used to encrypt a file.
 
 USAGE:
 
-    nshell version [-n] [--git]
+    nshell vault password-name [-n] PATH
+
+ARGUMENTS:
+
+    PATH    - Path to the encrypted file
 
 OPTIONS:
 
-    -n      - Don't write a newline after version
-    --git   - Include the Git branch/commit information
+    -n      - Don't write a newline after password
+
+REMARKS:
+
+This command determines a file is encrypted.  For encypted files, the command
+returns 0 exit code and writes the password name to the output.
+
+The command returns a non-zero exit code for unencrypted files.
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "version" }; }
+            get { return new string[] { "vault", "password-name" }; }
         }
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "-n", "--git" }; }
+            get { return new string[] { "-n" }; }
         }
 
         /// <inheritdoc/>
@@ -76,19 +89,29 @@ OPTIONS:
                 Program.Exit(0);
             }
 
-            if (commandLine.HasOption("--git"))
+            var path = commandLine.Arguments.ElementAtOrDefault(0);
+
+            if (string.IsNullOrEmpty(path))
             {
-                Console.Write($"{Program.Version}/{Program.GitVersion}");
+                Console.Error.WriteLine("*** ERROR: The PATH argument is required.");
+                Program.Exit(1);
+            }
+
+            if (NeonVault.IsEncrypted(path, out var passwordName))
+            {
+                Console.Write(passwordName);
+
+                if (!commandLine.HasOption("-n"))
+                {
+                    Console.WriteLine();
+                }
             }
             else
             {
-                Console.Write(Program.Version);
+                Program.Exit(1);
             }
 
-            if (!commandLine.HasOption("-n"))
-            {
-                Console.WriteLine();
-            }
+            Program.Exit(0);
         }
     }
 }

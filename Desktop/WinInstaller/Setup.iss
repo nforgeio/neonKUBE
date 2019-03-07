@@ -41,10 +41,6 @@ Source: {#GetEnv("NF_BUILD")}\win-desktop\*.*; DestDir: {app}\win-desktop; Flags
 Source: {#GetEnv("NF_BUILD")}\neon.cmd; DestDir: {app}; Flags: recursesubdirs replacesameversion
 Source: {#GetEnv("NF_BUILD")}\neon\*.*; DestDir: {app}\neon; Flags: recursesubdirs replacesameversion
 
-; nshell
-Source: {#GetEnv("NF_BUILD")}\nshell.cmd; DestDir: {app}; Flags: recursesubdirs replacesameversion
-Source: {#GetEnv("NF_BUILD")}\nshell\*.*; DestDir: {app}\nshell; Flags: recursesubdirs replacesameversion
-
 [Icons]
 Name: "{group}\neonKUBE Desktop"; Filename: "{app}\win-desktop\neonKUBE-win.exe"
 

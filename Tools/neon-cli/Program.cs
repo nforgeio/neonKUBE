@@ -78,9 +78,12 @@ COMMAND SUMMARY:
     neon cluster setup      [CLUSTER-DEF]
     neon login              COMMAND
     neon logout
+    neon password           COMMAND
     neon prepare            COMMAND
+    neon run                -- COMMAND
     neon scp                [NODE]
     neon ssh                [NODE]
+    neon vault              COMMAND
     neon version            [-n] [--git]
 
 ARGUMENTS:
@@ -207,10 +210,25 @@ OPTIONS:
                     new LoginListCommand(),
                     new LoginRemoveCommand(),
                     new LogoutCommand(),
+                    new PasswordCommand(),
+                    new PasswordExportCommand(),
+                    new PasswordGenerateCommand(),
+                    new PasswordGetCommand(),
+                    new PasswordImportCommand(),
+                    new PasswordListCommand(),
+                    new PasswordRemoveCommand(),
+                    new PasswordSetCommand(),
                     new PrepareCommand(),
                     new PrepareNodeTemplateCommand(),
+                    new RunCommand(),
                     new ScpCommand(),
                     new SshCommand(),
+                    new VaultCommand(),
+                    new VaultCreateCommand(),
+                    new VaultDecryptCommand(),
+                    new VaultEditCommand(),
+                    new VaultEncryptCommand(),
+                    new VaultPasswordNameCommand(),
                     new VersionCommand()
                 };
 
@@ -998,6 +1016,77 @@ OPTIONS:
             else
             {
                 return image;
+            }
+        }
+
+        /// <summary>
+        /// Searches the directory holding a file as well as any ancestor directories
+        /// for the first <b>.password-name</b> file specifying a default password name.
+        /// </summary>
+        /// <param name="filePath">The file path.</param>
+        /// <returns>The default password name if one was found or <c>null</c>.</returns>
+        public static string GetDefaultPasswordName(string filePath)
+        {
+            var folderPath = Path.GetDirectoryName(Path.GetFullPath(filePath));
+
+            try
+            {
+                while (true)
+                {
+                    var passwordNamePath = Path.Combine(folderPath, ".password-name");
+
+                    if (File.Exists(passwordNamePath))
+                    {
+                        var passwordName = File.ReadLines(passwordNamePath).First().Trim();
+
+                        if (passwordName == string.Empty)
+                        {
+                            // An empty [.password-name] file will block further searching.
+
+                            return null;
+                        }
+
+                        return passwordName;
+                    }
+
+                    if (Path.GetPathRoot(folderPath) == folderPath)
+                    {
+                        // We're at the file system root.
+
+                        return null;
+                    }
+
+                    // Advance to the parent folder.
+
+                    folderPath = Path.GetFullPath(Path.Combine(folderPath, ".."));
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // We will see this if the current user doesn't have permissions to
+                // walk the file directories all the way up to the root of the
+                // file system.  We'll just return NULL in this case.
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Returns a password based on its name.
+        /// </summary>
+        /// <param name="passwordName">The password name.</param>
+        /// <returns>The password or <c>null</c> if the named password doesn't exist.</returns>
+        public static string LookupPassword(string passwordName)
+        {
+            var passwordPath = Path.Combine(KubeHelper.PasswordsFolder, passwordName);
+
+            if (File.Exists(passwordPath))
+            {
+                return File.ReadLines(passwordPath).First().Trim();
+            }
+            else
+            {
+                return null;
             }
         }
     }

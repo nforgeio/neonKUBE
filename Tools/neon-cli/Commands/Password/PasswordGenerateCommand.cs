@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PasswordListCommand.cs
+// FILE:	    PasswordGenerateCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,34 +29,35 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
-using Neon.Cryptography;
 using Neon.Kube;
 
-namespace NShell
+namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>password list</b> command.
+    /// Implements the <b>password generate</b> command.
     /// </summary>
-    public class PasswordListCommand : CommandBase
+    public class PasswordGenerateCommand : CommandBase
     {
         private const string usage = @"
-Lists passwords.
+Generates a cryptographically secure password.
 
 USAGE:
 
-    neon password list|ls
+    neon password generate|gen [LENGTH]
+
+ARGUMENTS:
+
+    LENGTH      - Length of the desired password (default=20)
+
+REMARKS:
+
+The generated password will be written to standard output.
 ";
 
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "password", "list" }; }
-        }
-
-        /// <inheritdoc/>
-        public override string[] AltWords
-        {
-            get { return new string[] { "password", "ls" }; }
+            get { return new string[] { "password", "generate" }; }
         }
 
         /// <inheritdoc/>
@@ -74,11 +75,19 @@ USAGE:
                 Program.Exit(0);
             }
 
-            foreach (var path in Directory.GetFiles(KubeHelper.PasswordsFolder).OrderBy(p => p.ToLowerInvariant()))
+            var lengthArg = commandLine.Arguments.ElementAtOrDefault(0);
+            var length    = 20;
+
+            if (lengthArg != null)
             {
-                Console.WriteLine(Path.GetFileName(path));
+                if (!int.TryParse(lengthArg, out length) || length < 8 || length > 100)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [LENGTH={lengthArg}] is invalid.  Expected an integere between [8..100].");
+                    Program.Exit(1);
+                }
             }
 
+            Console.Write(NeonHelper.GetCryptoRandomPassword(length));
             Program.Exit(0);
         }
     }

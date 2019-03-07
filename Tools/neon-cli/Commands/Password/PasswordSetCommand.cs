@@ -32,7 +32,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Kube;
 
-namespace NShell
+namespace NeonCli
 {
     /// <summary>
     /// Implements the <b>password set</b> command.

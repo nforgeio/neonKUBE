@@ -31,9 +31,10 @@ using Neon.Xunit;
 using Neon.Xunit.Kube;
 
 using Xunit;
-using NShell;
 
-namespace Test.NShell
+using NeonCli;
+
+namespace Test.NeonCli
 {
     public class Test_BasicCommands
     {

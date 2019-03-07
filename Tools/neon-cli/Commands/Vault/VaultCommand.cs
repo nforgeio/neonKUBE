@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 
-namespace NShell
+namespace NeonCli
 {
     /// <summary>
     /// Implements the <b>vault</b> command.

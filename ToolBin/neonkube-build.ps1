@@ -161,7 +161,6 @@ if (-not $nobuild)
 PublishCore "Tools\entity-gen\entity-gen.csproj"    "entity-gen"
 PublishCore "Tools\neon-cli\neon-cli.csproj"        "neon"
 PublishCore "Tools\neon-build\neon-build.csproj"    "neon-build"
-PublishCore "Tools\nshell\nshell.csproj"            "nshell"
 
 if ($installer)
 {

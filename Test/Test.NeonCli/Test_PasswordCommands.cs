@@ -30,13 +30,13 @@ using Neon.Xunit;
 using Neon.Xunit.Kube;
 
 using Xunit;
-using NShell;
+using NeonCli;
 
 // $todo(jeff.lill): 
 //
 // We're not currently testing prompting actions by these commands.
 
-namespace Test.NShell
+namespace Test.NeonCli
 {
     /// <summary>
     /// Tests <b>neon passwords</b> commands.

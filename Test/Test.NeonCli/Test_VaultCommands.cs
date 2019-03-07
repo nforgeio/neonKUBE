@@ -32,9 +32,9 @@ using Neon.Xunit;
 using Neon.Xunit.Kube;
 
 using Xunit;
-using NShell;
+using NeonCli;
 
-namespace Test.NShell
+namespace Test.NeonCli
 {
     public class Test_VaultCommands
     {
