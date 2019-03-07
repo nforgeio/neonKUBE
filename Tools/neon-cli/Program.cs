@@ -37,6 +37,7 @@ using Neon.Diagnostics;
 using Neon.Kube;
 using Neon.IO;
 using Neon.Windows;
+using Neon.Xunit.Kube;
 
 namespace NeonCli
 {
@@ -118,8 +119,11 @@ OPTIONS:
             // Ensure that temporary files are written to the users temporary folder because
             // there's a decent chance that this folder will be encrypted at rest.
 
-            TempFile.Root   = KubeHelper.TempFolder;
-            TempFolder.Root = KubeHelper.TempFolder;
+            if (KubeTestManager.Current == null)
+            {
+                TempFile.Root   = KubeHelper.TempFolder;
+                TempFolder.Root = KubeHelper.TempFolder;
+            }
 
             // Use the version of Powershell Core installed with the application,
             // if present.
@@ -422,18 +426,10 @@ OPTIONS:
             {
                 Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
                 Console.Error.WriteLine(string.Empty);
-                Program.Exit(1);
+                return 1;
             }
 
-            if (ProgramRunner.Current != null)
-            {
-                return 0;
-            }
-            else
-            {
-                Environment.Exit(0);
-                return 0;
-            }
+            return 0;
         }
 
         /// <summary>
