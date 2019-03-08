@@ -107,8 +107,8 @@ namespace TestKube
         }
 
         /// <summary>
-        /// Creates a mock HTTP server and a wrapped [nshell proxy] instance
-        /// into a form that supports easy unit testing.
+        /// Creates a mock HTTP server and a wrapped <see cref="ReverseProxy"/>
+        /// instance into a form that supports easy unit testing.
         /// </summary>
         private sealed class ProxyTestFixture : IDisposable
         {
@@ -308,7 +308,7 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonShell)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public async Task Basics()
         {
             OperationInfo       opInfo;
@@ -354,7 +354,7 @@ namespace TestKube
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonShell)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public async Task Load()
         {
             // Perform some load testing with parallel requests.

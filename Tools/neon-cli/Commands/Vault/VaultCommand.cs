@@ -42,17 +42,17 @@ Manages encrypted files.
 
 USAGE:
 
-    nshell vault
-    nshell vault create PATH [PASSWORD-NAME]
-    nshell vault decrypt SOURCE TARGET
-    nshell vault edit PATH
-    nshell vault encrypt PATH [--password=PASSWORD-NAME]
-    nshell vault encrypt SOURCE TARGET [PASSWORD-NAME]
-    nshell vault password-name PATH
+    neon vault
+    neon vault create PATH [PASSWORD-NAME]
+    neon vault decrypt SOURCE TARGET
+    neon vault edit PATH
+    neon vault encrypt PATH [--password=PASSWORD-NAME]
+    neon vault encrypt SOURCE TARGET [PASSWORD-NAME]
+    neon vault password-name PATH
 
 REMARKS:
 
-[nshell] file encryption uses AES 256-bit encryption to secure files on disk
+[neon] file encryption uses AES 256-bit encryption to secure files on disk
 such that they may be persisted to source control repositories and other
 locations that may not be very secure.  This is a nice way to distribute
 sensitive files to developers, operators, and CI/CD build environments.
@@ -72,16 +72,16 @@ is used as the name to identify each password.  The file commands use
 password names to explicitly or implictly identify the password to be
 used to manage specific files.  For example:
 
-    nshell vault create foo.txt default
+    neon vault create foo.txt default
 
 creates an encrypted file named [foo.txt] using the password named [default].
 The [default] password must already exist in the current user's passwords
 folder.  Passwords can be managed via:
 
-    nshell password export [PASSWORD-NAMES...] ZIPFILE
-    nshell password import ZIPFILE
-    nshell password rm PASSWORD-NAME
-    nshell set PASSWORD-NAME [PASSWORD]
+    neon password export [PASSWORD-NAMES...] ZIPFILE
+    neon password import ZIPFILE
+    neon password rm PASSWORD-NAME
+    neon set PASSWORD-NAME [PASSWORD]
 
 where the [set/rm] commands provide for creating and deleting passwords and
 the [export/import] commands provide a way to share passwords using encrypted
@@ -92,7 +92,7 @@ may be done explicitly pass passing the password name on the command line
 or implicitly by creating a [.password-name] file in the same directory as
 the target file or in one of its ancestor directories.
 
-[nshell] will search the current and ancestor directores up to the file 
+[neon] will search the current and ancestor directores up to the file 
 system root for the first [.password-name] file when no password name is 
 exspelcitly specified.  The [.password-name] file simply holds the name 
 of the password.  This is a convenient way to specified default passwords

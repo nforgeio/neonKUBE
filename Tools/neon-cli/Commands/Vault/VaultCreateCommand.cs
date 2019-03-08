@@ -44,7 +44,7 @@ Creates an encrypted file and opens it in a text editor.
 
 USAGE:
 
-    nshell vault create PATH [PASSWORD-NAME]
+    neon vault create PATH [PASSWORD-NAME]
 
 ARGUMENTS:
 

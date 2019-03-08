@@ -314,8 +314,8 @@ namespace Neon.Common
         /// <summary>
         /// <para>
         /// Executes a program entry point asynchronously, without waiting for the command to complete.
-        /// This is useful for commands that don't terminate by themselves (like <b>nshell proxy</b>).
-        /// Call <see cref="TerminateFork()"/> to kill the running command.
+        /// This is useful for commands that don't terminate by themselves.  Call <see cref="TerminateFork()"/>
+        /// to kill the running command.
         /// </para>
         /// <note>
         /// <b>IMPORTANT:</b> The <paramref name="main"/> simulated entry point must call

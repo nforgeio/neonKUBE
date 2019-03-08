@@ -44,7 +44,7 @@ Edits an encypted file.
 
 USAGE:
 
-    nshell vault edit PATH
+    neon vault edit PATH
 
 ARGUMENTS:
 
