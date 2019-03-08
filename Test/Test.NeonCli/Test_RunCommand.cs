@@ -391,5 +391,44 @@ $<<TEST_D>>
                 Environment.CurrentDirectory = orgDirectory;
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void StandardFiles()
+        {
+            // We had a problem with [NeonHelper_Execute] where standard output
+            // and standard error streams weren't being relayed back to the
+            // corresponding [neon-cli] streams when the sub-process was an
+            // actual executable rather than a batch script.  So the unit tests
+            // above that ran a script passed.
+            // 
+            // This test verifies that we get output from an actual executable.
+
+            var orgDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                using (var manager = new KubeTestManager())
+                {
+                    using (var runner = new ProgramRunner())
+                    {
+                        using (var tempFolder = new TempFolder())
+                        {
+                            Environment.CurrentDirectory = tempFolder.Path;
+
+                            File.WriteAllText("test.txt", "Hello World!");
+
+                            var result = runner.Execute(Program.Main, $"run", "--", "cat", "test.txt");
+                            Assert.Equal(0, result.ExitCode);
+                            Assert.Contains("Hello World!", result.AllText);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Environment.CurrentDirectory = orgDirectory;
+            }
+        }
     }
 }
