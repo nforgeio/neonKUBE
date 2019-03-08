@@ -374,7 +374,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = runner.Execute(Program.Main, $"run", "--", "test.cmd", "@file.txt");
+                            result = runner.Execute(Program.Main, $"run", "--", "test.cmd", "^^^file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");

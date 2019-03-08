@@ -45,7 +45,7 @@ decrypting input files.
 
 USAGE:
 
-    nshell run [OPTIONS] [VARIABLES...] -- COMMAND ARG ^VAR ^^VAR-FILE @PATH
+    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG ^VAR ^^VAR-FILE ^^^PATH
 
 ARGUMENTS:
 
@@ -70,7 +70,7 @@ ARGUMENTS:
                       The command line will be updated to reference the
                       temporary file.
 
-    PATH            - The @ prefix indicates that the file at the PATH
+    PATH            - The ^^^ prefix indicates that the file at the PATH
                       should be temporarily decrypted (if necessary) and
                       the command line will be updated to reference the
                       temporary file.
@@ -82,14 +82,14 @@ OPTIONS:
 
 REMARKS:
 
-You can use this command in concert with the [nshell password] and 
-[nshell file] commands to securely inject secrets into your CI/CD,
+You can use this command in concert with the [neon password] and 
+[neon vault] commands to securely inject secrets into your CI/CD,
 and other operational scripts.
 
-The basic idea is to use the [nshell password ...] commands to create
+The basic idea is to use the [neon password ...] commands to create
 or import named passwords on your workstation and then use the
-[nshell file ...] commands to encrypt VARIABLES and other sensitive
-files so that you can use this [nshell run ...] command to inject
+[neon vault ...] commands to encrypt VARIABLES and other sensitive
+files so that you can use this [neon run ...] command to inject
 secrets and settings into a sub-command.
 
 Note that it will be quite safe to commit any encrypted files to
@@ -102,7 +102,7 @@ Examples
 
 Inject the PATH environment variable value into a sub-command:
 
-    nshell run -- echo ^PATH
+    neon run -- echo ^PATH
 
 Read a VARIABLES file and inject a variable into a sub-command:
 
@@ -110,22 +110,22 @@ Read a VARIABLES file and inject a variable into a sub-command:
     # Lines beginning with ""#"" are ignored as comments
     MYVAR=hello
 
-    nshell run variables.txt -- echo ^MYVAR
+    neon run variables.txt -- echo ^MYVAR
 
 Use a command line option set an environment variable:
 
-    nshell nshell run --MYVAR=hello -- echo ^MYHVAR
+    neon run --MYVAR=hello -- echo ^MYHVAR
 
 Inject an environment variable into a text file:
 
     [file.txt]:
     $<<MYVAR>>
 
-    nshell nshell run --MYVAR=hello -- type ^^file.txt
+    neon neon run --MYVAR=hello -- type ^^file.txt
 
 Pass a potentially encrypted file:
 
-    nshell nshell run -- type @encrypted.txt
+    neon neon run -- type ^^^encrypted.txt
 ";
 
         NeonVault vault = new NeonVault(Program.LookupPassword);
@@ -235,7 +235,32 @@ Pass a potentially encrypted file:
                 {
                     var arg = subcommand[i];
 
-                    if (arg.StartsWith("^^"))
+                    if (arg.StartsWith("^^^"))
+                    {
+                        // Argument is a reference to a potentially encrypted 
+                        // file that needs to be passed decrypted.
+
+                        var path = arg.Substring(3);
+
+                        if (!File.Exists(path))
+                        {
+                            Console.Error.WriteLine($"*** ERROR: File [{path}] does not exist.");
+                            Program.Exit(1);
+                        }
+
+                        if (NeonVault.IsEncrypted(path))
+                        {
+                            var tempFile = new TempFile();
+
+                            tempFiles.Add(tempFile);
+                            vault.Decrypt(path, tempFile.Path);
+
+                            path = tempFile.Path;
+                        }
+
+                        subcommand[i] = path;
+                    }
+                    else if (arg.StartsWith("^^"))
                     {
                         // Argument is a reference to a potentially encrypted text file
                         // with environment variable references we'll need to update.
@@ -332,31 +357,6 @@ Pass a potentially encrypted file:
 
                             subcommand[i] = $"{optionPart}={value}";
                         }
-                    }
-                    else if (arg.StartsWith("@"))
-                    {
-                        // Argument is a reference to a potentially encrypted 
-                        // file that needs to be passed decrypted.
-
-                        var path = arg.Substring(1);
-
-                        if (!File.Exists(path))
-                        {
-                            Console.Error.WriteLine($"*** ERROR: File [{path}] does not exist.");
-                            Program.Exit(1);
-                        }
-
-                        if (NeonVault.IsEncrypted(path))
-                        {
-                            var tempFile = new TempFile();
-
-                            tempFiles.Add(tempFile);
-                            vault.Decrypt(path, tempFile.Path);
-
-                            path = tempFile.Path;
-                        }
-
-                        subcommand[i] = path;
                     }
                     else
                     {
