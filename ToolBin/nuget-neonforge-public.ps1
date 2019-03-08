@@ -48,14 +48,6 @@ function Publish
 
 	$version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
 
-	# $todo(jeff.lill):
-    #
-    # We need to use [nshell run ...]  to retrieve the API key from an encrypted
-    # secrets file rather than depending on NUGET_API_KEY environment variable
-    # always being set.
-    #
-    #   https://github.com/nforgeio/neonKUBE/issues/448
-
 	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg"
 }
 

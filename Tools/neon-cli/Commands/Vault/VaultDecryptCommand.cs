@@ -44,7 +44,7 @@ Decrypts a file to another location.
 
 USAGE:
 
-    nshell vault decrypt SOURCE TARGET
+    neon vault decrypt SOURCE TARGET
 
 ARGUMENTS:
 

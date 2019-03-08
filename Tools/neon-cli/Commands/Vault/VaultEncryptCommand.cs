@@ -44,8 +44,8 @@ Encrypts a file using a named password.
 
 USAGE:
 
-    nshell vault encrypt PATH [--password-name=PASSWORD-NAME]
-    nshell vault encrypt SOURCE TARGET [PASSWORD-NAME]
+    neon vault encrypt PATH [--password-name=PASSWORD-NAME]
+    neon vault encrypt SOURCE TARGET [PASSWORD-NAME]
 
 ARGUMENTS:
 

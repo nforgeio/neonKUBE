@@ -45,7 +45,7 @@ Returns the name of the password used to encrypt a file.
 
 USAGE:
 
-    nshell vault password-name [-n] PATH
+    neon vault password-name [-n] PATH
 
 ARGUMENTS:
 
