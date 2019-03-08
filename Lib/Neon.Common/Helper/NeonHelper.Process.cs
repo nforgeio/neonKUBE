@@ -276,13 +276,46 @@ namespace Neon.Common
             try
             {
                 processInfo.UseShellExecute        = false;
-                processInfo.RedirectStandardError  = false;
-                processInfo.RedirectStandardOutput = false;
                 processInfo.CreateNoWindow         = true;
                 process.StartInfo                  = processInfo;
                 process.EnableRaisingEvents        = true;
+                processInfo.RedirectStandardError  = true;
+                processInfo.RedirectStandardOutput = true;
+
+                // Configure the sub-process STDOUT and STDERR streams to use
+                // code page 1252 which simply passes byte values through.
+
+                processInfo.StandardErrorEncoding =
+                processInfo.StandardOutputEncoding = ByteEncoding.Instance;
+
+                // Relay STDOUT and STDERR output from the child process
+                // to this process's STDOUT and STDERR streams.
+
+                // $todo(jeff.lill):
+                //
+                // This won't work properly for binary data streaming
+                // back from the process because we're not going to be
+                // sure whether the "line" was terminated by a CRLF or
+                // just a CR.  I'm not sure if there's a clean way to
+                // address this in .NET code.
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/461
+
+                process.ErrorDataReceived +=
+                    (s, a) =>
+                    {
+                        Console.Out.WriteLine(a.Data);
+                    };
+
+                process.OutputDataReceived +=
+                    (s, a) =>
+                    {
+                        Console.Error.WriteLine(a.Data);
+                    };
 
                 process.Start();
+                process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
 
                 if (!timeout.HasValue || timeout.Value >= TimeSpan.FromDays(1))
                 {
