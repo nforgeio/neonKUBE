@@ -430,5 +430,40 @@ $<<TEST_D>>
                 Environment.CurrentDirectory = orgDirectory;
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Options()
+        {
+            var orgDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                using (var manager = new KubeTestManager())
+                {
+                    using (var runner = new ProgramRunner())
+                    {
+                        using (var tempFolder = new TempFolder())
+                        {
+                            Environment.CurrentDirectory = tempFolder.Path;
+
+                            //-------------------------------------------------
+                            // Verify that the [run] command handles command line options correctly.
+
+                            File.WriteAllText("test.cmd", "echo %* > output.txt");
+
+                            var result = runner.Execute(Program.Main, $"run", "--", "test.cmd", "-foo", "--bar=foobar", "--hello", "world");
+                            Assert.Equal(0, result.ExitCode);
+
+                            Assert.Contains("-foo --bar=foobar --hello world", File.ReadAllText("output.txt"));
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Environment.CurrentDirectory = orgDirectory;
+            }
+        }
     }
 }

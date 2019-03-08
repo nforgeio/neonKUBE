@@ -272,35 +272,69 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Split()
         {
+            //-------------------------
             var commandLine = new CommandLine(new string[] { "one", "--x", "two", "three"});
             var split = commandLine.Split();
 
             Assert.Equal(split.Left.Items, new string[] { "one", "--x", "two", "three"}, new CollectionComparer<string>());
             Assert.Null(split.Right);
 
+            //-------------------------
             commandLine = new CommandLine(new string[] { "one", "--x", "two", "three", "--", "four", "five" });
             split = commandLine.Split();
 
             Assert.Equal(split.Left.Items, new string[] { "one", "--x", "two", "three" }, new CollectionComparer<string>());
             Assert.Equal(split.Right.Items, new string[] { "four", "five" }, new CollectionComparer<string>());
 
+            //-------------------------
             commandLine = new CommandLine(new string[] { "one", "--x", "two", "three", "splitter", "four", "five" });
             split = commandLine.Split("splitter");
 
             Assert.Equal(split.Left.Items, new string[] { "one", "--x", "two", "three" }, new CollectionComparer<string>());
             Assert.Equal(split.Right.Items, new string[] { "four", "five" }, new CollectionComparer<string>());
 
+            //-------------------------
             commandLine = new CommandLine(new string[] { "one", "--x", "two", "three", "splitter", "four", "five" });
             split = commandLine.Split("splitter", addSplitterToRight: true);
 
             Assert.Equal(split.Left.Items, new string[] { "one", "--x", "two", "three" }, new CollectionComparer<string>());
             Assert.Equal(split.Right.Items, new string[] { "splitter", "four", "five" }, new CollectionComparer<string>());
 
+            //-------------------------
             commandLine = new CommandLine(new string[] { "--" });
             split = commandLine.Split();
 
             Assert.Empty(split.Left.Items);
             Assert.Empty(split.Right.Items);
+
+            //-------------------------
+            commandLine = new CommandLine(new string[] { "left", "--left0", "--left1=1", "--left2", "2", "--", "right", "--right0", "--right1=1", "--right2", "2" });
+            split = commandLine.Split();
+
+            Assert.Equal(split.Left.Items, new string[] { "left", "--left0", "--left1=1", "--left2", "2" }, new CollectionComparer<string>());
+            Assert.Equal(split.Right.Items, new string[] { "right", "--right0", "--right1=1", "--right2", "2" }, new CollectionComparer<string>());
+
+            //-------------------------
+            commandLine = new CommandLine(new string[] { "left", "--left0", "--left1=1", "--left2", "2", "--", "right", "--right0", "--right1=1", "--right2", "2" });
+            split = commandLine.Split(addSplitterToRight: true);
+
+            Assert.Equal(split.Left.Items, new string[] { "left", "--left0", "--left1=1", "--left2", "2" }, new CollectionComparer<string>());
+            Assert.Equal(split.Right.Items, new string[] { "--", "right", "--right0", "--right1=1", "--right2", "2" }, new CollectionComparer<string>());
+
+            //-------------------------
+            commandLine = new CommandLine(new string[] { "left", "--left0", "--left1=1", "--left2", "2", "XX", "right", "--right0", "--right1=1", "--right2", "2" });
+            split = commandLine.Split("XX");
+
+            Assert.Equal(split.Left.Items, new string[] { "left", "--left0", "--left1=1", "--left2", "2" }, new CollectionComparer<string>());
+            Assert.Equal(split.Right.Items, new string[] { "right", "--right0", "--right1=1", "--right2", "2" }, new CollectionComparer<string>());
+
+            //-------------------------
+            commandLine = new CommandLine(new string[] { "cmd", "left", "--left0", "--left1=1", "--left2", "2", "--", "right", "--right0", "--right1=1", "--right2", "2" });
+            commandLine = commandLine.Shift(1);
+            split = commandLine.Split("--");
+
+            Assert.Equal(split.Left.Items, new string[] { "left", "--left0", "--left1=1", "--left2", "2" }, new CollectionComparer<string>());
+            Assert.Equal(split.Right.Items, new string[] { "right", "--right0", "--right1=1", "--right2", "2" }, new CollectionComparer<string>());
         }
     }
 }

@@ -201,7 +201,7 @@ Pass a potentially encrypted file:
                                 Program.Exit(1);
                             }
 
-                            var name = fields[0].Trim();
+                            var name  = fields[0].Trim();
                             var value = fields[1].Trim();
 
                             Environment.SetEnvironmentVariable(name, value);

@@ -117,7 +117,7 @@ namespace Neon.Common
     /// </code>
     /// <note>
     /// This class assumes that the position of command line options doesn't
-    /// matter, which is somewhat simplistic.  In particular, the <see cref="Shift(int)"/> 
+    /// matter, which is somewhat simplistic.  In particular, the <see cref="Shift(int, string)"/> 
     /// method actually relocates all of the options to the beginning of the 
     /// shifted command line.
     /// </note>
@@ -812,34 +812,79 @@ namespace Neon.Common
         /// essentially shifting arguments to the left.
         /// </summary>
         /// <param name="position">The index of the first argument to be included in the result.</param>
+        /// <param name="splitter">
+        /// The optional argument used to ensure that we're only shifting the left 
+        /// side of a command line.  This defaults to <b>"--"</b> but may be set to
+        /// <c>null</c> or the empty string to disable this behavior.
+        /// </param>
         /// <returns>The new <see cref="CommandLine" />.</returns>
-        /// <remarks>
-        /// <note>
-        /// This method relocates all of the options to the beginning of the command line.
-        /// </note>
-        /// </remarks>
-        public CommandLine Shift(int position)
+        public CommandLine Shift(int position, string splitter = "--")
         {
             Covenant.Requires<ArgumentException>(position >= 0);
 
-            if (position < 0 || position > Arguments.Length)
+            if (string.IsNullOrEmpty(splitter))
             {
-                throw new ArgumentOutOfRangeException("position");
+                if (position < 0 || position > Arguments.Length)
+                {
+                    throw new ArgumentOutOfRangeException("position");
+                }
+
+                var items    = new List<object>();
+                var argIndex = 0;
+
+                foreach (var item in this.Items)
+                {
+                    if (item == splitter)
+                    {
+                        break;
+                    }
+
+                    if (item.StartsWith("-"))
+                    {
+                        items.Add(item);
+                    }
+                    else
+                    {
+                        if (argIndex >= position)
+                        {
+                            items.Add(item);
+                        }
+
+                        argIndex++;
+                    }
+                }
+
+                return new CommandLine(items.ToArray());
             }
-
-            var items = new List<object>();
-
-            foreach (var option in this.Items.Where(i => i.StartsWith("-") && i != "-" && i != "--"))
+            else
             {
-                items.Add(option);
-            }
+                var split            = this.Split(splitter);
+                var leftCommandLine  = split.Left;
+                var rightCommandLine = split.Right;
 
-            foreach (var arg in this.Arguments.Skip(position))
-            {
-                items.Add(arg);
-            }
+                leftCommandLine = leftCommandLine.Shift(position, splitter: null);
 
-            return new CommandLine(items.ToArray());
+                if (rightCommandLine == null)
+                {
+                    return leftCommandLine;
+                }
+
+                var args = new List<string>();
+
+                foreach (var item in leftCommandLine.Items)
+                {
+                    args.Add(item);
+                }
+
+                args.Add(splitter);
+
+                foreach (var item in rightCommandLine.Items)
+                {
+                    args.Add(item);
+                }
+
+                return new CommandLine(args.ToArray());
+            }
         }
 
         /// <summary>
