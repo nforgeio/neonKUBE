@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DataAttributes.cs
+// FILE:	    CodeGeneratorOutput.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,4 +22,10 @@ using System.Text;
 
 namespace Neon.CodeGen
 {
+    /// <summary>
+    /// Holds the output of a code generation operation.
+    /// </summary>
+    public class CodeGeneratorOutput
+    {
+    }
 }

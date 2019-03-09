@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DataAttributes.cs
+// FILE:	    CodeGeneratorSettings.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,4 +22,16 @@ using System.Text;
 
 namespace Neon.CodeGen
 {
+    /// <summary>
+    /// Specifies code generator settings.
+    /// </summary>
+    public class CodeGeneratorSettings
+    {
+        /// <summary>
+        /// Constructs an instance with reasonable settings.
+        /// </summary>
+        public CodeGeneratorSettings()
+        {
+        }
+    }
 }

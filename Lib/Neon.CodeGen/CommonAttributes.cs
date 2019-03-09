@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DataAttributes.cs
+// FILE:	    CommonAttributes.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,4 +22,27 @@ using System.Text;
 
 namespace Neon.CodeGen
 {
+    /// <summary>
+    /// Used to group data models and service definitions so that the
+    /// class included in the generated code can filtered.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Interface, AllowMultiple = true)]
+    public class TargetAttribute : Attribute
+    {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="group">The group name.</param>
+        public TargetAttribute(string group)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(group));
+
+            this.Group = group;
+        }
+
+        /// <summary>
+        /// Returns the group name.
+        /// </summary>
+        public string Group { get; private set; }
+    }
 }

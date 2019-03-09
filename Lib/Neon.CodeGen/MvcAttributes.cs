@@ -99,7 +99,7 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpGetAttribute(string template = null)
         {
-            this.Template   = template;
+            this.Template = template;
             this.HttpMethod = "GET";
         }
 
@@ -135,7 +135,7 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpPostAttribute(string template = null)
         {
-            this.Template   = template;
+            this.Template = template;
             this.HttpMethod = "POST";
         }
 
@@ -177,7 +177,7 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpPutAttribute(string template = null)
         {
-            this.Template   = template;
+            this.Template = template;
             this.HttpMethod = "PUT";
         }
 
@@ -219,7 +219,7 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpPatchAttribute(string template = null)
         {
-            this.Template   = template;
+            this.Template = template;
             this.HttpMethod = "PATCH";
         }
 
@@ -261,7 +261,7 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpHeadAttribute(string template = null)
         {
-            this.Template   = template;
+            this.Template = template;
             this.HttpMethod = "HEAD";
         }
 
@@ -303,7 +303,7 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpOptionsAttribute(string template = null)
         {
-            this.Template   = template;
+            this.Template = template;
             this.HttpMethod = "OPTIONS";
         }
 
@@ -442,3 +442,4 @@ namespace Neon.CodeGen
             public string Name { get; set; }
         }
     }
+}
