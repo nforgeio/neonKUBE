@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using System.Runtime;
 using System.Text;
 
 namespace Neon.CodeGen
@@ -29,7 +30,9 @@ namespace Neon.CodeGen
     /// </summary>
     public class CodeGenerator
     {
-        private CodeGeneratorOutput output;
+        private CodeGeneratorOutput                 output;
+        private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
+        private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
 
         /// <summary>
         /// Constructs a code generator.
@@ -58,6 +61,71 @@ namespace Neon.CodeGen
             output = new CodeGeneratorOutput();
 
             return output;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Scans an assembly for data and service models and loads information about these
+        /// to <see cref="nameToDataModel"/> and <see cref="nameToServiceModel"/>.
+        /// </para>
+        /// <note>
+        /// This method will honor any target filters specified by
+        /// <see cref="CodeGeneratorSettings.TargetGroups"/>.
+        /// </note>
+        /// </summary>
+        /// <param name="assembly">The source assembly.</param>
+        private void ScanAssembly(Assembly assembly)
+        {
+            if (assembly == null)
+            {
+                return;
+            }
+
+            foreach (var type in assembly.GetTypes()
+                .Where(t => t.IsPublic)
+                .Where(t => t.IsInterface || t.IsEnum))
+            {
+                var serviceAttribute = type.GetCustomAttribute<ServiceAttribute>();
+
+                if (serviceAttribute != null)
+                {
+                    LoadServiceModel(type);
+                }
+                else
+                {
+                    LoadDataModel(type);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loads the required information for a service model type.
+        /// </summary>
+        /// <param name="type">The source type.</param>
+        private void LoadServiceModel(Type type)
+        {
+            // $todo(jeff.lill): Implement this!
+        }
+
+        /// <summary>
+        /// Loads the required information for a data model type.
+        /// </summary>
+        /// <param name="type">YThe source type.</param>
+        private void LoadDataModel(Type type)
+        {
+            var dataModel = new DataModel(type);
+
+            foreach (var targetAttibute in type.GetCustomAttributes<TargetAttribute>())
+            {
+                if (!dataModel.TargetGroups.Contains(targetAttibute.Group))
+                {
+                    dataModel.TargetGroups.Add(targetAttibute.Group);
+                }
+            }
+
+            if (!nameToDataModel.TryAdd(type.FullName, dataModel))
+            {
+            }
         }
     }
 }

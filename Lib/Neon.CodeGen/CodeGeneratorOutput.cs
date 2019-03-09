@@ -27,5 +27,31 @@ namespace Neon.CodeGen
     /// </summary>
     public class CodeGeneratorOutput
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public CodeGeneratorOutput()
+        {
+        }
+
+        /// <summary>
+        /// Indicates whether the coder generator reported any errors.
+        /// </summary>
+        public bool HasErrors => Errors.Count > 0;
+
+        /// <summary>
+        /// Returns the list of code generator errors (if any).
+        /// </summary>
+        public List<string> Errors { get; private set; } = new List<string>();
+
+        /// <summary>
+        /// Returns the generated data model source code.
+        /// </summary>
+        public string DataCode { get; internal set; }
+
+        /// <summary>
+        /// Rerturns the generated service client source code.
+        /// </summary>
+        public string ClientCode { get; internal set; }
     }
 }

@@ -29,6 +29,21 @@ namespace Neon.CodeGen
     [AttributeUsage(AttributeTargets.Interface)]
     public class ServiceAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="name">Identifes the name to use for the generated client class.</param>
+        public ServiceAttribute(string name)
+        {
+            Covenant.Requires(!string.IsNullOrEmpty(name));
+
+            this.Name = name;
+        }
+
+        /// <summary>
+        /// Returns the name to be used for the generated client class.
+        /// </summary>
+        public string Name { get; private set; }
     }
 
     /// <summary>

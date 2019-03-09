@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CodeGeneratorSettings.cs
+// FILE:	    DataAttributes.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,37 +18,31 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Text;
 
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Specifies code generator settings.
+    /// Holds information about a data model extracted from a source assembly.
     /// </summary>
-    public class CodeGeneratorSettings
+    internal class DataModel
     {
         /// <summary>
-        /// Constructs an instance with reasonable settings.
+        /// Constructor.
         /// </summary>
-        /// <param name="targetGroups">Optionally specifies the target output groups.</param>
-        public CodeGeneratorSettings(params string[] targetGroups)
+        /// <param name="sourceType">The source data type.</param>
+        public DataModel(Type sourceType)
         {
-            if (targetGroups != null)
-            {
-                foreach (var group in targetGroups.Where(g => !string.IsNullOrEmpty(g)))
-                {
-                    if (!TargetGroups.Contains(group))
-                    {
-                        TargetGroups.Add(group);
-                    }
-                }
-            }
+            Covenant.Requires<ArgumentNullException>(sourceType != null);
         }
-        
+
         /// <summary>
-        /// Returns a case insensitve <see cref="HashSet{T}"/> holding the names
-        /// of the selected target output groups.
+        /// Returns the source type.
+        /// </summary>
+        public Type SourceType { get; private set; }
+
+        /// <summary>
+        /// Returns the target groups for the type.
         /// </summary>
         public HashSet<string> TargetGroups { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
     }
