@@ -53,6 +53,8 @@ namespace Neon.Common
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(program));
 
+            var programExtensions = new string[] { ".exe", ".cmd" };
+
             if (!NeonHelper.IsWindows)
             {
                 return program;
@@ -61,6 +63,25 @@ namespace Neon.Common
             if (Path.IsPathRooted(program) || program.Contains(Path.PathSeparator))
             {
                 return program; // The path is already fully qualified or is relative.
+            }
+            else if (Path.HasExtension(program))
+            {
+                if (File.Exists(program))
+                {
+                    return program; // The program exists in the current directory.
+                }
+            }
+            else
+            {
+                foreach (var extension in programExtensions)
+                {
+                    var withExtension = program + extension;
+
+                    if (File.Exists(withExtension))
+                    {
+                        return withExtension; // The program exists in the current directory.
+                    }
+                }
             }
 
             var path = Environment.GetEnvironmentVariable("PATH");
@@ -88,7 +109,7 @@ namespace Neon.Common
 
                     if (string.IsNullOrEmpty(Path.GetExtension(fullPath)))
                     {
-                        foreach (var extension in new string[] { ".exe", ".cmd" })
+                        foreach (var extension in programExtensions)
                         {
                             var testPath = fullPath + extension;
 
@@ -202,6 +223,7 @@ namespace Neon.Common
             processInfo.RedirectStandardError  = false;
             processInfo.RedirectStandardOutput = false;
             processInfo.CreateNoWindow         = true;
+            processInfo.WorkingDirectory       = Environment.CurrentDirectory;
 
             var process = new Process()
             {
@@ -265,7 +287,7 @@ namespace Neon.Common
         /// </remarks>
         public static int Execute(string path, string args, TimeSpan? timeout = null, Process process = null)
         {
-            var processInfo   = new ProcessStartInfo(GetProgramPath(path), args != null ? args : string.Empty);
+            var processInfo   = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var killOnTimeout = process == null;
 
             if (process == null)
@@ -277,15 +299,17 @@ namespace Neon.Common
             {
                 processInfo.UseShellExecute        = false;
                 processInfo.CreateNoWindow         = true;
-                process.StartInfo                  = processInfo;
-                process.EnableRaisingEvents        = true;
                 processInfo.RedirectStandardError  = true;
                 processInfo.RedirectStandardOutput = true;
+                processInfo.WorkingDirectory       = Environment.CurrentDirectory;
+
+                process.StartInfo                  = processInfo;
+                process.EnableRaisingEvents        = true;
 
                 // Configure the sub-process STDOUT and STDERR streams to use
                 // code page 1252 which simply passes byte values through.
 
-                processInfo.StandardErrorEncoding =
+                processInfo.StandardErrorEncoding  =
                 processInfo.StandardOutputEncoding = ByteEncoding.Instance;
 
                 // Relay STDOUT and STDERR output from the child process
@@ -301,16 +325,33 @@ namespace Neon.Common
                 //
                 //      https://github.com/nforgeio/neonKUBE/issues/461
 
+                var stdErrClosed = false;
+                var stdOutClosed = false;
+
                 process.ErrorDataReceived +=
                     (s, a) =>
                     {
-                        Console.Out.WriteLine(a.Data);
+                        if (a.Data == null)
+                        {
+                            stdErrClosed = true;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine(a.Data);
+                        }
                     };
 
                 process.OutputDataReceived +=
                     (s, a) =>
                     {
-                        Console.Error.WriteLine(a.Data);
+                        if (a.Data == null)
+                        {
+                            stdOutClosed = true;
+                        }
+                        else
+                        {
+                            Console.Out.WriteLine(a.Data);
+                        }
                     };
 
                 process.Start();
@@ -319,10 +360,12 @@ namespace Neon.Common
 
                 if (!timeout.HasValue || timeout.Value >= TimeSpan.FromDays(1))
                 {
+                    NeonHelper.WaitFor(() => stdErrClosed && stdOutClosed, timeout: timeout ?? TimeSpan.FromDays(365), pollTime: TimeSpan.FromMilliseconds(250));
                     process.WaitForExit();
                 }
                 else
                 {
+                    NeonHelper.WaitFor(() => stdErrClosed && stdOutClosed, timeout: timeout.Value, pollTime: TimeSpan.FromMilliseconds(250));
                     process.WaitForExit((int)timeout.Value.TotalMilliseconds);
 
                     if (!process.HasExited)
@@ -571,6 +614,8 @@ namespace Neon.Common
                 processInfo.RedirectStandardError  = true;
                 processInfo.RedirectStandardOutput = true;
                 processInfo.CreateNoWindow         = true;
+                processInfo.WorkingDirectory       = Environment.CurrentDirectory;
+
                 process.StartInfo                  = processInfo;
                 process.OutputDataReceived        += new DataReceivedEventHandler(redirector.OnOutput);
                 process.ErrorDataReceived         += new DataReceivedEventHandler(redirector.OnError);

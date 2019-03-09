@@ -45,7 +45,13 @@ decrypting input files.
 
 USAGE:
 
-    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG ^VAR ^^VAR-FILE ^^^PATH
+    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG ""^VAR""
+    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG ""^^VAR-FILE""
+    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG ""^^^PATH""
+
+IMPORTANT: You must quote any arguments with leading caret (^) characters
+           as ahown above because to prevent the Windows shell will from
+           ignoring and removing them.
 
 ARGUMENTS:
 
@@ -59,18 +65,18 @@ ARGUMENTS:
     ARG             - Zero or more command line arguments that will be passed
                       to the command unmodified
 
-    VAR             - The ^ prefix indicates that the environment variable
+    ""^VAR""          - The ^ prefix indicates that the environment variable
                       named VAR should replace this argument before 
                       executing the command
 
-    VAR-FILE        - The ^^ prefix indicates that the VAR-FILE text file
+    ""^^VAR-FILE""    - The ^^ prefix indicates that the VAR-FILE text file
                       should be written (decrypting if necessary) to a secure 
                       temporary file and that any environment references
                       like $<<VAR>> will be replaced by the variable value.
                       The command line will be updated to reference the
                       temporary file.
 
-    PATH            - The ^^^ prefix indicates that the file at the PATH
+    ""^^PATH""        - The ^^^ prefix indicates that the file at the PATH
                       should be temporarily decrypted (if necessary) and
                       the command line will be updated to reference the
                       temporary file.
@@ -110,22 +116,22 @@ Read a VARIABLES file and inject a variable into a sub-command:
     # Lines beginning with ""#"" are ignored as comments
     MYVAR=hello
 
-    neon run variables.txt -- echo ^MYVAR
+    neon run variables.txt -- echo ""^MYVAR""
 
 Use a command line option set an environment variable:
 
-    neon run --MYVAR=hello -- echo ^MYHVAR
+    neon run --MYVAR=hello -- echo ""^MYHVAR""
 
 Inject an environment variable into a text file:
 
     [file.txt]:
     $<<MYVAR>>
 
-    neon neon run --MYVAR=hello -- type ^^file.txt
+    neon neon run --MYVAR=hello -- cat ""^^file.txt""
 
 Pass a potentially encrypted file:
 
-    neon neon run -- type ^^^encrypted.txt
+    neon neon run -- cat ""^^^encrypted.txt""
 ";
 
         NeonVault vault = new NeonVault(Program.LookupPassword);
@@ -158,7 +164,7 @@ Pass a potentially encrypted file:
             var leftCommandLine  = splitCommandLine.Left;
             var rightCommandLine = splitCommandLine.Right;
 
-            if (rightCommandLine.Arguments.Length == 0)
+            if (rightCommandLine == null || rightCommandLine.Arguments.Length == 0)
             {
                 Console.Error.WriteLine("*** ERROR: Expected a command after a [--] argument.");
                 Program.Exit(1);
@@ -286,9 +292,9 @@ Pass a potentially encrypted file:
                         subcommand[i] = path;
 
                         // Perform the subsitutions.
-                        
-                        var unprocessed      = File.ReadAllText(path);
-                        var processed        = string.Empty;
+
+                        var unprocessed = File.ReadAllText(path);
+                        var processed = string.Empty;
                         var linuxLineEndings = !unprocessed.Contains("\r\n");
 
                         using (var reader = new StreamReader(path))
@@ -339,7 +345,7 @@ Pass a potentially encrypted file:
                         if (valuePos != -1)
                         {
                             var optionPart = arg.Substring(0, valuePos);
-                            var name       = arg.Substring(valuePos + 2);
+                            var name = arg.Substring(valuePos + 2);
 
                             if (name == string.Empty)
                             {
@@ -370,12 +376,18 @@ Pass a potentially encrypted file:
 
                 var subcommandArgs = new List<object>();
 
-                foreach (var subcommandArg in subcommand.Skip(1))
+                foreach (var subcommandArg in subcommand)
                 {
                     subcommandArgs.Add(subcommandArg);
                 }
 
-                Program.Exit(NeonHelper.Execute(subcommand[0], subcommandArgs.ToArray()));
+                var exitCode = NeonHelper.Execute(subcommand[0], subcommandArgs.Skip(1).ToArray());
+
+                Program.Exit(exitCode);
+            }
+            catch
+            {
+                throw;
             }
             finally
             {

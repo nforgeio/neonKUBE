@@ -148,7 +148,7 @@ OPTIONS:
 
                     if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
                     {
-                        Console.Error.WriteLine("*** ERROR: This command required elevated administrator permissions.");
+                        Console.Error.WriteLine("*** ERROR: This command requires elevated administrator permissions.");
                         Program.Exit(1);
                     }
                 }

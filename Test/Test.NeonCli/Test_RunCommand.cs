@@ -40,6 +40,28 @@ namespace Test.NeonCli
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Run()
+        {
+            using (var runner = new ProgramRunner())
+            {
+                // Verify that the help command works.
+
+                var result = runner.Execute(Program.Main, "run", "--help");
+
+                Assert.Equal(0, result.ExitCode);
+                Assert.Contains("Runs a sub-command, optionally injecting settings and secrets and/or", result.OutputText);
+
+                // Verify ther error we get when there's no right command line.
+
+                result = runner.Execute(Program.Main, "run");
+
+                Assert.NotEqual(0, result.ExitCode);
+                Assert.Contains("*** ERROR: Expected a command after a [--] argument.", result.ErrorText);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void ReadVariables_Decrypted()
         {
             var orgDirectory = Environment.CurrentDirectory;
@@ -380,6 +402,22 @@ $<<TEST_D>>
                             var output = File.ReadAllText("output.txt");
 
                             Assert.Contains(plainText, output);
+                            File.Delete("output.txt");
+                            File.Delete("file.txt");
+
+                            //-------------------------------------------------
+                            // Try this again calling a command directly (batch files seem to have different behavior).
+
+                            File.WriteAllText("type", "%1");
+
+                            File.WriteAllText("file.txt", plainText);
+                            File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
+                            Assert.True(NeonVault.IsEncrypted("file.txt"));
+
+                            result = runner.Execute(Program.Main, $"run", "--", "cat", "^^^file.txt");
+                            Assert.Equal(0, result.ExitCode);
+
+                            Assert.Contains(plainText, result.OutputText);
                             File.Delete("output.txt");
                             File.Delete("file.txt");
                         }

@@ -56,8 +56,8 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --password-name - Optionally specifies the password name when 
-                      encrypting a file in-place.
+    --password-name=NAME    - Optionally specifies the password name
+    -p=NAME                   when encrypting a file in-place.
 
 REMARKS:
 
@@ -78,7 +78,7 @@ NOTE: The search for the [.password-name] file will start from the
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--password-name" }; }
+            get { return new string[] { "--password-name", "-p" }; }
         }
 
         /// <inheritdoc/>
@@ -116,6 +116,11 @@ NOTE: The search for the [.password-name] file will start from the
             if (string.IsNullOrEmpty(targetPath) || string.IsNullOrEmpty(passwordName))
             {
                 passwordName = commandLine.GetOption("--password-name");
+
+                if (string.IsNullOrEmpty(passwordName))
+                {
+                    passwordName = commandLine.GetOption("-p");
+                }
             }
 
             if (NeonVault.IsEncrypted(sourcePath))
