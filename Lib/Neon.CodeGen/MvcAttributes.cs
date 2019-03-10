@@ -41,7 +41,8 @@ namespace Neon.CodeGen
         }
 
         /// <summary>
-        /// Returns the name to be used for the generated client class.
+        /// Returns the name to be used for the generated client class
+        /// or <c>null</c> if a default name is to be used.
         /// </summary>
         public string Name { get; private set; }
     }

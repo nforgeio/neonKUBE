@@ -79,7 +79,7 @@ namespace Neon.CodeGen
         public string RouteTemplate { get; set; }
 
         /// <summary>
-        /// Lists the service methods.
+        /// Lists the service.
         /// </summary>
         public List<ServiceMethod> Methods { get; private set; } = new List<ServiceMethod>();
     }

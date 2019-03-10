@@ -45,11 +45,31 @@ namespace Neon.CodeGen
                 }
             }
         }
+
+        /// <summary>
+        /// Indicates that service client code should be generated.  This defaults to
+        /// <c>true</c> and may be set to <c>false</c> when only the data models
+        /// need to be generated.
+        /// </summary>
+        public bool GenerateServiceClients { get; set; } = true;
         
         /// <summary>
         /// Returns a case insensitve <see cref="HashSet{T}"/> holding the names
         /// of the selected target output groups.
         /// </summary>
         public HashSet<string> TargetGroups { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+        /// <summary>
+        /// The default C# <c>namespace</c> to use when no other namespace is
+        /// specified.  This defaults to <c>Neon.CodeGen.Output</c>.
+        /// </summary>
+        public string DefaultNamespace { get; set; } = "Neon.CodeGen.Output";
+
+        /// <summary>
+        /// Used to map case insensitve group names to the C# <c>namespace</c>
+        /// to be used when generating service and data models within the
+        /// group.  These mappings override <see cref="DefaultNamespace"/>.
+        /// </summary>
+        public Dictionary<string, string> GroupToNamespace { get; private set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
     }
 }

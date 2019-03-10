@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceMethod.cs
+// FILE:	    NamespaceInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,41 +18,40 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Reflection;
 using System.Text;
 
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Describes a service method.
+    /// Used to collect information about the items to be generated 
+    /// within an output namespace.
     /// </summary>
-    internal class ServiceMethod
+    internal class NamespaceInfo
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ServiceMethod()
+        /// <param name="outputNamespace">The output namespace name.</param>
+        public NamespaceInfo(string outputNamespace)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(outputNamespace));
+
+            this.OutputNamespace = outputNamespace;
         }
 
         /// <summary>
-        /// Describes the low-level method name, parameters, and result.
+        /// Returns the output namspace name.
         /// </summary>
-        public MethodInfo MethodInfo { get; set; }
+        public string OutputNamespace { get; private set; }
 
         /// <summary>
-        /// The method name to use when generating code for this method.
+        /// Lists the data models to be generated within this namespace.
         /// </summary>
-        public string Name { get; set; }
+        public List<DataModel> DataModels { get; private set; } = new List<DataModel>();
 
         /// <summary>
-        /// Optionally specifies the route template for this method.
+        /// Lists the service models to be generated within this namespace.
         /// </summary>
-        public string RouteTemplate { get; set; }
-
-        /// <summary>
-        /// Specifies the HTTP method to use for invoking the method.
-        /// </summary>
-        public string HttpMethod { get; set; }
+        public List<ServiceModel> ServiceModels { get; private set; } = new List<ServiceModel>();
     }
 }

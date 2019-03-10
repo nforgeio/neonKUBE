@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime;
@@ -36,6 +37,7 @@ namespace Neon.CodeGen
         private CodeGeneratorOutput                 output;
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
+        private StringWriter                        writer;
 
         /// <summary>
         /// Constructs a code generator.
@@ -62,6 +64,27 @@ namespace Neon.CodeGen
             Covenant.Requires<ArgumentException>(assemblies.Count() > 0, "At least one assembly must be passed.");
 
             output = new CodeGeneratorOutput();
+            writer = new StringWriter();
+
+            // Load and normalize service and data models from the source assemblies.
+
+            foreach (var assembly in assemblies)
+            {
+                ScanAssembly(assembly);
+            }
+
+            // Verify that everything looks good.
+
+            CheckForErrors();
+
+            if (output.HasErrors)
+            {
+                return output;
+            }
+
+            // Perform the code generation.
+
+            GenerateCode();
 
             return output;
         }
@@ -279,7 +302,7 @@ namespace Neon.CodeGen
                 }
                 else 
                 {
-                    output.Errors.Add($"[{type.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
+                    output.Errors.Add($"*** ERROR: [{type.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
 
                     dataModel.EnumBaseType = "int";
                 }
@@ -342,6 +365,103 @@ namespace Neon.CodeGen
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks the loaded service and data models for problems.
+        /// </summary>
+        private void CheckForErrors()
+        {
+            // Ensure that all data model property types are either a primitive
+            // .NET type or reference another loaded data model.  Also ensure
+            // that all non-primitive types have a public default constructor.
+
+            foreach (var dataModel in nameToDataModel.Values)
+            {
+                if (dataModel.SourceType.IsPrimitive)
+                {
+                    continue;
+                }
+
+                var constructors = dataModel.SourceType.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+
+                if (!constructors.Any(c => c.GetParameters().Length == 0))
+                {
+                    output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model does not define a public (parameter-less) default constructor.");
+                }
+
+                foreach (var property in dataModel.Properties)
+                {
+                    if (!nameToDataModel.ContainsKey(property.Type.FullName))
+                    {
+                        output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model references type [{property.Type.FullName}] which is not defined in a source assembly.");
+                    }
+                }
+            }
+
+            // Ensure that all service method parameter and result types are either
+            // a primitive .NET type or reference another loaded data model.
+
+            foreach (var serviceModel in nameToServiceModel.Values)
+            {
+                foreach (var method in serviceModel.Methods)
+                {
+                    var returnType = method.MethodInfo.ReturnType;
+
+                    if (!returnType.IsPrimitive && !nameToDataModel.ContainsKey(returnType.FullName))
+                    {
+                        output.Errors.Add($"*** ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] returns [{returnType.FullName}] which is not defined in a source assembly.");
+                    }
+
+                    foreach (var parameter in method.MethodInfo.GetParameters())
+                    {
+                        output.Errors.Add($"*** ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] as argument [{parameter.Name}:{parameter.ParameterType.FullName}] whose type is not defined in a source assembly.");
+                    }
+                }
+            }
+
+            // $todo(jeff.lill):
+            //
+            // Ensure that routes and method signatures will be unique for the generated
+            // clients, taking client groups into account.  The top priority is verify
+            // the routes because any problems there won't be detected until runtime.
+            // Any method signature conflicts will be detected when the the generated
+            // code is compiled.
+        }
+
+        /// <summary>
+        /// Generates code from the input models.
+        /// </summary>
+        private void GenerateCode()
+        {
+            // Write the source code file header.
+
+            writer.WriteLine($"//-----------------------------------------------------------------------------");
+            writer.WriteLine($"// This file was generated by the [Neon.CodeGen] library");
+            writer.WriteLine($"// Any manual edits will be lost when the file is regenerated.");
+            writer.WriteLine();
+            writer.WriteLine($"#pragma warning disable 1591");
+            writer.WriteLine();
+            writer.WriteLine($"using System;");
+            writer.WriteLine($"using System.Collections.Generic;");
+            writer.WriteLine($"using System.Dynamic;");
+            writer.WriteLine($"using System.IO;");
+            writer.WriteLine();
+            writer.WriteLine($"using Newtonsoft.Json.Linq;");
+            writer.WriteLine();
+
+            // 
+
+            // Generate the data models.
+
+            writer.WriteLine($"//-----------------------------------------------------------------------------");
+            writer.WriteLine();
+
+
+
+            // Set the generated source code for the code generator output.
+
+            output.OutputSource = writer.ToString();
         }
     }
 }

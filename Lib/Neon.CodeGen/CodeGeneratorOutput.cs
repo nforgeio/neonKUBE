@@ -50,8 +50,8 @@ namespace Neon.CodeGen
         public string DataCode { get; internal set; }
 
         /// <summary>
-        /// Rerturns the generated service client source code.
+        /// Returns the generated source code.
         /// </summary>
-        public string ClientCode { get; internal set; }
+        public string OutputSource { get; internal set; }
     }
 }

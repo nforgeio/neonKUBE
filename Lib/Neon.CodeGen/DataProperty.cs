@@ -25,7 +25,7 @@ namespace Neon.CodeGen
     /// <summary>
     /// Describes a <see cref="DataModel"/> property.
     /// </summary>
-    public class DataProperty
+    internal class DataProperty
     {
         /// <summary>
         /// Constructor.
