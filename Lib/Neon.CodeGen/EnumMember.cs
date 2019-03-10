@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DataAttributes.cs
+// FILE:	    EnumMember.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,33 +23,30 @@ using System.Text;
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Used to provide the model code generator additional information
-    /// about a specific data type.  Use of this optional because the code
-    /// generator assumes that all types that are not specifically tagged
-    /// by <see cref="ServiceAttribute"/> are data types.
+    /// Describes an <c>enum</c> member.
     /// </summary>
-    public class DataModelAttribute : Attribute
+    public class EnumMember
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DataModelAttribute()
+        public EnumMember()
         {
         }
 
         /// <summary>
-        /// <para>
-        /// Optionally specifies the type identifier that will be used by
-        /// generated code to identify the object type at runtime. This
-        /// will be used when deserializing the object from noSQL databases.
-        /// </para>
-        /// <para>
-        /// This defaults to the fully qualified name of the type as it
-        /// appears in the source assembly as it is scanned by the code 
-        /// generator.  You may want to set this to reduce the length
-        /// or just to customize how your data is persistedd.
-        /// </para>
+        /// The enumeration value name as it appears in code.
         /// </summary>
-        public string TypeID { get; set; }
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The enumeration value name as it is serialized.
+        /// </summary>
+        public string SerializedName { get; set; }
+
+        /// <summary>
+        /// The enumeration ordinal value.
+        /// </summary>
+        public string OrdinalValue { get; set; }
     }
 }

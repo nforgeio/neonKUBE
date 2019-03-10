@@ -103,10 +103,41 @@ namespace Neon.CodeGen
     }
 
     /// <summary>
+    /// Base class for the HTTP related attributes below.
+    /// </summary>
+    public abstract class HttpAttribute : Attribute
+    {
+        /// <summary>
+        /// The route template.
+        /// </summary>
+        public string Template { get; set; }
+
+        /// <summary>
+        /// Returns the HTTP method.
+        /// </summary>
+        public string HttpMethod { get; set; }
+
+        /// <summary>
+        /// Optionally overrides the tagged service endpoint method name when
+        /// generating the client code.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
+        /// </summary>
+        public int Order
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+    }
+
+    /// <summary>
     /// Used to identify a service endpoint that is triggered via the <b>GET</b> method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class HttpGetAttribute : Attribute
+    public class HttpGetAttribute : HttpAttribute
     {
         /// <summary>
         /// Constructor.
@@ -114,27 +145,8 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpGetAttribute(string template = null)
         {
-            this.Template = template;
+            this.Template   = template;
             this.HttpMethod = "GET";
-        }
-
-        /// <summary>
-        /// The route template.
-        /// </summary>
-        public string Template { get; set; }
-
-        /// <summary>
-        /// Returns the HTTP method.
-        /// </summary>
-        public string HttpMethod { get; private set; }
-
-        /// <summary>
-        /// <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-        /// </summary>
-        public int Order
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
         }
     }
 
@@ -142,7 +154,7 @@ namespace Neon.CodeGen
     /// Used to identify a service endpoint that is triggered via the <b>POST</b> method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class HttpPostAttribute : Attribute
+    public class HttpPostAttribute : HttpAttribute
     {
         /// <summary>
         /// Constructor.
@@ -150,33 +162,8 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpPostAttribute(string template = null)
         {
-            this.Template = template;
+            this.Template   = template;
             this.HttpMethod = "POST";
-        }
-
-        /// <summary>
-        /// The route template.
-        /// </summary>
-        public string Template { get; set; }
-
-        /// <summary>
-        /// Optionally overrides the tagged service endpoint method name when
-        /// generating the client code.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Returns the HTTP method.
-        /// </summary>
-        public string HttpMethod { get; private set; }
-
-        /// <summary>
-        /// <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-        /// </summary>
-        public int Order
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
         }
     }
 
@@ -184,7 +171,7 @@ namespace Neon.CodeGen
     /// Used to identify a service endpoint that is triggered via the <b>PUT</b> method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class HttpPutAttribute : Attribute
+    public class HttpPutAttribute : HttpAttribute
     {
         /// <summary>
         /// Constructor.
@@ -192,33 +179,8 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpPutAttribute(string template = null)
         {
-            this.Template = template;
+            this.Template   = template;
             this.HttpMethod = "PUT";
-        }
-
-        /// <summary>
-        /// The route template.
-        /// </summary>
-        public string Template { get; set; }
-
-        /// <summary>
-        /// Optionally overrides the tagged service endpoint method name when
-        /// generating the client code.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Returns the HTTP method.
-        /// </summary>
-        public string HttpMethod { get; private set; }
-
-        /// <summary>
-        /// <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-        /// </summary>
-        public int Order
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
         }
     }
 
@@ -226,7 +188,7 @@ namespace Neon.CodeGen
     /// Used to identify a service endpoint that is triggered via the <b>PATCH</b> method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class HttpPatchAttribute : Attribute
+    public class HttpPatchAttribute : HttpAttribute
     {
         /// <summary>
         /// Constructor.
@@ -234,33 +196,8 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpPatchAttribute(string template = null)
         {
-            this.Template = template;
+            this.Template   = template;
             this.HttpMethod = "PATCH";
-        }
-
-        /// <summary>
-        /// The route template.
-        /// </summary>
-        public string Template { get; set; }
-
-        /// <summary>
-        /// Optionally overrides the tagged service endpoint method name when
-        /// generating the client code.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Returns the HTTP method.
-        /// </summary>
-        public string HttpMethod { get; private set; }
-
-        /// <summary>
-        /// <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-        /// </summary>
-        public int Order
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
         }
     }
 
@@ -268,7 +205,7 @@ namespace Neon.CodeGen
     /// Used to identify a service endpoint that is triggered via the <b>HEAD</b> method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class HttpHeadAttribute : Attribute
+    public class HttpHeadAttribute : HttpAttribute
     {
         /// <summary>
         /// Constructor.
@@ -276,33 +213,8 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpHeadAttribute(string template = null)
         {
-            this.Template = template;
+            this.Template   = template;
             this.HttpMethod = "HEAD";
-        }
-
-        /// <summary>
-        /// The route template.
-        /// </summary>
-        public string Template { get; set; }
-
-        /// <summary>
-        /// Optionally overrides the tagged service endpoint method name when
-        /// generating the client code.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Returns the HTTP method.
-        /// </summary>
-        public string HttpMethod { get; private set; }
-
-        /// <summary>
-        /// <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-        /// </summary>
-        public int Order
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
         }
     }
 
@@ -310,7 +222,7 @@ namespace Neon.CodeGen
     /// Used to identify a service endpoint that is triggered via the <b>OPTIONS</b> method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class HttpOptionsAttribute : Attribute
+    public class HttpOptionsAttribute : HttpAttribute
     {
         /// <summary>
         /// Constructor.
@@ -318,33 +230,8 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpOptionsAttribute(string template = null)
         {
-            this.Template = template;
+            this.Template   = template;
             this.HttpMethod = "OPTIONS";
-        }
-
-        /// <summary>
-        /// The route template.
-        /// </summary>
-        public string Template { get; set; }
-
-        /// <summary>
-        /// Optionally overrides the tagged service endpoint method name when
-        /// generating the client code.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Returns the HTTP method.
-        /// </summary>
-        public string HttpMethod { get; private set; }
-
-        /// <summary>
-        /// <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-        /// </summary>
-        public int Order
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
         }
     }
 

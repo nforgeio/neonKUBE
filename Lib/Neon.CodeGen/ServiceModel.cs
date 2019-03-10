@@ -27,6 +27,8 @@ namespace Neon.CodeGen
     /// </summary>
     internal class ServiceModel
     {
+        private string clientGroup;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -45,5 +47,40 @@ namespace Neon.CodeGen
         /// Returns the target groups for the type.
         /// </summary>
         public HashSet<string> TargetGroups { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+        /// <summary>
+        /// Used to specify type name to use for the generated service client.
+        /// </summary>
+        public string ClientTypeName { get; set; }
+
+        /// <summary>
+        /// Optionally used group multiple services into a single generated service client.
+        /// </summary>
+        public string ClientGroup
+        {
+            get => clientGroup;
+
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    clientGroup = null;
+                }
+                else
+                {
+                    clientGroup = value.Trim();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Optionally specifies the route template prefix for the service.
+        /// </summary>
+        public string RouteTemplate { get; set; }
+
+        /// <summary>
+        /// Lists the service methods.
+        /// </summary>
+        public List<ServiceMethod> Methods { get; private set; } = new List<ServiceMethod>();
     }
 }

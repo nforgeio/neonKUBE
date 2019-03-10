@@ -21,7 +21,10 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Runtime;
+using System.Runtime.Serialization;
 using System.Text;
+
+using Newtonsoft.Json;
 
 namespace Neon.CodeGen
 {
@@ -104,7 +107,102 @@ namespace Neon.CodeGen
         /// <param name="type">The source type.</param>
         private void LoadServiceModel(Type type)
         {
-            // $todo(jeff.lill): Implement this!
+            var serviceModel = new ServiceModel(type);
+
+            nameToServiceModel[type.FullName] = serviceModel;
+
+            foreach (var targetAttibute in type.GetCustomAttributes<TargetAttribute>())
+            {
+                if (!serviceModel.TargetGroups.Contains(targetAttibute.Group))
+                {
+                    serviceModel.TargetGroups.Add(targetAttibute.Group);
+                }
+            }
+
+            var serviceAttributes = type.GetCustomAttribute<ServiceAttribute>();
+
+            serviceModel.ClientTypeName = serviceAttributes.Name ?? type.Name;
+
+            var clientGroupAttribute = type.GetCustomAttribute<ClientGroupAttribute>();
+
+            if (clientGroupAttribute != null)
+            {
+                serviceModel.ClientGroup = clientGroupAttribute.Name;
+            }
+
+            var routeAttribute = type.GetCustomAttribute<RouteAttribute>();
+
+            if (routeAttribute != null)
+            {
+                serviceModel.RouteTemplate = routeAttribute.Template;
+            }
+
+            // Walk the service methods to load their metadata.
+
+            foreach (var methodInfo in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var serviceMethod = new ServiceMethod();
+
+                routeAttribute = methodInfo.GetCustomAttribute<RouteAttribute>();
+
+                if (routeAttribute != null)
+                {
+                    serviceMethod.RouteTemplate = routeAttribute.Template;
+                }
+
+                var httpAttribute = methodInfo.GetCustomAttribute<HttpAttribute>();
+
+                if (httpAttribute != null)
+                {
+                    serviceMethod.Name       = routeAttribute.Name;
+                    serviceMethod.HttpMethod = httpAttribute.HttpMethod;
+                }
+
+                if (string.IsNullOrEmpty(serviceMethod.Name))
+                {
+                    serviceMethod.Name = methodInfo.Name;
+                }
+
+                if (string.IsNullOrEmpty(serviceMethod.HttpMethod))
+                {
+                    if (methodInfo.Name.StartsWith("Delete", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        serviceMethod.HttpMethod = "DELETE";
+                    }
+                    else if (methodInfo.Name.StartsWith("Get", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        serviceMethod.HttpMethod = "GET";
+                    }
+                    else if (methodInfo.Name.StartsWith("Head", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        serviceMethod.HttpMethod = "HEAD";
+                    }
+                    else if (methodInfo.Name.StartsWith("Options", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        serviceMethod.HttpMethod = "OPTIONS";
+                    }
+                    else if (methodInfo.Name.StartsWith("Patch", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        serviceMethod.HttpMethod = "PATCH";
+                    }
+                    else if (methodInfo.Name.StartsWith("Post", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        serviceMethod.HttpMethod = "POST";
+                    }
+                    else if (methodInfo.Name.StartsWith("Put", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        serviceMethod.HttpMethod = "PUT";
+                    }
+                    else
+                    {
+                        // All other method names will default to: GET
+
+                        serviceMethod.HttpMethod = "GET";
+                    }
+                }
+
+                serviceModel.Methods.Add(serviceMethod);
+            }
         }
 
         /// <summary>
@@ -115,6 +213,10 @@ namespace Neon.CodeGen
         {
             var dataModel = new DataModel(type);
 
+            nameToDataModel[type.FullName] = dataModel;
+            dataModel.BaseType             = type.BaseType;
+            dataModel.IsEnum               = type.IsEnum;
+
             foreach (var targetAttibute in type.GetCustomAttributes<TargetAttribute>())
             {
                 if (!dataModel.TargetGroups.Contains(targetAttibute.Group))
@@ -123,8 +225,122 @@ namespace Neon.CodeGen
                 }
             }
 
-            if (!nameToDataModel.TryAdd(type.FullName, dataModel))
+            var dataModelAttribute = type.GetCustomAttribute<DataModelAttribute>();
+
+            if (dataModelAttribute != null)
             {
+                dataModel.TypeID = dataModelAttribute.TypeID ?? type.FullName;
+            }
+
+            if (string.IsNullOrEmpty(dataModel.TypeID))
+            {
+                dataModel.TypeID = type.FullName;
+            }
+
+            if (dataModel.IsEnum)
+            {
+                // Normalize the enum properties.
+
+                dataModel.HasEnumFlags = type.GetCustomAttribute<FlagsAttribute>() != null;
+
+                var enumBaseType = type.GetEnumUnderlyingType();
+
+                if (enumBaseType == typeof(byte))
+                {
+                    dataModel.EnumBaseType = "byte";
+                }
+                else if (enumBaseType == typeof(sbyte))
+                {
+                    dataModel.EnumBaseType = "sbyte";
+                }
+                else if (enumBaseType == typeof(short))
+                {
+                    dataModel.EnumBaseType = "short";
+                }
+                else if (enumBaseType == typeof(ushort))
+                {
+                    dataModel.EnumBaseType = "ushort";
+                }
+                else if (enumBaseType == typeof(int))
+                {
+                    dataModel.EnumBaseType = "int";
+                }
+                else if (enumBaseType == typeof(uint))
+                {
+                    dataModel.EnumBaseType = "uint";
+                }
+                else if (enumBaseType == typeof(long))
+                {
+                    dataModel.EnumBaseType = "long";
+                }
+                else if (enumBaseType == typeof(ulong))
+                {
+                    dataModel.EnumBaseType = "ulong";
+                }
+                else 
+                {
+                    output.Errors.Add($"[{type.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
+
+                    dataModel.EnumBaseType = "int";
+                }
+
+                foreach (var member in type.GetFields(BindingFlags.Public | BindingFlags.Static))
+                {
+                    var enumMember = new EnumMember()
+                    {
+                        Name         = member.Name,
+                        OrdinalValue = member.GetRawConstantValue().ToString()
+                    };
+
+                    var enumMemberAttribute = member.GetCustomAttribute<EnumMemberAttribute>();
+
+                    if (enumMemberAttribute != null)
+                    {
+                        enumMember.SerializedName = enumMemberAttribute.Value;
+                    }
+
+                    if (string.IsNullOrEmpty(enumMember.SerializedName))
+                    {
+                        enumMember.SerializedName = member.Name;
+                    }
+
+                    dataModel.EnumMembers.Add(enumMember);
+                }
+            }
+            else
+            {
+                // Normalize regular (non-enum) data model properties.
+
+                foreach (var member in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    var property = new DataProperty()
+                    {
+                        Name = member.Name,
+                        Type = member.PropertyType
+                    };
+
+                    property.Ignore = member.GetCustomAttribute<JsonIgnoreAttribute>() != null;
+
+                    var jsonPropertyAttribute = member.GetCustomAttribute<JsonPropertyAttribute>();
+
+                    if (jsonPropertyAttribute != null)
+                    {
+                        property.SerializedName = jsonPropertyAttribute.PropertyName;
+                        property.Order          = jsonPropertyAttribute.Order;
+                    }
+                    else
+                    {
+                        // Properties without a specific order should be rendered 
+                        // after any properties with a specifc order.
+
+                        property.Order = int.MaxValue;
+                    }
+
+                    if (string.IsNullOrEmpty(property.SerializedName))
+                    {
+                        property.SerializedName = member.Name;
+                    }
+                }
             }
         }
     }
