@@ -26,6 +26,13 @@ using System.Runtime.Serialization;
 using System.Text;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+// $todo(jeff.lill):
+//
+// At somepoint in the future it would be nice to read the
+// XML code documentation and include this in the generated
+// source code as well.
 
 namespace Neon.CodeGen
 {
@@ -37,7 +44,10 @@ namespace Neon.CodeGen
         private CodeGeneratorOutput                 output;
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
+        private Dictionary<string, NamespaceInfo>   nameToNamespace    = new Dictionary<string, NamespaceInfo>();
         private StringWriter                        writer;
+        private string                              targetGroup;
+        private string                              targetNamespace;
 
         /// <summary>
         /// Constructs a code generator.
@@ -72,6 +82,8 @@ namespace Neon.CodeGen
             {
                 ScanAssembly(assembly);
             }
+
+            GroupModelsIntoNamespaces();
 
             // Verify that everything looks good.
 
@@ -430,6 +442,69 @@ namespace Neon.CodeGen
         }
 
         /// <summary>
+        /// Group the data and service models into the namespaces they will be
+        /// generated within.  Note that each model may end up being generated
+        /// in multiple namespaces.
+        /// </summary>
+        /// <returns><c>true</c> if the operation was successful.</returns>
+        private bool GroupModelsIntoNamespaces()
+        {
+            foreach (var dataModel in nameToDataModel.Values)
+            {
+                var namespaceName = Settings.DefaultNamespace;
+
+                foreach (var targetGroup in dataModel.TargetGroups)
+                {
+                    if (Settings.GroupToNamespace.TryGetValue(targetGroup, out var targetNamespace))
+                    {
+                        namespaceName = targetNamespace;
+                    }
+                }
+
+                if (!nameToNamespace.TryGetValue(namespaceName, out var namespaceInfo))
+                {
+                    namespaceInfo = new NamespaceInfo(namespaceName);
+                    nameToNamespace.Add(namespaceName, namespaceInfo);
+                }
+
+                if (!namespaceInfo.DataModels.Contains(dataModel))
+                {
+                    namespaceInfo.DataModels.Add(dataModel);
+                }
+            }
+
+            foreach (var dataModel in nameToDataModel.Values)
+            {
+                var namespaceName = Settings.DefaultNamespace;
+
+                foreach (var targetGroup in dataModel.TargetGroups)
+                {
+                    if (Settings.GroupToNamespace.TryGetValue(targetGroup, out var targetNamespace))
+                    {
+                        namespaceName = targetNamespace;
+                    }
+                }
+
+                if (!nameToNamespace.TryGetValue(namespaceName, out var namespaceInfo))
+                {
+                    namespaceInfo = new NamespaceInfo(namespaceName);
+                    nameToNamespace.Add(namespaceName, namespaceInfo);
+                }
+
+                if (!namespaceInfo.DataModels.Contains(dataModel))
+                {
+                    namespaceInfo.DataModels.Add(dataModel);
+                }
+            }
+
+            // Ensure that a single target group and namespace are selected.
+
+            // $todo(jeff.lill): Implement this
+
+            return true;
+        }
+
+        /// <summary>
         /// Generates code from the input models.
         /// </summary>
         private void GenerateCode()
@@ -447,21 +522,171 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
             writer.WriteLine();
-            writer.WriteLine($"using Newtonsoft.Json.Linq;");
-            writer.WriteLine();
 
-            // 
+            if (Settings.EnableRoundTrip)
+            {
+                writer.WriteLine($"using Newtonsoft.Json;");
+                writer.WriteLine($"using Newtonsoft.Json.Linq;");
+                writer.WriteLine();
+            }
 
-            // Generate the data models.
+            // Generate namespaces and the models contained within each.
 
-            writer.WriteLine($"//-----------------------------------------------------------------------------");
-            writer.WriteLine();
+            foreach (var namespaceInfo in nameToNamespace.Values
+                .OrderBy(ns => ns.OutputNamespace.ToLowerInvariant()))
+            {
+                writer.WriteLine($"//-----------------------------------------------------------------------------");
+                writer.WriteLine();
+                writer.WriteLine($"namespace {namespaceInfo.OutputNamespace}");
+                writer.WriteLine($"{{");
 
+                // Generate the data models.
 
+                var index = 0;
+
+                foreach (var dataModel in namespaceInfo.DataModels
+                    .OrderBy(dm => dm.SourceType.Name.ToLowerInvariant()))
+                {
+                    GenerateDataModel(dataModel, index++);
+                }
+
+                // Generate the service clients (if enabled).
+
+                if (Settings.GenerateServiceClients)
+                {
+                }
+
+                writer.WriteLine($"}}");
+            }
 
             // Set the generated source code for the code generator output.
 
             output.OutputSource = writer.ToString();
+        }
+
+        /// <summary>
+        /// Generates source code for a data model.
+        /// </summary>
+        /// <param name="dataModel">The data model.</param>
+        /// <param name="index">Zero based index of the model within the current namespace.</param>
+        private void GenerateDataModel(DataModel dataModel, int index)
+        {
+            if (index > 0)
+            {
+                // Add a blank line between type definitions within the namespace.
+
+                writer.WriteLine();
+            }
+
+            writer.WriteLine($"    /// <summary>");
+            writer.WriteLine($"    /// Generated from: {dataModel.SourceType.FullName}");
+            writer.WriteLine($"    /// </summary>");
+
+            if (dataModel.IsEnum)
+            {
+                if (dataModel.HasEnumFlags)
+                {
+                    writer.WriteLine($"    [Flags]");
+                }
+
+                writer.WriteLine($"    public enum {dataModel.SourceType.Name} : {dataModel.EnumBaseType}");
+                writer.WriteLine($"    {{");
+
+                foreach (var member in dataModel.EnumMembers)
+                {
+                    writer.WriteLine($"        {member.Name} = {member.OrdinalValue},");
+                }
+
+                writer.WriteLine($"    }}");
+            }
+            else
+            {
+                writer.WriteLine($"    public class {dataModel.SourceType.Name}");
+                writer.WriteLine($"    {{");
+
+                if (Settings.EnableRoundTrip)
+                {
+                    writer.WriteLine($"        public static {dataModel.SourceType.Name} FromJson(string jsonText)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            if (string.IsNullOrEmpty(jsonText))");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText))");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            this.__JObject = new JObject(jsonText);");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        public static {dataModel.SourceType.Name} FromJObject(JObject jObject)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            if (jObject == null)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText))");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            this.__JObject = jObject;");
+                    writer.WriteLine($"        }}");
+
+                    if (dataModel.BaseType == null)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"        protected JObject __JObject {{ get; set; }}");
+                    }
+                }
+
+                foreach (var property in dataModel.Properties)
+                {
+                    if (Settings.EnableRoundTrip)
+                    {
+                        writer.WriteLine();
+                    }
+
+                    if (property.Ignore)
+                    {
+                        writer.WriteLine($"        [JsonIgnore]");
+                    }
+                    else
+                    {
+                        if (property.Order < int.MaxValue)
+                        {
+                            writer.WriteLine($"        [JsonProperty(Name = \"{property.SerializedName}\", Order = {property.Order})]");
+                        }
+                        else
+                        {
+                            writer.WriteLine($"        [JsonProperty(Name = \"{property.SerializedName}\")]");
+                        }
+                    }
+
+                    var propertyTypeName = ResoveTypeReference(property.Type);
+
+                    if (Settings.EnableRoundTrip)
+                    {
+                        writer.WriteLine($"        public {propertyTypeName} {property.Name}");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            get {{ return __JObject[{property.SerializedName}].ToObject<{propertyTypeName}>(); }}");
+                        writer.WriteLine($"            set {{ __JObject[{property.SerializedName}]= value; }}");
+                        writer.WriteLine($"        }}");
+                    }
+                    else
+                    {
+                        writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}");
+                    }
+                }
+
+                writer.WriteLine($"    }}");
+            }
+        }
+
+        /// <summary>
+        /// Returns the fully qualified name for a type, taking target
+        /// groups and namespace mappings into account.
+        /// </summary>
+        /// <param name="type">The referenced type.</param>
+        /// <returns>The fully qualified type name.</returns>
+        private string ResoveTypeReference(Type type)
+        {
+            // $todo(jeff.lill): We need to handle target namespaces.
+
+            return type.FullName;
         }
     }
 }

@@ -31,19 +31,8 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructs an instance with reasonable settings.
         /// </summary>
-        /// <param name="targetGroups">Optionally specifies the target output groups.</param>
-        public CodeGeneratorSettings(params string[] targetGroups)
+        public CodeGeneratorSettings()
         {
-            if (targetGroups != null)
-            {
-                foreach (var group in targetGroups.Where(g => !string.IsNullOrEmpty(g)))
-                {
-                    if (!TargetGroups.Contains(group))
-                    {
-                        TargetGroups.Add(group);
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -52,12 +41,20 @@ namespace Neon.CodeGen
         /// need to be generated.
         /// </summary>
         public bool GenerateServiceClients { get; set; } = true;
+
+        /// <summary>
+        /// Enhances data model code generation to prevent property loss
+        /// for noSQL scenarios where somebody added a model property before
+        /// all referencing applications have regenerated their generated
+        /// data models.  This defaults to <c>true</c>.
+        /// </summary>
+        public bool EnableRoundTrip { get; set; } = true;
         
         /// <summary>
-        /// Returns a case insensitve <see cref="HashSet{T}"/> holding the names
-        /// of the selected target output groups.
+        /// Used to select a specific target group when there are more
+        /// than one group defined.
         /// </summary>
-        public HashSet<string> TargetGroups { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        public string TargetGroup { get; set; }
 
         /// <summary>
         /// The default C# <c>namespace</c> to use when no other namespace is
