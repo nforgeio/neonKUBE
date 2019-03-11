@@ -27,7 +27,8 @@ using Newtonsoft.Json.Linq;
 
 // $todo(jeff.lill):
 //
-// I need to measure how expensive this is.
+// This is about 390 times slower than a stock Dictionary<TKey, TValue>, 
+// handling about 1.5 million operations per second.
 
 namespace Neon.CodeGen
 {
@@ -50,7 +51,7 @@ namespace Neon.CodeGen
         {
             Covenant.Requires<ArgumentNullException>(backingProperty != null);
 
-            this.property = backingProperty;
+            this.property   = backingProperty;
             this.dictionary = property.Value.ToObject<Dictionary<TKey, TValue>>();
         }
 
@@ -60,7 +61,7 @@ namespace Neon.CodeGen
         /// afterwards.
         /// </summary>
         /// <param name="operation">The operation to be performed.</param>
-        private void ModifyOperation(Action operation)
+        private void Modify(Action operation)
         {
             lock (property)
             {
@@ -82,7 +83,7 @@ namespace Neon.CodeGen
         /// <typeparam name="TResult">Thr result type.</typeparam>
         /// <param name="operation">The operation to be performed.</param>
         /// <returns>The operation result.</returns>
-        private TResult QueryOperation<TResult>(Func<TResult> operation)
+        private TResult Query<TResult>(Func<TResult> operation)
         {
             lock (property)
             {
@@ -99,11 +100,11 @@ namespace Neon.CodeGen
         /// <inheritdoc/>
         public TValue this[TKey key]
         {
-            get => QueryOperation(() => dictionary[key]);
+            get => Query(() => dictionary[key]);
 
             set
             {
-                ModifyOperation(() =>
+                Modify(() =>
                 {
                     dictionary[key] = value;
                 });
@@ -111,13 +112,13 @@ namespace Neon.CodeGen
         }
 
         /// <inheritdoc/>
-        public ICollection<TKey> Keys => QueryOperation(() => dictionary.Keys);
+        public ICollection<TKey> Keys => Query(() => dictionary.Keys);
 
         /// <inheritdoc/>
-        public ICollection<TValue> Values => QueryOperation(() => dictionary.Values);
+        public ICollection<TValue> Values => Query(() => dictionary.Values);
 
         /// <inheritdoc/>
-        public int Count => QueryOperation(() => dictionary.Count);
+        public int Count => Query(() => dictionary.Count);
 
         /// <inheritdoc/>
         public bool IsReadOnly => false;
@@ -125,44 +126,38 @@ namespace Neon.CodeGen
         /// <inheritdoc/>
         public void Add(TKey key, TValue value)
         {
-            ModifyOperation(() => dictionary.Add(key, value));
+            Modify(() => dictionary.Add(key, value));
         }
 
         /// <inheritdoc/>
         public void Add(KeyValuePair<TKey, TValue> item)
         {
-            ModifyOperation(() => dictionary.Add(item.Key, item.Value));
+            Modify(() => dictionary.Add(item.Key, item.Value));
         }
 
         /// <inheritdoc/>
         public void Clear()
         {
-            ModifyOperation(() => dictionary.Clear());
+            Modify(() => dictionary.Clear());
         }
 
         /// <inheritdoc/>
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            return QueryOperation(() => dictionary.ContainsKey(item.Key));
+            return Query(() => dictionary.ContainsKey(item.Key));
         }
 
         /// <inheritdoc/>
         public bool ContainsKey(TKey key)
         {
-            return QueryOperation(() => dictionary.ContainsKey(key));
+            return Query(() => dictionary.ContainsKey(key));
         }
 
         /// <inheritdoc/>
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            lock (property)
+            Modify(() =>
             {
-                if (dictionary == null)
-                {
-                    dictionary     = new Dictionary<TKey, TValue>();
-                    property.Value = JToken.FromObject(dictionary);
-                }
-
                 var index = 0;
 
                 foreach (var item in dictionary)
@@ -170,13 +165,13 @@ namespace Neon.CodeGen
                     array[arrayIndex + index] = item;
                     index++;
                 }
-            }
+            });
         }
 
         /// <inheritdoc/>
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            return QueryOperation(() => dictionary.GetEnumerator());
+            return Query(() => dictionary.GetEnumerator());
         }
 
         /// <inheritdoc/>
@@ -184,7 +179,7 @@ namespace Neon.CodeGen
         {
             var removed = false;
 
-            ModifyOperation(() => removed = dictionary.Remove(key));
+            Modify(() => removed = dictionary.Remove(key));
 
             return removed;
         }
@@ -202,7 +197,7 @@ namespace Neon.CodeGen
 
             try
             {
-                return QueryOperation(() => dictionary.TryGetValue(key, out output));
+                return Query(() => dictionary.TryGetValue(key, out output));
             }
             finally
             {
@@ -213,7 +208,7 @@ namespace Neon.CodeGen
         /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return QueryOperation(() => ((IEnumerable)dictionary).GetEnumerator());
+            return Query(() => ((IEnumerable)dictionary).GetEnumerator());
         }
     }
 }
