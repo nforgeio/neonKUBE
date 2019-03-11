@@ -83,7 +83,7 @@ namespace Neon.CodeGen
                 ScanAssembly(assembly);
             }
 
-            GroupModelsIntoNamespaces();
+            FilterModels();
 
             // Verify that everything looks good.
 
@@ -119,6 +119,8 @@ namespace Neon.CodeGen
                 return;
             }
 
+            // Load and normalize the types.
+
             foreach (var type in assembly.GetTypes()
                 .Where(t => t.IsPublic)
                 .Where(t => t.IsInterface || t.IsEnum))
@@ -133,6 +135,67 @@ namespace Neon.CodeGen
                 {
                     LoadDataModel(type);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Removes any data and/or service models that are not within any 
+        /// of the targeted groups.
+        /// </summary>
+        private void FilterModels()
+        {
+            // Remove any data models that aren't in one of the target groups.
+
+            var deletedDataModels = new List<string>();
+
+            foreach (var item in nameToDataModel)
+            {
+                var inGroup = false;
+
+                foreach (var group in Settings.TargetGroups)
+                {
+                    if (inGroup = item.Value.TargetGroups.Contains(group))
+                    {
+                        break;
+                    }
+                }
+
+                if (!inGroup)
+                {
+                    deletedDataModels.Add(item.Key);
+                }
+            }
+
+            foreach (var deletedDataModel in deletedDataModels)
+            {
+                nameToDataModel.Remove(deletedDataModel);
+            }
+
+            // Remove any service models aren't in one of the target groups.
+
+            var deletedServiceModels = new List<string>();
+
+            foreach (var item in nameToServiceModel)
+            {
+                var inGroup = false;
+
+                foreach (var group in Settings.TargetGroups)
+                {
+                    if (inGroup = item.Value.TargetGroups.Contains(group))
+                    {
+                        break;
+                    }
+                }
+
+                if (!inGroup)
+                {
+                    deletedServiceModels.Add(item.Key);
+                }
+            }
+
+            foreach (var deletedServiceModel in deletedServiceModels)
+            {
+                nameToServiceModel.Remove(deletedServiceModel);
             }
         }
 
@@ -436,72 +499,9 @@ namespace Neon.CodeGen
             //
             // Ensure that routes and method signatures will be unique for the generated
             // clients, taking client groups into account.  The top priority is verify
-            // the routes because any problems there won't be detected until runtime.
+            // the routes because any problems these won't be detected until runtime.
             // Any method signature conflicts will be detected when the the generated
             // code is compiled.
-        }
-
-        /// <summary>
-        /// Group the data and service models into the namespaces they will be
-        /// generated within.  Note that each model may end up being generated
-        /// in multiple namespaces.
-        /// </summary>
-        /// <returns><c>true</c> if the operation was successful.</returns>
-        private bool GroupModelsIntoNamespaces()
-        {
-            foreach (var dataModel in nameToDataModel.Values)
-            {
-                var namespaceName = Settings.DefaultNamespace;
-
-                foreach (var targetGroup in dataModel.TargetGroups)
-                {
-                    if (Settings.GroupToNamespace.TryGetValue(targetGroup, out var targetNamespace))
-                    {
-                        namespaceName = targetNamespace;
-                    }
-                }
-
-                if (!nameToNamespace.TryGetValue(namespaceName, out var namespaceInfo))
-                {
-                    namespaceInfo = new NamespaceInfo(namespaceName);
-                    nameToNamespace.Add(namespaceName, namespaceInfo);
-                }
-
-                if (!namespaceInfo.DataModels.Contains(dataModel))
-                {
-                    namespaceInfo.DataModels.Add(dataModel);
-                }
-            }
-
-            foreach (var dataModel in nameToDataModel.Values)
-            {
-                var namespaceName = Settings.DefaultNamespace;
-
-                foreach (var targetGroup in dataModel.TargetGroups)
-                {
-                    if (Settings.GroupToNamespace.TryGetValue(targetGroup, out var targetNamespace))
-                    {
-                        namespaceName = targetNamespace;
-                    }
-                }
-
-                if (!nameToNamespace.TryGetValue(namespaceName, out var namespaceInfo))
-                {
-                    namespaceInfo = new NamespaceInfo(namespaceName);
-                    nameToNamespace.Add(namespaceName, namespaceInfo);
-                }
-
-                if (!namespaceInfo.DataModels.Contains(dataModel))
-                {
-                    namespaceInfo.DataModels.Add(dataModel);
-                }
-            }
-
-            // Ensure that a single target group and namespace are selected.
-
-            // $todo(jeff.lill): Implement this
-
-            return true;
         }
 
         /// <summary>
@@ -512,8 +512,8 @@ namespace Neon.CodeGen
             // Write the source code file header.
 
             writer.WriteLine($"//-----------------------------------------------------------------------------");
-            writer.WriteLine($"// This file was generated by the [Neon.CodeGen] library");
-            writer.WriteLine($"// Any manual edits will be lost when the file is regenerated.");
+            writer.WriteLine($"// This file was generated by the [Neon.CodeGen] library.  Any");
+            writer.WriteLine($"// manual changes will be lost when the file is regenerated.");
             writer.WriteLine();
             writer.WriteLine($"#pragma warning disable 1591");
             writer.WriteLine();
@@ -523,7 +523,7 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.IO;");
             writer.WriteLine();
 
-            if (Settings.EnableRoundTrip)
+            if (Settings.RoundTrip)
             {
                 writer.WriteLine($"using Newtonsoft.Json;");
                 writer.WriteLine($"using Newtonsoft.Json.Linq;");
@@ -552,7 +552,7 @@ namespace Neon.CodeGen
 
                 // Generate the service clients (if enabled).
 
-                if (Settings.GenerateServiceClients)
+                if (Settings.ServiceClients)
                 {
                 }
 
@@ -601,10 +601,10 @@ namespace Neon.CodeGen
             }
             else
             {
-                writer.WriteLine($"    public class {dataModel.SourceType.Name}");
+                writer.WriteLine($"    public partial class {dataModel.SourceType.Name}");
                 writer.WriteLine($"    {{");
 
-                if (Settings.EnableRoundTrip)
+                if (Settings.RoundTrip)
                 {
                     writer.WriteLine($"        public static {dataModel.SourceType.Name} FromJson(string jsonText)");
                     writer.WriteLine($"        {{");
@@ -635,7 +635,7 @@ namespace Neon.CodeGen
 
                 foreach (var property in dataModel.Properties)
                 {
-                    if (Settings.EnableRoundTrip)
+                    if (Settings.RoundTrip)
                     {
                         writer.WriteLine();
                     }
@@ -658,12 +658,12 @@ namespace Neon.CodeGen
 
                     var propertyTypeName = ResoveTypeReference(property.Type);
 
-                    if (Settings.EnableRoundTrip)
+                    if (Settings.RoundTrip)
                     {
                         writer.WriteLine($"        public {propertyTypeName} {property.Name}");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            get {{ return __JObject[{property.SerializedName}].ToObject<{propertyTypeName}>(); }}");
-                        writer.WriteLine($"            set {{ __JObject[{property.SerializedName}]= value; }}");
+                        writer.WriteLine($"            set {{ __JObject[{property.SerializedName}] = value; }}");
                         writer.WriteLine($"        }}");
                     }
                     else
@@ -677,16 +677,116 @@ namespace Neon.CodeGen
         }
 
         /// <summary>
-        /// Returns the fully qualified name for a type, taking target
-        /// groups and namespace mappings into account.
+        /// Resolves the type passed into a string, taking namespaces,
+        /// arrays, and generic collection references into account.
         /// </summary>
         /// <param name="type">The referenced type.</param>
-        /// <returns>The fully qualified type name.</returns>
+        /// <returns>The type reference as a string or <c>null</c> if the type is now valid.</returns>
         private string ResoveTypeReference(Type type)
         {
-            // $todo(jeff.lill): We need to handle target namespaces.
+            return ResoveTypeReference(type, out var error);
+        }
 
-            return type.FullName;
+        /// <summary>
+        /// Resolves the type passed into a string, taking namespaces,
+        /// arrays, and generic collection references into account.
+        /// </summary>
+        /// <param name="type">The referenced type.</param>
+        /// <param name="errorMessage">Returns as the error message when there's a problem.</param>
+        /// <returns>The type reference as a string or <c>null</c> if the type is now valid.</returns>
+        private string ResoveTypeReference(Type type, out string errorMessage)
+        {
+            errorMessage = null;
+
+            // We currently handle references to the following types:
+            //
+            //      * Primitive .NET types
+            //      * Common .NET types: TimeSpan, DateTime, DateTimeOffset
+            //      * Data models loaded from the assembly and included
+            //        in one of the targeted groups
+            //      * Single dimension arrays of the types above
+            //      * Generic IList<T>, where T is of the above types
+            //      * Generic IEnumerable<T>, where T is one of the above types
+            //      * IDictionary<TKey, TValue> where the TKey and
+            //        TValue is one of the above types
+            //
+            // NOTE:
+            //
+            //      * IList<T> and IEnumerable<T> types will be converted
+            //        to List<T>.
+
+            if (type.IsPrimitive)
+            {
+                return type.Name;
+            }
+            else if (type == typeof(TimeSpan) || type == typeof(DateTime) || type == typeof(DateTimeOffset))
+            {
+                return type.Name;
+            }
+            else if (type.IsArray)
+            {
+                if (type.GetArrayRank() > 1)
+                {
+                    errorMessage = "Only single dimensional arrays are supported";
+                    return null;
+                }
+
+                var elementType = type.GetElementType();
+                var elementRef  = ResoveTypeReference(elementType, out errorMessage);
+
+                if (elementRef == null)
+                {
+                    return null;
+                }
+
+                return $"{elementRef}[]";
+            }
+            else if (type.IsGenericType)
+            {
+                if (type.FullName == "System.Collections.Generic.List" ||
+                    type.FullName == "System.Collections.Generic.IList")
+                {
+                    var elementTypes = type.GetGenericArguments();
+                    var elementRef   = ResoveTypeReference(elementTypes[0], out errorMessage);
+
+                    if (elementRef == null)
+                    {
+                        return null;
+                    }
+
+                    return $"List<{elementRef}>";
+                }
+                else if (type.FullName == "System.Collections.Generic.Dictionary" ||
+                         type.FullName == "System.Collections.Generic.IDictionary")
+                {
+                    var elementTypes = type.GetGenericArguments();
+                    var keyRef = ResoveTypeReference(elementTypes[0], out errorMessage);
+
+                    if (keyRef == null)
+                    {
+                        return null;
+                    }
+
+                    var valueRef = ResoveTypeReference(elementTypes[1], out errorMessage);
+
+                    if (valueRef == null)
+                    {
+                        return null;
+                    }
+
+                    return $"Dictionary<{keyRef}, {valueRef}>";
+                }
+                else
+                {
+                    errorMessage = $"[{type}] is not a supported type.";
+                    return null;
+                }
+            }
+            else
+            {
+                errorMessage = $"[{type}] is not a supported type.";
+                return null;
+            }
         }
     }
 }

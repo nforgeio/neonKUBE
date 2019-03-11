@@ -31,8 +31,31 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructs an instance with reasonable settings.
         /// </summary>
-        public CodeGeneratorSettings()
+        /// <param name="targetGroups">
+        /// Specifies the target groups to be included in the
+        /// generated output code.
+        /// </param>
+        public CodeGeneratorSettings(params string[] targetGroups)
         {
+            Covenant.Requires<ArgumentNullException>(targetGroups != null);
+
+            foreach (var group in targetGroups)
+            {
+                if (string.IsNullOrEmpty(group))
+                {
+                    continue;
+                }
+
+                if (!TargetGroups.Contains(group, StringComparer.InvariantCultureIgnoreCase))
+                {
+                    TargetGroups.Add(group);
+                }
+
+                if (TargetGroups.Count == 0)
+                {
+                    throw new ArgumentException("At least one target group must be specified.");
+                }
+            }
         }
 
         /// <summary>
@@ -40,7 +63,7 @@ namespace Neon.CodeGen
         /// <c>true</c> and may be set to <c>false</c> when only the data models
         /// need to be generated.
         /// </summary>
-        public bool GenerateServiceClients { get; set; } = true;
+        public bool ServiceClients { get; set; } = true;
 
         /// <summary>
         /// Enhances data model code generation to prevent property loss
@@ -48,25 +71,18 @@ namespace Neon.CodeGen
         /// all referencing applications have regenerated their generated
         /// data models.  This defaults to <c>true</c>.
         /// </summary>
-        public bool EnableRoundTrip { get; set; } = true;
-        
-        /// <summary>
-        /// Used to select a specific target group when there are more
-        /// than one group defined.
-        /// </summary>
-        public string TargetGroup { get; set; }
+        public bool RoundTrip { get; set; } = true;
 
         /// <summary>
-        /// The default C# <c>namespace</c> to use when no other namespace is
-        /// specified.  This defaults to <c>Neon.CodeGen.Output</c>.
+        /// Used to select a specific target groups to be included in the
+        /// generated output.
         /// </summary>
-        public string DefaultNamespace { get; set; } = "Neon.CodeGen.Output";
+        public List<string> TargetGroups { get; private set; } = new List<string>();
 
         /// <summary>
-        /// Used to map case insensitve group names to the C# <c>namespace</c>
-        /// to be used when generating service and data models within the
-        /// group.  These mappings override <see cref="DefaultNamespace"/>.
+        /// The C# <c>namespace</c> to be used when generating the output
+        /// code.  This defaults to <c>Neon.CodeGen.Output</c>.
         /// </summary>
-        public Dictionary<string, string> GroupToNamespace { get; private set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+        public string Namespace { get; set; } = "Neon.CodeGen.Output";
     }
 }
