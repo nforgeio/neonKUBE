@@ -36,6 +36,8 @@ namespace Neon.CodeGen
         public ServiceModel(Type sourceType)
         {
             Covenant.Requires<ArgumentNullException>(sourceType != null);
+
+            this.SourceType = sourceType;
         }
 
         /// <summary>

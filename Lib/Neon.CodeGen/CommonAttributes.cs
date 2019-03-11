@@ -45,4 +45,13 @@ namespace Neon.CodeGen
         /// </summary>
         public string Group { get; private set; }
     }
+
+    /// <summary>
+    /// Used to indicate that a class or interface should be ignored
+    /// during code generation.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
+    public class NoCodeGenAttribute : Attribute
+    {
+    }
 }

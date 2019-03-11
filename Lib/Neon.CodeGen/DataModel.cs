@@ -36,6 +36,8 @@ namespace Neon.CodeGen
         public DataModel(Type sourceType)
         {
             Covenant.Requires<ArgumentNullException>(sourceType != null);
+
+            this.SourceType = sourceType;
         }
 
         /// <summary>
@@ -67,11 +69,6 @@ namespace Neon.CodeGen
                 }
             }
         }
-
-        /// <summary>
-        /// Identifies the base type (or <c>null</c>).
-        /// </summary>
-        public Type BaseType { get; set; }
 
         /// <summary>
         /// Indicates that the type is an <c>enum</c>.

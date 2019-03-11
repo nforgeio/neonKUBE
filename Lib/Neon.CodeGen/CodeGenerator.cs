@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -24,6 +25,8 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.Serialization;
 using System.Text;
+
+using Microsoft.CSharp;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -41,13 +44,31 @@ namespace Neon.CodeGen
     /// </summary>
     public class CodeGenerator
     {
+        //---------------------------------------------------------------------
+        // Static methods
+
+        /// <summary>
+        /// Compiles C# source code into an assembly.
+        /// </summary>
+        /// <param name="source">The C# source code.</param>
+        /// <returns>The compiled <see cref="Assembly"/>.</returns>
+        public static Assembly Compile(string source)
+        {
+            Covenant.Requires<ArgumentNullException>(source != null);
+
+            CodeDomProvider.CreateProvider("CSharp");
+        }
+
+        //---------------------------------------------------------------------
+        // Instance methods
+
         private CodeGeneratorOutput                 output;
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
-        private Dictionary<string, NamespaceInfo>   nameToNamespace    = new Dictionary<string, NamespaceInfo>();
         private StringWriter                        writer;
         private string                              targetGroup;
         private string                              targetNamespace;
+        private string                              sourceNamespace;
 
         /// <summary>
         /// Constructs a code generator.
@@ -56,6 +77,20 @@ namespace Neon.CodeGen
         public CodeGenerator(CodeGeneratorSettings settings = null)
         {
             this.Settings = settings ?? new CodeGeneratorSettings();
+
+            this.sourceNamespace = settings.SourceNamespace;
+
+            if (string.IsNullOrEmpty(sourceNamespace))
+            {
+                this.sourceNamespace = null;
+            }
+            else
+            {
+                if (!sourceNamespace.EndsWith("."))
+                {
+                    sourceNamespace += ".";
+                }
+            }
         }
 
         /// <summary>
@@ -68,10 +103,10 @@ namespace Neon.CodeGen
         /// </summary>
         /// <param name="assemblies">The source assemblies.</param>
         /// <returns>A <see cref="CodeGeneratorOutput"/> instance holding the results.</returns>
-        public CodeGeneratorOutput Generate(IEnumerable<Assembly> assemblies)
+        public CodeGeneratorOutput Generate(params Assembly[] assemblies)
         {
             Covenant.Requires<ArgumentNullException>(assemblies != null);
-            Covenant.Requires<ArgumentException>(assemblies.Count() > 0, "At least one assembly must be passed.");
+            Covenant.Requires<ArgumentException>(assemblies.Length > 0, "At least one assembly must be passed.");
 
             output = new CodeGeneratorOutput();
             writer = new StringWriter();
@@ -125,6 +160,20 @@ namespace Neon.CodeGen
                 .Where(t => t.IsPublic)
                 .Where(t => t.IsInterface || t.IsEnum))
             {
+                if (sourceNamespace != null && !type.FullName.StartsWith(sourceNamespace))
+                {
+                    // Ignore any types that aren't in specified source namespace.
+
+                    continue;
+                }
+
+                if (type.GetCustomAttribute<NoCodeGenAttribute>() != null)
+                {
+                    // Ignore any types tagged with [NoCodeGen].
+
+                    continue;
+                }
+
                 var serviceAttribute = type.GetCustomAttribute<ServiceAttribute>();
 
                 if (serviceAttribute != null)
@@ -144,6 +193,13 @@ namespace Neon.CodeGen
         /// </summary>
         private void FilterModels()
         {
+            if (Settings.TargetGroups.Count == 0)
+            {
+                // Treat an empty list as enabling all groups.
+
+                return;
+            }
+
             // Remove any data models that aren't in one of the target groups.
 
             var deletedDataModels = new List<string>();
@@ -312,7 +368,6 @@ namespace Neon.CodeGen
             var dataModel = new DataModel(type);
 
             nameToDataModel[type.FullName] = dataModel;
-            dataModel.BaseType             = type.BaseType;
             dataModel.IsEnum               = type.IsEnum;
 
             foreach (var targetAttibute in type.GetCustomAttributes<TargetAttribute>())
@@ -458,13 +513,6 @@ namespace Neon.CodeGen
                     continue;
                 }
 
-                var constructors = dataModel.SourceType.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
-
-                if (!constructors.Any(c => c.GetParameters().Length == 0))
-                {
-                    output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model does not define a public (parameter-less) default constructor.");
-                }
-
                 foreach (var property in dataModel.Properties)
                 {
                     if (!nameToDataModel.ContainsKey(property.Type.FullName))
@@ -530,34 +578,30 @@ namespace Neon.CodeGen
                 writer.WriteLine();
             }
 
+            // Open the namespace.
+
+            writer.WriteLine($"namespace {Settings.TargetNamespace}");
+            writer.WriteLine($"{{");
+
             // Generate namespaces and the models contained within each.
 
-            foreach (var namespaceInfo in nameToNamespace.Values
-                .OrderBy(ns => ns.OutputNamespace.ToLowerInvariant()))
+            var index = 0;
+
+            foreach (var dataModel in nameToDataModel.Values
+                .OrderBy(dm => dm.SourceType.Name.ToLowerInvariant()))
             {
-                writer.WriteLine($"//-----------------------------------------------------------------------------");
-                writer.WriteLine();
-                writer.WriteLine($"namespace {namespaceInfo.OutputNamespace}");
-                writer.WriteLine($"{{");
-
-                // Generate the data models.
-
-                var index = 0;
-
-                foreach (var dataModel in namespaceInfo.DataModels
-                    .OrderBy(dm => dm.SourceType.Name.ToLowerInvariant()))
-                {
-                    GenerateDataModel(dataModel, index++);
-                }
-
-                // Generate the service clients (if enabled).
-
-                if (Settings.ServiceClients)
-                {
-                }
-
-                writer.WriteLine($"}}");
+                GenerateDataModel(dataModel, index++);
             }
+
+            // Generate the service clients (if enabled).
+
+            if (Settings.ServiceClients)
+            {
+            }
+
+            // Close the namespace.
+
+            writer.WriteLine($"}}");
 
             // Set the generated source code for the code generator output.
 
@@ -626,12 +670,17 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            this.__JObject = jObject;");
                     writer.WriteLine($"        }}");
 
-                    if (dataModel.BaseType == null)
+                    if (dataModel.SourceType.BaseType == null)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        protected JObject __JObject {{ get; set; }}");
                     }
                 }
+
+                writer.WriteLine();
+                writer.WriteLine($"        public {dataModel.SourceType.Name}");
+                writer.WriteLine($"        {{");
+                writer.WriteLine($"        }}");
 
                 foreach (var property in dataModel.Properties)
                 {

@@ -32,7 +32,7 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
-namespace TestCommon
+namespace TestCodeGen
 {
     public class Test_SerializedList
     {

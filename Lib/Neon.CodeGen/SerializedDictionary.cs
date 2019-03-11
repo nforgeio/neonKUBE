@@ -27,8 +27,9 @@ using Newtonsoft.Json.Linq;
 
 // $todo(jeff.lill):
 //
-// This is about 390 times slower than a stock Dictionary<TKey, TValue>, 
-// handling about 1.5 million operations per second.
+// This is about 390 times slower than a stock List<T>, handling
+// about 1.5 million operations per second.  I'm not entirely sure
+// that I need this class anyway.  Need to do some more thinking.
 
 namespace Neon.CodeGen
 {

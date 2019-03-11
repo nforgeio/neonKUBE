@@ -74,15 +74,29 @@ namespace Neon.CodeGen
         public bool RoundTrip { get; set; } = true;
 
         /// <summary>
+        /// <para>
         /// Used to select a specific target groups to be included in the
         /// generated output.
+        /// </para>
+        /// <note>
+        /// All groups will be generated when the <see cref="TargetGroups"/> 
+        /// list is empty.
+        /// </note>
         /// </summary>
         public List<string> TargetGroups { get; private set; } = new List<string>();
 
         /// <summary>
-        /// The C# <c>namespace</c> to be used when generating the output
+        /// Specifies the C# <c>namespace</c> to be used when generating the output
         /// code.  This defaults to <c>Neon.CodeGen.Output</c>.
         /// </summary>
-        public string Namespace { get; set; } = "Neon.CodeGen.Output";
+        public string TargetNamespace { get; set; } = "Neon.CodeGen.Output";
+
+        /// <summary>
+        /// Specifies the C# <c>namespace</c> to be used to filter the
+        /// service and data model classes processed by the code generator.
+        /// This is especially handy for unit testing.  This defaults to
+        /// <c>null</c> which disables any filtering.
+        /// </summary>
+        public string SourceNamespace { get; set; }
     }
 }
