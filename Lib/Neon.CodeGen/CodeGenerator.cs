@@ -53,24 +53,17 @@ namespace Neon.CodeGen
         /// </summary>
         /// <param name="source">The C# source code.</param>
         /// <param name="assemblyName">The generated assembly name.</param>
-        /// <param name="referenceHandler">Optionally manage metadata/assembly references (see remarks).</param>
+        /// <param name="referenceHandler">Called to manage metadata/assembly references (see remarks).</param>
         /// <param name="options">Optional compilation options.  This defaults to building a release assembly.</param>
         /// <returns>The compiled <see cref="Assembly"/>.</returns>
         /// <exception cref="CompilerErrorException">Thrown for compiler errors.</exception>
         /// <remarks>
         /// <para>
         /// By default, this method will compile the assembly with references to 
-        /// common system assemblies including:
+        /// .NET Standard 2.0.
         /// </para>
-        /// <list type="bullet">
-        /// <item><c>System</c></item>
-        /// <item><c>System.Collections.Generic</c></item>
-        /// <item><c>System.IO</c></item>
-        /// <item><c>System.Linq</c></item>
-        /// <item><c>System.Text</c></item>
-        /// </list>
         /// <para>
-        /// You can customize these by passing a <paramref name="referenceHandler"/>
+        /// You may customize these by passing a <paramref name="referenceHandler"/>
         /// action.  This is passed the list of <see cref="MetadataReference"/> instances.
         /// You can add or remove references as required.  The easiest way to add
         /// a reference is to use type reference like:
@@ -84,35 +77,50 @@ namespace Neon.CodeGen
         /// var assembly = CodeGenerator.Compile(source, "my-assembly",
         ///     references =>
         ///     {
-        ///         references.Add(MetadataReference.CreateFromFile(typeof(MyClass).Assembly.Location));
+        ///         references.Add(typeof(MyClass));    // Adds the assembly containing MyClass.
         ///     });
         /// </code>
-        /// <para>
-        /// In this example, we added a reference to the assembly containing the
-        /// [MyClass] type.
-        /// </para>
-        /// <note>
-        /// You'll need to add a reference to the <b>Microsoft.CodeAnalysis</b> package.
-        /// </note>
         /// </remarks>
         public static Assembly Compile(
-            string                              source, 
-            string                              assemblyName, 
-            Action<List<MetadataReference>>     referenceHandler = null,
-            CSharpCompilationOptions            options = null)
+            string                          source, 
+            string                          assemblyName, 
+            Action<MetadataReferences>      referenceHandler = null,
+            CSharpCompilationOptions        options = null)
         {
             Covenant.Requires<ArgumentNullException>(source != null);
 
-            var syntaxTree  = CSharpSyntaxTree.ParseText(source);
-            var references  = new List<MetadataReference>();
+            var syntaxTree = CSharpSyntaxTree.ParseText(source);
+            var references = new MetadataReferences();
 
-            references.Add(MetadataReference.CreateFromFile(typeof(System.Object).Assembly.Location));
-            references.Add(MetadataReference.CreateFromFile(typeof(System.Collections.Generic.List<string>).Assembly.Location));
-            references.Add(MetadataReference.CreateFromFile(typeof(System.IO.Stream).Assembly.Location));
-            references.Add(MetadataReference.CreateFromFile(typeof(System.Linq.Enumerable).Assembly.Location));
-            references.Add(MetadataReference.CreateFromFile(typeof(System.Text.Encoding).Assembly.Location));
+            // Allow the caller to add references.
 
             referenceHandler?.Invoke(references);
+
+            // NOTE: 
+            // 
+            // We need add all of the NetStandard reference assemblies so
+            // compilation will actually work.
+            // 
+            // We've set [PreserveCompilationContext=true] in [Neon.CodeGen.csproj]
+            // so that the reference assemblies will be written to places like:
+            //
+            //      bin/Debug/netstandard2.0/refs/*
+            //
+            // This is where we obtained the these assemblies and added them
+            // all as resources within the [Netstandard] project folder.
+            //
+            // We'll need to replace all of these when/if we upgrade the 
+            // library to a new version of NetStandard.
+
+            var thisAssembly = Assembly.GetExecutingAssembly();
+
+            foreach (var resourceName in thisAssembly.GetManifestResourceNames())
+            {
+                using (var resourceStream = thisAssembly.GetManifestResourceStream(resourceName))
+                {
+                    references.Add(MetadataReference.CreateFromStream(resourceStream));
+                }
+            }
 
             if (options == null)
             {

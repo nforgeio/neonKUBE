@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CodeGenTestHelper
+// FILE:	    MetadataReferences.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,39 +17,38 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime;
+using System.Runtime.Serialization;
 using System.Text;
-using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
-
-using Neon.CodeGen;
-using Neon.Common;
-using Neon.Xunit;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Xunit;
-
-namespace TestCodeGen.CodeGen
+namespace Neon.CodeGen
 {
     /// <summary>
-    /// Test helpers.
+    /// Specifies the metadata references to be used when compiling
+    /// C# code.
     /// </summary>
-    internal static class CodeGenTestHelper
+    public class MetadataReferences : List<MetadataReference>
     {
         /// <summary>
-        /// Adds the assembly references required to compile the generated code.
+        /// Adds the assembly holding a specific type to the references.
         /// </summary>
-        /// <param name="references">The assembly references.</param>
-        public static void ReferenceHandler(MetadataReferences references)
+        /// <param name="type">The type.</param>
+        public void Add(Type type)
         {
-            references.Add(typeof(System.Dynamic.CallInfo));
-            references.Add(typeof(Newtonsoft.Json.JsonToken));
+            Covenant.Requires<ArgumentNullException>(type != null);
+
+            Add(MetadataReference.CreateFromFile(type.Assembly.Location));
         }
     }
 }

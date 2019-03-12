@@ -15,6 +15,7 @@
 </PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,6 +25,126 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>C:\src\neonKUBE\Lib\Neon.CodeGen\bin\Release\Neon.CodeGen.xml</DocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Netstandard\Microsoft.Win32.Primitives.dll" />
+    <None Remove="Netstandard\mscorlib.dll" />
+    <None Remove="Netstandard\netstandard.dll" />
+    <None Remove="Netstandard\System.AppContext.dll" />
+    <None Remove="Netstandard\System.Collections.Concurrent.dll" />
+    <None Remove="Netstandard\System.Collections.dll" />
+    <None Remove="Netstandard\System.Collections.NonGeneric.dll" />
+    <None Remove="Netstandard\System.Collections.Specialized.dll" />
+    <None Remove="Netstandard\System.ComponentModel.Composition.dll" />
+    <None Remove="Netstandard\System.ComponentModel.dll" />
+    <None Remove="Netstandard\System.ComponentModel.EventBasedAsync.dll" />
+    <None Remove="Netstandard\System.ComponentModel.Primitives.dll" />
+    <None Remove="Netstandard\System.ComponentModel.TypeConverter.dll" />
+    <None Remove="Netstandard\System.Console.dll" />
+    <None Remove="Netstandard\System.Core.dll" />
+    <None Remove="Netstandard\System.Data.Common.dll" />
+    <None Remove="Netstandard\System.Data.dll" />
+    <None Remove="Netstandard\System.Diagnostics.Contracts.dll" />
+    <None Remove="Netstandard\System.Diagnostics.Debug.dll" />
+    <None Remove="Netstandard\System.Diagnostics.FileVersionInfo.dll" />
+    <None Remove="Netstandard\System.Diagnostics.Process.dll" />
+    <None Remove="Netstandard\System.Diagnostics.StackTrace.dll" />
+    <None Remove="Netstandard\System.Diagnostics.TextWriterTraceListener.dll" />
+    <None Remove="Netstandard\System.Diagnostics.Tools.dll" />
+    <None Remove="Netstandard\System.Diagnostics.TraceSource.dll" />
+    <None Remove="Netstandard\System.Diagnostics.Tracing.dll" />
+    <None Remove="Netstandard\System.dll" />
+    <None Remove="Netstandard\System.Drawing.dll" />
+    <None Remove="Netstandard\System.Drawing.Primitives.dll" />
+    <None Remove="Netstandard\System.Dynamic.Runtime.dll" />
+    <None Remove="Netstandard\System.Globalization.Calendars.dll" />
+    <None Remove="Netstandard\System.Globalization.dll" />
+    <None Remove="Netstandard\System.Globalization.Extensions.dll" />
+    <None Remove="Netstandard\System.IO.Compression.dll" />
+    <None Remove="Netstandard\System.IO.Compression.FileSystem.dll" />
+    <None Remove="Netstandard\System.IO.Compression.ZipFile.dll" />
+    <None Remove="Netstandard\System.IO.dll" />
+    <None Remove="Netstandard\System.IO.FileSystem.dll" />
+    <None Remove="Netstandard\System.IO.FileSystem.DriveInfo.dll" />
+    <None Remove="Netstandard\System.IO.FileSystem.Primitives.dll" />
+    <None Remove="Netstandard\System.IO.FileSystem.Watcher.dll" />
+    <None Remove="Netstandard\System.IO.IsolatedStorage.dll" />
+    <None Remove="Netstandard\System.IO.MemoryMappedFiles.dll" />
+    <None Remove="Netstandard\System.IO.Pipes.dll" />
+    <None Remove="Netstandard\System.IO.UnmanagedMemoryStream.dll" />
+    <None Remove="Netstandard\System.Linq.dll" />
+    <None Remove="Netstandard\System.Linq.Expressions.dll" />
+    <None Remove="Netstandard\System.Linq.Parallel.dll" />
+    <None Remove="Netstandard\System.Linq.Queryable.dll" />
+    <None Remove="Netstandard\System.Net.dll" />
+    <None Remove="Netstandard\System.Net.Http.dll" />
+    <None Remove="Netstandard\System.Net.NameResolution.dll" />
+    <None Remove="Netstandard\System.Net.NetworkInformation.dll" />
+    <None Remove="Netstandard\System.Net.Ping.dll" />
+    <None Remove="Netstandard\System.Net.Primitives.dll" />
+    <None Remove="Netstandard\System.Net.Requests.dll" />
+    <None Remove="Netstandard\System.Net.Security.dll" />
+    <None Remove="Netstandard\System.Net.Sockets.dll" />
+    <None Remove="Netstandard\System.Net.WebHeaderCollection.dll" />
+    <None Remove="Netstandard\System.Net.WebSockets.Client.dll" />
+    <None Remove="Netstandard\System.Net.WebSockets.dll" />
+    <None Remove="Netstandard\System.Numerics.dll" />
+    <None Remove="Netstandard\System.ObjectModel.dll" />
+    <None Remove="Netstandard\System.Reflection.dll" />
+    <None Remove="Netstandard\System.Reflection.Extensions.dll" />
+    <None Remove="Netstandard\System.Reflection.Primitives.dll" />
+    <None Remove="Netstandard\System.Resources.Reader.dll" />
+    <None Remove="Netstandard\System.Resources.ResourceManager.dll" />
+    <None Remove="Netstandard\System.Resources.Writer.dll" />
+    <None Remove="Netstandard\System.Runtime.CompilerServices.VisualC.dll" />
+    <None Remove="Netstandard\System.Runtime.dll" />
+    <None Remove="Netstandard\System.Runtime.Extensions.dll" />
+    <None Remove="Netstandard\System.Runtime.Handles.dll" />
+    <None Remove="Netstandard\System.Runtime.InteropServices.dll" />
+    <None Remove="Netstandard\System.Runtime.InteropServices.RuntimeInformation.dll" />
+    <None Remove="Netstandard\System.Runtime.Numerics.dll" />
+    <None Remove="Netstandard\System.Runtime.Serialization.dll" />
+    <None Remove="Netstandard\System.Runtime.Serialization.Formatters.dll" />
+    <None Remove="Netstandard\System.Runtime.Serialization.Json.dll" />
+    <None Remove="Netstandard\System.Runtime.Serialization.Primitives.dll" />
+    <None Remove="Netstandard\System.Runtime.Serialization.Xml.dll" />
+    <None Remove="Netstandard\System.Security.Claims.dll" />
+    <None Remove="Netstandard\System.Security.Cryptography.Algorithms.dll" />
+    <None Remove="Netstandard\System.Security.Cryptography.Csp.dll" />
+    <None Remove="Netstandard\System.Security.Cryptography.Encoding.dll" />
+    <None Remove="Netstandard\System.Security.Cryptography.Primitives.dll" />
+    <None Remove="Netstandard\System.Security.Cryptography.X509Certificates.dll" />
+    <None Remove="Netstandard\System.Security.Principal.dll" />
+    <None Remove="Netstandard\System.Security.SecureString.dll" />
+    <None Remove="Netstandard\System.ServiceModel.Web.dll" />
+    <None Remove="Netstandard\System.Text.Encoding.dll" />
+    <None Remove="Netstandard\System.Text.Encoding.Extensions.dll" />
+    <None Remove="Netstandard\System.Text.RegularExpressions.dll" />
+    <None Remove="Netstandard\System.Threading.dll" />
+    <None Remove="Netstandard\System.Threading.Overlapped.dll" />
+    <None Remove="Netstandard\System.Threading.Tasks.dll" />
+    <None Remove="Netstandard\System.Threading.Tasks.Parallel.dll" />
+    <None Remove="Netstandard\System.Threading.Thread.dll" />
+    <None Remove="Netstandard\System.Threading.ThreadPool.dll" />
+    <None Remove="Netstandard\System.Threading.Timer.dll" />
+    <None Remove="Netstandard\System.Transactions.dll" />
+    <None Remove="Netstandard\System.ValueTuple.dll" />
+    <None Remove="Netstandard\System.Web.dll" />
+    <None Remove="Netstandard\System.Windows.dll" />
+    <None Remove="Netstandard\System.Xml.dll" />
+    <None Remove="Netstandard\System.Xml.Linq.dll" />
+    <None Remove="Netstandard\System.Xml.ReaderWriter.dll" />
+    <None Remove="Netstandard\System.Xml.Serialization.dll" />
+    <None Remove="Netstandard\System.Xml.XDocument.dll" />
+    <None Remove="Netstandard\System.Xml.XmlDocument.dll" />
+    <None Remove="Netstandard\System.Xml.XmlSerializer.dll" />
+    <None Remove="Netstandard\System.Xml.XPath.dll" />
+    <None Remove="Netstandard\System.Xml.XPath.XDocument.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Netstandard\netstandard.dll" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis" Version="3.0.0-beta4-final" />
