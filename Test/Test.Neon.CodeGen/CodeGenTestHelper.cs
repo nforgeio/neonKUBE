@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_CodeGen
+// FILE:	    CodeGenTestHelper
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -24,6 +24,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.CodeAnalysis;
+
 using Neon.CodeGen;
 using Neon.Common;
 using Neon.Xunit;
@@ -35,37 +37,19 @@ using Xunit;
 
 namespace TestCodeGen.CodeGen
 {
-    public interface EmptyData
+    /// <summary>
+    /// Test helpers.
+    /// </summary>
+    internal static class CodeGenTestHelper
     {
-    }
-
-    public interface SimpleData
-    {
-        string Name { get; set; }
-        int Age { get; set; }
-    }
-
-    [NoCodeGen]
-    public class Test_CodeGen
-    {
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void DataModel_Empty()
+        /// <summary>
+        /// Adds the assembly references required to compile the generated code.
+        /// </summary>
+        /// <param name="references">The assembly references.</param>
+        public static void ReferenceHandler(List<MetadataReference> references)
         {
-            // Verify that we can generate code for an empty data model.
-
-            var settings = new CodeGeneratorSettings()
-            {
-                 SourceNamespace = typeof(Test_CodeGen).Namespace,
-                 ServiceClients  = false
-            };
-
-            var generator = new CodeGenerator(settings);
-            var output    = generator.Generate(Assembly.GetExecutingAssembly());
-
-            Assert.False(output.HasErrors);
-
-            CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+            references.Add(MetadataReference.CreateFromFile(typeof(System.Dynamic.CallInfo).Assembly.Location));
+            references.Add(MetadataReference.CreateFromFile(typeof(Newtonsoft.Json.JsonToken).Assembly.Location));
         }
     }
 }

@@ -16,7 +16,6 @@
 // limitations under the License.
 
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -26,7 +25,9 @@ using System.Runtime;
 using System.Runtime.Serialization;
 using System.Text;
 
-using Microsoft.CSharp;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -51,12 +52,91 @@ namespace Neon.CodeGen
         /// Compiles C# source code into an assembly.
         /// </summary>
         /// <param name="source">The C# source code.</param>
+        /// <param name="assemblyName">The generated assembly name.</param>
+        /// <param name="referenceHandler">Optionally manage metadata/assembly references (see remarks).</param>
+        /// <param name="options">Optional compilation options.  This defaults to building a release assembly.</param>
         /// <returns>The compiled <see cref="Assembly"/>.</returns>
-        public static Assembly Compile(string source)
+        /// <exception cref="CompilerErrorException">Thrown for compiler errors.</exception>
+        /// <remarks>
+        /// <para>
+        /// By default, this method will compile the assembly with references to 
+        /// common system assemblies including:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><c>System</c></item>
+        /// <item><c>System.Collections.Generic</c></item>
+        /// <item><c>System.IO</c></item>
+        /// <item><c>System.Linq</c></item>
+        /// <item><c>System.Text</c></item>
+        /// </list>
+        /// <para>
+        /// You can customize these by passing a <paramref name="referenceHandler"/>
+        /// action.  This is passed the list of <see cref="MetadataReference"/> instances.
+        /// You can add or remove references as required.  The easiest way to add
+        /// a reference is to use type reference like:
+        /// </para>
+        /// <code>
+        /// using Microsoft.CodeAnalysis;
+        /// 
+        /// ...
+        /// 
+        /// var source   = "public class Foo {}";
+        /// var assembly = CodeGenerator.Compile(source, "my-assembly",
+        ///     references =>
+        ///     {
+        ///         references.Add(MetadataReference.CreateFromFile(typeof(MyClass).Assembly.Location));
+        ///     });
+        /// </code>
+        /// <para>
+        /// In this example, we added a reference to the assembly containing the
+        /// [MyClass] type.
+        /// </para>
+        /// <note>
+        /// You'll need to add a reference to the <b>Microsoft.CodeAnalysis</b> package.
+        /// </note>
+        /// </remarks>
+        public static Assembly Compile(
+            string                              source, 
+            string                              assemblyName, 
+            Action<List<MetadataReference>>     referenceHandler = null,
+            CSharpCompilationOptions            options = null)
         {
             Covenant.Requires<ArgumentNullException>(source != null);
 
-            CodeDomProvider.CreateProvider("CSharp");
+            var syntaxTree  = CSharpSyntaxTree.ParseText(source);
+            var references  = new List<MetadataReference>();
+
+            references.Add(MetadataReference.CreateFromFile(typeof(System.Object).Assembly.Location));
+            references.Add(MetadataReference.CreateFromFile(typeof(System.Collections.Generic.List<string>).Assembly.Location));
+            references.Add(MetadataReference.CreateFromFile(typeof(System.IO.Stream).Assembly.Location));
+            references.Add(MetadataReference.CreateFromFile(typeof(System.Linq.Enumerable).Assembly.Location));
+            references.Add(MetadataReference.CreateFromFile(typeof(System.Text.Encoding).Assembly.Location));
+
+            referenceHandler?.Invoke(references);
+
+            if (options == null)
+            {
+                options = new CSharpCompilationOptions(
+                    OutputKind.DynamicallyLinkedLibrary,
+                    optimizationLevel: OptimizationLevel.Release);
+            }
+
+            var compilation = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, options);
+
+            using (var dllStream = new MemoryStream())
+            {
+                using (var pdbStream = new MemoryStream())
+                {
+                    var emitted = compilation.Emit(dllStream, pdbStream);
+
+                    if (!emitted.Success)
+                    {
+                        throw new CompilerErrorException(emitted.Diagnostics);
+                    }
+
+                    return Assembly.Load(dllStream.ToArray());
+                }
+            }
         }
 
         //---------------------------------------------------------------------
@@ -605,7 +685,7 @@ namespace Neon.CodeGen
 
             // Set the generated source code for the code generator output.
 
-            output.OutputSource = writer.ToString();
+            output.SourceCode = writer.ToString();
         }
 
         /// <summary>
@@ -622,9 +702,7 @@ namespace Neon.CodeGen
                 writer.WriteLine();
             }
 
-            writer.WriteLine($"    /// <summary>");
-            writer.WriteLine($"    /// Generated from: {dataModel.SourceType.FullName}");
-            writer.WriteLine($"    /// </summary>");
+            writer.WriteLine($"    // Generated from: {dataModel.SourceType.FullName}");
 
             if (dataModel.IsEnum)
             {
@@ -654,20 +732,20 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (string.IsNullOrEmpty(jsonText))");
                     writer.WriteLine($"            {{");
-                    writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText))");
+                    writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            this.__JObject = new JObject(jsonText);");
+                    writer.WriteLine($"            return new {dataModel.SourceType.Name}() {{ __JObject = new JObject(jsonText) }};");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        public static {dataModel.SourceType.Name} FromJObject(JObject jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (jObject == null)");
                     writer.WriteLine($"            {{");
-                    writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText))");
+                    writer.WriteLine($"                throw new ArgumentNullException(nameof(jObject));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            this.__JObject = jObject;");
+                    writer.WriteLine($"            return new {dataModel.SourceType.Name}() {{ __JObject = jObject }};");
                     writer.WriteLine($"        }}");
 
                     if (dataModel.SourceType.BaseType == null)
@@ -678,7 +756,7 @@ namespace Neon.CodeGen
                 }
 
                 writer.WriteLine();
-                writer.WriteLine($"        public {dataModel.SourceType.Name}");
+                writer.WriteLine($"        public {dataModel.SourceType.Name}()");
                 writer.WriteLine($"        {{");
                 writer.WriteLine($"        }}");
 

@@ -52,6 +52,6 @@ namespace Neon.CodeGen
         /// <summary>
         /// Returns the generated source code.
         /// </summary>
-        public string OutputSource { get; internal set; }
+        public string SourceCode { get; internal set; }
     }
 }
