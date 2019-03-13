@@ -101,6 +101,16 @@ namespace TestCodeGen.CodeGen
         string Value { get; }
     }
 
+    public interface ParentModel
+    {
+        string ParentProperty { get; set; }
+    }
+
+    public interface ChildModel : ParentModel
+    {
+        string ChildProperty { get; set; }
+    }
+
     [NoCodeGen]
     public class Test_CodeGen
     {

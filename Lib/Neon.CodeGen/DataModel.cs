@@ -81,9 +81,10 @@ namespace Neon.CodeGen
         public bool HasEnumFlags { get; set; }
 
         /// <summary>
-        /// Returns the name of the <c>enum</c> base type name.
+        /// Returns the base type name for both <c>enum</c> and other data model types
+        /// or <c>null</c> if there is no base type (other than <c>object</c>).
         /// </summary>
-        public string EnumBaseType { get; set; }
+        public string BaseTypeName { get; set; }
 
         /// <summary>
         /// Lists the members for <c>enum</c> types.
