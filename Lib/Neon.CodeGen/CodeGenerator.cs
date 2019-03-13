@@ -558,6 +558,13 @@ namespace Neon.CodeGen
 
                 foreach (var member in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 {
+                    // Ignore properties that don't have both a getter and a setter.
+
+                    if (member.GetAccessors().Length != 2)
+                    {
+                        continue;
+                    }
+
                     var property = new DataProperty()
                     {
                         Name = member.Name,
@@ -847,11 +854,11 @@ namespace Neon.CodeGen
                     {
                         if (property.Order < int.MaxValue)
                         {
-                            writer.WriteLine($"        [JsonProperty(Name = \"{property.SerializedName}\", Order = {property.Order})]");
+                            writer.WriteLine($"        [JsonProperty(PropertyName = \"{property.SerializedName}\", Order = {property.Order})]");
                         }
                         else
                         {
-                            writer.WriteLine($"        [JsonProperty(Name = \"{property.SerializedName}\")]");
+                            writer.WriteLine($"        [JsonProperty(PropertyName = \"{property.SerializedName}\")]");
                         }
                     }
 
@@ -865,6 +872,61 @@ namespace Neon.CodeGen
         }
 
         /// <summary>
+        /// Returns the name will use for a type when generating type references.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The type name.</returns>
+        private string GetTypeName(Type type)
+        {
+            // Convert common types into their C# equivents:
+
+            var typeName = type.FullName;
+
+            switch (typeName)
+            {
+                case "System.Byte":     return "byte";
+                case "System.SByte":    return "sbyte";
+                case "System.Int16":    return "short";
+                case "System.UInt16":   return "ushort";
+                case "System.Int32":    return "int";
+                case "System.UInt32":   return "uint";
+                case "System.Int64":    return "long";
+                case "System.UInt64":   return "ulong";
+                case "System.Float":    return "float";
+                case "System.Double":   return "double";
+                case "System.String":   return "string";
+                case "System.Boolean":  return "bool";
+                case "System.Decimal":  return "decimal";
+            }
+
+            if (type.IsGenericType)
+            {
+                // Strip the backtick and any text after it.
+
+                var tickPos = typeName.IndexOf('`');
+
+                if (tickPos != -1)
+                {
+                    typeName = typeName.Substring(0, tickPos);
+                }
+            }
+
+            if (nameToDataModel.ContainsKey(type.FullName))
+            {
+                // Strip the namespace off of local data model types.
+
+                var lastDotPos = typeName.LastIndexOf('.');
+
+                if (lastDotPos != -1)
+                {
+                    typeName = typeName.Substring(lastDotPos + 1);
+                }
+            }
+
+            return typeName;
+        }
+
+        /// <summary>
         /// Resolves the type passed into a nice string taking generic types 
         /// and arrays into account.
         /// </summary>
@@ -872,13 +934,9 @@ namespace Neon.CodeGen
         /// <returns>The type reference as a string or <c>null</c> if the type is now valid.</returns>
         private string ResoveTypeReference(Type type)
         {
-            if (type.Name.Contains("Dictionary"))
-            {
-            }
-
             if (type.IsPrimitive || !type.IsArray && !type.IsGenericType)
             {
-                return type.FullName;
+                return GetTypeName(type);
             }
 
             if (type.IsArray)
@@ -908,9 +966,23 @@ namespace Neon.CodeGen
             }
             else if (type.IsGenericType)
             {
-                var t = type.GetGenericTypeDefinition();
+                // Generic type names look like: "System.Collections.List`1"
+                // We'll strip off the part including the backtick.
 
-                return "int";       // $todo(jeff.lill): Implement this.
+                var genericRef    = GetTypeName(type);
+                var genericParams = string.Empty;
+
+                foreach (var genericParamType in type.GetGenericArguments())
+                {
+                    if (genericParams.Length > 0)
+                    {
+                        genericParams += ", ";
+                    }
+
+                    genericParams += genericParamType.Name;
+                }
+
+                return $"{genericRef}<{genericParams}>";
             }
 
             Covenant.Assert(false); // We should never get here.

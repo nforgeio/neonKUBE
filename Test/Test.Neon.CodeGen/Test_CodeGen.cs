@@ -64,6 +64,23 @@ namespace TestCodeGen.CodeGen
         int Age { get; set; }
     }
 
+    public interface BasicTypes
+    {
+        bool Bool { get; set; }
+        byte Byte { get; set; }
+        sbyte SByte { get; set; }
+        short Short { get; set; }
+        ushort UShort { get; set; }
+        int Int { get; set; }
+        uint UInt { get; set; }
+        long Long { get; set; }
+        ulong ULong { get; set; }
+        float Float { get; set; }
+        double Double { get; set; }
+        decimal Decimal { get; set; }
+        string String { get; set; }
+    }
+
     public interface ComplexData
     {
         List<string> Items { get; set; }
@@ -77,6 +94,11 @@ namespace TestCodeGen.CodeGen
 
         [JsonIgnore]
         int IgnoreThis { get; set; }
+    }
+
+    public interface NoSetter
+    {
+        string Value { get; }
     }
 
     [NoCodeGen]
