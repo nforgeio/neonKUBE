@@ -31,7 +31,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 // $todo(jeff.lill):
 //
@@ -722,7 +721,9 @@ namespace Neon.CodeGen
             if (Settings.RoundTrip)
             {
                 writer.WriteLine($"using Newtonsoft.Json;");
+                writer.WriteLine($"using Newtonsoft.Json.Converters;");
                 writer.WriteLine($"using Newtonsoft.Json.Linq;");
+                writer.WriteLine($"using Newtonsoft.Json.Serialization;");
                 writer.WriteLine();
             }
 
@@ -731,7 +732,39 @@ namespace Neon.CodeGen
             writer.WriteLine($"namespace {Settings.TargetNamespace}");
             writer.WriteLine($"{{");
 
-            // Generate namespaces and the models contained within each.
+            //---------------------------------------------
+            // Generate a static class to hold the shared JSON serializer stuff.
+
+            writer.WriteLine($"    internal static class __Json");
+            writer.WriteLine($"    {{");
+            writer.WriteLine($"        private static readonly JsonSerializerSettings settings;");
+            writer.WriteLine();
+            writer.WriteLine($"        static __Json()");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            settings = new JsonSerializerSettings()");
+            writer.WriteLine($"            {{");
+            writer.WriteLine($"                MissingMemberHandling = MissingMemberHandling.Ignore,");
+            writer.WriteLine($"                DateFormatHandling    = DateFormatHandling.IsoDateFormat,");
+            writer.WriteLine($"                DateTimeZoneHandling  = DateTimeZoneHandling.Utc");
+            writer.WriteLine($"            }};");
+            writer.WriteLine();
+            writer.WriteLine($"            settings.Converters.Add(new StringEnumConverter(new DefaultNamingStrategy(), allowIntegerValues: false));");
+            writer.WriteLine($"        }}");
+            writer.WriteLine();
+            writer.WriteLine($"        public static string Serialize(object value, Formatting format = Formatting.None)");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            return JsonConvert.SerializeObject(value, format, settings);");
+            writer.WriteLine($"        }}");
+            writer.WriteLine();
+            writer.WriteLine($"        public static T Deserialize<T>(string jsonText)");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            return JsonConvert.DeserializeObject<T>(jsonText, settings);");
+            writer.WriteLine($"        }}");
+            writer.WriteLine($"    }}");
+            writer.WriteLine();
+
+            //---------------------------------------------
+            // Generate the models.
 
             var index = 0;
 
@@ -745,6 +778,7 @@ namespace Neon.CodeGen
 
             if (Settings.ServiceClients)
             {
+                // $todo(jeff.lill): Implement this!
             }
 
             // Close the namespace.
@@ -860,6 +894,7 @@ namespace Neon.CodeGen
 
                 if (Settings.RoundTrip)
                 {
+                    //-------------------------------------
                     // Generate the static members.
 
                     writer.WriteLine($"        public static {dataModel.SourceType.Name} From(string jsonText)");
@@ -869,7 +904,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            return new {dataModel.SourceType.Name}() {{ __JObject = new JObject(jsonText) }};");
+                    writer.WriteLine($"            return new {dataModel.SourceType.Name}() {{ __JObject = __Json.Deserialize<JObject>(jsonText) }};");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        public static {dataModel.SourceType.Name} From(JObject jObject)");
@@ -881,6 +916,9 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"            return new {dataModel.SourceType.Name}() {{ __JObject = jObject }};");
                     writer.WriteLine($"        }}");
+
+                    //-------------------------------------
+                    // Generate instance members
 
                     // Generate the backing __JObject property.
 
@@ -966,23 +1004,30 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        protected {virtualModifier} void __Load()");
                     writer.WriteLine($"        {{");
-
                     writer.WriteLine($"            JProperty property;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            lock (__JObject)");
+                    writer.WriteLine($"            {{");
 
                     if (dataModel.BaseTypeName != null)
                     {
-                        writer.WriteLine();
-                        writer.WriteLine($"            base.__Load();");
+                        writer.WriteLine($"                base.__Load();");
                     }
+
+                    var propertyIndex = 0;
 
                     foreach (var property in dataModel.Properties)
                     {
-                        writer.WriteLine();
-                        writer.WriteLine($"            property = this.__JObject.Property(\"{property.SerializedName}\");");
-                        writer.WriteLine($"            if (property != null)");
-                        writer.WriteLine($"            {{");
-                        writer.WriteLine($"                this.{property.Name} = property.ToObject<{ResolveTypeReference(property.Type)}>();");
-                        writer.WriteLine($"            }}");
+                        if (propertyIndex++ > 0)
+                        {
+                            writer.WriteLine();
+                        }
+
+                        writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
+                        writer.WriteLine($"                if (property != null)");
+                        writer.WriteLine($"                {{");
+                        writer.WriteLine($"                    this.{property.Name} = property.ToObject<{ResolveTypeReference(property.Type)}>();");
+                        writer.WriteLine($"                }}");
 
                         switch (property.DefaultValueHandling)
                         {
@@ -1003,15 +1048,16 @@ namespace Neon.CodeGen
 
                                 if (!isTypeDefault)
                                 {
-                                    writer.WriteLine($"            else");
-                                    writer.WriteLine($"            {{");
-                                    writer.WriteLine($"                this.{property.Name} = {defaultValue};");
-                                    writer.WriteLine($"            }}");
+                                    writer.WriteLine($"                else");
+                                    writer.WriteLine($"                {{");
+                                    writer.WriteLine($"                    this.{property.Name} = {defaultValue};");
+                                    writer.WriteLine($"                }}");
                                 }
                                 break;
                         }
                     }
 
+                    writer.WriteLine($"            }}");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -1020,13 +1066,14 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        protected {virtualModifier} void __Save()");
                     writer.WriteLine($"        {{");
-
                     writer.WriteLine($"            JProperty property;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            lock (__JObject)");
+                    writer.WriteLine($"            {{");
 
                     if (dataModel.BaseTypeName != null)
                     {
-                        writer.WriteLine();
-                        writer.WriteLine($"            base.__Save();");
+                        writer.WriteLine($"                base.__Save();");
 
                         if (dataModel.Properties.Count > 0)
                         {
@@ -1034,16 +1081,22 @@ namespace Neon.CodeGen
                         }
                     }
 
+                    propertyIndex = 0;
+
                     foreach (var property in dataModel.Properties)
                     {
-                        writer.WriteLine();
-                        writer.WriteLine($"            property = this.__JObject.Property(\"{property.SerializedName}\");");
+                        if (propertyIndex++ > 0)
+                        {
+                            writer.WriteLine();
+                        }
+
+                        writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
 
                         switch (property.DefaultValueHandling)
                         {
                             case DefaultValueHandling.Include:
 
-                                writer.WriteLine($"            this.__JObject[\"{property.SerializedName}\"] = property.Name;");
+                                writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = property.Name;");
                                 break;
 
                             case DefaultValueHandling.Populate:
@@ -1052,22 +1105,41 @@ namespace Neon.CodeGen
 
                                 var defaultValue = GetPropertyDefaultValue(property, out var isTypeDefault);
 
-                                writer.WriteLine($"            if (property.Value.ToObject<{ResolveTypeReference(property.Type)}>() == {defaultValue})");
-                                writer.WriteLine($"            {{");
-                                writer.WriteLine($"                if (property != null)");
+                                writer.WriteLine($"                if (property.Value.ToObject<{ResolveTypeReference(property.Type)}>() == {defaultValue})");
                                 writer.WriteLine($"                {{");
-                                writer.WriteLine($"                    this.__JObject.Remove(\"{property.SerializedName}\");");
+                                writer.WriteLine($"                    if (property != null)");
+                                writer.WriteLine($"                    {{");
+                                writer.WriteLine($"                        this.__JObject.Remove(\"{property.SerializedName}\");");
+                                writer.WriteLine($"                    }}");
                                 writer.WriteLine($"                }}");
-                                writer.WriteLine($"            }}");
-                                writer.WriteLine($"            else");
-                                writer.WriteLine($"            {{");
-                                writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = property.Name;");
-                                writer.WriteLine($"            }}");
+                                writer.WriteLine($"                else");
+                                writer.WriteLine($"                {{");
+                                writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = property.Name;");
+                                writer.WriteLine($"                }}");
 
                                 break;
                         }
                     }
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine($"        }}");
 
+                    //-------------------------------------
+                    // Generate the ToString() methods.
+
+                    // NOTE: I'm not locking __JObject here because anybody who is
+                    //       trying to serialize an object that they're modifying
+                    //       on another thread should hang their head in shame.
+
+                    writer.WriteLine();
+                    writer.WriteLine($"        public override string ToString()");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            return __Json.Serialize(__JObject, Formatting.None);");
+                    writer.WriteLine($"        }}");
+
+                    writer.WriteLine();
+                    writer.WriteLine($"        public string ToString(bool indented)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            return __Json.Serialize(__JObject, Formatting.Indented);");
                     writer.WriteLine($"        }}");
 
                     // Close the generated model class definition.
