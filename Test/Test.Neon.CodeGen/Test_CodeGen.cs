@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -61,6 +62,9 @@ namespace TestCodeGen.CodeGen
     public interface SimpleData
     {
         string Name { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(5)]
         int Age { get; set; }
     }
 

@@ -15,8 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Text;
 
@@ -58,5 +60,17 @@ namespace Neon.CodeGen
         /// Controls the order for which this property will be serialized.
         /// </summary>
         public int Order { get; set; }
+
+        /// <summary>
+        /// Set to the value specified by a <see cref="DefaultValueAttribute"/> 
+        /// on the property or the default value for the property type.
+        /// </summary>
+        public object DefaultValue { get; set; }
+
+        /// <summary>
+        /// Set the value specified by a <see cref="JsonPropertyAttribute.DefaultValueHandling"/>
+        /// attribute on the property.
+        /// </summary>
+        public DefaultValueHandling DefaultValueHandling { get; set; } = DefaultValueHandling.Include;
     }
 }
