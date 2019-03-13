@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -35,14 +36,47 @@ using Xunit;
 
 namespace TestCodeGen.CodeGen
 {
-    public interface EmptyData
+    //public interface EmptyData
+    //{
+    //}
+
+    public enum MyEnum1
     {
+        One,
+        Two,
+        Three
+    }
+
+    [Flags]
+    public enum MyEnum2 : int
+    {
+        [EnumMember(Value = "one")]
+        One = 1,
+        [EnumMember(Value = "two")]
+        Two = 2,
+        [EnumMember(Value = "three")]
+        Three = 3
     }
 
     public interface SimpleData
     {
         string Name { get; set; }
         int Age { get; set; }
+    }
+
+    public interface ComplexData
+    {
+        List<string> Items { get; set; }
+        Dictionary<string, int> Lookup { get; set; }
+        MyEnum1 Enum1 { get; set; }
+        MyEnum2 Enum2 { get; set; }
+        SimpleData Simple { get; set; }
+        int[] SingleArray { get; set; }
+        int[][] DoubleArray { get; set; }
+        int[][][] TripleArray { get; set; }
+
+        [JsonIgnore]
+        int IgnoreThis { get; set; }
     }
 
     [NoCodeGen]

@@ -68,8 +68,8 @@ namespace Neon.CodeGen
         /// <summary>
         /// Enhances data model code generation to prevent property loss
         /// for noSQL scenarios where somebody added a model property before
-        /// all referencing applications have regenerated their generated
-        /// data models.  This defaults to <c>true</c>.
+        /// all referencing applications have regenerated their data models.  
+        /// This defaults to <c>true</c>.
         /// </summary>
         public bool RoundTrip { get; set; } = true;
 

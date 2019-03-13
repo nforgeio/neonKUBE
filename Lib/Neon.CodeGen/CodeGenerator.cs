@@ -46,7 +46,9 @@ namespace Neon.CodeGen
     public class CodeGenerator
     {
         //---------------------------------------------------------------------
-        // Static methods
+        // Static members
+
+        private static MetadataReference cachedNetStandard;
 
         /// <summary>
         /// Compiles C# source code into an assembly.
@@ -112,15 +114,17 @@ namespace Neon.CodeGen
             // We'll need to replace all of these when/if we upgrade the 
             // library to a new version of NetStandard.
 
-            var thisAssembly = Assembly.GetExecutingAssembly();
-
-            foreach (var resourceName in thisAssembly.GetManifestResourceNames())
+            if (cachedNetStandard == null)
             {
-                using (var resourceStream = thisAssembly.GetManifestResourceStream(resourceName))
+                var thisAssembly = Assembly.GetExecutingAssembly();
+
+                using (var resourceStream = thisAssembly.GetManifestResourceStream("Neon.CodeGen.Netstandard.netstandard.dll"))
                 {
-                    references.Add(MetadataReference.CreateFromStream(resourceStream));
+                    cachedNetStandard = MetadataReference.CreateFromStream(resourceStream);
                 }
             }
+
+            references.Add(cachedNetStandard);
 
             if (options == null)
             {
@@ -148,7 +152,7 @@ namespace Neon.CodeGen
         }
 
         //---------------------------------------------------------------------
-        // Instance methods
+        // Instance members
 
         private CodeGeneratorOutput                 output;
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
@@ -581,6 +585,8 @@ namespace Neon.CodeGen
                     {
                         property.SerializedName = member.Name;
                     }
+
+                    dataModel.Properties.Add(property);
                 }
             }
         }
@@ -591,8 +597,9 @@ namespace Neon.CodeGen
         private void CheckForErrors()
         {
             // Ensure that all data model property types are either a primitive
-            // .NET type or reference another loaded data model.  Also ensure
-            // that all non-primitive types have a public default constructor.
+            // .NET type, a type implemented within [mscorlib] or reference another
+            // loaded data model.  Also ensure that all non-primitive types have a 
+            // public default constructor.
 
             foreach (var dataModel in nameToDataModel.Values)
             {
@@ -603,15 +610,23 @@ namespace Neon.CodeGen
 
                 foreach (var property in dataModel.Properties)
                 {
-                    if (!nameToDataModel.ContainsKey(property.Type.FullName))
+                    var propertyType = property.Type;
+
+                    if (IsSafeType(propertyType))
                     {
-                        output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model references type [{property.Type.FullName}] which is not defined in a source assembly.");
+                        continue;
+                    }
+
+                    if (!nameToDataModel.ContainsKey(propertyType.FullName))
+                    {
+                        output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model references type [{propertyType.FullName}] which is not defined in a source assembly.");
                     }
                 }
             }
 
             // Ensure that all service method parameter and result types are either
-            // a primitive .NET type or reference another loaded data model.
+            // a primitive .NET type, a type implemented within [mscorlib] or a
+            // reference a loaded data model.
 
             foreach (var serviceModel in nameToServiceModel.Values)
             {
@@ -657,6 +672,7 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.Collections.Generic;");
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
+            writer.WriteLine($"using System.Runtime.Serialization;");
             writer.WriteLine();
 
             if (Settings.RoundTrip)
@@ -697,6 +713,56 @@ namespace Neon.CodeGen
         }
 
         /// <summary>
+        /// Determines whether a type is safe to use as a data model property.
+        /// </summary>
+        /// <param name="type">The type being checked.</param>
+        /// <returns><c>true</c> if the type is safe.</returns>
+        private bool IsSafeType(Type type)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null);
+
+            if (type == typeof(string))
+            {
+                // Special case this one.
+
+                return true;
+            }
+
+            if (type.IsPrimitive || nameToDataModel.ContainsKey(type.FullName))
+            {
+                return true;
+            }
+
+            // NOTE: Value types (AKA struct) implicitly have a default parameterless constructor.
+
+            if (type.Assembly.FullName.Contains("System.Private.CoreLib") &&
+                type.IsValueType || type.GetConstructor(new Type[0]) != null)
+            {
+                return true;
+            }
+
+            // Arrays of the types meeting the criteria above are also allowed.
+
+            if (type.IsArray)
+            {
+                var elementType = type.GetElementType();
+
+                while (elementType.IsArray)
+                {
+                    elementType = elementType.GetElementType();
+                }
+
+                if (elementType.Assembly.FullName.Contains("System.Private.CoreLib") &&
+                    elementType.IsValueType || elementType.GetConstructor(new Type[0]) != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Generates source code for a data model.
         /// </summary>
         /// <param name="dataModel">The data model.</param>
@@ -710,7 +776,7 @@ namespace Neon.CodeGen
                 writer.WriteLine();
             }
 
-            writer.WriteLine($"    // Generated from: {dataModel.SourceType.FullName}");
+            writer.WriteLine($"    // From: {dataModel.SourceType.FullName}");
 
             if (dataModel.IsEnum)
             {
@@ -724,6 +790,7 @@ namespace Neon.CodeGen
 
                 foreach (var member in dataModel.EnumMembers)
                 {
+                    writer.WriteLine($"        [EnumMember(Value = \"{member.SerializedName}\")]");
                     writer.WriteLine($"        {member.Name} = {member.OrdinalValue},");
                 }
 
@@ -770,10 +837,7 @@ namespace Neon.CodeGen
 
                 foreach (var property in dataModel.Properties)
                 {
-                    if (Settings.RoundTrip)
-                    {
-                        writer.WriteLine();
-                    }
+                    writer.WriteLine();
 
                     if (property.Ignore)
                     {
@@ -793,18 +857,7 @@ namespace Neon.CodeGen
 
                     var propertyTypeName = ResoveTypeReference(property.Type);
 
-                    if (Settings.RoundTrip)
-                    {
-                        writer.WriteLine($"        public {propertyTypeName} {property.Name}");
-                        writer.WriteLine($"        {{");
-                        writer.WriteLine($"            get {{ return __JObject[{property.SerializedName}].ToObject<{propertyTypeName}>(); }}");
-                        writer.WriteLine($"            set {{ __JObject[{property.SerializedName}] = value; }}");
-                        writer.WriteLine($"        }}");
-                    }
-                    else
-                    {
-                        writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}");
-                    }
+                    writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}");
                 }
 
                 writer.WriteLine($"    }}");
@@ -812,116 +865,56 @@ namespace Neon.CodeGen
         }
 
         /// <summary>
-        /// Resolves the type passed into a string, taking namespaces,
-        /// arrays, and generic collection references into account.
+        /// Resolves the type passed into a nice string taking generic types 
+        /// and arrays into account.
         /// </summary>
         /// <param name="type">The referenced type.</param>
         /// <returns>The type reference as a string or <c>null</c> if the type is now valid.</returns>
         private string ResoveTypeReference(Type type)
         {
-            return ResoveTypeReference(type, out var error);
-        }
-
-        /// <summary>
-        /// Resolves the type passed into a string, taking namespaces,
-        /// arrays, and generic collection references into account.
-        /// </summary>
-        /// <param name="type">The referenced type.</param>
-        /// <param name="errorMessage">Returns as the error message when there's a problem.</param>
-        /// <returns>The type reference as a string or <c>null</c> if the type is now valid.</returns>
-        private string ResoveTypeReference(Type type, out string errorMessage)
-        {
-            errorMessage = null;
-
-            // We currently handle references to the following types:
-            //
-            //      * Primitive .NET types
-            //      * Common .NET types: TimeSpan, DateTime, DateTimeOffset
-            //      * Data models loaded from the assembly and included
-            //        in one of the targeted groups
-            //      * Single dimension arrays of the types above
-            //      * Generic IList<T>, where T is of the above types
-            //      * Generic IEnumerable<T>, where T is one of the above types
-            //      * IDictionary<TKey, TValue> where the TKey and
-            //        TValue is one of the above types
-            //
-            // NOTE:
-            //
-            //      * IList<T> and IEnumerable<T> types will be converted
-            //        to List<T>.
-
-            if (type.IsPrimitive)
+            if (type.Name.Contains("Dictionary"))
             {
-                return type.Name;
             }
-            else if (type == typeof(TimeSpan) || type == typeof(DateTime) || type == typeof(DateTimeOffset))
-            {
-                return type.Name;
-            }
-            else if (type.IsArray)
-            {
-                if (type.GetArrayRank() > 1)
-                {
-                    errorMessage = "Only single dimensional arrays are supported";
-                    return null;
-                }
 
+            if (type.IsPrimitive || !type.IsArray && !type.IsGenericType)
+            {
+                return type.FullName;
+            }
+
+            if (type.IsArray)
+            {
+                // We need to handle jagged arrays where the element type 
+                // is also an array.  We'll accomplish this by walking down
+                // the element types until we get to a non-array element type,
+                // counting how many subarrays there were.
+
+                var arrayDepth  = 0;
                 var elementType = type.GetElementType();
-                var elementRef  = ResoveTypeReference(elementType, out errorMessage);
 
-                if (elementRef == null)
+                while (elementType.IsArray)
                 {
-                    return null;
+                    arrayDepth++;
+                    elementType = elementType.GetElementType();
                 }
 
-                return $"{elementRef}[]";
+                var arrayRef = ResoveTypeReference(elementType);
+
+                for (int i = 0; i < arrayDepth; i++)
+                {
+                    arrayRef += "[]";
+                }
+
+                return arrayRef;
             }
             else if (type.IsGenericType)
             {
-                if (type.FullName == "System.Collections.Generic.List" ||
-                    type.FullName == "System.Collections.Generic.IList")
-                {
-                    var elementTypes = type.GetGenericArguments();
-                    var elementRef   = ResoveTypeReference(elementTypes[0], out errorMessage);
+                var t = type.GetGenericTypeDefinition();
 
-                    if (elementRef == null)
-                    {
-                        return null;
-                    }
-
-                    return $"List<{elementRef}>";
-                }
-                else if (type.FullName == "System.Collections.Generic.Dictionary" ||
-                         type.FullName == "System.Collections.Generic.IDictionary")
-                {
-                    var elementTypes = type.GetGenericArguments();
-                    var keyRef = ResoveTypeReference(elementTypes[0], out errorMessage);
-
-                    if (keyRef == null)
-                    {
-                        return null;
-                    }
-
-                    var valueRef = ResoveTypeReference(elementTypes[1], out errorMessage);
-
-                    if (valueRef == null)
-                    {
-                        return null;
-                    }
-
-                    return $"Dictionary<{keyRef}, {valueRef}>";
-                }
-                else
-                {
-                    errorMessage = $"[{type}] is not a supported type.";
-                    return null;
-                }
+                return "int";       // $todo(jeff.lill): Implement this.
             }
-            else
-            {
-                errorMessage = $"[{type}] is not a supported type.";
-                return null;
-            }
+
+            Covenant.Assert(false); // We should never get here.
+            return null;
         }
     }
 }
