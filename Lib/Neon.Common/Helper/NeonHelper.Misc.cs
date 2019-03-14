@@ -1665,7 +1665,7 @@ namespace Neon.Common
 
             if (!string.IsNullOrEmpty(editor))
             {
-                Execute(editor, path);
+                Execute(editor, new object[] { path });
             }
             else if (IsWindows)
             {
