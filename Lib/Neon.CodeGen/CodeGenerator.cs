@@ -57,7 +57,7 @@ namespace Neon.CodeGen
         /// <param name="assemblyName">The generated assembly name.</param>
         /// <param name="referenceHandler">Called to manage metadata/assembly references (see remarks).</param>
         /// <param name="options">Optional compilation options.  This defaults to building a release assembly.</param>
-        /// <returns>The compiled <see cref="Assembly"/>.</returns>
+        /// <returns>The compiled assembly as a <see cref="MemoryStream"/>.</returns>
         /// <exception cref="CompilerErrorException">Thrown for compiler errors.</exception>
         /// <remarks>
         /// <para>
@@ -83,7 +83,7 @@ namespace Neon.CodeGen
         ///     });
         /// </code>
         /// </remarks>
-        public static Assembly Compile(
+        public static MemoryStream Compile(
             string                          source, 
             string                          assemblyName, 
             Action<MetadataReferences>      referenceHandler = null,
@@ -135,20 +135,21 @@ namespace Neon.CodeGen
 
             var compilation = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, options);
 
-            using (var dllStream = new MemoryStream())
+            var dllStream = new MemoryStream();
+
+            using (var pdbStream = new MemoryStream())
             {
-                using (var pdbStream = new MemoryStream())
+                var emitted = compilation.Emit(dllStream, pdbStream);
+
+                if (!emitted.Success)
                 {
-                    var emitted = compilation.Emit(dllStream, pdbStream);
-
-                    if (!emitted.Success)
-                    {
-                        throw new CompilerErrorException(emitted.Diagnostics);
-                    }
-
-                    return Assembly.Load(dllStream.ToArray());
+                    throw new CompilerErrorException(emitted.Diagnostics);
                 }
             }
+
+            dllStream.Position = 0;
+
+            return dllStream;
         }
 
         //---------------------------------------------------------------------

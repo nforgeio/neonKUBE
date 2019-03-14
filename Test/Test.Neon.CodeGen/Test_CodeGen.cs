@@ -37,9 +37,9 @@ using Xunit;
 
 namespace TestCodeGen.CodeGen
 {
-    //public interface EmptyData
-    //{
-    //}
+    public interface EmptyData
+    {
+    }
 
     public enum MyEnum1
     {
@@ -135,7 +135,14 @@ namespace TestCodeGen.CodeGen
 
             Assert.False(output.HasErrors);
 
-            CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var empty = context.CreateDataWrapper<EmptyData>();
+
+
+            }
         }
     }
 }

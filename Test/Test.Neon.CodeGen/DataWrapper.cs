@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CodeGenTestHelper
+// FILE:	    DataWrapper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,15 +17,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis;
 
 using Neon.CodeGen;
 using Neon.Common;
@@ -39,18 +38,20 @@ using Xunit;
 namespace TestCodeGen.CodeGen
 {
     /// <summary>
-    /// Test helpers.
+    /// Used to wrap a dynamically generated and compiled data model
+    /// class for testing purposes.
     /// </summary>
-    internal static class CodeGenTestHelper
+    public class DataWrapper
     {
+        private object instance;
+
         /// <summary>
-        /// Adds the assembly references required to compile the generated code.
+        /// Constructor.
         /// </summary>
-        /// <param name="references">The assembly references.</param>
-        public static void ReferenceHandler(MetadataReferences references)
+        /// <param name="assembly">The source assembly.</param>
+        /// <param name="className">The fully qualified class name.</param>
+        public DataWrapper(Assembly assembly, string className)
         {
-            references.Add(typeof(System.Dynamic.CallInfo));
-            references.Add(typeof(Newtonsoft.Json.JsonToken));
         }
     }
 }
