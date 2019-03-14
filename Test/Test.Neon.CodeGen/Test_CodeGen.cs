@@ -139,9 +139,20 @@ namespace TestCodeGen.CodeGen
 
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
-                var empty = context.CreateDataWrapper<EmptyData>();
+                var data = context.CreateDataWrapper<EmptyData>();
 
+                Assert.Equal("{}", data.ToString());
+                Assert.Equal("{}", data.ToString(indented: true));
 
+                data = context.CreateDataWrapperFrom<EmptyData>("{}");
+
+                Assert.Equal("{}", data.ToString());
+                Assert.Equal("{}", data.ToString(indented: true));
+
+                data = context.CreateDataWrapperFrom<EmptyData>(new JObject());
+
+                Assert.Equal("{}", data.ToString());
+                Assert.Equal("{}", data.ToString(indented: true));
             }
         }
     }

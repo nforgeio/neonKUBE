@@ -81,14 +81,57 @@ namespace TestCodeGen.CodeGen
         /// Creates an uni9n <see cref="DataWrapper"/> instance around a new instance
         /// of the named type.
         /// </summary>
-        /// <typeparam name="T">The type as defined in the </typeparam>
-        /// <param name="typeName">The data model type as defined in the source assembly.</param>
+        /// <typeparam name="T">The source data type as defined in the within the unit test assembly.</typeparam>
         /// <returns>The new <see cref="DataWrapper"/>.</returns>
         public DataWrapper CreateDataWrapper<T>()
         {
             var sourceType = typeof(T);
+            var targetType = assembly.GetType($"{defaultNamespace}.{sourceType.Name}");
 
-            return new DataWrapper(assembly, $"{defaultNamespace}.{sourceType.Name}");
+            if (targetType == null)
+            {
+                throw new TypeLoadException($"Cannot find type: {defaultNamespace}.{sourceType.Name}");
+            }
+
+            return new DataWrapper(targetType);
+        }
+
+        /// <summary>
+        /// Creates a data wrapper from JSON text.
+        /// </summary>
+        /// <typeparam name="T">The source data type as defined in the within the unit test assembly.</typeparam>
+        /// <param name="jsonText">The JSON text.</param>
+        /// <returns>The new <see cref="DataWrapper"/>.</returns>
+        public DataWrapper CreateDataWrapperFrom<T>(string jsonText)
+        {
+            var sourceType = typeof(T);
+            var targetType = assembly.GetType($"{defaultNamespace}.{sourceType.Name}");
+
+            if (targetType == null)
+            {
+                throw new TypeLoadException($"Cannot find type: {defaultNamespace}.{sourceType.Name}");
+            }
+
+            return new DataWrapper(targetType, jsonText);
+        }
+
+        /// <summary>
+        /// Creates a data wrapper from a <see cref="JObject"/>.
+        /// </summary>
+        /// <typeparam name="T">The source data type as defined in the within the unit test assembly.</typeparam>
+        /// <param name="jObject">The <see cref="JObject"/>.</param>
+        /// <returns>The new <see cref="DataWrapper"/>.</returns>
+        public DataWrapper CreateDataWrapperFrom<T>(JObject jObject)
+        {
+            var sourceType = typeof(T);
+            var targetType = assembly.GetType($"{defaultNamespace}.{sourceType.Name}");
+
+            if (targetType == null)
+            {
+                throw new TypeLoadException($"Cannot find type: {defaultNamespace}.{sourceType.Name}");
+            }
+
+            return new DataWrapper(targetType, jObject);
         }
     }
 }

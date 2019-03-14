@@ -905,7 +905,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            return new {dataModel.SourceType.Name}() {{ __JObject = __Json.Deserialize<JObject>(jsonText) }};");
+                    writer.WriteLine($"            var model = new {dataModel.SourceType.Name}(__Json.Deserialize<JObject>(jsonText));");
+                    writer.WriteLine();
+                    writer.WriteLine($"            model.__Load();");
+                    writer.WriteLine($"            return model;");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        public static {dataModel.SourceType.Name} From(JObject jObject)");
@@ -915,7 +918,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(jObject));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            return new {dataModel.SourceType.Name}() {{ __JObject = jObject }};");
+                    writer.WriteLine($"            var model = new {dataModel.SourceType.Name}(jObject);");
+                    writer.WriteLine();
+                    writer.WriteLine($"            model.__Load();");
+                    writer.WriteLine($"            return model;");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -930,11 +936,18 @@ namespace Neon.CodeGen
                     }
                 }
 
-                // Generate the default constructor.
+                // Generate the constructors.
 
                 writer.WriteLine();
                 writer.WriteLine($"        public {dataModel.SourceType.Name}()");
                 writer.WriteLine($"        {{");
+                writer.WriteLine($"            __JObject = new JObject();");
+                writer.WriteLine($"        }}");
+
+                writer.WriteLine();
+                writer.WriteLine($"        private {dataModel.SourceType.Name}(JObject jObject)");
+                writer.WriteLine($"        {{");
+                writer.WriteLine($"            __JObject = jObject;");
                 writer.WriteLine($"        }}");
 
                 // Generate the properties.
@@ -1005,60 +1018,65 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        protected {virtualModifier} void __Load()");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            JProperty property;");
-                    writer.WriteLine();
-                    writer.WriteLine($"            lock (__JObject)");
-                    writer.WriteLine($"            {{");
 
-                    if (dataModel.BaseTypeName != null)
+                    if (dataModel.Properties.Count > 0 || dataModel.BaseTypeName != null)
                     {
-                        writer.WriteLine($"                base.__Load();");
-                    }
+                        writer.WriteLine($"            JProperty property;");
+                        writer.WriteLine();
+                        writer.WriteLine($"            lock (__JObject)");
+                        writer.WriteLine($"            {{");
 
-                    var propertyIndex = 0;
-
-                    foreach (var property in dataModel.Properties)
-                    {
-                        if (propertyIndex++ > 0)
+                        if (dataModel.BaseTypeName != null)
                         {
-                            writer.WriteLine();
+                            writer.WriteLine($"                base.__Load();");
                         }
 
-                        writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
-                        writer.WriteLine($"                if (property != null)");
-                        writer.WriteLine($"                {{");
-                        writer.WriteLine($"                    this.{property.Name} = property.ToObject<{ResolveTypeReference(property.Type)}>();");
-                        writer.WriteLine($"                }}");
+                        var propertyIndex = 0;
 
-                        switch (property.DefaultValueHandling)
+                        foreach (var property in dataModel.Properties)
                         {
-                            case DefaultValueHandling.Include:
-                            case DefaultValueHandling.Ignore:
+                            if (propertyIndex++ > 0)
+                            {
+                                writer.WriteLine();
+                            }
 
-                                // Doesn't impact deserialization.
+                            writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
+                            writer.WriteLine($"                if (property != null)");
+                            writer.WriteLine($"                {{");
+                            writer.WriteLine($"                    this.{property.Name} = property.ToObject<{ResolveTypeReference(property.Type)}>();");
+                            writer.WriteLine($"                }}");
 
-                                break;
+                            switch (property.DefaultValueHandling)
+                            {
+                                case DefaultValueHandling.Include:
+                                case DefaultValueHandling.Ignore:
 
-                            case DefaultValueHandling.Populate:
-                            case DefaultValueHandling.IgnoreAndPopulate:
+                                    // Doesn't impact deserialization.
 
-                                // Set the property to its default value, when the
-                                // default differs from the type's default.
+                                    break;
 
-                                var defaultValue = GetPropertyDefaultValue(property, out var isTypeDefault);
+                                case DefaultValueHandling.Populate:
+                                case DefaultValueHandling.IgnoreAndPopulate:
 
-                                if (!isTypeDefault)
-                                {
-                                    writer.WriteLine($"                else");
-                                    writer.WriteLine($"                {{");
-                                    writer.WriteLine($"                    this.{property.Name} = {defaultValue};");
-                                    writer.WriteLine($"                }}");
-                                }
-                                break;
+                                    // Set the property to its default value, when the
+                                    // default differs from the type's default.
+
+                                    var defaultValue = GetPropertyDefaultValue(property, out var isTypeDefault);
+
+                                    if (!isTypeDefault)
+                                    {
+                                        writer.WriteLine($"                else");
+                                        writer.WriteLine($"                {{");
+                                        writer.WriteLine($"                    this.{property.Name} = {defaultValue};");
+                                        writer.WriteLine($"                }}");
+                                    }
+                                    break;
+                            }
                         }
+
+                        writer.WriteLine($"            }}");
                     }
 
-                    writer.WriteLine($"            }}");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -1067,61 +1085,66 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        protected {virtualModifier} void __Save()");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            JProperty property;");
-                    writer.WriteLine();
-                    writer.WriteLine($"            lock (__JObject)");
-                    writer.WriteLine($"            {{");
 
-                    if (dataModel.BaseTypeName != null)
+                    if (dataModel.Properties.Count > 0 || dataModel.BaseTypeName != null)
                     {
-                        writer.WriteLine($"                base.__Save();");
+                        writer.WriteLine($"            JProperty property;");
+                        writer.WriteLine();
+                        writer.WriteLine($"            lock (__JObject)");
+                        writer.WriteLine($"            {{");
 
-                        if (dataModel.Properties.Count > 0)
+                        if (dataModel.BaseTypeName != null)
                         {
-                            writer.WriteLine();
+                            writer.WriteLine($"                base.__Save();");
+
+                            if (dataModel.Properties.Count > 0)
+                            {
+                                writer.WriteLine();
+                            }
                         }
+
+                        var propertyIndex = 0;
+
+                        foreach (var property in dataModel.Properties)
+                        {
+                            if (propertyIndex++ > 0)
+                            {
+                                writer.WriteLine();
+                            }
+
+                            writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
+
+                            switch (property.DefaultValueHandling)
+                            {
+                                case DefaultValueHandling.Include:
+
+                                    writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = property.Name;");
+                                    break;
+
+                                case DefaultValueHandling.Populate:
+                                case DefaultValueHandling.Ignore:
+                                case DefaultValueHandling.IgnoreAndPopulate:
+
+                                    var defaultValue = GetPropertyDefaultValue(property, out var isTypeDefault);
+
+                                    writer.WriteLine($"                if (property.Value.ToObject<{ResolveTypeReference(property.Type)}>() == {defaultValue})");
+                                    writer.WriteLine($"                {{");
+                                    writer.WriteLine($"                    if (property != null)");
+                                    writer.WriteLine($"                    {{");
+                                    writer.WriteLine($"                        this.__JObject.Remove(\"{property.SerializedName}\");");
+                                    writer.WriteLine($"                    }}");
+                                    writer.WriteLine($"                }}");
+                                    writer.WriteLine($"                else");
+                                    writer.WriteLine($"                {{");
+                                    writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = property.Name;");
+                                    writer.WriteLine($"                }}");
+
+                                    break;
+                            }
+                        }
+                        writer.WriteLine($"            }}");
                     }
 
-                    propertyIndex = 0;
-
-                    foreach (var property in dataModel.Properties)
-                    {
-                        if (propertyIndex++ > 0)
-                        {
-                            writer.WriteLine();
-                        }
-
-                        writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
-
-                        switch (property.DefaultValueHandling)
-                        {
-                            case DefaultValueHandling.Include:
-
-                                writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = property.Name;");
-                                break;
-
-                            case DefaultValueHandling.Populate:
-                            case DefaultValueHandling.Ignore:
-                            case DefaultValueHandling.IgnoreAndPopulate:
-
-                                var defaultValue = GetPropertyDefaultValue(property, out var isTypeDefault);
-
-                                writer.WriteLine($"                if (property.Value.ToObject<{ResolveTypeReference(property.Type)}>() == {defaultValue})");
-                                writer.WriteLine($"                {{");
-                                writer.WriteLine($"                    if (property != null)");
-                                writer.WriteLine($"                    {{");
-                                writer.WriteLine($"                        this.__JObject.Remove(\"{property.SerializedName}\");");
-                                writer.WriteLine($"                    }}");
-                                writer.WriteLine($"                }}");
-                                writer.WriteLine($"                else");
-                                writer.WriteLine($"                {{");
-                                writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = property.Name;");
-                                writer.WriteLine($"                }}");
-
-                                break;
-                        }
-                    }
-                    writer.WriteLine($"            }}");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -1134,13 +1157,15 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        public override string ToString()");
                     writer.WriteLine($"        {{");
+                    writer.WriteLine($"            __Save();");
                     writer.WriteLine($"            return __Json.Serialize(__JObject, Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            return __Json.Serialize(__JObject, Formatting.Indented);");
+                    writer.WriteLine($"            __Save();");
+                    writer.WriteLine($"            return __Json.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     // Close the generated model class definition.
