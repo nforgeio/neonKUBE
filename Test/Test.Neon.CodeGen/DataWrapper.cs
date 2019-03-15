@@ -44,8 +44,8 @@ namespace TestCodeGen.CodeGen
     /// </summary>
     public class DataWrapper
     {
-        private object  instance;
-        private Type    instanceType;
+        private object instance;
+        private Type instanceType;
 
         /// <summary>
         /// Constructs an instance with uninitialized properties.
@@ -53,7 +53,7 @@ namespace TestCodeGen.CodeGen
         /// <param name="type">The target type.</param>
         public DataWrapper(Type type)
         {
-            instance     = Activator.CreateInstance(type);
+            instance = Activator.CreateInstance(type);
             instanceType = type;
 
             if (instance == null)
@@ -74,7 +74,7 @@ namespace TestCodeGen.CodeGen
 
             var fromMethod = type.GetMethod("From", new Type[] { typeof(string) });
 
-            instance     = fromMethod.Invoke(null, new object[] { jsonText });
+            instance = fromMethod.Invoke(null, new object[] { jsonText });
             instanceType = type;
 
             if (instance == null)
@@ -95,33 +95,12 @@ namespace TestCodeGen.CodeGen
 
             var fromMethod = type.GetMethod("From", new Type[] { typeof(JObject) });
 
-            instance     = fromMethod.Invoke(null, new object[] { jObject });
+            instance = fromMethod.Invoke(null, new object[] { jObject });
             instanceType = type;
 
             if (instance == null)
             {
                 throw new TypeLoadException($"Cannot instantiate type: {type.FullName}");
-            }
-        }
-
-        /// <summary>
-        /// Serializes the data model as JSON.
-        /// </summary>
-        /// <param name="indented">Optionally format the JSON output.</param>
-        /// <returns>The JSON text.</returns>
-        public string ToString(bool indented = false)
-        {
-            if (indented)
-            {
-                var method = instanceType.GetMethod("ToString", new Type[] { typeof(bool) });
-
-                return (string)method.Invoke(instance, new object[] { indented });
-            }
-            else
-            {
-                var method = instanceType.GetMethod("ToString", new Type[] { });
-
-                return (string)method.Invoke(instance, null);
             }
         }
 
@@ -158,6 +137,39 @@ namespace TestCodeGen.CodeGen
 
                 property.SetValue(instance, value);
             }
+        }
+
+        /// <summary>
+        /// Serializes the data model as JSON.
+        /// </summary>
+        /// <param name="indented">Optionally format the JSON output.</param>
+        /// <returns>The JSON text.</returns>
+        public string ToString(bool indented = false)
+        {
+            if (indented)
+            {
+                var method = instanceType.GetMethod("ToString", new Type[] { typeof(bool) });
+
+                return (string)method.Invoke(instance, new object[] { indented });
+            }
+            else
+            {
+                var method = instanceType.GetMethod("ToString", new Type[] { });
+
+                return (string)method.Invoke(instance, null);
+            }
+        }
+
+        /// <summary>
+        /// Serializes the data model as a <see cref="JObjects"/>.
+        /// </summary>
+        /// <param name="indented">Optionally format the JSON output.</param>
+        /// <returns>The JSON text.</returns>
+        public JObject ToJObject()
+        {
+            var method = instanceType.GetMethod("ToJObject", new Type[] { });
+
+            return (JObject)method.Invoke(instance, new object[] { });
         }
     }
 }

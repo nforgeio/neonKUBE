@@ -193,6 +193,25 @@ namespace TestCodeGen.CodeGen
                 var data = context.CreateDataWrapper<SimpleData>();
                 Assert.Equal("{\"Name\":null,\"Age\":0,\"Enum\":\"One\"}", data.ToString());
                 Assert.Equal("{\r\n  \"Name\": null,\r\n  \"Age\": 0,\r\n  \"Enum\": \"One\"\r\n}", data.ToString(indented: true));
+
+                data = context.CreateDataWrapper<SimpleData>();
+                data["Name"] = "Jeff";
+                data["Age"]  = 58;
+                data["Enum"] = MyEnum1.Two;
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
+
+                data = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
+                data["Name"] = "Jeff";
+                data["Age"] = 58;
+                data["Enum"] = MyEnum1.Two;
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
+
+                var jObject = data.ToJObject();
+                data = context.CreateDataWrapperFrom<SimpleData>(jObject);
+                data["Name"] = "Jeff";
+                data["Age"] = 58;
+                data["Enum"] = MyEnum1.Two;
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
             }
         }
     }

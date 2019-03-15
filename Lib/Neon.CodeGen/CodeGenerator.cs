@@ -738,8 +738,8 @@ namespace Neon.CodeGen
 
             writer.WriteLine($"    internal static class __Json");
             writer.WriteLine($"    {{");
-            writer.WriteLine($"        private static readonly JsonSerializerSettings   settings;");
-            writer.WriteLine($"        private static readonly JsonSerializer           serializer;");
+            writer.WriteLine($"        public static readonly JsonSerializerSettings    settings;");
+            writer.WriteLine($"        public static readonly JsonSerializer            serializer;");
             writer.WriteLine();
             writer.WriteLine($"        static __Json()");
             writer.WriteLine($"        {{");
@@ -1061,10 +1061,21 @@ namespace Neon.CodeGen
                                 writer.WriteLine();
                             }
 
+                            var resolvedPropertyType = ResolveTypeReference(property.Type);
+
                             writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
                             writer.WriteLine($"                if (property != null)");
                             writer.WriteLine($"                {{");
-                            writer.WriteLine($"                    this.{property.Name} = property.ToObject<{ResolveTypeReference(property.Type)}>();");
+
+                            if (property.RequiresObjectification)
+                            {
+                                writer.WriteLine($"                    this.{property.Name} = property.Value.ToObject<{resolvedPropertyType}>(__Json.serializer);");
+                            }
+                            else
+                            {
+                                writer.WriteLine($"                    this.{property.Name} = ({resolvedPropertyType})property.Value;");
+                            }
+
                             writer.WriteLine($"                }}");
 
                             switch (property.DefaultValueHandling)
@@ -1200,6 +1211,19 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            __Save();");
                     writer.WriteLine($"            return __Json.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
                     writer.WriteLine($"        }}");
+
+                    //-------------------------------------
+                    // Generate the ToJObject() method if this is the root class.
+
+                    if (dataModel.BaseTypeName == null)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"        public JObject ToJObject()");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            __Save();");
+                        writer.WriteLine($"            return (JObject)__JObject.DeepClone();");
+                        writer.WriteLine($"        }}");
+                    }
 
                     // Close the generated model class definition.
 
