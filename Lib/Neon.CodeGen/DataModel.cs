@@ -87,6 +87,11 @@ namespace Neon.CodeGen
         public string BaseTypeName { get; set; }
 
         /// <summary>
+        /// Indicates whether the current data model is derived from another model.
+        /// </summary>
+        public bool IsDerived => BaseTypeName != null;
+
+        /// <summary>
         /// Lists the members for <c>enum</c> types.
         /// </summary>
         public List<EnumMember> EnumMembers { get; private set; } = new List<EnumMember>();

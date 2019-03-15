@@ -765,9 +765,21 @@ namespace Neon.CodeGen
             writer.WriteLine($"            return JsonConvert.DeserializeObject<T>(jsonText, settings);");
             writer.WriteLine($"        }}");
             writer.WriteLine();
-            writer.WriteLine($"        public static JToken FromObject(object value)");
+            writer.WriteLine($"        public static JToken FromObject(object value, Type objectType, string propertyName)");
             writer.WriteLine($"        {{");
-            writer.WriteLine($"            return value == null ? null : JToken.FromObject(value, serializer);");
+            writer.WriteLine($"            if (value == null)");
+            writer.WriteLine($"            {{");
+            writer.WriteLine($"                return null;");
+            writer.WriteLine($"            }} ");
+            writer.WriteLine();
+            writer.WriteLine($"            try");
+            writer.WriteLine($"            {{");
+            writer.WriteLine($"                return JToken.FromObject(value, serializer);");
+            writer.WriteLine($"            }}");
+            writer.WriteLine($"            catch (JsonSerializationException e)");
+            writer.WriteLine($"            {{");
+            writer.WriteLine($"                throw new SerializationException($\"Error persisting value to [{{objectType.Name}}.{{propertyName}}]: {{e.Message}}\", e);");
+            writer.WriteLine($"            }}");
             writer.WriteLine($"        }}");
             writer.WriteLine($"    }}");
             writer.WriteLine();
@@ -889,7 +901,7 @@ namespace Neon.CodeGen
             {
                 var baseTypeRef = string.Empty;
 
-                if (dataModel.BaseTypeName != null)
+                if (dataModel.IsDerived)
                 {
                     if (!nameToDataModel.ContainsKey(dataModel.BaseTypeName))
                     {
@@ -908,7 +920,7 @@ namespace Neon.CodeGen
                     //-------------------------------------
                     // Generate the static members.
 
-                    writer.WriteLine($"        public static {dataModel.SourceType.Name} From(string jsonText)");
+                    writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(string jsonText)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (string.IsNullOrEmpty(jsonText))");
                     writer.WriteLine($"            {{");
@@ -921,7 +933,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            return model;");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
-                    writer.WriteLine($"        public static {dataModel.SourceType.Name} From(JObject jObject)");
+                    writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(JObject jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (jObject == null)");
                     writer.WriteLine($"            {{");
@@ -948,17 +960,32 @@ namespace Neon.CodeGen
 
                 // Generate the constructors.
 
-                writer.WriteLine();
-                writer.WriteLine($"        public {dataModel.SourceType.Name}()");
-                writer.WriteLine($"        {{");
-                writer.WriteLine($"            __JObject = new JObject();");
-                writer.WriteLine($"        }}");
+                if (!dataModel.IsDerived)
+                {
+                    writer.WriteLine();
+                    writer.WriteLine($"        public {dataModel.SourceType.Name}()");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            __JObject = new JObject();");
+                    writer.WriteLine($"        }}");
 
-                writer.WriteLine();
-                writer.WriteLine($"        private {dataModel.SourceType.Name}(JObject jObject)");
-                writer.WriteLine($"        {{");
-                writer.WriteLine($"            __JObject = jObject;");
-                writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        protected {dataModel.SourceType.Name}(JObject jObject)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            __JObject = jObject;");
+                    writer.WriteLine($"        }}");
+                }
+                else
+                {
+                    writer.WriteLine();
+                    writer.WriteLine($"        public {dataModel.SourceType.Name}() : base()");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"        }}");
+
+                    writer.WriteLine();
+                    writer.WriteLine($"        protected {dataModel.SourceType.Name}(JObject jObject) : base(jObject)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"        }}");
+                }
 
                 // Generate the properties.
 
@@ -1034,27 +1061,33 @@ namespace Neon.CodeGen
                     //-------------------------------------
                     // Generate the __Load() method.
 
-                    var virtualModifier = dataModel.BaseTypeName == null ? "virtual" : "override";
+                    var virtualModifier      = dataModel.IsDerived ? "override" : "virtual";
+                    var serializedProperties = dataModel.Properties.Where(p => !p.Ignore);
 
                     writer.WriteLine();
                     writer.WriteLine($"        protected {virtualModifier} void __Load()");
                     writer.WriteLine($"        {{");
 
-                    if (dataModel.Properties.Count > 0 || dataModel.BaseTypeName != null)
+                    if (serializedProperties.Count() > 0 || dataModel.IsDerived)
                     {
                         writer.WriteLine($"            JProperty property;");
                         writer.WriteLine();
                         writer.WriteLine($"            lock (__JObject)");
                         writer.WriteLine($"            {{");
 
-                        if (dataModel.BaseTypeName != null)
+                        if (dataModel.IsDerived)
                         {
                             writer.WriteLine($"                base.__Load();");
+
+                            if (dataModel.Properties.Count > 0)
+                            {
+                                writer.WriteLine();
+                            }
                         }
 
                         var propertyIndex = 0;
 
-                        foreach (var property in dataModel.Properties)
+                        foreach (var property in serializedProperties)
                         {
                             if (propertyIndex++ > 0)
                             {
@@ -1118,14 +1151,14 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        protected {virtualModifier} void __Save()");
                     writer.WriteLine($"        {{");
 
-                    if (dataModel.Properties.Count > 0 || dataModel.BaseTypeName != null)
+                    if (serializedProperties.Count() > 0 || dataModel.IsDerived)
                     {
                         writer.WriteLine($"            JProperty property;");
                         writer.WriteLine();
                         writer.WriteLine($"            lock (__JObject)");
                         writer.WriteLine($"            {{");
 
-                        if (dataModel.BaseTypeName != null)
+                        if (dataModel.IsDerived)
                         {
                             writer.WriteLine($"                base.__Save();");
 
@@ -1137,15 +1170,22 @@ namespace Neon.CodeGen
 
                         var propertyIndex = 0;
 
-                        foreach (var property in dataModel.Properties)
+                        foreach (var property in serializedProperties)
                         {
+                            if (property.Ignore)
+                            {
+                                continue;
+                            }
+
+                            var propertyTypeReference = ResolveTypeReference(property.Type);
+
                             switch (property.DefaultValueHandling)
                             {
                                 case DefaultValueHandling.Include:
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name});");
+                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name}, typeof({dataModel.SourceType.Name}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1166,7 +1206,7 @@ namespace Neon.CodeGen
 
                                     writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
                                     writer.WriteLine();
-                                    writer.WriteLine($"                if (property != null && property.Value.ToObject<{ResolveTypeReference(property.Type)}>() == {defaultValueExpression})");
+                                    writer.WriteLine($"                if (property != null && property.Value.ToObject<{propertyTypeReference}>() == {defaultValueExpression})");
                                     writer.WriteLine($"                {{");
                                     writer.WriteLine($"                    this.__JObject.Remove(\"{property.SerializedName}\");");
                                     writer.WriteLine($"                }}");
@@ -1175,7 +1215,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name});");
+                                        writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name}, typeof({dataModel.SourceType.Name}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1215,7 +1255,7 @@ namespace Neon.CodeGen
                     //-------------------------------------
                     // Generate the ToJObject() method if this is the root class.
 
-                    if (dataModel.BaseTypeName == null)
+                    if (!dataModel.IsDerived)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        public JObject ToJObject()");
@@ -1337,7 +1377,7 @@ namespace Neon.CodeGen
 
                 var arrayRef = ResolveTypeReference(elementType);
 
-                for (int i = 0; i < arrayDepth; i++)
+                for (int i = 0; i <= arrayDepth; i++)
                 {
                     arrayRef += "[]";
                 }

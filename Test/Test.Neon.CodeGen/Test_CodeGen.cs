@@ -92,7 +92,6 @@ namespace TestCodeGen.CodeGen
         SimpleData Simple { get; set; }
         int[] SingleArray { get; set; }
         int[][] DoubleArray { get; set; }
-        int[][][] TripleArray { get; set; }
 
         [JsonIgnore]
         int IgnoreThis { get; set; }
@@ -103,14 +102,19 @@ namespace TestCodeGen.CodeGen
         string Value { get; }
     }
 
-    public interface ParentModel
+    public interface NoGetter
     {
-        string ParentProperty { get; set; }
+        string Value { set; }
     }
 
-    public interface ChildModel : ParentModel
+    public interface BaseModel
     {
-        string ChildProperty { get; set; }
+        string BaseProperty { get; set; }
+    }
+
+    public interface DerivedModel : BaseModel
+    {
+        string DerivedProperty { get; set; }
     }
 
     public interface DefaultValues
@@ -143,7 +147,7 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients   = false
+                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -164,6 +168,82 @@ namespace TestCodeGen.CodeGen
                 Assert.Equal("{}", data.ToString(indented: true));
 
                 data = context.CreateDataWrapperFrom<EmptyData>(new JObject());
+                Assert.Equal("{}", data.ToString());
+                Assert.Equal("{}", data.ToString(indented: true));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void DataModel_NoSetter()
+        {
+            // Verify that we can generate code for the [NoSetter] data model.
+            // This has a single property that only has a getter which should
+            // be ignored by the code generator, so this should end up being
+            // equivalent to a model with no properties.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<NoSetter>();
+                Assert.Equal("{}", data.ToString());
+                Assert.Equal("{}", data.ToString(indented: true));
+
+                data = context.CreateDataWrapperFrom<NoSetter>("{}");
+                Assert.Equal("{}", data.ToString());
+                Assert.Equal("{}", data.ToString(indented: true));
+
+                data = context.CreateDataWrapperFrom<NoSetter>(new JObject());
+                Assert.Equal("{}", data.ToString());
+                Assert.Equal("{}", data.ToString(indented: true));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void DataModel_NoGetter()
+        {
+            // Verify that we can generate code for the [NoGetter] data model.
+            // This has a single property that only has a getter which should
+            // be ignored by the code generator, so this should end up being
+            // equivalent to a model with no properties.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<NoGetter>();
+                Assert.Equal("{}", data.ToString());
+                Assert.Equal("{}", data.ToString(indented: true));
+
+                data = context.CreateDataWrapperFrom<NoGetter>("{}");
+                Assert.Equal("{}", data.ToString());
+                Assert.Equal("{}", data.ToString(indented: true));
+
+                data = context.CreateDataWrapperFrom<NoGetter>(new JObject());
                 Assert.Equal("{}", data.ToString());
                 Assert.Equal("{}", data.ToString(indented: true));
             }
@@ -212,6 +292,20 @@ namespace TestCodeGen.CodeGen
                 data["Age"] = 58;
                 data["Enum"] = MyEnum1.Two;
                 Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
+
+                var jsonText = data.ToString(indented: false);
+                data = context.CreateDataWrapperFrom<SimpleData>(jsonText);
+                data["Name"] = "Jeff";
+                data["Age"] = 58;
+                data["Enum"] = MyEnum1.Two;
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
+
+                jsonText = data.ToString(indented: true);
+                data = context.CreateDataWrapperFrom<SimpleData>(jsonText);
+                data["Name"] = "Jeff";
+                data["Age"] = 58;
+                data["Enum"] = MyEnum1.Two;
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
             }
         }
 
@@ -254,6 +348,14 @@ namespace TestCodeGen.CodeGen
                 data["String"]  = "12";
 
                 Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}", data.ToString());
+
+                var jsonText = data.ToString(indented: false);
+                data = context.CreateDataWrapperFrom<BasicTypes>(jsonText);
+                Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}", data.ToString());
+
+                jsonText = data.ToString(indented: true);
+                data = context.CreateDataWrapperFrom<BasicTypes>(jsonText);
+                Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}", data.ToString());
             }
         }
 
@@ -280,9 +382,136 @@ namespace TestCodeGen.CodeGen
             {
                 var data = context.CreateDataWrapper<ComplexData>();
 
-                var s = data.ToString();
+                // This is going to throw a serialization exception because 0 is not a valid
+                // [Enum2] orginal value, but that's what it will be initially set to because
+                // we didn't use [DefaultValue].
 
-                Assert.Equal("{\"Bool\":false,\"Byte\":0,\"SByte\":0,\"Short\":0,\"UShort\":0,\"Int\":0,\"UInt\":0,\"Long\":0,\"ULong\":0,\"Float\":0.0,\"Double\":0.0,\"Decimal\":0.0,\"String\":null}", data.ToString());
+                Assert.Throws<SerializationException>(() => data.ToString());
+
+                // Set a valid [Enum2] Value and test again.
+
+                data["Enum2"] = MyEnum2.Three;
+                Assert.Equal("{\"Items\":null,\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
+
+                // Initialize the list and verify.
+
+                data["Items"] = new List<string>() { "item0", "item1" };
+
+                Assert.Equal("{\"Items\":[\"item0\",\"item1\"],\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
+
+                // Initialize the dictionary and verify.
+
+                data["Lookup"] = new Dictionary<string, int>()
+                {
+                    { "zero", 0 },
+                    { "one", 1 }
+                };
+
+                Assert.Equal("{\"Items\":[\"item0\",\"item1\"],\"Lookup\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
+
+                // Initialize the one dimensional array and verify.
+
+                data["SingleArray"] = new int[] { 100, 200 };
+                Assert.Equal("{\"Items\":[\"item0\",\"item1\"],\"Lookup\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":null}", data.ToString());
+
+                // Initialize the two dimensional array and verify.
+
+                data["DoubleArray"] = new int[][]
+                {
+                    new int[] { 100, 200 },
+                    new int[] { 300, 400 }
+                };
+
+                Assert.Equal("{\"Items\":[\"item0\",\"item1\"],\"Lookup\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":[[100,200],[300,400]]}", data.ToString());
+
+                // Verify that a property with [JsonIgnore] is not persisted.
+
+                data["IgnoreThis"] = 1000;
+                Assert.DoesNotContain("IgnoreThis", data.ToString());
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void DataModel_DefaultValues()
+        {
+            // Verify that data models with default property values are initialized correctly.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients  = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<DefaultValues>();
+
+                Assert.Equal("Joe Bloe", data["Name"]);
+                Assert.Equal(67, data["Age"]);
+                Assert.Equal(100000.0, data["NetWorth"]);
+                Assert.Equal(MyEnum1.Three, (MyEnum1)data["Enum1"]);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void DataModel_Inherit()
+        {
+            // Verify that data models that inherit from other data models work.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients  = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                // Verify that [BaseModel] by itself works.
+
+                var baseData = context.CreateDataWrapper<BaseModel>();
+
+                Assert.Null(baseData["BaseProperty"]);
+
+                baseData["BaseProperty"] = "Hello World!";
+                Assert.Equal("Hello World!", baseData["BaseProperty"]);
+
+                baseData = context.CreateDataWrapperFrom<BaseModel>(baseData.ToString());
+                Assert.Equal("Hello World!", baseData["BaseProperty"]);
+
+                // Verify that [DerivedModel] works too.
+
+                var derivedData = context.CreateDataWrapper<DerivedModel>();
+
+                Assert.Null(derivedData["BaseProperty"]);
+                Assert.Null(derivedData["DerivedProperty"]);
+
+                derivedData["BaseProperty"] = "base";
+                Assert.Equal("base", derivedData["BaseProperty"]);
+
+                derivedData["DerivedProperty"] = "derived";
+                Assert.Equal("derived", derivedData["DerivedProperty"]);
+
+                var json = derivedData.ToString(indented: true);
+
+                derivedData = context.CreateDataWrapperFrom<DerivedModel>(derivedData.ToString());
+                Assert.Equal("base", derivedData["BaseProperty"]);
+                Assert.Equal("derived", derivedData["DerivedProperty"]);
             }
         }
     }

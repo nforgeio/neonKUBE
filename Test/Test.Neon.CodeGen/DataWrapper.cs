@@ -44,8 +44,8 @@ namespace TestCodeGen.CodeGen
     /// </summary>
     public class DataWrapper
     {
-        private object instance;
-        private Type instanceType;
+        private object  instance;
+        private Type    instanceType;
 
         /// <summary>
         /// Constructs an instance with uninitialized properties.
@@ -53,7 +53,7 @@ namespace TestCodeGen.CodeGen
         /// <param name="type">The target type.</param>
         public DataWrapper(Type type)
         {
-            instance = Activator.CreateInstance(type);
+            instance     = Activator.CreateInstance(type);
             instanceType = type;
 
             if (instance == null)
@@ -72,14 +72,28 @@ namespace TestCodeGen.CodeGen
             Covenant.Requires<ArgumentNullException>(type != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(jsonText));
 
-            var fromMethod = type.GetMethod("From", new Type[] { typeof(string) });
-
-            instance = fromMethod.Invoke(null, new object[] { jsonText });
-            instanceType = type;
-
-            if (instance == null)
+            try
             {
-                throw new TypeLoadException($"Cannot instantiate type: {type.FullName}");
+                var createFromMethod = type.GetMethod("CreateFrom", new Type[] { typeof(string) });
+
+                instance     = createFromMethod.Invoke(null, new object[] { jsonText });
+                instanceType = type;
+
+                if (instance == null)
+                {
+                    throw new TypeLoadException($"Cannot instantiate type: {type.FullName}");
+                }
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
 
@@ -93,14 +107,28 @@ namespace TestCodeGen.CodeGen
             Covenant.Requires<ArgumentNullException>(type != null);
             Covenant.Requires<ArgumentNullException>(jObject != null);
 
-            var fromMethod = type.GetMethod("From", new Type[] { typeof(JObject) });
-
-            instance = fromMethod.Invoke(null, new object[] { jObject });
-            instanceType = type;
-
-            if (instance == null)
+            try
             {
-                throw new TypeLoadException($"Cannot instantiate type: {type.FullName}");
+                var createFromMethod = type.GetMethod("CreateFrom", new Type[] { typeof(JObject) });
+
+                instance     = createFromMethod.Invoke(null, new object[] { jObject });
+                instanceType = type;
+
+                if (instance == null)
+                {
+                    throw new TypeLoadException($"Cannot instantiate type: {type.FullName}");
+                }
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
 
@@ -114,28 +142,56 @@ namespace TestCodeGen.CodeGen
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName));
 
-                var property = instanceType.GetProperty(propertyName);
-
-                if (property == null)
+                try
                 {
-                    throw new KeyNotFoundException($"Property [{propertyName}] was not found.");
-                }
+                    var property = instanceType.GetProperty(propertyName);
 
-                return property.GetValue(instance);
+                    if (property == null)
+                    {
+                        throw new KeyNotFoundException($"Property [{propertyName}] was not found.");
+                    }
+
+                    return property.GetValue(instance);
+                }
+                catch (TargetInvocationException e)
+                {
+                    if (e.InnerException != null)
+                    {
+                        throw e.InnerException;
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
 
             set
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName));
 
-                var property = instanceType.GetProperty(propertyName);
-
-                if (property == null)
+                try
                 {
-                    throw new KeyNotFoundException($"Property [{propertyName}] was not found.");
-                }
+                    var property = instanceType.GetProperty(propertyName);
 
-                property.SetValue(instance, value);
+                    if (property == null)
+                    {
+                        throw new KeyNotFoundException($"Property [{propertyName}] was not found.");
+                    }
+
+                    property.SetValue(instance, value);
+                }
+                catch (TargetInvocationException e)
+                {
+                    if (e.InnerException != null)
+                    {
+                        throw e.InnerException;
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
         }
 
@@ -146,17 +202,31 @@ namespace TestCodeGen.CodeGen
         /// <returns>The JSON text.</returns>
         public string ToString(bool indented = false)
         {
-            if (indented)
+            try
             {
-                var method = instanceType.GetMethod("ToString", new Type[] { typeof(bool) });
+                if (indented)
+                {
+                    var method = instanceType.GetMethod("ToString", new Type[] { typeof(bool) });
 
-                return (string)method.Invoke(instance, new object[] { indented });
+                    return (string)method.Invoke(instance, new object[] { indented });
+                }
+                else
+                {
+                    var method = instanceType.GetMethod("ToString", new Type[] { });
+
+                    return (string)method.Invoke(instance, null);
+                }
             }
-            else
+            catch (TargetInvocationException e)
             {
-                var method = instanceType.GetMethod("ToString", new Type[] { });
-
-                return (string)method.Invoke(instance, null);
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
 
@@ -167,9 +237,23 @@ namespace TestCodeGen.CodeGen
         /// <returns>The JSON text.</returns>
         public JObject ToJObject()
         {
-            var method = instanceType.GetMethod("ToJObject", new Type[] { });
+            try
+            {
+                var method = instanceType.GetMethod("ToJObject", new Type[] { });
 
-            return (JObject)method.Invoke(instance, new object[] { });
+                return (JObject)method.Invoke(instance, new object[] { });
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
     }
 }
