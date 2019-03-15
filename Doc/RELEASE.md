@@ -26,25 +26,23 @@
 
 4. Open the **Properties** each of the library projects and update the **Release notes**.
 
-5. Create a new local `release-VERSION` branch from `MASTER` (where `VERSION` is the same version as saved to `$/product-version.txt`).
-
-6. Rebuild the RELEASE version via:
+5. Rebuild the RELEASE version via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
-7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
+6. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
 
-8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+7. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-9. Upgrade an older cluster and verify by running cluster unit tests.
+8. Upgrade an older cluster and verify by running cluster unit tests.
 
-10. Deploy a fresh cluster and verify by running the cluster unit tests.
+9. Deploy a fresh cluster and verify by running the cluster unit tests.
 
-11. Fix any important issues and commit the changes.
+10. Fix any important issues and commit the changes.
 
-12. Push the `release-VERSION` branch to GitHub.
+11. Push the `release-VERSION` branch to GitHub.
 
-13. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+12. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
