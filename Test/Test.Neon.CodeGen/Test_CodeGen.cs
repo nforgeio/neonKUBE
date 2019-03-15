@@ -173,7 +173,7 @@ namespace TestCodeGen.CodeGen
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public void DataModel_Simple()
         {
-            // Verify that we can generate code for an empty data model.
+            // Verify that we can generate code for a simple data model.
 
             var settings = new CodeGeneratorSettings()
             {
@@ -212,6 +212,77 @@ namespace TestCodeGen.CodeGen
                 data["Age"] = 58;
                 data["Enum"] = MyEnum1.Two;
                 Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void DataModel_BasicTypes()
+        {
+            // Verify that we can generate code for basic data types.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients  = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<BasicTypes>();
+                Assert.Equal("{\"Bool\":false,\"Byte\":0,\"SByte\":0,\"Short\":0,\"UShort\":0,\"Int\":0,\"UInt\":0,\"Long\":0,\"ULong\":0,\"Float\":0.0,\"Double\":0.0,\"Decimal\":0.0,\"String\":null}", data.ToString());
+
+                data["Bool"]    = true;
+                data["Byte"]    = (byte)1;
+                data["SByte"]   = (sbyte)2;
+                data["Short"]   = (short)3;
+                data["UShort"]  = (ushort)4;
+                data["Int"]     = (int)5;
+                data["UInt"]    = (uint)6;
+                data["Long"]    = (long)7;
+                data["ULong"]   = (ulong)8;
+                data["Float"]   = (float)9;
+                data["Double"]  = (double)10;
+                data["Decimal"] = (decimal)11;
+                data["String"]  = "12";
+
+                Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}", data.ToString());
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void DataModel_Complex()
+        {
+            // Verify that we can generate code for complex data types.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients  = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<ComplexData>();
+
+                var s = data.ToString();
+
+                Assert.Equal("{\"Bool\":false,\"Byte\":0,\"SByte\":0,\"Short\":0,\"UShort\":0,\"Int\":0,\"UInt\":0,\"Long\":0,\"ULong\":0,\"Float\":0.0,\"Double\":0.0,\"Decimal\":0.0,\"String\":null}", data.ToString());
             }
         }
     }
