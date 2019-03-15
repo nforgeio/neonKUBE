@@ -591,7 +591,7 @@ namespace Neon.CodeGen
                         continue;
                     }
 
-                    var property = new DataProperty()
+                    var property = new DataProperty(output)
                     {
                         Name = member.Name,
                         Type = member.PropertyType
@@ -738,7 +738,8 @@ namespace Neon.CodeGen
 
             writer.WriteLine($"    internal static class __Json");
             writer.WriteLine($"    {{");
-            writer.WriteLine($"        private static readonly JsonSerializerSettings settings;");
+            writer.WriteLine($"        private static readonly JsonSerializerSettings   settings;");
+            writer.WriteLine($"        private static readonly JsonSerializer           serializer;");
             writer.WriteLine();
             writer.WriteLine($"        static __Json()");
             writer.WriteLine($"        {{");
@@ -750,6 +751,8 @@ namespace Neon.CodeGen
             writer.WriteLine($"            }};");
             writer.WriteLine();
             writer.WriteLine($"            settings.Converters.Add(new StringEnumConverter(new DefaultNamingStrategy(), allowIntegerValues: false));");
+            writer.WriteLine();
+            writer.WriteLine($"            serializer = JsonSerializer.Create(settings);");
             writer.WriteLine($"        }}");
             writer.WriteLine();
             writer.WriteLine($"        public static string Serialize(object value, Formatting format = Formatting.None)");
@@ -764,7 +767,7 @@ namespace Neon.CodeGen
             writer.WriteLine();
             writer.WriteLine($"        public static JToken FromObject(object value)");
             writer.WriteLine($"        {{");
-            writer.WriteLine($"            return value == null ? null : JToken.FromObject(value);");
+            writer.WriteLine($"            return value == null ? null : JToken.FromObject(value, serializer);");
             writer.WriteLine($"        }}");
             writer.WriteLine($"    }}");
             writer.WriteLine();
@@ -1129,7 +1132,14 @@ namespace Neon.CodeGen
                             {
                                 case DefaultValueHandling.Include:
 
-                                    writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name});");
+                                    if (property.RequiresObjectification)
+                                    {
+                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name});");
+                                    }
+                                    else
+                                    {
+                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = this.{property.Name};");
+                                    }
                                     break;
 
                                 case DefaultValueHandling.Populate:
@@ -1151,7 +1161,16 @@ namespace Neon.CodeGen
                                     writer.WriteLine($"                }}");
                                     writer.WriteLine($"                else");
                                     writer.WriteLine($"                {{");
-                                    writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name});");
+
+                                    if (property.RequiresObjectification)
+                                    {
+                                        writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name});");
+                                    }
+                                    else
+                                    {
+                                        writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = this.{property.Name};");
+                                    }
+
                                     writer.WriteLine($"                }}");
                                     break;
                             }

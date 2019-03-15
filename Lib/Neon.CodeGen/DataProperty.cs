@@ -34,9 +34,15 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DataProperty()
+        /// <param name="output">The code generator output.</param>
+        public DataProperty(CodeGeneratorOutput output)
         {
+            Covenant.Requires<ArgumentNullException>(output != null);
+
+            this.Output = output;
         }
+
+        public CodeGeneratorOutput Output { get; private set; }
 
         /// <summary>
         /// True when this property is not to be serialized.
@@ -64,6 +70,15 @@ namespace Neon.CodeGen
         public int Order { get; set; }
 
         /// <summary>
+        /// Returns <c>true</c> if the property type requires conversion
+        /// to an object before assignment to a <see cref="JObject"/> property.
+        /// </summary>
+        public bool RequiresObjectification
+        {
+            get => !(Type.IsPrimitive || Type == typeof(string) || Type == typeof(Decimal));
+        }
+
+        /// <summary>
         /// Set to the value specified by a <see cref="DefaultValueAttribute"/> 
         /// on the property or the default value for the property type.
         /// </summary>
@@ -87,7 +102,14 @@ namespace Neon.CodeGen
                 {
                     if (Type == typeof(string))
                     {
-                        return $"\"{DefaultValue}\"";
+                        if (DefaultValue == null)
+                        {
+                            return "null";
+                        }
+                        else
+                        {
+                            return $"\"{DefaultValue}\"";
+                        }
                     }
                     else
                     {
@@ -101,7 +123,7 @@ namespace Neon.CodeGen
                         {
                             if (Type.IsEnum)
                             {
-                                return $"{Type.Name}.{DefaultValue.ToString()}";
+                                return $"{Type.Name}.{NeonHelper.EnumToString(Type, DefaultValue)}";
                             }
                             else if (Type == typeof(bool))
                             {

@@ -63,6 +63,7 @@ namespace TestCodeGen.CodeGen
     {
         string Name { get; set; }
         int Age { get; set; }
+        MyEnum1 Enum { get; set; }
     }
 
     public interface BasicTypes
@@ -190,8 +191,8 @@ namespace TestCodeGen.CodeGen
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
                 var data = context.CreateDataWrapper<SimpleData>();
-                Assert.Equal("{\"Name\":null,\"Age\":0}", data.ToString());
-                Assert.Equal("{\r\n  \"Name\": null,\r\n  \"Age\": 0\r\n}", data.ToString(indented: true));
+                Assert.Equal("{\"Name\":null,\"Age\":0,\"Enum\":\"One\"}", data.ToString());
+                Assert.Equal("{\r\n  \"Name\": null,\r\n  \"Age\": 0,\r\n  \"Enum\": \"One\"\r\n}", data.ToString(indented: true));
             }
         }
     }
