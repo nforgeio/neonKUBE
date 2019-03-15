@@ -72,13 +72,18 @@ namespace TestCodeGen.CodeGen
             }
         }
 
+        /// <summary>
+        /// Required to implement [AssemblyLoadContext] but is never called.
+        /// </summary>
+        /// <param name="assemblyName"></param>
+        /// <returns></returns>
         protected override Assembly Load(AssemblyName assemblyName)
         {
             return null;
         }
 
         /// <summary>
-        /// Creates an uni9n <see cref="DataWrapper"/> instance around a new instance
+        /// Creates a unit <see cref="DataWrapper"/> instance around a new instance
         /// of the named type.
         /// </summary>
         /// <typeparam name="T">The source data type as defined in the within the unit test assembly.</typeparam>

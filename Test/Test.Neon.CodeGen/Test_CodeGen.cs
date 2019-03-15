@@ -62,9 +62,6 @@ namespace TestCodeGen.CodeGen
     public interface SimpleData
     {
         string Name { get; set; }
-
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(5)]
         int Age { get; set; }
     }
 
@@ -115,8 +112,26 @@ namespace TestCodeGen.CodeGen
         string ChildProperty { get; set; }
     }
 
+    public interface DefaultValues
+    {
+        [DefaultValue("Joe Bloe")]
+        string Name { get; set; }
+
+        [DefaultValue(67)]
+        int Age { get; set; }
+
+        [DefaultValue(true)]
+        bool IsRetired { get; set; }
+
+        [DefaultValue(100000)]
+        double NetWorth { get; set; }
+
+        [DefaultValue(MyEnum1.Three)]
+        MyEnum1 Enum1 { get; set; }
+    }
+
     [NoCodeGen]
-    public class Test_CodeGen
+    public class Test_DataModel
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
@@ -126,8 +141,8 @@ namespace TestCodeGen.CodeGen
 
             var settings = new CodeGeneratorSettings()
             {
-                 SourceNamespace = typeof(Test_CodeGen).Namespace,
-                 ServiceClients  = false
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients   = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -140,19 +155,43 @@ namespace TestCodeGen.CodeGen
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
                 var data = context.CreateDataWrapper<EmptyData>();
-
                 Assert.Equal("{}", data.ToString());
                 Assert.Equal("{}", data.ToString(indented: true));
 
                 data = context.CreateDataWrapperFrom<EmptyData>("{}");
-
                 Assert.Equal("{}", data.ToString());
                 Assert.Equal("{}", data.ToString(indented: true));
 
                 data = context.CreateDataWrapperFrom<EmptyData>(new JObject());
-
                 Assert.Equal("{}", data.ToString());
                 Assert.Equal("{}", data.ToString(indented: true));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void DataModel_Simple()
+        {
+            // Verify that we can generate code for an empty data model.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients  = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<SimpleData>();
+                Assert.Equal("{\"Name\":null,\"Age\":0}", data.ToString());
+                Assert.Equal("{\r\n  \"Name\": null,\r\n  \"Age\": 0\r\n}", data.ToString(indented: true));
             }
         }
     }

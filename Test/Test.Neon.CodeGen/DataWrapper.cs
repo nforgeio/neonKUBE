@@ -53,7 +53,7 @@ namespace TestCodeGen.CodeGen
         /// <param name="type">The target type.</param>
         public DataWrapper(Type type)
         {
-            instance = Activator.CreateInstance(type);
+            instance     = Activator.CreateInstance(type);
             instanceType = type;
 
             if (instance == null)

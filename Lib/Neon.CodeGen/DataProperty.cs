@@ -22,6 +22,8 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Text;
 
+using Neon.Common;
+
 namespace Neon.CodeGen
 {
     /// <summary>
@@ -66,6 +68,60 @@ namespace Neon.CodeGen
         /// on the property or the default value for the property type.
         /// </summary>
         public object DefaultValue { get; set; }
+
+        /// <summary>
+        /// Returns <see cref="DefaultValue"/> as an expression string or
+        /// <c>null</c> if the property has no default value or if it's
+        /// the same as the default value for the property type.
+        /// </summary>
+        public string DefaultValueExpression
+        {
+            get
+            {
+                if (DefaultValue == null)
+                {
+                    return null;
+                }
+
+                if (Type.IsPrimitive || Type == typeof(string) || Type == typeof(Decimal) || Type.IsEnum)
+                {
+                    if (Type == typeof(string))
+                    {
+                        return $"\"{DefaultValue}\"";
+                    }
+                    else
+                    {
+                        var defaultObject = Activator.CreateInstance(Type);
+
+                        if (defaultObject.Equals(DefaultValue))
+                        {
+                            return null;
+                        }
+                        else
+                        {
+                            if (Type.IsEnum)
+                            {
+                                return $"{Type.Name}.{DefaultValue.ToString()}";
+                            }
+                            else if (Type == typeof(bool))
+                            {
+                                return NeonHelper.ToBoolString((bool)DefaultValue);
+                            }
+                            else
+                            {
+                                return DefaultValue.ToString();
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Other types can't have default values.
+
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Set the value specified by a <see cref="JsonPropertyAttribute.DefaultValueHandling"/>

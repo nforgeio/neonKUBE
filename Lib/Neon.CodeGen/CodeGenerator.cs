@@ -761,6 +761,11 @@ namespace Neon.CodeGen
             writer.WriteLine($"        {{");
             writer.WriteLine($"            return JsonConvert.DeserializeObject<T>(jsonText, settings);");
             writer.WriteLine($"        }}");
+            writer.WriteLine();
+            writer.WriteLine($"        public static JToken FromObject(object value)");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            return value == null ? null : JToken.FromObject(value);");
+            writer.WriteLine($"        }}");
             writer.WriteLine($"    }}");
             writer.WriteLine();
 
@@ -848,6 +853,8 @@ namespace Neon.CodeGen
         /// <param name="index">Zero based index of the model within the current namespace.</param>
         private void GenerateDataModel(DataModel dataModel, int index)
         {
+            string defaultValueExpression;
+
             if (index > 0)
             {
                 // Add a blank line between type definitions within the namespace.
@@ -995,17 +1002,28 @@ namespace Neon.CodeGen
 
                         writer.WriteLine($"        [JsonProperty(PropertyName = \"{property.SerializedName}\", DefaultValueHandling = DefaultValueHandling.{defaultValueHandling}, Order = {property.Order})]");
 
-                        var defaultValue = GetPropertyDefaultValue(property, out var isTypeDefault);
+                        defaultValueExpression = property.DefaultValueExpression;
 
-                        if (!isTypeDefault)
+                        if (defaultValueExpression != null)
                         {
-                            writer.WriteLine($"        [DefaultValue({GetPropertyDefaultValue(property)})]");
+                            writer.WriteLine($"        [DefaultValue({defaultValueExpression})]");
                         }
                     }
 
                     var propertyTypeName = ResolveTypeReference(property.Type);
 
-                    writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}");
+                    defaultValueExpression = property.DefaultValueExpression;
+
+                    if (defaultValueExpression == null)
+                    {
+                        defaultValueExpression = string.Empty;
+                    }
+                    else
+                    {
+                        defaultValueExpression = $" = {defaultValueExpression};";
+                    }
+
+                    writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}{defaultValueExpression}");
                 }
 
                 if (Settings.RoundTrip)
@@ -1061,13 +1079,13 @@ namespace Neon.CodeGen
                                     // Set the property to its default value, when the
                                     // default differs from the type's default.
 
-                                    var defaultValue = GetPropertyDefaultValue(property, out var isTypeDefault);
+                                    defaultValueExpression = property.DefaultValueExpression;
 
-                                    if (!isTypeDefault)
+                                    if (defaultValueExpression != null)
                                     {
                                         writer.WriteLine($"                else");
                                         writer.WriteLine($"                {{");
-                                        writer.WriteLine($"                    this.{property.Name} = {defaultValue};");
+                                        writer.WriteLine($"                    this.{property.Name} = {defaultValueExpression};");
                                         writer.WriteLine($"                }}");
                                     }
                                     break;
@@ -1107,38 +1125,34 @@ namespace Neon.CodeGen
 
                         foreach (var property in dataModel.Properties)
                         {
-                            if (propertyIndex++ > 0)
-                            {
-                                writer.WriteLine();
-                            }
-
-                            writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
-
                             switch (property.DefaultValueHandling)
                             {
                                 case DefaultValueHandling.Include:
 
-                                    writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = property.Name;");
+                                    writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name});");
                                     break;
 
                                 case DefaultValueHandling.Populate:
                                 case DefaultValueHandling.Ignore:
                                 case DefaultValueHandling.IgnoreAndPopulate:
 
-                                    var defaultValue = GetPropertyDefaultValue(property, out var isTypeDefault);
+                                    if (propertyIndex++ > 0)
+                                    {
+                                        writer.WriteLine();
+                                    }
 
-                                    writer.WriteLine($"                if (property.Value.ToObject<{ResolveTypeReference(property.Type)}>() == {defaultValue})");
+                                    defaultValueExpression = property.DefaultValueExpression;
+
+                                    writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
+                                    writer.WriteLine();
+                                    writer.WriteLine($"                if (property != null && property.Value.ToObject<{ResolveTypeReference(property.Type)}>() == {defaultValueExpression})");
                                     writer.WriteLine($"                {{");
-                                    writer.WriteLine($"                    if (property != null)");
-                                    writer.WriteLine($"                    {{");
-                                    writer.WriteLine($"                        this.__JObject.Remove(\"{property.SerializedName}\");");
-                                    writer.WriteLine($"                    }}");
+                                    writer.WriteLine($"                    this.__JObject.Remove(\"{property.SerializedName}\");");
                                     writer.WriteLine($"                }}");
                                     writer.WriteLine($"                else");
                                     writer.WriteLine($"                {{");
-                                    writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = property.Name;");
+                                    writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name});");
                                     writer.WriteLine($"                }}");
-
                                     break;
                             }
                         }
@@ -1310,38 +1324,6 @@ namespace Neon.CodeGen
 
             Covenant.Assert(false); // We should never get here.
             return null;
-        }
-
-        /// <summary>
-        /// Returns the default value for a property.
-        /// </summary>
-        /// <param name="property">The property.</param>
-        /// <returns>The value expression.</returns>
-        private string GetPropertyDefaultValue(DataProperty property)
-        {
-            return GetPropertyDefaultValue(property, out var ignored);
-        }
-
-        /// <summary>
-        /// Returns the default value for a property.
-        /// </summary>
-        /// <param name="property">The property.</param>
-        /// <param name="isTypeDefault">Returns as <c>true</c> when the value is the type's default value.</param>
-        /// <returns>The value expression.</returns>
-        private string GetPropertyDefaultValue(DataProperty property, out bool isTypeDefault)
-        {
-            var typeDefault = $"default({ResolveTypeReference(property.Type)})";
-
-            if (property.DefaultValue != null)
-            {
-                var valueExpression = property.DefaultValue.ToString();
-
-                isTypeDefault = valueExpression == typeDefault;
-                return valueExpression;
-            }
-
-            isTypeDefault = true;
-            return typeDefault;
         }
     }
 }
