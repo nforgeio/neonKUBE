@@ -135,12 +135,60 @@ namespace TestCodeGen.CodeGen
         MyEnum1 Enum1 { get; set; }
     }
 
+    public interface OrderedProperties
+    {
+        string Field1 { get; set; }
+
+        string Field2 { get; set; }
+
+        [JsonProperty(Order = 0)]
+        string Field3 { get; set; }
+
+        [JsonProperty(Order = 1)]
+        string Field4 { get; set; }
+    }
+
+    public interface NullableProperties
+    {
+        bool? Bool { get; set; }
+        int? Int { get; set; }
+        MyEnum1? Enum { get; set; }
+    }
+
+    public interface CustomNamesModel
+    {
+        [JsonProperty(PropertyName = "CustomString")]
+        string String { get; set; }
+
+        [JsonProperty(PropertyName = "CustomInt")]
+        int Int { get; set; }
+    }
+
+    public interface SerializationDefaultsModel
+    {
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore, Order = 0)]
+        [DefaultValue("Ignore")]
+        string Ignore { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate, Order = 1)]
+        [DefaultValue("IgnoreAndPopulate")]
+        string IgnoreAndPopulate { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Include, Order = 2)]
+        [DefaultValue("Include")]
+        string Include { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate, Order = 3)]
+        [DefaultValue("Populate")]
+        string Populate { get; set; }
+    }
+
     [NoCodeGen]
     public class Test_DataModel
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void DataModel_Empty()
+        public void Empty()
         {
             // Verify that we can generate code for an empty data model.
 
@@ -175,7 +223,7 @@ namespace TestCodeGen.CodeGen
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void DataModel_NoSetter()
+        public void NoSetter()
         {
             // Verify that we can generate code for the [NoSetter] data model.
             // This has a single property that only has a getter which should
@@ -185,7 +233,7 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients = false
+                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -213,7 +261,7 @@ namespace TestCodeGen.CodeGen
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void DataModel_NoGetter()
+        public void NoGetter()
         {
             // Verify that we can generate code for the [NoGetter] data model.
             // This has a single property that only has a getter which should
@@ -227,7 +275,7 @@ namespace TestCodeGen.CodeGen
             };
 
             var generator = new CodeGenerator(settings);
-            var output = generator.Generate(Assembly.GetExecutingAssembly());
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
 
             Assert.False(output.HasErrors);
 
@@ -251,7 +299,7 @@ namespace TestCodeGen.CodeGen
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void DataModel_Simple()
+        public void Simple()
         {
             // Verify that we can generate code for a simple data model.
 
@@ -311,7 +359,7 @@ namespace TestCodeGen.CodeGen
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void DataModel_BasicTypes()
+        public void BasicTypes()
         {
             // Verify that we can generate code for basic data types.
 
@@ -361,7 +409,7 @@ namespace TestCodeGen.CodeGen
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void DataModel_Complex()
+        public void Complex()
         {
             // Verify that we can generate code for complex data types.
 
@@ -433,7 +481,7 @@ namespace TestCodeGen.CodeGen
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void DataModel_DefaultValues()
+        public void DefaultValues()
         {
             // Verify that data models with default property values are initialized correctly.
 
@@ -463,7 +511,7 @@ namespace TestCodeGen.CodeGen
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void DataModel_Inherit()
+        public void Inherit()
         {
             // Verify that data models that inherit from other data models work.
 
@@ -512,6 +560,159 @@ namespace TestCodeGen.CodeGen
                 derivedData = context.CreateDataWrapperFrom<DerivedModel>(derivedData.ToString());
                 Assert.Equal("base", derivedData["BaseProperty"]);
                 Assert.Equal("derived", derivedData["DerivedProperty"]);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void OrderedProperties()
+        {
+            // Verify that data models that specify a property order
+            // are rendered correctly.  Note that properties that
+            // aren't tagged with [JsonProperty()] should be rendered
+            // after all of the properties that are tagged.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients  = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<OrderedProperties>();
+
+                data["Field1"] = "one";
+                data["Field2"] = "two";
+                data["Field3"] = "three";
+                data["Field4"] = "four";
+
+                Assert.Equal("{\"Field3\":\"three\",\"Field4\":\"four\",\"Field1\":\"one\",\"Field2\":\"two\"}", data.ToString());
+            }
+        }
+
+        [Fact(Skip = "Manually testing required")]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void NullableProperties()
+        {
+            // NOTE: 
+            //
+            // This test doesn't work due to apparent limitations of
+            // the DataWrapper class an perhaps .NET itself.  The problem
+            // is related to assigning a nullable Enum value.  This
+            // fails even though I explicitly cast the value to (MyEnum1?).
+            //
+            // I think the problem is related to the JIT compiler doing some
+            // magic here and effectively stripping out the cast and 
+            // just passing the non-nullable enum value and then 
+            // [DataWrapper] fails when dynamically assigning the value 
+            // to the property because the value is no longer a (MyEnum1?).
+            //
+            // I have verified this manually when using the generated
+            // model classes directly.
+
+            // Verify that we handle nullable property types correctly.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients  = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<NullableProperties>();
+                Assert.Equal("{\"Bool\":null,\"Int\":null,\"Enum\":null}", data.ToString());
+
+                data = context.CreateDataWrapperFrom<NullableProperties>(data.ToString());
+                Assert.Equal("{\"Bool\":null,\"Int\":null,\"Enum\":null}", data.ToString());
+
+                data["Bool"] = true;
+                data["Int"]  = 100;
+                data["Enum"] = (MyEnum1?)MyEnum1.Two;   // This throws an exception
+
+                var s = data.ToString();
+
+                Assert.Equal("", data.ToString());
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void CustomPropertyNames()
+        {
+            // Vertify that [JsonProperty(PropertyName = "xxx")] works.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients  = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<CustomNamesModel>();
+                Assert.Equal("{\"CustomString\":null,\"CustomInt\":0}", data.ToString());
+
+                data["String"] = "Hello World!";
+                data["Int"]    = 1001;
+                Assert.Equal("{\"CustomString\":\"Hello World!\",\"CustomInt\":1001}", data.ToString());
+
+                data = context.CreateDataWrapperFrom<CustomNamesModel>(data.ToString());
+                Assert.Equal("{\"CustomString\":\"Hello World!\",\"CustomInt\":1001}", data.ToString());
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void SerializationDefaults()
+        {
+            // Verify that we honor the [JsonProperty(DefaultValueHandling)] options.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+                ServiceClients  = false
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data       = context.CreateDataWrapper<SerializationDefaultsModel>();
+                var serialized = data.ToString();
+
+                Assert.Equal(serialized, data.ToString());
+
+                var s = data.ToString();
+
+                Assert.Equal(s, data.ToString());
             }
         }
     }

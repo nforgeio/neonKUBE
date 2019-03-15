@@ -55,6 +55,11 @@ namespace Neon.CodeGen
         public Type Type { get; set; }
 
         /// <summary>
+        /// Returns <c>true</c> if the property type is nullable.
+        /// </summary>
+        public bool IsNullable => Nullable.GetUnderlyingType(Type) != null;
+
+        /// <summary>
         /// The property name for generated code.
         /// </summary>
         public string Name { get; set; }

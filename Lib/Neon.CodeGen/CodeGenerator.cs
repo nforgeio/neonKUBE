@@ -1087,7 +1087,7 @@ namespace Neon.CodeGen
 
                         var propertyIndex = 0;
 
-                        foreach (var property in serializedProperties)
+                        foreach (var property in serializedProperties.OrderBy(p => p.Order))
                         {
                             if (propertyIndex++ > 0)
                             {
@@ -1170,7 +1170,7 @@ namespace Neon.CodeGen
 
                         var propertyIndex = 0;
 
-                        foreach (var property in serializedProperties)
+                        foreach (var property in serializedProperties.OrderBy(p => p.Order))
                         {
                             if (property.Ignore)
                             {
