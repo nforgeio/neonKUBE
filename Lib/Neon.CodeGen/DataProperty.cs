@@ -22,6 +22,8 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Text;
 
+using Newtonsoft.Json.Linq;
+
 using Neon.Common;
 
 namespace Neon.CodeGen
