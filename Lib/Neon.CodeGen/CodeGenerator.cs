@@ -558,7 +558,7 @@ namespace Neon.CodeGen
                 // A data model interface is allowed to implement another 
                 // data model interface to specify a base class.  Note that
                 // only one of these references is allowed and it may only
-                // be a reference to another data model (not an arbetrary 
+                // be a reference to another data model (not an arbtrary 
                 // type.
 
                 var baseInterface = (Type)null;
@@ -580,6 +580,11 @@ namespace Neon.CodeGen
 
                 dataModel.BaseTypeName = baseInterface?.FullName;
 
+                if (baseInterface != null)
+                {
+                    dataModel.BaseModel = nameToDataModel[baseInterface.FullName];
+                }
+
                 // Normalize regular (non-enum) data model properties.
 
                 foreach (var member in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
@@ -597,7 +602,8 @@ namespace Neon.CodeGen
                         Type = member.PropertyType
                     };
 
-                    property.Ignore = member.GetCustomAttribute<JsonIgnoreAttribute>() != null;
+                    property.Ignore       = member.GetCustomAttribute<JsonIgnoreAttribute>() != null;
+                    property.IsHashSource = member.GetCustomAttribute<HashSourceAttribute>() != null;
 
                     var jsonPropertyAttribute = member.GetCustomAttribute<JsonPropertyAttribute>();
 
@@ -740,6 +746,8 @@ namespace Neon.CodeGen
             writer.WriteLine();
             writer.WriteLine($"    internal static class __Json");
             writer.WriteLine($"    {{");
+            writer.WriteLine($"        public const string NoHashPropertiesError = \"At least one data model property must be tagged by [{nameof(HashSourceAttribute)}].\";");
+            writer.WriteLine();
             writer.WriteLine($"        public static readonly JsonSerializerSettings    settings;");
             writer.WriteLine($"        public static readonly JsonSerializer            serializer;");
             writer.WriteLine();
@@ -995,9 +1003,9 @@ namespace Neon.CodeGen
                     //-------------------------------------
                     // Generate instance members
 
+                    writer.WriteLine();
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Instance members:");
-                    writer.WriteLine();
 
                     // Generate the backing __JObject property.
 
@@ -1356,7 +1364,43 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        public override int GetHashCode()");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            return base.GetHashCode();");
+
+                    // This is implemented by looking for all of the properties
+                    // tagged by [HashSource], incuding any inherited properties
+                    // and generating the hash code from these sorted in ascending
+                    // order by serialized property name.  This should provide for
+                    // relatively consistent hash code computations over time.
+                    //
+                    // Note that we require at least one tagged [HashSource]
+                    // property.
+
+                    var hashedProperties = dataModel.SelectProperties(p => p.IsHashSource, includeInherited: true).ToList();
+
+                    if (hashedProperties.Count == 0)
+                    {
+                        writer.WriteLine($"            throw new InvalidOperationException(__Json.NoHashPropertiesError);");
+                    }
+                    else
+                    {
+                        writer.WriteLine($"            var hashCode = 0;");
+                        writer.WriteLine();
+
+                        foreach (var property in hashedProperties)
+                        {
+                            if (property.Type.IsValueType)
+                            {
+                                writer.WriteLine($"            hashCode ^= this.{property.Name}.GetHashCode();");
+                            }
+                            else
+                            {
+                                writer.WriteLine($"            if (this.{property.Name} != null) {{ hashCode ^= this.{property.Name}.GetHashCode(); }}");
+                            }
+                        }
+
+                        writer.WriteLine();
+                        writer.WriteLine($"            return hashCode;");
+                    }
+
                     writer.WriteLine($"        }}");
 
                     // Close the generated model class definition.

@@ -380,7 +380,21 @@ namespace TestCodeGen
         {
             var method = instanceType.GetMethod("GetHashCode", new Type[] { });
 
-            return (int)method.Invoke(instance, new object[] { });
+            try
+            {
+                return (int)method.Invoke(instance, new object[] { });
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
     }
 }

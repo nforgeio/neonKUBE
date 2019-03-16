@@ -62,6 +62,19 @@ namespace Neon.CodeGen
         public bool IsNullable => Nullable.GetUnderlyingType(Type) != null;
 
         /// <summary>
+        /// <para>
+        /// Returns <c>true</c> if the property is to be included in
+        /// the generated <see cref="Object.GetHashCode()"/> method's
+        /// hash code computation.
+        /// </para>
+        /// <note>
+        /// At least one property must be tagged with this for 
+        /// <see cref="Object.GetHashCode()"/> to work.
+        /// </note>
+        /// </summary>
+        public bool IsHashSource { get; set; }
+
+        /// <summary>
         /// The property name for generated code.
         /// </summary>
         public string Name { get; set; }

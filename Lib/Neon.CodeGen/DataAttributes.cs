@@ -52,4 +52,18 @@ namespace Neon.CodeGen
         /// </summary>
         public string TypeID { get; set; }
     }
+
+    /// <summary>
+    /// Used to mark data model properties that should be included in the
+    /// <see cref="Object.GetHashCode()"/> computation.
+    /// </summary>
+    public class HashSourceAttribute : Attribute
+    {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public HashSourceAttribute()
+        {
+        }
+    }
 }

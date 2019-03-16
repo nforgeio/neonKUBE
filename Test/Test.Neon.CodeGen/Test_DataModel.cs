@@ -109,19 +109,23 @@ namespace TestCodeGen.DataModel
 
     public interface BaseModel
     {
-        string BaseProperty { get; set; }
+        [HashSource]
+        string ParentProperty { get; set; }
     }
 
     public interface DerivedModel : BaseModel
     {
-        string DerivedProperty { get; set; }
+        [HashSource]
+        string ChildProperty { get; set; }
     }
 
     public interface DefaultValues
     {
+        [HashSource]
         [DefaultValue("Joe Bloe")]
         string Name { get; set; }
 
+        [HashSource]
         [DefaultValue(67)]
         int Age { get; set; }
 
@@ -605,38 +609,38 @@ namespace TestCodeGen.DataModel
 
                 var baseData = context.CreateDataWrapper<BaseModel>();
 
-                Assert.Null(baseData["BaseProperty"]);
+                Assert.Null(baseData["ParentProperty"]);
 
-                baseData["BaseProperty"] = "Hello World!";
-                Assert.Equal("Hello World!", baseData["BaseProperty"]);
+                baseData["ParentProperty"] = "Hello World!";
+                Assert.Equal("Hello World!", baseData["ParentProperty"]);
 
                 baseData = context.CreateDataWrapperFrom<BaseModel>(baseData.ToString());
-                Assert.Equal("Hello World!", baseData["BaseProperty"]);
+                Assert.Equal("Hello World!", baseData["ParentProperty"]);
 
                 // Verify that [DerivedModel] works too.
 
                 var derivedData = context.CreateDataWrapper<DerivedModel>();
 
-                Assert.Null(derivedData["BaseProperty"]);
-                Assert.Null(derivedData["DerivedProperty"]);
+                Assert.Null(derivedData["ParentProperty"]);
+                Assert.Null(derivedData["ChildProperty"]);
 
-                derivedData["BaseProperty"] = "base";
-                Assert.Equal("base", derivedData["BaseProperty"]);
+                derivedData["ParentProperty"] = "base";
+                Assert.Equal("base", derivedData["ParentProperty"]);
 
-                derivedData["DerivedProperty"] = "derived";
-                Assert.Equal("derived", derivedData["DerivedProperty"]);
+                derivedData["ChildProperty"] = "derived";
+                Assert.Equal("derived", derivedData["ChildProperty"]);
 
                 var json = derivedData.ToString(indented: true);
 
                 derivedData = context.CreateDataWrapperFrom<DerivedModel>(derivedData.ToString());
-                Assert.Equal("base", derivedData["BaseProperty"]);
-                Assert.Equal("derived", derivedData["DerivedProperty"]);
+                Assert.Equal("base", derivedData["ParentProperty"]);
+                Assert.Equal("derived", derivedData["ChildProperty"]);
 
                 //-------------------------------------------------------------
                 // Verify Equals():
 
-                var value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DerivedValue\"}");
-                var value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DerivedValue\"}");
+                var value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DerivedValue\"}");
+                var value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DerivedValue\"}");
 
                 Assert.True(value1.Equals(value1));
                 Assert.True(value1.Equals(value2));
@@ -647,8 +651,8 @@ namespace TestCodeGen.DataModel
 
                 // Verify that a change to the base class property is detected.
 
-                value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DerivedValue\"}");
-                value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"DIFFERENT\",\"DerivedProperty\":\"DerivedValue\"}");
+                value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DerivedValue\"}");
+                value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"DIFFERENT\",\"ChildProperty\":\"DerivedValue\"}");
 
                 Assert.True(value1.Equals(value1));
 
@@ -659,8 +663,8 @@ namespace TestCodeGen.DataModel
 
                 // Verify that a change to the derived class property is detected.
 
-                value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DerivedValue\"}");
-                value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DIFFERENT\"}");
+                value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DerivedValue\"}");
+                value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DIFFERENT\"}");
 
                 Assert.True(value1.Equals(value1));
 
@@ -930,6 +934,84 @@ namespace TestCodeGen.DataModel
                 value2["Name"] = "Bob";
                 Assert.True(DataWrapper.NotEquals<SimpleData>(value1, value2));
                 Assert.True(DataWrapper.NotEquals<SimpleData>(value2, value1));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void HashCode()
+        {
+            // Verify that GetHashCode() works.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                // Verify that we see a [InvalidOperationException] when computing a hash
+                // on a data model with no properties tagged by [HashSource].
+
+                var emptyData = context.CreateDataWrapper<EmptyData>();
+
+                Assert.Throws<InvalidOperationException>(() => emptyData.GetHashCode());
+
+                // Verify that we compute HASH=0 for a data model with a
+                // single tagged parameter set to NULL.
+
+                var baseData = context.CreateDataWrapper<BaseModel>();
+
+                Assert.Equal(0, baseData.GetHashCode());
+
+                // Verify that we compute a non-zero HASH for a data model with a
+                // single tagged parameter set to to a value.
+
+                baseData = context.CreateDataWrapper<BaseModel>();
+                baseData["ParentProperty"] = "Hello World!";
+                Assert.NotEqual(0, baseData.GetHashCode());
+
+                // Verify that we can compute a HASH code for a derived class
+                // and that the hash includes properties from both the derived
+                // and parent classes.
+
+                var derivedData = context.CreateDataWrapper<DerivedModel>();
+                derivedData["ChildProperty"] = "Goodbye World!";
+                var derivedCode1 = derivedData.GetHashCode();
+                Assert.NotEqual(0, derivedCode1);
+
+                derivedData["ParentProperty"] = "Hello World!";
+                var derivedCode2 = derivedData.GetHashCode();
+                Assert.NotEqual(0, derivedCode2);
+                Assert.NotEqual(derivedCode1, derivedCode2);
+
+                // Verify that we can compute hash codes for models
+                // with multiple hash source properties.
+
+                var defaultValues = context.CreateDataWrapper<DefaultValues>();
+
+                defaultValues["Name"] = null;
+                defaultValues["Age"]  = 0;
+                Assert.Equal(0, defaultValues.GetHashCode());
+
+                defaultValues["Name"] = "JoeBob";
+                defaultValues["Age"]  = 0;
+                Assert.Equal("JoeBob".GetHashCode(), defaultValues.GetHashCode());
+
+                defaultValues["Name"] = null;
+                defaultValues["Age"]  = 67;
+                Assert.Equal(67.GetHashCode(), defaultValues.GetHashCode());
+
+                defaultValues["Name"] = "JoeBob";
+                defaultValues["Age"]  = 67;
+                Assert.Equal(67.GetHashCode() ^ "JoeBob".GetHashCode(), defaultValues.GetHashCode());
             }
         }
     }

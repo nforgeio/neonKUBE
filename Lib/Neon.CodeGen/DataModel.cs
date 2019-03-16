@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Text;
 
 namespace Neon.CodeGen
@@ -87,6 +88,12 @@ namespace Neon.CodeGen
         public string BaseTypeName { get; set; }
 
         /// <summary>
+        /// The base <see cref="DataModel"/> or <c>null</c> if the current
+        /// data model isn't derived from another.
+        /// </summary>
+        public DataModel BaseModel { get; set;}
+
+        /// <summary>
         /// Indicates whether the current data model is derived from another model.
         /// </summary>
         public bool IsDerived => BaseTypeName != null;
@@ -100,5 +107,43 @@ namespace Neon.CodeGen
         /// Lists the properties for a data model.
         /// </summary>
         public List<DataProperty> Properties { get; private set; } = new List<DataProperty>();
+
+        /// <summary>
+        /// Returns the data model properties that satisfy a filter.
+        /// </summary>
+        /// <param name="selector">The property selector.</param>
+        /// <param name="includeInherited">Optionally include properties inherited from ancestor data models.</param>
+        /// <returns>The list of selected properties.</returns>
+        public IEnumerable<DataProperty> SelectProperties(Func<DataProperty, bool> selector, bool includeInherited = false)
+        {
+            Covenant.Requires<ArgumentNullException>(selector != null);
+
+            if (!includeInherited)
+            {
+                return this.Properties.Where(selector);
+            }
+            else
+            {
+                var list      = new List<DataProperty>();
+                var dataModel = this;
+
+                while (dataModel != null)
+                {
+                    foreach (var property in dataModel.Properties.Where(selector))
+                    {
+                        list.Add(property);
+                    }
+
+                    if (dataModel.BaseTypeName == null)
+                    {
+                        break;
+                    }
+
+                    dataModel = dataModel.BaseModel;
+                }
+
+                return list;
+            }
+        }
     }
 }
