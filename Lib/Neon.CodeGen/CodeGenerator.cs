@@ -1182,6 +1182,7 @@ namespace Neon.CodeGen
                             switch (property.DefaultValueHandling)
                             {
                                 case DefaultValueHandling.Include:
+                                case DefaultValueHandling.Populate:
 
                                     if (property.RequiresObjectification)
                                     {
@@ -1193,7 +1194,6 @@ namespace Neon.CodeGen
                                     }
                                     break;
 
-                                case DefaultValueHandling.Populate:
                                 case DefaultValueHandling.Ignore:
                                 case DefaultValueHandling.IgnoreAndPopulate:
 
@@ -1204,11 +1204,12 @@ namespace Neon.CodeGen
 
                                     defaultValueExpression = property.DefaultValueExpression;
 
-                                    writer.WriteLine($"                property = this.__JObject.Property(\"{property.SerializedName}\");");
-                                    writer.WriteLine();
-                                    writer.WriteLine($"                if (property != null && property.Value.ToObject<{propertyTypeReference}>() == {defaultValueExpression})");
+                                    writer.WriteLine($"                if (this.{property.Name} == {defaultValueExpression})");
                                     writer.WriteLine($"                {{");
-                                    writer.WriteLine($"                    this.__JObject.Remove(\"{property.SerializedName}\");");
+                                    writer.WriteLine($"                    if (this.__JObject.Property(\"{property.SerializedName}\") != null)");
+                                    writer.WriteLine($"                    {{");
+                                    writer.WriteLine($"                        this.__JObject.Remove(\"{property.SerializedName}\");");
+                                    writer.WriteLine($"                    }}");
                                     writer.WriteLine($"                }}");
                                     writer.WriteLine($"                else");
                                     writer.WriteLine($"                {{");

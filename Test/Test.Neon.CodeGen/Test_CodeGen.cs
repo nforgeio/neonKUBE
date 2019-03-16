@@ -705,14 +705,57 @@ namespace TestCodeGen.CodeGen
 
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
-                var data       = context.CreateDataWrapper<SerializationDefaultsModel>();
+                var data = context.CreateDataWrapper<SerializationDefaultsModel>();
+
+                // Verify that the instance starts out with the correct 
+                // default property values.
+
+                Assert.Equal("Ignore", data["Ignore"]);
+                Assert.Equal("IgnoreAndPopulate", data["IgnoreAndPopulate"]);
+                Assert.Equal("Include", data["Include"]);
+                Assert.Equal("Populate", data["Populate"]);
+
+                // Verify that we get the same output when serializing
+                // the same data multple times (this wasn't working
+                // early on).
+
                 var serialized = data.ToString();
 
                 Assert.Equal(serialized, data.ToString());
+                Assert.Equal(serialized, data.ToString());
 
-                var s = data.ToString();
+                // Verify that defaults serialize correctly.
 
-                Assert.Equal(s, data.ToString());
+                Assert.Equal("{\"Include\":\"Include\",\"Populate\":\"Populate\"}", data.ToString());
+
+                // Verify that defaults deserialize correctly.
+
+                data = context.CreateDataWrapper<SerializationDefaultsModel>();
+                data = context.CreateDataWrapperFrom<SerializationDefaultsModel>(data.ToString());
+
+                Assert.Equal("Ignore", data["Ignore"]);
+                Assert.Equal("IgnoreAndPopulate", data["IgnoreAndPopulate"]);
+                Assert.Equal("Include", data["Include"]);
+                Assert.Equal("Populate", data["Populate"]);
+
+                // Verify that non-default values serialize/desearlize correctly.
+
+                data = context.CreateDataWrapper<SerializationDefaultsModel>();
+
+                data["Ignore"]            = "NotIgnore";
+                data["IgnoreAndPopulate"] = "NotIgnoreAndPopulate";
+                data["Include"]           = "NotInclude";
+                data["Populate"]          = "NotPopulate";
+
+                Assert.Equal("{\"Ignore\":\"NotIgnore\",\"IgnoreAndPopulate\":\"NotIgnoreAndPopulate\",\"Include\":\"NotInclude\",\"Populate\":\"NotPopulate\"}", data.ToString());
+
+                data = context.CreateDataWrapperFrom<SerializationDefaultsModel>(data.ToString());
+                Assert.Equal("{\"Ignore\":\"NotIgnore\",\"IgnoreAndPopulate\":\"NotIgnoreAndPopulate\",\"Include\":\"NotInclude\",\"Populate\":\"NotPopulate\"}", data.ToString());
+
+                Assert.Equal("NotIgnore", data["Ignore"]);
+                Assert.Equal("NotIgnoreAndPopulate", data["IgnoreAndPopulate"]);
+                Assert.Equal("NotInclude", data["Include"]);
+                Assert.Equal("NotPopulate", data["Populate"]);
             }
         }
     }
