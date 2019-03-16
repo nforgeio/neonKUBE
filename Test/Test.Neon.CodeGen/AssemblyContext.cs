@@ -37,7 +37,7 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
-namespace TestCodeGen.CodeGen
+namespace TestCodeGen
 {
     /// <summary>
     /// Implements assembly context for testing.

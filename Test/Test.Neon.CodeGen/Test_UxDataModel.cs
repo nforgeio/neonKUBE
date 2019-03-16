@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CodeGenTestHelper
+// FILE:	    Test_UxDataModel.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,15 +17,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis;
 
 using Neon.CodeGen;
 using Neon.Common;
@@ -36,21 +35,15 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
-namespace TestCodeGen
+namespace TestCodeGen.UxDataModel
 {
-    /// <summary>
-    /// Test helpers.
-    /// </summary>
-    internal static class CodeGenTestHelper
+    [NoCodeGen]
+    public class Test_UxDataModel
     {
-        /// <summary>
-        /// Adds the assembly references required to compile the generated code.
-        /// </summary>
-        /// <param name="references">The assembly references.</param>
-        public static void ReferenceHandler(MetadataReferences references)
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void Empty()
         {
-            references.Add(typeof(System.Dynamic.CallInfo));
-            references.Add(typeof(Newtonsoft.Json.JsonToken));
         }
     }
 }

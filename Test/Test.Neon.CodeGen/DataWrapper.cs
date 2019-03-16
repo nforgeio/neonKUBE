@@ -36,7 +36,7 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
-namespace TestCodeGen.CodeGen
+namespace TestCodeGen
 {
     /// <summary>
     /// Used to wrap a dynamically generated and compiled data model

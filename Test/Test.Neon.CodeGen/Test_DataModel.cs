@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_CodeGen
+// FILE:	    Test_DataModel.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,7 +35,7 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
-namespace TestCodeGen.CodeGen
+namespace TestCodeGen.DataModel
 {
     public interface EmptyData
     {
@@ -195,7 +195,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -233,7 +232,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -271,7 +269,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -306,7 +303,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -366,7 +362,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -416,7 +411,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -488,7 +482,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -518,7 +511,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -575,7 +567,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -623,7 +614,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -660,7 +650,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
@@ -693,7 +682,6 @@ namespace TestCodeGen.CodeGen
             var settings = new CodeGeneratorSettings()
             {
                 SourceNamespace = typeof(Test_DataModel).Namespace,
-                ServiceClients  = false
             };
 
             var generator = new CodeGenerator(settings);
