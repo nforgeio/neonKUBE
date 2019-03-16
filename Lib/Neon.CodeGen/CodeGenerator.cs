@@ -933,8 +933,12 @@ namespace Neon.CodeGen
                 if (Settings.RoundTrip)
                 {
                     //-------------------------------------
-                    // Generate the static members.
+                    // Generate the static members
 
+
+                    writer.WriteLine($"        //---------------------------------------------------------------------");
+                    writer.WriteLine($"        // Static members:");
+                    writer.WriteLine();
                     writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(string jsonText)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (string.IsNullOrEmpty(jsonText))");
@@ -963,8 +967,8 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        public static bool operator ==({dataModel.SourceType.Name} value1, {dataModel.SourceType.Name} value2)");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            var value1IsNull = value1 == null;");
-                    writer.WriteLine($"            var value2IsNull = value2 == null;");
+                    writer.WriteLine($"            var value1IsNull = object.ReferenceEquals(value1, null);");
+                    writer.WriteLine($"            var value2IsNull = object.ReferenceEquals(value2, null);");
                     writer.WriteLine();
                     writer.WriteLine($"            if (value1IsNull == value2IsNull)");
                     writer.WriteLine($"            {{");
@@ -990,6 +994,10 @@ namespace Neon.CodeGen
 
                     //-------------------------------------
                     // Generate instance members
+
+                    writer.WriteLine($"        //---------------------------------------------------------------------");
+                    writer.WriteLine($"        // Instance members:");
+                    writer.WriteLine();
 
                     // Generate the backing __JObject property.
 

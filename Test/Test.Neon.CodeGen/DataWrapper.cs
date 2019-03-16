@@ -322,7 +322,7 @@ namespace TestCodeGen
         }
 
         /// <summary>
-        /// Uses the generated data model's <b>==</b> operator to compare two
+        /// Uses the generated data model's <b>==</b> operator override to compare two
         /// wrapped instances.
         /// </summary>
         /// <typeparam name="T">The source data type as defined in the within the unit test assembly.</typeparam>
@@ -344,6 +344,32 @@ namespace TestCodeGen
             var instance2      = value2 != null ? value2.instance : null;
 
             return (bool)equalsOperator.Invoke(null, new object[] { instance1, instance2 });
+        }
+
+
+        /// <summary>
+        /// Uses the generated data model's <b>!=</b> operator override to compare two
+        /// wrapped instances.
+        /// </summary>
+        /// <typeparam name="T">The source data type as defined in the within the unit test assembly.</typeparam>
+        /// <param name="value1">The first wrapped instance (or <c>null</c>).</param>
+        /// <param name="value2">The second wrapped instance (or <c>null</c>).</param>
+        /// <returns><c>true</c> if the instances are not equal.</returns>
+        public static bool NotEquals<T>(DataWrapper value1, DataWrapper value2)
+        {
+            var sourceType = typeof(T);
+            var targetType = AssemblyContext.Current.Assembly.GetType($"{AssemblyContext.Current.DefaultNamespace}.{sourceType.Name}");
+
+            if (targetType == null)
+            {
+                throw new TypeLoadException($"Cannot find type: {AssemblyContext.Current.DefaultNamespace}.{sourceType.Name}");
+            }
+
+            var notEqualsOperator = targetType.GetMethod("op_Inequality", new Type[] { targetType, targetType });
+            var instance1         = value1 != null ? value1.instance : null;
+            var instance2         = value2 != null ? value2.instance : null;
+
+            return (bool)notEqualsOperator.Invoke(null, new object[] { instance1, instance2 });
         }
 
         /// <summary>

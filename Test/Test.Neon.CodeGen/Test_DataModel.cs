@@ -875,7 +875,7 @@ namespace TestCodeGen.DataModel
             };
 
             var generator = new CodeGenerator(settings);
-            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+            var output = generator.Generate(Assembly.GetExecutingAssembly());
 
             Assert.False(output.HasErrors);
 
@@ -891,10 +891,45 @@ namespace TestCodeGen.DataModel
 
                 Assert.False(DataWrapper.Equals<SimpleData>(null, value2));
                 Assert.False(DataWrapper.Equals<SimpleData>(value1, null));
-                Assert.False(DataWrapper.Equals<SimpleData>(value1, value2));
 
                 value2["Name"] = "Bob";
-                Assert.False(DataWrapper.Equals<SimpleData>(value1, value1));
+                Assert.False(DataWrapper.Equals<SimpleData>(value1, value2));
+                Assert.False(DataWrapper.Equals<SimpleData>(value2, value1));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void NotEqualsOperator()
+        {
+            // Verify that the generated binary "==" operator works.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var value1 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
+                var value2 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
+
+                Assert.False(DataWrapper.NotEquals<SimpleData>(value1, value1));
+                Assert.False(DataWrapper.NotEquals<SimpleData>(value1, value2));
+
+                Assert.True(DataWrapper.NotEquals<SimpleData>(null, value2));
+                Assert.True(DataWrapper.NotEquals<SimpleData>(value1, null));
+
+                value2["Name"] = "Bob";
+                Assert.True(DataWrapper.NotEquals<SimpleData>(value1, value2));
+                Assert.True(DataWrapper.NotEquals<SimpleData>(value2, value1));
             }
         }
     }
