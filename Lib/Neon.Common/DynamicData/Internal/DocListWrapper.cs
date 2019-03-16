@@ -79,11 +79,11 @@ namespace Neon.DynamicData.Internal
 
         private const string DetachedError = "The underlying [JArray] has been detached.";
 
-        private IDynamicEntity                         parentEntity;
-        private IDynamicEntityContext                  context;
-        private JArray                          jArray;
-        private ObservableCollection<LinkState> list;
-        private bool                            notifyDisabled;
+        private IDynamicEntity                      parentEntity;
+        private IDynamicEntityContext               context;
+        private JArray                              jArray;
+        private ObservableCollection<LinkState>     list;
+        private bool                                notifyDisabled;
 
         /// <summary>
         /// Constructor.
