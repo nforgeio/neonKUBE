@@ -862,5 +862,40 @@ namespace TestCodeGen.DataModel
                 Assert.Equal("NotPopulate", data["Populate"]);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void EqualsOperator()
+        {
+            // Verify that the generated binary "==" operator works.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var value1 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
+                var value2 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
+
+                Assert.True(DataWrapper.Equals<SimpleData>(value1, value1));
+                Assert.True(DataWrapper.Equals<SimpleData>(value1, value2));
+
+                Assert.False(DataWrapper.Equals<SimpleData>(null, value2));
+                Assert.False(DataWrapper.Equals<SimpleData>(value1, null));
+                Assert.False(DataWrapper.Equals<SimpleData>(value1, value2));
+
+                value2["Name"] = "Bob";
+                Assert.False(DataWrapper.Equals<SimpleData>(value1, value1));
+            }
+        }
     }
 }

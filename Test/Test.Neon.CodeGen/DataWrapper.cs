@@ -322,6 +322,31 @@ namespace TestCodeGen
         }
 
         /// <summary>
+        /// Uses the generated data model's <b>==</b> operator to compare two
+        /// wrapped instances.
+        /// </summary>
+        /// <typeparam name="T">The source data type as defined in the within the unit test assembly.</typeparam>
+        /// <param name="value1">The first wrapped instance (or <c>null</c>).</param>
+        /// <param name="value2">The second wrapped instance (or <c>null</c>).</param>
+        /// <returns><c>true</c> if the instances are equal.</returns>
+        public static bool Equals<T>(DataWrapper value1, DataWrapper value2)
+        {
+            var sourceType = typeof(T);
+            var targetType = AssemblyContext.Current.Assembly.GetType($"{AssemblyContext.Current.DefaultNamespace}.{sourceType.Name}");
+
+            if (targetType == null)
+            {
+                throw new TypeLoadException($"Cannot find type: {AssemblyContext.Current.DefaultNamespace}.{sourceType.Name}");
+            }
+
+            var equalsOperator = targetType.GetMethod("op_Equality", new Type[] { targetType, targetType });
+            var instance1      = value1 != null ? value1.instance : null;
+            var instance2      = value2 != null ? value2.instance : null;
+
+            return (bool)equalsOperator.Invoke(null, new object[] { instance1, instance2 });
+        }
+
+        /// <summary>
         /// Returns the hash code computed by the wrapped data model.
         /// </summary>
         /// <returns>The hash code.</returns>

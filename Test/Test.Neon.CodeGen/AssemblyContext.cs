@@ -44,8 +44,14 @@ namespace TestCodeGen
     /// </summary>
     public class AssemblyContext : AssemblyLoadContext, IDisposable
     {
-        private string      defaultNamespace;
-        private Assembly    assembly;
+        //---------------------------------------------------------------------
+        // Static members
+
+        public static AssemblyContext Current { get; private set; }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private bool        isDisposed;
 
         /// <summary>
@@ -58,19 +64,33 @@ namespace TestCodeGen
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(defaultNamespace));
             Covenant.Requires<ArgumentNullException>(assemblyStream != null);
+            Covenant.Assert(Current == null);
 
-            this.defaultNamespace = defaultNamespace;
-            this.assembly         = LoadFromStream(assemblyStream);
+            this.DefaultNamespace = defaultNamespace;
+            this.Assembly         = LoadFromStream(assemblyStream);
+
+            Current = this;
         }
 
         public void Dispose()
         {
             if (!isDisposed)
             {
+                Current    = null;
                 isDisposed = true;
                 Unload();
             }
         }
+
+        /// <summary>
+        /// Returns the default namespace.
+        /// </summary>
+        public string DefaultNamespace { get; private set; }
+
+        /// <summary>
+        /// Returns the loaded assembly.
+        /// </summary>
+        public Assembly Assembly { get; private set; }
 
         /// <summary>
         /// Required to implement [AssemblyLoadContext] but is never called.
@@ -91,11 +111,11 @@ namespace TestCodeGen
         public DataWrapper CreateDataWrapper<T>()
         {
             var sourceType = typeof(T);
-            var targetType = assembly.GetType($"{defaultNamespace}.{sourceType.Name}");
+            var targetType = Assembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
 
             if (targetType == null)
             {
-                throw new TypeLoadException($"Cannot find type: {defaultNamespace}.{sourceType.Name}");
+                throw new TypeLoadException($"Cannot find type: {DefaultNamespace}.{sourceType.Name}");
             }
 
             return new DataWrapper(targetType);
@@ -110,11 +130,11 @@ namespace TestCodeGen
         public DataWrapper CreateDataWrapperFrom<T>(string jsonText)
         {
             var sourceType = typeof(T);
-            var targetType = assembly.GetType($"{defaultNamespace}.{sourceType.Name}");
+            var targetType = Assembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
 
             if (targetType == null)
             {
-                throw new TypeLoadException($"Cannot find type: {defaultNamespace}.{sourceType.Name}");
+                throw new TypeLoadException($"Cannot find type: {DefaultNamespace}.{sourceType.Name}");
             }
 
             return new DataWrapper(targetType, jsonText);
@@ -129,11 +149,11 @@ namespace TestCodeGen
         public DataWrapper CreateDataWrapperFrom<T>(JObject jObject)
         {
             var sourceType = typeof(T);
-            var targetType = assembly.GetType($"{defaultNamespace}.{sourceType.Name}");
+            var targetType = Assembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
 
             if (targetType == null)
             {
-                throw new TypeLoadException($"Cannot find type: {defaultNamespace}.{sourceType.Name}");
+                throw new TypeLoadException($"Cannot find type: {DefaultNamespace}.{sourceType.Name}");
             }
 
             return new DataWrapper(targetType, jObject);
