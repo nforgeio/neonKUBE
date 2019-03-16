@@ -725,7 +725,6 @@ namespace Neon.CodeGen
                 writer.WriteLine($"using Newtonsoft.Json.Converters;");
                 writer.WriteLine($"using Newtonsoft.Json.Linq;");
                 writer.WriteLine($"using Newtonsoft.Json.Serialization;");
-                writer.WriteLine();
             }
 
             // Open the namespace.
@@ -736,6 +735,9 @@ namespace Neon.CodeGen
             //---------------------------------------------
             // Generate a static class to hold the shared JSON serializer stuff.
 
+            writer.WriteLine($"//-------------------------------------------------------------------------");
+            writer.WriteLine($"// Internal helper types");
+            writer.WriteLine();
             writer.WriteLine($"    internal static class __Json");
             writer.WriteLine($"    {{");
             writer.WriteLine($"        public static readonly JsonSerializerSettings    settings;");
@@ -782,7 +784,20 @@ namespace Neon.CodeGen
             writer.WriteLine($"            }}");
             writer.WriteLine($"        }}");
             writer.WriteLine($"    }}");
-            writer.WriteLine();
+
+            if (Settings.UxFeatures)
+            {
+                writer.WriteLine();
+                writer.WriteLine($"    public abstract class __NotifyPropertyChanged : INotifyPropertyChanged");
+                writer.WriteLine($"    {{");
+                writer.WriteLine($"        public event PropertyChangedEventHandler PropertyChanged;");
+                writer.WriteLine();
+                writer.WriteLine($"        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)");
+                writer.WriteLine($"        {{");
+                writer.WriteLine($"            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));");
+                writer.WriteLine($"        }}");
+                writer.WriteLine($"    }}");
+            }
 
             //---------------------------------------------
             // Generate the models.
@@ -797,7 +812,7 @@ namespace Neon.CodeGen
 
             // Generate the service clients (if enabled).
 
-            if (Settings.ServiceClients)
+            if (!Settings.NoServiceClients)
             {
                 // $todo(jeff.lill): Implement this!
             }
@@ -870,14 +885,10 @@ namespace Neon.CodeGen
         {
             string defaultValueExpression;
 
-            if (index > 0)
-            {
-                // Add a blank line between type definitions within the namespace.
-
-                writer.WriteLine();
-            }
-
+            writer.WriteLine();
+            writer.WriteLine($"    //-------------------------------------------------------------------------");
             writer.WriteLine($"    // From: {dataModel.SourceType.FullName}");
+            writer.WriteLine();
 
             if (dataModel.IsEnum)
             {
@@ -910,6 +921,10 @@ namespace Neon.CodeGen
                     }
 
                     baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}";
+                }
+                else if (Settings.UxFeatures)
+                {
+                    baseTypeRef = " : __NotifyPropertyChanged";
                 }
 
                 writer.WriteLine($"    public partial class {dataModel.SourceType.Name}{baseTypeRef}");
@@ -944,6 +959,33 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"            model.__Load();");
                     writer.WriteLine($"            return model;");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        public static bool operator ==({dataModel.SourceType.Name} value1, {dataModel.SourceType.Name} value2)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            var value1IsNull = value1 == null;");
+                    writer.WriteLine($"            var value2IsNull = value2 == null;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            if (value1IsNull == value2IsNull)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                if (value1IsNull)");
+                    writer.WriteLine($"                {{");
+                    writer.WriteLine($"                    return true;");
+                    writer.WriteLine($"                }}");
+                    writer.WriteLine($"                else");
+                    writer.WriteLine($"                {{");
+                    writer.WriteLine($"                    return value1.Equals(value2);");
+                    writer.WriteLine($"                }}");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine($"            else");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                return false;");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        public static bool operator !=({dataModel.SourceType.Name} value1, {dataModel.SourceType.Name} value2)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            return !(value1 == value2);");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -1265,6 +1307,49 @@ namespace Neon.CodeGen
                         writer.WriteLine($"            return (JObject)__JObject.DeepClone();");
                         writer.WriteLine($"        }}");
                     }
+
+                    //-------------------------------------
+                    // Generate handy helper methods.
+
+                    writer.WriteLine();
+                    writer.WriteLine($"        public {dataModel.SourceType.Name} DeepClone()");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            lock (__JObject)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                __Save();");
+                    writer.WriteLine($"                return CreateFrom((JObject)__JObject.DeepClone());");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        public override bool Equals(object obj)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            if (object.ReferenceEquals(this, obj))");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                return true;");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            var other = obj as {dataModel.SourceType.Name};");
+                    writer.WriteLine();
+                    writer.WriteLine($"            if (object.ReferenceEquals(other, null))");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                return false;");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            lock (this.__JObject)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                lock (other.__JObject)");
+                    writer.WriteLine($"                {{");
+                    writer.WriteLine($"                    this.__Save();");
+                    writer.WriteLine($"                    other.__Save();");
+                    writer.WriteLine($"                    return JObject.DeepEquals(this.__JObject, other.__JObject);");
+                    writer.WriteLine($"                }}");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        public override int GetHashCode()");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            return base.GetHashCode();");
+                    writer.WriteLine($"        }}");
 
                     // Close the generated model class definition.
 

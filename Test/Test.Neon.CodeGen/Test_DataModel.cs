@@ -217,6 +217,19 @@ namespace TestCodeGen.DataModel
                 data = context.CreateDataWrapperFrom<EmptyData>(new JObject());
                 Assert.Equal("{}", data.ToString());
                 Assert.Equal("{}", data.ToString(indented: true));
+
+                //-------------------------------------------------------------
+                // Verify Equals():
+
+                var value1 = context.CreateDataWrapperFrom<EmptyData>(new JObject());
+                var value2 = context.CreateDataWrapperFrom<EmptyData>(new JObject());
+
+                Assert.True(value1.Equals(value1));
+                Assert.True(value1.Equals(value2));
+                Assert.True(value2.Equals(value1));
+
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
             }
         }
 
@@ -350,6 +363,28 @@ namespace TestCodeGen.DataModel
                 data["Age"] = 58;
                 data["Enum"] = MyEnum1.Two;
                 Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
+
+                //-------------------------------------------------------------
+                // Verify Equals():
+
+                var value1 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
+                var value2 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
+
+                Assert.True(value1.Equals(value1));
+                Assert.True(value1.Equals(value2));
+                Assert.True(value2.Equals(value1));
+
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
+
+                value2["Name"] = "Bob";
+
+                Assert.True(value1.Equals(value1));
+
+                Assert.False(value1.Equals(value2));
+                Assert.False(value2.Equals(value1));
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
             }
         }
 
@@ -399,6 +434,28 @@ namespace TestCodeGen.DataModel
                 jsonText = data.ToString(indented: true);
                 data = context.CreateDataWrapperFrom<BasicTypes>(jsonText);
                 Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}", data.ToString());
+
+                //-------------------------------------------------------------
+                // Verify Equals():
+
+                var value1 = context.CreateDataWrapperFrom<BasicTypes>("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}");
+                var value2 = context.CreateDataWrapperFrom<BasicTypes>("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}");
+
+                Assert.True(value1.Equals(value1));
+                Assert.True(value1.Equals(value2));
+                Assert.True(value2.Equals(value1));
+
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
+
+                value2["String"] = "Bob";
+
+                Assert.True(value1.Equals(value1));
+
+                Assert.False(value1.Equals(value2));
+                Assert.False(value2.Equals(value1));
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
             }
         }
 
@@ -470,6 +527,28 @@ namespace TestCodeGen.DataModel
 
                 data["IgnoreThis"] = 1000;
                 Assert.DoesNotContain("IgnoreThis", data.ToString());
+
+                //-------------------------------------------------------------
+                // Verify Equals():
+
+                var value1 = context.CreateDataWrapperFrom<ComplexData>("{\"Items\":[\"zero\"],\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
+                var value2 = context.CreateDataWrapperFrom<ComplexData>("{\"Items\":[\"zero\"],\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
+
+                Assert.True(value1.Equals(value1));
+                Assert.True(value1.Equals(value2));
+                Assert.True(value2.Equals(value1));
+
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
+
+                value2 = context.CreateDataWrapperFrom<ComplexData>("{\"Items\":[\"NOT-ZERO\"],\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
+
+                Assert.True(value1.Equals(value1));
+
+                Assert.False(value1.Equals(value2));
+                Assert.False(value2.Equals(value1));
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
             }
         }
 
@@ -552,6 +631,43 @@ namespace TestCodeGen.DataModel
                 derivedData = context.CreateDataWrapperFrom<DerivedModel>(derivedData.ToString());
                 Assert.Equal("base", derivedData["BaseProperty"]);
                 Assert.Equal("derived", derivedData["DerivedProperty"]);
+
+                //-------------------------------------------------------------
+                // Verify Equals():
+
+                var value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DerivedValue\"}");
+                var value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DerivedValue\"}");
+
+                Assert.True(value1.Equals(value1));
+                Assert.True(value1.Equals(value2));
+                Assert.True(value2.Equals(value1));
+
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
+
+                // Verify that a change to the base class property is detected.
+
+                value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DerivedValue\"}");
+                value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"DIFFERENT\",\"DerivedProperty\":\"DerivedValue\"}");
+
+                Assert.True(value1.Equals(value1));
+
+                Assert.False(value1.Equals(value2));
+                Assert.False(value2.Equals(value1));
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
+
+                // Verify that a change to the derived class property is detected.
+
+                value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DerivedValue\"}");
+                value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"BaseProperty\":\"BaseValue\",\"DerivedProperty\":\"DIFFERENT\"}");
+
+                Assert.True(value1.Equals(value1));
+
+                Assert.False(value1.Equals(value2));
+                Assert.False(value2.Equals(value1));
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
             }
         }
 

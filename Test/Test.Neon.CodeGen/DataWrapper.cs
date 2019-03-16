@@ -133,6 +133,14 @@ namespace TestCodeGen
         }
 
         /// <summary>
+        /// Returns the wrapped data model instance.
+        /// </summary>
+        public object WrappedDataModelInstance
+        {
+            get { return instance; }
+        }
+
+        /// <summary>
         /// Accesses the wrapped data model's properties.
         /// </summary>
         /// <param name="propertyName">The property name.</param>
@@ -254,6 +262,74 @@ namespace TestCodeGen
                     throw;
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns a deep clone of the data model.
+        /// </summary>
+        /// <returns>The new data <see cref="DataWrapper"/> with the cloned instance.</returns>
+        public DataWrapper DeepClone()
+        {
+            try
+            {
+                var cloneMethod     = instanceType.GetMethod("DeepClone", new Type[] { });
+                var clone           = cloneMethod.Invoke(instance, new object[] { });
+                var toJObjectMethod = instanceType.GetMethod("ToJObject", new Type[] { });
+                var jObject         = (JObject)toJObjectMethod.Invoke(instance, new object[] { });
+
+                return new DataWrapper(instanceType, jObject);
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Compares one wrapped data model with another for equality.
+        /// </summary>
+        /// <param name="obj">The other instance (or <c>null</c>).</param>
+        /// <returns><c>true</c> if the data models report being equal.</returns>
+        public override bool Equals(object obj)
+        {
+            var method = instanceType.GetMethod("Equals", new Type[] { typeof(object) });
+
+            if (obj == null)
+            {
+                return (bool)method.Invoke(instance, new object[] { obj });
+            }
+
+            var instanceProperty = obj.GetType().GetProperty("WrappedDataModelInstance");
+
+            if (instanceProperty == null)
+            {
+                // [obj] is not a wrapped data model, so we'll
+                // just pass it through to Equals().
+
+                return (bool)method.Invoke(instance, new object[] { obj });
+            }
+
+            var otherInstance = instanceProperty.GetValue(obj);
+
+            return (bool)method.Invoke(instance, new object[] { otherInstance });
+        }
+
+        /// <summary>
+        /// Returns the hash code computed by the wrapped data model.
+        /// </summary>
+        /// <returns>The hash code.</returns>
+        public override int GetHashCode()
+        {
+            var method = instanceType.GetMethod("GetHashCode", new Type[] { });
+
+            return (int)method.Invoke(instance, new object[] { });
         }
     }
 }

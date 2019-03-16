@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
@@ -59,11 +60,17 @@ namespace Neon.CodeGen
         }
 
         /// <summary>
-        /// Indicates that service client code should be generated.  This defaults to
-        /// <c>true</c> and may be set to <c>false</c> when only the data models
+        /// Indicates that service client code should not be generated.  This defaults to
+        /// <c>false</c> and may be set to <c>true</c> when only the data models
         /// need to be generated.
         /// </summary>
-        public bool ServiceClients { get; set; } = true;
+        public bool NoServiceClients { get; set; } = false;
+
+        /// <summary>
+        /// Indicates that the generated classes should include user interface related
+        /// code including <see cref="INotifyPropertyChanged"/> implementations.
+        /// </summary>
+        public bool UxFeatures { get; set; } = false;
 
         /// <summary>
         /// Enhances data model code generation to prevent property loss
