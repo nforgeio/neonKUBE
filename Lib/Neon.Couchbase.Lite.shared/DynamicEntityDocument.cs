@@ -30,7 +30,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.DynamicData;
+using Neon.Couchbase.Dynamic;
 
 namespace Couchbase.Lite
 {

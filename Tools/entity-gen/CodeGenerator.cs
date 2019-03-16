@@ -30,7 +30,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Neon.Common;
-using Neon.DynamicData;
+using Neon.Couchbase.DynamicData;
 
 // $todo(jeff.lill): Complete integration and testing of the build task into VS.
 
@@ -420,8 +420,8 @@ namespace EntityGen
                 writer.WriteLine($"using Couchbase.Lite;");
                 writer.WriteLine();
                 writer.WriteLine($"using Neon.Common;");
-                writer.WriteLine($"using Neon.DynamicData;");
-                writer.WriteLine($"using Neon.DynamicData.Internal;");
+                writer.WriteLine($"using Neon.Couchbase.Dynamic;");
+                writer.WriteLine($"using Neon.Couchbase.Dynamic.Internal;");
 
                 // Append the source code for each entity.
 

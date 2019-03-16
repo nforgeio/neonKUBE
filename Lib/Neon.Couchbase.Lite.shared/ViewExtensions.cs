@@ -24,7 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.DynamicData;
+using Neon.Couchbase.Dynamic;
 
 // $todo(jeff.lill): Look into implementing extensions for SetMapReduce().
 

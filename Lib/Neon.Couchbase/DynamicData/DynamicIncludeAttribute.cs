@@ -24,9 +24,8 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.DynamicData;
 
-namespace Neon.DynamicData
+namespace Neon.Couchbase.DynamicData
 {
     /// <summary>
     /// Used to tag a <c>class</c> or <c>enum</c> such that the <b>entity-gen</b> Visual 

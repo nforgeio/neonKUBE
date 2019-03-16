@@ -27,7 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.DynamicData;
+using Neon.Couchbase.Dynamic;
 
 using Couchbase.Lite.Store;
 

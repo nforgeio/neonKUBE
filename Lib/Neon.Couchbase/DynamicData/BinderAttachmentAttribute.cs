@@ -25,9 +25,8 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.DynamicData;
 
-namespace Neon.DynamicData
+namespace Neon.Couchbase.DynamicData
 {
     /// <summary>
     /// Used to tag the properties of a binder document's <c>interface</c> definition

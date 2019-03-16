@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -30,10 +31,9 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.DynamicData;
-using System.Collections;
+using Neon.Couchbase.DynamicData;
 
-namespace Neon.DynamicData.Internal
+namespace Neon.Couchbase.DynamicData.Internal
 {
     /// <summary>
     /// <b>Platform use only:</b> Used by <see cref="IDynamicEntity"/> implementations 

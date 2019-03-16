@@ -25,9 +25,8 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.DynamicData;
 
-namespace Neon.DynamicData
+namespace Neon.Couchbase.DynamicData
 {
     /// <summary>
     /// Used to tag an <c>interface</c> indicating that the <b>entity-gen</b> should

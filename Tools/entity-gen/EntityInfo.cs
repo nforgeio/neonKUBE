@@ -27,7 +27,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Neon.Common;
-using Neon.DynamicData;
+using Neon.Couchbase.DynamicData;
 
 namespace EntityGen
 {

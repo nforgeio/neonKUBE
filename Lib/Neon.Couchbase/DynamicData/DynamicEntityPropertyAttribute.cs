@@ -25,11 +25,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.DynamicData;
-using Neon.DynamicData.Internal;
+using Neon.Couchbase.DynamicData.Internal;
 using System.Runtime.Serialization;
 
-namespace Neon.DynamicData
+namespace Neon.Couchbase.DynamicData
 {
     /// <summary>
     /// Used to customize code generation for a property definition within an

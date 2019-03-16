@@ -26,10 +26,9 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.DynamicData;
-using Neon.DynamicData.Internal;
+using Neon.Couchbase.DynamicData.Internal;
 
-namespace Neon.DynamicData
+namespace Neon.Couchbase.DynamicData
 {
     /// <summary>
     /// An implementation of <see cref="IDynamicEntity"/> suitable for backing

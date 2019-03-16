@@ -27,10 +27,9 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
-using Neon.DynamicData;
-using Neon.DynamicData.Internal;
+using Neon.Couchbase.DynamicData.Internal;
 
-namespace Neon.DynamicData
+namespace Neon.Couchbase.DynamicData
 {
     /// <summary>
     /// Defines the implementation of a data entity that wraps a JSON.NET

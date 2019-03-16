@@ -28,9 +28,9 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.DynamicData;
+using Neon.Couchbase.DynamicData;
 
-namespace Neon.DynamicData.Internal
+namespace Neon.Couchbase.DynamicData.Internal
 {
     /// <summary>
     /// The delegate registered by <see cref="IDynamicEntity"/> implementations that

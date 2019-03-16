@@ -16,8 +16,8 @@ using Newtonsoft.Json.Linq;
 using Couchbase.Lite;
 
 using Neon.Common;
-using Neon.DynamicData;
-using Neon.DynamicData.Internal;
+using Neon.Couchbase.Dynamic;
+using Neon.Couchbase.Dynamic.Internal;
 
 //-----------------------------------------------------------------------------
 

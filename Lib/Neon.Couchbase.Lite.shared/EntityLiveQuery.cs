@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 using Couchbase.Lite;
 
 using Neon.Common;
-using Neon.DynamicData;
+using Neon.Couchbase.Dynamic;
 
 namespace Couchbase.Lite
 {
