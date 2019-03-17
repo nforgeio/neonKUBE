@@ -34,7 +34,7 @@ using Newtonsoft.Json;
 
 // $todo(jeff.lill):
 //
-// At somepoint in the future it would be nice to read the
+// At somepoint in the future it would be nice to read any
 // XML code documentation and include this in the generated
 // source code as well.
 
@@ -87,7 +87,7 @@ namespace Neon.CodeGen
             string                          source, 
             string                          assemblyName, 
             Action<MetadataReferences>      referenceHandler = null,
-            CSharpCompilationOptions        options = null)
+            CSharpCompilationOptions        options          = null)
         {
             Covenant.Requires<ArgumentNullException>(source != null);
 
@@ -155,7 +155,6 @@ namespace Neon.CodeGen
         //---------------------------------------------------------------------
         // Instance members
 
-        private CodeGeneratorOutput                 output;
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
         private StringWriter                        writer;
@@ -170,6 +169,7 @@ namespace Neon.CodeGen
         public CodeGenerator(CodeGeneratorSettings settings = null)
         {
             this.Settings = settings ?? new CodeGeneratorSettings();
+            this.Output   = new CodeGeneratorOutput();
 
             this.sourceNamespace = settings.SourceNamespace;
 
@@ -192,6 +192,11 @@ namespace Neon.CodeGen
         public CodeGeneratorSettings Settings { get; private set; }
 
         /// <summary>
+        /// Returns the code generator output instance.
+        /// </summary>
+        public CodeGeneratorOutput Output { get; private set; }
+
+        /// <summary>
         /// Generates code from a set of source assemblies.
         /// </summary>
         /// <param name="assemblies">The source assemblies.</param>
@@ -201,7 +206,6 @@ namespace Neon.CodeGen
             Covenant.Requires<ArgumentNullException>(assemblies != null);
             Covenant.Requires<ArgumentException>(assemblies.Length > 0, "At least one assembly must be passed.");
 
-            output = new CodeGeneratorOutput();
             writer = new StringWriter();
 
             // Load and normalize service and data models from the source assemblies.
@@ -217,16 +221,16 @@ namespace Neon.CodeGen
 
             CheckForErrors();
 
-            if (output.HasErrors)
+            if (Output.HasErrors)
             {
-                return output;
+                return Output;
             }
 
             // Perform the code generation.
 
             GenerateCode();
 
-            return output;
+            return Output;
         }
 
         /// <summary>
@@ -354,7 +358,7 @@ namespace Neon.CodeGen
         /// <param name="type">The source type.</param>
         private void LoadServiceModel(Type type)
         {
-            var serviceModel = new ServiceModel(type);
+            var serviceModel = new ServiceModel(type, this);
 
             nameToServiceModel[type.FullName] = serviceModel;
 
@@ -366,31 +370,13 @@ namespace Neon.CodeGen
                 }
             }
 
-            var serviceAttributes = type.GetCustomAttribute<ServiceAttribute>();
-
-            serviceModel.ClientTypeName = serviceAttributes.Name ?? type.Name;
-
-            var clientGroupAttribute = type.GetCustomAttribute<ClientGroupAttribute>();
-
-            if (clientGroupAttribute != null)
-            {
-                serviceModel.ClientGroup = clientGroupAttribute.Name;
-            }
-
-            var routeAttribute = type.GetCustomAttribute<RouteAttribute>();
-
-            if (routeAttribute != null)
-            {
-                serviceModel.RouteTemplate = routeAttribute.Template;
-            }
-
             // Walk the service methods to load their metadata.
 
             foreach (var methodInfo in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
                 var serviceMethod = new ServiceMethod();
 
-                routeAttribute = methodInfo.GetCustomAttribute<RouteAttribute>();
+                var routeAttribute = methodInfo.GetCustomAttribute<RouteAttribute>();
 
                 if (routeAttribute != null)
                 {
@@ -458,7 +444,7 @@ namespace Neon.CodeGen
         /// <param name="type">YThe source type.</param>
         private void LoadDataModel(Type type)
         {
-            var dataModel = new DataModel(type);
+            var dataModel = new DataModel(type, this);
 
             nameToDataModel[type.FullName] = dataModel;
             dataModel.IsEnum               = type.IsEnum;
@@ -525,7 +511,7 @@ namespace Neon.CodeGen
                 }
                 else 
                 {
-                    output.Errors.Add($"*** ERROR: [{type.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
+                    Output.Errors.Add($"*** ERROR: [{type.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
 
                     dataModel.BaseTypeName = "int";
                 }
@@ -567,12 +553,12 @@ namespace Neon.CodeGen
                 {
                     if (!nameToDataModel.ContainsKey(implementedInterface.FullName))
                     {
-                        output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model inherits [{implementedInterface.FullName}] which is not defined in a source assembly.");
+                        Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model inherits [{implementedInterface.FullName}] which is not defined in a source assembly.");
                     }
 
                     if (baseInterface != null)
                     {
-                        output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model inherits from multiple base types.  A maximum of one is allowed.");
+                        Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model inherits from multiple base types.  A maximum of one is allowed.");
                     }
 
                     baseInterface = implementedInterface;
@@ -596,7 +582,7 @@ namespace Neon.CodeGen
                         continue;
                     }
 
-                    var property = new DataProperty(output)
+                    var property = new DataProperty(Output)
                     {
                         Name = member.Name,
                         Type = member.PropertyType
@@ -666,7 +652,7 @@ namespace Neon.CodeGen
 
                     if (!nameToDataModel.ContainsKey(propertyType.FullName))
                     {
-                        output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model references type [{propertyType.FullName}] which is not defined in a source assembly.");
+                        Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model references type [{propertyType.FullName}] which is not defined in a source assembly.");
                     }
                 }
             }
@@ -683,23 +669,15 @@ namespace Neon.CodeGen
 
                     if (!returnType.IsPrimitive && !nameToDataModel.ContainsKey(returnType.FullName))
                     {
-                        output.Errors.Add($"*** ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] returns [{returnType.FullName}] which is not defined in a source assembly.");
+                        Output.Errors.Add($"*** ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] returns [{returnType.FullName}] which is not defined in a source assembly.");
                     }
 
                     foreach (var parameter in method.MethodInfo.GetParameters())
                     {
-                        output.Errors.Add($"*** ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] as argument [{parameter.Name}:{parameter.ParameterType.FullName}] whose type is not defined in a source assembly.");
+                        Output.Errors.Add($"*** ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] as argument [{parameter.Name}:{parameter.ParameterType.FullName}] whose type is not defined in a source assembly.");
                     }
                 }
             }
-
-            // $todo(jeff.lill):
-            //
-            // Ensure that routes and method signatures will be unique for the generated
-            // clients, taking client groups into account.  The top priority is verify
-            // the routes because any problems these won't be detected until runtime.
-            // Any method signature conflicts will be detected when the the generated
-            // code is compiled.
         }
 
         /// <summary>
@@ -822,7 +800,13 @@ namespace Neon.CodeGen
 
             if (!Settings.NoServiceClients)
             {
-                // $todo(jeff.lill): Implement this!
+                index = 0;
+
+                foreach (var serviceModel in nameToServiceModel.Values
+                    .OrderBy(sm => sm.ClientTypeName.ToLowerInvariant()))
+                {
+                    GenerateServiceClient(serviceModel, index++);
+                }
             }
 
             // Close the namespace.
@@ -831,7 +815,7 @@ namespace Neon.CodeGen
 
             // Set the generated source code for the code generator output.
 
-            output.SourceCode = writer.ToString();
+            Output.SourceCode = writer.ToString();
         }
 
         /// <summary>
@@ -924,7 +908,7 @@ namespace Neon.CodeGen
                 {
                     if (!nameToDataModel.ContainsKey(dataModel.BaseTypeName))
                     {
-                        output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model inherits type [{dataModel.BaseTypeName}] which is not defined in a source assembly.");
+                        Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model inherits type [{dataModel.BaseTypeName}] which is not defined in a source assembly.");
                         return;
                     }
 
@@ -1083,7 +1067,7 @@ namespace Neon.CodeGen
 
                             default:
 
-                                output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: Service model [{property.Name}] specifies an unsupported [{nameof(DefaultValueHandling)}] value.");
+                                Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: Service model [{property.Name}] specifies an unsupported [{nameof(DefaultValueHandling)}] value.");
                                 defaultValueHandling = "Include";
                                 break;
                         }
@@ -1408,6 +1392,15 @@ namespace Neon.CodeGen
                     writer.WriteLine($"    }}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Generates a service client for a one or more related service controllers.
+        /// </summary>
+        /// <param name="serviceModel">The service model.</param>
+        /// <param name="index">Zero based index of the model within the current namespace.</param>
+        private void GenerateServiceClient(ServiceModel serviceModel, int index)
+        {
         }
 
         /// <summary>

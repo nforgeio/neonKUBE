@@ -34,7 +34,8 @@ namespace Neon.CodeGen
         /// Constructor.
         /// </summary>
         /// <param name="sourceType">The source data type.</param>
-        public DataModel(Type sourceType)
+        /// <param name="codeGenerator">The code generator instance.</param>
+        public DataModel(Type sourceType, CodeGenerator codeGenerator)
         {
             Covenant.Requires<ArgumentNullException>(sourceType != null);
 

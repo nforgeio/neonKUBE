@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 using System.Text;
 
 namespace Neon.CodeGen
@@ -33,11 +34,46 @@ namespace Neon.CodeGen
         /// Constructor.
         /// </summary>
         /// <param name="sourceType">The source service type.</param>
-        public ServiceModel(Type sourceType)
+        /// <param name="codeGenerator">The code generator instance.</param>
+        public ServiceModel(Type sourceType, CodeGenerator codeGenerator)
         {
             Covenant.Requires<ArgumentNullException>(sourceType != null);
 
             this.SourceType = sourceType;
+
+            // Determine the name we'll use for the generated service class.
+
+            var serviceAttribute = sourceType.GetCustomAttribute<ServiceAttribute>();
+
+            if (serviceAttribute != null && !string.IsNullOrEmpty(serviceAttribute.Name))
+            {
+                this.ClientTypeName = serviceAttribute.Name;
+            }
+            else
+            {
+                this.ClientTypeName = sourceType.Name;
+
+                if (this.ClientTypeName.EndsWith("Controller"))
+                {
+                    this.ClientTypeName = this.ClientTypeName.Substring(0, this.ClientTypeName.Length - "Controller".Length);
+                }
+            }
+
+            // Determine the service route template.
+
+            var routeAttribute = sourceType.GetCustomAttribute<RouteAttribute>();
+
+            if (routeAttribute != null && !string.IsNullOrEmpty(routeAttribute.Template))
+            {
+                if (!routeAttribute.Template.StartsWith("/"))
+                {
+                    codeGenerator.Output.Errors.Add($"*** ERROR: Service [{sourceType.FullName}] has a relative [Route] attribute.  Only absolute service routes are allowed.");
+                }
+            }
+            else
+            {
+                this.RouteTemplate = "/";
+            }
         }
 
         /// <summary>
