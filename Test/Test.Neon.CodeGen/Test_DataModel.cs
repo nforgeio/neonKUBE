@@ -1098,5 +1098,70 @@ namespace TestCodeGen.DataModel
                 Assert.NotSame(((int[][])complexData["DoubleArray"])[1], ((int[][])clonedComplexData["DoubleArray"])[1]);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void RoundTripUnknownProperties()
+        {
+            // Verify that persisted properties that were unknown
+            // at compile time are still round-tripped successfuly.
+            // We're going to test this by accessing the backing
+            // [JObject].  We're also going to verify that these
+            // unknown properties are included in the equality
+            // tests.
+            //
+            // This requirement was the inspiration for this entire code
+            // generation thing and it's funny that it took me this
+            // line to actually test it.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                // Verify for an empty class.
+
+                var emptyData = context.CreateDataWrapper<EmptyData>();
+
+                emptyData.JObject["Unknown"] = "very tricky!";
+
+                var deserialzedEmptyData = context.CreateDataWrapperFrom<EmptyData>(emptyData.ToString());
+
+                Assert.Equal(emptyData, deserialzedEmptyData);
+                Assert.Equal("very tricky!", deserialzedEmptyData.JObject["Unknown"]);
+
+                deserialzedEmptyData.JObject["Unknown"] = "even trickier!";
+
+                Assert.False(emptyData.Equals(deserialzedEmptyData));
+                Assert.False(DataWrapper.Equals(emptyData, deserialzedEmptyData));
+                Assert.True(DataWrapper.NotEquals<EmptyData>(emptyData, deserialzedEmptyData));
+
+                // Verify for simple data.
+
+                var simpleData = context.CreateDataWrapper<SimpleData>();
+
+                simpleData.JObject["Unknown"] = "very tricky!";
+
+                var deserialzedSimpleData = context.CreateDataWrapperFrom<SimpleData>(emptyData.ToString());
+
+                Assert.Equal(simpleData, deserialzedSimpleData);
+                Assert.Equal("very tricky!", deserialzedSimpleData.JObject["Unknown"]);
+
+                deserialzedSimpleData.JObject["Unknown"] = "even trickier!";
+
+                Assert.False(simpleData.Equals(deserialzedSimpleData));
+                Assert.False(DataWrapper.Equals(simpleData, deserialzedSimpleData));
+                Assert.True(DataWrapper.NotEquals<SimpleData>(simpleData, deserialzedSimpleData));
+            }
+        }
     }
 }
