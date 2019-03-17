@@ -85,8 +85,8 @@ namespace TestCodeGen.DataModel
 
     public interface ComplexData
     {
-        List<string> Items { get; set; }
-        Dictionary<string, int> Lookup { get; set; }
+        List<string> List { get; set; }
+        Dictionary<string, int> Dictionary { get; set; }
         MyEnum1 Enum1 { get; set; }
         MyEnum2 Enum2 { get; set; }
         SimpleData Simple { get; set; }
@@ -494,28 +494,28 @@ namespace TestCodeGen.DataModel
                 // Set a valid [Enum2] Value and test again.
 
                 data["Enum2"] = MyEnum2.Three;
-                Assert.Equal("{\"Items\":null,\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
+                Assert.Equal("{\"List\":null,\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
 
                 // Initialize the list and verify.
 
-                data["Items"] = new List<string>() { "item0", "item1" };
+                data["List"] = new List<string>() { "item0", "item1" };
 
-                Assert.Equal("{\"Items\":[\"item0\",\"item1\"],\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
+                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
 
                 // Initialize the dictionary and verify.
 
-                data["Lookup"] = new Dictionary<string, int>()
+                data["Dictionary"] = new Dictionary<string, int>()
                 {
                     { "zero", 0 },
                     { "one", 1 }
                 };
 
-                Assert.Equal("{\"Items\":[\"item0\",\"item1\"],\"Lookup\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
+                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
 
                 // Initialize the one dimensional array and verify.
 
                 data["SingleArray"] = new int[] { 100, 200 };
-                Assert.Equal("{\"Items\":[\"item0\",\"item1\"],\"Lookup\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":null}", data.ToString());
+                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":null}", data.ToString());
 
                 // Initialize the two dimensional array and verify.
 
@@ -525,7 +525,7 @@ namespace TestCodeGen.DataModel
                     new int[] { 300, 400 }
                 };
 
-                Assert.Equal("{\"Items\":[\"item0\",\"item1\"],\"Lookup\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":[[100,200],[300,400]]}", data.ToString());
+                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":[[100,200],[300,400]]}", data.ToString());
 
                 // Verify that a property with [JsonIgnore] is not persisted.
 
@@ -535,8 +535,8 @@ namespace TestCodeGen.DataModel
                 //-------------------------------------------------------------
                 // Verify Equals():
 
-                var value1 = context.CreateDataWrapperFrom<ComplexData>("{\"Items\":[\"zero\"],\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
-                var value2 = context.CreateDataWrapperFrom<ComplexData>("{\"Items\":[\"zero\"],\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
+                var value1 = context.CreateDataWrapperFrom<ComplexData>("{\"List\":[\"zero\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
+                var value2 = context.CreateDataWrapperFrom<ComplexData>("{\"List\":[\"zero\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
 
                 Assert.True(value1.Equals(value1));
                 Assert.True(value1.Equals(value2));
@@ -545,7 +545,7 @@ namespace TestCodeGen.DataModel
                 Assert.False(value1.Equals(null));
                 Assert.False(value1.Equals("Hello World!"));
 
-                value2 = context.CreateDataWrapperFrom<ComplexData>("{\"Items\":[\"NOT-ZERO\"],\"Lookup\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
+                value2 = context.CreateDataWrapperFrom<ComplexData>("{\"List\":[\"NOT-ZERO\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
 
                 Assert.True(value1.Equals(value1));
 
@@ -1012,6 +1012,90 @@ namespace TestCodeGen.DataModel
                 defaultValues["Name"] = "JoeBob";
                 defaultValues["Age"]  = 67;
                 Assert.Equal(67.GetHashCode() ^ "JoeBob".GetHashCode(), defaultValues.GetHashCode());
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void DeepClone()
+        {
+            // Verify that DeepClone() works.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                // Verify for an empty class.
+
+                var emptyData       = context.CreateDataWrapper<EmptyData>();
+                var clonedEmptyData = emptyData.DeepClone();
+
+                Assert.NotNull(clonedEmptyData);
+                Assert.NotSame(emptyData, clonedEmptyData);
+                Assert.Equal(emptyData, clonedEmptyData);
+
+                // Verify for simple data.
+
+                var simpleData = context.CreateDataWrapper<SimpleData>();
+
+                simpleData["Name"] = "Joe Bloe";
+                simpleData["Age"]  = 67;
+                simpleData["Enum"] = MyEnum1.Two;
+
+                var clonedSimpleData = simpleData.DeepClone();
+
+                Assert.NotNull(clonedSimpleData);
+                Assert.NotSame(simpleData, clonedSimpleData);
+                Assert.Equal(simpleData, clonedSimpleData);
+
+                // Verify for inherited data.
+
+                var derivedData = context.CreateDataWrapper<DerivedModel>();
+
+                derivedData["ParentProperty"] = "parent";
+                derivedData["ChildProperty"]  = "child";
+
+                var clonedDerivedData = derivedData.DeepClone();
+
+                Assert.NotNull(derivedData);
+                Assert.NotSame(derivedData, clonedDerivedData);
+                Assert.Equal(derivedData, clonedDerivedData);
+
+                // Verify for complex data and also ensure that we actually
+                // made copies of reference properties.
+
+                var complexData = context.CreateDataWrapper<ComplexData>();
+
+                complexData["List"]        = new List<string>() { "zero", "one", "two" };
+                complexData["Dictionary"]  = new Dictionary<string, int>() { { "zero", 1 }, { "one", 1 } };
+                complexData["Enum1"]       = MyEnum1.One;
+                complexData["Enum2"]       = MyEnum2.Three;
+                complexData["Simple"]      = simpleData.__Instance;
+                complexData["SingleArray"] = new int[] { 0, 1, 2, 3, 4 };
+                complexData["DoubleArray"] = new int[][] { new int[] { 0, 1, 2 }, new int[] { 3, 4, 5 } };
+
+                var clonedComplexData = complexData.DeepClone();
+
+                Assert.NotNull(clonedComplexData);
+                Assert.NotSame(complexData, clonedComplexData);
+                Assert.Equal(complexData, clonedComplexData);
+                Assert.NotSame(complexData["List"], clonedComplexData["List"]);
+                Assert.NotSame(complexData["Dictionary"], clonedComplexData["Dictionary"]);
+                Assert.NotSame(complexData["Simple"], clonedComplexData["Simple"]);
+                Assert.NotSame(complexData["SingleArray"], clonedComplexData["SingleArray"]);
+                Assert.NotSame(complexData["DoubleArray"], clonedComplexData["DoubleArray"]);
+                Assert.NotSame(((int[][])complexData["DoubleArray"])[0], ((int[][])clonedComplexData["DoubleArray"])[0]);
+                Assert.NotSame(((int[][])complexData["DoubleArray"])[1], ((int[][])clonedComplexData["DoubleArray"])[1]);
             }
         }
     }

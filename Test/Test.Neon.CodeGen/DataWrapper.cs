@@ -135,10 +135,12 @@ namespace TestCodeGen
         /// <summary>
         /// Returns the wrapped data model instance.
         /// </summary>
-        public object WrappedDataModelInstance
-        {
-            get { return instance; }
-        }
+        public object __Instance => instance;
+
+        /// <summary>
+        /// Returns the <see cref="JObject"/> backineg the wrapped class.
+        /// </summary>
+        public JObject JObject => (JObject)instanceType.GetProperty("__JObject", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(instance);
 
         /// <summary>
         /// Accesses the wrapped data model's properties.
@@ -306,7 +308,7 @@ namespace TestCodeGen
                 return (bool)method.Invoke(instance, new object[] { obj });
             }
 
-            var instanceProperty = obj.GetType().GetProperty("WrappedDataModelInstance");
+            var instanceProperty = obj.GetType().GetProperty("__Instance");
 
             if (instanceProperty == null)
             {
