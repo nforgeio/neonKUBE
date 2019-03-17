@@ -380,7 +380,7 @@ namespace Neon.CodeGen
 
                 if (routeAttribute != null)
                 {
-                    serviceMethod.RouteTemplate = routeAttribute.Template;
+                    serviceMethod.RouteTemplate = ConcatRoutes(serviceModel.RouteTemplate, routeAttribute.Template);
                 }
 
                 var httpAttribute = methodInfo.GetCustomAttribute<HttpAttribute>();
@@ -798,7 +798,7 @@ namespace Neon.CodeGen
 
             // Generate the service clients (if enabled).
 
-            if (!Settings.NoServiceClients)
+            if (Settings.ServiceClients)
             {
                 index = 0;
 
@@ -1538,6 +1538,41 @@ namespace Neon.CodeGen
 
             Covenant.Assert(false); // We should never get here.
             return null;
+        }
+
+        /// <summary>
+        /// Concatenates zero or more service route templates into an absolute 
+        /// route template.
+        /// </summary>
+        /// <param name="routes">The route templates being concatenated.</param>
+        /// <returns>The absolute route template.</returns>
+        private string ConcatRoutes(params string[] routes)
+        {
+            var routeTemplate = "/";
+
+            foreach (var rawRoute in routes)
+            {
+                var route = rawRoute;
+
+                if (string.IsNullOrEmpty(route))
+                {
+                    continue;
+                }
+
+                if (route.StartsWith("/"))
+                {
+                    route = route.Substring(1);
+                }
+
+                if (!routeTemplate.EndsWith("/"))
+                {
+                    routeTemplate += "/";
+                }
+
+                routeTemplate += route;
+            }
+
+            return routeTemplate;
         }
     }
 }

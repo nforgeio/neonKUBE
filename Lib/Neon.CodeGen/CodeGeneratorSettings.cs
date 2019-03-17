@@ -67,6 +67,11 @@ namespace Neon.CodeGen
         public bool NoServiceClients { get; set; } = false;
 
         /// <summary>
+        /// Returns <c>true</c> if service client code generation is enabled.
+        /// </summary>
+        internal bool ServiceClients => !NoServiceClients;
+
+        /// <summary>
         /// Indicates that the generated classes should include user interface related
         /// code including <see cref="INotifyPropertyChanged"/> implementations.
         /// </summary>
