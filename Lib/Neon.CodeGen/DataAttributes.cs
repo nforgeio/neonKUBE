@@ -54,7 +54,7 @@ namespace Neon.CodeGen
     }
 
     /// <summary>
-    /// Used to mark data model properties that should be included in the
+    /// Used to tag data model properties that should be included in the
     /// <see cref="Object.GetHashCode()"/> computation.
     /// </summary>
     public class HashSourceAttribute : Attribute
