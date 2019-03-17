@@ -156,13 +156,13 @@ namespace EntityGen
                 EntityTypePath = entityTypePathList.ToArray();
             }
 
-            Interface  = interfaceType;
-            IsDerived  = interfaceType.GetParentInterface() != null;
-            Namespace  = targetNamespace;
-            Name       = targetName;
-            FullName   = $"{targetNamespace}.{targetName}";
+            Interface   = interfaceType;
+            IsDerived   = interfaceType.GetParentInterface() != null;
+            Namespace   = targetNamespace;
+            Name        = targetName;
+            FullName    = $"{targetNamespace}.{targetName}";
             TypeLiteral = entityTypeString;
-            Visibility = entityAttribute.IsInternal ? "internal" : "public";
+            Visibility  = entityAttribute.IsInternal ? "internal" : "public";
         }
 
         /// <summary>
