@@ -106,7 +106,7 @@ namespace Neon.Net
                     AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
                 };
 
-                disposeHandler = false; // Always dispose handlers created by the constructor.
+                disposeHandler = true;  // Always dispose handlers created by the constructor.
             }
 
             HttpClient = new HttpClient(handler, disposeHandler);

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceAttribute.cs
+// FILE:	    ServiceModelAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,13 +28,13 @@ namespace Neon.CodeGen
     /// generating a service client class.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class ServiceAttribute : Attribute
+    public class ServiceModelAttribute : Attribute
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="controllerType">The service controller type.</param>
-        public ServiceAttribute(Type controllerType)
+        public ServiceModelAttribute(Type controllerType)
         {
             Covenant.Requires(controllerType != null);
 
@@ -49,7 +49,10 @@ namespace Neon.CodeGen
         /// <summary>
         /// <para>
         /// The name to be used for the generated client class
-        /// or <c>null</c> if a default name is to be used.
+        /// or <c>null</c> if a default name is to be used.  This
+        /// can be used to group the methods from multiple service
+        /// model (AKA controller) classes into a common generated
+        /// service client.
         /// </para>
         /// <note>
         /// The tagged controller class name will be used as the default

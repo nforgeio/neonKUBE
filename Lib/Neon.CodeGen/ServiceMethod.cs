@@ -31,9 +31,18 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ServiceMethod()
+        /// <param name="serviceModel">The parent <see cref="ServiceModel"/>.</param>
+        public ServiceMethod(ServiceModel serviceModel)
         {
+            Covenant.Requires<ArgumentNullException>(serviceModel != null);
+
+            this.ServiceModel = serviceModel;
         }
+
+        /// <summary>
+        /// Returns the parent <see cref="ServiceModel"/>.
+        /// </summary>
+        public ServiceModel ServiceModel { get; private set; }
 
         /// <summary>
         /// Describes the low-level method name, parameters, and result.

@@ -43,7 +43,7 @@ namespace Neon.CodeGen
 
             // Determine the name we'll use for the generated service class.
 
-            var serviceAttribute = sourceType.GetCustomAttribute<ServiceAttribute>();
+            var serviceAttribute = sourceType.GetCustomAttribute<ServiceModelAttribute>();
 
             if (serviceAttribute != null && !string.IsNullOrEmpty(serviceAttribute.Name))
             {

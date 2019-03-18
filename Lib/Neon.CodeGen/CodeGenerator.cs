@@ -277,7 +277,7 @@ namespace Neon.CodeGen
                     continue;
                 }
 
-                var serviceAttribute = type.GetCustomAttribute<ServiceAttribute>();
+                var serviceAttribute = type.GetCustomAttribute<ServiceModelAttribute>();
 
                 if (serviceAttribute != null)
                 {
@@ -380,7 +380,7 @@ namespace Neon.CodeGen
 
             foreach (var methodInfo in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
-                var serviceMethod = new ServiceMethod();
+                var serviceMethod = new ServiceMethod(serviceModel);
 
                 var routeAttribute = methodInfo.GetCustomAttribute<RouteAttribute>();
 
@@ -706,9 +706,11 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.ComponentModel;");
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
+            writer.WriteLine($"using System.Net;");
             writer.WriteLine($"using System.Runtime.Serialization;");
             writer.WriteLine();
             writer.WriteLine($"using Neon.Common;");
+            writer.WriteLine($"using Neon.Net;");
             writer.WriteLine($"using Neon.Serialization;");
             writer.WriteLine();
 
@@ -741,12 +743,29 @@ namespace Neon.CodeGen
 
             if (Settings.ServiceClients)
             {
+                // Multiple service models may be combined into each generated
+                // service client.  These are organized via the [ServiceModel.ClientTypeName]
+                // property.  We're going to determine these groupings below.
+
+                var clientNameToServiceModels = new Dictionary<string, List<ServiceModel>>();
+
+                foreach (var serviceModel in nameToServiceModel.Values)
+                {
+                    if (!clientNameToServiceModels.TryGetValue(serviceModel.ClientTypeName, out var models))
+                    {
+                        clientNameToServiceModels.Add(serviceModel.ClientTypeName, models = new List<ServiceModel>());
+                    }
+
+                    models.Add(serviceModel);
+                }
+
+                // Generate the clients.
+
                 index = 0;
 
-                foreach (var serviceModel in nameToServiceModel.Values
-                    .OrderBy(sm => sm.ClientTypeName.ToLowerInvariant()))
+                foreach (var item in clientNameToServiceModels)
                 {
-                    GenerateServiceClient(serviceModel, index++);
+                    GenerateServiceClient(item.Key, item.Value, index++);
                 }
             }
 
@@ -1337,21 +1356,185 @@ namespace Neon.CodeGen
         /// <summary>
         /// Generates a service client for a one or more related service controllers.
         /// </summary>
-        /// <param name="serviceModel">The service model.</param>
+        /// <param name="clientTypeName">The client type name.</param>
+        /// <param name="serviceModels">One or more service models to be included in the generated output.</param>
         /// <param name="index">Zero based index of the model within the current namespace.</param>
-        private void GenerateServiceClient(ServiceModel serviceModel, int index)
+        private void GenerateServiceClient(string clientTypeName, IEnumerable<ServiceModel> serviceModels, int index)
         {
+            Covenant.Requires<ArgumentNullException>(serviceModels != null);
+            Covenant.Requires<ArgumentException>(serviceModels.Any());
+
+            // Ensure that all of the service models have the same client name.
+
+            var clientNameSet = new HashSet<string>();
+
+            foreach (var serviceModel in serviceModels)
+            {
+                if (!clientNameSet.Contains(serviceModel.ClientTypeName))
+                {
+                    clientNameSet.Add(serviceModel.ClientTypeName);
+                }
+            }
+
+            Covenant.Assert(clientNameSet.Count > 0);
+
+            // Service models may be organized into zero or more client groups by client
+            // group name.  Service methods that are not within a client group will be
+            // generated directly within the class.  Methods within client groups will
+            // be generated in subclasses within the client class.
+            //
+            // We're going collate the service methods into client groups by name,
+            // with the empty name referring to methods that should appear directly
+            // within the generated service class.
+
+            var clientGroups = new Dictionary<string, List<ServiceMethod>>();
+
+            foreach (var serviceModel in serviceModels)
+            {
+                var groupName = serviceModel.ClientGroup ?? string.Empty;
+
+                if (!clientGroups.TryGetValue(groupName, out var clientGroup))
+                {
+                    clientGroups.Add(groupName, clientGroup = new List<ServiceMethod>());
+                }
+
+                foreach (var serviceMethod in serviceModel.Methods)
+                {
+                    clientGroup.Add(serviceMethod);
+                }
+            }
+
+            var rootMethodGroups       = clientGroups.Where(cg => string.IsNullOrEmpty(cg.Key));
+            var nonRootMethodGroups    = clientGroups.Where(cg => !string.IsNullOrEmpty(cg.Key));
+            var hasNonRootMethodGroups = nonRootMethodGroups.Any();
+
+            // $todo(jeff.lill):
+            //
+            // Generate the class and method comments below by parsing any code documentation.
+
             writer.WriteLine();
             writer.WriteLine($"    //-------------------------------------------------------------------------");
-            writer.WriteLine($"    // From: {serviceModel.SourceType.FullName}");
+
+            foreach (var serviceModel in serviceModels)
+            {
+                writer.WriteLine($"    // From: {serviceModel.SourceType.FullName}");
+            }
+
             writer.WriteLine();
-            writer.WriteLine($"    public partial class {serviceModel.ClientTypeName}");
+            writer.WriteLine($"    public partial class {clientTypeName}");
             writer.WriteLine($"    {{");
+
+            if (hasNonRootMethodGroups)
+            {
+                // Generate local [class] definitions for any non-root service
+                // methods here.
+
+                foreach (var clientGroup in nonRootMethodGroups)
+                {
+                    writer.WriteLine($"        public class {clientGroup.Key}");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            private JsonClient client;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            private {clientGroup.Key}(JsonClient client)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                this.client = client;");
+                    writer.WriteLine($"            }}");
+
+                    foreach (var serviceMethod in clientGroup.Value)
+                    {
+                        GenerateServiceMethod(serviceMethod, indent: "    ");
+                    }
+
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                }
+            }
+
+            writer.WriteLine($"        private JsonClient   client;");
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary>");
+            writer.WriteLine($"        /// Constructor.");
+            writer.WriteLine($"        /// </summary>");
+            writer.WriteLine($"        /// <param name=\"handler\">The optional message handler.</param>");
+            writer.WriteLine($"        /// <param name=\"disposeHandler\">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>");
+            writer.WriteLine($"        public {clientTypeName}(HttpMessageHandler handler = null, bool disposeHandler = false)");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            this.client = new JsonClient(handler, disposeHandler);");
+
+            if (hasNonRootMethodGroups)
+            {
+                // Initialize the non-root method group properties.
+
+                foreach (var nonRootGroup in nonRootMethodGroups)
+                {
+                    writer.WriteLine($"            this.{nonRootGroup.Key} = new {nonRootGroup.Key}(this.client);");
+                }
+            }
+
+            writer.WriteLine($"        }}");
+            writer.WriteLine();
+            writer.WriteLine($"        <summary");
+            writer.WriteLine($"        Returns the underlying <see cref=\"JsonClient\"/>.");
+            writer.WriteLine($"        </summary");
+            writer.WriteLine($"        public JsonClient JsonClient => client;");
+            writer.WriteLine();
+            writer.WriteLine($"        <summary");
+            writer.WriteLine($"        Returns the underlying <see cref=\"HttpClient\"/>.");
+            writer.WriteLine($"        </summary");
+            writer.WriteLine($"        public HttpClient HttpClient => client.HttpClient;");
+
+            if (hasNonRootMethodGroups)
+            {
+                // Generate any service group properties.
+
+                foreach (var nonRootGroup in nonRootMethodGroups)
+                {
+                    writer.WriteLine();
+                    writer.WriteLine($"        public {nonRootGroup.Key} {nonRootGroup.Key} {{ get; private set; }}");
+                }
+            }
+
+            // Generate any root service methods here.
+
+            foreach (var rootGroup in rootMethodGroups)
+            {
+                foreach (var serviceMethod in rootGroup.Value)
+                {
+                    GenerateServiceMethod(serviceMethod);
+                }
+            }
+
             writer.WriteLine($"    }}");
         }
 
         /// <summary>
-        /// Returns the name will use for a type when generating type references.
+        /// Generates a service's method code.
+        /// </summary>
+        /// <param name="serviceMethod">The service method.</param>
+        /// <param name="indent">Optionally specifies additional source code indentation.</param>
+        private void GenerateServiceMethod(ServiceMethod serviceMethod, string indent = "")
+        {
+            // $todo(jeff.lill): This is incomplete.
+            // $todo(jeff.lill): Ensure that the parameter and result types are valid.
+            // $todo(jeff.lill): We'll probably need to inspect and modify the result type.
+
+            var sbParameters = new StringBuilder();
+            
+            foreach (var parameter in serviceMethod.MethodInfo.GetParameters())
+            {
+                sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterType)} {parameter.Name}", ", ");
+            }
+
+            writer.WriteLine($"{indent}        void {serviceMethod.Name}({sbParameters})");
+            writer.WriteLine($"{indent}        {{");
+
+            // $todo(jeff.lill): More magic goes here.
+
+            writer.WriteLine($"{indent}        }}");
+        }
+
+        /// <summary>
+        /// Returns the name we'll use for a type when generating type references.
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns>The type name.</returns>
