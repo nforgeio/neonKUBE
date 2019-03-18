@@ -32,6 +32,8 @@ using Microsoft.CodeAnalysis.Text;
 
 using Newtonsoft.Json;
 
+using Neon.Serialization;
+
 // $todo(jeff.lill):
 //
 // At somepoint in the future it would be nice to read any
@@ -97,6 +99,10 @@ namespace Neon.CodeGen
             // Allow the caller to add references.
 
             referenceHandler?.Invoke(references);
+
+            // Add the [Neon.Common] assembly.
+
+            references.Add(typeof(IGeneratedDataModel));
 
             // NOTE: 
             // 
@@ -702,6 +708,9 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.IO;");
             writer.WriteLine($"using System.Runtime.Serialization;");
             writer.WriteLine();
+            writer.WriteLine($"using Neon.Common;");
+            writer.WriteLine($"using Neon.Serialization;");
+            writer.WriteLine();
 
             if (Settings.RoundTrip)
             {
@@ -709,81 +718,13 @@ namespace Neon.CodeGen
                 writer.WriteLine($"using Newtonsoft.Json.Converters;");
                 writer.WriteLine($"using Newtonsoft.Json.Linq;");
                 writer.WriteLine($"using Newtonsoft.Json.Serialization;");
+                writer.WriteLine();
             }
 
             // Open the namespace.
 
             writer.WriteLine($"namespace {Settings.TargetNamespace}");
             writer.WriteLine($"{{");
-
-            //---------------------------------------------
-            // Generate a static class to hold the shared JSON serializer stuff.
-
-            writer.WriteLine($"//-------------------------------------------------------------------------");
-            writer.WriteLine($"// Internal helper types");
-            writer.WriteLine();
-            writer.WriteLine($"    internal static class __Json");
-            writer.WriteLine($"    {{");
-            writer.WriteLine($"        public const string NoHashPropertiesError = \"At least one data model property must be tagged by [{nameof(HashSourceAttribute)}].\";");
-            writer.WriteLine();
-            writer.WriteLine($"        public static readonly JsonSerializerSettings    settings;");
-            writer.WriteLine($"        public static readonly JsonSerializer            serializer;");
-            writer.WriteLine();
-            writer.WriteLine($"        static __Json()");
-            writer.WriteLine($"        {{");
-            writer.WriteLine($"            settings = new JsonSerializerSettings()");
-            writer.WriteLine($"            {{");
-            writer.WriteLine($"                MissingMemberHandling = MissingMemberHandling.Ignore,");
-            writer.WriteLine($"                DateFormatHandling    = DateFormatHandling.IsoDateFormat,");
-            writer.WriteLine($"                DateTimeZoneHandling  = DateTimeZoneHandling.Utc");
-            writer.WriteLine($"            }};");
-            writer.WriteLine();
-            writer.WriteLine($"            settings.Converters.Add(new StringEnumConverter(new DefaultNamingStrategy(), allowIntegerValues: false));");
-            writer.WriteLine();
-            writer.WriteLine($"            serializer = JsonSerializer.Create(settings);");
-            writer.WriteLine($"        }}");
-            writer.WriteLine();
-            writer.WriteLine($"        public static string Serialize(object value, Formatting format = Formatting.None)");
-            writer.WriteLine($"        {{");
-            writer.WriteLine($"            return JsonConvert.SerializeObject(value, format, settings);");
-            writer.WriteLine($"        }}");
-            writer.WriteLine();
-            writer.WriteLine($"        public static T Deserialize<T>(string jsonText)");
-            writer.WriteLine($"        {{");
-            writer.WriteLine($"            return JsonConvert.DeserializeObject<T>(jsonText, settings);");
-            writer.WriteLine($"        }}");
-            writer.WriteLine();
-            writer.WriteLine($"        public static JToken FromObject(object value, Type objectType, string propertyName)");
-            writer.WriteLine($"        {{");
-            writer.WriteLine($"            if (value == null)");
-            writer.WriteLine($"            {{");
-            writer.WriteLine($"                return null;");
-            writer.WriteLine($"            }} ");
-            writer.WriteLine();
-            writer.WriteLine($"            try");
-            writer.WriteLine($"            {{");
-            writer.WriteLine($"                return JToken.FromObject(value, serializer);");
-            writer.WriteLine($"            }}");
-            writer.WriteLine($"            catch (JsonSerializationException e)");
-            writer.WriteLine($"            {{");
-            writer.WriteLine($"                throw new SerializationException($\"Error persisting value to [{{objectType.Name}}.{{propertyName}}]: {{e.Message}}\", e);");
-            writer.WriteLine($"            }}");
-            writer.WriteLine($"        }}");
-            writer.WriteLine($"    }}");
-
-            if (Settings.UxFeatures)
-            {
-                writer.WriteLine();
-                writer.WriteLine($"    public abstract class __NotifyPropertyChanged : INotifyPropertyChanged");
-                writer.WriteLine($"    {{");
-                writer.WriteLine($"        public event PropertyChangedEventHandler PropertyChanged;");
-                writer.WriteLine();
-                writer.WriteLine($"        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)");
-                writer.WriteLine($"        {{");
-                writer.WriteLine($"            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));");
-                writer.WriteLine($"        }}");
-                writer.WriteLine($"    }}");
-            }
 
             //---------------------------------------------
             // Generate the models.
@@ -902,7 +843,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                var baseTypeRef = string.Empty;
+                var baseTypeRef = " : IGeneratedDataModel";
 
                 if (dataModel.IsDerived)
                 {
@@ -912,7 +853,7 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IGeneratedDataModel";
                 }
                 else if (Settings.UxFeatures)
                 {
@@ -927,7 +868,6 @@ namespace Neon.CodeGen
                     //-------------------------------------
                     // Generate the static members
 
-
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Static members:");
                     writer.WriteLine();
@@ -938,7 +878,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            var model = new {dataModel.SourceType.Name}(__Json.Deserialize<JObject>(jsonText));");
+                    writer.WriteLine($"            var model = new {dataModel.SourceType.Name}(SerializationHelper.Deserialize<JObject>(jsonText));");
                     writer.WriteLine();
                     writer.WriteLine($"            model.__Load();");
                     writer.WriteLine($"            return model;");
@@ -1144,7 +1084,7 @@ namespace Neon.CodeGen
 
                             if (property.RequiresObjectification)
                             {
-                                writer.WriteLine($"                    this.{property.Name} = property.Value.ToObject<{resolvedPropertyType}>(__Json.serializer);");
+                                writer.WriteLine($"                    this.{property.Name} = property.Value.ToObject<{resolvedPropertyType}>(SerializationHelper.Serializer);");
                             }
                             else
                             {
@@ -1228,7 +1168,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name}, typeof({dataModel.SourceType.Name}), nameof({property.Name}));");
+                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = SerializationHelper.FromObject(this.{property.Name}, typeof({dataModel.SourceType.Name}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1258,7 +1198,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = __Json.FromObject(this.{property.Name}, typeof({dataModel.SourceType.Name}), nameof({property.Name}));");
+                                        writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = SerializationHelper.FromObject(this.{property.Name}, typeof({dataModel.SourceType.Name}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1285,14 +1225,14 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public override string ToString()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return __Json.Serialize(__JObject, Formatting.None);");
+                    writer.WriteLine($"            return SerializationHelper.Serialize(__JObject, Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return __Json.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
+                    writer.WriteLine($"            return SerializationHelper.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -1362,7 +1302,7 @@ namespace Neon.CodeGen
 
                     if (hashedProperties.Count == 0)
                     {
-                        writer.WriteLine($"            throw new InvalidOperationException(__Json.NoHashPropertiesError);");
+                        writer.WriteLine($"            throw new InvalidOperationException(SerializationHelper.NoHashPropertiesError);");
                     }
                     else
                     {
@@ -1401,6 +1341,13 @@ namespace Neon.CodeGen
         /// <param name="index">Zero based index of the model within the current namespace.</param>
         private void GenerateServiceClient(ServiceModel serviceModel, int index)
         {
+            writer.WriteLine();
+            writer.WriteLine($"    //-------------------------------------------------------------------------");
+            writer.WriteLine($"    // From: {serviceModel.SourceType.FullName}");
+            writer.WriteLine();
+            writer.WriteLine($"    public partial class {serviceModel.ClientTypeName}");
+            writer.WriteLine($"    {{");
+            writer.WriteLine($"    }}");
         }
 
         /// <summary>

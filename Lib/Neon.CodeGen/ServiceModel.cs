@@ -87,7 +87,7 @@ namespace Neon.CodeGen
         public HashSet<string> TargetGroups { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Used to specify type name to use for the generated service client.
+        /// Specifies the class name to use for the generated service client.
         /// </summary>
         public string ClientTypeName { get; set; }
 

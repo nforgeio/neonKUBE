@@ -138,7 +138,7 @@ namespace TestCodeGen
         public object __Instance => instance;
 
         /// <summary>
-        /// Returns the <see cref="JObject"/> backineg the wrapped class.
+        /// Returns the <see cref="JObject"/> backing the wrapped class.
         /// </summary>
         public JObject JObject => (JObject)instanceType.GetProperty("__JObject", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(instance);
 

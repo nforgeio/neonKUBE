@@ -30,6 +30,7 @@ using System.Threading.Tasks;
 
 using Neon.CodeGen;
 using Neon.Common;
+using Neon.Serialization;
 using Neon.Xunit;
 
 using Newtonsoft.Json;
@@ -66,10 +67,16 @@ namespace TestCodeGen
             Covenant.Requires<ArgumentNullException>(assemblyStream != null);
             Covenant.Assert(Current == null);
 
+            AssemblyContext.Current = this;
+
+            // We need the [Neon.Common] assembly.
+
+            base.LoadFromAssemblyPath(typeof(IGeneratedDataModel).Assembly.Location);
+
+            // Load the assembly passed.
+
             this.DefaultNamespace = defaultNamespace;
             this.Assembly         = LoadFromStream(assemblyStream);
-
-            Current = this;
         }
 
         public void Dispose()
