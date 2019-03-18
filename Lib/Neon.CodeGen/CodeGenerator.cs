@@ -33,6 +33,7 @@ using Microsoft.CodeAnalysis.Text;
 using Newtonsoft.Json;
 
 using Neon.Serialization;
+using System.Threading.Tasks;
 
 // $todo(jeff.lill):
 //
@@ -1518,6 +1519,86 @@ namespace Neon.CodeGen
             // $todo(jeff.lill): Ensure that the parameter and result types are valid.
             // $todo(jeff.lill): We'll probably need to inspect and modify the result type.
 
+            // Verify that the method result type is reasonable.
+
+            if (!IsValidMethodType(serviceMethod.MethodInfo.ReturnType, isResultType: true))
+            {
+                Output.Errors.Add($"*** ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] returns unsupported type [{serviceMethod.MethodInfo.ReturnType}].");
+            }
+
+            // Read and normalize the method parameters.
+
+            var parameters = new List<MethodParameter>();
+
+            foreach (var parameterInfo in serviceMethod.MethodInfo.GetParameters())
+            {
+                var methodParameter = new MethodParameter(parameterInfo);
+
+                // Process and normalize the parameter passing attributes.
+
+                var fromAttributeCount = 0;
+                var fromBodyAttribute  = parameterInfo.GetCustomAttribute<FromBodyAttribute>();
+
+                if (fromBodyAttribute != null)
+                {
+                    fromAttributeCount++;
+                    methodParameter.Pass = Pass.AsBody;
+                }
+
+                var fromHeaderAttribute = parameterInfo.GetCustomAttribute<FromHeaderAttribute>();
+
+                if (fromHeaderAttribute != null)
+                {
+                    fromAttributeCount++;
+
+                    methodParameter.Pass          = Pass.AsHeader;
+                    methodParameter.SeralizedName = fromHeaderAttribute.Name ?? parameterInfo.Name;
+                }
+
+                var fromQueryAttribute = parameterInfo.GetCustomAttribute<FromQueryAttribute>();
+
+                if (fromQueryAttribute != null)
+                {
+                    fromAttributeCount++;
+
+                    methodParameter.Pass          = Pass.InQuery;
+                    methodParameter.SeralizedName = fromQueryAttribute.Name ?? parameterInfo.Name;
+                }
+
+                var fromRouteAttribute = parameterInfo.GetCustomAttribute<FromRouteAttribute>();
+
+                if (fromRouteAttribute != null)
+                {
+                    fromAttributeCount++;
+
+                    methodParameter.Pass          = Pass.InRoute;
+                    methodParameter.SeralizedName = fromRouteAttribute.Name ?? parameterInfo.Name;
+                }
+
+                if (fromAttributeCount == 0)
+                {
+                    // Default to [FromQuery] using the parameter name.
+
+                    methodParameter.Pass          = Pass.InQuery;
+                    methodParameter.SeralizedName = parameterInfo.Name;
+                }
+                else if (fromAttributeCount > 1)
+                {
+                    Output.Errors.Add($"*** ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with multiple [FromXXX] attributes.  A maximum of one is allowed.");
+                }
+
+                // Verify that the parameter type is valid.
+
+                if (!IsValidMethodType(parameterInfo.ParameterType))
+                {
+                    Output.Errors.Add($"*** ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with unsupported type [{parameterInfo.ParameterType}].");
+                }
+
+                parameters.Add(methodParameter);
+            }
+
+            // Generate the method signature.
+
             var sbParameters = new StringBuilder();
             
             foreach (var parameter in serviceMethod.MethodInfo.GetParameters())
@@ -1525,12 +1606,83 @@ namespace Neon.CodeGen
                 sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterType)} {parameter.Name}", ", ");
             }
 
-            writer.WriteLine($"{indent}        void {serviceMethod.Name}({sbParameters})");
+            writer.WriteLine($"{indent}        public void {serviceMethod.Name}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
 
             // $todo(jeff.lill): More magic goes here.
 
             writer.WriteLine($"{indent}        }}");
+        }
+
+        /// <summary>
+        /// Determines whether a type can be used as a service method parameter
+        /// or result.
+        /// </summary>
+        /// <param name="type">The type being tested.</param>
+        /// <param name="pass">Indicates how the value will be serialized (ignored when <paramref name="isResultType"/><c>=true</c>).</param>
+        /// <param name="isResultType">Optionally allow <c>void</c> as a method result type.</param>
+        /// <returns><c>true</c> if the type is valid.</returns>
+        private bool IsValidMethodType(Type type, Pass pass, bool isResultType = false)
+        {
+            if (isResultType)
+            {
+                // [void] is always allowed.
+                
+                if (type == typeof(void))
+                {
+                    return isResultType;
+                }
+
+                // Handle Task<T> type checking.
+
+                if (type.IsGenericType)
+                {
+                    var genericType = type.GetGenericTypeDefinition();
+
+                    if (genericType == typeof(Task))
+                    {
+                        var genericArgs = genericType.GetGenericArguments();
+
+                        if (genericArgs.Count() == 0)
+                        {
+                            // This is equivalent to [void].
+
+                            return true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+            }
+
+            if (!type.IsPrimitive && type != typeof(string) && !type.IsEnum && !nameToDataModel.ContainsKey(type.Name))
+            {
+                // Handle Task<T> type checking.
+
+                if (type.IsGenericType)
+                {
+                    var genericType = type.GetGenericTypeDefinition();
+
+                    if (genericType == typeof(Task))
+                    {
+                        var genericArgs = genericType.GetGenericArguments();
+                    }
+                }
+
+                // $todo(jeff.lill):
+                //
+                // We should do a deeper type inspection here to ensure that
+                // any types referenced by generics or arrays are valid too.
+                // We're just going to let this ride for now and accept any
+                // generic or array types.
+
+                return type.IsGenericType || type.IsArray;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>

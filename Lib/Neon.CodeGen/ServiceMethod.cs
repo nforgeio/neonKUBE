@@ -50,6 +50,11 @@ namespace Neon.CodeGen
         public MethodInfo MethodInfo { get; set; }
 
         /// <summary>
+        /// Returns <c>true</c> if the method returns <c>void</c>.
+        /// </summary>
+        public bool IsVoid => MethodInfo.ReturnType == typeof(void);
+
+        /// <summary>
         /// The method name to use when generating code for this method.
         /// </summary>
         public string Name { get; set; }

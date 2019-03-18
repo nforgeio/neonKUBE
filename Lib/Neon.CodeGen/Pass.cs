@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PassParameter.cs
+// FILE:	    Pass.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -37,24 +37,30 @@ using Neon.Serialization;
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Identifies how a service method parameter is passed within a REST
+    /// Specifies how a service method parameter is passed within a REST
     /// service request.
     /// </summary>
-    internal enum PassParameter
+    internal enum Pass
     {
+        /// <summary>
+        /// Passes the parameter as a URI query parameter.  This is the
+        /// default mechanism.
+        /// </summary>
+        InQuery = 0,
+
+        /// <summary>
+        /// Passes the parameter within the URI route template. 
+        /// </summary>
+        InRoute,
+
+        /// <summary>
+        /// Passes the parameter as an HTTP header.
+        /// </summary>
+        AsHeader,
+
         /// <summary>
         /// Passes the parameter as the HTTP request body. 
         /// </summary>
-        AsBody,
-
-        /// <summary>
-        /// Passes the parameter as a URI query parameter.
-        /// </summary>
-        InQuery,
-
-        /// <summary>
-        /// Passes the request within the URI route template. 
-        /// </summary>
-        InRoute
+        AsBody
     }
 }

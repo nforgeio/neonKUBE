@@ -38,7 +38,7 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name">The source header name.</param>
+        /// <param name="name">The HTTP header name.</param>
         public FromHeaderAttribute(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));

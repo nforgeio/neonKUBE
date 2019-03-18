@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FromQueryAttributes.cs
+// FILE:	    FromRouteAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,7 +25,7 @@ namespace Neon.CodeGen
 {
     /// <summary>
     /// Used to indicate that a service endpoint parameter is to be obtained
-    /// by parsing a request URI query parameter.
+    /// by extracting it from the URI route template.
     /// </summary>
     /// <remarks>
     /// By default, this option will look for the query parameter with the same
@@ -33,13 +33,13 @@ namespace Neon.CodeGen
     /// the <see cref="Name"/> property.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Parameter)]
-    public class FromQueryAttribute : Attribute
+    public class FromRouteAttribute : Attribute
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name">The URI query parameter name.</param>
-        public FromQueryAttribute(string name)
+        /// <param name="name">The route template parameter name.</param>
+        public FromRouteAttribute(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 

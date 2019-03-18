@@ -45,6 +45,20 @@ namespace Neon.CodeGen
         /// </summary>
         public ParameterInfo ParameterInfo { get; private set; }
 
+        /// <summary>
+        /// Returns the parameter name.
+        /// </summary>
+        public string Name => ParameterInfo.Name;
 
+        /// <summary>
+        /// Specifies how the parameter shoud be passed to the service endpoint.
+        /// </summary>
+        public Pass Pass { get; set; } = Pass.InQuery;
+
+        /// <summary>
+        /// The parameter or HTTP header name to use when passing the parameter as <see cref="Pass.InQuery"/>
+        /// <see cref="Pass.InRoute"/>, or <see cref="Pass.AsHeader"/>.  This is ignored for <see cref="Pass.AsBody"/>.
+        /// </summary>
+        public string SeralizedName { get; set; }
     }
 }
