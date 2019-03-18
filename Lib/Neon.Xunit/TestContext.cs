@@ -45,7 +45,7 @@ namespace Neon.Xunit
     /// the static <see cref="TestContext.Current"/> property.
     /// </para>
     /// <para>
-    /// You'll generally constructone of these instances at the beginning of your
+    /// You'll generally construct one of these instances at the beginning of your
     /// test method or within a test fixture.  Only one <see cref="TestContext"/>
     /// may be active at any given time, so remember to call <see cref="Dispose"/>
     /// when your test run is commplete.
@@ -122,16 +122,24 @@ namespace Neon.Xunit
         /// </note>
         /// </summary>
         /// <param name="path">The input file path.</param>
+        /// <param name="passwordProvider">
+        /// Optionally specifies the password provider functio to be used to locate the
+        /// password required to decrypt the source file when necessary.  The password will 
+        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
+        /// <paramref name="passwordProvider"/> is <c>null</c>.
+        /// </param>
         /// <exception cref="FileNotFoundException">Thrown if the file doesn't exist.</exception>
         /// <exception cref="FormatException">Thrown for file formatting problems.</exception>
-        public void LoadSettings(string path)
+        public void LoadSettings(string path, Func<string, string> passwordProvider = null)
         {
+            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
+
             if (!File.Exists(path))
             {
                 throw new FileNotFoundException($"File not found: {path}");
             }
 
-            var vault = new NeonVault(KubeHelper.LookupPassword);
+            var vault = new NeonVault(passwordProvider);
             var bytes = vault.Decrypt(path);
 
             using (var ms = new MemoryStream(bytes))
@@ -181,16 +189,24 @@ namespace Neon.Xunit
         /// </note>
         /// </summary>
         /// <param name="path">The input file path.</param>
+        /// <param name="passwordProvider">
+        /// Optionally specifies the password provider functio to be used to locate the
+        /// password required to decrypt the source file when necessary.  The password will 
+        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
+        /// <paramref name="passwordProvider"/> is <c>null</c>.
+        /// </param>
         /// <exception cref="FileNotFoundException">Thrown if the file doesn't exist.</exception>
         /// <exception cref="FormatException">Thrown for file formatting problems.</exception>
-        public void LoadEnvironment(string path)
+        public void LoadEnvironment(string path, Func<string, string> passwordProvider = null)
         {
+            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
+
             if (!File.Exists(path))
             {
                 throw new FileNotFoundException($"File not found: {path}");
             }
 
-            var vault = new NeonVault(KubeHelper.LookupPassword);
+            var vault = new NeonVault(passwordProvider);
             var bytes = vault.Decrypt(path);
 
             using (var ms = new MemoryStream(bytes))
@@ -235,16 +251,24 @@ namespace Neon.Xunit
         /// <see cref="NeonVault"/> as necessary.
         /// </summary>
         /// <param name="path">The file path.</param>
+        /// <param name="passwordProvider">
+        /// Optionally specifies the password provider functio to be used to locate the
+        /// password required to decrypt the source file when necessary.  The password will 
+        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
+        /// <paramref name="passwordProvider"/> is <c>null</c>.
+        /// </param>
         /// <exception cref="FileNotFoundException">Thrown if the file doesn't exist.</exception>
         /// <exception cref="FormatException">Thrown for file formatting problems.</exception>
-        public void LoadFile(string path)
+        public void LoadFile(string path, Func<string, string> passwordProvider = null)
         {
+            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
+
             if (!File.Exists(path))
             {
                 throw new FileNotFoundException($"File not found: {path}");
             }
 
-            var vault = new NeonVault(KubeHelper.LookupPassword);
+            var vault = new NeonVault(passwordProvider);
             var bytes = vault.Decrypt(path);
 
             Files[Path.GetFileName(path)] = bytes;
