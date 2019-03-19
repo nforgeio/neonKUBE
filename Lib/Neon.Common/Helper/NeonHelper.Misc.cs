@@ -660,7 +660,7 @@ namespace Neon.Common
         /// <returns><c>true</c> if the tokens are to be considered as equal.</returns>
         /// <remarks>
         /// <para>
-        /// I have run into a situation in the <see cref="Neon.Couchbase.Dynamic.DynamicEntity"/> implementation
+        /// I have run into a situation in the <c>Neon.Couchbase.Dynamic.DynamicEntity</c> implementation
         /// where I've serialized a Couchbase Lite document and then when loading the updated
         /// revision, <see cref="JToken.EqualityComparer"/> indicates that two properties with
         /// the same name and <c>null</c> values are different.
