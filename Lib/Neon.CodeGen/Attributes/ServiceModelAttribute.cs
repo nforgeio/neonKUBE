@@ -33,18 +33,9 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="controllerType">The service controller type.</param>
-        public ServiceModelAttribute(Type controllerType)
+        public ServiceModelAttribute()
         {
-            Covenant.Requires(controllerType != null);
-
-            this.ControllerType = controllerType;
         }
-
-        /// <summary>
-        /// Returns the source service controller type.
-        /// </summary>
-        public Type ControllerType { get; private set; }
 
         /// <summary>
         /// <para>

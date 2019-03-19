@@ -37,7 +37,7 @@ using Neon.Serialization;
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Specifies how a service method parameter is passed within a REST
+    /// Specifies how a service method value is passed within a REST
     /// service request.
     /// </summary>
     internal enum Pass
@@ -61,6 +61,11 @@ namespace Neon.CodeGen
         /// <summary>
         /// Passes the parameter as the HTTP request body. 
         /// </summary>
-        AsBody
+        AsBody,
+
+        /// <summary>
+        /// Returns the type as a result.
+        /// </summary>
+        AsResult
     }
 }

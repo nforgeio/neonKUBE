@@ -381,7 +381,10 @@ namespace Neon.CodeGen
 
             foreach (var methodInfo in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
-                var serviceMethod = new ServiceMethod(serviceModel);
+                var serviceMethod = new ServiceMethod(serviceModel)
+                {
+                    MethodInfo = methodInfo
+                };
 
                 var routeAttribute = methodInfo.GetCustomAttribute<RouteAttribute>();
 
@@ -518,7 +521,7 @@ namespace Neon.CodeGen
                 }
                 else 
                 {
-                    Output.Errors.Add($"*** ERROR: [{type.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
+                    Output.Errors.Add($"ERROR: [{type.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
 
                     dataModel.BaseTypeName = "int";
                 }
@@ -560,12 +563,12 @@ namespace Neon.CodeGen
                 {
                     if (!nameToDataModel.ContainsKey(implementedInterface.FullName))
                     {
-                        Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model inherits [{implementedInterface.FullName}] which is not defined in a source assembly.");
+                        Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model inherits [{implementedInterface.FullName}] which is not defined in a source assembly.");
                     }
 
                     if (baseInterface != null)
                     {
-                        Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model inherits from multiple base types.  A maximum of one is allowed.");
+                        Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model inherits from multiple base types.  A maximum of one is allowed.");
                     }
 
                     baseInterface = implementedInterface;
@@ -659,7 +662,7 @@ namespace Neon.CodeGen
 
                     if (!nameToDataModel.ContainsKey(propertyType.FullName))
                     {
-                        Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model references type [{propertyType.FullName}] which is not defined in a source assembly.");
+                        Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model references type [{propertyType.FullName}] which is not defined in a source assembly.");
                     }
                 }
             }
@@ -674,14 +677,14 @@ namespace Neon.CodeGen
                 {
                     var returnType = method.MethodInfo.ReturnType;
 
-                    if (!returnType.IsPrimitive && !nameToDataModel.ContainsKey(returnType.FullName))
+                    if (!returnType.IsPrimitive && returnType != typeof(void) && !nameToDataModel.ContainsKey(returnType.FullName))
                     {
-                        Output.Errors.Add($"*** ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] returns [{returnType.FullName}] which is not defined in a source assembly.");
+                        Output.Errors.Add($"ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] returns [{returnType.FullName}] which is not defined in a source assembly.");
                     }
 
                     foreach (var parameter in method.MethodInfo.GetParameters())
                     {
-                        Output.Errors.Add($"*** ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] as argument [{parameter.Name}:{parameter.ParameterType.FullName}] whose type is not defined in a source assembly.");
+                        Output.Errors.Add($"ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] as argument [{parameter.Name}:{parameter.ParameterType.FullName}] whose type is not defined in a source assembly.");
                     }
                 }
             }
@@ -708,7 +711,11 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
             writer.WriteLine($"using System.Net;");
+            writer.WriteLine($"using System.Net.Http;");
+            writer.WriteLine($"using System.Net.Http.Headers;");
             writer.WriteLine($"using System.Runtime.Serialization;");
+            writer.WriteLine($"using System.Text;");
+            writer.WriteLine($"using System.Threading.Tasks;");
             writer.WriteLine();
             writer.WriteLine($"using Neon.Common;");
             writer.WriteLine($"using Neon.Net;");
@@ -869,7 +876,7 @@ namespace Neon.CodeGen
                 {
                     if (!nameToDataModel.ContainsKey(dataModel.BaseTypeName))
                     {
-                        Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: This data model inherits type [{dataModel.BaseTypeName}] which is not defined in a source assembly.");
+                        Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model inherits type [{dataModel.BaseTypeName}] which is not defined in a source assembly.");
                         return;
                     }
 
@@ -891,6 +898,11 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Static members:");
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Deserializes an instance from JSON text.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"jsonText\">The JSON text input.</param>");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{dataModel.SourceType.Name}\"/>.</returns>");
                     writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(string jsonText)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (string.IsNullOrEmpty(jsonText))");
@@ -904,6 +916,11 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            return model;");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Deserializes an instance from a <see cref=\"JObject\"/>.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"jsonText\">The input <see cref=\"JObject\"/>.</param>");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{dataModel.SourceType.Name}\"/>.</returns>");
                     writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(JObject jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (jObject == null)");
@@ -917,6 +934,39 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            return model;");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Deserializes an instance from a <see cref=\"Stream\"/>.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"jsonText\">The input <see cref=\"Stream\"/>.</param>");
+                    writer.WriteLine($"        /// <param name=\"encoding\">Optionally specifies the inout encoding.  This defaults to <see cref=\"Enoding.UTF8\"/>.</param>");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{dataModel.SourceType.Name}\"/>.</returns>");
+                    writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(Stream stream, Encoding encoding = null)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            encoding = encoding ?? Encoding.UTF8;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            if (stream == null)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                throw new ArgumentNullException(nameof(stream));");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            {dataModel.SourceType.Name} model;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            using (var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: false, bufferSize: 8192, leaveOpen: true))");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                model = {dataModel.SourceType.Name}.CreateFrom(reader.ReadToEnd());");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            model.__Load();");
+                    writer.WriteLine($"            return model;");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Compares two instances for equality by performing a deep comparision of all object");
+                    writer.WriteLine($"        /// properties including any hidden properties.  Note that you may pass <c>null</c>.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"value1\">The first value or <c>null</c>.</param>");
+                    writer.WriteLine($"        /// <param name=\"value2\">The second value or <c>null</c>.</param>");
+                    writer.WriteLine($"        /// <returns><c>true</c> if the values are equal.</returns>");
                     writer.WriteLine($"        public static bool operator ==({dataModel.SourceType.Name} value1, {dataModel.SourceType.Name} value2)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            var value1IsNull = object.ReferenceEquals(value1, null);");
@@ -939,6 +989,13 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            }}");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Compares two instances for inequality by performing a deep comparision of all object");
+                    writer.WriteLine($"        /// properties including any hidden properties.  Note that you may pass <c>null</c>.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"value1\">The first value or <c>null</c>.</param>");
+                    writer.WriteLine($"        /// <param name=\"value2\">The second value or <c>null</c>.</param>");
+                    writer.WriteLine($"        /// <returns><c>true</c> if the values are not equal.</returns>");
                     writer.WriteLine($"        public static bool operator !=({dataModel.SourceType.Name} value1, {dataModel.SourceType.Name} value2)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            return !(value1 == value2);");
@@ -965,6 +1022,9 @@ namespace Neon.CodeGen
                 if (!dataModel.IsDerived)
                 {
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Constructs an uninitialized instance.");
+                    writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        public {dataModel.SourceType.Name}()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __JObject = new JObject();");
@@ -979,6 +1039,9 @@ namespace Neon.CodeGen
                 else
                 {
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Constructs an uninitialized instance.");
+                    writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        public {dataModel.SourceType.Name}() : base()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"        }}");
@@ -1027,7 +1090,7 @@ namespace Neon.CodeGen
 
                             default:
 
-                                Output.Errors.Add($"*** ERROR: [{dataModel.SourceType.FullName}]: Service model [{property.Name}] specifies an unsupported [{nameof(DefaultValueHandling)}] value.");
+                                Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: Service model [{property.Name}] specifies an unsupported [{nameof(DefaultValueHandling)}] value.");
                                 defaultValueHandling = "Include";
                                 break;
                         }
@@ -1242,6 +1305,10 @@ namespace Neon.CodeGen
                     //       on another thread should hang their head in shame.
 
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Renders the instance as JSON text.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <returns>The serialized JSON string.</returns>");
                     writer.WriteLine($"        public override string ToString()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
@@ -1249,6 +1316,11 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Renders the instance as JSON text, optionally formatting the output.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name\"indent\">Optionally pass <c>true</c> to format the output.</param>");
+                    writer.WriteLine($"        /// <returns>The serialized JSON string.</returns>");
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
@@ -1261,6 +1333,10 @@ namespace Neon.CodeGen
                     if (!dataModel.IsDerived)
                     {
                         writer.WriteLine();
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// Renders the instances as a <see cref=\"JObject\"/>.");
+                        writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        /// <returns>The cloned <see cref=\"JObject\"/>.</returns>");
                         writer.WriteLine($"        public JObject ToJObject()");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
@@ -1272,6 +1348,10 @@ namespace Neon.CodeGen
                     // Generate handy helper methods.
 
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Returns a deep clone of the instance.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <returns>The cloned instance.</returns>");
                     writer.WriteLine($"        public {dataModel.SourceType.Name} DeepClone()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            lock (__JObject)");
@@ -1281,6 +1361,11 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            }}");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Determines whether the current instance equals another object.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name\"obj\">The other object instance or <c>null</c>.</param>");
+                    writer.WriteLine($"        /// <returns><c>true</c> if the object reference equals the current instance.</returns>");
                     writer.WriteLine($"        public override bool Equals(object obj)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (object.ReferenceEquals(this, obj))");
@@ -1306,6 +1391,15 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            }}");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Calculates the hash code for the instance.");
+                    writer.WriteLine($"        /// <note>");
+                    writer.WriteLine($"        /// At least one of the class properties must be tagged with a <b>[HashSource]</b>");
+                    writer.WriteLine($"        /// for this to work.");
+                    writer.WriteLine($"        /// </note>");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <returns>The calculated hash code.</returns>");
+                    writer.WriteLine($"        /// <exception cref\"InvalidOperationException\">Thrown when no class properties are tagged with <see cref=\"HashSourceAttribute\"/>.</exception>");
                     writer.WriteLine($"        public override int GetHashCode()");
                     writer.WriteLine($"        {{");
 
@@ -1456,7 +1550,7 @@ namespace Neon.CodeGen
             writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Constructor.");
             writer.WriteLine($"        /// </summary>");
-            writer.WriteLine($"        /// <param name=\"handler\">The optional message handler.</param>");
+            writer.WriteLine($"        /// <param name=\"handler\">An optional message handler.  This defaults to a reasonable handler with compression enabled.</param>");
             writer.WriteLine($"        /// <param name=\"disposeHandler\">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>");
             writer.WriteLine($"        public {clientTypeName}(HttpMessageHandler handler = null, bool disposeHandler = false)");
             writer.WriteLine($"        {{");
@@ -1474,15 +1568,38 @@ namespace Neon.CodeGen
 
             writer.WriteLine($"        }}");
             writer.WriteLine();
-            writer.WriteLine($"        <summary");
-            writer.WriteLine($"        Returns the underlying <see cref=\"JsonClient\"/>.");
-            writer.WriteLine($"        </summary");
+            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// Returns the underlying <see cref=\"JsonClient\"/>.");
+            writer.WriteLine($"        /// </summary");
             writer.WriteLine($"        public JsonClient JsonClient => client;");
             writer.WriteLine();
-            writer.WriteLine($"        <summary");
-            writer.WriteLine($"        Returns the underlying <see cref=\"HttpClient\"/>.");
-            writer.WriteLine($"        </summary");
+            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// Returns the underlying <see cref=\"HttpClient\"/>.");
+            writer.WriteLine($"        /// </summary");
             writer.WriteLine($"        public HttpClient HttpClient => client.HttpClient;");
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// Accesses the underlying <see cref=\"HttpClient.Timeout\"/>.");
+            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        public TimeSpan Timeout");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            get => client.Timeout;");
+            writer.WriteLine($"            set => client.Timeout = value;");
+            writer.WriteLine($"        }}");
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// Accesses the underlying <see cref=\"HttpClient.BaseAddress\"/>.");
+            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        public Uri BaseAddress");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            get => client.BaseAddress;");
+            writer.WriteLine($"            set => client.BaseAddress = value;");
+            writer.WriteLine($"        }}");
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// Returns the underlying <see cref=\"HttpClient.DefaultRequestHeaders\"/>.");
+            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        public HttpRequestHeaders DefaultRequestHeaders => client.DefaultRequestHeaders;");
 
             if (hasNonRootMethodGroups)
             {
@@ -1521,9 +1638,9 @@ namespace Neon.CodeGen
 
             // Verify that the method result type is reasonable.
 
-            if (!IsValidMethodType(serviceMethod.MethodInfo.ReturnType, isResultType: true))
+            if (!IsValidMethodType(serviceMethod.MethodInfo.ReturnType, Pass.AsResult))
             {
-                Output.Errors.Add($"*** ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] returns unsupported type [{serviceMethod.MethodInfo.ReturnType}].");
+                Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] returns unsupported type [{serviceMethod.MethodInfo.ReturnType}].");
             }
 
             // Read and normalize the method parameters.
@@ -1584,32 +1701,67 @@ namespace Neon.CodeGen
                 }
                 else if (fromAttributeCount > 1)
                 {
-                    Output.Errors.Add($"*** ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with multiple [FromXXX] attributes.  A maximum of one is allowed.");
+                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with multiple [FromXXX] attributes.  A maximum of one is allowed.");
                 }
 
                 // Verify that the parameter type is valid.
 
-                if (!IsValidMethodType(parameterInfo.ParameterType))
+                if (!IsValidMethodType(parameterInfo.ParameterType, methodParameter.Pass))
                 {
-                    Output.Errors.Add($"*** ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with unsupported type [{parameterInfo.ParameterType}].");
+                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with unsupported type [{parameterInfo.ParameterType}].");
                 }
 
                 parameters.Add(methodParameter);
             }
 
-            // Generate the method signature.
+            // Common code that applies to both of the generated [save] and [unsafe] methods.
 
             var sbParameters = new StringBuilder();
-            
+
             foreach (var parameter in serviceMethod.MethodInfo.GetParameters())
             {
                 sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterType)} {parameter.Name}", ", ");
             }
+            
+            // Generate the [safe] version of the method.
 
-            writer.WriteLine($"{indent}        public void {serviceMethod.Name}({sbParameters})");
+            var returnType   = ResolveTypeReference(serviceMethod.MethodInfo.ReturnType, allowVoid: true);
+
+            if (serviceMethod.IsVoid)
+            {
+                returnType = "Task";
+            }
+            else
+            {
+                returnType = $"Task<{returnType}>";
+            }
+
+            writer.WriteLine();
+            writer.WriteLine($"{indent}        public {returnType} {serviceMethod.Name}Async({sbParameters})");
             writer.WriteLine($"{indent}        {{");
 
-            // $todo(jeff.lill): More magic goes here.
+            writer.WriteLine($"{indent}            throw new NotImplementedException();");
+
+            writer.WriteLine($"{indent}        }}");
+
+            // Generate the [unsafe] version of the method.
+
+            returnType = ResolveTypeReference(serviceMethod.MethodInfo.ReturnType, allowVoid: true);
+
+            if (serviceMethod.IsVoid)
+            {
+                returnType = "Task<ServiceResponse<object>>";
+            }
+            else
+            {
+                returnType = $"Task<ServiceResponse<{returnType}?>";
+            }
+
+            writer.WriteLine();
+            writer.WriteLine($"{indent}        public {returnType} Unsafe{serviceMethod.Name}Async({sbParameters})");
+            writer.WriteLine($"{indent}        {{");
+
+            writer.WriteLine($"{indent}            throw new NotImplementedException();");
 
             writer.WriteLine($"{indent}        }}");
         }
@@ -1619,18 +1771,17 @@ namespace Neon.CodeGen
         /// or result.
         /// </summary>
         /// <param name="type">The type being tested.</param>
-        /// <param name="pass">Indicates how the value will be serialized (ignored when <paramref name="isResultType"/><c>=true</c>).</param>
-        /// <param name="isResultType">Optionally allow <c>void</c> as a method result type.</param>
+        /// <param name="pass">Indicates how the value will be serialized.</param>
         /// <returns><c>true</c> if the type is valid.</returns>
-        private bool IsValidMethodType(Type type, Pass pass, bool isResultType = false)
+        private bool IsValidMethodType(Type type, Pass pass)
         {
-            if (isResultType)
+            if (pass == Pass.AsResult)
             {
                 // [void] is always allowed.
                 
                 if (type == typeof(void))
                 {
-                    return isResultType;
+                    return true;
                 }
 
                 // Handle Task<T> type checking.
@@ -1764,9 +1915,15 @@ namespace Neon.CodeGen
         /// and arrays into account.
         /// </summary>
         /// <param name="type">The referenced type.</param>
+        /// <param name="allowVoid">Optionally allow the <c>void</c> type (for service method results).</param>
         /// <returns>The type reference as a string or <c>null</c> if the type is now valid.</returns>
-        private string ResolveTypeReference(Type type)
+        private string ResolveTypeReference(Type type, bool allowVoid = false)
         {
+            if (allowVoid && type == typeof(void))
+            {
+                return "void";
+            }
+
             if (type.IsPrimitive || !type.IsArray && !type.IsGenericType)
             {
                 return GetTypeName(type);

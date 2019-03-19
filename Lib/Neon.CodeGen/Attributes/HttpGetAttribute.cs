@@ -35,7 +35,7 @@ namespace Neon.CodeGen
         /// <param name="template">The optional routing template.</param>
         public HttpGetAttribute(string template = null)
         {
-            this.Template = template;
+            this.Template   = template;
             this.HttpMethod = "GET";
         }
     }

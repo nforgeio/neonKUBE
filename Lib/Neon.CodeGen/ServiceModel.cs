@@ -67,7 +67,7 @@ namespace Neon.CodeGen
             {
                 if (!routeAttribute.Template.StartsWith("/"))
                 {
-                    codeGenerator.Output.Errors.Add($"*** ERROR: Service [{sourceType.FullName}] has a relative [Route] attribute.  Only absolute service routes are allowed.");
+                    codeGenerator.Output.Errors.Add($"ERROR: Service [{sourceType.FullName}] has a relative [Route] attribute.  Only absolute service routes are allowed.");
                 }
             }
             else

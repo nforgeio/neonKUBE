@@ -59,14 +59,15 @@ namespace Neon.Net
     /// to perform an HTTP without ensuring a non-error HTTP status code.
     /// </para>
     /// <para>
-    /// This class can also handle retrying operations when transient errors are detected.  Set 
-    /// <see cref="SafeRetryPolicy"/> to a <see cref="IRetryPolicy"/> implementation such as
-    /// <see cref="LinearRetryPolicy"/> or <see cref="ExponentialRetryPolicy"/> to enable this.
+    /// This class can also handle retrying operations when transient errors are detected.  Customize 
+    /// <see cref="SafeRetryPolicy"/> and/or <see cref="UnsafeRetryPolicy"/> by setting a <see cref="IRetryPolicy"/> 
+    /// implementation such as <see cref="LinearRetryPolicy"/> or <see cref="ExponentialRetryPolicy"/>.
     /// </para>
     /// <note>
-    /// This class uses a reasonable <see cref="ExponentialRetryPolicy"/> by default.  You can override the default
-    /// retry policy for specific requests using the methods that take an <see cref="IRetryPolicy"/> as their first
-    /// parameter.
+    /// This class initializes <see cref="SafeRetryPolicy"/> to a reasonable <see cref="ExponentialRetryPolicy"/> by default
+    /// and <see cref="UnsafeRetryPolicy"/> to <see cref="NoRetryPolicy"/>.  You can override the default
+    /// retry policy for specific requests using the methods that take an <see cref="IRetryPolicy"/> as 
+    /// their first parameter.
     /// </note>
     /// <note>
     /// <para>
@@ -210,8 +211,7 @@ namespace Neon.Net
         /// <summary>
         /// <para>
         /// The <see cref="IRetryPolicy"/> to be used to detect and retry transient network errors for the
-        /// <b>unsafe</b> methods.  This defaults to <see cref="ExponentialRetryPolicy"/> with the transient 
-        /// detector function set to <see cref="TransientDetector.NetworkOrHttp(Exception)"/>.
+        /// <b>unsafe</b> methods.  This defaults to <see cref="NoRetryPolicy"/>.
         /// </para>
         /// <note>
         /// You may set this to <c>null</c> to disable unsafe transient error retry.
