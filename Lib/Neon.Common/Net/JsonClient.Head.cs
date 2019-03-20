@@ -78,7 +78,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
+                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, null);
 
                         jsonResponse.EnsureSuccess();
@@ -129,7 +129,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
+                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, null);
 
                         jsonResponse.EnsureSuccess();
@@ -184,7 +184,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
+                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, null);
 
                         jsonResponse.EnsureSuccess();
@@ -233,7 +233,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
+                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, null);
                     }
@@ -284,7 +284,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
+                        var httpResponse = await client.HeadAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, headers: headers, activity: logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, null);
                     }

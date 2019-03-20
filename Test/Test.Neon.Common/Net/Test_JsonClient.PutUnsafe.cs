@@ -224,6 +224,72 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task PutUnsafeAsync_Headers()
+        {
+            // Ensure that PUT with query arguments work.
+
+            RequestDoc requestDoc = null;
+
+            using (new MockHttpServer(baseUri,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "PUT")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
+
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = request.Headers["arg1"],
+                        Value2 = request.Headers["arg2"]
+                    };
+
+                    response.ContentType = "application/json";
+
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
+                }))
+            {
+                using (var jsonClient = new JsonClient())
+                {
+                    var headers = new ArgDictionary()
+                    {
+                        { "arg1", "test1" },
+                        { "arg2", "test2" }
+                    };
+
+                    var doc = new RequestDoc()
+                    {
+                        Operation = "FOO",
+                        Arg0      = "Hello",
+                        Arg1      = "World"
+                    };
+
+                    var reply = (await jsonClient.PutUnsafeAsync(baseUri + "info", doc, headers: headers)).As<ReplyDoc>();
+
+                    Assert.Equal("test1", reply.Value1);
+                    Assert.Equal("test2", reply.Value2);
+
+                    Assert.Equal("FOO", requestDoc.Operation);
+                    Assert.Equal("Hello", requestDoc.Arg0);
+                    Assert.Equal("World", requestDoc.Arg1);
+                }
+            };
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync_Dynamic()
         {
             // Ensure that PUT returning a dynamic works.

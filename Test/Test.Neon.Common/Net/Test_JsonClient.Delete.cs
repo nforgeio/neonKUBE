@@ -223,7 +223,7 @@ namespace TestCommon
                         { "arg2", "test2" }
                     };
 
-                    var reply = (await jsonClient.DeleteAsync(baseUri, headers: headers)).As<ReplyDoc>();
+                    var reply = (await jsonClient.DeleteAsync(baseUri + "info", headers: headers)).As<ReplyDoc>();
 
                     Assert.Equal("test1", reply.Value1);
                     Assert.Equal("test2", reply.Value2);

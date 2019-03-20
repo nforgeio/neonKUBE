@@ -178,6 +178,57 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task DeleteUnsafeAsync_Headers()
+        {
+            // Ensure that DELETE with query arguments work.
+
+            using (new MockHttpServer(baseUri,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "DELETE")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = request.Headers["arg1"],
+                        Value2 = request.Headers["arg2"]
+                    };
+
+                    response.ContentType = "application/json";
+
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
+                }))
+            {
+                using (var jsonClient = new JsonClient())
+                {
+                    var headers = new ArgDictionary()
+                    {
+                        { "arg1", "test1" },
+                        { "arg2", "test2" }
+                    };
+
+                    var reply = (await jsonClient.DeleteUnsafeAsync(baseUri + "info", headers: headers)).As<ReplyDoc>();
+
+                    Assert.Equal("test1", reply.Value1);
+                    Assert.Equal("test2", reply.Value2);
+                }
+            };
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteUnsafeAsync_Dynamic()
         {
             // Ensure that DELETE returning a dynamic works.
