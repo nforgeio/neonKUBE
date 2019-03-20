@@ -59,6 +59,6 @@ namespace Neon.CodeGen
         /// The parameter or HTTP header name to use when passing the parameter as <see cref="Pass.InQuery"/>
         /// <see cref="Pass.InRoute"/>, or <see cref="Pass.AsHeader"/>.  This is ignored for <see cref="Pass.AsBody"/>.
         /// </summary>
-        public string SeralizedName { get; set; }
+        public string SerializedName { get; set; }
     }
 }

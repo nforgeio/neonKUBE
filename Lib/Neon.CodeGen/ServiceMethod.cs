@@ -52,7 +52,7 @@ namespace Neon.CodeGen
         /// <summary>
         /// Returns <c>true</c> if the method returns <c>void</c>.
         /// </summary>
-        public bool IsVoid => MethodInfo.ReturnType == typeof(void);
+        public bool IsVoid { get; set; }
 
         /// <summary>
         /// The method name to use when generating code for this method.
@@ -60,7 +60,7 @@ namespace Neon.CodeGen
         public string Name { get; set; }
 
         /// <summary>
-        /// Optionally specifies the route template for this method.
+        /// Specifies the route template for this method.
         /// </summary>
         public string RouteTemplate { get; set; }
 

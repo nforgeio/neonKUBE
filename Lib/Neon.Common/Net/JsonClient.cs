@@ -1108,7 +1108,7 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Performs an HTTP <b>DELETE</b> returning a specific type and ensuring that a success code was returned.
+        /// Performs an HTTP <b>DELETE</b> returning a specific type and ensuring that a success cxode was returned.
         /// </summary>
         /// <typeparam name="TResult">The desired result type.</typeparam>
         /// <param name="uri">The URI</param>

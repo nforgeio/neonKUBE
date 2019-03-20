@@ -65,19 +65,21 @@ namespace TestCodeGen.ServiceModel
     }
 
     [ServiceModel]
-    public interface EmptyController
+    public interface EmptyServiceController
     {
     }
 
     [ServiceModel(Name = "EmptyOverride")]
-    public interface Empty2Controller
+    public interface Empty2ServiceController
     {
     }
 
     [ServiceModel]
-    public interface DefaultsController
+    public interface VoidServiceController
     {
-        void DoNothing();
+        void VoidResult();
+        IActionResult VoidAction();
+        Task VoidTask();
     }
 
     [NoCodeGen]
@@ -127,7 +129,7 @@ namespace TestCodeGen.ServiceModel
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void Defaults()
+        public void VoidService()
         {
             // Verify that we can generate and call a service defined without
             // any special routing (etc) attributes.
