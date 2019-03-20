@@ -38,11 +38,12 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name">The route template parameter name.</param>
-        public FromRouteAttribute(string name)
+        /// <param name="name">
+        /// Optionally specifies URI query parameter name.  This defaults to 
+        /// the actual parameter name.
+        /// </param>
+        public FromRouteAttribute(string name = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-
             this.Name = name;
         }
 

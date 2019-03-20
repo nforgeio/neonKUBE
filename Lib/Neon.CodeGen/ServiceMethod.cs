@@ -37,6 +37,7 @@ namespace Neon.CodeGen
             Covenant.Requires<ArgumentNullException>(serviceModel != null);
 
             this.ServiceModel = serviceModel;
+            this.Parameters   = new List<MethodParameter>();
         }
 
         /// <summary>
@@ -68,5 +69,10 @@ namespace Neon.CodeGen
         /// Specifies the HTTP method to use for invoking the method.
         /// </summary>
         public string HttpMethod { get; set; }
+
+        /// <summary>
+        /// Returns the list of method parameters.
+        /// </summary>
+        public List<MethodParameter> Parameters { get; private set; }
     }
 }

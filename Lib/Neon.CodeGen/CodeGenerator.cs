@@ -398,7 +398,7 @@ namespace Neon.CodeGen
 
                 if (httpAttribute != null)
                 {
-                    serviceMethod.Name       = routeAttribute.Name;
+                    serviceMethod.Name       = httpAttribute.Name;
                     serviceMethod.HttpMethod = httpAttribute.HttpMethod.ToUpperInvariant();
                 }
 
@@ -465,6 +465,80 @@ namespace Neon.CodeGen
 
                         Output.Errors.Add($"ERROR: [{type.FullName}]: This data model defines method [{serviceMethod.Name}] that uses the unsupported HTTP [{serviceMethod.HttpMethod}].");
                         break;
+                }
+
+                // Read and normalize the method parameters.
+
+                foreach (var parameterInfo in serviceMethod.MethodInfo.GetParameters())
+                {
+                    var methodParameter = new MethodParameter(parameterInfo);
+
+                    // Process and normalize the parameter passing attributes.
+
+                    var fromAttributeCount = 0;
+                    var fromBodyAttribute  = parameterInfo.GetCustomAttribute<FromBodyAttribute>();
+
+                    if (fromBodyAttribute != null)
+                    {
+                        fromAttributeCount++;
+                        methodParameter.Pass = Pass.AsBody;
+                    }
+
+                    var fromHeaderAttribute = parameterInfo.GetCustomAttribute<FromHeaderAttribute>();
+
+                    if (fromHeaderAttribute != null)
+                    {
+                        fromAttributeCount++;
+
+                        methodParameter.Pass           = Pass.AsHeader;
+                        methodParameter.SerializedName = fromHeaderAttribute.Name ?? parameterInfo.Name;
+                    }
+
+                    var fromQueryAttribute = parameterInfo.GetCustomAttribute<FromQueryAttribute>();
+
+                    if (fromQueryAttribute != null)
+                    {
+                        fromAttributeCount++;
+
+                        methodParameter.Pass           = Pass.InQuery;
+                        methodParameter.SerializedName = fromQueryAttribute.Name ?? parameterInfo.Name;
+                    }
+
+                    var fromRouteAttribute = parameterInfo.GetCustomAttribute<FromRouteAttribute>();
+
+                    if (fromRouteAttribute != null)
+                    {
+                        fromAttributeCount++;
+
+                        methodParameter.Pass           = Pass.InRoute;
+                        methodParameter.SerializedName = fromRouteAttribute.Name ?? parameterInfo.Name;
+                    }
+
+                    if (fromAttributeCount == 0)
+                    {
+                        // Default to [FromQuery] using the parameter name.
+
+                        methodParameter.Pass           = Pass.InQuery;
+                        methodParameter.SerializedName = parameterInfo.Name;
+                    }
+                    else if (fromAttributeCount > 1)
+                    {
+                        Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with multiple [FromXXX] attributes.  A maximum of one is allowed.");
+                    }
+
+                    // Verify that the parameter type is valid.
+
+                    if (!IsValidMethodType(methodParameter.ParameterInfo.ParameterType, methodParameter.Pass))
+                    {
+                        Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with unsupported type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody].");
+                    }
+
+                    serviceMethod.Parameters.Add(methodParameter);
+                }
+
+                if (serviceMethod.Parameters.Count(p => p.Pass == Pass.AsBody) > 1)
+                {
+                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines more than one parameter tagged with [FromBody].");
                 }
 
                 serviceModel.Methods.Add(serviceMethod);
@@ -691,7 +765,7 @@ namespace Neon.CodeGen
             }
 
             // Ensure that all service method parameter and result types are either
-            // a primitive .NET type, a type implemented within [mscorlib] or a
+            // a primitive .NET type, a type implemented within [mscorlib] or 
             // reference a loaded data model.
 
             foreach (var serviceModel in nameToServiceModel.Values)
@@ -705,9 +779,12 @@ namespace Neon.CodeGen
                         Output.Errors.Add($"ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] returns [{returnType.FullName}] which is not defined as a data model.");
                     }
 
-                    foreach (var parameter in method.MethodInfo.GetParameters())
+                    foreach (var parameter in method.Parameters)
                     {
-                        Output.Errors.Add($"ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] as argument [{parameter.Name}:{parameter.ParameterType.FullName}] whose type is not defined in a source assembly.");
+                        if (!IsValidMethodType(parameter.ParameterInfo.ParameterType, parameter.Pass))
+                        {
+                            Output.Errors.Add($"ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] has argument [{parameter.Name}:{parameter.ParameterInfo.ParameterType.FullName}] whose type is not a defined data model.");
+                        }
                     }
                 }
             }
@@ -741,6 +818,7 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.Threading;");
             writer.WriteLine($"using System.Threading.Tasks;");
             writer.WriteLine();
+            writer.WriteLine($"using Neon.Collections;");
             writer.WriteLine($"using Neon.Common;");
             writer.WriteLine($"using Neon.Diagnostics;");
             writer.WriteLine($"using Neon.Net;");
@@ -1664,85 +1742,7 @@ namespace Neon.CodeGen
                 Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] returns unsupported type [{serviceMethod.MethodInfo.ReturnType}].");
             }
 
-            // Read and normalize the method parameters.
-
-            var parameters = new List<MethodParameter>();
-
-            foreach (var parameterInfo in serviceMethod.MethodInfo.GetParameters())
-            {
-                var methodParameter = new MethodParameter(parameterInfo);
-
-                // Process and normalize the parameter passing attributes.
-
-                var fromAttributeCount = 0;
-                var fromBodyAttribute = parameterInfo.GetCustomAttribute<FromBodyAttribute>();
-
-                if (fromBodyAttribute != null)
-                {
-                    fromAttributeCount++;
-                    methodParameter.Pass = Pass.AsBody;
-                }
-
-                var fromHeaderAttribute = parameterInfo.GetCustomAttribute<FromHeaderAttribute>();
-
-                if (fromHeaderAttribute != null)
-                {
-                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has a parameter using the currently unsupported [FromHeader] attribute.");
-#if TODO
-                    fromAttributeCount++;
-
-                    methodParameter.Pass           = Pass.AsHeader;
-                    methodParameter.SerializedName = fromHeaderAttribute.Name ?? parameterInfo.Name;
-#endif
-                }
-
-                var fromQueryAttribute = parameterInfo.GetCustomAttribute<FromQueryAttribute>();
-
-                if (fromQueryAttribute != null)
-                {
-                    fromAttributeCount++;
-
-                    methodParameter.Pass           = Pass.InQuery;
-                    methodParameter.SerializedName = fromQueryAttribute.Name ?? parameterInfo.Name;
-                }
-
-                var fromRouteAttribute = parameterInfo.GetCustomAttribute<FromRouteAttribute>();
-
-                if (fromRouteAttribute != null)
-                {
-                    fromAttributeCount++;
-
-                    methodParameter.Pass           = Pass.InRoute;
-                    methodParameter.SerializedName = fromRouteAttribute.Name ?? parameterInfo.Name;
-                }
-
-                if (fromAttributeCount == 0)
-                {
-                    // Default to [FromQuery] using the parameter name.
-
-                    methodParameter.Pass           = Pass.InQuery;
-                    methodParameter.SerializedName = parameterInfo.Name;
-                }
-                else if (fromAttributeCount > 1)
-                {
-                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with multiple [FromXXX] attributes.  A maximum of one is allowed.");
-                }
-
-                // Verify that the parameter type is valid.
-
-                if (!IsValidMethodType(parameterInfo.ParameterType, methodParameter.Pass))
-                {
-                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with unsupported type [{parameterInfo.ParameterType}].");
-                }
-
-                parameters.Add(methodParameter);
-            }
-
-            if (parameters.Count(p => p.Pass == Pass.AsBody) > 1)
-            {
-                Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines more than one parameter tagged with [FromBody].");
-            }
-
+            var parameters    = serviceMethod.Parameters;
             var bodyParameter = parameters.FirstOrDefault(p => p.Pass == Pass.AsBody);
 
             //-----------------------------------------------------------------
@@ -1762,11 +1762,13 @@ namespace Neon.CodeGen
 
             // Generate the arguments to be passed to the query methods.
 
-            var sbArgGenerate   = new StringBuilder();   // Will hold the code required to generate the arguments.
-            var sbArguments     = new StringBuilder();   // Will hold the arguments to be passed to the [JsonClient] method.
-            var queryParameters = parameters.Where(p => p.Pass == Pass.InQuery);
-            var routeParameters = parameters.Where(p => p.Pass == Pass.InRoute);
-            var uriRef          = "\"/\"";
+            var sbArgGenerate    = new StringBuilder();   // Will hold the code required to generate the arguments.
+            var sbArguments      = new StringBuilder();   // Will hold the arguments to be passed to the [JsonClient] method.
+            var argSeparator     = ", ";
+            var queryParameters  = parameters.Where(p => p.Pass == Pass.InQuery);
+            var routeParameters  = parameters.Where(p => p.Pass == Pass.InRoute);
+            var headerParameters = parameters.Where(p => p.Pass == Pass.AsHeader);
+            var uriRef           = "\"/\"";
 
             if (routeParameters.Count() > 0 && !string.IsNullOrEmpty(serviceMethod.RouteTemplate))
             {
@@ -1809,11 +1811,39 @@ namespace Neon.CodeGen
                 sbArgGenerate.AppendLine($"{indent}            }};");
             }
 
-            sbArguments.AppendWithSeparator(uriRef, ", ");
+            if (headerParameters.Count() > 0)
+            {
+                if (sbArgGenerate.Length > 0)
+                {
+                    sbArgGenerate.AppendLine();
+                }
+
+                sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary()");
+                sbArgGenerate.AppendLine($"{indent}            {{");
+
+                foreach (var parameter in headerParameters)
+                {
+                    sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", {parameter.Name} }},");
+                }
+
+                sbArgGenerate.AppendLine($"{indent}            }};");
+            }
+
+            sbArguments.AppendWithSeparator(uriRef, argSeparator);
+
+            if (bodyParameter != null)
+            {
+                sbArguments.AppendWithSeparator($"document: {bodyParameter.Name}", argSeparator);
+            }
 
             if (queryParameters.Count() > 0)
             {
-                sbArguments.AppendWithSeparator("args", ", ");
+                sbArguments.AppendWithSeparator("args: args", argSeparator);
+            }
+
+            if (headerParameters.Count() > 0)
+            {
+                sbArguments.AppendWithSeparator("headers: headers", argSeparator);
             }
 
             // Generate the safe and unsafe query method names and 
@@ -1967,32 +1997,16 @@ namespace Neon.CodeGen
                 return ResolveTypeReference(type, isResultType: true) != null;
             }
 
-            if (!type.IsPrimitive && type != typeof(string) && !type.IsEnum && !nameToDataModel.ContainsKey(type.Name))
+            // By default, parameters may only be a primitive type, a string, or an enum.
+            // The only exception is for parameters passed as the request body.
+
+            if (pass == Pass.AsBody)
             {
-                // Handle Task<T> type checking.
-
-                if (type.IsGenericType)
-                {
-                    var genericType = type.GetGenericTypeDefinition();
-
-                    if (genericType == typeof(Task))
-                    {
-                        var genericArgs = genericType.GetGenericArguments();
-                    }
-                }
-
-                // $todo(jeff.lill):
-                //
-                // We should do a deeper type inspection here to ensure that
-                // any types referenced by generics or arrays are valid too.
-                // We're just going to let this ride for now and accept any
-                // generic or array types.
-
-                return type.IsGenericType || type.IsArray;
+                return ResolveTypeReference(type) != null;
             }
             else
             {
-                return false;
+                return type.IsPrimitive || type == typeof(string) || type.IsEnum;
             }
         }
 

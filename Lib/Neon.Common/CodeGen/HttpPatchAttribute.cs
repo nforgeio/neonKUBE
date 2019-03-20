@@ -26,7 +26,7 @@ namespace Neon.CodeGen
     /// <summary>
     /// Used to identify a service endpoint that is triggered via the <b>PATCH</b> method.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Interface)]
+    [AttributeUsage(AttributeTargets.Method)]
     public class HttpPatchAttribute : HttpAttribute
     {
         /// <summary>

@@ -26,7 +26,7 @@ namespace Neon.CodeGen
     /// <summary>
     /// Used to identify a service endpoint that is triggered via the <b>GET</b> method.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Interface)]
+    [AttributeUsage(AttributeTargets.Method)]
     public class HttpGetAttribute : HttpAttribute
     {
         /// <summary>

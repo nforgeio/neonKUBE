@@ -82,6 +82,15 @@ namespace TestCodeGen.ServiceModel
         Task VoidTask();
     }
 
+    [ServiceModel]
+    public interface QueryServiceController
+    {
+        void Test1(int p1, string p2, MyEnum p3);
+
+        [HttpPost]
+        void Test2([FromQuery]int p1, [FromQuery]string p2, [FromBody]SimpleData p3);
+    }
+
     [NoCodeGen]
     public class Test_ServiceModel
     {
