@@ -28,6 +28,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 using Neon.Retry;
@@ -199,9 +200,9 @@ namespace TestCommon
                     requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
 
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/not-json";
 
@@ -257,10 +258,10 @@ namespace TestCommon
                     requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
 
                     var output = new ReplyDoc()
-                        {
-                            Value1 = request.QueryGet("arg1"),
-                            Value2 = request.QueryGet("arg2")
-                        };
+                    {
+                        Value1 = request.QueryGet("arg1"),
+                        Value2 = request.QueryGet("arg2")
+                    };
 
                     response.ContentType = "application/json";
 
@@ -269,6 +270,12 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
+                    var args = new ArgDictionary()
+                    {
+                        { "arg1", "test1" },
+                        { "arg2", "test2" }
+                    };
+
                     var doc = new RequestDoc()
                     {
                         Operation = "FOO",
@@ -276,7 +283,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.OptionsAsync(baseUri + "info?arg1=test1&arg2=test2", doc)).As<ReplyDoc>();
+                    var reply = (await jsonClient.OptionsAsync(baseUri + "info", doc, args: args)).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -317,9 +324,9 @@ namespace TestCommon
                     requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
 
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/json";
 
@@ -375,9 +382,9 @@ namespace TestCommon
                     requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
 
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/not-json";
 

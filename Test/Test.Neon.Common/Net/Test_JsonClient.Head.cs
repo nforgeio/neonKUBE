@@ -27,6 +27,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 using Neon.Retry;
@@ -158,7 +159,13 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    await jsonClient.HeadAsync(baseUri + "info?arg1=test1&arg2=test2");
+                    var args = new ArgDictionary()
+                    {
+                        { "arg1", "test1" },
+                        { "arg2", "test2" }
+                    };
+
+                    await jsonClient.HeadAsync(baseUri + "info", args: args);
                 }
             };
         }

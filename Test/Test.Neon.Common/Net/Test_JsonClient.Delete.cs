@@ -27,6 +27,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Neon.Collections;
 using Neon.Common;
 using Neon.Net;
 using Neon.Retry;
@@ -110,9 +111,9 @@ namespace TestCommon
                     }
 
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/not-json";
 
@@ -153,10 +154,10 @@ namespace TestCommon
                     }
 
                     var output = new ReplyDoc()
-                        {
-                            Value1 = request.QueryGet("arg1"),
-                            Value2 = request.QueryGet("arg2")
-                        };
+                    {
+                        Value1 = request.QueryGet("arg1"),
+                        Value2 = request.QueryGet("arg2")
+                    };
 
                     response.ContentType = "application/json";
 
@@ -165,7 +166,64 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteAsync(baseUri + "info?arg1=test1&arg2=test2")).As<ReplyDoc>();
+                    var args = new ArgDictionary()
+                    {
+                        { "arg1", "test1" },
+                        { "arg2", "test2" }
+                    };
+
+                    var reply = (await jsonClient.DeleteAsync(baseUri + "info", args: args)).As<ReplyDoc>();
+
+                    Assert.Equal("test1", reply.Value1);
+                    Assert.Equal("test2", reply.Value2);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task DeleteAsync_Headers()
+        {
+            // Ensure that DELETE with headers work.
+
+            using (new MockHttpServer(baseUri,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "DELETE")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = request.Headers["arg1"],
+                        Value2 = request.Headers["arg2"]
+                    };
+
+                    response.ContentType = "application/json";
+
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
+                }))
+            {
+                using (var jsonClient = new JsonClient())
+                {
+                    var headers = new ArgDictionary()
+                    {
+                        { "arg1", "test1" },
+                        { "arg2", "test2" }
+                    };
+
+                    var reply = (await jsonClient.DeleteAsync(baseUri, headers: headers)).As<ReplyDoc>();
 
                     Assert.Equal("test1", reply.Value1);
                     Assert.Equal("test2", reply.Value2);
@@ -198,9 +256,9 @@ namespace TestCommon
                     }
 
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/json";
 
@@ -241,9 +299,9 @@ namespace TestCommon
                     }
 
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/not-json";
 
