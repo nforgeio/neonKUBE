@@ -37,6 +37,10 @@ namespace System.Net.Http
     /// </summary>
     public static class HttpClientExtensions
     {
+        private static HttpMethod headMethod    = new HttpMethod("HEAD");
+        private static HttpMethod optionsMethod = new HttpMethod("OPTIONS");
+        private static HttpMethod patchMethod   = new HttpMethod("PATCH");
+
         /// <summary>
         /// Send a DELETE request including an activity ID to the specified Uri as an asynchronous operation.
         /// </summary>
@@ -626,6 +630,150 @@ namespace System.Net.Http
         public static async Task<HttpResponseMessage> PutAsync(this HttpClient client, Uri requestUri, HttpContent content, CancellationToken cancellationToken, LogActivity activity)
         {
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
+
+            request.Content = content;
+
+            if (!string.IsNullOrEmpty(activity.Id))
+            {
+                request.Headers.Add(LogActivity.HttpHeader, activity.Id);
+            }
+
+            return await client.SendAsync(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Send a PATCH request including an activity ID and with a cancellation token as an asynchronous operation.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="content">The content to be sent to the server.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="activity">The <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <returns>The response.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+        public static async Task<HttpResponseMessage> PatchAsync(this HttpClient client, string requestUri, HttpContent content, CancellationToken cancellationToken, LogActivity activity)
+        {
+            var request = new HttpRequestMessage(patchMethod, requestUri);
+
+            request.Content = content;
+
+            if (!string.IsNullOrEmpty(activity.Id))
+            {
+                request.Headers.Add(LogActivity.HttpHeader, activity.Id);
+            }
+
+            return await client.SendAsync(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Send a PATCH request including an activity ID and with a cancellation token as an asynchronous operation.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="content">The content to be sent to the server.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="activity">The <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <returns>The response.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+        public static async Task<HttpResponseMessage> PatchAsync(this HttpClient client, Uri requestUri, HttpContent content, CancellationToken cancellationToken, LogActivity activity)
+        {
+            var request = new HttpRequestMessage(patchMethod, requestUri);
+
+            request.Content = content;
+
+            if (!string.IsNullOrEmpty(activity.Id))
+            {
+                request.Headers.Add(LogActivity.HttpHeader, activity.Id);
+            }
+
+            return await client.SendAsync(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Send a OPTIONS request including an activity ID and with a cancellation token as an asynchronous operation.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="content">The content to be sent to the server.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="activity">The <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <returns>The response.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+        public static async Task<HttpResponseMessage> OptionsAsync(this HttpClient client, string requestUri, HttpContent content, CancellationToken cancellationToken, LogActivity activity)
+        {
+            var request = new HttpRequestMessage(optionsMethod, requestUri);
+
+            request.Content = content;
+
+            if (!string.IsNullOrEmpty(activity.Id))
+            {
+                request.Headers.Add(LogActivity.HttpHeader, activity.Id);
+            }
+
+            return await client.SendAsync(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Send a OPTIONS request including an activity ID and with a cancellation token as an asynchronous operation.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="content">The content to be sent to the server.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="activity">The <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <returns>The response.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+        public static async Task<HttpResponseMessage> OptionsAsync(this HttpClient client, Uri requestUri, HttpContent content, CancellationToken cancellationToken, LogActivity activity)
+        {
+            var request = new HttpRequestMessage(optionsMethod, requestUri);
+
+            request.Content = content;
+
+            if (!string.IsNullOrEmpty(activity.Id))
+            {
+                request.Headers.Add(LogActivity.HttpHeader, activity.Id);
+            }
+
+            return await client.SendAsync(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Send a HEAD request including an activity ID and with a cancellation token as an asynchronous operation.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="content">The content to be sent to the server.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="activity">The <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <returns>The response.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+        public static async Task<HttpResponseMessage> HeadAsync(this HttpClient client, string requestUri, HttpContent content, CancellationToken cancellationToken, LogActivity activity)
+        {
+            var request = new HttpRequestMessage(headMethod, requestUri);
+
+            request.Content = content;
+
+            if (!string.IsNullOrEmpty(activity.Id))
+            {
+                request.Headers.Add(LogActivity.HttpHeader, activity.Id);
+            }
+
+            return await client.SendAsync(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Send a HEAD request including an activity ID and with a cancellation token as an asynchronous operation.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="content">The content to be sent to the server.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="activity">The <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <returns>The response.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+        public static async Task<HttpResponseMessage> HeadAsync(this HttpClient client, Uri requestUri, HttpContent content, CancellationToken cancellationToken, LogActivity activity)
+        {
+            var request = new HttpRequestMessage(headMethod, requestUri);
 
             request.Content = content;
 

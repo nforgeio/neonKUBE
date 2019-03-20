@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_JsonHttp_Delete.cs
+// FILE:	    Test_JsonClient.PostUnsafe.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Net;
 using System.Linq;
@@ -40,9 +41,11 @@ namespace TestCommon
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeletetAsync()
+        public async Task PostUnsafeAsync()
         {
-            // Ensure that DELETE returning an explict type works.
+            // Ensure that POST returning an explict type works.
+
+            RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -50,7 +53,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -62,10 +65,12 @@ namespace TestCommon
                         return;
                     }
 
+                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
+
                     var output = new ReplyDoc()
-                    {
-                        Value1 = "Hello World!"
-                    };
+                        {
+                            Value1 = "Hello World!"
+                        };
 
                     response.ContentType = "application/json";
 
@@ -74,22 +79,31 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteAsync(baseUri + "info")).As<ReplyDoc>();
+                    var doc = new RequestDoc()
+                    {
+                        Operation = "FOO",
+                        Arg0      = "Hello",
+                        Arg1      = "World"
+                    };
+
+                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info", doc)).As<ReplyDoc>();
 
                     Assert.Equal("Hello World!", reply.Value1);
 
-                    reply = await jsonClient.DeleteAsync<ReplyDoc>(baseUri + "info");
-
-                    Assert.Equal("Hello World!", reply.Value1);
+                    Assert.Equal("FOO", requestDoc.Operation);
+                    Assert.Equal("Hello", requestDoc.Arg0);
+                    Assert.Equal("World", requestDoc.Arg1);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteAsync_NotJson()
+        public async Task PostUnsafeAsync_NotJson()
         {
-            // Ensure that DELETE returning a non-JSON content type returns a NULL document.
+            // Ensure that POST returning a non-JSON content type returns a NULL document.
+
+            RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -97,7 +111,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -108,6 +122,8 @@ namespace TestCommon
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         return;
                     }
+
+                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
 
                     var output = new ReplyDoc()
                         {
@@ -121,18 +137,31 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteAsync(baseUri + "info")).As<ReplyDoc>();
+                    var doc = new RequestDoc()
+                    {
+                        Operation = "FOO",
+                        Arg0      = "Hello",
+                        Arg1      = "World"
+                    };
+
+                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info", doc)).As<ReplyDoc>();
 
                     Assert.Null(reply);
+
+                    Assert.Equal("FOO", requestDoc.Operation);
+                    Assert.Equal("Hello", requestDoc.Arg0);
+                    Assert.Equal("World", requestDoc.Arg1);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteAsync_Args()
+        public async Task PostUnsafeAsync_Args()
         {
-            // Ensure that DELETE with query arguments work.
+            // Ensure that POST with query arguments work.
+
+            RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -140,7 +169,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -151,6 +180,8 @@ namespace TestCommon
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         return;
                     }
+
+                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
 
                     var output = new ReplyDoc()
                         {
@@ -165,19 +196,32 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteAsync(baseUri + "info?arg1=test1&arg2=test2")).As<ReplyDoc>();
+                    var doc = new RequestDoc()
+                    {
+                        Operation = "FOO",
+                        Arg0      = "Hello",
+                        Arg1      = "World"
+                    };
+
+                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info?arg1=test1&arg2=test2", doc)).As<ReplyDoc>();
 
                     Assert.Equal("test1", reply.Value1);
                     Assert.Equal("test2", reply.Value2);
+
+                    Assert.Equal("FOO", requestDoc.Operation);
+                    Assert.Equal("Hello", requestDoc.Arg0);
+                    Assert.Equal("World", requestDoc.Arg1);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteAsync_Dynamic()
+        public async Task PostUnsafeAsync_Dynamic()
         {
-            // Ensure that DELETE returning a dynamic works.
+            // Ensure that POST returning a dynamic works.
+
+            RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -185,7 +229,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -196,6 +240,8 @@ namespace TestCommon
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         return;
                     }
+
+                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
 
                     var output = new ReplyDoc()
                         {
@@ -209,18 +255,30 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteAsync(baseUri + "info")).AsDynamic();
+                    dynamic doc = new ExpandoObject();
+
+                    doc.Operation = "FOO";
+                    doc.Arg0      = "Hello";
+                    doc.Arg1      = "World";
+
+                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info", doc)).AsDynamic();
 
                     Assert.Equal("Hello World!", (string)reply.Value1);
+
+                    Assert.Equal("FOO", requestDoc.Operation);
+                    Assert.Equal("Hello", requestDoc.Arg0);
+                    Assert.Equal("World", requestDoc.Arg1);
                 }
-            }
+            };
         }
  
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteAsync_Dynamic_NotJson()
+        public async Task PostUnsafeAsync_Dynamic_NotJson()
         {
-            // Ensure that DELETE returning non-JSON returns a NULL dynamic document.
+            // Ensure that POST returning non-JSON returns a NULL dynamic document.
+
+            RequestDoc requestDoc = null;
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -228,7 +286,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -239,6 +297,8 @@ namespace TestCommon
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         return;
                     }
+
+                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
 
                     var output = new ReplyDoc()
                         {
@@ -252,20 +312,30 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteAsync(baseUri + "info")).AsDynamic();
+                    dynamic doc = new ExpandoObject();
+
+                    doc.Operation = "FOO";
+                    doc.Arg0 = "Hello";
+                    doc.Arg1 = "World";
+
+                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info", doc)).AsDynamic();
 
                     Assert.Null(reply);
+
+                    Assert.Equal("FOO", requestDoc.Operation);
+                    Assert.Equal("Hello", requestDoc.Arg0);
+                    Assert.Equal("World", requestDoc.Arg1);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteAsync_Error()
+        public async Task PostUnsafeAsync_Error()
         {
-            // Ensure that DELETE returning a hard error works.
+            // Ensure that POST returning a hard error works.
 
-            using (new MockHttpServer(baseUri,
+            using(new MockHttpServer(baseUri,
                 async context =>
                 {
                     var response = context.Response;
@@ -277,130 +347,53 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.DeleteAsync(baseUri + "info"));
-                }
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteAsync_Retry()
-        {
-            // Ensure that DELETE will retry after soft errors.
-
-            var attemptCount = 0;
-
-            using (new MockHttpServer(baseUri,
-                async context =>
-                {
-                    var request  = context.Request;
-                    var response = context.Response;
-
-                    if (attemptCount++ == 0)
+                    var doc = new RequestDoc()
                     {
-                        response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-
-                        return;
-                    }
-
-                    var output = new ReplyDoc()
-                    {
-                        Value1 = "Hello World!"
+                        Operation = "FOO",
+                        Arg0      = "Hello",
+                        Arg1      = "World"
                     };
 
-                    response.ContentType = "application/json";
+                    var response = await jsonClient.PostUnsafeAsync(baseUri + "info", doc);
 
-                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
-                }))
-            {
-                using (var jsonClient = new JsonClient())
-                {
-                    var reply = (await jsonClient.DeleteAsync(baseUri + "info")).AsDynamic();
-
-                    Assert.Equal(2, attemptCount);
-                    Assert.Equal("Hello World!", (string)reply.Value1);
+                    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+                    Assert.False(response.IsSuccess);
+                    Assert.Throws<HttpException>(() => response.EnsureSuccess());
                 }
-            }
+            };
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteAsync_NoRetryNull()
+        public async Task PostUnsafeAsync_Retry()
         {
-            // Ensure that DELETE won't retry if [retryPolicy=NULL]
+            // Ensure that POST will retry after soft errors.
 
-            var attemptCount = 0;
+            // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
 
-            using (new MockHttpServer(baseUri,
-                async context =>
-                {
-                    var request  = context.Request;
-                    var response = context.Response;
-
-                    if (attemptCount++ == 0)
-                    {
-                        response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-
-                        return;
-                    }
-
-                    var output = new ReplyDoc()
-                    {
-                        Value1 = "Hello World!"
-                    };
-
-                    response.ContentType = "application/json";
-
-                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
-                }))
-            {
-                using (var jsonClient = new JsonClient())
-                {
-                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.DeleteAsync(null, baseUri + "info"));
-
-                    Assert.Equal(1, attemptCount);
-                }
-            }
+            await Task.Delay(0);
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteAsync_NoRetryExplicit()
+        public async Task PostUnsafeAsync_NoRetryNull()
         {
-            // Ensure that DELETE won't retry if [retryPolicy=NoRetryPolicy]
+            // Ensure that POST won't retry if [retryPolicy=NULL]
 
-            var attemptCount = 0;
+            // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
 
-            using (new MockHttpServer(baseUri,
-                async context =>
-                {
-                    var request  = context.Request;
-                    var response = context.Response;
+            await Task.Delay(0);
+        }
 
-                    if (attemptCount++ == 0)
-                    {
-                        response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+        [Fact(Skip = "TODO")]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task PostUnsafeAsync_NoRetryExplicit()
+        {
+            // Ensure that POST won't retry if [retryPolicy=NoRetryPolicy]
 
-                        return;
-                    }
+            // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
 
-                    var output = new ReplyDoc()
-                    {
-                        Value1 = "Hello World!"
-                    };
-
-                    response.ContentType = "application/json";
-
-                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
-                }))
-            {
-                using (var jsonClient = new JsonClient())
-                {
-                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.DeleteAsync(NoRetryPolicy.Instance, baseUri + "info"));
-
-                    Assert.Equal(1, attemptCount);
-                }
-            }
+            await Task.Delay(0);
         }
     }
 }

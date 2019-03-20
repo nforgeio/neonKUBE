@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_JsonClient_PostUnsafe.cs
+// FILE:	    Test_JsonClient.Head.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,7 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IO;
 using System.Net;
 using System.Linq;
@@ -41,11 +40,9 @@ namespace TestCommon
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync()
+        public async Task HeadAsync()
         {
-            // Ensure that POST returning an explict type works.
-
-            RequestDoc requestDoc = null;
+            // Ensure that HEAD returning an explict type works.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -53,7 +50,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -65,12 +62,10 @@ namespace TestCommon
                         return;
                     }
 
-                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
-
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/json";
 
@@ -79,31 +74,17 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var doc = new RequestDoc()
-                    {
-                        Operation = "FOO",
-                        Arg0      = "Hello",
-                        Arg1      = "World"
-                    };
-
-                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info", doc)).As<ReplyDoc>();
-
-                    Assert.Equal("Hello World!", reply.Value1);
-
-                    Assert.Equal("FOO", requestDoc.Operation);
-                    Assert.Equal("Hello", requestDoc.Arg0);
-                    Assert.Equal("World", requestDoc.Arg1);
+                    await jsonClient.HeadAsync(baseUri + "info");
+                    await jsonClient.HeadAsync<ReplyDoc>(baseUri + "info");
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync_NotJson()
+        public async Task HeadAsync_NotJson()
         {
-            // Ensure that POST returning a non-JSON content type returns a NULL document.
-
-            RequestDoc requestDoc = null;
+            // Ensure that HEAD returning a non-JSON content type returns a NULL document.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -111,7 +92,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -123,12 +104,10 @@ namespace TestCommon
                         return;
                     }
 
-                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
-
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/not-json";
 
@@ -137,31 +116,16 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var doc = new RequestDoc()
-                    {
-                        Operation = "FOO",
-                        Arg0      = "Hello",
-                        Arg1      = "World"
-                    };
-
-                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info", doc)).As<ReplyDoc>();
-
-                    Assert.Null(reply);
-
-                    Assert.Equal("FOO", requestDoc.Operation);
-                    Assert.Equal("Hello", requestDoc.Arg0);
-                    Assert.Equal("World", requestDoc.Arg1);
+                    await jsonClient.HeadAsync(baseUri + "info");
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync_Args()
+        public async Task HeadAsync_Args()
         {
-            // Ensure that POST with query arguments work.
-
-            RequestDoc requestDoc = null;
+            // Ensure that HEAD with query arguments work.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -169,7 +133,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -181,13 +145,11 @@ namespace TestCommon
                         return;
                     }
 
-                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
-
                     var output = new ReplyDoc()
-                        {
-                            Value1 = request.QueryGet("arg1"),
-                            Value2 = request.QueryGet("arg2")
-                        };
+                    {
+                        Value1 = request.QueryGet("arg1"),
+                        Value2 = request.QueryGet("arg2")
+                    };
 
                     response.ContentType = "application/json";
 
@@ -196,32 +158,16 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var doc = new RequestDoc()
-                    {
-                        Operation = "FOO",
-                        Arg0      = "Hello",
-                        Arg1      = "World"
-                    };
-
-                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info?arg1=test1&arg2=test2", doc)).As<ReplyDoc>();
-
-                    Assert.Equal("test1", reply.Value1);
-                    Assert.Equal("test2", reply.Value2);
-
-                    Assert.Equal("FOO", requestDoc.Operation);
-                    Assert.Equal("Hello", requestDoc.Arg0);
-                    Assert.Equal("World", requestDoc.Arg1);
+                    await jsonClient.HeadAsync(baseUri + "info?arg1=test1&arg2=test2");
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync_Dynamic()
+        public async Task HeadAsync_Dynamic()
         {
-            // Ensure that POST returning a dynamic works.
-
-            RequestDoc requestDoc = null;
+            // Ensure that HEAD returning a dynamic works.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -229,7 +175,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -241,12 +187,10 @@ namespace TestCommon
                         return;
                     }
 
-                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
-
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/json";
 
@@ -255,30 +199,16 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    dynamic doc = new ExpandoObject();
-
-                    doc.Operation = "FOO";
-                    doc.Arg0      = "Hello";
-                    doc.Arg1      = "World";
-
-                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info", doc)).AsDynamic();
-
-                    Assert.Equal("Hello World!", (string)reply.Value1);
-
-                    Assert.Equal("FOO", requestDoc.Operation);
-                    Assert.Equal("Hello", requestDoc.Arg0);
-                    Assert.Equal("World", requestDoc.Arg1);
+                    await jsonClient.HeadAsync(baseUri + "info");
                 }
             };
         }
- 
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync_Dynamic_NotJson()
+        public async Task HeadAsync_Dynamic_NotJson()
         {
-            // Ensure that POST returning non-JSON returns a NULL dynamic document.
-
-            RequestDoc requestDoc = null;
+            // Ensure that HEAD returning non-JSON returns a NULL dynamic document.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -286,7 +216,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -298,12 +228,10 @@ namespace TestCommon
                         return;
                     }
 
-                    requestDoc = NeonHelper.JsonDeserialize<RequestDoc>(request.GetBodyText());
-
                     var output = new ReplyDoc()
-                        {
-                            Value1 = "Hello World!"
-                        };
+                    {
+                        Value1 = "Hello World!"
+                    };
 
                     response.ContentType = "application/not-json";
 
@@ -312,30 +240,18 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    dynamic doc = new ExpandoObject();
-
-                    doc.Operation = "FOO";
-                    doc.Arg0 = "Hello";
-                    doc.Arg1 = "World";
-
-                    var reply = (await jsonClient.PostUnsafeAsync(baseUri + "info", doc)).AsDynamic();
-
-                    Assert.Null(reply);
-
-                    Assert.Equal("FOO", requestDoc.Operation);
-                    Assert.Equal("Hello", requestDoc.Arg0);
-                    Assert.Equal("World", requestDoc.Arg1);
+                    await jsonClient.HeadAsync(baseUri + "info");
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync_Error()
+        public async Task HeadAsync_Error()
         {
-            // Ensure that POST returning a hard error works.
+            // Ensure that HEAD returning a hard error works.
 
-            using(new MockHttpServer(baseUri,
+            using (new MockHttpServer(baseUri,
                 async context =>
                 {
                     var response = context.Response;
@@ -347,53 +263,126 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var doc = new RequestDoc()
-                    {
-                        Operation = "FOO",
-                        Arg0      = "Hello",
-                        Arg1      = "World"
-                    };
-
-                    var response = await jsonClient.PostUnsafeAsync(baseUri + "info", doc);
-
-                    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-                    Assert.False(response.IsSuccess);
-                    Assert.Throws<HttpException>(() => response.EnsureSuccess());
+                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.HeadAsync(baseUri + "info"));
                 }
             };
         }
 
-        [Fact(Skip = "TODO")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync_Retry()
+        public async Task HeadAsync_Retry()
         {
-            // Ensure that POST will retry after soft errors.
+            // Ensure that HEAD will retry after soft errors.
 
-            // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
+            var attemptCount = 0;
 
-            await Task.Delay(0);
+            using (new MockHttpServer(baseUri,
+                 async context =>
+                 {
+                     var request  = context.Request;
+                     var response = context.Response;
+
+                     if (attemptCount++ == 0)
+                     {
+                         response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                         return;
+                     }
+
+                     var output = new ReplyDoc()
+                     {
+                         Value1 = "Hello World!"
+                     };
+
+                     response.ContentType = "application/json";
+
+                     await response.WriteAsync(NeonHelper.JsonSerialize(output));
+                 }))
+            {
+                using (var jsonClient = new JsonClient())
+                {
+                    await jsonClient.HeadAsync(baseUri + "info");
+                }
+            };
         }
 
-        [Fact(Skip = "TODO")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync_NoRetryNull()
+        public async Task HeadAsync_NoRetryNull()
         {
-            // Ensure that POST won't retry if [retryPolicy=NULL]
+            // Ensure that HEAD won't retry if [retryPolicy=NULL]
 
-            // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
+            var attemptCount = 0;
 
-            await Task.Delay(0);
+            using (new MockHttpServer(baseUri,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (attemptCount++ == 0)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = "Hello World!"
+                    };
+
+                    response.ContentType = "application/json";
+
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
+                }))
+            {
+                using (var jsonClient = new JsonClient())
+                {
+                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.HeadAsync(null, baseUri + "info"));
+
+                    Assert.Equal(1, attemptCount);
+                }
+            };
         }
 
-        [Fact(Skip = "TODO")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync_NoRetryExplicit()
+        public async Task HeadAsync_NoRetryExplicit()
         {
-            // Ensure that POST won't retry if [retryPolicy=NoRetryPolicy]
+            // Ensure that HEAD won't retry if [retryPolicy=NoRetryPolicy]
 
-            // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
+            var attemptCount = 0;
 
-            await Task.Delay(0);
+            using (new MockHttpServer(baseUri,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (attemptCount++ == 0)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = "Hello World!"
+                    };
+
+                    response.ContentType = "application/json";
+
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
+                }))
+            {
+                using (var jsonClient = new JsonClient())
+                {
+                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.HeadAsync(NoRetryPolicy.Instance, baseUri + "info"));
+
+                    Assert.Equal(1, attemptCount);
+                }
+            };
         }
     }
 }

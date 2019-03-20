@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_JsonClient_DeleteUnsafe.cs
+// FILE:	    Test_JsonClient.HeadUnsafe.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -40,9 +40,9 @@ namespace TestCommon
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync()
+        public async Task HeadUnsafeAsync()
         {
-            // Ensure that DELETE returning an explict type works.
+            // Ensure that HEAD returning an explict type works.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -50,7 +50,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -74,18 +74,16 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteUnsafeAsync(baseUri + "info")).As<ReplyDoc>();
-
-                    Assert.Equal("Hello World!", reply.Value1);
+                    await jsonClient.HeadUnsafeAsync(baseUri + "info");
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync_NotJson()
+        public async Task HeadUnsafeAsync_NotJson()
         {
-            // Ensure that DELETE returning a non-JSON content type returns a NULL document.
+            // Ensure that HEAD returning a non-JSON content type returns a NULL document.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -93,7 +91,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -117,18 +115,16 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteUnsafeAsync(baseUri + "info")).As<ReplyDoc>();
-
-                    Assert.Null(reply);
+                    await jsonClient.HeadUnsafeAsync(baseUri + "info");
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync_Args()
+        public async Task HeadUnsafeAsync_Args()
         {
-            // Ensure that DELETE with query arguments work.
+            // Ensure that HEAD with query arguments work.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -136,7 +132,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -161,19 +157,16 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteUnsafeAsync(baseUri + "info?arg1=test1&arg2=test2")).As<ReplyDoc>();
-
-                    Assert.Equal("test1", reply.Value1);
-                    Assert.Equal("test2", reply.Value2);
+                    await jsonClient.HeadUnsafeAsync(baseUri + "info?arg1=test1&arg2=test2");
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync_Dynamic()
+        public async Task HeadUnsafeAsync_Dynamic()
         {
-            // Ensure that DELETE returning a dynamic works.
+            // Ensure that HEAD returning a dynamic works.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -181,10 +174,10 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                        return;
+                        return ;
                     }
 
                     if (request.Path.ToString() != "/info")
@@ -205,18 +198,16 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteUnsafeAsync(baseUri + "info")).AsDynamic();
-
-                    Assert.Equal("Hello World!", (string)reply.Value1);
+                    await jsonClient.HeadUnsafeAsync(baseUri + "info");
                 }
             };
         }
  
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync_Dynamic_NotJson()
+        public async Task HeadUnsafeAsync_Dynamic_NotJson()
         {
-            // Ensure that DELETE returning non-JSON returns a NULL dynamic document.
+            // Ensure that HEAD returning non-JSON returns a NULL dynamic document.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -224,7 +215,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "DELETE")
+                    if (request.Method != "HEAD")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -248,18 +239,16 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var reply = (await jsonClient.DeleteUnsafeAsync(baseUri + "info")).AsDynamic();
-
-                    Assert.Null(reply);
+                    await jsonClient.HeadUnsafeAsync(baseUri + "info");
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync_Error()
+        public async Task HeadUnsafeAsync_Error()
         {
-            // Ensure that DELETE returning a hard error works.
+            // Ensure that HEAD returning a hard error works.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -273,20 +262,16 @@ namespace TestCommon
             {
                 using (var jsonClient = new JsonClient())
                 {
-                    var response = await jsonClient.DeleteUnsafeAsync(baseUri + "info");
-
-                    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-                    Assert.False(response.IsSuccess);
-                    Assert.Throws<HttpException>(() => response.EnsureSuccess());
+                    await jsonClient.HeadUnsafeAsync(baseUri + "info");
                 }
             };
         }
 
         [Fact(Skip = "TODO")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync_Retry()
+        public async Task HeadUnsafeAsync_Retry()
         {
-            // Ensure that DELETE will retry after soft errors.
+            // Ensure that HEAD will retry after soft errors.
 
             // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
 
@@ -295,9 +280,9 @@ namespace TestCommon
 
         [Fact(Skip = "TODO")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync_NoRetryNull()
+        public async Task HeadUnsafeAsync_NoRetryNull()
         {
-            // Ensure that DELETE won't retry if [retryPolicy=NULL]
+            // Ensure that HEAD won't retry if [retryPolicy=NULL]
 
             // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
 
@@ -306,9 +291,9 @@ namespace TestCommon
 
         [Fact(Skip = "TODO")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync_NoRetryExplicit()
+        public async Task HeadUnsafeAsync_NoRetryExplicit()
         {
-            // Ensure that DELETE won't retry if [retryPolicy=NoRetryPolicy]
+            // Ensure that HEAD won't retry if [retryPolicy=NoRetryPolicy]
 
             // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
 

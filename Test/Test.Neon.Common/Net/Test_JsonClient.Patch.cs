@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_JsonClient_Post.cs
+// FILE:	    Test_JsonClient.Patch.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,9 +41,9 @@ namespace TestCommon
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync()
+        public async Task PatchAsync()
         {
-            // Ensure that POST sending and returning an explict types works.
+            // Ensure that PATCH sending and returning an explict types works.
 
             RequestDoc requestDoc = null;
 
@@ -53,7 +53,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "PATCH")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -86,7 +86,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).As<ReplyDoc>();
+                    var reply = (await jsonClient.PatchAsync(baseUri + "info", doc)).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -94,7 +94,7 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", reply.Value1);
 
-                    reply = await jsonClient.PostAsync<ReplyDoc>(baseUri + "info", doc);
+                    reply = await jsonClient.PatchAsync<ReplyDoc>(baseUri + "info", doc);
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -102,7 +102,7 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", reply.Value1);
 
-                    reply = (await jsonClient.PostAsync(baseUri + "info", @"{""Operation"":""FOO"", ""Arg0"":""Hello"", ""Arg1"":""World""}")).As<ReplyDoc>();
+                    reply = (await jsonClient.PatchAsync(baseUri + "info", @"{""Operation"":""FOO"", ""Arg0"":""Hello"", ""Arg1"":""World""}")).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -115,9 +115,9 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostDynamicAsync()
+        public async Task PatchDynamicAsync()
         {
-            // Ensure that POST sending a dynamic document works.
+            // Ensure that PATCH sending a dynamic document works.
 
             RequestDoc requestDoc = null;
 
@@ -127,7 +127,7 @@ namespace TestCommon
                     var request = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "PATCH")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -159,7 +159,7 @@ namespace TestCommon
                     doc.Arg0      = "Hello";
                     doc.Arg1      = "World";
 
-                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).As<ReplyDoc>();
+                    var reply = (await jsonClient.PatchAsync(baseUri + "info", doc)).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -172,9 +172,9 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_NotJson()
+        public async Task PatchAsync_NotJson()
         {
-            // Ensure that POST returning a non-JSON content type returns a NULL document.
+            // Ensure that PATCH returning a non-JSON content type returns a NULL document.
 
             RequestDoc requestDoc = null;
 
@@ -184,7 +184,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "PATCH")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -217,7 +217,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).As<ReplyDoc>();
+                    var reply = (await jsonClient.PatchAsync(baseUri + "info", doc)).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -230,9 +230,9 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_Args()
+        public async Task PatchAsync_Args()
         {
-            // Ensure that POST with query arguments work.
+            // Ensure that PATCH with query arguments work.
 
             RequestDoc requestDoc = null;
 
@@ -242,7 +242,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "PATCH")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -276,7 +276,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PostAsync(baseUri + "info?arg1=test1&arg2=test2", doc)).As<ReplyDoc>();
+                    var reply = (await jsonClient.PatchAsync(baseUri + "info?arg1=test1&arg2=test2", doc)).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -290,9 +290,9 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_Dynamic()
+        public async Task PatchAsync_Dynamic()
         {
-            // Ensure that POST returning a dynamic works.
+            // Ensure that PATCH returning a dynamic works.
 
             RequestDoc requestDoc = null;
 
@@ -302,7 +302,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "PATCH")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -335,7 +335,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).AsDynamic();
+                    var reply = (await jsonClient.PatchAsync(baseUri + "info", doc)).AsDynamic();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -348,9 +348,9 @@ namespace TestCommon
  
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_Dynamic_NotJson()
+        public async Task PatchAsync_Dynamic_NotJson()
         {
-            // Ensure that POST returning non-JSON returns a NULL dynamic document.
+            // Ensure that PATCH returning non-JSON returns a NULL dynamic document.
 
             RequestDoc requestDoc = null;
 
@@ -360,7 +360,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "PATCH")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -393,7 +393,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).AsDynamic();
+                    var reply = (await jsonClient.PatchAsync(baseUri + "info", doc)).AsDynamic();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -406,9 +406,9 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_Error()
+        public async Task PatchAsync_Error()
         {
-            // Ensure that POST returning a hard error works.
+            // Ensure that PATCH returning a hard error works.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -429,16 +429,16 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PostAsync(baseUri + "info", doc));
+                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PatchAsync(baseUri + "info", doc));
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_Retry()
+        public async Task PatchAsync_Retry()
         {
-            // Ensure that POST will retry after soft errors.
+            // Ensure that PATCH will retry after soft errors.
 
             RequestDoc requestDoc = null;
 
@@ -478,7 +478,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).AsDynamic();
+                    var reply = (await jsonClient.PatchAsync(baseUri + "info", doc)).AsDynamic();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -492,9 +492,9 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_NoRetryNull()
+        public async Task PatchAsync_NoRetryNull()
         {
-            // Ensure that POST won't retry if [retryPolicy=NULL]
+            // Ensure that PATCH won't retry if [retryPolicy=NULL]
 
             var attemptCount = 0;
 
@@ -530,7 +530,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PostAsync(null, baseUri + "info", doc));
+                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PatchAsync(null, baseUri + "info", doc));
 
                     Assert.Equal(1, attemptCount);
                 }
@@ -539,9 +539,9 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_NoRetryExplicit()
+        public async Task PatchAsync_NoRetryExplicit()
         {
-            // Ensure that POST won't retry if [retryPolicy=NoRetryPolicy]
+            // Ensure that PATCH won't retry if [retryPolicy=NoRetryPolicy]
 
             var attemptCount = 0;
 
@@ -577,7 +577,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PostAsync(NoRetryPolicy.Instance, baseUri + "info", doc));
+                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PatchAsync(NoRetryPolicy.Instance, baseUri + "info", doc));
 
                     Assert.Equal(1, attemptCount);
                 }
@@ -586,9 +586,9 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task CustomPayloadAsync()
+        public async Task PatchCustomPayloadAsync()
         {
-            // Ensure that POST uploading a [JsonCustomPayload] works.
+            // Ensure that PATCH uploading a [JsonCustomPayload] works.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -596,7 +596,7 @@ namespace TestCommon
                     var request = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "PATCH")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -625,16 +625,16 @@ namespace TestCommon
                 {
                     var doc = new JsonClientPayload("application/x-www-form-urlencoded", "key1=value1&key2=value2");
 
-                    await jsonClient.PostAsync(baseUri + "info", doc);
+                    await jsonClient.PatchAsync(baseUri + "info", doc);
                 }
             };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_NullPayloadAsync()
+        public async Task PatchAsync_NullPayloadAsync()
         {
-            // Ensure that POST uploading a NULL payload works.
+            // Ensure that PATCH uploading a NULL payload works.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -642,7 +642,7 @@ namespace TestCommon
                     var request = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "POST")
+                    if (request.Method != "PATCH")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -668,7 +668,7 @@ namespace TestCommon
                 {
                     var doc = new JsonClientPayload("application/x-www-form-urlencoded", "key1=value1&key2=value2");
 
-                    await jsonClient.PostAsync(baseUri + "info", doc);
+                    await jsonClient.PatchAsync(baseUri + "info", doc);
                 }
             };
         }

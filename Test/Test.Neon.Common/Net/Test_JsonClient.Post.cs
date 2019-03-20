@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_JsonClient_Put.cs
+// FILE:	    Test_JsonClient.Post.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,8 +17,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Dynamic;
+using System.IO;
 using System.Net;
 using System.Linq;
 using System.Text;
@@ -41,9 +41,9 @@ namespace TestCommon
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync()
+        public async Task PostAsync()
         {
-            // Ensure that PUT sending and returning an explict types works.
+            // Ensure that POST sending and returning an explict types works.
 
             RequestDoc requestDoc = null;
 
@@ -53,7 +53,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "PUT")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -86,7 +86,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PutAsync(baseUri + "info", doc)).As<ReplyDoc>();
+                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -94,7 +94,7 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", reply.Value1);
 
-                    reply = await jsonClient.PutAsync<ReplyDoc>(baseUri + "info", doc);
+                    reply = await jsonClient.PostAsync<ReplyDoc>(baseUri + "info", doc);
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -102,7 +102,7 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", reply.Value1);
 
-                    reply = (await jsonClient.PutAsync(baseUri + "info", @"{""Operation"":""FOO"", ""Arg0"":""Hello"", ""Arg1"":""World""}")).As<ReplyDoc>();
+                    reply = (await jsonClient.PostAsync(baseUri + "info", @"{""Operation"":""FOO"", ""Arg0"":""Hello"", ""Arg1"":""World""}")).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -110,14 +110,14 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", reply.Value1);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutDynamicAsync()
+        public async Task PostDynamicAsync()
         {
-            // Ensure that PUT sending a dynamic document works.
+            // Ensure that POST sending a dynamic document works.
 
             RequestDoc requestDoc = null;
 
@@ -127,7 +127,7 @@ namespace TestCommon
                     var request = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "PUT")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -159,7 +159,7 @@ namespace TestCommon
                     doc.Arg0      = "Hello";
                     doc.Arg1      = "World";
 
-                    var reply = (await jsonClient.PutAsync(baseUri + "info", doc)).As<ReplyDoc>();
+                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -167,14 +167,14 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", reply.Value1);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_NotJson()
+        public async Task PostAsync_NotJson()
         {
-            // Ensure that PUT returning a non-JSON content type returns a NULL document.
+            // Ensure that POST returning a non-JSON content type returns a NULL document.
 
             RequestDoc requestDoc = null;
 
@@ -184,7 +184,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "PUT")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -217,7 +217,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PutAsync(baseUri + "info", doc)).As<ReplyDoc>();
+                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -225,14 +225,14 @@ namespace TestCommon
 
                     Assert.Null(reply);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_Args()
+        public async Task PostAsync_Args()
         {
-            // Ensure that PUT with query arguments work.
+            // Ensure that POST with query arguments work.
 
             RequestDoc requestDoc = null;
 
@@ -242,7 +242,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "PUT")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -276,7 +276,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PutAsync(baseUri + "info?arg1=test1&arg2=test2", doc)).As<ReplyDoc>();
+                    var reply = (await jsonClient.PostAsync(baseUri + "info?arg1=test1&arg2=test2", doc)).As<ReplyDoc>();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -285,14 +285,14 @@ namespace TestCommon
                     Assert.Equal("test1", reply.Value1);
                     Assert.Equal("test2", reply.Value2);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_Dynamic()
+        public async Task PostAsync_Dynamic()
         {
-            // Ensure that PUT returning a dynamic works.
+            // Ensure that POST returning a dynamic works.
 
             RequestDoc requestDoc = null;
 
@@ -302,7 +302,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "PUT")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -335,7 +335,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PutAsync(baseUri + "info", doc)).AsDynamic();
+                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).AsDynamic();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -343,14 +343,14 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", (string)reply.Value1);
                 }
-            }
+            };
         }
  
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_Dynamic_NotJson()
+        public async Task PostAsync_Dynamic_NotJson()
         {
-            // Ensure that PUT returning non-JSON returns a NULL dynamic document.
+            // Ensure that POST returning non-JSON returns a NULL dynamic document.
 
             RequestDoc requestDoc = null;
 
@@ -360,7 +360,7 @@ namespace TestCommon
                     var request  = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "PUT")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -393,7 +393,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PutAsync(baseUri + "info", doc)).AsDynamic();
+                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).AsDynamic();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -401,14 +401,14 @@ namespace TestCommon
 
                     Assert.Null(reply);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_Error()
+        public async Task PostAsync_Error()
         {
-            // Ensure that PUT returning a hard error works.
+            // Ensure that POST returning a hard error works.
 
             using (new MockHttpServer(baseUri,
                 async context =>
@@ -429,16 +429,16 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PutAsync(baseUri + "info", doc));
+                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PostAsync(baseUri + "info", doc));
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_Retry()
+        public async Task PostAsync_Retry()
         {
-            // Ensure that PUT will retry after soft errors.
+            // Ensure that POST will retry after soft errors.
 
             RequestDoc requestDoc = null;
 
@@ -478,7 +478,7 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    var reply = (await jsonClient.PutAsync(baseUri + "info", doc)).AsDynamic();
+                    var reply = (await jsonClient.PostAsync(baseUri + "info", doc)).AsDynamic();
 
                     Assert.Equal("FOO", requestDoc.Operation);
                     Assert.Equal("Hello", requestDoc.Arg0);
@@ -487,14 +487,14 @@ namespace TestCommon
                     Assert.Equal(2, attemptCount);
                     Assert.Equal("Hello World!", (string)reply.Value1);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_NoRetryNull()
+        public async Task PostAsync_NoRetryNull()
         {
-            // Ensure that PUT won't retry if [retryPolicy=NULL]
+            // Ensure that POST won't retry if [retryPolicy=NULL]
 
             var attemptCount = 0;
 
@@ -530,18 +530,18 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PutAsync(null, baseUri + "info", doc));
+                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PostAsync(null, baseUri + "info", doc));
 
                     Assert.Equal(1, attemptCount);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_NoRetryExplicit()
+        public async Task PostAsync_NoRetryExplicit()
         {
-            // Ensure that PUT won't retry if [retryPolicy=NoRetryPolicy]
+            // Ensure that POST won't retry if [retryPolicy=NoRetryPolicy]
 
             var attemptCount = 0;
 
@@ -577,16 +577,62 @@ namespace TestCommon
                         Arg1      = "World"
                     };
 
-                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PutAsync(NoRetryPolicy.Instance, baseUri + "info", doc));
+                    await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PostAsync(NoRetryPolicy.Instance, baseUri + "info", doc));
 
                     Assert.Equal(1, attemptCount);
                 }
-            }
+            };
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_NullPayloadAsync()
+        public async Task Post_CustomPayloadAsync()
+        {
+            // Ensure that POST uploading a [JsonCustomPayload] works.
+
+            using (new MockHttpServer(baseUri,
+                async context =>
+                {
+                    var request = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "POST")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    Assert.Equal("application/x-www-form-urlencoded", request.ContentType);
+                    Assert.Equal("key1=value1&key2=value2", request.GetBodyText());
+
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = "Hello World!"
+                    };
+
+                    response.ContentType = "application/json";
+
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
+                }))
+            {
+                using (var jsonClient = new JsonClient())
+                {
+                    var doc = new JsonClientPayload("application/x-www-form-urlencoded", "key1=value1&key2=value2");
+
+                    await jsonClient.PostAsync(baseUri + "info", doc);
+                }
+            };
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task PostAsync_NullPayloadAsync()
         {
             // Ensure that POST uploading a NULL payload works.
 
@@ -596,7 +642,7 @@ namespace TestCommon
                     var request = context.Request;
                     var response = context.Response;
 
-                    if (request.Method != "PUT")
+                    if (request.Method != "POST")
                     {
                         response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                         return;
@@ -622,7 +668,7 @@ namespace TestCommon
                 {
                     var doc = new JsonClientPayload("application/x-www-form-urlencoded", "key1=value1&key2=value2");
 
-                    await jsonClient.PutAsync(baseUri + "info", doc);
+                    await jsonClient.PostAsync(baseUri + "info", doc);
                 }
             };
         }
