@@ -449,20 +449,14 @@ namespace Neon.CodeGen
                 {
                     case "DELETE":
                     case "GET":
+                    case "HEAD":
+                    case "OPTIONS":
+                    case "PATCH":
                     case "POST":
                     case "PUT":
 
                         // All of these HTTP methods are currently supported.
 
-                        break;
-
-                    case "HEAD":
-                    case "OPTIONS":
-                    case "PATCH":
-
-                        // These HTTP methods aren't currently supported, but will be in the future.
-
-                        Output.Errors.Add($"ERROR: [{type.FullName}]: This data model defines method [{serviceMethod.Name}] that uses the HTTP [{serviceMethod.HttpMethod}] method.  This is not currently supported (but will be in the future).");
                         break;
 
                     default:
@@ -1826,9 +1820,10 @@ namespace Neon.CodeGen
             // verify that each method actually supports sending
             // any [FromBody] object.
 
-            var safeQueryMethod   = string.Empty;
-            var unsafeQueryMethod = string.Empty;
-            var bodyError         = $"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines a parameter with [FromBody] that is not compatable with the HTTP [{serviceMethod.HttpMethod}] method.";
+            var methodReturnsContent = true;
+            var safeQueryMethod      = string.Empty;
+            var unsafeQueryMethod    = string.Empty;
+            var bodyError            = $"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines a parameter with [FromBody] that is not compatible with the HTTP [{serviceMethod.HttpMethod}] method.";
 
             switch (serviceMethod.HttpMethod)
             {
@@ -1855,6 +1850,8 @@ namespace Neon.CodeGen
                     break;
 
                 case "HEAD":
+
+                    methodReturnsContent = false;
 
                     safeQueryMethod   = "HeadAsync";
                     unsafeQueryMethod = "HeadUnsafeAsync";
@@ -1904,7 +1901,7 @@ namespace Neon.CodeGen
 
             var returnType = ResolveTypeReference(serviceMethod.MethodInfo.ReturnType, isResultType: true);
 
-            if (serviceMethod.IsVoid)
+            if (serviceMethod.IsVoid || !methodReturnsContent)
             {
                 returnType = "Task";
             }
@@ -1929,7 +1926,7 @@ namespace Neon.CodeGen
                 writer.WriteLine(sbArgGenerate);
             }
 
-            if (serviceMethod.IsVoid)
+            if (serviceMethod.IsVoid || !methodReturnsContent)
             {
                 writer.WriteLine($"{indent}        await client.{safeQueryMethod}({sbArguments});");
             }

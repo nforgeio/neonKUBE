@@ -47,6 +47,7 @@ namespace Neon.Net
         /// </summary>
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -55,6 +56,7 @@ namespace Neon.Net
         public async Task<JsonResponse> DeleteAsync(
             string              uri, 
             ArgDictionary       args = null, 
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default,
             LogActivity         logActivity = default)
         {
@@ -74,7 +76,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken: cancellationToken, activity: logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -94,6 +96,7 @@ namespace Neon.Net
         /// <typeparam name="TResult">The desired result type.</typeparam>
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -101,7 +104,8 @@ namespace Neon.Net
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<TResult> DeleteAsync<TResult>(
             string              uri, 
-            ArgDictionary       args = null, 
+            ArgDictionary       args = null,
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
@@ -121,7 +125,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken: cancellationToken, activity: logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -144,6 +148,7 @@ namespace Neon.Net
         /// <param name="retryPolicy">The retry policy or <c>null</c> to disable retries.</param>
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -153,6 +158,7 @@ namespace Neon.Net
             IRetryPolicy        retryPolicy,
             string              uri, 
             ArgDictionary       args = null, 
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
@@ -174,7 +180,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken: cancellationToken, activity: logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -193,6 +199,7 @@ namespace Neon.Net
         /// </summary>
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -200,6 +207,7 @@ namespace Neon.Net
         public async Task<JsonResponse> DeleteUnsafeAsync(
             string              uri, 
             ArgDictionary       args = null, 
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
@@ -219,7 +227,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken: cancellationToken, activity: logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -237,6 +245,7 @@ namespace Neon.Net
         /// <param name="retryPolicy">The retry policy or <c>null</c> to disable retries.</param>
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -245,6 +254,7 @@ namespace Neon.Net
             IRetryPolicy        retryPolicy, 
             string              uri, 
             ArgDictionary       args = null, 
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
@@ -266,7 +276,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken: cancellationToken, activity: logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }

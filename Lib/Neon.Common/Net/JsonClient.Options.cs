@@ -48,6 +48,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -57,6 +58,7 @@ namespace Neon.Net
             string              uri, 
             object              document = null, 
             ArgDictionary       args = null, 
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
@@ -76,7 +78,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
+                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -97,6 +99,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="document">Optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -106,6 +109,7 @@ namespace Neon.Net
             string              uri, 
             object              document = null, 
             ArgDictionary       args = null, 
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
@@ -125,7 +129,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
+                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -149,6 +153,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -159,6 +164,7 @@ namespace Neon.Net
             string              uri,
             object              document = null, 
             ArgDictionary       args = null, 
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
@@ -180,7 +186,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
+                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -200,6 +206,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -208,6 +215,7 @@ namespace Neon.Net
             string              uri,
             object              document = null, 
             ArgDictionary       args = null, 
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
@@ -227,7 +235,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
+                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -246,6 +254,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
+        /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
@@ -255,6 +264,7 @@ namespace Neon.Net
             string              uri, 
             object              document = null,
             ArgDictionary       args = null, 
+            ArgDictionary       headers = null,
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
@@ -276,7 +286,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
+                        var httpResponse = await client.OptionsAsync(requestUri, CreateContent(document), cancellationToken: cancellationToken, activity: logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
