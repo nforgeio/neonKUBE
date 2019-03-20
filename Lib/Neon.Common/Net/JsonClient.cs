@@ -342,7 +342,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -350,7 +350,7 @@ namespace Neon.Net
             string              uri, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default,
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -368,7 +368,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -389,7 +389,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -397,7 +397,7 @@ namespace Neon.Net
             string              uri, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -415,7 +415,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -439,7 +439,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -448,7 +448,7 @@ namespace Neon.Net
             string              uri, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -468,7 +468,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -488,14 +488,14 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> GetUnsafeAsync(
             string              uri, 
             ArgDictionary       args = null,
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -513,7 +513,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -532,7 +532,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> GetUnsafeAsync(
@@ -540,7 +540,7 @@ namespace Neon.Net
             string              uri, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -560,7 +560,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -578,7 +578,7 @@ namespace Neon.Net
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -587,7 +587,7 @@ namespace Neon.Net
             object              document = null, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -605,7 +605,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -627,7 +627,7 @@ namespace Neon.Net
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -636,7 +636,7 @@ namespace Neon.Net
             object              document = null,
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -654,7 +654,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -679,7 +679,7 @@ namespace Neon.Net
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -689,7 +689,7 @@ namespace Neon.Net
             object              document = null, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -709,7 +709,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -730,7 +730,7 @@ namespace Neon.Net
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> PutUnsafeAsync(
@@ -738,7 +738,7 @@ namespace Neon.Net
             object              document = null, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -756,7 +756,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateContent(document), cancellationToken, logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -776,7 +776,7 @@ namespace Neon.Net
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> PutUnsafeAsync(
@@ -785,7 +785,7 @@ namespace Neon.Net
             object              document = null,
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -805,7 +805,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PutAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -823,7 +823,7 @@ namespace Neon.Net
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -832,7 +832,7 @@ namespace Neon.Net
             object              document = null, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -850,7 +850,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -872,7 +872,7 @@ namespace Neon.Net
         /// <param name="document">Optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -881,7 +881,7 @@ namespace Neon.Net
             object              document = null, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -899,7 +899,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -924,7 +924,7 @@ namespace Neon.Net
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -934,7 +934,7 @@ namespace Neon.Net
             object              document = null, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -954,7 +954,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -975,7 +975,7 @@ namespace Neon.Net
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> PostUnsafeAsync(
@@ -983,7 +983,7 @@ namespace Neon.Net
             object              document = null, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -1001,7 +1001,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -1021,7 +1021,7 @@ namespace Neon.Net
         /// <param name="document">The optional object to be uploaded as the request payload.</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> PostUnsafeAsync(
@@ -1030,7 +1030,7 @@ namespace Neon.Net
             object              document = null,
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -1050,7 +1050,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, activity);
+                        var httpResponse = await client.PostAsync(requestUri, CreateContent(document), cancellationToken, logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -1067,7 +1067,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -1075,7 +1075,7 @@ namespace Neon.Net
             string              uri, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default,
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -1093,7 +1093,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -1114,7 +1114,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -1122,7 +1122,7 @@ namespace Neon.Net
             string              uri, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -1140,7 +1140,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -1164,7 +1164,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
@@ -1173,7 +1173,7 @@ namespace Neon.Net
             string              uri, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -1193,7 +1193,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
                         var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                         jsonResponse.EnsureSuccess();
@@ -1213,14 +1213,14 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> DeleteUnsafeAsync(
             string              uri, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -1238,7 +1238,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
@@ -1257,7 +1257,7 @@ namespace Neon.Net
         /// <param name="uri">The URI</param>
         /// <param name="args">The optional query arguments.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <param name="activity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
+        /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> DeleteUnsafeAsync(
@@ -1265,7 +1265,7 @@ namespace Neon.Net
             string              uri, 
             ArgDictionary       args = null, 
             CancellationToken   cancellationToken = default, 
-            LogActivity         activity = default)
+            LogActivity         logActivity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -1285,7 +1285,7 @@ namespace Neon.Net
                             throw new ObjectDisposedException(nameof(JsonClient));
                         }
 
-                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, logActivity);
 
                         return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
