@@ -60,7 +60,10 @@ file will be encrypted back to PATH and then be deleted.
 
 The default platform editor will be launched (NotePad.exe for Windows or 
 Vim for OS/x and Linux).  You can customize the editor by setting the EDITOR 
-environment variable to the path to the editor executable file.
+environment with the command line required to launch your favorite editor.
+If $FILE exists in the environment variable, then that will be replaced
+by the tareget file path or else the file path will be appended to the
+command line if $FILE isn't present.
 
 NOTE: You don't need to specify a password name for this command 
       because the password name is saved within encrypted files.

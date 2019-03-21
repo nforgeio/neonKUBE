@@ -1642,8 +1642,15 @@ namespace Neon.Common
         /// <para>
         /// This method will launch the editor specified in the <b>EDITOR</b>
         /// environment variable otherwise it will launch NotePad on Windows
-        /// and Vim on Linux and OS/X.
+        /// and Vim on Linux and OS/X.  <b>EDITOR</b> should be set to the
+        /// command line used to launch the editor with special <b>$FILE</b> 
+        /// parameter.  This will be replaced with the path to the file being 
+        /// edited.
         /// </para>
+        /// <note>
+        /// We'll simply append the file path if <b>$FILE</b> isn't found in
+        /// the <b>EDITOR</b> environment variable.
+        /// </note>
         /// <para>
         /// This method will block until the editor is closed.
         /// </para>
@@ -1661,19 +1668,94 @@ namespace Neon.Common
                 return;
             }
 
+            // Quote the file path if necessary.
+
+            if (path.Contains(' '))
+            {
+                path = $"\"{path}\"";
+            }
+
             var editor = Environment.GetEnvironmentVariable("EDITOR");
 
             if (!string.IsNullOrEmpty(editor))
             {
-                Execute(editor, new object[] { path });
+                if (!editor.Contains("$FILE"))
+                {
+                    editor += $" {path}";
+                }
+                else
+                {
+                    editor = editor.Replace("$FILE", path);
+                }
+
+                // Extract the path to the executable.
+
+                string executablePath;
+                string args;
+
+                if (editor.StartsWith("\""))
+                {
+                    var pos = editor.IndexOf('\"', 1);
+
+                    if (pos == -1)
+                    {
+                        executablePath = editor;
+                        args           = string.Empty;
+                    }
+                    else
+                    {
+                        executablePath = editor.Substring(0, pos);
+                        args           = editor.Substring(pos + 1).Trim();
+                    }
+                }
+                else
+                {
+                    var pos = editor.IndexOf(' ', 1);
+
+                    if (pos == -1)
+                    {
+                        executablePath = editor;
+                        args           = string.Empty;
+                    }
+                    else
+                    {
+                        executablePath = editor.Substring(0, pos);
+                        args           = editor.Substring(pos + 1).Trim();
+                    }
+                }
+
+                // Strip any quotes off the executable path.
+
+                if (executablePath.StartsWith("\""))
+                {
+                    executablePath = executablePath.Substring(1);
+                }
+
+                if (executablePath.EndsWith("\""))
+                {
+                    executablePath = executablePath.Substring(0, executablePath.Length - 1);
+                }
+
+                if (IsWindows)
+                {
+                    // Special case NotePad++ on Windows by adding the [-multiInst]
+                    // option if it's not already present.
+
+                    if (!args.Contains("-multiInst"))
+                    {
+                        args = "-multiInst " + args;
+                    }
+                }
+
+                Execute(executablePath, args);
             }
             else if (IsWindows)
             {
-                Execute("notepad.exe", path);
+                Execute("notepad.exe", new object[] { path });
             }
             else
             {
-                Execute("vim", path);
+                Execute("vim", new object[] { path });
             }
         }
     }
