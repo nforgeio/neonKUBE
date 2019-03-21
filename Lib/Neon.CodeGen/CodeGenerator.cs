@@ -1831,21 +1831,21 @@ namespace Neon.CodeGen
 
             // Generate the method parameter definition.
 
+            var argSeparator = ", ";
             var sbParameters = new StringBuilder();
 
             foreach (var parameter in serviceMethod.MethodInfo.GetParameters())
             {
-                sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterType)} {parameter.Name}", ", ");
+                sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterType)} {parameter.Name}", argSeparator);
             }
 
-            sbParameters.AppendWithSeparator("CancellationToken cancellationToken = default", ", ");
-            sbParameters.AppendWithSeparator("LogActivity logActivity = default", ", ");
+            sbParameters.AppendWithSeparator("CancellationToken cancellationToken = default", argSeparator);
+            sbParameters.AppendWithSeparator("LogActivity logActivity = default", argSeparator);
 
             // Generate the arguments to be passed to the query methods.
 
             var sbArgGenerate    = new StringBuilder();   // Will hold the code required to generate the arguments.
             var sbArguments      = new StringBuilder();   // Will hold the arguments to be passed to the [JsonClient] method.
-            var argSeparator     = ", ";
             var routeParameters  = new List<MethodParameter>();
             var headerParameters = parameters.Where(p => p.Pass == Pass.AsHeader);
             var uriRef           = $"\"{serviceMethod.RouteTemplate}\"";
@@ -2008,6 +2008,9 @@ namespace Neon.CodeGen
             {
                 sbArguments.AppendWithSeparator("headers: headers", argSeparator);
             }
+
+            sbArguments.AppendWithSeparator("cancellationToken: cancellationToken", argSeparator);
+            sbArguments.AppendWithSeparator("logActivity: logActivity", argSeparator);
 
             // Generate the safe and unsafe query method names and 
             // verify that each method actually supports sending
