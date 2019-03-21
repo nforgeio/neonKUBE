@@ -1665,7 +1665,7 @@ namespace Neon.CodeGen
             }
 
             writer.WriteLine();
-            writer.WriteLine($"    public partial class {clientTypeName}");
+            writer.WriteLine($"    public partial class {clientTypeName} : IDisposable");
             writer.WriteLine($"    {{");
 
             if (hasNonRootMethodGroups)
@@ -1695,6 +1695,7 @@ namespace Neon.CodeGen
             }
 
             writer.WriteLine($"        private JsonClient   client;");
+            writer.WriteLine($"        private bool         isDisposed = false;");
             writer.WriteLine();
             writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Constructor.");
@@ -1715,6 +1716,40 @@ namespace Neon.CodeGen
                 }
             }
 
+            writer.WriteLine($"        }}");
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// Finalizer.");
+            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        ~{clientTypeName}()");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"             Dispose(false);");
+            writer.WriteLine($"        }}");
+            writer.WriteLine();
+            writer.WriteLine($"        /// <inheritdoc/>");
+            writer.WriteLine($"        public void Dispose()");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"        }}");
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary>");
+            writer.WriteLine($"        /// Releases any important resources associated with the instance.");
+            writer.WriteLine($"        /// </summary>");
+            writer.WriteLine($"        /// <param name=\"disposing\">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>");
+            writer.WriteLine($"        protected void Dispose(bool disposing)");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            if (isDisposed)");
+            writer.WriteLine($"            {{");
+            writer.WriteLine($"                return;");
+            writer.WriteLine($"            }}");
+            writer.WriteLine();
+            writer.WriteLine($"            client.Dispose();");
+            writer.WriteLine();
+            writer.WriteLine($"            if (disposing)");
+            writer.WriteLine($"            {{");
+            writer.WriteLine($"                GC.SuppressFinalize(this);");
+            writer.WriteLine($"            }}");
+            writer.WriteLine();
+            writer.WriteLine($"            isDisposed = true;");
             writer.WriteLine($"        }}");
             writer.WriteLine();
             writer.WriteLine($"        /// <summary");
