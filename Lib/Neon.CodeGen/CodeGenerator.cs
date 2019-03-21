@@ -1813,7 +1813,7 @@ namespace Neon.CodeGen
             var argSeparator     = ", ";
             var routeParameters  = new List<MethodParameter>();
             var headerParameters = parameters.Where(p => p.Pass == Pass.AsHeader);
-            var uriRef           = $"\"{ConcatRoutes(serviceMethod.RouteTemplate, serviceMethod.Name)}\"";
+            var uriRef           = $"\"{serviceMethod.RouteTemplate}\"";
 
             foreach (var routeParameter in parameters.Where(p => p.Pass == Pass.InRoute))
             {
@@ -1876,14 +1876,14 @@ namespace Neon.CodeGen
                 //
                 // When a service method has a [Route] attribute that defines a route template, 
                 // we're going to treat any parameter that has no other [FromXXX] attribute as
-                // if it is tagged by a [FromRoute] attribute.
+                // if it was tagged by a [FromRoute] attribute.
 
                 if (sbArgGenerate.Length > 0)
                 {
                     sbArgGenerate.AppendLine();
                 }
 
-                var route     = ConcatRoutes(serviceMethod.ServiceModel.RouteTemplate, serviceMethod.RouteTemplate);
+                var route     = serviceMethod.RouteTemplate;
                 var uri       = route;
                 var uriVerify = route;
 
@@ -1930,7 +1930,14 @@ namespace Neon.CodeGen
 
                 foreach (var parameter in queryParameters)
                 {
-                    sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", {parameter.Name} }},");
+                    if (parameter.ParameterInfo.ParameterType.IsEnum)
+                    {
+                        sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", NeonHelper.EnumToString({parameter.Name}) }},");
+                    }
+                    else
+                    {
+                        sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", {parameter.Name} }},");
+                    }
                 }
 
                 sbArgGenerate.AppendLine($"{indent}            }};");
