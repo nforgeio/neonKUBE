@@ -45,13 +45,9 @@ decrypting input files.
 
 USAGE:
 
-    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG ""^VAR""
-    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG ""^^VAR-FILE""
-    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG ""^^^PATH""
-
-IMPORTANT: You must quote any arguments with leading caret (^) characters
-           as ahown above because to prevent the Windows shell will from
-           ignoring and removing them.
+    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG _.VAR
+    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG _..VAR-FILE
+    neon run [OPTIONS] [VARIABLES...] -- COMMAND ARG _...PATH
 
 ARGUMENTS:
 
@@ -65,18 +61,18 @@ ARGUMENTS:
     ARG             - Zero or more command line arguments that will be passed
                       to the command unmodified
 
-    ""^VAR""          - The ^ prefix indicates that the environment variable
+    _.VAR           - The ""."" prefix indicates that the environment variable
                       named VAR should replace this argument before 
                       executing the command
 
-    ""^^VAR-FILE""    - The ^^ prefix indicates that the VAR-FILE text file
+    _..VAR-FILE     - The "".."" prefix indicates that the VAR-FILE text file
                       should be written (decrypting if necessary) to a secure 
                       temporary file and that any environment references
                       like $<<VAR>> will be replaced by the variable value.
                       The command line will be updated to reference the
                       temporary file.
 
-    ""^^PATH""        - The ^^^ prefix indicates that the file at the PATH
+    _...PATH        - The ""..."" prefix indicates that the file at the PATH
                       should be temporarily decrypted (if necessary) and
                       the command line will be updated to reference the
                       temporary file.
@@ -108,7 +104,7 @@ Examples
 
 Inject the PATH environment variable value into a sub-command:
 
-    neon run -- echo ^PATH
+    neon run -- echo .PATH
 
 Read a VARIABLES file and inject a variable into a sub-command:
 
@@ -116,22 +112,18 @@ Read a VARIABLES file and inject a variable into a sub-command:
     # Lines beginning with ""#"" are ignored as comments
     MYVAR=hello
 
-    neon run variables.txt -- echo ""^MYVAR""
-
-Use a command line option set an environment variable:
-
-    neon run --MYVAR=hello -- echo ""^MYHVAR""
+    neon run variables.txt -- echo _.MYVAR
 
 Inject an environment variable into a text file:
 
     [file.txt]:
     $<<MYVAR>>
 
-    neon neon run --MYVAR=hello -- cat ""^^file.txt""
+    neon neon run --MYVAR=hello -- cat _..file.txt
 
 Pass a potentially encrypted file:
 
-    neon neon run -- cat ""^^^encrypted.txt""
+    neon neon run -- cat _...encrypted.txt
 ";
 
         NeonVault vault = new NeonVault(Program.LookupPassword);
@@ -241,12 +233,12 @@ Pass a potentially encrypted file:
                 {
                     var arg = subcommand[i];
 
-                    if (arg.StartsWith("^^^"))
+                    if (arg.StartsWith("_..."))
                     {
                         // Argument is a reference to a potentially encrypted 
                         // file that needs to be passed decrypted.
 
-                        var path = arg.Substring(3);
+                        var path = arg.Substring(4);
 
                         if (!File.Exists(path))
                         {
@@ -266,12 +258,12 @@ Pass a potentially encrypted file:
 
                         subcommand[i] = path;
                     }
-                    else if (arg.StartsWith("^^"))
+                    else if (arg.StartsWith("_.."))
                     {
                         // Argument is a reference to a potentially encrypted text file
                         // with environment variable references we'll need to update.
 
-                        var path = arg.Substring(2);
+                        var path = arg.Substring(3);
 
                         if (!File.Exists(path))
                         {
@@ -313,7 +305,7 @@ Pass a potentially encrypted file:
 
                         File.WriteAllText(path, processed);
                     }
-                    else if (arg.StartsWith("^"))
+                    else if (arg.StartsWith("_."))
                     {
                         // Argument is a reference to an environment variable.
 
@@ -330,7 +322,7 @@ Pass a potentially encrypted file:
                         if (value == null)
                         {
                             Console.Error.WriteLine($"*** ERROR: Subcommand argument [{arg}] references an undefined environment variable.");
-                            Program.Exit(1);
+                            Program.Exit(2);
                         }
 
                         subcommand[i] = value;

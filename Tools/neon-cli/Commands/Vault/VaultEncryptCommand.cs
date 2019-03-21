@@ -117,9 +117,21 @@ NOTE: The search for the [.password-name] file will start from the
             {
                 passwordName = commandLine.GetOption("--password-name");
 
-                if (string.IsNullOrEmpty(passwordName))
+                if (passwordName != null && string.IsNullOrWhiteSpace(passwordName))
+                {
+                    Console.Error.WriteLine("*** ERROR: [--password-name] specifies a blank password.");
+                    Program.Exit(1);
+                }
+
+                if (passwordName == null)
                 {
                     passwordName = commandLine.GetOption("-p");
+
+                    if (passwordName != null && string.IsNullOrWhiteSpace(passwordName))
+                    {
+                        Console.Error.WriteLine("*** ERROR: [-p] specifies a blank password.");
+                        Program.Exit(1);
+                    }
                 }
             }
 
