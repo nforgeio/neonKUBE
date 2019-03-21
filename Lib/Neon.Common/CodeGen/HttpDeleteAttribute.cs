@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RouteAttribute.cs
+// FILE:	    HttpDeleteAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -24,37 +24,19 @@ using System.Text;
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Used to customize request routing at the service level.
+    /// Used to identify a service endpoint that is triggered via the <b>DELETE</b> method.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Method)]
-    public class RouteAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Method)]
+    public class HttpDeleteAttribute : HttpAttribute
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="template">The optional routing template.</param>
-        public RouteAttribute(string template = null)
+        public HttpDeleteAttribute(string template = null)
         {
-            this.Template = template;
-        }
-
-        /// <summary>
-        /// The route template.
-        /// </summary>
-        public string Template { get; set; }
-
-        /// <summary>
-        /// The route name.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-        /// </summary>
-        public int Order
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
+            this.Template   = template;
+            this.HttpMethod = "DELETE";
         }
     }
 }

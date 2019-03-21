@@ -83,12 +83,78 @@ namespace TestCodeGen.ServiceModel
     }
 
     [ServiceModel]
+    public interface MethodsServiceController
+    {
+        void TestDefault(int p1, string p2, MyEnum p3);
+
+        [HttpGet]
+        void TestGet(int p1, string p2, MyEnum p3);
+
+        [HttpDelete]
+        void TestDelete([FromQuery]int p1, [FromQuery]string p2);
+
+        [HttpGet]
+        void TestHead([FromQuery]int p1, [FromQuery]string p2);
+
+        [HttpOptions]
+        void TestOptions([FromQuery]int p1, [FromQuery]string p2);
+
+        [HttpPatch]
+        void TestPatch([FromQuery]int p1, [FromQuery]string p2, [FromBody]SimpleData p3);
+
+        [HttpPost]
+        void TestPost([FromQuery]int p1, [FromQuery]string p2, [FromBody]SimpleData p3);
+
+        [HttpPost]
+        void TestPut([FromQuery]int p1, [FromQuery]string p2, [FromBody]SimpleData p3);
+    }
+
+    [ServiceModel]
     public interface QueryServiceController
     {
         void Test1(int p1, string p2, MyEnum p3);
 
+        void Test2(int p1, string p2, MyEnum p3);
+
         [HttpPost]
-        void Test2([FromQuery]int p1, [FromQuery]string p2, [FromBody]SimpleData p3);
+        void Test3([FromQuery]int p1, [FromQuery]string p2, [FromBody]SimpleData p3);
+    }
+
+    [ServiceModel]
+    public interface RouteService1
+    {
+        void Test1(int p1, string p2, MyEnum p3);
+
+        [Route("{p1}/{p2}/{p3}")]
+        void Test2(int p1, string p2, MyEnum p3);
+    }
+
+    [ServiceModel]
+    [RoutePrefix("/api/v1/service2")]
+    public interface RouteService2
+    {
+        void Test1(int p1, string p2, MyEnum p3);
+
+        [Route("{p1}/{p2}/{p3}")]
+        void Test2(int p1, string p2, MyEnum p3);
+    }
+
+    [ServiceModel(Name = "MyRouteService")]
+    [RoutePrefix("/api/v1/service3")]
+    public interface RouteService3
+    {
+        [Route("")]
+        void Test1(int p1, string p2, MyEnum p3);
+
+        [Route("/{p1}/{p2}/{p3}")]
+        void Test2(int p1, string p2, MyEnum p3);
+    }
+
+    [ServiceModel]
+    public interface ComplexService
+    {
+        [Route("/{p1}/{p2}/{p3}")]
+        ComplexData Test2(int p1, string p2, MyEnum p3);
     }
 
     [NoCodeGen]
@@ -139,6 +205,26 @@ namespace TestCodeGen.ServiceModel
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public void VoidService()
+        {
+            // Verify that we can generate and call a service defined without
+            // any special routing (etc) attributes.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_ServiceModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void RouteService1()
         {
             // Verify that we can generate and call a service defined without
             // any special routing (etc) attributes.

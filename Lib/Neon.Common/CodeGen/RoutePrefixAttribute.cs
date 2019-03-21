@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RouteAttribute.cs
+// FILE:	    RoutePrefixAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -24,37 +24,23 @@ using System.Text;
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Used to customize request routing at the service level.
+    /// Used to customize the request route prefix service level.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Method)]
-    public class RouteAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Interface)]
+    public class RoutePrefixAttribute : Attribute
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="template">The optional routing template.</param>
-        public RouteAttribute(string template = null)
+        /// <param name="prefix">The optional routing template.</param>
+        public RoutePrefixAttribute(string prefix = null)
         {
-            this.Template = template;
+            this.Prefix = prefix;
         }
 
         /// <summary>
-        /// The route template.
+        /// The route prefix.
         /// </summary>
-        public string Template { get; set; }
-
-        /// <summary>
-        /// The route name.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-        /// </summary>
-        public int Order
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
-        }
+        public string Prefix { get; set; }
     }
 }

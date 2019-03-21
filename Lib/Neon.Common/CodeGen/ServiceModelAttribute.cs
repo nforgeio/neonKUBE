@@ -40,14 +40,12 @@ namespace Neon.CodeGen
         /// <summary>
         /// <para>
         /// The name to be used for the generated client class
-        /// or <c>null</c> if a default name is to be used.  This
-        /// can be used to group the methods from multiple service
-        /// model (AKA controller) classes into a common generated
-        /// service client.
+        /// and for transmitting requests to the server or <c>null</c>
+        /// if the name is to be derived from the tagged class name.
         /// </para>
         /// <note>
         /// The tagged controller class name will be used as the default
-        /// name, stripping "Controller" off the end of he class name
+        /// name, stripping "Controller" off the end of the class name
         /// if present.
         /// </note>
         /// </summary>

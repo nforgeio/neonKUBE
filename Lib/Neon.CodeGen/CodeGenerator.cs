@@ -25,6 +25,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -51,7 +52,9 @@ namespace Neon.CodeGen
         //---------------------------------------------------------------------
         // Static members
 
-        private static MetadataReference cachedNetStandard;
+        private static MetadataReference    cachedNetStandard;
+        private static Regex                routeConstraintRegex = new Regex(@"\{[^:\}]*:[^:\}]*\}");   // Matches route template parameters with constraints (like: "{param:int}").
+        private static Regex                routeParameterRegex  = new Regex(@"\{([^\}]*)\}");          // Matches route template parameters (like: "{param}") capturing just the parameter name.
 
         /// <summary>
         /// Compiles C# source code into an assembly.
@@ -362,14 +365,14 @@ namespace Neon.CodeGen
         /// <summary>
         /// Loads the required information for a service model type.
         /// </summary>
-        /// <param name="type">The source type.</param>
-        private void LoadServiceModel(Type type)
+        /// <param name="serviceModelType">The source type.</param>
+        private void LoadServiceModel(Type serviceModelType)
         {
-            var serviceModel = new ServiceModel(type, this);
+            var serviceModel = new ServiceModel(serviceModelType, this);
 
-            nameToServiceModel[type.FullName] = serviceModel;
+            nameToServiceModel[serviceModelType.FullName] = serviceModel;
 
-            foreach (var targetAttibute in type.GetCustomAttributes<TargetAttribute>())
+            foreach (var targetAttibute in serviceModelType.GetCustomAttributes<TargetAttribute>())
             {
                 if (!serviceModel.TargetGroups.Contains(targetAttibute.Group))
                 {
@@ -377,9 +380,25 @@ namespace Neon.CodeGen
                 }
             }
 
+            // Handle any [Route] or [RoutePrefix] tags.
+
+            var serviceRouteAttribute = serviceModelType.GetCustomAttribute<RouteAttribute>();
+
+            if (serviceRouteAttribute != null)
+            {
+                Output.Errors.Add($"ERROR: [{serviceModelType.FullName}]: This data model defines method is tagged with the [Route] attribute.  This is not currently supported.");
+            }
+
+            var serviceRoutePrefixAttribute = serviceModelType.GetCustomAttribute<RoutePrefixAttribute>();
+
+            if (serviceRoutePrefixAttribute != null && !string.IsNullOrEmpty(serviceRoutePrefixAttribute.Prefix))
+            {
+                serviceModel.RouteTemplate = serviceRoutePrefixAttribute.Prefix;
+            }
+
             // Walk the service methods to load their metadata.
 
-            foreach (var methodInfo in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var methodInfo in serviceModelType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
                 var serviceMethod = new ServiceMethod(serviceModel)
                 {
@@ -391,7 +410,18 @@ namespace Neon.CodeGen
 
                 if (routeAttribute != null)
                 {
+                    // Verify that the template doesn't specify any route constraints.
+
+                    if (!string.IsNullOrEmpty(routeAttribute.Template) && routeConstraintRegex.IsMatch(routeAttribute.Template))
+                    {
+                        Output.Errors.Add($"ERROR: [{serviceModelType.FullName}]: This data model defines method [{serviceMethod.Name}] that defines a route template with a constraint.  Constraints are not currently supported.");
+                    }
+
                     serviceMethod.RouteTemplate = ConcatRoutes(serviceModel.RouteTemplate, routeAttribute.Template);
+                }
+                else
+                {
+                    serviceMethod.RouteTemplate = ConcatRoutes(serviceModel.RouteTemplate, methodInfo.Name);
                 }
 
                 var httpAttribute = methodInfo.GetCustomAttribute<HttpAttribute>();
@@ -463,7 +493,7 @@ namespace Neon.CodeGen
 
                         // These HTTP methods are not supported.
 
-                        Output.Errors.Add($"ERROR: [{type.FullName}]: This data model defines method [{serviceMethod.Name}] that uses the unsupported HTTP [{serviceMethod.HttpMethod}].");
+                        Output.Errors.Add($"ERROR: [{serviceModelType.FullName}]: This data model defines method [{serviceMethod.Name}] that uses the unsupported HTTP [{serviceMethod.HttpMethod}].");
                         break;
                 }
 
@@ -1061,6 +1091,22 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"            model.__Load();");
                     writer.WriteLine($"            return model;");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Deserializes an instance from a <see cref=\"JsonResponse\"/>.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"response\">The input <see cref=\"JsonResponse\"/>.</param>");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{dataModel.SourceType.Name}\"/>.</returns>");
+                    writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(JsonResponse response)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            if (response == null)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                throw new ArgumentNullException(nameof(response));");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            return CreateFrom(response.JsonText);");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1765,32 +1811,111 @@ namespace Neon.CodeGen
             var sbArgGenerate    = new StringBuilder();   // Will hold the code required to generate the arguments.
             var sbArguments      = new StringBuilder();   // Will hold the arguments to be passed to the [JsonClient] method.
             var argSeparator     = ", ";
-            var queryParameters  = parameters.Where(p => p.Pass == Pass.InQuery);
-            var routeParameters  = parameters.Where(p => p.Pass == Pass.InRoute);
+            var routeParameters  = new List<MethodParameter>();
             var headerParameters = parameters.Where(p => p.Pass == Pass.AsHeader);
-            var uriRef           = "\"/\"";
+            var uriRef           = $"\"{ConcatRoutes(serviceMethod.RouteTemplate, serviceMethod.Name)}\"";
 
-            if (routeParameters.Count() > 0 && !string.IsNullOrEmpty(serviceMethod.RouteTemplate))
+            foreach (var routeParameter in parameters.Where(p => p.Pass == Pass.InRoute))
             {
+                routeParameters.Add(routeParameter);
+            }
+
+            if (!string.IsNullOrEmpty(serviceMethod.RouteTemplate))
+            {
+                // NOTE:
+                //
+                // When a service method has a [Route] attribute that defines a route template, 
+                // we're going to treat any parameter not tagged with a [FromXXX] attribute as
+                // if it is tagged by a [FromRoute] attribute when the parameter name matches
+                // a reference in the route template.
+
+                // Extract the parameter names from the route template.
+
+                var templateParameters = new HashSet<string>();
+
+                foreach (Match match in routeParameterRegex.Matches(serviceMethod.RouteTemplate))
+                {
+                    var param = match.Groups[1].Value;
+
+                    if (!templateParameters.Contains(param))
+                    {
+                        templateParameters.Add(param);
+                    }
+                }
+
+                // Compare the parameters without a [FromXXX] attribute against the
+                // the route template parameters by name, assigning [Pass.InRoute]
+                // to any of these.
+                // 
+                // NOTE: Parameters will be assigned [Pass.InQuery] by default when
+                //       no  [FromXXX] tag was present, so all we need to do is to
+                //       check for the absence of a [FromQuery] attribute.
+
+                foreach (var parameter in serviceMethod.Parameters)
+                {
+                    var noFromXXX = parameter.ParameterInfo.GetCustomAttribute<FromQueryAttribute>() == null;
+
+                    if (noFromXXX && templateParameters.Contains(parameter.ParameterInfo.Name))
+                    {
+                        parameter.Pass = Pass.InRoute;
+
+                        routeParameters.Add(parameter);
+                    }
+                }
+            }
+
+            // The query parameters include those that have [Pass.InQuery].
+
+            var queryParameters = parameters.Where(p => p.Pass == Pass.InQuery);
+
+            // We're ready to generate the method code.
+
+            if (!string.IsNullOrEmpty(serviceMethod.RouteTemplate))
+            {
+                // NOTE:
+                //
+                // When a service method has a [Route] attribute that defines a route template, 
+                // we're going to treat any parameter that has no other [FromXXX] attribute as
+                // if it is tagged by a [FromRoute] attribute.
+
                 if (sbArgGenerate.Length > 0)
                 {
                     sbArgGenerate.AppendLine();
                 }
 
-                sbArgGenerate.AppendLine($"{indent}            var uri = \"{serviceMethod.RouteTemplate}\";");
-                sbArgGenerate.AppendLine();
+                var route     = ConcatRoutes(serviceMethod.ServiceModel.RouteTemplate, serviceMethod.RouteTemplate);
+                var uri       = route;
+                var uriVerify = route;
 
-                foreach (var parameter in queryParameters)
+                foreach (var parameter in routeParameters)
                 {
-                    if (!serviceMethod.RouteTemplate.Contains($"{{{parameter.SerializedName}}}"))
+                    if (!serviceMethod.RouteTemplate.Contains($"{{{parameter.Name}}}"))
                     {
-                        Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has parameter [{parameter.Name}] that does not map to item [{parameter.SerializedName}] in the method's [{serviceMethod.RouteTemplate}] route template.");
+                        Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has parameter [{parameter.Name}] that does not map to a [{{{parameter.Name}}}] in the method's [{serviceMethod.RouteTemplate}] route template.");
                     }
 
-                    sbArgGenerate.AppendLine($"{indent}            uri = uri.Replace(\"{parameter.SerializedName}\", {parameter.Name});");
+                    uriVerify = uriVerify.Replace($"{{{parameter.Name}}}", parameter.Name);
+
+                    // Generate the URI template parameter.  Note that we need to treat
+                    // Enum parameters specially to ensure that they honor any [EnumMember]
+                    // attributes.
+
+                    if (parameter.ParameterInfo.ParameterType.IsEnum)
+                    {
+                        uri = uri.Replace($"{{{parameter.Name}}}", $"{{NeonHelper.EnumToString({parameter.Name})}}");
+                    }
+                    else
+                    {
+                        uri = uri.Replace($"{{{parameter.Name}}}", parameter.Name);
+                    }
                 }
 
-                uriRef = "uri";
+                if (uriVerify.Contains('{') || uriVerify.Contains('}'))
+                {
+                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has a malformed route [{route}] that references a method parameter that doesn't exist or has extra \"{{\" or \"}}\" characters.");
+                }
+
+                uriRef = $"$\"{uri}\"";
             }
 
             if (queryParameters.Count() > 0)
@@ -1833,7 +1958,7 @@ namespace Neon.CodeGen
 
             if (bodyParameter != null)
             {
-                sbArguments.AppendWithSeparator($"document: {bodyParameter.Name}", argSeparator);
+                sbArguments.AppendWithSeparator($"document: {bodyParameter.Name}.ToJObject()", argSeparator);
             }
 
             if (queryParameters.Count() > 0)
@@ -1929,15 +2054,16 @@ namespace Neon.CodeGen
             //-----------------------------------------------------------------
             // Generate the [safe] version of the method.
 
-            var returnType = ResolveTypeReference(serviceMethod.MethodInfo.ReturnType, isResultType: true);
+            var returnType       = ResolveTypeReference(serviceMethod.MethodInfo.ReturnType, isResultType: true);
+            var methodReturnType = returnType;
 
             if (serviceMethod.IsVoid || !methodReturnsContent)
             {
-                returnType = "Task";
+                methodReturnType = "Task";
             }
             else
             {
-                returnType = $"Task<{returnType}>";
+                methodReturnType = $"Task<{methodReturnType}>";
             }
 
             var methodName = serviceMethod.Name;
@@ -1948,7 +2074,7 @@ namespace Neon.CodeGen
             }
 
             writer.WriteLine();
-            writer.WriteLine($"{indent}        public async {returnType} {methodName}({sbParameters})");
+            writer.WriteLine($"{indent}        public async {methodReturnType} {methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
 
             if (sbArgGenerate.Length > 0)
@@ -1962,7 +2088,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                writer.WriteLine($"{indent}        return await client.{safeQueryMethod}({sbArguments});");
+                writer.WriteLine($"{indent}        return {returnType}.CreateFrom(await client.{safeQueryMethod}({sbArguments}));");
             }
 
             writer.WriteLine($"{indent}        }}");
@@ -1979,7 +2105,7 @@ namespace Neon.CodeGen
                 writer.WriteLine(sbArgGenerate);
             }
 
-            writer.WriteLine($"{indent}        return await client.{unsafeQueryMethod}({sbArguments});");
+            writer.WriteLine($"{indent}            return await client.{unsafeQueryMethod}({sbArguments});");
             writer.WriteLine($"{indent}        }}");
         }
 

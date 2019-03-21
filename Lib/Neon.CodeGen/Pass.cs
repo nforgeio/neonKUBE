@@ -43,10 +43,14 @@ namespace Neon.CodeGen
     internal enum Pass
     {
         /// <summary>
-        /// Passes the parameter as a URI query parameter.  This is the
-        /// default mechanism.
+        /// Uses default routing.
         /// </summary>
-        InQuery = 0,
+        Default = 0,
+
+        /// <summary>
+        /// Passes the parameter as a URI query parameter.
+        /// </summary>
+        InQuery,
 
         /// <summary>
         /// Passes the parameter within the URI route template. 
