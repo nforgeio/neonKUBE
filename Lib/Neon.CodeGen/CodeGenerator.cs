@@ -1904,10 +1904,6 @@ namespace Neon.CodeGen
                     {
                         uri = uri.Replace($"{{{parameter.Name}}}", $"{{NeonHelper.EnumToString({parameter.Name})}}");
                     }
-                    else
-                    {
-                        uri = uri.Replace($"{{{parameter.Name}}}", parameter.Name);
-                    }
                 }
 
                 if (uriVerify.Contains('{') || uriVerify.Contains('}'))
