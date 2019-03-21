@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,10 +29,17 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
+using Neon.Serialization;
+
 namespace Neon.Common
 {
     public static partial class NeonHelper
     {
+        // This table is used to cache the factory functions used to create instances of 
+        // [IGeneratedDataModel] types.  This must be locked to be threadsafe.
+
+        private static Dictionary<Type, Func<string, object>> typeToGeneratedObjectFactory = new Dictionary<Type, Func<string, object>>();
+
         /// <summary>
         /// The global <b>relaxed</b> JSON serializer settings.  These settings 
         /// <b>do not require</b> that all source JSON properties match those 
@@ -118,7 +126,38 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonDeserialize<T>(string json, bool strict = false)
         {
-            return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
+            var type = typeof(T);
+
+            if (type.Implements<IGeneratedDataModel>())
+            {
+                // Special case generated data models (note that we ignore [strict] in this case).
+
+                Func<string, object> factory;
+
+                lock (typeToGeneratedObjectFactory)
+                {
+                    if (!typeToGeneratedObjectFactory.TryGetValue(type, out factory))
+                    {
+                        var factoryMethod = type.GetMethod("CreateFrom", new Type[] { typeof(string) });
+
+                        Covenant.Assert(factoryMethod != null && (factoryMethod.Attributes & MethodAttributes.Static) != 0, $"Generated type [{type.FullName}] does not include a [CreateFrom(string)] static method.");
+
+                        factory = new Func<string, object>(
+                            jsonText =>
+                            {
+                                return factoryMethod.Invoke(null, new object[] { jsonText });
+                            });
+
+                        typeToGeneratedObjectFactory.Add(type, factory);
+                    }
+                }
+
+                return (T)factory(json);
+            }
+            else
+            {
+                return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
+            }
         }
 
         /// <summary>
