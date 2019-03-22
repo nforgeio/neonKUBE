@@ -33,8 +33,7 @@ namespace Neon.CodeGen
         /// Constructs an instance with reasonable settings.
         /// </summary>
         /// <param name="targetGroups">
-        /// Specifies the target groups to be included in the
-        /// generated output code.
+        /// Specifies the targets to be included in the generated output code.
         /// </param>
         public CodeGeneratorSettings(params string[] targetGroups)
         {
@@ -47,12 +46,12 @@ namespace Neon.CodeGen
                     continue;
                 }
 
-                if (!TargetGroups.Contains(group, StringComparer.InvariantCultureIgnoreCase))
+                if (!Targets.Contains(group, StringComparer.InvariantCultureIgnoreCase))
                 {
-                    TargetGroups.Add(group);
+                    Targets.Add(group);
                 }
 
-                if (TargetGroups.Count == 0)
+                if (Targets.Count == 0)
                 {
                     throw new ArgumentException("At least one target group must be specified.");
                 }
@@ -87,15 +86,15 @@ namespace Neon.CodeGen
 
         /// <summary>
         /// <para>
-        /// Used to select a specific target groups to be included in the
+        /// Used to select a specific targets to be included in the
         /// generated output.
         /// </para>
         /// <note>
-        /// All groups will be generated when the <see cref="TargetGroups"/> 
+        /// All groups will be generated when the <see cref="Targets"/> 
         /// list is empty.
         /// </note>
         /// </summary>
-        public List<string> TargetGroups { get; private set; } = new List<string>();
+        public List<string> Targets { get; set; } = new List<string>();
 
         /// <summary>
         /// Specifies the C# <c>namespace</c> to be used when generating the output

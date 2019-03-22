@@ -32,17 +32,17 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="group">The group name.</param>
-        public TargetAttribute(string group)
+        /// <param name="name">The target name.</param>
+        public TargetAttribute(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(group));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            this.Group = group;
+            this.Name = name;
         }
 
         /// <summary>
         /// Returns the group name.
         /// </summary>
-        public string Group { get; private set; }
+        public string Name { get; private set; }
     }
 }

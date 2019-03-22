@@ -180,8 +180,7 @@ namespace Neon.Kube
         /// <para>
         /// Specifies the minimum amount of memory to allocate to each cluster virtual machine.  This is specified as a string that
         /// can be a byte count or a number with units like <b>512MB</b>, <b>0.5GiB</b>, <b>2GiB</b>, or <b>1TiB</b> or may be set to <c>null</c> to set
-        /// the same value as <see cref="VmMemory"/>.  This defaults to <c>2GiB</c>, which is half of the default value of <see cref="VmMemory"/>
-        /// which is <b>4GiB</b>.
+        /// the same value as <see cref="VmMemory"/>.  This defaults to <c>4GiB</c>.
         /// </para>
         /// <note>
         /// This is currently honored only when provisioning to a local Hyper-V instance (typically as a developer).  This is ignored

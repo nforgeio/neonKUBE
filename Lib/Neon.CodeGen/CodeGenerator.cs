@@ -250,7 +250,7 @@ namespace Neon.CodeGen
         /// </para>
         /// <note>
         /// This method will honor any target filters specified by
-        /// <see cref="CodeGeneratorSettings.TargetGroups"/>.
+        /// <see cref="CodeGeneratorSettings.Targets"/>.
         /// </note>
         /// </summary>
         /// <param name="assembly">The source assembly.</param>
@@ -300,30 +300,30 @@ namespace Neon.CodeGen
         /// </summary>
         private void FilterModels()
         {
-            if (Settings.TargetGroups.Count == 0)
+            if (Settings.Targets.Count == 0)
             {
-                // Treat an empty list as enabling all groups.
+                // Treat an empty list as enabling all targets.
 
                 return;
             }
 
-            // Remove any data models that aren't in one of the target groups.
+            // Remove any data models that aren't in one of the targets.
 
             var deletedDataModels = new List<string>();
 
             foreach (var item in nameToDataModel)
             {
-                var inGroup = false;
+                var targeted = false;
 
-                foreach (var group in Settings.TargetGroups)
+                foreach (var target in Settings.Targets)
                 {
-                    if (inGroup = item.Value.TargetGroups.Contains(group))
+                    if (targeted = item.Value.Targets.Contains(target))
                     {
                         break;
                     }
                 }
 
-                if (!inGroup)
+                if (!targeted)
                 {
                     deletedDataModels.Add(item.Key);
                 }
@@ -334,23 +334,23 @@ namespace Neon.CodeGen
                 nameToDataModel.Remove(deletedDataModel);
             }
 
-            // Remove any service models aren't in one of the target groups.
+            // Remove any service models aren't in one of the targets.
 
             var deletedServiceModels = new List<string>();
 
             foreach (var item in nameToServiceModel)
             {
-                var inGroup = false;
+                var targeted = false;
 
-                foreach (var group in Settings.TargetGroups)
+                foreach (var target in Settings.Targets)
                 {
-                    if (inGroup = item.Value.TargetGroups.Contains(group))
+                    if (targeted = item.Value.Targets.Contains(target))
                     {
                         break;
                     }
                 }
 
-                if (!inGroup)
+                if (!targeted)
                 {
                     deletedServiceModels.Add(item.Key);
                 }
@@ -374,9 +374,9 @@ namespace Neon.CodeGen
 
             foreach (var targetAttibute in serviceModelType.GetCustomAttributes<TargetAttribute>())
             {
-                if (!serviceModel.TargetGroups.Contains(targetAttibute.Group))
+                if (!serviceModel.Targets.Contains(targetAttibute.Name))
                 {
-                    serviceModel.TargetGroups.Add(targetAttibute.Group);
+                    serviceModel.Targets.Add(targetAttibute.Name);
                 }
             }
 
@@ -588,9 +588,9 @@ namespace Neon.CodeGen
 
             foreach (var targetAttibute in type.GetCustomAttributes<TargetAttribute>())
             {
-                if (!dataModel.TargetGroups.Contains(targetAttibute.Group))
+                if (!dataModel.Targets.Contains(targetAttibute.Name))
                 {
-                    dataModel.TargetGroups.Add(targetAttibute.Group);
+                    dataModel.Targets.Add(targetAttibute.Name);
                 }
             }
 

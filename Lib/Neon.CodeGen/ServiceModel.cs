@@ -84,9 +84,9 @@ namespace Neon.CodeGen
         public Type SourceType { get; private set; }
 
         /// <summary>
-        /// Returns the target groups for the type.
+        /// Returns the targets for the type.
         /// </summary>
-        public HashSet<string> TargetGroups { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        public HashSet<string> Targets { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Specifies the class name to use for the generated service client.
