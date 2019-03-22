@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -37,6 +38,11 @@ using Xunit;
 
 namespace TestCodeGen.ServiceModel
 {
+    internal static class TestSettings
+    {
+        public const string BaseAddress = "http://127.0.0.1:888/";
+    }
+
     public enum MyEnum
     {
         One,
@@ -204,10 +210,11 @@ namespace TestCodeGen.ServiceModel
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void VoidService()
+        public async Task VoidService()
         {
             // Verify that we can generate and call a service defined without
-            // any special routing (etc) attributes.
+            // any special routing (etc) attributes and where all methods
+            // return VOID.
 
             var settings = new CodeGeneratorSettings()
             {
@@ -220,6 +227,76 @@ namespace TestCodeGen.ServiceModel
             Assert.False(output.HasErrors);
 
             var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            // Spin up a mock service and a service client and then call the service
+            // via the client.  The mock service will record the HTTP method, URI, and
+            // JSON text received in the request body and then return so that the
+            // caller can verify that these were passed correctly.
+
+            var requestMethod      = string.Empty;
+            var requestPath        = string.Empty;
+            var requestQueryString = string.Empty;
+            var requestContentType = string.Empty;
+            var requestBody        = string.Empty;
+
+            using (new MockHttpServer(TestSettings.BaseAddress,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    requestMethod      = request.Method;
+                    requestPath        = request.Path;
+                    requestQueryString = request.QueryString;
+                    requestContentType = request.ContentType;
+
+                    if (request.HasEntityBody)
+                    {
+                        requestBody = request.GetBodyText();
+                    }
+                    else
+                    {
+                        requestBody = null;
+                    }
+
+                    response.ContentType = "application/json";
+
+                    await response.WriteAsync(NeonHelper.JsonSerialize(output));
+                }))
+            {
+                using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+                {
+                    using (var client = context.CreateServiceWrapper<VoidServiceController>(TestSettings.BaseAddress))
+                    {
+                        // Call: VoidResult()
+
+                        await client.CallAsync("VoidResult");
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/VoidService/VoidResult", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: VoidAction()
+
+                        await client.CallAsync("VoidAction");
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/VoidService/VoidAction", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: VoidTask()
+
+                        await client.CallAsync("VoidTask");
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/VoidService/VoidTask", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+                    }
+                }
+            }
         }
 
         [Fact]

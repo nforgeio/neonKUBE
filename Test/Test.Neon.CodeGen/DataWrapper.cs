@@ -53,7 +53,9 @@ namespace TestCodeGen
         /// <param name="type">The target type.</param>
         public DataWrapper(Type type)
         {
-            instance     = Activator.CreateInstance(type);
+            Covenant.Requires<ArgumentNullException>(type != null);
+
+            instance = Activator.CreateInstance(type);
             instanceType = type;
 
             if (instance == null)
@@ -334,7 +336,7 @@ namespace TestCodeGen
         public static bool Equals<T>(DataWrapper value1, DataWrapper value2)
         {
             var sourceType = typeof(T);
-            var targetType = AssemblyContext.Current.Assembly.GetType($"{AssemblyContext.Current.DefaultNamespace}.{sourceType.Name}");
+            var targetType = AssemblyContext.Current.LoadedAssembly.GetType($"{AssemblyContext.Current.DefaultNamespace}.{sourceType.Name}");
 
             if (targetType == null)
             {
@@ -360,7 +362,7 @@ namespace TestCodeGen
         public static bool NotEquals<T>(DataWrapper value1, DataWrapper value2)
         {
             var sourceType = typeof(T);
-            var targetType = AssemblyContext.Current.Assembly.GetType($"{AssemblyContext.Current.DefaultNamespace}.{sourceType.Name}");
+            var targetType = AssemblyContext.Current.LoadedAssembly.GetType($"{AssemblyContext.Current.DefaultNamespace}.{sourceType.Name}");
 
             if (targetType == null)
             {

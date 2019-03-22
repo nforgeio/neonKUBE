@@ -53,7 +53,7 @@ namespace TestCodeGen
         //---------------------------------------------------------------------
         // Instance members
 
-        private bool        isDisposed;
+        private bool isDisposed;
 
         /// <summary>
         /// Constructor. 
@@ -76,14 +76,22 @@ namespace TestCodeGen
             // Load the assembly passed.
 
             this.DefaultNamespace = defaultNamespace;
-            this.Assembly         = LoadFromStream(assemblyStream);
+            this.LoadedAssembly   = LoadFromStream(assemblyStream);
+
+            // Also load the [Neon.Common] assembly.  This should be located
+            // in the same directory as the running test assembly.
+
+            var currentAssembly     = Assembly.GetExecutingAssembly();
+            var currentAssemblyPath = currentAssembly.Location;
+
+            this.NeonCommonAssembly = base.LoadFromAssemblyPath(Path.Combine(Path.GetDirectoryName(currentAssemblyPath), "Neon.Common.dll"));
         }
 
         public void Dispose()
         {
             if (!isDisposed)
             {
-                Current    = null;
+                Current = null;
                 isDisposed = true;
                 Unload();
             }
@@ -97,7 +105,12 @@ namespace TestCodeGen
         /// <summary>
         /// Returns the loaded assembly.
         /// </summary>
-        public Assembly Assembly { get; private set; }
+        public Assembly LoadedAssembly { get; private set; }
+
+        /// <summary>
+        /// Returns the loaded <b>Neon.Common</b> assembly.
+        /// </summary>
+        public Assembly NeonCommonAssembly { get; private set; }
 
         /// <summary>
         /// Required to implement [AssemblyLoadContext] but is never called.
@@ -118,7 +131,7 @@ namespace TestCodeGen
         public DataWrapper CreateDataWrapper<T>()
         {
             var sourceType = typeof(T);
-            var targetType = Assembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
+            var targetType = LoadedAssembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
 
             if (targetType == null)
             {
@@ -137,7 +150,7 @@ namespace TestCodeGen
         public DataWrapper CreateDataWrapperFrom<T>(string jsonText)
         {
             var sourceType = typeof(T);
-            var targetType = Assembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
+            var targetType = LoadedAssembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
 
             if (targetType == null)
             {
@@ -156,7 +169,7 @@ namespace TestCodeGen
         public DataWrapper CreateDataWrapperFrom<T>(JObject jObject)
         {
             var sourceType = typeof(T);
-            var targetType = Assembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
+            var targetType = LoadedAssembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
 
             if (targetType == null)
             {
@@ -164,6 +177,36 @@ namespace TestCodeGen
             }
 
             return new DataWrapper(targetType, jObject);
+        }
+
+        /// <summary>
+        /// Creates a service wrapper>.
+        /// </summary>
+        /// <typeparam name="T">The source service type as defined in the within the unit test assembly.</typeparam>
+        /// <param name="baseAddress">The base address to use for the created client.</param>
+        /// <returns>The new <see cref="ServiceWrapper"/>.</returns>
+        public ServiceWrapper CreateServiceWrapper<T>(string baseAddress)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(baseAddress));
+
+            const string controllerSuffix = "Controller";
+
+            var sourceType     = typeof(T);
+            var clientTypeName = sourceType.Name;
+
+            if (clientTypeName.EndsWith(controllerSuffix))
+            {
+                clientTypeName = clientTypeName.Substring(0, clientTypeName.Length - controllerSuffix.Length);
+            }
+
+            var targetType = LoadedAssembly.GetType($"{DefaultNamespace}.{clientTypeName}");
+
+            if (targetType == null)
+            {
+                throw new TypeLoadException($"Cannot find type: {DefaultNamespace}.{sourceType.Name}");
+            }
+
+            return new ServiceWrapper(targetType, baseAddress, this);
         }
     }
 }
