@@ -155,6 +155,11 @@ namespace TestCodeGen
         /// </remarks>
         public async Task<TResult> CallAsync<TResult>(string methodName, params object[] args)
         {
+            if (!methodName.EndsWith("Async"))
+            {
+                methodName += "Async";
+            }
+
             var method = instanceType.GetMethod(methodName);
 
             if (method == null)
@@ -162,7 +167,35 @@ namespace TestCodeGen
                 throw new ArgumentException($"Cannot find method: {methodName}()");
             }
 
-            return await (Task<TResult>)method.Invoke(instance, args);
+            // We need to pass the default cancellation token and log activity values too.
+
+            var argList = new List<object>();
+
+            foreach (var arg in args)
+            {
+                argList.Add(arg);
+            }
+
+            argList.Add(defaultCancellationToken);
+            argList.Add(defaultLogActivity);
+
+            try
+            {
+                return await (Task<TResult>)method.Invoke(instance, argList.ToArray());
+            }
+            catch (InvalidCastException)
+            {
+                // $hack(jeff.lill):
+                //
+                // We're going to see this for situations where the service client 
+                // returns one of the data model types that reside in the compiled
+                // assembly loaded into the context.
+                //
+                // We need to mitigate this manually by using real generated service
+                // clients.  I couldn't figure out a workaround.
+
+                throw new NotSupportedException("This unit test requires calling a real generated service client directly,");
+            }
         }
     }
 }

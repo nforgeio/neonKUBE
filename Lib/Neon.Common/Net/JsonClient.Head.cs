@@ -207,9 +207,9 @@ namespace Neon.Net
         /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
-        public async Task HeadUnsafeAsync(
+        public async Task<JsonResponse> HeadUnsafeAsync(
             string              uri,
             object              document = null, 
             ArgDictionary       args = null, 
@@ -219,7 +219,7 @@ namespace Neon.Net
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
-            await unsafeRetryPolicy.InvokeAsync(
+            return await unsafeRetryPolicy.InvokeAsync(
                 async () =>
                 {
                     var requestUri = FormatUri(uri, args);
@@ -255,9 +255,9 @@ namespace Neon.Net
         /// <param name="headers">The Optional HTTP headers.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <param name="logActivity">The optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
-        public async Task HeadUnsafeAsync(
+        public async Task<JsonResponse> HeadUnsafeAsync(
             IRetryPolicy        retryPolicy, 
             string              uri, 
             object              document = null,
@@ -270,7 +270,7 @@ namespace Neon.Net
 
             retryPolicy = retryPolicy ?? NoRetryPolicy.Instance;
 
-            await retryPolicy.InvokeAsync(
+            return await retryPolicy.InvokeAsync(
                 async () =>
                 {
                     var requestUri = FormatUri(uri, args);

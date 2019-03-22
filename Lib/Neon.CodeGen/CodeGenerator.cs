@@ -1890,7 +1890,7 @@ namespace Neon.CodeGen
                 {
                     var noFromXXX = parameter.ParameterInfo.GetCustomAttribute<FromQueryAttribute>() == null;
 
-                    if (noFromXXX && templateParameters.Contains(parameter.ParameterInfo.Name))
+                    if (noFromXXX && templateParameters.Contains(parameter.SerializedName))
                     {
                         parameter.Pass = Pass.InRoute;
 
@@ -1924,20 +1924,31 @@ namespace Neon.CodeGen
 
                 foreach (var parameter in routeParameters)
                 {
-                    if (!serviceMethod.RouteTemplate.Contains($"{{{parameter.Name}}}"))
+                    if (!serviceMethod.RouteTemplate.Contains($"{{{parameter.SerializedName}}}"))
                     {
                         Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has parameter [{parameter.Name}] that does not map to a [{{{parameter.Name}}}] in the method's [{serviceMethod.RouteTemplate}] route template.");
                     }
 
-                    uriVerify = uriVerify.Replace($"{{{parameter.Name}}}", parameter.Name);
+                    uriVerify = uriVerify.Replace($"{{{parameter.SerializedName}}}", parameter.Name);
 
-                    // Generate the URI template parameter.  Note that we need to treat
-                    // Enum parameters specially to ensure that they honor any [EnumMember]
-                    // attributes.
+                    // Generate the URI template parameter.  These need to be URI encoded and
+                    // note that we also need to treat Enum parameters specially to ensure that 
+                    // they honor any [EnumMember] attributes.
 
                     if (parameter.ParameterInfo.ParameterType.IsEnum)
                     {
-                        uri = uri.Replace($"{{{parameter.Name}}}", $"{{NeonHelper.EnumToString({parameter.Name})}}");
+                        uri = uri.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString(NeonHelper.EnumToString({parameter.Name}))}}");
+                    }
+                    else
+                    {
+                        if (parameter.ParameterInfo.ParameterType == typeof(string))
+                        {
+                            uri = uri.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name})}}");
+                        }
+                        else
+                        {
+                            uri = uri.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name}.ToString())}}");
+                        }
                     }
                 }
 
@@ -2095,7 +2106,7 @@ namespace Neon.CodeGen
             //-----------------------------------------------------------------
             // Generate the [safe] version of the method.
 
-            var returnType       = ResolveTypeReference(serviceMethod.MethodInfo.ReturnType, isResultType: true);
+            var returnType       = ResolveTypeReference(serviceMethod.MethodInfo.ReturnType, out var resultIsDataModel, isResultType: true);
             var methodReturnType = returnType;
 
             if (serviceMethod.IsVoid || !methodReturnsContent)
@@ -2125,11 +2136,18 @@ namespace Neon.CodeGen
 
             if (serviceMethod.IsVoid || !methodReturnsContent)
             {
-                writer.WriteLine($"{indent}        await client.{safeQueryMethod}({sbArguments});");
+                writer.WriteLine($"{indent}            await client.{safeQueryMethod}({sbArguments});");
             }
             else
             {
-                writer.WriteLine($"{indent}        return {returnType}.CreateFrom(await client.{safeQueryMethod}({sbArguments}));");
+                if (resultIsDataModel && !serviceMethod.MethodInfo.ReturnType.IsEnum)
+                {
+                    writer.WriteLine($"{indent}            return {returnType}.CreateFrom(await client.{safeQueryMethod}({sbArguments}));");
+                }
+                else
+                {
+                    writer.WriteLine($"{indent}            return (await client.{safeQueryMethod}({sbArguments})).As<{returnType}>();");
+                }
             }
 
             writer.WriteLine($"{indent}        }}");
@@ -2260,6 +2278,21 @@ namespace Neon.CodeGen
         /// <returns>The type reference as a string or <c>null</c> if the type is not valid.</returns>
         private string ResolveTypeReference(Type type, bool isResultType = false)
         {
+            return ResolveTypeReference(type, out var ignoredd, isResultType);
+        }
+
+        /// <summary>
+        /// Resolves the type passed into a nice string taking generic types 
+        /// and arrays into account.
+        /// </summary>
+        /// <param name="type">The referenced type.</param>
+        /// <param name="isModelType">Returns <c>true</c> if the type is a defined data model.</param>
+        /// <param name="isResultType">Optionally allow the <c>void</c> and related types (used for service method results).</param>
+        /// <returns>The type reference as a string or <c>null</c> if the type is not valid.</returns>
+        private string ResolveTypeReference(Type type, out bool isModelType, bool isResultType = false)
+        {
+            isModelType = nameToDataModel.ContainsKey(type.FullName);
+
             if (isResultType)
             {
                 if (type == typeof(void) || type == typeof(Task) || type == typeof(IActionResult))
