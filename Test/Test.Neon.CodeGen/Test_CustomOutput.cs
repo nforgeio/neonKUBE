@@ -36,6 +36,15 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
+namespace FooBar
+{
+    [Target("4")]
+    public interface Class4
+    {
+        string Field { get; set; }
+    }
+}
+
 namespace TestCodeGen.CustomOutput
 {
     [Target("1")]
@@ -99,6 +108,7 @@ namespace TestCodeGen.CustomOutput
             Assert.Contains("class Class1", sourceCode);
             Assert.Contains("class Class2", sourceCode);
             Assert.Contains("class Class3", sourceCode);
+            Assert.DoesNotContain("class Class4", sourceCode);
             Assert.Contains("class Service1", sourceCode);
             Assert.Contains("class Service2", sourceCode);
         }
@@ -126,6 +136,7 @@ namespace TestCodeGen.CustomOutput
             Assert.Contains("class Class1", sourceCode);
             Assert.DoesNotContain("class Class2", sourceCode);
             Assert.DoesNotContain("class Class3", sourceCode);
+            Assert.DoesNotContain("class Class4", sourceCode);
             Assert.Contains("class Service1", sourceCode);
             Assert.DoesNotContain("class Service2", sourceCode);
         }
@@ -153,6 +164,7 @@ namespace TestCodeGen.CustomOutput
             Assert.DoesNotContain("class Class1", sourceCode);
             Assert.Contains("class Class2", sourceCode);
             Assert.DoesNotContain("class Class3", sourceCode);
+            Assert.DoesNotContain("class Class4", sourceCode);
             Assert.DoesNotContain("class Service1", sourceCode);
             Assert.Contains("class Service2", sourceCode);
         }
@@ -180,6 +192,7 @@ namespace TestCodeGen.CustomOutput
             Assert.Contains("class Class1", sourceCode);
             Assert.Contains("class Class2", sourceCode);
             Assert.DoesNotContain("class Class3", sourceCode);
+            Assert.DoesNotContain("class Class4", sourceCode);
             Assert.Contains("class Service1", sourceCode);
             Assert.DoesNotContain("class Service2", sourceCode);
         }
@@ -208,15 +221,16 @@ namespace TestCodeGen.CustomOutput
             Assert.Contains("class Class1", sourceCode);
             Assert.Contains("class Class2", sourceCode);
             Assert.Contains("class Class3", sourceCode);
+            Assert.DoesNotContain("class Class4", sourceCode);
             Assert.Contains("class Service1", sourceCode);
             Assert.DoesNotContain("class Service2", sourceCode);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void Namespace()
+        public void TargetNamespace()
         {
-            // Verify that we can customize the namespace.
+            // Verify that we can customize the output namespace.
 
             var settings = new CodeGeneratorSettings()
             {
@@ -233,6 +247,34 @@ namespace TestCodeGen.CustomOutput
             var sourceCode     = output.SourceCode;
 
             Assert.Contains("namespace Foo.Bar", sourceCode);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void SourceNamespace()
+        {
+            // Verify that we can filter by source namespace.
+            // This should only generate [Class4].
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(FooBar.Class4).Namespace
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+            var sourceCode     = output.SourceCode;
+
+            Assert.DoesNotContain("class Class1", sourceCode);
+            Assert.DoesNotContain("class Class2", sourceCode);
+            Assert.DoesNotContain("class Class3", sourceCode);
+            Assert.Contains("class Class4", sourceCode);
+            Assert.DoesNotContain("class Service1", sourceCode);
+            Assert.DoesNotContain("class Service2", sourceCode);
         }
 
         [Fact]
