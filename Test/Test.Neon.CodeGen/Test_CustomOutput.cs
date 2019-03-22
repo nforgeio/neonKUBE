@@ -234,5 +234,32 @@ namespace TestCodeGen.CustomOutput
 
             Assert.Contains("namespace Foo.Bar", sourceCode);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void NoServices()
+        {
+            // Verify that we can disable service client generation.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace  = typeof(Test_CustomOutput).Namespace,
+                NoServiceClients = true
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+            var sourceCode     = output.SourceCode;
+
+            Assert.Contains("class Class1", sourceCode);
+            Assert.Contains("class Class2", sourceCode);
+            Assert.Contains("class Class3", sourceCode);
+            Assert.DoesNotContain("class Service1", sourceCode);
+            Assert.DoesNotContain("class Service2", sourceCode);
+        }
     }
 }
