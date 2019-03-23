@@ -59,7 +59,7 @@ namespace WinDesktop
         // Instance members
 
         private const double animationFrameRate = 2;
-        private const string headendError = "Unable to contact the neonKUBE headend service.";
+        private const string headendError       = "Unable to contact the neonKUBE headend service.";
 
         private Icon                appIcon;
         private Icon                disconnectedIcon;
@@ -67,9 +67,11 @@ namespace WinDesktop
         private Icon                errorIcon;
         private AnimatedIcon        connectingAnimation;
         private AnimatedIcon        workingAnimation;
+        private AnimatedIcon        errorAnimation;
         private int                 animationNesting;
         private ContextMenu         contextMenu;
         private bool                operationInProgress;
+        private string              errorStatus;
         private RemoteOperation     remoteOperation;
         private List<ReverseProxy>  proxies;
         private KubeConfigContext   proxiedContext;
@@ -100,6 +102,7 @@ namespace WinDesktop
             errorIcon           = new Icon(@"Images\error.ico");
             connectingAnimation = AnimatedIcon.Load("Images", "connecting", animationFrameRate);
             workingAnimation    = AnimatedIcon.Load("Images", "working", animationFrameRate);
+            errorAnimation      = AnimatedIcon.Load("Images", "error", animationFrameRate);
 
             // Initialize the cluster hosting provider components.
 
@@ -124,9 +127,9 @@ namespace WinDesktop
         {
             get
             {
-                if (!IsConnected)
+                if (IsConnected)
                 {
-                    return ConnectionState.Disconnected;
+                    return !string.IsNullOrEmpty(errorStatus) ? ConnectionState.Error : ConnectionState.Connected;
                 }
                 else
                 {
@@ -239,7 +242,7 @@ namespace WinDesktop
             if (animationNesting == 0)
             {
                 animationTimer.Interval = (int)TimeSpan.FromSeconds(1 / animatedIcon.FrameRate).TotalMilliseconds;
-                animationTimer.Tick +=
+                animationTimer.Tick    +=
                     (s, a) =>
                     {
                         notifyIcon.Icon = animatedIcon.GetNextFrame();

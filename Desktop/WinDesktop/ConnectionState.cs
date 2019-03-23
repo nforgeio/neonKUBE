@@ -47,7 +47,7 @@ namespace WinDesktop
         Connected,
 
         /// <summary>
-        /// A cluster is supposed to be connected but there is a problem.
+        /// A cluster is supposed to be connected but there's a problem.
         /// </summary>
         Error
     }
