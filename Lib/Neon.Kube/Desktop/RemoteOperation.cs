@@ -78,5 +78,13 @@ namespace Neon.Kube
         [YamlMember(Alias = "CompletedToast", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CompletedToast { get; set; }
+
+        /// <summary>
+        /// Indicates whether the operation failed.
+        /// </summary>
+        [JsonProperty(PropertyName = "Failed", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Failed", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public bool Failed { get; set; }
     }
 }

@@ -227,7 +227,7 @@ namespace WinDesktop
         /// <returns>Th tracking <see cref="Task"/>.</returns>
         private static async Task OnUpdateUIAsync(Request request, Response response)
         {
-            MainForm.Current.UpdateUIState();
+            MainForm.Current.PostUpdateUIState();
             await Task.CompletedTask;
         }
 

@@ -53,11 +53,19 @@ namespace WinDesktop
         /// </summary>
         /// <param name="animatedIcon">The optional animation.</param>
         /// <param name="balloonText">The optional balloon text.</param>
-        /// <param name="isError">Optionally indicates that this is an error state.</param>
-        public NotifyState(AnimatedIcon animatedIcon, string balloonText = null, bool isError = false)
+        /// <param name="isTransient">
+        /// Optionally indicates that the state is not associated with
+        /// an operation indicating an error or other transient status.
+        /// </param>
+        /// <param name="isError">
+        /// Optionally indicates that the application is in the error state.
+        /// This implies <see cref="IsTransient"/><c>=true</c>.
+        /// </param>
+        public NotifyState(AnimatedIcon animatedIcon, string balloonText = null, bool isTransient = false, bool isError = false)
         {
             this.AnimatedIcon = animatedIcon;
             this.BalloonText  = balloonText;
+            this.IsTransient  = isTransient || isError;
             this.IsError      = isError;
         }
 
@@ -72,7 +80,13 @@ namespace WinDesktop
         public string BalloonText { get; set; }
 
         /// <summary>
-        /// Indicates that this is an error state.
+        /// Indicates that the state is not associated with an operation
+        /// indicating an error or other transient status.
+        /// </summary>
+        public bool IsTransient { get; set; }
+
+        /// <summary>
+        /// Indicates that the client is in an error state.
         /// </summary>
         public bool IsError { get; set; }
     }

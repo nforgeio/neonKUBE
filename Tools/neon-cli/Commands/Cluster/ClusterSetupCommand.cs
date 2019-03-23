@@ -206,9 +206,11 @@ OPTIONS:
 
                 cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
 
+                var failed = false;
+
                 try
                 {
-                    KubeHelper.Desktop.StartOperationAsync($"setting up [{cluster.Name}]").Wait();
+                    KubeHelper.Desktop.StartOperationAsync($"Setting up [{cluster.Name}]").Wait();
 
                     // Configure global options.
 
@@ -222,7 +224,7 @@ OPTIONS:
                     var controller =
                         new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
                         {
-                            ShowStatus  = !Program.Quiet,
+                            ShowStatus = !Program.Quiet,
                             MaxParallel = Program.MaxParallel
                         };
 
@@ -393,7 +395,7 @@ OPTIONS:
                         // The user already has an existing kubeconfig, so we need
                         // to merge in the new config.
 
-                        var newConfig      = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                        var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
                         var existingConfig = KubeHelper.Config;
 
                         // Remove any existing user, context, and cluster with the same names.
@@ -402,7 +404,7 @@ OPTIONS:
 
                         var newCluster = newConfig.Clusters.Single();
                         var newContext = newConfig.Contexts.Single();
-                        var newUser    = newConfig.Users.Single();
+                        var newUser = newConfig.Users.Single();
 
                         var existingCluster = existingConfig.GetCluster(newCluster.Name);
                         var existingContext = existingConfig.GetContext(newContext.Name);
@@ -432,9 +434,21 @@ OPTIONS:
                         KubeHelper.SetConfig(existingConfig);
                     }
                 }
+                catch
+                {
+                    failed = true;
+                    throw;
+                }
                 finally
                 {
-                    KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] is ready for use.").Wait();
+                    if (!failed)
+                    {
+                        KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] is ready for use.").Wait();
+                    }
+                    else
+                    {
+                        KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] setup failed.", failed: true).Wait();
+                    }
                 }
 
                 Console.WriteLine();

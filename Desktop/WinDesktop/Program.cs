@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -36,6 +37,11 @@ namespace WinDesktop
     /// </summary>
     public static class Program
     {
+        /// <summary>
+        /// Returns the global application thread synchronization object. 
+        /// </summary>
+        public static readonly object SyncLock = new object();
+
 #if DEBUG_LOG
         //---------------------------------------------------------------------
         // Use these methods for debugging startup issues.  Note that the log
@@ -93,6 +99,7 @@ namespace WinDesktop
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
             Application.Run(new MainForm());
         }
 
@@ -140,6 +147,54 @@ namespace WinDesktop
             var sshCredentials = KubeHelper.CurrentContext.Extension.SshCredentials; ;
 
             return new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials);
+        }
+
+        /// <summary>
+        /// Logs an exception as an error.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        public static void LogError(Exception e)
+        {
+            lock (SyncLock)
+            {
+                // $todo(jeff.lill): Implement this
+            }
+        }
+
+        /// <summary>
+        /// Logs an error message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public static void LogError(string message)
+        {
+            lock (SyncLock)
+            {
+                // $todo(jeff.lill): Implement this
+            }
+        }
+
+        /// <summary>
+        /// Logs a warning message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public static void LogWarning(string message)
+        {
+            lock (SyncLock)
+            {
+                // $todo(jeff.lill): Implement this
+            }
+        }
+
+        /// <summary>
+        /// Logs an informational message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public static void LogInfo(string message)
+        {
+            lock (SyncLock)
+            {
+                // $todo(jeff.lill): Implement this
+            }
         }
     }
 }

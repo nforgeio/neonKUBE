@@ -215,9 +215,11 @@ Server Requirements:
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
+            var failed = false;
+
             try
             {
-                KubeHelper.Desktop.StartOperationAsync($"preparing [{cluster.Name}]").Wait();
+                KubeHelper.Desktop.StartOperationAsync($"Preparing [{cluster.Name}]").Wait();
 
                 //-----------------------------------------------------------------
                 // Try to ensure that no servers are already deployed on the IP addresses defined
@@ -436,9 +438,21 @@ Server Requirements:
 
                 cluster.LogLine(logEndMarker);
             }
+            catch
+            {
+                failed = true;
+                throw;
+            }
             finally
             {
-                KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready for setup.").Wait();
+                if (!failed)
+                {
+                    KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready for setup.").Wait();
+                }
+                else
+                {
+                    KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] prepare has failed.", failed: true).Wait();
+                }
             }
         }
     }

@@ -27,6 +27,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -61,7 +62,6 @@ namespace WinDesktop
         private const double animationFrameRate = 2;
         private const string headendError       = "Unable to contact the neonKUBE headend service.";
 
-        private object              syncLock = new object();
         private Icon                appIcon;
         private Icon                disconnectedIcon;
         private Icon                connectedIcon;
@@ -167,13 +167,10 @@ namespace WinDesktop
             notifyIcon.Visible     = true;
             contextMenu.Popup     += Menu_Popup;
 
-            // Set the initial notify icon state and setup a timer
-            // to periodically keep the UI in sync with any changes.
-
-            UpdateUIState();
+            // Setup a timer to periodically keep the UI in sync with any changes.
 
             statusTimer.Interval = (int)TimeSpan.FromSeconds(KubeHelper.ClientConfig.StatusPollSeconds).TotalMilliseconds;
-            statusTimer.Tick    += (s, a) => UpdateUIState();
+            statusTimer.Tick    += async (s, a) => await UpdateUIStateAsync();
             statusTimer.Start();
         }
 
@@ -209,6 +206,33 @@ namespace WinDesktop
         }
 
         /// <summary>
+        /// Ensures that an function is invoked on the UI thread.
+        /// </summary>
+        /// <typeparam name="TResult">The function result type.</typeparam>
+        /// <param name="function">The function.</param>
+        private TResult InvokeOnUIThread<TResult>(Func<TResult> function)
+        {
+            Covenant.Requires(function != null);
+
+            var result = default(TResult);
+
+            if (InvokeRequired)
+            {
+                Invoke(new Action(
+                    () =>
+                    {
+                        result = function();
+                    }));
+            }
+            else
+            {
+                result = function();
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// <para>
         /// Sets the notify icon balloon text.
         /// </para>
@@ -220,14 +244,18 @@ namespace WinDesktop
         /// <param name="balloonText">The balloon text.</param>
         private void SetBalloonText(string balloonText)
         {
-            balloonText = balloonText ?? string.Empty;
+            InvokeOnUIThread(
+                () =>
+                {
+                    balloonText = balloonText ?? string.Empty;
 
-            if (balloonText.Length > 64)
-            {
-                balloonText = balloonText.Substring(0, 64 - 3) + "...";
-            }
+                    if (balloonText.Length > 64)
+                    {
+                        balloonText = balloonText.Substring(0, 64 - 3) + "...";
+                    }
 
-            notifyIcon.Text = balloonText;
+                    notifyIcon.Text = balloonText;
+                });
         }
 
         /// <summary>
@@ -235,7 +263,14 @@ namespace WinDesktop
         /// </summary>
         /// <param name="animatedIcon">The icon animation.</param>
         /// <param name="balloonText">Optional text to be displayed in the balloon during the animation.</param>
-        /// <param name="isError">Optionally indicates that we're in an error state.</param>
+        /// <param name="isTransient">
+        /// Optionally indicates that the state is not associated with
+        /// an operation indicating an error or other transient status.
+        /// </param>
+        /// <param name="isError">
+        /// Optionally indicates that the application is in the error state.
+        /// This implies <see cref="IsTransient"/><c>=true</c>.
+        /// </param>
         /// <remarks>
         /// Calls to this method may be recursed and should be matched 
         /// with a call to <see cref="StopNotifyAnimation"/>.  The
@@ -243,29 +278,33 @@ namespace WinDesktop
         /// <see cref="StartNotifyAnimation"/> call was matched with
         /// the last <see cref="StopNotifyAnimation"/>.
         /// </remarks>
-        private void StartNotifyAnimation(AnimatedIcon animatedIcon, string balloonText = null, bool isError = false)
+        private void StartNotifyAnimation(AnimatedIcon animatedIcon, string balloonText = null, bool isTransient = false, bool isError = false)
         {
             Covenant.Requires<ArgumentNullException>(animatedIcon != null);
 
-            notifyStack.Push(new NotifyState(animatedIcon, balloonText, isError));
+            InvokeOnUIThread(
+                () =>
+                {
+                    notifyStack.Push(new NotifyState(animatedIcon, balloonText, isTransient, isError));
 
-            if (!string.IsNullOrEmpty(balloonText))
-            {
-                SetBalloonText(balloonText);
-            }
-
-            if (animatedIcon != null)
-            {
-                animationTimer.Stop();
-                animationTimer.Interval = (int)TimeSpan.FromSeconds(1 / animatedIcon.FrameRate).TotalMilliseconds;
-                animationTimer.Tick    +=
-                    (s, a) =>
+                    if (!string.IsNullOrEmpty(balloonText))
                     {
-                        notifyIcon.Icon = animatedIcon.GetNextFrame();
-                    };
+                        SetBalloonText(balloonText);
+                    }
 
-                animationTimer.Start();
-            }
+                    if (animatedIcon != null)
+                    {
+                        animationTimer.Stop();
+                        animationTimer.Interval = (int)TimeSpan.FromSeconds(1 / animatedIcon.FrameRate).TotalMilliseconds;
+                        animationTimer.Tick    +=
+                            (s, a) =>
+                            {
+                                notifyIcon.Icon = animatedIcon.GetNextFrame();
+                            };
+
+                        animationTimer.Start();
+                    }
+                });
         }
 
         /// <summary>
@@ -274,60 +313,75 @@ namespace WinDesktop
         /// <param name="force">Optionally force the animation to stop regardless of the nesting level.</param>
         private void StopNotifyAnimation(bool force = false)
         {
-            if (force)
-            {
-                if (notifyStack.Count > 0)
+            InvokeOnUIThread(
+                () =>
                 {
-                    animationTimer.Stop();
-                    UpdateUIState();
-                    notifyStack.Clear();
-                }
-
-                return;
-            }
-
-            if (notifyStack.Count == 0)
-            {
-                throw new InvalidOperationException("StopNotifyAnimation: Stack underflow.");
-            }
-
-            notifyStack.Pop();
-            animationTimer.Stop();
-
-            if (notifyStack.Count == 0)
-            {
-                UpdateUIState();
-            }
-            else
-            {
-                // We need to restart the previous icon animation in the
-                // stack (if there is one).
-
-                var animatedIcon = (AnimatedIcon)null;
-
-                for (int i = notifyStack.Count - 1; i >= 0; i--)
-                {
-                    var notifyState = notifyStack.ElementAt(i);
-
-                    if (notifyState.AnimatedIcon != null)
+                    if (force)
                     {
-                        animatedIcon = notifyState.AnimatedIcon;
-                        break;
-                    }
-                }
-
-                if (animatedIcon != null)
-                {
-                    animationTimer.Interval = (int)TimeSpan.FromSeconds(1 / animatedIcon.FrameRate).TotalMilliseconds;
-                    animationTimer.Tick    +=
-                        (s, a) =>
+                        if (notifyStack.Count > 0)
                         {
-                            notifyIcon.Icon = animatedIcon.GetNextFrame();
-                        };
+                            animationTimer.Stop();
+                            PostUpdateUIState();
+                            notifyStack.Clear();
+                        }
 
-                    animationTimer.Start();
-                }
-            }
+                        return;
+                    }
+
+                    if (notifyStack.Count == 0)
+                    {
+                        throw new InvalidOperationException("StopNotifyAnimation: Stack underflow.");
+                    }
+
+                    notifyStack.Pop();
+                    animationTimer.Stop();
+
+                    if (notifyStack.Count == 0)
+                    {
+                        PostUpdateUIState();
+                    }
+                    else
+                    {
+                        // We need to restart the previous icon animation in the
+                        // stack (if there is one).
+
+                        var animatedIcon = (AnimatedIcon)null;
+
+                        for (int i = notifyStack.Count - 1; i >= 0; i--)
+                        {
+                            var notifyState = notifyStack.ElementAt(i);
+
+                            if (notifyState.AnimatedIcon != null)
+                            {
+                                animatedIcon = notifyState.AnimatedIcon;
+                                break;
+                            }
+                        }
+
+                        if (animatedIcon != null)
+                        {
+                            animationTimer.Interval = (int)TimeSpan.FromSeconds(1 / animatedIcon.FrameRate).TotalMilliseconds;
+                            animationTimer.Tick    +=
+                                (s, a) =>
+                                {
+                                    notifyIcon.Icon = animatedIcon.GetNextFrame();
+                                };
+
+                            animationTimer.Start();
+                        }
+
+                        // We also need to restore the previous balloon text.
+
+                        if (notifyStack.Count > 0)
+                        {
+                            SetBalloonText(notifyStack.Peek().BalloonText);
+                        }
+                        else
+                        {
+                            SetBalloonText(string.Empty);
+                        }
+                    }
+                });
         }
 
         /// <summary>
@@ -338,7 +392,11 @@ namespace WinDesktop
         /// <param name="icon">The optional tool tip icon (defaults to <see cref="ToolTipIcon.Info"/>).</param>
         private void ShowToast(string text, string title = null, ToolTipIcon icon = ToolTipIcon.Info)
         {
-            notifyIcon.ShowBalloonTip(0, title ?? this.Text, text, icon);
+            InvokeOnUIThread(
+                () =>
+                {
+                    notifyIcon.ShowBalloonTip(0, title ?? this.Text, text, icon);
+                });
         }
 
         /// <summary>
@@ -349,17 +407,21 @@ namespace WinDesktop
         /// <param name="toastText">The optional toast text.</param>
         private void StartOperation(AnimatedIcon animatedIcon = null, string toastText = null)
         {
-            operationInProgress = true;
+            InvokeOnUIThread(
+                () =>
+                {
+                    operationInProgress = true;
 
-            if (animatedIcon != null)
-            {
-                StartNotifyAnimation(animatedIcon);
-            }
+                    if (animatedIcon != null)
+                    {
+                        StartNotifyAnimation(animatedIcon);
+                    }
 
-            if (!string.IsNullOrEmpty(toastText))
-            {
-                ShowToast(toastText);
-            }
+                    if (!string.IsNullOrEmpty(toastText))
+                    {
+                        ShowToast(toastText);
+                    }
+                });
         }
 
         /// <summary>
@@ -367,10 +429,14 @@ namespace WinDesktop
         /// </summary>
         private void StopOperation()
         {
-            StopNotifyAnimation(force: true);
-            operationInProgress = false;
+            InvokeOnUIThread(
+                () =>
+                {
+                    StopNotifyAnimation(force: true);
+                    operationInProgress = false;
 
-            UpdateUIState();
+                    PostUpdateUIState();
+                });
         }
 
         /// <summary>
@@ -379,13 +445,17 @@ namespace WinDesktop
         /// <param name="toastErrorText">The optional toast error text.</param>
         private void StopFailedOperation(string toastErrorText = null)
         {
-            StopNotifyAnimation(force: true);
-            UpdateUIState();
+            InvokeOnUIThread(
+                () =>
+                {
+                    StopNotifyAnimation(force: true);
+                    PostUpdateUIState();
 
-            if (!string.IsNullOrEmpty(toastErrorText))
-            {
-                ShowToast(toastErrorText, icon: ToolTipIcon.Error);
-            }
+                    if (!string.IsNullOrEmpty(toastErrorText))
+                    {
+                        ShowToast(toastErrorText, icon: ToolTipIcon.Error);
+                    }
+                });
         }
 
         /// <summary>
@@ -394,39 +464,60 @@ namespace WinDesktop
         /// <param name="balloonText">The message to be displayed in the notify icon balloon.</param>
         private void SetErrorState(string balloonText)
         {
-            if (InErrorState)
-            {
-                // Just update the existing error state on the stack.
+            InvokeOnUIThread(
+                () =>
+                {
+                    if (notifyStack.Count > 0 && notifyStack.Peek().IsTransient)
+                    {
+                        // $hack(jeff.lill):
+                        //
+                        // This is a bit of a hack.  If the top trasient item indicates 
+                        // an error, we're going to simply replace the text.  If it's
+                        // not an error, we're going to pop the old transient state
+                        // and start an error animation.
 
-                notifyStack.Peek().BalloonText = balloonText;
-            }
-            else
-            {
-                StartNotifyAnimation(errorAnimation, balloonText, isError: true);
-            }
+                        if (notifyStack.Peek().IsError)
+                        {
+                            notifyStack.Peek().BalloonText = balloonText;
+                        }
+                        else
+                        {
+                            StopNotifyAnimation();
+                            StartNotifyAnimation(errorAnimation, balloonText, isError: true);
+                        }
+                    }
+                    else
+                    {
+                        StartNotifyAnimation(errorAnimation, balloonText, isError: true);
+                    }
 
-            if (!string.IsNullOrEmpty(balloonText))
-            {
-                SetBalloonText(balloonText);
-            }
+                    if (!string.IsNullOrEmpty(balloonText))
+                    {
+                        SetBalloonText(balloonText);
+                    }
+                });
         }
 
         /// <summary>
         /// Returns <c>true</c> if the application is currently in an error state.
         /// </summary>
-        private bool InErrorState => notifyStack.Count > 0 && notifyStack.Peek().IsError;
+        private bool InErrorState => InvokeOnUIThread(() => notifyStack.Count > 0 && notifyStack.Peek().IsError);
 
         /// <summary>
         /// Resets the application error state.
         /// </summary>
         private void ResetErrorState()
         {
-            if (!InErrorState)
-            {
-                return;
-            }
+            InvokeOnUIThread(
+                () =>
+                {
+                    if (!InErrorState)
+                    {
+                        return;
+                    }
 
-            StopNotifyAnimation();
+                    StopNotifyAnimation();
+                });
         }
 
         /// <summary>
@@ -434,20 +525,32 @@ namespace WinDesktop
         /// </summary>
         private void StopProxies()
         {
-            foreach (var proxy in proxies)
-            {
-                proxy.Dispose();
-            }
+            InvokeOnUIThread(
+                () =>
+                {
+                    lock (Program.SyncLock)
+                    {
+                        foreach (var proxy in proxies)
+                        {
+                            proxy.Dispose();
+                        }
 
-            proxies.Clear();
+                        proxies.Clear();
+                    }
+                });
         }
 
         /// <summary>
         /// Updates the running proxies to match the current cluster 
-        /// (if there is one).
+        /// (if there is one).  This may only be called on the UI thread.
         /// </summary>
-        private void UpdateProxies()
+        private async Task UpdateProxiesAsync()
         {
+            if (InvokeRequired)
+            {
+                throw new InvalidOperationException($"[{nameof(UpdateProxiesAsync)}()] may only be called on the UI thread.");
+            }
+
             if (KubeHelper.CurrentContext == null)
             {
                 StopProxies();
@@ -480,106 +583,137 @@ namespace WinDesktop
                     return;
                 }
 
-                //-------------------------------------------------------------
-                // The Kubernetes dashboard reverse proxy.
-
-                // Setup a callback that transparently adds an [Authentication] header
-                // to all requests with the correct bearer token.  We'll need to
-                // obtain the token secret via two steps:
-                //
-                //      1. Identify the dashboard token secret by listing all secrets
-                //         in the [kube-system] namespace looking for one named like
-                //         [root-user-token-*].
-                //
-                //      2. Reading that secret and extracting the value.
-
-                var response       = KubeHelper.Kubectl("--namespace", "kube-system", "get", "secrets", "-o=name");
-                var secretName     = string.Empty;
-                var dashboardToken = string.Empty;
-
-                if (response.ExitCode != 0)
+                try
                 {
-                    try
+                    // Start the connecting animation if we're not already in the error state.
+
+                    if (!InErrorState)
                     {
-                        response.EnsureSuccess();
+                        StartNotifyAnimation(connectingAnimation, $"{KubeHelper.CurrentContextName}: Connecting...", isTransient: true);
                     }
-                    catch (Exception e)
+
+                    //-------------------------------------------------------------
+                    // The Kubernetes dashboard reverse proxy.
+
+                    // Setup a callback that transparently adds an [Authentication] header
+                    // to all requests with the correct bearer token.  We'll need to
+                    // obtain the token secret via two steps:
+                    //
+                    //      1. Identify the dashboard token secret by listing all secrets
+                    //         in the [kube-system] namespace looking for one named like
+                    //         [root-user-token-*].
+                    //
+                    //      2. Reading that secret and extracting the value.
+
+                    var response       = (ExecuteResponse)null;
+                    var secretName     = string.Empty;
+                    var dashboardToken = string.Empty;
+
+                    await Task.Run(
+                        async () =>
+                        {
+                            response = KubeHelper.Kubectl("--namespace", "kube-system", "get", "secrets", "-o=name");
+                            await Task.CompletedTask;
+                        });
+
+                    if (response.ExitCode != 0)
                     {
-                        LogError(e);
-                        SetErrorState($"{KubeHelper.CurrentContextName}: Kubernetes API failure");
-                        return;
+                        try
+                        {
+                            response.EnsureSuccess();
+                        }
+                        catch (Exception e)
+                        {
+                            Program.LogError(e);
+                            SetErrorState($"{KubeHelper.CurrentContextName}: Kubernetes API failure");
+                            return;
+                        }
+                    }
+
+                    // Step 1: Determine the secret name.
+
+                    using (var reader = new StringReader(response.OutputText))
+                    {
+                        const string secretPrefix = "secret/";
+
+                        secretName = reader.Lines().FirstOrDefault(line => line.StartsWith($"{secretPrefix}root-user-token-"));
+
+                        Covenant.Assert(!string.IsNullOrEmpty(secretName));
+
+                        secretName = secretName.Substring(secretPrefix.Length);
+                    }
+
+                    // Step 2: Describe the secret and extract the token value.  This
+                    //         is a bit of a hack because I'm making assumptions about
+                    //         the output format.
+
+                    await Task.Run(
+                        async () =>
+                        {
+                            response = KubeHelper.Kubectl("--namespace", "kube-system", "describe", "secret", secretName);
+                            await Task.CompletedTask;
+                        });
+
+                    if (response.ExitCode != 0)
+                    {
+                        try
+                        {
+                            response.EnsureSuccess();
+                        }
+                        catch (Exception e)
+                        {
+                            Program.LogError(e);
+                            SetErrorState($"{KubeHelper.CurrentContextName}: Kubernetes API failure");
+                            return;
+                        }
+                    }
+
+                    using (var reader = new StringReader(response.OutputText))
+                    {
+                        var tokenLine = reader.Lines().FirstOrDefault(line => line.StartsWith("token:"));
+
+                        Covenant.Assert(!string.IsNullOrEmpty(tokenLine));
+
+                        dashboardToken = tokenLine.Split(new char[] { ' ' }, 2).Skip(1).First().Trim();
+                    }
+
+                    Action<RequestContext> dashboardRequestHandler =
+                        context =>
+                        {
+                            context.Request.Headers.Add("Authorization", $"Bearer {dashboardToken}");
+                        };
+
+                    // Start the proxy.
+
+                    var userContext   = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
+                    var certPem       = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
+                    var keyPem        = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
+                    var dashboardCert = TlsCertificate.Parse(KubeHelper.CurrentContext.Extension.KubernetesDashboardCertificate).ToX509(publicOnly: true);
+
+                    var kubeDashboardProxy =
+                        new ReverseProxy(
+                            localPort: KubeHelper.ClientConfig.KubeDashboardProxyPort,
+                            remotePort: KubeHostPorts.KubeDashboard,
+                            remoteHost: cluster.GetReachableMaster().PrivateAddress.ToString(),
+                            validCertificate: dashboardCert,
+                            requestHandler: dashboardRequestHandler);
+
+                    proxies.Add(kubeDashboardProxy);
+
+                    //-------------------------------------------------------------
+                    // Remember which cluster context we're proxying.
+
+                    proxiedContext = KubeHelper.CurrentContext;
+                }
+                finally
+                {
+                    // Stop any non-error transient animation on the top of the notify stack.
+
+                    if (notifyStack.Count > 0 && notifyStack.Peek().IsTransient && !notifyStack.Peek().IsError)
+                    {
+                        StopNotifyAnimation();
                     }
                 }
-
-                // Step 1: Determine the secret name.
-
-                using (var reader = new StringReader(response.OutputText))
-                {
-                    const string secretPrefix = "secret/";
-
-                    secretName = reader.Lines().FirstOrDefault(line => line.StartsWith($"{secretPrefix}root-user-token-"));
-
-                    Covenant.Assert(!string.IsNullOrEmpty(secretName));
-
-                    secretName = secretName.Substring(secretPrefix.Length);
-                }
-
-                // Step 2: Describe the secret and extract the token value.  This
-                //         is a bit of a hack because I'm making assumptions about
-                //         the output format.
-
-                response = KubeHelper.Kubectl("--namespace", "kube-system", "describe", "secret", secretName);
-
-                if (response.ExitCode != 0)
-                {
-                    try
-                    {
-                        response.EnsureSuccess();
-                    }
-                    catch (Exception e)
-                    {
-                        LogError(e);
-                        SetErrorState($"{KubeHelper.CurrentContextName}: Kubernetes API failure");
-                        return;
-                    }
-                }
-
-                using (var reader = new StringReader(response.OutputText))
-                {
-                    var tokenLine = reader.Lines().FirstOrDefault(line => line.StartsWith("token:"));
-
-                    Covenant.Assert(!string.IsNullOrEmpty(tokenLine));
-
-                    dashboardToken = tokenLine.Split(new char[] { ' ' }, 2).Skip(1).First().Trim();
-                }
-
-                Action<RequestContext> dashboardRequestHandler =
-                    context =>
-                    {
-                        context.Request.Headers.Add("Authorization", $"Bearer {dashboardToken}");
-                    };
-
-                // Start the proxy.
-
-                var userContext   = KubeHelper.Config.GetUser(KubeHelper.CurrentContext.Properties.User);
-                var certPem       = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientCertificateData));
-                var keyPem        = Encoding.UTF8.GetString(Convert.FromBase64String(userContext.Properties.ClientKeyData));
-                var dashboardCert = TlsCertificate.Parse(KubeHelper.CurrentContext.Extension.KubernetesDashboardCertificate).ToX509(publicOnly: true);
-
-                var kubeDashboardProxy =
-                    new ReverseProxy(
-                        localPort:        KubeHelper.ClientConfig.KubeDashboardProxyPort,
-                        remotePort:       KubeHostPorts.KubeDashboard,
-                        remoteHost:       cluster.GetReachableMaster().PrivateAddress.ToString(),
-                        validCertificate: dashboardCert,
-                        requestHandler:   dashboardRequestHandler);
-
-                proxies.Add(kubeDashboardProxy);
-
-                //-------------------------------------------------------------
-                // Remember which cluster context we're proxying.
-
-                proxiedContext = KubeHelper.CurrentContext;
             }
         }
 
@@ -588,71 +722,91 @@ namespace WinDesktop
         // other places):
 
         /// <summary>
-        /// Synchronizes the UI state with the current cluster configuration.
+        /// Schedules a call to <see cref="UpdateUIStateAsync"/> on the UI thread
+        /// by posting a message to the UI message loop.  Note that the actual
+        /// operation will be performed some time in the near future.
         /// </summary>
-        public void UpdateUIState()
+        public void PostUpdateUIState()
         {
-            InvokeOnUIThread(
-                () =>
+            SynchronizationContext.Current.Post(
+                async state => await UpdateUIStateAsync(),
+                        state: null);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Synchronizes the UI state with the current cluster configuration.
+        /// </para>
+        /// <note>
+        /// This method is somewhat special in that it must be executed on the UI
+        /// thread and if it's called on another thread, then the method will post
+        /// a message to itself to invoke itself shortely on the UI thread.
+        /// </note>
+        /// </summary>
+        public async Task UpdateUIStateAsync()
+        {
+            if (InvokeRequired)
+            {
+                PostUpdateUIState();
+                return;
+            }
+
+            KubeHelper.LoadConfig();
+            await UpdateProxiesAsync();
+
+            if (InErrorState)
+            {
+                return;
+            }
+
+            if (!operationInProgress)
+            {
+                notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+
+                if (notifyStack.Count > 0 && !string.IsNullOrEmpty(notifyStack.Peek().BalloonText))
                 {
-                    KubeHelper.LoadConfig();
+                    SetBalloonText(notifyStack.Peek().BalloonText);
+                }
+                else if (IsConnected)
+                {
+                    SetBalloonText($"{Text}: {KubeHelper.CurrentContextName}");
+                }
+                else
+                {
+                    SetBalloonText($"{Text}: disconnected");
+                }
 
-                    UpdateProxies();
+                return;
+            }
 
-                    if (InErrorState)
-                    {
-                        return;
-                    }
+            if (remoteOperation != null)
+            {
+                if (NeonHelper.GetProcessById(remoteOperation.ProcessId) == null)
+                {
+                    // The original [neon-cli] process is no longer running;
+                    // it must have terminated before signalling the end
+                    // of the operation.  We're going to terminate the
+                    // operation status.
+                    //
+                    // This is an important fail-safe.
 
-                    if (!operationInProgress)
-                    {
-                        notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
+                    StopOperation();
+                    return;
+                }
+            }
+            else
+            {
+                notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
 
-                        if (notifyStack.Count > 0 && !string.IsNullOrEmpty(notifyStack.Peek().BalloonText))
-                        {
-                            SetBalloonText(notifyStack.Peek().BalloonText);
-                        }
-                        else if (IsConnected)
-                        {
-                            SetBalloonText($"{Text}: {KubeHelper.CurrentContextName}");
-                        }
-                        else
-                        {
-                            SetBalloonText($"{Text}: disconnected");
-                        }
-
-                        return;
-                    }
-
-                    if (remoteOperation != null)
-                    {
-                        if (Process.GetProcessById(remoteOperation.ProcessId) == null)
-                        {
-                            // The original [neon-cli] process is no longer running;
-                            // it must have terminated before signalling the end
-                            // of the operation.  We're going to terminate the
-                            // operation status.
-                            //
-                            // This is an important fail-safe.
-
-                            StopOperation();
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
-
-                        if (IsConnected)
-                        {
-                            SetBalloonText($"{Text}: {KubeHelper.CurrentContextName}");
-                        }
-                        else
-                        {
-                            SetBalloonText($"{Text}: disconnected");
-                        }
-                    }
-                });
+                if (IsConnected)
+                {
+                    SetBalloonText($"{Text}: {KubeHelper.CurrentContextName}");
+                }
+                else
+                {
+                    SetBalloonText($"{Text}: disconnected");
+                }
+            }
         }
 
         /// <summary>
@@ -671,13 +825,14 @@ namespace WinDesktop
                         // we'll just substitute the new operation info otherwise
                         // we'll start a new operation.
                         //
-                        // If the operation was initiated by the Desktop app then
-                        // we'll ignore the new operation.
+                        // If the current operation was initiated by the Desktop app
+                        // then we'll ignore the new operation.
 
                         if (remoteOperation != null && remoteOperation.ProcessId == operation.ProcessId)
                         {
                             remoteOperation = operation;
-                            UpdateUIState();
+                            PostUpdateUIState();
+
                         }
                         else
                         {
@@ -685,12 +840,20 @@ namespace WinDesktop
                             StartOperation(workingAnimation);
                         }
 
-                        return;
+                        SetBalloonText(operation.Summary);
                     }
                     else
                     {
+                        // Remove any transient notification.
+
+                        if (notifyStack.Count > 0 && notifyStack.Peek().IsTransient)
+                        {
+                            StopNotifyAnimation();
+                        }
+
                         remoteOperation = operation;
                         StartOperation(workingAnimation);
+                        PostUpdateUIState();
                     }
                 });
         }
@@ -719,6 +882,11 @@ namespace WinDesktop
                             {
                                 ShowToast(operation.CompletedToast);
                             }
+
+                            if (operation.Failed)
+                            {
+                                StartNotifyAnimation(errorAnimation, operation.CompletedToast, isError: true);
+                            }
                         }
                     }
                 });
@@ -732,7 +900,7 @@ namespace WinDesktop
             InvokeOnUIThread(
                 () =>
                 {
-                    UpdateUIState();
+                    PostUpdateUIState();
                 });
         }
 
@@ -744,56 +912,8 @@ namespace WinDesktop
             InvokeOnUIThread(
                 () =>
                 {
-                    UpdateUIState();
+                    PostUpdateUIState();
                 });
-        }
-
-        /// <summary>
-        /// Logs an exception as an error.
-        /// </summary>
-        /// <param name="e">The exception.</param>
-        public void LogError(Exception e)
-        {
-            lock (syncLock)
-            {
-                // $todo(jeff.lill): Implement this
-            }
-        }
-
-        /// <summary>
-        /// Logs an error message.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        public void LogError(string message)
-        {
-            lock (syncLock)
-            {
-                // $todo(jeff.lill): Implement this
-            }
-        }
-
-        /// <summary>
-        /// Logs a warning message.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        public void LogWarning(string message)
-        {
-            lock (syncLock)
-            {
-                // $todo(jeff.lill): Implement this
-            }
-        }
-
-        /// <summary>
-        /// Logs an informational message.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        public void LogInfo(string message)
-        {
-            lock (syncLock)
-            {
-                // $todo(jeff.lill): Implement this
-            }
         }
 
         //---------------------------------------------------------------------
@@ -1064,7 +1184,7 @@ namespace WinDesktop
             {
                 ShowToast($"Logging out of: {KubeHelper.CurrentContext.Name}");
                 KubeHelper.SetCurrentContext((string)null);
-                UpdateUIState();
+                PostUpdateUIState();
             }
         }
 

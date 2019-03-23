@@ -198,6 +198,7 @@ namespace Neon.Kube
         /// Optionally specifies text to be displayed as toast by the 
         /// desktop application.
         /// </param>
+        /// <param name="failed">Optionally indicates that the operation failed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
@@ -205,12 +206,13 @@ namespace Neon.Kube
         /// not respond.
         /// </note>
         /// </remarks>
-        public async Task EndOperationAsync(string completedToast = null)
+        public async Task EndOperationAsync(string completedToast = null, bool failed = false)
         {
             var operation = new RemoteOperation()
             {
                 ProcessId      = Process.GetCurrentProcess().Id,
-                CompletedToast = completedToast
+                CompletedToast = completedToast,
+                Failed         = failed
             };
 
             try
