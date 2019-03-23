@@ -68,11 +68,10 @@ namespace WinDesktop
         private AnimatedIcon        connectingAnimation;
         private AnimatedIcon        workingAnimation;
         private AnimatedIcon        errorAnimation;
-        private int                 animationNesting;
         private ContextMenu         contextMenu;
         private bool                operationInProgress;
-        private string              errorStatus;
         private RemoteOperation     remoteOperation;
+        private Stack<NotifyState>  notifyStack;
         private List<ReverseProxy>  proxies;
         private KubeConfigContext   proxiedContext;
 
@@ -103,6 +102,7 @@ namespace WinDesktop
             connectingAnimation = AnimatedIcon.Load("Images", "connecting", animationFrameRate);
             workingAnimation    = AnimatedIcon.Load("Images", "working", animationFrameRate);
             errorAnimation      = AnimatedIcon.Load("Images", "error", animationFrameRate);
+            notifyStack         = new Stack<NotifyState>();
 
             // Initialize the cluster hosting provider components.
 
@@ -119,24 +119,6 @@ namespace WinDesktop
         /// Indicates whether the application is connected to a cluster.
         /// </summary>
         public bool IsConnected => KubeHelper.CurrentContext != null;
-
-        /// <summary>
-        /// Returns the current connection state.
-        /// </summary>
-        public ConnectionState ConnectionState
-        {
-            get
-            {
-                if (IsConnected)
-                {
-                    return !string.IsNullOrEmpty(errorStatus) ? ConnectionState.Error : ConnectionState.Connected;
-                }
-                else
-                {
-                    return ConnectionState.Disconnected;
-                }
-            }
-        }
 
         /// <summary>
         /// Returns the neonKUBE head client to be used to query the headend services.
@@ -177,7 +159,8 @@ namespace WinDesktop
 
             // Initialize the notify icon and its context memu.
 
-            notifyIcon.Text        = Build.ProductName;
+            SetBalloonText(Build.ProductName);
+
             notifyIcon.Icon        = disconnectedIcon;
             notifyIcon.ContextMenu = contextMenu = new ContextMenu();
             notifyIcon.Visible     = true;
@@ -225,9 +208,33 @@ namespace WinDesktop
         }
 
         /// <summary>
+        /// <para>
+        /// Sets the notify icon balloon text.
+        /// </para>
+        /// <note>
+        /// Windows limits the balloon text to 64 characters.  This method will trim
+        /// the text to fit if necessary.
+        /// </note>
+        /// </summary>
+        /// <param name="balloonText">The balloon text.</param>
+        private void SetBalloonText(string balloonText)
+        {
+            balloonText = balloonText ?? string.Empty;
+
+            if (balloonText.Length > 64)
+            {
+                balloonText = balloonText.Substring(0, 64 - 3) + "...";
+            }
+
+            notifyIcon.Text = balloonText;
+        }
+
+        /// <summary>
         /// Starts a notify icon animation.
         /// </summary>
         /// <param name="animatedIcon">The icon animation.</param>
+        /// <param name="balloonText">Optional text to be displayed in the balloon during the animation.</param>
+        /// <param name="isError">Optionally indicates that we're in an error state.</param>
         /// <remarks>
         /// Calls to this method may be recursed and should be matched 
         /// with a call to <see cref="StopNotifyAnimation"/>.  The
@@ -235,12 +242,20 @@ namespace WinDesktop
         /// <see cref="StartNotifyAnimation"/> call was matched with
         /// the last <see cref="StopNotifyAnimation"/>.
         /// </remarks>
-        private void StartNotifyAnimation(AnimatedIcon animatedIcon)
+        private void StartNotifyAnimation(AnimatedIcon animatedIcon, string balloonText = null, bool isError = false)
         {
             Covenant.Requires<ArgumentNullException>(animatedIcon != null);
 
-            if (animationNesting == 0)
+            notifyStack.Push(new NotifyState(animatedIcon, balloonText, isError));
+
+            if (!string.IsNullOrEmpty(balloonText))
             {
+                SetBalloonText(balloonText);
+            }
+
+            if (animatedIcon != null)
+            {
+                animationTimer.Stop();
                 animationTimer.Interval = (int)TimeSpan.FromSeconds(1 / animatedIcon.FrameRate).TotalMilliseconds;
                 animationTimer.Tick    +=
                     (s, a) =>
@@ -250,8 +265,6 @@ namespace WinDesktop
 
                 animationTimer.Start();
             }
-
-            animationNesting++;
         }
 
         /// <summary>
@@ -262,25 +275,57 @@ namespace WinDesktop
         {
             if (force)
             {
-                if (animationNesting > 0)
+                if (notifyStack.Count > 0)
                 {
                     animationTimer.Stop();
                     UpdateUIState();
-                    animationNesting = 0;
+                    notifyStack.Clear();
                 }
 
                 return;
             }
 
-            if (animationNesting == 0)
+            if (notifyStack.Count == 0)
             {
                 throw new InvalidOperationException("StopNotifyAnimation: Stack underflow.");
             }
 
-            if (--animationNesting == 0)
+            notifyStack.Pop();
+            animationTimer.Stop();
+
+            if (notifyStack.Count == 0)
             {
-                animationTimer.Stop();
                 UpdateUIState();
+            }
+            else
+            {
+                // We need to restart the previous icon animation in the
+                // stack (if there is one).
+
+                var animatedIcon = (AnimatedIcon)null;
+
+                for (int i = notifyStack.Count - 1; i >= 0; i--)
+                {
+                    var notifyState = notifyStack.ElementAt(i);
+
+                    if (notifyState.AnimatedIcon != null)
+                    {
+                        animatedIcon = notifyState.AnimatedIcon;
+                        break;
+                    }
+                }
+
+                if (animatedIcon != null)
+                {
+                    animationTimer.Interval = (int)TimeSpan.FromSeconds(1 / animatedIcon.FrameRate).TotalMilliseconds;
+                    animationTimer.Tick    +=
+                        (s, a) =>
+                        {
+                            notifyIcon.Icon = animatedIcon.GetNextFrame();
+                        };
+
+                    animationTimer.Start();
+                }
             }
         }
 
@@ -303,11 +348,6 @@ namespace WinDesktop
         /// <param name="toastText">The optional toast text.</param>
         private void StartOperation(AnimatedIcon animatedIcon = null, string toastText = null)
         {
-            if (operationInProgress)
-            {
-                throw new InvalidOperationException("Another operation is already in progress.");
-            }
-
             operationInProgress = true;
 
             if (animatedIcon != null)
@@ -322,20 +362,11 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Indicates that the current operation has been stopped.
+        /// Indicates that the current operation has completed.
         /// </summary>
         private void StopOperation()
         {
-            if (!operationInProgress)
-            {
-                throw new InvalidOperationException("No operation is in progress.");
-            }
-
-            if (animationNesting > 0)
-            {
-                StopNotifyAnimation(force: true);
-            }
-
+            StopNotifyAnimation(force: true);
             operationInProgress = false;
 
             UpdateUIState();
@@ -347,17 +378,54 @@ namespace WinDesktop
         /// <param name="toastErrorText">The optional toast error text.</param>
         private void StopFailedOperation(string toastErrorText = null)
         {
-            if (animationNesting > 0)
-            {
-                StopNotifyAnimation(force: true);
-            }
-
+            StopNotifyAnimation(force: true);
             UpdateUIState();
 
             if (!string.IsNullOrEmpty(toastErrorText))
             {
                 ShowToast(toastErrorText, icon: ToolTipIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// Places the application in the error state.
+        /// </summary>
+        /// <param name="balloonText">The message to be displayed in the notify icon balloon.</param>
+        private void SetErrorState(string balloonText)
+        {
+            if (InErrorState)
+            {
+                // Just update the existing error state on the stack.
+
+                notifyStack.Peek().BalloonText = balloonText;
+            }
+            else
+            {
+                StartNotifyAnimation(errorAnimation, balloonText, isError: true);
+            }
+
+            if (!string.IsNullOrEmpty(balloonText))
+            {
+                SetBalloonText(balloonText);
+            }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the application is currently in an error state.
+        /// </summary>
+        private bool InErrorState => notifyStack.Count > 0 && notifyStack.Peek().IsError;
+
+        /// <summary>
+        /// Resets the application error state.
+        /// </summary>
+        private void ResetErrorState()
+        {
+            if (!InErrorState)
+            {
+                return;
+            }
+
+            StopNotifyAnimation();
         }
 
         /// <summary>
@@ -430,13 +498,16 @@ namespace WinDesktop
 
                 if (response.ExitCode != 0)
                 {
-                    // $todo(jeff.lill):
-                    //
-                    // We're going to throw an exception here for now, but in the
-                    // future it would probably be better to notify the user of
-                    // the problem and periodically retry.
-
-                    response.EnsureSuccess();
+                    try
+                    {
+                        response.EnsureSuccess();
+                    }
+                    catch (Exception e)
+                    {
+                        LogError(e);
+                        SetErrorState($"{KubeHelper.CurrentContextName}: Kubernetes API failure");
+                        return;
+                    }
                 }
 
                 // Step 1: Determine the secret name.
@@ -457,6 +528,20 @@ namespace WinDesktop
                 //         the output format.
 
                 response = KubeHelper.Kubectl("--namespace", "kube-system", "describe", "secret", secretName);
+
+                if (response.ExitCode != 0)
+                {
+                    try
+                    {
+                        response.EnsureSuccess();
+                    }
+                    catch (Exception e)
+                    {
+                        LogError(e);
+                        SetErrorState($"{KubeHelper.CurrentContextName}: Kubernetes API failure");
+                        return;
+                    }
+                }
 
                 using (var reader = new StringReader(response.OutputText))
                 {
@@ -513,17 +598,26 @@ namespace WinDesktop
 
                     UpdateProxies();
 
+                    if (InErrorState)
+                    {
+                        return;
+                    }
+
                     if (!operationInProgress)
                     {
                         notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
 
-                        if (IsConnected)
+                        if (notifyStack.Count > 0 && !string.IsNullOrEmpty(notifyStack.Peek().BalloonText))
                         {
-                            notifyIcon.Text = $"{Text}: {KubeHelper.CurrentContextName}";
+                            SetBalloonText(notifyStack.Peek().BalloonText);
+                        }
+                        else if (IsConnected)
+                        {
+                            SetBalloonText($"{Text}: {KubeHelper.CurrentContextName}");
                         }
                         else
                         {
-                            notifyIcon.Text = $"{Text}: disconnected";
+                            SetBalloonText($"{Text}: disconnected");
                         }
 
                         return;
@@ -543,8 +637,6 @@ namespace WinDesktop
                             StopOperation();
                             return;
                         }
-
-                        notifyIcon.Text = $"{Text}: {remoteOperation.Summary}";
                     }
                     else
                     {
@@ -552,11 +644,11 @@ namespace WinDesktop
 
                         if (IsConnected)
                         {
-                            notifyIcon.Text = $"{Text}: {KubeHelper.CurrentContextName}";
+                            SetBalloonText($"{Text}: {KubeHelper.CurrentContextName}");
                         }
                         else
                         {
-                            notifyIcon.Text = $"{Text}: disconnected";
+                            SetBalloonText($"{Text}: disconnected");
                         }
                     }
                 });
@@ -653,6 +745,42 @@ namespace WinDesktop
                 {
                     UpdateUIState();
                 });
+        }
+
+        /// <summary>
+        /// Logs an exception as an error.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        public void LogError(Exception e)
+        {
+            // $todo(jeff.lill): Implement this
+        }
+
+        /// <summary>
+        /// Logs an error message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public void LogError(string message)
+        {
+            // $todo(jeff.lill): Implement this
+        }
+
+        /// <summary>
+        /// Logs a warning message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public void LogWarning(string message)
+        {
+            // $todo(jeff.lill): Implement this
+        }
+
+        /// <summary>
+        /// Logs an informational message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public void LogInfo(string message)
+        {
+            // $todo(jeff.lill): Implement this
         }
 
         //---------------------------------------------------------------------
