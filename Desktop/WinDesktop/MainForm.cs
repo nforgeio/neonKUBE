@@ -61,6 +61,7 @@ namespace WinDesktop
         private const double animationFrameRate = 2;
         private const string headendError       = "Unable to contact the neonKUBE headend service.";
 
+        private object              syncLock = new object();
         private Icon                appIcon;
         private Icon                disconnectedIcon;
         private Icon                connectedIcon;
@@ -753,7 +754,10 @@ namespace WinDesktop
         /// <param name="e">The exception.</param>
         public void LogError(Exception e)
         {
-            // $todo(jeff.lill): Implement this
+            lock (syncLock)
+            {
+                // $todo(jeff.lill): Implement this
+            }
         }
 
         /// <summary>
@@ -762,7 +766,10 @@ namespace WinDesktop
         /// <param name="message">The message.</param>
         public void LogError(string message)
         {
-            // $todo(jeff.lill): Implement this
+            lock (syncLock)
+            {
+                // $todo(jeff.lill): Implement this
+            }
         }
 
         /// <summary>
@@ -771,7 +778,10 @@ namespace WinDesktop
         /// <param name="message">The message.</param>
         public void LogWarning(string message)
         {
-            // $todo(jeff.lill): Implement this
+            lock (syncLock)
+            {
+                // $todo(jeff.lill): Implement this
+            }
         }
 
         /// <summary>
@@ -780,7 +790,10 @@ namespace WinDesktop
         /// <param name="message">The message.</param>
         public void LogInfo(string message)
         {
-            // $todo(jeff.lill): Implement this
+            lock (syncLock)
+            {
+                // $todo(jeff.lill): Implement this
+            }
         }
 
         //---------------------------------------------------------------------
