@@ -644,21 +644,19 @@ namespace Neon.Kube
                         });
                 }
 
-                var processors     = node.Metadata.GetVmProcessors(cluster.Definition);
-                var memoryBytes    = node.Metadata.GetVmMemory(cluster.Definition);
-                var minMemoryBytes = node.Metadata.GetVmMinimumMemory(cluster.Definition);
-                var diskBytes      = node.Metadata.GetVmDisk(cluster.Definition);
+                var processors  = node.Metadata.GetVmProcessors(cluster.Definition);
+                var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
+                var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVM(
                     vmName,
-                    processorCount:     processors,
-                    diskSize:           diskBytes.ToString(),
-                    memorySize:         memoryBytes.ToString(),
-                    minimumMemorySize:  minMemoryBytes.ToString(),
-                    drivePath:          drivePath,
-                    switchName:         switchName,
-                    extraDrives:        extraDrives);
+                    processorCount: processors,
+                    diskSize:       diskBytes.ToString(),
+                    memorySize:     memoryBytes.ToString(),
+                    drivePath:      drivePath,
+                    switchName:     switchName,
+                    extraDrives:    extraDrives);
 
                 node.Status = $"start: virtual machine";
 

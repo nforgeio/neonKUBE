@@ -46,9 +46,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string DefaultVmMemory        = "4GiB";
-        internal const string DefaultVmMinimumMemory = "2GiB";
-        internal const string DefaultVmDisk          = "64GiB";
+        internal const string DefaultVmMemory = "4GiB";
+        internal const string DefaultVmDisk   = "64GiB";
 
         //---------------------------------------------------------------------
         // Instance members
@@ -175,22 +174,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "VmMemory", ApplyNamingConventions = false)]
         [DefaultValue(DefaultVmMemory)]
         public string VmMemory { get; set; } = DefaultVmMemory;
-
-        /// <summary>
-        /// <para>
-        /// Specifies the minimum amount of memory to allocate to each cluster virtual machine.  This is specified as a string that
-        /// can be a byte count or a number with units like <b>512MB</b>, <b>0.5GiB</b>, <b>2GiB</b>, or <b>1TiB</b> or may be set to <c>null</c> to set
-        /// the same value as <see cref="VmMemory"/>.  This defaults to <c>4GiB</c>.
-        /// </para>
-        /// <note>
-        /// This is currently honored only when provisioning to a local Hyper-V instance (typically as a developer).  This is ignored
-        /// for XenServer and when provisioning to remote Hyper-V or XenServer instances.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "VmMinimumMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmMinimumMemory", ApplyNamingConventions = false)]
-        [DefaultValue(DefaultVmMinimumMemory)]
-        public string VmMinimumMemory { get; set; } = DefaultVmMinimumMemory;
 
         /// <summary>
         /// Specifies the maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
@@ -437,13 +420,11 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(VmProcessors)}={VmProcessors}] must be positive.");
             }
 
-            VmMemory        = VmMemory ?? DefaultVmMemory;
-            VmMinimumMemory = VmMinimumMemory ?? VmMemory;
-            VmDisk          = VmDisk ?? DefaultVmMinimumMemory;
-            VmHosts         = VmHosts ?? new List<HypervisorHost>();
+            VmMemory = VmMemory ?? DefaultVmMemory;
+            VmDisk   = VmDisk ?? DefaultVmDisk;
+            VmHosts  = VmHosts ?? new List<HypervisorHost>();
 
             ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
-            ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
 
             // Verify that the hypervisor host machines have unique names and addresses.

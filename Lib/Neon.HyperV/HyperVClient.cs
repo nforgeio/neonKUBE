@@ -174,10 +174,6 @@ namespace Neon.HyperV
         /// byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
         /// or <b>1TiB</b>.  This defaults to <b>2GiB</b>.
         /// </param>
-        /// <param name="minimumMemorySize">
-        /// Optionally specifies the minimum memory size.  This defaults to <c>null</c> which will
-        /// set this to <paramref name="memorySize"/>.
-        /// </param>
         /// <param name="processorCount">
         /// The number of virutal processors to assign to the machine.  This defaults to <b>4</b>.
         /// </param>
@@ -214,7 +210,6 @@ namespace Neon.HyperV
         public void AddVM(
             string                      machineName, 
             string                      memorySize        = "2GiB", 
-            string                      minimumMemorySize = null, 
             int                         processorCount    = 4,
             string                      diskSize          = "64GiB",
             string                      drivePath         = null,
@@ -225,11 +220,6 @@ namespace Neon.HyperV
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
             CheckDisposed();
-
-            if (string.IsNullOrEmpty(minimumMemorySize))
-            {
-                minimumMemorySize = memorySize;
-            }
 
             var driveFolder = DefaultDriveFolder;
 
@@ -284,7 +274,7 @@ namespace Neon.HyperV
 
             // Create the virtual machine.
 
-            var command = $"New-VM -Name \"{machineName}\" -MemoryStartupBytes {minimumMemorySize} -Generation 1";
+            var command = $"New-VM -Name \"{machineName}\" -MemoryStartupBytes {memorySize}  -Generation 1";
 
             if (!string.IsNullOrEmpty(drivePath))
             {
@@ -309,7 +299,7 @@ namespace Neon.HyperV
 
             try
             {
-                powershell.Execute($"Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {minimumMemorySize} -MemoryMaximumBytes {memorySize}");
+                powershell.Execute($"Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {memorySize} -MemoryMaximumBytes {memorySize}");
             }
             catch (Exception e)
             {

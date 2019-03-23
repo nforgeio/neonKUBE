@@ -207,23 +207,6 @@ namespace Neon.Kube
         public string VmMemory { get; set; } = null;
 
         /// <summary>
-        /// <para>
-        /// Specifies the minimum amount of memory to allocate to each cluster virtual machine.  This is specified as a string that
-        /// can be a long byte count or a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>
-        /// or may be set to <c>null</c> to set the same value as <see cref="VmMemory"/>.  This defaults to the value specified by
-        /// <see cref="HostingOptions.VmMinimumMemory"/>.
-        /// </para>
-        /// <note>
-        /// This is currently honored only when provisioning to a local Hyper-V instance (typically as a developer).  This is ignored
-        /// for XenServer and when provisioning to remote Hyper-V instances.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "VmMinimumMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "VmMinimumMemory", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string VmMinimumMemory { get; set; } = null;
-
-        /// <summary>
         /// The amount of disk space to allocate to this node when when provisioned on a hypervisor.  This is specified as a string
         /// that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults 
         /// to the value specified by <see cref="HostingOptions.VmDisk"/>.
@@ -266,30 +249,6 @@ namespace Neon.Kube
             else
             {
                 return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMemory));
-            }
-        }
-
-        /// <summary>
-        /// Returns the minimum number of bytes of memory allocate to for this node when
-        /// hosted on a hypervisor.
-        /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <returns>The size in bytes.</returns>
-        public long GetVmMinimumMemory(ClusterDefinition clusterDefinition)
-        {
-            if (!string.IsNullOrEmpty(VmMinimumMemory))
-            {
-                return ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
-            }
-            else if (!string.IsNullOrEmpty(clusterDefinition.Hosting.VmMinimumMemory))
-            {
-                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmMinimumMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMinimumMemory));
-            }
-            else
-            {
-                // Return [VmMemory] otherwise.
-
-                return GetVmMemory(clusterDefinition);
             }
         }
 
@@ -480,11 +439,6 @@ namespace Neon.Kube
             if (VmMemory != null)
             {
                 ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
-            }
-
-            if (VmMinimumMemory != null)
-            {
-                ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             }
 
             if (VmDisk != null)
