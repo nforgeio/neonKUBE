@@ -72,6 +72,18 @@ namespace Test.NeonCli
                 Assert.Equal(0, result.ExitCode);
                 Assert.Equal($"{Build.ProductVersion}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
+
+                result = runner.Execute(Program.Main, "version", $"--minimum={Program.Version}");
+
+                Assert.Equal(0, result.ExitCode);
+
+                result = runner.Execute(Program.Main, "version", $"--minimum=0");
+
+                Assert.Equal(0, result.ExitCode);
+
+                result = runner.Execute(Program.Main, "version", $"--minimum=64000.0.0");
+
+                Assert.NotEqual(0, result.ExitCode);
             }
         }
     }

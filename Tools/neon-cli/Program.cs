@@ -86,7 +86,7 @@ COMMAND SUMMARY:
     neon scp                [NODE]
     neon ssh                [NODE]
     neon vault              COMMAND
-    neon version            [-n] [--git]
+    neon version            [-n] [--git] [--minimum=VERSION]
 
 ARGUMENTS:
 

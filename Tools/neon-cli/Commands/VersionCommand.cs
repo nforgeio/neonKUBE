@@ -43,12 +43,17 @@ Prints the [neon-cli] version.
 
 USAGE:
 
-    neon version [-n] [--get]
+    neon version [OPTIONS]
 
 OPTIONS:
 
-    -n      - Don't write a newline after version.
-    --git   - Include the Git branch/commit information.
+    -n                  - Don't write a newline after version.
+
+    --git               - Include the Git branch/commit information.
+
+    --minimum=VERSION   - Compares the version passed against the current
+                          tool version and returns a non-zero exit code
+                          if the tool is older than VERSION.
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -59,7 +64,7 @@ OPTIONS:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "-n", "--git" }; }
+            get { return new string[] { "-n", "--git", "--minimum" }; }
         }
 
         /// <inheritdoc/>
@@ -77,18 +82,39 @@ OPTIONS:
                 Program.Exit(0);
             }
 
-            if (commandLine.HasOption("--git"))
+            var minVersion = commandLine.GetOption("--minimum");
+
+            if (!string.IsNullOrEmpty(minVersion))
             {
-                Console.Write($"{Program.Version}/{Program.GitVersion}");
+                if (!SemanticVersion.TryParse(minVersion, out var minSemanticVersion))
+                {
+                    Console.Error.WriteLine($"*** ERROR: [{minVersion}] is not a valid semantic version.");
+                    Program.Exit(1);
+                }
+
+                var toolSemanticVersion = SemanticVersion.Parse(Program.Version);
+
+                if (toolSemanticVersion < minSemanticVersion)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [neon v{Program.Version}] is older than the required version []. ");
+                    Program.Exit(1);
+                }
             }
             else
             {
-                Console.Write(Program.Version);
-            }
+                if (commandLine.HasOption("--git"))
+                {
+                    Console.Write($"{Program.Version}/{Program.GitVersion}");
+                }
+                else
+                {
+                    Console.Write(Program.Version);
+                }
 
-            if (!commandLine.HasOption("-n"))
-            {
-                Console.WriteLine();
+                if (!commandLine.HasOption("-n"))
+                {
+                    Console.WriteLine();
+                }
             }
         }
     }
