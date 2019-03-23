@@ -45,8 +45,8 @@ Source: {#GetEnv("NF_BUILD")}\neon\*.*; DestDir: {app}\neon; Flags: recursesubdi
 Name: "{group}\neonKUBE Desktop"; Filename: "{app}\win-desktop\neonKUBE-win.exe"
 
 [Registry]
-Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: "{app}\win-desktop\neonKUBE-win.exe"; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "NEONKUBE_PROGRAM_FOLDER"; ValueData: "{app}"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: "{app}\win-desktop\neonKUBE-win.exe"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Environment"; ValueType: string; ValueName: "NEONKUBE_PROGRAM_FOLDER"; ValueData: "{app}"; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\win-desktop\neonKUBE-win.exe"; Description: "neonKUBE Desktop"; Flags: postinstall nowait
@@ -92,12 +92,12 @@ var
   V: string;
   Str: string;
 begin
-  RegQueryStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'Path', V);
+  RegQueryStringValue(HKCU, 'Environment', 'Path', V);
   Str := ExpandConstant('{app}');
   V := Replace(V, Str, '');
   V := Str + ';' + V;
   V := Replace(V,';;',';');
-  RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'Path', V);
+  RegWriteStringValue(HKCU, 'Environment', 'Path', V);
 end;
 
 procedure AppendToPath();
@@ -105,12 +105,12 @@ var
   V: string;
   Str: string;
 begin
-  RegQueryStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'Path', V);
+  RegQueryStringValue(HKCU, 'Environment', 'Path', V);
   Str := ExpandConstant('{app}');
   V := Replace(V, Str, '');
   V := V + ';' + Str;
   V := Replace(V,';;',';');
-  RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'Path', V);
+  RegWriteStringValue(HKCU, 'Environment', 'Path', V);
 end;
 
 procedure RemoveFromPath();
@@ -118,11 +118,11 @@ var
   V: string;
   Str: string;
 begin
-  RegQueryStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'Path', V);
+  RegQueryStringValue(HKCU, 'Environment', 'Path', V);
   Str := ExpandConstant('{app}');
   V := Replace(V, Str, '');
   V := Replace(V,';;',';');
-  RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'Path', V);
+  RegWriteStringValue(HKCU, 'Environment', 'Path', V);
 end;
 
 { ============================================================================= }
