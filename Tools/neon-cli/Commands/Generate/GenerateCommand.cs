@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CodeGeneratorOutput.cs
+// FILE:	    GenerateCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,36 +17,51 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Neon.CodeGen
+using Newtonsoft;
+using Newtonsoft.Json;
+
+using Neon.Common;
+using Neon.Kube;
+
+namespace NeonCli
 {
     /// <summary>
-    /// Holds the output of a code generation operation.
+    /// Implements the <b>generate</b> command.
     /// </summary>
-    public class CodeGeneratorOutput
+    public class GenerateCommand : CommandBase
     {
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public CodeGeneratorOutput()
+        private const string usage = @"
+Code generation commands.
+
+USAGE:
+
+    neon generate models [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
+";
+
+        /// <inheritdoc/>
+        public override string[] Words
         {
+            get { return new string[] { "generate" }; }
         }
 
-        /// <summary>
-        /// Indicates whether the coder generator reported any errors.
-        /// </summary>
-        public bool HasErrors => Errors.Count > 0;
+        /// <inheritdoc/>
+        public override void Help()
+        {
+            Console.WriteLine(usage);
+        }
 
-        /// <summary>
-        /// Returns the list of code generator errors (if any).
-        /// </summary>
-        public List<string> Errors { get; private set; } = new List<string>();
-
-        /// <summary>
-        /// Returns the generated source code.
-        /// </summary>
-        public string SourceCode { get; internal set; }
+        /// <inheritdoc/>
+        public override void Run(CommandLine commandLine)
+        {
+            Help();
+        }
     }
 }

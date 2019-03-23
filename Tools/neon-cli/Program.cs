@@ -77,6 +77,7 @@ COMMAND SUMMARY:
     neon help               COMMAND
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster setup      [CLUSTER-DEF]
+    neon generate models    [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
     neon login              COMMAND
     neon logout
     neon password           COMMAND
@@ -208,6 +209,8 @@ OPTIONS:
                     new ClusterPrepareCommand(),
                     new ClusterSetupCommand(),
                     new ClusterVerifyCommand(),
+                    new GenerateCommand(),
+                    new GenerateModelsCommand(),
                     new LoginCommand(),
                     new LoginExportCommand(),
                     new LoginImportCommand(),

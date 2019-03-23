@@ -168,9 +168,6 @@ namespace Neon.CodeGen
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
         private StringWriter                        writer;
-        private string                              targetGroup;
-        private string                              targetNamespace;
-        private string                              sourceNamespace;
 
         /// <summary>
         /// Constructs a code generator.
@@ -181,19 +178,19 @@ namespace Neon.CodeGen
             this.Settings = settings ?? new CodeGeneratorSettings();
             this.Output   = new CodeGeneratorOutput();
 
-            this.sourceNamespace = settings.SourceNamespace;
-
-            if (string.IsNullOrEmpty(sourceNamespace))
+            if (string.IsNullOrEmpty(settings.SourceNamespace))
             {
-                this.sourceNamespace = null;
+                settings.SourceNamespace = null;
             }
             else
             {
-                if (!sourceNamespace.EndsWith("."))
+                if (!settings.SourceNamespace.EndsWith("."))
                 {
-                    sourceNamespace += ".";
+                    settings.SourceNamespace += ".";
                 }
             }
+
+            Settings.TargetNamespace = Settings.TargetNamespace ?? "Neon.CodeGen.Output";
         }
 
         /// <summary>
@@ -267,7 +264,7 @@ namespace Neon.CodeGen
                 .Where(t => t.IsPublic)
                 .Where(t => t.IsInterface || t.IsEnum))
             {
-                if (sourceNamespace != null && !type.FullName.StartsWith(sourceNamespace))
+                if (Settings.SourceNamespace != null && !type.FullName.StartsWith(Settings.SourceNamespace))
                 {
                     // Ignore any types that aren't in specified source namespace.
 
