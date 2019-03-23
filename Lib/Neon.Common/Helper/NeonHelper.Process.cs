@@ -827,5 +827,28 @@ namespace Neon.Common
 
             return process.ExitCode;
         }
+
+        /// <summary>
+        /// Returns the <see cref="Process"/> associated with an ID
+        /// or <c>null</c> if no process with this ID exists.
+        /// </summary>
+        /// <param name="id">The target process ID.</param>
+        /// <returns>The <see cref="Process"/> or <c>null</c>.</returns>
+        /// <remarks>
+        /// This is slightly different from how <see cref="Process.GetProcessById(int)"/>
+        /// works.  That method throws an <see cref="ArgumentException"/> if there's
+        /// no process with the ID where as this one will return <c>null</c>.
+        /// </remarks>
+        public static Process GetProcessById(int id)
+        {
+            try
+            {
+                return Process.GetProcessById(id);
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
     }
 }
