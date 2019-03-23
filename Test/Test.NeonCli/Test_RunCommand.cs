@@ -105,7 +105,7 @@ TEST_B=B-VALUE
 TEST_C=C-VALUE
 TEST_D=D-VALUE
 ");
-                            result = runner.Execute(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "^TEST_A", "^TEST_B", "^TEST_C", "^TEST_D");
+                            result = runner.Execute(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -177,7 +177,7 @@ TEST_D=D-VALUE
                             File.WriteAllBytes("var2.txt", vault.Encrypt("var2.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("var2.txt"));
 
-                            result = runner.Execute(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "^TEST_A", "^TEST_B", "^TEST_C", "^TEST_D");
+                            result = runner.Execute(Program.Main, $"run", "var1.txt", "var2.txt", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -222,7 +222,7 @@ TEST_D=D-VALUE
 
                             File.WriteAllText("test.cmd", "echo %* > output.txt");
 
-                            var result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "^TEST_A", "^TEST_B", "^TEST_C", "^TEST_D");
+                            var result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_.TEST_A", "_.TEST_B", "_.TEST_C", "_.TEST_D");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -279,7 +279,7 @@ $<<TEST_B>>
 $<<TEST_C>>
 $<<TEST_D>>
 ");
-                            result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "^^file.txt");
+                            result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -340,7 +340,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "^^file.txt");
+                            result = runner.Execute(Program.Main, $"run", "--TEST_A=A-VALUE", "--TEST_B=B-VALUE", "--TEST_C=C-VALUE", "--TEST_D=D-VALUE", "--", "test.cmd", "_..file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -396,7 +396,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = runner.Execute(Program.Main, $"run", "--", "test.cmd", "^^^file.txt");
+                            result = runner.Execute(Program.Main, $"run", "--", "test.cmd", "_...file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             var output = File.ReadAllText("output.txt");
@@ -414,7 +414,7 @@ $<<TEST_D>>
                             File.WriteAllBytes("file.txt", vault.Encrypt("file.txt", "test"));
                             Assert.True(NeonVault.IsEncrypted("file.txt"));
 
-                            result = runner.Execute(Program.Main, $"run", "--", "cat", "^^^file.txt");
+                            result = runner.Execute(Program.Main, $"run", "--", "cat", "_...file.txt");
                             Assert.Equal(0, result.ExitCode);
 
                             Assert.Contains(plainText, result.OutputText);

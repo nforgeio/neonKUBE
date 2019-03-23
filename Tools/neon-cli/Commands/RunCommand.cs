@@ -309,7 +309,7 @@ Pass a potentially encrypted file:
                     {
                         // Argument is a reference to an environment variable.
 
-                        var name = arg.Substring(1);
+                        var name = arg.Substring(2);
 
                         if (name == string.Empty)
                         {
@@ -332,12 +332,12 @@ Pass a potentially encrypted file:
                         // Argument is a command line option.  We'll check to see if
                         // it contains a reference to an environment variable.
 
-                        var valuePos = arg.IndexOf("=^");
+                        var valuePos = arg.IndexOf("=_.");
 
                         if (valuePos != -1)
                         {
                             var optionPart = arg.Substring(0, valuePos);
-                            var name = arg.Substring(valuePos + 2);
+                            var name       = arg.Substring(valuePos + 3);
 
                             if (name == string.Empty)
                             {
