@@ -205,7 +205,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.RestApi", "Test\Test.R
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.CodeGen", "Test\Test.Neon.CodeGen\Test.Neon.CodeGen.csproj", "{40496FF2-3343-476D-9BE6-29D4CDBC86C5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Models", "Test\Test.Neon.Models\Test.Neon.Models.csproj", "{DF8A6F39-7A8D-477F-8A19-8B467671B542}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Models", "Test\Test.Neon.Models\Test.Neon.Models.csproj", "{DF8A6F39-7A8D-477F-8A19-8B467671B542}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -293,6 +293,7 @@ Global
 		{756FB86B-29BC-4C6B-A19B-A624A9E9D367}.Release|x86.ActiveCfg = Release|Any CPU
 		{756FB86B-29BC-4C6B-A19B-A624A9E9D367}.Release|x86.Build.0 = Release|Any CPU
 		{626E630A-03D5-4578-88B1-31B0E6011E2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{626E630A-03D5-4578-88B1-31B0E6011E2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{626E630A-03D5-4578-88B1-31B0E6011E2C}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{626E630A-03D5-4578-88B1-31B0E6011E2C}.Debug|x64.Build.0 = Debug|Any CPU
 		{626E630A-03D5-4578-88B1-31B0E6011E2C}.Debug|x86.ActiveCfg = Debug|Any CPU

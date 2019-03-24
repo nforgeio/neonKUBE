@@ -429,7 +429,7 @@ OPTIONS:
             {
                 Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
                 Console.Error.WriteLine(string.Empty);
-                return 1;
+                Program.Exit(1);
             }
 
             return 0;

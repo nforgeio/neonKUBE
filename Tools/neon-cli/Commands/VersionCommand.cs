@@ -82,6 +82,12 @@ OPTIONS:
                 Program.Exit(0);
             }
 
+            if (commandLine.Arguments.Length > 0)
+            {
+                Console.Error.WriteLine($"*** ERROR: Unexpected command line argument.");
+                Program.Exit(1);
+            }
+
             var minVersion = commandLine.GetOption("--minimum");
 
             if (!string.IsNullOrEmpty(minVersion))

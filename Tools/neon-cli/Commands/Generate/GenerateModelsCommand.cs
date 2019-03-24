@@ -130,7 +130,7 @@ style design conventions.  See this GitHub issue for more information:
                 NoServiceClients = commandLine.HasOption("--no-services")
             };
 
-            var assembly      = Assembly.LoadFile(assemblyPath);
+            var assembly      = Assembly.LoadFile(Path.GetFullPath(assemblyPath));
             var codeGenerator = new CodeGenerator(settings);
             var output        = codeGenerator.Generate(assembly);
 
@@ -142,6 +142,8 @@ style design conventions.  See this GitHub issue for more information:
             {
                 Console.Write(output.SourceCode);
             }
+
+            Program.Exit(0);
         }
     }
 }
