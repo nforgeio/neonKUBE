@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TestModels.cs
+// FILE:	    Test_Couchbase.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,9 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -29,22 +29,16 @@ using System.Threading.Tasks;
 
 using Neon.CodeGen;
 using Neon.Common;
-using Neon.Serialization;
+using Neon.Xunit;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Test.Neon.Models.Definitions
-{
-    public interface BaseModel
-    {
-        [HashSource]
-        string ParentProperty { get; set; }
-    }
+using Xunit;
 
-    public interface DerivedModel : BaseModel
+namespace TestCodeGen.ServiceModel
+{
+    public class Test_Couchbase
     {
-        [HashSource]
-        string ChildProperty { get; set; }
     }
 }

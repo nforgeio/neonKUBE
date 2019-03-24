@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Test.Neon.Models.Definitions\Test.Neon.Models.Definitions.csproj" />
+  </ItemGroup>
+
+  <Target Name="PreBuild" AfterTargets="PreBuildEvent">
+    <Exec Command="neon version --minimum=0.3.1-alpha" />
+    <Exec Command="echo neon generate models --target-namespace=Test.Models '$(ProjectDir)../Test.Neon.Models/bin/$(ConfigurationName)/netstandard2.0/Test.Neon.Models.Definitions.dll' '$(ProjectDir)Models.cs'"/>
+  </Target>
+
+</Project>

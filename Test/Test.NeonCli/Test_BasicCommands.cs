@@ -56,33 +56,35 @@ namespace Test.NeonCli
         {
             using (var runner = new ProgramRunner())
             {
-                var result = runner.Execute(Program.Main, "version");
+                //var result = runner.Execute(Program.Main, "version");
+                //Assert.Equal(0, result.ExitCode);
+                //Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
 
-                Assert.Equal(0, result.ExitCode);
-                Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
+                //result = runner.Execute(Program.Main, "version", "-n");
+                //Assert.Equal(0, result.ExitCode);
+                //Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
+                //Assert.DoesNotContain('\n', result.OutputText);
 
-                result = runner.Execute(Program.Main, "version", "-n");
+                //result = runner.Execute(Program.Main, "version", "-n", "--git");
+                //Assert.Equal(0, result.ExitCode);
+                //Assert.Equal($"{Build.ProductVersion}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
+                //Assert.DoesNotContain('\n', result.OutputText);
 
-                Assert.Equal(0, result.ExitCode);
-                Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
-                Assert.DoesNotContain('\n', result.OutputText);
+                //result = runner.Execute(Program.Main, "version", $"--minimum={Program.Version}");
+                //Assert.Equal(0, result.ExitCode);
 
-                result = runner.Execute(Program.Main, "version", "-n", "--git");
+                //result = runner.Execute(Program.Main, "version", $"--minimum=0");
+                //Assert.Equal(0, result.ExitCode);
 
-                Assert.Equal(0, result.ExitCode);
-                Assert.Equal($"{Build.ProductVersion}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
-                Assert.DoesNotContain('\n', result.OutputText);
+                //result = runner.Execute(Program.Main, "version", $"--minimum=64000.0.0");
+                //Assert.NotEqual(0, result.ExitCode);
 
-                result = runner.Execute(Program.Main, "version", $"--minimum={Program.Version}");
+                var curVersion   = SemanticVersion.Parse(Program.Version);
+                var newerVersion = SemanticVersion.Create(curVersion.Major, curVersion.Minor, curVersion.Patch + 1, curVersion.Build, curVersion.Prerelease);
 
-                Assert.Equal(0, result.ExitCode);
+                Assert.True(newerVersion > curVersion);
 
-                result = runner.Execute(Program.Main, "version", $"--minimum=0");
-
-                Assert.Equal(0, result.ExitCode);
-
-                result = runner.Execute(Program.Main, "version", $"--minimum=64000.0.0");
-
+                var result = runner.Execute(Program.Main, "version", $"--minimum={newerVersion}");
                 Assert.NotEqual(0, result.ExitCode);
             }
         }

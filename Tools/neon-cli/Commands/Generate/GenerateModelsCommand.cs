@@ -53,7 +53,7 @@ ARGUMENTS:
     ASSEMBLY-PATH       - Path to the assembly being scanned.
 
     OUTPUT-PATH         - Optional path to the output file, otherwise
-                          the generated code will be writtent to STDOUT.
+                          the generated code will be written to STDOUT.
 
 OPTIONS:
 

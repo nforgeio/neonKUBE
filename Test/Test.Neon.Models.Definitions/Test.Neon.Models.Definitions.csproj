@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
@@ -20,10 +20,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="echo &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\Test.Neon.Models.Shared\Couchbase.Lite.g.cs&quot; --register=Test.Neon.Models.ModelTypes --quiet" />
-    <Exec Command="entity-gen &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\Test.Neon.Models.Shared\Couchbase.Lite.g.cs&quot; --register=Test.Neon.Models.ModelTypes --quiet" />
-  </Target>
 
 </Project>
