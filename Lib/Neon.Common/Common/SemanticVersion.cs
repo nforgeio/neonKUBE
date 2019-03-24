@@ -187,6 +187,37 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Creates a semantic version number from parameters.
+        /// </summary>
+        /// <param name="major">The major version.</param>
+        /// <param name="minor">Optional minor version.</param>
+        /// <param name="patch">Optional patch version.</param>
+        /// <param name="build">Optional build.</param>
+        /// <param name="prerelease">Optional prerelease.</param>
+        /// <returns>The <see cref="SemanticVersion"/>.</returns>
+        /// <exception cref="ArgumentException">Thrown if any of the parameters are invalid.</exception>
+        public static SemanticVersion Create(int major, int minor = 0, int patch = 0, string build = null, string prerelease = null)
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(major);
+            sb.AppendWithSeparator(minor.ToString(), ".");
+            sb.AppendWithSeparator(patch.ToString(), ".");
+
+            if (!string.IsNullOrEmpty(build))
+            {
+                sb.AppendWithSeparator(build, "+");
+            }
+
+            if (!string.IsNullOrEmpty(prerelease))
+            {
+                sb.AppendWithSeparator(prerelease, "-");
+            }
+
+            return Parse(sb.ToString());
+        }
+
+        /// <summary>
         /// Compares two non-null semantic versions.
         /// </summary>
         /// <param name="v1">The first version.</param>
