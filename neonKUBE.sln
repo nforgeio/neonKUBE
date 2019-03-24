@@ -52,9 +52,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{31
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{83DC75D5-800D-42F7-9812-BD198A62DD0B}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Test.Neon.Models.shared", "Test\Test.Neon.Models.shared\Test.Neon.Models.shared.shproj", "{29E7763D-85D9-4174-92E1-DF739099A36A}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Models.Definition", "Test\Test.Neon.Models.Definition\Test.Neon.Models.Definition.csproj", "{626E630A-03D5-4578-88B1-31B0E6011E2C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Models", "Test\Test.Neon.Models\Test.Neon.Models.csproj", "{626E630A-03D5-4578-88B1-31B0E6011E2C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{77DD54D0-3F03-4B34-AF83-ABFD430400F0} = {77DD54D0-3F03-4B34-AF83-ABFD430400F0}
 	EndProjectSection
@@ -205,11 +203,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.CodeGen", "Lib\Neon.Co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.RestApi", "Test\Test.RestApi\Test.RestApi.csproj", "{70216CFB-7D80-40BB-B95C-66E7DD991C16}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.CodeGen", "Test\Test.Neon.CodeGen\Test.Neon.CodeGen.csproj", "{40496FF2-3343-476D-9BE6-29D4CDBC86C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.CodeGen", "Test\Test.Neon.CodeGen\Test.Neon.CodeGen.csproj", "{40496FF2-3343-476D-9BE6-29D4CDBC86C5}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Test\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems*{29e7763d-85d9-4174-92e1-df739099a36a}*SharedItemsImports = 13
 		Lib\Neon.Couchbase.Lite.shared\Neon.Couchbase.Lite.shared.projitems*{8d7fe880-9006-488f-bab3-3a82011cd699}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -699,7 +696,6 @@ Global
 		{468E440F-2284-483D-A54A-EC540C85F76E} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{66229C6D-EC7E-4340-8BC0-6C9E6EF830C6} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 		{756FB86B-29BC-4C6B-A19B-A624A9E9D367} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
-		{29E7763D-85D9-4174-92E1-DF739099A36A} = {5641C82B-E8E5-49AD-8DEE-E574D0D77460}
 		{626E630A-03D5-4578-88B1-31B0E6011E2C} = {5641C82B-E8E5-49AD-8DEE-E574D0D77460}
 		{5641C82B-E8E5-49AD-8DEE-E574D0D77460} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{77DD54D0-3F03-4B34-AF83-ABFD430400F0} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
