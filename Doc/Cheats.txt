@@ -1,3 +1,5 @@
+neonkube-build -release -installer
+
 # HOME: tiny
 neon login rm --force root@home-tiny
 neon cluster prepare %NF_ROOT%/devops/home/tiny.cluster.yaml --unredacted

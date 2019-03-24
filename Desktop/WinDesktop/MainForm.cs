@@ -321,8 +321,8 @@ namespace WinDesktop
                         if (notifyStack.Count > 0)
                         {
                             animationTimer.Stop();
-                            PostUpdateUIState();
                             notifyStack.Clear();
+                            PostUpdateUIState();
                         }
 
                         return;
@@ -433,6 +433,8 @@ namespace WinDesktop
                 () =>
                 {
                     StopNotifyAnimation(force: true);
+
+                    notifyStack.Clear();
                     operationInProgress = false;
 
                     PostUpdateUIState();
@@ -728,7 +730,7 @@ namespace WinDesktop
         /// </summary>
         public void PostUpdateUIState()
         {
-            SynchronizationContext.Current.Post(
+            SynchronizationContext.Current?.Post(
                 async state => await UpdateUIStateAsync(),
                         state: null);
         }
@@ -740,7 +742,7 @@ namespace WinDesktop
         /// <note>
         /// This method is somewhat special in that it must be executed on the UI
         /// thread and if it's called on another thread, then the method will post
-        /// a message to itself to invoke itself shortely on the UI thread.
+        /// a message to itself to invoke itself shortly on the UI thread.
         /// </note>
         /// </summary>
         public async Task UpdateUIStateAsync()
@@ -775,37 +777,18 @@ namespace WinDesktop
                 {
                     SetBalloonText($"{Text}: disconnected");
                 }
+            }
+            else if (remoteOperation != null && NeonHelper.GetProcessById(remoteOperation.ProcessId) == null)
+            {
+                // The original [neon-cli] process is no longer running;
+                // it must have terminated before signalling the end
+                // of the operation.  We're going to clear the operation
+                // status.
+                //
+                // This is an important fail-safe.
 
+                StopOperation();
                 return;
-            }
-
-            if (remoteOperation != null)
-            {
-                if (NeonHelper.GetProcessById(remoteOperation.ProcessId) == null)
-                {
-                    // The original [neon-cli] process is no longer running;
-                    // it must have terminated before signalling the end
-                    // of the operation.  We're going to terminate the
-                    // operation status.
-                    //
-                    // This is an important fail-safe.
-
-                    StopOperation();
-                    return;
-                }
-            }
-            else
-            {
-                notifyIcon.Icon = IsConnected ? connectedIcon : disconnectedIcon;
-
-                if (IsConnected)
-                {
-                    SetBalloonText($"{Text}: {KubeHelper.CurrentContextName}");
-                }
-                else
-                {
-                    SetBalloonText($"{Text}: disconnected");
-                }
             }
         }
 
@@ -813,7 +796,7 @@ namespace WinDesktop
         /// Signals the start of a long-running operation.
         /// </summary>
         /// <param name="operation">The <b>neon-cli</b> operation information.</param>
-        public void OnStartOperation(RemoteOperation operation)
+        public void OnRemoteStartOperation(RemoteOperation operation)
         {
             InvokeOnUIThread(
                 () =>
@@ -837,7 +820,7 @@ namespace WinDesktop
                         else
                         {
                             remoteOperation = operation;
-                            StartOperation(workingAnimation);
+                            //StartOperation(workingAnimation);     // $todo(jeff.lill): Notification status is a bit of a mess.
                         }
 
                         SetBalloonText(operation.Summary);
@@ -848,11 +831,11 @@ namespace WinDesktop
 
                         if (notifyStack.Count > 0 && notifyStack.Peek().IsTransient)
                         {
-                            StopNotifyAnimation();
+                            //StopNotifyAnimation();
                         }
 
                         remoteOperation = operation;
-                        StartOperation(workingAnimation);
+                        //StartOperation(workingAnimation);
                         PostUpdateUIState();
                     }
                 });
@@ -869,24 +852,17 @@ namespace WinDesktop
                 {
                     if (operationInProgress)
                     {
-                        // Stop the operation only if the the current operation
-                        // was initiated by the same [neon-cli] process that
-                        // started the operation.
+                        remoteOperation = null;
+                        StopOperation();
 
-                        if (remoteOperation != null && remoteOperation.ProcessId == operation.ProcessId)
+                        if (!string.IsNullOrEmpty(operation.CompletedToast))
                         {
-                            remoteOperation = null;
-                            StopOperation();
+                            ShowToast(operation.CompletedToast);
+                        }
 
-                            if (!string.IsNullOrEmpty(operation.CompletedToast))
-                            {
-                                ShowToast(operation.CompletedToast);
-                            }
-
-                            if (operation.Failed)
-                            {
-                                StartNotifyAnimation(errorAnimation, operation.CompletedToast, isError: true);
-                            }
+                        if (operation.Failed)
+                        {
+                            StartNotifyAnimation(errorAnimation, operation.CompletedToast, isError: true);
                         }
                     }
                 });

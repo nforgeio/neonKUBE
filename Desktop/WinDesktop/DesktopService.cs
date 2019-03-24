@@ -154,12 +154,12 @@ namespace WinDesktop
 
                                             case "/start-operation":
 
-                                                await OnStartOperation(request, response);
+                                                await OnRemoteStartOperation(request, response);
                                                 break;
 
                                             case "/end-operation":
 
-                                                await OnEndOperation(request, response);
+                                                await OnRemoteEndOperation(request, response);
                                                 break;
 
                                             case "/login":
@@ -237,9 +237,9 @@ namespace WinDesktop
         /// <param name="request">The request.</param>
         /// <param name="response">The response.</param>
         /// <returns>Th tracking <see cref="Task"/>.</returns>
-        private static async Task OnStartOperation(Request request, Response response)
+        private static async Task OnRemoteStartOperation(Request request, Response response)
         {
-            MainForm.Current.OnStartOperation(await ParseBodyAsync<RemoteOperation>(request));
+            MainForm.Current.OnRemoteStartOperation(await ParseBodyAsync<RemoteOperation>(request));
             await Task.CompletedTask;
         }
 
@@ -249,7 +249,7 @@ namespace WinDesktop
         /// <param name="request">The request.</param>
         /// <param name="response">The response.</param>
         /// <returns>Th tracking <see cref="Task"/>.</returns>
-        private static async Task OnEndOperation(Request request, Response response)
+        private static async Task OnRemoteEndOperation(Request request, Response response)
         {
             MainForm.Current.OnEndOperation(await ParseBodyAsync<RemoteOperation>(request));
             await Task.CompletedTask;
