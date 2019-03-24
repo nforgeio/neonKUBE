@@ -563,9 +563,16 @@ namespace Neon.CodeGen
                     serviceMethod.Parameters.Add(methodParameter);
                 }
 
-                if (serviceMethod.Parameters.Count(p => p.Pass == Pass.AsBody) > 1)
+                var asBodyParameterCount = serviceMethod.Parameters.Count(p => p.Pass == Pass.AsBody);
+
+                if (asBodyParameterCount > 1)
                 {
                     Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines more than one parameter tagged with [FromBody].");
+                }
+
+                if (serviceMethod.HttpMethod == "GET" && asBodyParameterCount > 0)
+                {
+                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] a parameter tagged with [FromBody].  This is not alowed for methods using the HTTP GET method.");
                 }
 
                 serviceModel.Methods.Add(serviceMethod);
@@ -2033,7 +2040,14 @@ namespace Neon.CodeGen
 
             if (bodyParameter != null)
             {
-                sbArguments.AppendWithSeparator($"document: {bodyParameter.Name}.ToJObject()", argSeparator);
+                if (nameToDataModel.ContainsKey(bodyParameter.ParameterInfo.ParameterType.FullName))
+                {
+                    sbArguments.AppendWithSeparator($"document: {bodyParameter.Name}.ToString()", argSeparator);
+                }
+                else
+                {
+                    sbArguments.AppendWithSeparator($"document: SerializationHelper.Serialize({bodyParameter.Name})", argSeparator);
+                }
             }
 
             if (queryParameters.Count() > 0)

@@ -187,6 +187,38 @@ namespace TestCodeGen.ServiceModel
     {
     }
 
+    /// <summary>
+    /// Used for testing [FromBody] method parameters.
+    /// </summary>
+    [ServiceModel]
+    [RoutePrefix("/api/v1/frombody")]
+    public interface FromBodyService
+    {
+        /// <summary>
+        /// Verify passing a single data model parameter.
+        /// </summary>
+        [HttpPost]
+        void Test1([FromBody]SimpleData p1);
+
+        /// <summary>
+        /// Verify passing other parameters along with a data model parameter.
+        /// </summary>
+        [HttpPost]
+        void Test2(int p1, string p2, MyEnum p3, [FromBody]SimpleData p4);
+
+        /// <summary>
+        /// Verify passing a byte array.
+        /// </summary>
+        [HttpPost]
+        void Test3([FromBody]byte[] p1);
+
+        /// <summary>
+        /// Verify passing a generic list.
+        /// </summary>
+        [HttpPost]
+        void Test4([FromBody]List<string> p1);
+    }
+
     [NoCodeGen]
     public class Test_ServiceModel
     {
@@ -661,7 +693,7 @@ namespace TestCodeGen.ServiceModel
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task RouteService1()
         {
-            // Verify that we can 
+            // Verify that we do URI routing properly.
 
             var settings = new CodeGeneratorSettings()
             {
@@ -741,7 +773,7 @@ namespace TestCodeGen.ServiceModel
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task RouteService2()
         {
-            // Verify that we can 
+            // Verify that we do URI routing properly.
 
             var settings = new CodeGeneratorSettings()
             {
@@ -821,7 +853,7 @@ namespace TestCodeGen.ServiceModel
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task RouteService3()
         {
-            // Verify that we can 
+            // Verify that we do URI routing properly.
 
             var settings = new CodeGeneratorSettings()
             {
@@ -892,6 +924,110 @@ namespace TestCodeGen.ServiceModel
                         Assert.Equal(string.Empty, requestQueryString);
                         Assert.Null(requestContentType);
                         Assert.Null(requestBody);
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task FromBody()
+        {
+            // Verify that we can transmit [FromBody] parameters properly.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_ServiceModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            // Spin up a mock service and a service client and then call the service
+            // via the client.  The mock service will record the HTTP method, URI, and
+            // JSON text received in the request body and then return so that the
+            // caller can verify that these were passed correctly.
+
+            var requestMethod      = string.Empty;
+            var requestPath        = string.Empty;
+            var requestQueryString = string.Empty;
+            var requestContentType = string.Empty;
+            var requestBody        = string.Empty;
+
+            using (new MockHttpServer(TestSettings.BaseAddress,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    requestMethod      = request.Method;
+                    requestPath        = request.Path;
+                    requestQueryString = request.QueryString;
+                    requestContentType = request.ContentType;
+
+                    if (request.HasEntityBody)
+                    {
+                        requestBody = request.GetBodyText();
+                    }
+                    else
+                    {
+                        requestBody = null;
+                    }
+
+                    response.ContentType = "application/json";
+
+                    await Task.CompletedTask;
+                }))
+            {
+                using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+                {
+                    using (var client = context.CreateServiceWrapper<FromBodyService>(TestSettings.BaseAddress))
+                    {
+                        var simpleData = context.CreateDataWrapper<SimpleData>();
+
+                        simpleData["Name"] = "Joe Bloe";
+                        simpleData["Age"]  = 45;
+                        simpleData["Enum"] = MyEnum.Two;
+
+                        // Call: Test1()
+
+                        await client.CallAsync("Test1", simpleData.__Instance);
+                        Assert.Equal("POST", requestMethod);
+                        Assert.Equal("/api/v1/frombody/Test1", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Equal("application/json; charset=utf-8", requestContentType);
+                        Assert.Equal("{\"Name\":\"Joe Bloe\",\"Age\":45,\"Enum\":\"Two\"}", requestBody);
+
+                        // Call: Test2()
+
+                        await client.CallAsync("Test2", 1, "two", MyEnum.Three, simpleData.__Instance);
+                        Assert.Equal("POST", requestMethod);
+                        Assert.Equal("/api/v1/frombody/Test2", requestPath);
+                        Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
+                        Assert.Equal("application/json; charset=utf-8", requestContentType);
+                        Assert.Equal("{\"Name\":\"Joe Bloe\",\"Age\":45,\"Enum\":\"Two\"}", requestBody);
+
+                        // Call: Test3()
+
+                        await client.CallAsync("Test3", new byte[] { 0, 1, 2, 3, 4 });
+                        Assert.Equal("POST", requestMethod);
+                        Assert.Equal("/api/v1/frombody/Test3", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Equal("application/json; charset=utf-8", requestContentType);
+                        Assert.Equal($"\"{Convert.ToBase64String(new byte[] { 0, 1, 2, 3, 4 })}\"", requestBody);
+
+                        // Call: Test4()
+
+                        await client.CallAsync("Test4", new List<string>() { "zero", "one", "two", "three", "four" });
+                        Assert.Equal("POST", requestMethod);
+                        Assert.Equal("/api/v1/frombody/Test4", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Equal("application/json; charset=utf-8", requestContentType);
+                        Assert.Equal($"[\"zero\",\"one\",\"two\",\"three\",\"four\"]", requestBody);
                     }
                 }
             }
