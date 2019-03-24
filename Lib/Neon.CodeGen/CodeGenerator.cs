@@ -575,15 +575,21 @@ namespace Neon.CodeGen
         /// <summary>
         /// Loads the required information for a data model type.
         /// </summary>
-        /// <param name="type">YThe source type.</param>
-        private void LoadDataModel(Type type)
+        /// <param name="dataType">The source data model type.</param>
+        private void LoadDataModel(Type dataType)
         {
-            var dataModel = new DataModel(type, this);
+            if (dataType.IsGenericTypeDefinition)
+            {
+                Output.Errors.Add($"ERROR: Data model [{dataType.FullName}] is not currently supported because it is a generic type.");
+                return;
+            }
 
-            nameToDataModel[type.FullName] = dataModel;
-            dataModel.IsEnum               = type.IsEnum;
+            var dataModel = new DataModel(dataType, this);
 
-            foreach (var targetAttibute in type.GetCustomAttributes<TargetAttribute>())
+            nameToDataModel[dataType.FullName] = dataModel;
+            dataModel.IsEnum               = dataType.IsEnum;
+
+            foreach (var targetAttibute in dataType.GetCustomAttributes<TargetAttribute>())
             {
                 if (!dataModel.Targets.Contains(targetAttibute.Name))
                 {
@@ -591,25 +597,25 @@ namespace Neon.CodeGen
                 }
             }
 
-            var dataModelAttribute = type.GetCustomAttribute<DataModelAttribute>();
+            var dataModelAttribute = dataType.GetCustomAttribute<DataModelAttribute>();
 
             if (dataModelAttribute != null)
             {
-                dataModel.TypeID = dataModelAttribute.TypeID ?? type.FullName;
+                dataModel.TypeID = dataModelAttribute.TypeID ?? dataType.FullName;
             }
 
             if (string.IsNullOrEmpty(dataModel.TypeID))
             {
-                dataModel.TypeID = type.FullName;
+                dataModel.TypeID = dataType.FullName;
             }
 
             if (dataModel.IsEnum)
             {
                 // Normalize the enum properties.
 
-                dataModel.HasEnumFlags = type.GetCustomAttribute<FlagsAttribute>() != null;
+                dataModel.HasEnumFlags = dataType.GetCustomAttribute<FlagsAttribute>() != null;
 
-                var enumBaseType = type.GetEnumUnderlyingType();
+                var enumBaseType = dataType.GetEnumUnderlyingType();
 
                 if (enumBaseType == typeof(byte))
                 {
@@ -645,12 +651,12 @@ namespace Neon.CodeGen
                 }
                 else 
                 {
-                    Output.Errors.Add($"ERROR: [{type.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
+                    Output.Errors.Add($"ERROR: [{dataType.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
 
                     dataModel.BaseTypeName = "int";
                 }
 
-                foreach (var member in type.GetFields(BindingFlags.Public | BindingFlags.Static))
+                foreach (var member in dataType.GetFields(BindingFlags.Public | BindingFlags.Static))
                 {
                     var enumMember = new EnumMember()
                     {
@@ -683,7 +689,7 @@ namespace Neon.CodeGen
 
                 var baseInterface = (Type)null;
 
-                foreach (var implementedInterface in type.GetInterfaces())
+                foreach (var implementedInterface in dataType.GetInterfaces())
                 {
                     if (!nameToDataModel.ContainsKey(implementedInterface.FullName))
                     {
@@ -707,7 +713,7 @@ namespace Neon.CodeGen
 
                 // Normalize regular (non-enum) data model properties.
 
-                foreach (var member in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                foreach (var member in dataType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 {
                     // Ignore properties that don't have both a getter and a setter.
 
