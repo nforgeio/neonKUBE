@@ -489,6 +489,142 @@ namespace TestCodeGen.ServiceModel
             }
         }
 
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task UnsafeMethodService()
+        {
+            // Verify that the correct HTTP methods are used when performing unsafe
+            // operations.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_ServiceModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            // Spin up a mock service and a service client and then call the service
+            // via the client.  The mock service will record the HTTP method, URI, and
+            // JSON text received in the request body and then return so that the
+            // caller can verify that these were passed correctly.
+
+            var requestMethod      = string.Empty;
+            var requestPath        = string.Empty;
+            var requestQueryString = string.Empty;
+            var requestContentType = string.Empty;
+            var requestBody        = string.Empty;
+
+            using (new MockHttpServer(TestSettings.BaseAddress,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    requestMethod      = request.Method;
+                    requestPath        = request.Path;
+                    requestQueryString = request.QueryString;
+                    requestContentType = request.ContentType;
+
+                    if (request.HasEntityBody)
+                    {
+                        requestBody = request.GetBodyText();
+                    }
+                    else
+                    {
+                        requestBody = null;
+                    }
+
+                    response.ContentType = "application/json";
+
+                    await Task.CompletedTask;
+                }))
+            {
+                using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+                {
+                    using (var client = context.CreateServiceWrapper<MethodsServiceController>(TestSettings.BaseAddress))
+                    {
+                        // Call: TestDefault()
+
+                        await client.CallAsync("UnsafeTestDefault", 1, "two", MyEnum.Three);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/MethodsService/TestDefault", requestPath);
+                        Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: TestGet()
+
+                        await client.CallAsync("UnsafeTestGet", 1, "two", MyEnum.Three);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/MethodsService/TestGet", requestPath);
+                        Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: TestDelete()
+
+                        await client.CallAsync("UnsafeTestDelete", 1, "two", MyEnum.Three);
+                        Assert.Equal("DELETE", requestMethod);
+                        Assert.Equal("/MethodsService/TestDelete", requestPath);
+                        Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: TestHead()
+
+                        await client.CallAsync("UnsafeTestHead", 1, "two", MyEnum.Three);
+                        Assert.Equal("HEAD", requestMethod);
+                        Assert.Equal("/MethodsService/TestHead", requestPath);
+                        Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: TestOptions()
+
+                        await client.CallAsync("UnsafeTestOptions", 1, "two", MyEnum.Three);
+                        Assert.Equal("OPTIONS", requestMethod);
+                        Assert.Equal("/MethodsService/TestOptions", requestPath);
+                        Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: TestPatch()
+
+                        await client.CallAsync("UnsafeTestPatch", 1, "two", MyEnum.Three);
+                        Assert.Equal("PATCH", requestMethod);
+                        Assert.Equal("/MethodsService/TestPatch", requestPath);
+                        Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: TestPost()
+
+                        await client.CallAsync("UnsafeTestPost", 1, "two", MyEnum.Three);
+                        Assert.Equal("POST", requestMethod);
+                        Assert.Equal("/MethodsService/TestPost", requestPath);
+                        Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: TestPut()
+
+                        await client.CallAsync("UnsafeTestPut", 1, "two", MyEnum.Three);
+                        Assert.Equal("PUT", requestMethod);
+                        Assert.Equal("/MethodsService/TestPut", requestPath);
+                        Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+                    }
+                }
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task ResultsService()
