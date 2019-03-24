@@ -24,6 +24,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -34,7 +35,6 @@ using Microsoft.CodeAnalysis.Text;
 using Newtonsoft.Json;
 
 using Neon.Serialization;
-using System.Threading.Tasks;
 
 // $todo(jeff.lill):
 //
@@ -846,6 +846,7 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.Net;");
             writer.WriteLine($"using System.Net.Http;");
             writer.WriteLine($"using System.Net.Http.Headers;");
+            writer.WriteLine($"using System.Reflection;");
             writer.WriteLine($"using System.Runtime.Serialization;");
             writer.WriteLine($"using System.Text;");
             writer.WriteLine($"using System.Threading;");
@@ -1510,6 +1511,28 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            {{");
                     writer.WriteLine($"                __Save();");
                     writer.WriteLine($"                return CreateFrom((JObject)__JObject.DeepClone());");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Used to convert a base data model class into a derived class.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <typeparam name=\"T\">The desired derived type.</typeparam>");
+                    writer.WriteLine($"        /// <param name\"noClone\">");
+                    writer.WriteLine($"        /// By default, this method will create a deep clone of the underlying <see cref=\"JObject\"/>");
+                    writer.WriteLine($"        /// and use this new instance when constructing the new object.  This is the safest");
+                    writer.WriteLine($"        /// approach but will cause a performance hit.  You can pass <paramref name=\"noClone\"/><c>=true</>");
+                    writer.WriteLine($"        /// to reuse the existing <see cref=\"JObject\"/> for the new instance if you're sure that the");
+                    writer.WriteLine($"        /// original instance will no longer be accessed.");
+                    writer.WriteLine($"        /// </param>");
+                    writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
+                    writer.WriteLine($"        public {dataModel.SourceType.Name} ToDerived<T>(bool noClone = false)");
+                    writer.WriteLine($"           where T : {dataModel.SourceType.Name}, IGeneratedDataModel");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            lock (__JObject)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                __Save();");
+                    writer.WriteLine($"                return GeneratedClassFactory.CreateFrom<T>(noClone ? __JObject : (JObject)__JObject.DeepClone());");
                     writer.WriteLine($"            }}");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();

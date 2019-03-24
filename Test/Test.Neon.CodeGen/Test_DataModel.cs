@@ -672,6 +672,21 @@ namespace TestCodeGen.DataModel
                 Assert.False(value2.Equals(value1));
                 Assert.False(value1.Equals(null));
                 Assert.False(value1.Equals("Hello World!"));
+
+                //-------------------------------------------------------------
+                // Verify that we can use [ToDerived<TResult>()] to create a derived instance
+                // from the base type.  This also exercises [GeneratedClassFactory] a bit.
+
+                derivedData = context.CreateDataWrapper<DerivedModel>();
+
+                derivedData["ParentProperty"] = "parent";
+                derivedData["ChildProperty"]  = "child";
+
+                baseData    = context.CreateDataWrapperFrom<BaseModel>(derivedData.ToString());
+                derivedData = baseData.ToDerived<DerivedModel>();
+
+                //Assert.Equal("parent", derivedData["ParentProperty"]);
+                Assert.Equal("child", derivedData["ChildProperty"]);
             }
         }
 

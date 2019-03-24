@@ -48,42 +48,49 @@ namespace TestCodeGen
         private Type    instanceType;
 
         /// <summary>
+        /// Private constructor that initializes nothing.
+        /// </summary>
+        private DataWrapper()
+        {
+        }
+
+        /// <summary>
         /// Constructs an instance with uninitialized properties.
         /// </summary>
-        /// <param name="type">The target type.</param>
-        public DataWrapper(Type type)
+        /// <param name="instanceType">The target type.</param>
+        public DataWrapper(Type instanceType)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null);
 
-            instance = Activator.CreateInstance(type);
-            instanceType = type;
+            this.instance     = Activator.CreateInstance(instanceType);
+            this.instanceType = instanceType;
 
             if (instance == null)
             {
-                throw new TypeLoadException($"Cannot instantiate type: {type.FullName}");
+                throw new TypeLoadException($"Cannot instantiate type: {instanceType.FullName}");
             }
         }
 
         /// <summary>
         /// Constructs an instance initialized from JSON text.
         /// </summary>
-        /// <param name="type">The target type.</param>
+        /// <param name="instanceType">The target type.</param>
         /// <param name="jsonText">The JSON text.</param>
-        public DataWrapper(Type type, string jsonText)
+        public DataWrapper(Type instanceType, string jsonText)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(jsonText));
 
             try
             {
-                var createFromMethod = type.GetMethod("CreateFrom", new Type[] { typeof(string) });
+                var createFromMethod = instanceType.GetMethod("CreateFrom", new Type[] { typeof(string) });
 
-                instance     = createFromMethod.Invoke(null, new object[] { jsonText });
-                instanceType = type;
+                this.instance     = createFromMethod.Invoke(null, new object[] { jsonText });
+                this.instanceType = instanceType;
 
-                if (instance == null)
+                if (this.instance == null)
                 {
-                    throw new TypeLoadException($"Cannot instantiate type: {type.FullName}");
+                    throw new TypeLoadException($"Cannot instantiate type: {instanceType.FullName}");
                 }
             }
             catch (TargetInvocationException e)
@@ -102,23 +109,23 @@ namespace TestCodeGen
         /// <summary>
         /// Constructs an instance initialized from a <see cref="JObject"/>.
         /// </summary>
-        /// <param name="type">The target type.</param>
+        /// <param name="instanceType">The target type.</param>
         /// <param name="jObject">The <see cref="JObject"/>.</param>
-        public DataWrapper(Type type, JObject jObject)
+        public DataWrapper(Type instanceType, JObject jObject)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null);
             Covenant.Requires<ArgumentNullException>(jObject != null);
 
             try
             {
-                var createFromMethod = type.GetMethod("CreateFrom", new Type[] { typeof(JObject) });
+                var createFromMethod = instanceType.GetMethod("CreateFrom", new Type[] { typeof(JObject) });
 
-                instance     = createFromMethod.Invoke(null, new object[] { jObject });
-                instanceType = type;
+                this.instance     = createFromMethod.Invoke(null, new object[] { jObject });
+                this.instanceType = instanceType;
 
-                if (instance == null)
+                if (this.instance == null)
                 {
-                    throw new TypeLoadException($"Cannot instantiate type: {type.FullName}");
+                    throw new TypeLoadException($"Cannot instantiate type: {instanceType.FullName}");
                 }
             }
             catch (TargetInvocationException e)
@@ -243,7 +250,7 @@ namespace TestCodeGen
         }
 
         /// <summary>
-        /// Serializes the data model as a <see cref="JObjects"/>.
+        /// Serializes the data model as a <see cref="JObject"/>.
         /// </summary>
         /// <param name="indented">Optionally format the JSON output.</param>
         /// <returns>The JSON text.</returns>
@@ -269,6 +276,47 @@ namespace TestCodeGen
         }
 
         /// <summary>
+        /// Converts the current instance into one of its derived types.
+        /// </summary>
+        /// <typeparam name="TResult">The desired result type.</typeparam>
+        /// <param name="noClone">Optionally disable deep cloning of the underlying <see cref="JObject"/>.</param>
+        /// <returns>The derived instance.</returns>
+        public DataWrapper ToDerived<TResult>(bool noClone = false)
+        {
+            try
+            {
+                var toDerivedMethod = instanceType.GetMethod("ToDerived", new Type[] { typeof(bool) });
+
+                Covenant.Assert(toDerivedMethod != null);
+
+                // $hack(jeff.lill):
+                //
+                // We're going to assume for testing purposes that the derived type
+                // is in the same namespace as the current type.
+
+                var resultType             = AssemblyContext.Current.LoadedAssembly.GetType($"{instanceType.Namespace}.{typeof(TResult).Name}");
+                var toGenericDerivedMethod = toDerivedMethod.MakeGenericMethod(resultType);
+
+                return new DataWrapper()
+                {
+                    instance     = toGenericDerivedMethod.Invoke(instance, new object[] { noClone }),
+                    instanceType = resultType
+                };
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns a deep clone of the data model.
         /// </summary>
         /// <returns>The new data <see cref="DataWrapper"/> with the cloned instance.</returns>
@@ -276,8 +324,6 @@ namespace TestCodeGen
         {
             try
             {
-                var cloneMethod     = instanceType.GetMethod("DeepClone", new Type[] { });
-                var clone           = cloneMethod.Invoke(instance, new object[] { });
                 var toJObjectMethod = instanceType.GetMethod("ToJObject", new Type[] { });
                 var jObject         = (JObject)toJObjectMethod.Invoke(instance, new object[] { });
 
