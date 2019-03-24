@@ -96,7 +96,11 @@ OPTIONS:
 
                 if (toolSemanticVersion < minSemanticVersion)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [neon v{Program.Version}] is older than the required version []. ");
+                    Console.Error.WriteLine($"*** ERROR: [neon v{Program.Version}] is older than the required version [{minSemanticVersion}]. ");
+                    Console.Error.WriteLine($"           You can obtain the latest releases from here:");
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($"           https://github.com/nforgeio/neonKUBE/releases");
+                    Console.Error.WriteLine();
                     Program.Exit(1);
                 }
             }
