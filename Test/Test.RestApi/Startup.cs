@@ -38,7 +38,7 @@ namespace Test.RestApi
 
             app.UseRouting(routes =>
             {
-                routes.MapApplication();
+                routes.MapControllers();
             });
 
             app.UseAuthorization();

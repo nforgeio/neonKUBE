@@ -70,7 +70,7 @@ Follow the steps below to configure a development or test workstation:
     * GitHub extensions for Visual Studio
     * Help Viewer
   * Click **Install** (and take a coffee break)
-  * Install **.NET Core SDK 3.0.100-preview2** from [here](https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-3.0.100-preview2-windows-x64-installer)
+  * Install **.NET Core SDK 3.0.100-preview3-010431** from [here](https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-3.0.100-preview3-windows-x64-installer)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   

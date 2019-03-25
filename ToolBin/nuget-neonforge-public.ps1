@@ -72,6 +72,7 @@ SetVersion Neon.Kube.XenServer
 SetVersion Neon.Web
 SetVersion Neon.XenServer
 SetVersion Neon.Xunit
+SetVersion Neon.Xunit.Couchbase
 SetVersion Neon.Xunit.Kube
 
 # Build and publish the projects.
@@ -95,5 +96,6 @@ Publish Neon.Kube.XenServer
 Publish Neon.Web
 Publish Neon.XenServer
 Publish Neon.Xunit
+Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
 pause
