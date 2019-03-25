@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj" />
+    <ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj" />
   </ItemGroup>
 
 </Project>
