@@ -124,7 +124,7 @@ namespace Neon.Xunit.Couchbase
         /// </remarks>
         public bool Start(
             CouchbaseSettings   settings  = null,
-            string              image     = "nhive/couchbase-test:latest",
+            string              image     = "nkubeio/couchbase-test:latest",
             string              name      = "cb-test",
             string[]            env       = null,
             string              username  = "Administrator",
