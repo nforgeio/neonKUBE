@@ -44,7 +44,7 @@ function Publish
         [string]$project
     )
 
-	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_build\nuget"
+	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_BUILD\nuget"
 
 	$version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
 
@@ -98,4 +98,5 @@ Publish Neon.XenServer
 Publish Neon.Xunit
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
+
 pause
