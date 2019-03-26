@@ -36,9 +36,10 @@ param
 	[switch]$installer = $False
 )
 
-$msbuild = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\MSBuild\Current\Bin\amd64\MSBuild.exe"
-$nfRoot  = "$env:NF_ROOT"
-$nfBuild = "$env:NF_BUILD"
+$msbuild   = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$nfRoot    = "$env:NF_ROOT"
+$nfBuild   = "$env:NF_BUILD"
+$env:PATH += ";$nfBuild"
 
 if (-not $debug -and -not $release)
 {
