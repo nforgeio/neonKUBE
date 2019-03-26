@@ -1104,7 +1104,6 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            return model;");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
-                    writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Deserializes an instance from a <see cref=\"JsonResponse\"/>.");
                     writer.WriteLine($"        /// </summary>");
