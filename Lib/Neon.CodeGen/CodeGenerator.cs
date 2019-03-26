@@ -1479,7 +1479,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Renders the instance as JSON text, optionally formatting the output.");
                     writer.WriteLine($"        /// </summary>");
-                    writer.WriteLine($"        /// <param name=\"indent\">Optionally pass <c>true</c> to format the output.</param>");
+                    writer.WriteLine($"        /// <param name=\"indented\">Optionally pass <c>true</c> to format the output.</param>");
                     writer.WriteLine($"        /// <returns>The serialized JSON string.</returns>");
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
@@ -1581,7 +1581,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </note>");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <returns>The calculated hash code.</returns>");
-                    writer.WriteLine($"        /// <exception cref=\"InvalidOperationException\">Thrown when no class properties are tagged with <see cref=\"HashSourceAttribute\"/>.</exception>");
+                    writer.WriteLine($"        /// <exception cref=\"InvalidOperationException\">Thrown when no class properties are tagged with a <c>[HashSourceAttribute]</c>.</exception>");
                     writer.WriteLine($"        public override int GetHashCode()");
                     writer.WriteLine($"        {{");
 
