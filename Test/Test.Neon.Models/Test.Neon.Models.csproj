@@ -9,9 +9,9 @@
     <ProjectReference Include="..\Test.Neon.Models.Definitions\Test.Neon.Models.Definitions.csproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" AfterTargets="PreBuildEvent">
+  <Target Name="ModelGen" AfterTargets="BeforeCompile">
     <Exec Command="neon version --minimum=0.3.1-alpha" />
-    <Exec Command="neon generate models --target-namespace=Test.Models &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\$(OutDir)Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)Models.cs&quot;" />
+    <Exec Command="neon generate models --target-namespace=Test.Models &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\$(OutDir)Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedModels.cs&quot;" />
   </Target>
 
 </Project>
