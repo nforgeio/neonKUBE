@@ -595,7 +595,7 @@ namespace Neon.CodeGen
             var dataModel = new DataModel(dataType, this);
 
             nameToDataModel[dataType.FullName] = dataModel;
-            dataModel.IsEnum               = dataType.IsEnum;
+            dataModel.IsEnum                   = dataType.IsEnum;
 
             foreach (var targetAttibute in dataType.GetCustomAttributes<TargetAttribute>())
             {

@@ -26,7 +26,7 @@ namespace Neon.CodeGen
     /// Used to group data models and service definitions so that the
     /// class included in the generated code can filtered.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Interface, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Enum, AllowMultiple = true)]
     public class TargetAttribute : Attribute
     {
         /// <summary>
