@@ -864,6 +864,7 @@ namespace Neon.CodeGen
             writer.WriteLine($"using Neon.Common;");
             writer.WriteLine($"using Neon.Diagnostics;");
             writer.WriteLine($"using Neon.Net;");
+            writer.WriteLine($"using Neon.Retry;");
             writer.WriteLine($"using Neon.Serialization;");
             writer.WriteLine();
 
@@ -1897,6 +1898,7 @@ namespace Neon.CodeGen
             }
 
             sbParameters.AppendWithSeparator("CancellationToken cancellationToken = default", argSeparator);
+            sbParameters.AppendWithSeparator("IRetryPolicy retryPolicy = default", argSeparator);
             sbParameters.AppendWithSeparator("LogActivity logActivity = default", argSeparator);
 
             // Generate the arguments to be passed to the query methods.
@@ -2060,6 +2062,7 @@ namespace Neon.CodeGen
                 sbArgGenerate.AppendLine($"{indent}            }};");
             }
 
+            sbArguments.AppendWithSeparator("retryPolicy ?? NoRetryPolicy.Instance", argSeparator);
             sbArguments.AppendWithSeparator(uriRef, argSeparator);
 
             if (bodyParameter != null)

@@ -31,6 +31,7 @@ using System.Threading.Tasks;
 using Neon.CodeGen;
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Retry;
 using Neon.Xunit;
 
 using Newtonsoft.Json;
@@ -49,6 +50,7 @@ namespace TestCodeGen
         private object              instance;
         private Type                instanceType;
         private CancellationToken   defaultCancellationToken;
+        private IRetryPolicy        defaultRetryPolicy;
         private object              defaultLogActivity;
 
         /// <summary>
@@ -83,6 +85,7 @@ namespace TestCodeGen
             // need to be obtained from the generated assembly.
 
             this.defaultCancellationToken = default(CancellationToken);
+            this.defaultRetryPolicy       = default(IRetryPolicy);
             this.defaultLogActivity       = Activator.CreateInstance(context.NeonCommonAssembly.GetType(typeof(LogActivity).FullName));
         }
 
@@ -135,6 +138,7 @@ namespace TestCodeGen
             }
 
             argList.Add(defaultCancellationToken);
+            argList.Add(defaultRetryPolicy);
             argList.Add(defaultLogActivity);
 
             await (Task)method.Invoke(instance, argList.ToArray());
@@ -177,6 +181,7 @@ namespace TestCodeGen
             }
 
             argList.Add(defaultCancellationToken);
+            argList.Add(defaultRetryPolicy);
             argList.Add(defaultLogActivity);
 
             try
@@ -243,6 +248,7 @@ namespace TestCodeGen
             }
 
             argList.Add(defaultCancellationToken);
+            argList.Add(defaultRetryPolicy);
             argList.Add(defaultLogActivity);
 
             await (Task)method.Invoke(property.GetValue(instance), argList.ToArray());
@@ -293,6 +299,7 @@ namespace TestCodeGen
             }
 
             argList.Add(defaultCancellationToken);
+            argList.Add(defaultRetryPolicy);
             argList.Add(defaultLogActivity);
 
             try
