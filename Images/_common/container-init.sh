@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # Standard container initialization script.
 #
-# USAGE: . ./container-init.sh
+# USAGE: ./container-init.sh
 
 
 envoy_end=$((SECONDS+300))
