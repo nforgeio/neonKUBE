@@ -75,7 +75,7 @@ namespace TestCodeGen.ServiceModel
     {
     }
 
-    [ServiceModel(Name = "EmptyOverride")]
+    [ServiceModel(name: "EmptyOverride")]
     public interface Empty2ServiceController
     {
     }
@@ -162,7 +162,7 @@ namespace TestCodeGen.ServiceModel
         void Test2(int p1, string p2, MyEnum p3);
     }
 
-    [ServiceModel(Name = "MyRouteService")]
+    [ServiceModel(name: "MyRouteService")]
     [RoutePrefix("/api/v1/service3")]
     public interface RouteService3
     {
@@ -217,6 +217,47 @@ namespace TestCodeGen.ServiceModel
         /// </summary>
         [HttpPost]
         void Test4([FromBody]List<string> p1);
+    }
+
+    /// <summary>
+    /// Used for testing a service client composed of multiple controllers.
+    /// </summary>
+    [ServiceModel(name: "Composed", group: "User")]
+    [RoutePrefix("/api/v1/user")]
+    public interface ComposedUserController
+    {
+        [HttpGet]
+        [Route("{id}")]
+        string Get(int id);
+
+        [HttpGet]
+        string[] List();
+    }
+
+    /// <summary>
+    /// Used for testing a service client composed of multiple controllers.
+    /// </summary>
+    [ServiceModel(name: "Composed", group: "Delivery")]
+    [RoutePrefix("/api/v1/delivery")]
+    public interface ComposedDeliveryController
+    {
+        [HttpGet]
+        [Route("{id}")]
+        string Get(int id);
+
+        [HttpGet]
+        string[] List();
+    }
+
+    /// <summary>
+    /// Used for testing a service client composed of multiple controllers.
+    /// </summary>
+    [ServiceModel(name: "Composed")]
+    [RoutePrefix("/api/v1")]
+    public interface ComposedController
+    {
+        [HttpGet]
+        string GetVersion();
     }
 
     [NoCodeGen]
@@ -1164,6 +1205,113 @@ namespace TestCodeGen.ServiceModel
                         Assert.Equal("", requestQueryString);
                         Assert.Equal("application/json; charset=utf-8", requestContentType);
                         Assert.Equal($"[\"zero\",\"one\",\"two\",\"three\",\"four\"]", requestBody);
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task Composed()
+        {
+            // Verify that a client composed from multiple service models work.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_ServiceModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            // Spin up a mock service and a service client and then call the service
+            // via the client.  The mock service will record the HTTP method, URI, and
+            // JSON text received in the request body and then return so that the
+            // caller can verify that these were passed correctly.
+
+            var requestMethod      = string.Empty;
+            var requestPath        = string.Empty;
+            var requestQueryString = string.Empty;
+            var requestContentType = string.Empty;
+            var requestBody        = string.Empty;
+
+            using (new MockHttpServer(TestSettings.BaseAddress,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    requestMethod      = request.Method;
+                    requestPath        = request.Path;
+                    requestQueryString = request.QueryString;
+                    requestContentType = request.ContentType;
+
+                    if (request.HasEntityBody)
+                    {
+                        requestBody = request.GetBodyText();
+                    }
+                    else
+                    {
+                        requestBody = null;
+                    }
+
+                    response.ContentType = "application/json";
+
+                    await Task.CompletedTask;
+                }))
+            {
+                using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+                {
+                    using (var client = context.CreateServiceWrapper<ComposedController>(TestSettings.BaseAddress))
+                    {
+                        // Call: GetVersion()
+
+                        await client.CallAsync("GetVersion");
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/api/v1/GetVersion", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: User.Get()
+
+                        await client.ComposedCallAsync("User", "Get", 10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/api/v1/user/10", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: User.List()
+
+                        await client.ComposedCallAsync("User", "List");
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/api/v1/user/List", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: Delivery.Get()
+
+                        await client.ComposedCallAsync("Delivery", "Get", 10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/api/v1/delivery/10", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // Call: Delivery.List()
+
+                        await client.ComposedCallAsync("Delivery", "List");
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/api/v1/delivery/List", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
                     }
                 }
             }

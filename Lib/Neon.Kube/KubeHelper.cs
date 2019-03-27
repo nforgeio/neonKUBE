@@ -69,7 +69,6 @@ namespace Neon.Kube
         private static string               cachedDesktopFolder;
         private static KubeClientConfig     cachedClientConfig;
         private static X509Certificate2     cachedClusterCertificate;
-        private static X509Certificate2     cachedClientCertificate;
         private static string               cachedProgramFolder;
         private static string               cachedPwshPath;
 
@@ -108,7 +107,6 @@ namespace Neon.Kube
             cachedDesktopFolder      = null;
             cachedClientConfig       = null;
             cachedClusterCertificate = null;
-            cachedClientCertificate  = null;
             cachedProgramFolder      = null;
             cachedPwshPath           = null;
         }
@@ -982,7 +980,6 @@ namespace Neon.Kube
             }
 
             cachedClusterCertificate = null;
-            cachedClientCertificate  = null;
 
             Config.Save();
         }

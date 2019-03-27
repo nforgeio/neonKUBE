@@ -33,13 +33,39 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ServiceModelAttribute()
+        /// <param name="name">
+        /// Optionally specifies the name to be used for the generated
+        /// service client class.  This defaults to the tagged controller
+        /// class name with a "Controller" suffix being stripped off if
+        /// present.
+        /// </param>
+        /// <param name="group">
+        /// <para>
+        /// Optionally specifies that the methods from this controller
+        /// should be grouped together in a generated controller class
+        /// composed from multiple service controllers.  Set this to the
+        /// name to be used for the client property under which these 
+        /// methods will be generated.
+        /// </para>
+        /// <note>
+        /// <paramref name="name"/> must also be specified when <paramref name="group"/>
+        /// is set.
+        /// </note>
+        /// </param>
+        public ServiceModelAttribute(string name = null, string group = null)
         {
+            this.Name  = name;
+            this.Group = group;
+
+            if (!string.IsNullOrEmpty(group) && string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException($"[{nameof(name)}] cannot be empty when [{nameof(group)}] is specified.");
+            }
         }
 
         /// <summary>
         /// <para>
-        /// The name to be used for the generated client class
+        /// Returns the name to be used for the generated client class
         /// and for transmitting requests to the server or <c>null</c>
         /// if the name is to be derived from the tagged class name.
         /// </para>
@@ -49,7 +75,7 @@ namespace Neon.CodeGen
         /// if present.
         /// </note>
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; private set; }
 
         /// <summary>
         /// <para>
@@ -66,6 +92,6 @@ namespace Neon.CodeGen
         /// from the controllers with this group name.
         /// </para>
         /// </summary>
-        public string Group { get; set; }
+        public string Group { get; private set; }
     }
 }
