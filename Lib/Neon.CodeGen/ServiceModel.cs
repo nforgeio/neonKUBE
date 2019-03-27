@@ -45,18 +45,23 @@ namespace Neon.CodeGen
 
             var serviceAttribute = sourceType.GetCustomAttribute<ServiceModelAttribute>();
 
-            if (serviceAttribute != null && !string.IsNullOrEmpty(serviceAttribute.Name))
+            if (serviceAttribute != null)
             {
-                this.ClientTypeName = serviceAttribute.Name;
-            }
-            else
-            {
-                this.ClientTypeName = sourceType.Name;
-
-                if (this.ClientTypeName.EndsWith("Controller"))
+                if (!string.IsNullOrEmpty(serviceAttribute.Name))
                 {
-                    this.ClientTypeName = this.ClientTypeName.Substring(0, this.ClientTypeName.Length - "Controller".Length);
+                    this.ClientTypeName = serviceAttribute.Name;
                 }
+                else
+                {
+                    this.ClientTypeName = sourceType.Name;
+
+                    if (this.ClientTypeName.EndsWith("Controller"))
+                    {
+                        this.ClientTypeName = this.ClientTypeName.Substring(0, this.ClientTypeName.Length - "Controller".Length);
+                    }
+                }
+
+                this.ClientGroup = serviceAttribute.Group;
             }
 
             // Determine the service route template.
