@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>uuid_gen</RootNamespace>
     <AssemblyName>uuid-gen</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
