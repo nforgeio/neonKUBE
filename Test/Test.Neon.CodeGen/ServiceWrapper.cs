@@ -197,5 +197,121 @@ namespace TestCodeGen
                 throw new NotSupportedException("This unit test requires calling a real generated service client directly,");
             }
         }
+
+
+        /// <summary>
+        /// Calls a named <c>void</c> method within a named method group.
+        /// </summary>
+        /// <param name="methodGroup">The method group name.</param>
+        /// <param name="methodName">The method name.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// <b>IMPORTANT:</b> This method doesn't handle method overloading 
+        /// so you'll need to ensure that all methods have unique names.
+        /// </note>
+        /// </remarks>
+        public async Task ComposedCallAsync(string methodGroup, string methodName, params object[] args)
+        {
+            var property = instanceType.GetProperty(methodGroup);
+
+            if (property == null)
+            {
+                throw new ArgumentException($"Cannot find method group property: {methodGroup}");
+            }
+
+            if (!methodName.EndsWith("Async"))
+            {
+                methodName += "Async";
+            }
+
+            var method = property.PropertyType.GetMethod(methodName);
+
+            if (method == null)
+            {
+                throw new ArgumentException($"Cannot find method: {methodGroup}.{methodName}()");
+            }
+
+            // We need to pass the default cancellation token and log activity values too.
+
+            var argList = new List<object>();
+
+            foreach (var arg in args)
+            {
+                argList.Add(arg);
+            }
+
+            argList.Add(defaultCancellationToken);
+            argList.Add(defaultLogActivity);
+
+            await (Task)method.Invoke(property.GetValue(instance), argList.ToArray());
+        }
+
+        /// <summary>
+        /// Calls a named method within a method group that returns a specific type.
+        /// </summary>
+        /// <typeparam name="TResult">The method result type.</typeparam>
+        /// <param name="methodGroup">The method group name.</param>
+        /// <param name="methodName">The method name.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The <typeparamref name="TResult"/> method result.</returns>
+        /// <remarks>
+        /// <note>
+        /// <b>IMPORTANT:</b> This method doesn't handle method overloading 
+        /// so you'll need to ensure that all methods have unique names.
+        /// </note>
+        /// </remarks>
+        public async Task<TResult> ComposedCallAsync<TResult>(string methodGroup, string methodName, params object[] args)
+        {
+            var property = instanceType.GetProperty(methodGroup);
+
+            if (property == null)
+            {
+                throw new ArgumentException($"Cannot find method group property: {methodGroup}");
+            }
+
+            if (!methodName.EndsWith("Async"))
+            {
+                methodName += "Async";
+            }
+
+            var method = property.PropertyType.GetMethod(methodName);
+
+            if (method == null)
+            {
+                throw new ArgumentException($"Cannot find method: {methodGroup}.{methodName}()");
+            }
+
+            // We need to pass the default cancellation token and log activity values too.
+
+            var argList = new List<object>();
+
+            foreach (var arg in args)
+            {
+                argList.Add(arg);
+            }
+
+            argList.Add(defaultCancellationToken);
+            argList.Add(defaultLogActivity);
+
+            try
+            {
+                return await (Task<TResult>)method.Invoke(property.GetValue(instance), argList.ToArray());
+            }
+            catch (InvalidCastException)
+            {
+                // $hack(jeff.lill):
+                //
+                // We're going to see this for situations where the service client 
+                // returns one of the data model types that reside in the compiled
+                // assembly loaded into the context.
+                //
+                // We need to mitigate this manually by using real generated service
+                // clients.  I couldn't figure out a workaround.
+
+                throw new NotSupportedException("This unit test requires calling a real generated service client directly,");
+            }
+        }
     }
 }

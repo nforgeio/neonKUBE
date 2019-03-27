@@ -1665,7 +1665,7 @@ namespace Neon.CodeGen
 
             // Service models may be organized into zero or more client groups by client
             // group name.  Service methods that are not within a client group will be
-            // generated directly within the class.  Methods within client groups will
+            // generated directly within the class.  Methods within a client group will
             // be generated in subclasses within the client class.
             //
             // We're going collate the service methods into client groups by name,
@@ -1717,6 +1717,11 @@ namespace Neon.CodeGen
             writer.WriteLine($"    public partial class {clientTypeName} : IDisposable");
             writer.WriteLine($"    {{");
 
+            if (clientTypeName == "Composed")
+            {
+                // $todo(jeff.lill): DELETE THIS!
+            }
+
             if (hasNonRootMethodGroups)
             {
                 // Generate local [class] definitions for any non-root service
@@ -1724,11 +1729,11 @@ namespace Neon.CodeGen
 
                 foreach (var clientGroup in nonRootMethodGroups)
                 {
-                    writer.WriteLine($"        public class {clientGroup.Key}");
+                    writer.WriteLine($"        public class __{clientGroup.Key}");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            private JsonClient client;");
                     writer.WriteLine();
-                    writer.WriteLine($"            private {clientGroup.Key}(JsonClient client)");
+                    writer.WriteLine($"            internal __{clientGroup.Key}(JsonClient client)");
                     writer.WriteLine($"            {{");
                     writer.WriteLine($"                this.client = client;");
                     writer.WriteLine($"            }}");
@@ -1761,7 +1766,7 @@ namespace Neon.CodeGen
 
                 foreach (var nonRootGroup in nonRootMethodGroups)
                 {
-                    writer.WriteLine($"            this.{nonRootGroup.Key} = new {nonRootGroup.Key}(this.client);");
+                    writer.WriteLine($"            this.{nonRootGroup.Key} = new __{nonRootGroup.Key}(this.client);");
                 }
             }
 
@@ -1841,7 +1846,10 @@ namespace Neon.CodeGen
                 foreach (var nonRootGroup in nonRootMethodGroups)
                 {
                     writer.WriteLine();
-                    writer.WriteLine($"        public {nonRootGroup.Key} {nonRootGroup.Key} {{ get; private set; }}");
+                    writer.WriteLine($"        /// <summary");
+                    writer.WriteLine($"        /// <b>{nonRootGroup.Key}</b> related service methods.");
+                    writer.WriteLine($"        /// </summary");
+                    writer.WriteLine($"        public __{nonRootGroup.Key} {nonRootGroup.Key} {{ get; private set; }}");
                 }
             }
 
