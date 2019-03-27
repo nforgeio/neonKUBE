@@ -846,6 +846,14 @@ namespace Neon.Xunit
                 }
             }
 
+            // Add the DEV_WORKSTATION=1 environment variable if it's set on the local workstation.
+
+            if (Environment.GetEnvironmentVariable("DEV_WORKSTATION") == "1")
+            {
+                extraArgs.Add("--env");
+                extraArgs.Add("DEV_WORKSTATION=1");
+            }
+
             var argsString = NeonHelper.NormalizeExecArgs("service", "create", extraArgs.ToArray(), dockerArgs, image, serviceArgs);
             var result     = DockerExecute(argsString);
 
@@ -1090,6 +1098,14 @@ namespace Neon.Xunit
                     extraArgs.Add("--env");
                     extraArgs.Add(variable);
                 }
+            }
+
+            // Add the DEV_WORKSTATION=1 environment variable if it's set on the local workstation.
+
+            if (Environment.GetEnvironmentVariable("DEV_WORKSTATION") == "1")
+            {
+                extraArgs.Add("--env");
+                extraArgs.Add("DEV_WORKSTATION=1");
             }
 
             var argsString = NeonHelper.NormalizeExecArgs("run", extraArgs.ToArray(), dockerArgs, image, containerArgs);
