@@ -136,7 +136,15 @@ style design conventions.  See this GitHub issue for more information:
 
             if (!string.IsNullOrEmpty(outputPath))
             {
-                File.WriteAllText(outputPath, output.SourceCode);
+                // Don't write the output file if its contents are already
+                // the same as the generated output.  This will help reduce
+                // wear on SSDs and also make things a tiny bit easier for
+                // source control.
+
+                if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != output.SourceCode)
+                {
+                    File.WriteAllText(outputPath, output.SourceCode);
+                }
             }
             else
             {
