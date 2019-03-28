@@ -24,6 +24,7 @@ using Neon.Collections;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Retry;
 using Neon.Serialization;
 
 using Newtonsoft.Json;
