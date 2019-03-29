@@ -84,3 +84,4 @@ wwwroot/
 /Build-Cache/**
 **/bin/**
 **/obj/**
+GeneratedModels.cs

@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 
 using Neon.Collections;
 using Neon.Common;
+using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Net;
 using Neon.Retry;
@@ -185,13 +186,10 @@ namespace Test.Models
         {
             JProperty property;
 
-            lock (__JObject)
+            property = this.__JObject.Property("ParentProperty");
+            if (property != null)
             {
-                property = this.__JObject.Property("ParentProperty");
-                if (property != null)
-                {
-                    this.ParentProperty = (string)property.Value;
-                }
+                this.ParentProperty = (string)property.Value;
             }
         }
 
@@ -199,10 +197,7 @@ namespace Test.Models
         {
             JProperty property;
 
-            lock (__JObject)
-            {
-                this.__JObject["ParentProperty"] = this.ParentProperty;
-            }
+            this.__JObject["ParentProperty"] = this.ParentProperty;
         }
 
         /// <summary>
@@ -243,11 +238,8 @@ namespace Test.Models
         /// <returns>The cloned instance.</returns>
         public BaseModel DeepClone()
         {
-            lock (__JObject)
-            {
-                __Save();
-                return CreateFrom((JObject)__JObject.DeepClone());
-            }
+            __Save();
+            return CreateFrom((JObject)__JObject.DeepClone());
         }
 
         /// <summary>
@@ -262,14 +254,11 @@ namespace Test.Models
         /// original instance will no longer be accessed.
         /// </param>
         /// <returns>The converted instance of type <typeparamref name="T"/>.</returns>
-        public BaseModel ToDerived<T>(bool noClone = false)
+        public T ToDerived<T>(bool noClone = false)
            where T : BaseModel, IGeneratedDataModel
         {
-            lock (__JObject)
-            {
-                __Save();
-                return GeneratedClassFactory.CreateFrom<T>(noClone ? __JObject : (JObject)__JObject.DeepClone());
-            }
+            __Save();
+            return GeneratedClassFactory.CreateFrom<T>(noClone ? __JObject : (JObject)__JObject.DeepClone());
         }
 
         /// <summary>
@@ -291,15 +280,9 @@ namespace Test.Models
                 return false;
             }
 
-            lock (this.__JObject)
-            {
-                lock (other.__JObject)
-                {
-                    this.__Save();
-                    other.__Save();
-                    return JObject.DeepEquals(this.__JObject, other.__JObject);
-                }
-            }
+            this.__Save();
+            other.__Save();
+            return JObject.DeepEquals(this.__JObject, other.__JObject);
         }
 
         /// <summary>
@@ -468,15 +451,12 @@ namespace Test.Models
         {
             JProperty property;
 
-            lock (__JObject)
-            {
-                base.__Load();
+            base.__Load();
 
-                property = this.__JObject.Property("ChildProperty");
-                if (property != null)
-                {
-                    this.ChildProperty = (string)property.Value;
-                }
+            property = this.__JObject.Property("ChildProperty");
+            if (property != null)
+            {
+                this.ChildProperty = (string)property.Value;
             }
         }
 
@@ -484,12 +464,9 @@ namespace Test.Models
         {
             JProperty property;
 
-            lock (__JObject)
-            {
-                base.__Save();
+            base.__Save();
 
-                this.__JObject["ChildProperty"] = this.ChildProperty;
-            }
+            this.__JObject["ChildProperty"] = this.ChildProperty;
         }
 
         /// <summary>
@@ -519,11 +496,8 @@ namespace Test.Models
         /// <returns>The cloned instance.</returns>
         public DerivedModel DeepClone()
         {
-            lock (__JObject)
-            {
-                __Save();
-                return CreateFrom((JObject)__JObject.DeepClone());
-            }
+            __Save();
+            return CreateFrom((JObject)__JObject.DeepClone());
         }
 
         /// <summary>
@@ -538,14 +512,11 @@ namespace Test.Models
         /// original instance will no longer be accessed.
         /// </param>
         /// <returns>The converted instance of type <typeparamref name="T"/>.</returns>
-        public DerivedModel ToDerived<T>(bool noClone = false)
+        public T ToDerived<T>(bool noClone = false)
            where T : DerivedModel, IGeneratedDataModel
         {
-            lock (__JObject)
-            {
-                __Save();
-                return GeneratedClassFactory.CreateFrom<T>(noClone ? __JObject : (JObject)__JObject.DeepClone());
-            }
+            __Save();
+            return GeneratedClassFactory.CreateFrom<T>(noClone ? __JObject : (JObject)__JObject.DeepClone());
         }
 
         /// <summary>
@@ -567,15 +538,9 @@ namespace Test.Models
                 return false;
             }
 
-            lock (this.__JObject)
-            {
-                lock (other.__JObject)
-                {
-                    this.__Save();
-                    other.__Save();
-                    return JObject.DeepEquals(this.__JObject, other.__JObject);
-                }
-            }
+            this.__Save();
+            other.__Save();
+            return JObject.DeepEquals(this.__JObject, other.__JObject);
         }
 
         /// <summary>
