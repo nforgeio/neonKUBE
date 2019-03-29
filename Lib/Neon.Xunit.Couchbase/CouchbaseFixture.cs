@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -243,6 +244,8 @@ namespace Neon.Xunit.Couchbase
         {
             // Give the Couchbase container a chance to spin up.
 
+var log = @"C:\temp\log.txt";
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 0\r\n");
             Thread.Sleep(warmupDelay);
 
             // Dispose any existing underlying cluster and bucket.
@@ -258,6 +261,7 @@ namespace Neon.Xunit.Couchbase
                     Bucket.SetInternalBucket(null);
                 }
             }
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 1\r\n");
 
             // It appears that it may take a bit of time for the Couchbase query
             // service to start in new container we started above.  We're going to
@@ -271,6 +275,7 @@ namespace Neon.Xunit.Couchbase
             NeonBucket.ReadyRetry.InvokeAsync(
                 async () =>
                 {
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 2\r\n");
                     if (bucket == null)
                     {
                         bucket = Settings.OpenBucket(Username, Password);
@@ -278,6 +283,7 @@ namespace Neon.Xunit.Couchbase
 
                     try
                     {
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 3\r\n");
                         if (createPrimaryIndex)
                         {
                             // Create the primary index if requested.
@@ -287,12 +293,14 @@ namespace Neon.Xunit.Couchbase
                                 await bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(bucket.Name)} using gsi");
                                 indexCreated = true;
                             }
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 4\r\n");
 
                             if (!indexReady)
                             {
                                 await bucket.WaitForIndexAsync("#primary");
                                 indexReady = true;
                             }
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 5\r\n");
 
                             // Ensure that the query service is running too.
 
@@ -304,20 +312,24 @@ namespace Neon.Xunit.Couchbase
                                 await bucket.QuerySafeAsync<dynamic>(query);
                                 queryReady = true;
                             }
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 6\r\n");
                         }
                         else
                         {
                             // List the indexes to ensure the index service is ready when we didn't create a primary index.
 
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 7\r\n");
                             if (!queryReady)
                             {
                                 await bucket.ListIndexesAsync();
                                 queryReady = true;
                             }
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 8\r\n");
                         }
                     }
-                    catch
+                    catch (Exception e)
                     {
+File.WriteAllText(log, $"*** {DateTime.UtcNow}: 9: {NeonHelper.ExceptionError(e)}\r\n");
                         // $hack(jeff.lill):
                         //
                         // It looks like we need to create a new bucket if the query service 

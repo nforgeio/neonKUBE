@@ -29,6 +29,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Diagnostics;
@@ -41,5 +42,17 @@ namespace Neon.Serialization
     /// </summary>
     public interface IGeneratedDataModel
     {
+        /// <summary>
+        /// Renders the instance as JSON text, optionally formatting the output.
+        /// </summary>
+        /// <param name="indented">Optionally pass <c>true</c> to format the output.</param>
+        /// <returns>The serialized JSON string.</returns>
+        string ToString(bool indented);
+
+        /// <summary>
+        /// Renders the instance as a <see cref="JObject"/>.
+        /// </summary>
+        /// <returns>The cloned <see cref="JObject"/>.</returns>
+        JObject ToJObject(bool noClone = false);
     }
 }
