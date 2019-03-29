@@ -52,26 +52,52 @@ namespace TestCodeGen.Couchbase
     [Entity]
     public interface Person
     {
+        [EntityKey]
         string Name { get; set; }
         int Age { get; set; }
         MyEnum1 Enum { get; set; }
     }
 
-    public class Test_Couchbase : IClassFixture<CouchbaseFixture>
+    [NoCodeGen]
+    public class Test_Couchbase // : IClassFixture<CouchbaseFixture>
     {
-        private const string username = "Administrator";
-        private const string password = "password";
+        //private const string username = "Administrator";
+        //private const string password = "password";
 
-        private CouchbaseFixture    couchbase;
-        private NeonBucket          bucket;
+        //private CouchbaseFixture    couchbase;
+        //private NeonBucket          bucket;
 
-        public Test_Couchbase(CouchbaseFixture couchbase)
+        //public Test_Couchbase(CouchbaseFixture couchbase)
+        //{
+        //    this.couchbase = couchbase;
+
+        //    couchbase.Start();
+
+        //    bucket = couchbase.Bucket;
+        //}
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void Person()
         {
-            this.couchbase = couchbase;
+            // Verify that we can generate code for a simple data model.
 
-            couchbase.Start();
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_Couchbase).Namespace,
+                Entities        = true
+            };
 
-            bucket = couchbase.Bucket;
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+            }
         }
     }
 }

@@ -54,7 +54,7 @@ namespace Neon.CodeGen
     ///             throw new ArgumentException("At least one argument is expected.");
     ///         }
     ///         
-    ///         var entityRef = "entity-type::";
+    ///         var key = "entity-type::";
     ///         
     ///         for (int i=0; i $lt; args.Length; i++)
     ///         {
@@ -62,13 +62,13 @@ namespace Neon.CodeGen
     ///             
     ///             if (i &gt; 0)
     ///             {
-    ///                 entityRef +' ":";
+    ///                 key += ":";
     ///             }
     ///             
-    ///             entityRef += arg != null ? arg.ToString() : "NULL";
+    ///             key += arg != null ? arg.ToString() : "NULL";
     ///         }
     /// 
-    ///         return entityRef;
+    ///         return key;
     ///     }
     ///     
     ///     ...

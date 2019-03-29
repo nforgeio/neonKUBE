@@ -115,5 +115,36 @@ namespace Neon.Serialization
                 throw new SerializationException($"Error persisting value to [{objectType.Name}.{propertyName}]: {e.Message}", e);
             }
         }
+
+        /// <summary>
+        /// Generates an entity database key.
+        /// </summary>
+        /// <param name="entityType">The entity type string.</param>
+        /// <param name="args">Arguments identifying the entity.</param>
+        public static string CreateEntityKey(string entityType, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(entityType));
+
+            if (args.Length == 0)
+            {
+                throw new ArgumentException("At least one argument is expected.");
+            }
+
+            var key = $"{entityType}::";
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                var arg = args[i];
+
+                if (i > 0)
+                {
+                    key += ":";
+                }
+
+                key += arg != null ? arg.ToString() : "NULL";
+            }
+
+            return key;
+        }
     }
 }

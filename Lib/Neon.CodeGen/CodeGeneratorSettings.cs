@@ -88,7 +88,7 @@ namespace Neon.CodeGen
         /// Optionally generate an <c>Entity&lt;T&gt;</c> based class for
         /// data models tagged with <c>[Entity]</c>.
         /// </summary>
-        public bool Entity { get; set; } = false;
+        public bool Entities { get; set; } = false;
 
         /// <summary>
         /// <para>
