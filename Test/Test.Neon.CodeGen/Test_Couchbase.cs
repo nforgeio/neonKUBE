@@ -59,22 +59,22 @@ namespace TestCodeGen.Couchbase
     }
 
     [NoCodeGen]
-    public class Test_Couchbase // : IClassFixture<CouchbaseFixture>
+    public class Test_Couchbase : IClassFixture<CouchbaseFixture>
     {
-        //private const string username = "Administrator";
-        //private const string password = "password";
+        private const string username = "Administrator";
+        private const string password = "password";
 
-        //private CouchbaseFixture    couchbase;
-        //private NeonBucket          bucket;
+        private CouchbaseFixture couchbase;
+        private NeonBucket bucket;
 
-        //public Test_Couchbase(CouchbaseFixture couchbase)
-        //{
-        //    this.couchbase = couchbase;
+        public Test_Couchbase(CouchbaseFixture couchbase)
+        {
+            this.couchbase = couchbase;
 
-        //    couchbase.Start();
+            couchbase.Start();
 
-        //    bucket = couchbase.Bucket;
-        //}
+            bucket = couchbase.Bucket;
+        }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]

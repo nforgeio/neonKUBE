@@ -691,7 +691,7 @@ namespace Neon.CodeGen
             {
                 dataModel.EntityInfo = dataType.GetCustomAttribute<EntityAttribute>();
 
-                if (string.IsNullOrEmpty(dataModel.EntityInfo.EntityType))
+                if (dataModel.EntityInfo != null && string.IsNullOrEmpty(dataModel.EntityInfo.EntityType))
                 {
                     dataModel.EntityInfo.EntityType = dataModel.SourceType.FullName;
                 }
@@ -1448,9 +1448,9 @@ namespace Neon.CodeGen
                                     break;
                             }
                         }
-
-                        writer.WriteLine($"        }}");
                     }
+
+                    writer.WriteLine($"        }}");
 
                     //-------------------------------------
                     // Generate the __Save() method.
@@ -1508,7 +1508,7 @@ namespace Neon.CodeGen
                                         writer.WriteLine();
                                     }
 
-                                    defaultValueExpression = property.DefaultValueExpression;
+                                    defaultValueExpression = property.DefaultValueExpression ?? "default";
 
                                     writer.WriteLine($"            if (this.{property.Name} == {defaultValueExpression})");
                                     writer.WriteLine($"            {{");
@@ -1533,8 +1533,9 @@ namespace Neon.CodeGen
                                     break;
                             }
                         }
-                        writer.WriteLine($"        }}");
                     }
+
+                    writer.WriteLine($"        }}");
 
                     //-------------------------------------
                     // Generate the ToString() methods.
