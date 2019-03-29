@@ -45,7 +45,7 @@ using Neon.Serialization;
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Implements data model and service client code generation.
+    /// Handles data model and service client code generation.
     /// </summary>
     public class CodeGenerator
     {
