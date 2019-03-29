@@ -229,11 +229,12 @@ namespace Test.Models
         /// <summary>
         /// Renders the instances as a <see cref="JObject"/>.
         /// </summary>
-        /// <returns>The cloned <see cref="JObject"/>.</returns>
-        public JObject ToJObject()
+        /// <param name="noClone">Optionally return the underlying <see cref="JObject"/> without cloning it for better performance.</param>
+        /// <returns>The underlying <see cref="JObject"/> (cloned by default).</returns>
+        public JObject ToJObject(bool noClone = false)
         {
             __Save();
-            return (JObject)__JObject.DeepClone();
+            return noClone ? __JObject : (JObject)__JObject.DeepClone();
         }
 
         /// <summary>

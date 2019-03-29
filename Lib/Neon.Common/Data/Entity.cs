@@ -23,6 +23,7 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
+using Neon.Serialization;
 
 namespace Neon.Data
 {
@@ -31,7 +32,7 @@ namespace Neon.Data
     /// </summary>
     /// <typeparam name="T">The entity content type.</typeparam>
     public class Entity<T> : IEntity<T>
-        where T : class, new()
+        where T : class, IGeneratedDataModel, new()
     {
         /// <inheritdoc/>
         public virtual string GetKey()
@@ -52,9 +53,9 @@ namespace Neon.Data
         public string __EntityType { get; set; }
 
         /// <inheritdoc/>
-        public virtual bool Equals(T other)
+        public T ToBase()
         {
-            return NeonHelper.JsonEquals(this, other);
+            return null;
         }
     }
 }

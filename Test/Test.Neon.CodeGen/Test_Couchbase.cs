@@ -40,8 +40,23 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
-namespace TestCodeGen.ServiceModel
+namespace TestCodeGen.Couchbase
 {
+    public enum MyEnum1
+    {
+        One,
+        Two,
+        Three
+    }
+
+    [Entity]
+    public interface Person
+    {
+        string Name { get; set; }
+        int Age { get; set; }
+        MyEnum1 Enum { get; set; }
+    }
+
     public class Test_Couchbase : IClassFixture<CouchbaseFixture>
     {
         private const string username = "Administrator";

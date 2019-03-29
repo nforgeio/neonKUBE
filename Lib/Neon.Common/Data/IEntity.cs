@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
+using Neon.Serialization;
 
 namespace Neon.Data
 {
@@ -76,12 +77,17 @@ namespace Neon.Data
     /// type prefix for brevity,
     /// </para>
     /// <para>
-    /// As a convention, many <see cref="IEntity{T}"/> implementations also implement <c>static</c>
+    /// As a convention, many <see cref="IEntity{T}"/> implementations also have a <c>static</c>
     /// <b>GetKey(...)</b> method that returns the Couchbase key for an entity based on parameters passed.
     /// </para>
     /// </remarks>
     public interface IEntity<T> : IEntity
-        where T : class, new()
+        where T : class, IGeneratedDataModel, new()
     {
+        /// <summary>
+        /// Returns a deep clone of the base object with type <typeparamref name="T"/> from the entity instance.
+        /// </summary>
+        /// <returns>The base object instance.</returns>
+        T ToBase();
     }
 }

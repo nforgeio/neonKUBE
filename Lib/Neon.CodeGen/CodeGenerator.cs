@@ -689,6 +689,8 @@ namespace Neon.CodeGen
             }
             else
             {
+                dataModel.EntityInfo = dataType.GetCustomAttribute<EntityAttribute>();
+
                 // A data model interface is allowed to implement another 
                 // data model interface to specify a base class.  Note that
                 // only one of these references is allowed and it may only
@@ -862,6 +864,7 @@ namespace Neon.CodeGen
             writer.WriteLine();
             writer.WriteLine($"using Neon.Collections;");
             writer.WriteLine($"using Neon.Common;");
+            writer.WriteLine($"using Neon.Data;");
             writer.WriteLine($"using Neon.Diagnostics;");
             writer.WriteLine($"using Neon.Net;");
             writer.WriteLine($"using Neon.Retry;");
@@ -885,12 +888,20 @@ namespace Neon.CodeGen
             //---------------------------------------------
             // Generate the models.
 
-            var index = 0;
-
             foreach (var dataModel in nameToDataModel.Values
                 .OrderBy(dm => dm.SourceType.Name.ToLowerInvariant()))
             {
-                GenerateDataModel(dataModel, index++);
+                // We'll generate a base class for all data models and then
+                // optionally generated an Entity<T> based class if the data
+                // model is tagged with [Entity] and entity generation is
+                // enabled.
+
+                GenerateDataModel(dataModel, genEntity: false);
+
+                if (Settings.Entity && dataModel.EntityInfo != null)
+                {
+                    GenerateDataModel(dataModel, genEntity: true);
+                }
             }
 
             // Generate the service clients (if enabled).
@@ -915,11 +926,9 @@ namespace Neon.CodeGen
 
                 // Generate the clients.
 
-                index = 0;
-
                 foreach (var item in clientNameToServiceModels)
                 {
-                    GenerateServiceClient(item.Key, item.Value, index++);
+                    GenerateServiceClient(item.Key, item.Value);
                 }
             }
 
@@ -986,10 +995,20 @@ namespace Neon.CodeGen
         /// Generates source code for a data model.
         /// </summary>
         /// <param name="dataModel">The data model.</param>
-        /// <param name="index">Zero based index of the model within the current namespace.</param>
-        private void GenerateDataModel(DataModel dataModel, int index)
+        /// <param name="genEntity">
+        /// Indicates whether we're generating an <c>Entity&lt;T&gt;}</c> class wrapping
+        /// a data model or just a data model.
+        /// </param>
+        private void GenerateDataModel(DataModel dataModel, bool genEntity)
         {
             string defaultValueExpression;
+
+            if (genEntity && (dataModel.EntityInfo == null || dataModel.IsEnum))
+            {
+                // Nothing needs to be generated.
+
+                return;
+            }
 
             if (firstItemGenerated)
             {
@@ -1041,7 +1060,19 @@ namespace Neon.CodeGen
                     baseTypeRef = " : __NotifyPropertyChanged";
                 }
 
-                writer.WriteLine($"    public partial class {dataModel.SourceType.Name}{baseTypeRef}");
+                if (genEntity)
+                {
+                    baseTypeRef += $", IEntity<{dataModel.BaseTypeName}>";
+                }
+
+                var className = dataModel.BaseTypeName;
+
+                if (genEntity)
+                {
+                    className += "Entity";
+                }
+
+                writer.WriteLine($"    public partial class {className}{baseTypeRef}");
                 writer.WriteLine($"    {{");
 
                 if (Settings.RoundTrip)
@@ -1056,15 +1087,15 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Deserializes an instance from JSON text.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"jsonText\">The JSON text input.</param>");
-                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{dataModel.SourceType.Name}\"/>.</returns>");
-                    writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(string jsonText)");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+                    writer.WriteLine($"        public static {className} CreateFrom(string jsonText)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (string.IsNullOrEmpty(jsonText))");
                     writer.WriteLine($"            {{");
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            var model = new {dataModel.SourceType.Name}(SerializationHelper.Deserialize<JObject>(jsonText));");
+                    writer.WriteLine($"            var model = new {className}(SerializationHelper.Deserialize<JObject>(jsonText));");
                     writer.WriteLine();
                     writer.WriteLine($"            model.__Load();");
                     writer.WriteLine($"            return model;");
@@ -1074,15 +1105,15 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Deserializes an instance from a <see cref=\"JObject\"/>.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"jObject\">The input <see cref=\"JObject\"/>.</param>");
-                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{dataModel.SourceType.Name}\"/>.</returns>");
-                    writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(JObject jObject)");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+                    writer.WriteLine($"        public static {className} CreateFrom(JObject jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (jObject == null)");
                     writer.WriteLine($"            {{");
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(jObject));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            var model = new {dataModel.SourceType.Name}(jObject);");
+                    writer.WriteLine($"            var model = new {className}(jObject);");
                     writer.WriteLine();
                     writer.WriteLine($"            model.__Load();");
                     writer.WriteLine($"            return model;");
@@ -1093,8 +1124,8 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"stream\">The input <see cref=\"Stream\"/>.</param>");
                     writer.WriteLine($"        /// <param name=\"encoding\">Optionally specifies the inout encoding.  This defaults to <see cref=\"Encoding.UTF8\"/>.</param>");
-                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{dataModel.SourceType.Name}\"/>.</returns>");
-                    writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(Stream stream, Encoding encoding = null)");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+                    writer.WriteLine($"        public static {className} CreateFrom(Stream stream, Encoding encoding = null)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            encoding = encoding ?? Encoding.UTF8;");
                     writer.WriteLine();
@@ -1103,11 +1134,11 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(stream));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            {dataModel.SourceType.Name} model;");
+                    writer.WriteLine($"            {className} model;");
                     writer.WriteLine();
                     writer.WriteLine($"            using (var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: false, bufferSize: 8192, leaveOpen: true))");
                     writer.WriteLine($"            {{");
-                    writer.WriteLine($"                model = {dataModel.SourceType.Name}.CreateFrom(reader.ReadToEnd());");
+                    writer.WriteLine($"                model = {className}.CreateFrom(reader.ReadToEnd());");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
                     writer.WriteLine($"            model.__Load();");
@@ -1118,8 +1149,8 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Deserializes an instance from a <see cref=\"JsonResponse\"/>.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"response\">The input <see cref=\"JsonResponse\"/>.</param>");
-                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{dataModel.SourceType.Name}\"/>.</returns>");
-                    writer.WriteLine($"        public static {dataModel.SourceType.Name} CreateFrom(JsonResponse response)");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+                    writer.WriteLine($"        public static {className} CreateFrom(JsonResponse response)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (response == null)");
                     writer.WriteLine($"            {{");
@@ -1136,7 +1167,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <param name=\"value1\">The first value or <c>null</c>.</param>");
                     writer.WriteLine($"        /// <param name=\"value2\">The second value or <c>null</c>.</param>");
                     writer.WriteLine($"        /// <returns><c>true</c> if the values are equal.</returns>");
-                    writer.WriteLine($"        public static bool operator ==({dataModel.SourceType.Name} value1, {dataModel.SourceType.Name} value2)");
+                    writer.WriteLine($"        public static bool operator ==({className} value1, {className} value2)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            var value1IsNull = object.ReferenceEquals(value1, null);");
                     writer.WriteLine($"            var value2IsNull = object.ReferenceEquals(value2, null);");
@@ -1165,10 +1196,43 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <param name=\"value1\">The first value or <c>null</c>.</param>");
                     writer.WriteLine($"        /// <param name=\"value2\">The second value or <c>null</c>.</param>");
                     writer.WriteLine($"        /// <returns><c>true</c> if the values are not equal.</returns>");
-                    writer.WriteLine($"        public static bool operator !=({dataModel.SourceType.Name} value1, {dataModel.SourceType.Name} value2)");
+                    writer.WriteLine($"        public static bool operator !=({className} value1, {className} value2)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            return !(value1 == value2);");
                     writer.WriteLine($"        }}");
+
+                    // For data models tagged with [Entity], we need to generate the static GetKey(...) method.
+
+                    if (genEntity)
+                    {
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// Returns the database key for an entity.");
+                        writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the entity.</param>");
+                        writer.WriteLine($"        public static string GetKey(params object[] args)");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            if (args.Length == 0)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                throw new ArgumentException(\"At least one argument is expected.\");");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"            var entityRef = \"entity-type::\";");
+                        writer.WriteLine();
+                        writer.WriteLine($"            for (int i=0; i < args.Length; i++)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                var arg = args[i];");
+                        writer.WriteLine();
+                        writer.WriteLine($"                if (i &gt; 0)");
+                        writer.WriteLine($"                {{");
+                        writer.WriteLine($"                    entityRef +' \":\";");
+                        writer.WriteLine($"                }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"                entityRef += arg != null ? arg.ToString() : \"NULL\";");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"            return entityRef;");
+                        writer.WriteLine($"        }}");
+                    }
 
                     //-------------------------------------
                     // Generate instance members
@@ -1194,13 +1258,13 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Constructs an uninitialized instance.");
                     writer.WriteLine($"        /// </summary>");
-                    writer.WriteLine($"        public {dataModel.SourceType.Name}()");
+                    writer.WriteLine($"        public {className}()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __JObject = new JObject();");
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
-                    writer.WriteLine($"        protected {dataModel.SourceType.Name}(JObject jObject)");
+                    writer.WriteLine($"        protected {className}(JObject jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __JObject = jObject;");
                     writer.WriteLine($"        }}");
@@ -1211,12 +1275,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Constructs an uninitialized instance.");
                     writer.WriteLine($"        /// </summary>");
-                    writer.WriteLine($"        public {dataModel.SourceType.Name}() : base()");
+                    writer.WriteLine($"        public {className}() : base()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
-                    writer.WriteLine($"        protected {dataModel.SourceType.Name}(JObject jObject) : base(jObject)");
+                    writer.WriteLine($"        protected {className}(JObject jObject) : base(jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"        }}");
                 }
@@ -1295,7 +1359,7 @@ namespace Neon.CodeGen
                     //-------------------------------------
                     // Generate the __Load() method.
 
-                    var virtualModifier      = dataModel.IsDerived ? "override" : "virtual";
+                    var virtualModifier = dataModel.IsDerived ? "override" : "virtual";
                     var serializedProperties = dataModel.Properties.Where(p => !p.Ignore);
 
                     writer.WriteLine();
@@ -1420,7 +1484,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = SerializationHelper.FromObject(this.{property.Name}, typeof({dataModel.SourceType.Name}), nameof({property.Name}));");
+                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = SerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1450,7 +1514,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = SerializationHelper.FromObject(this.{property.Name}, typeof({dataModel.SourceType.Name}), nameof({property.Name}));");
+                                        writer.WriteLine($"                    this.__JObject[\"{property.SerializedName}\"] = SerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1505,11 +1569,12 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Renders the instances as a <see cref=\"JObject\"/>.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        /// <returns>The cloned <see cref=\"JObject\"/>.</returns>");
-                        writer.WriteLine($"        public JObject ToJObject()");
+                        writer.WriteLine($"        /// <param name=\"noClone\">Optionally return the underlying <see cref=\"JObject\"/> without cloning it for better performance.</param>");
+                        writer.WriteLine($"        /// <returns>The underlying <see cref=\"JObject\"/> (cloned by default).</returns>");
+                        writer.WriteLine($"        public JObject ToJObject(bool noClone = false)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
-                        writer.WriteLine($"            return (JObject)__JObject.DeepClone();");
+                        writer.WriteLine($"            return noClone ? __JObject : (JObject)__JObject.DeepClone();");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1521,7 +1586,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Returns a deep clone of the instance.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <returns>The cloned instance.</returns>");
-                    writer.WriteLine($"        public {dataModel.SourceType.Name} DeepClone()");
+                    writer.WriteLine($"        public {className} DeepClone()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            lock (__JObject)");
                     writer.WriteLine($"            {{");
@@ -1542,8 +1607,8 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// original instance will no longer be accessed.");
                     writer.WriteLine($"        /// </param>");
                     writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
-                    writer.WriteLine($"        public {dataModel.SourceType.Name} ToDerived<T>(bool noClone = false)");
-                    writer.WriteLine($"           where T : {dataModel.SourceType.Name}, IGeneratedDataModel");
+                    writer.WriteLine($"        public T ToDerived<T>(bool noClone = false)");
+                    writer.WriteLine($"           where T : {className}, IGeneratedDataModel");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            lock (__JObject)");
                     writer.WriteLine($"            {{");
@@ -1564,7 +1629,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                return true;");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            var other = obj as {dataModel.SourceType.Name};");
+                    writer.WriteLine($"            var other = obj as {className};");
                     writer.WriteLine();
                     writer.WriteLine($"            if (object.ReferenceEquals(other, null))");
                     writer.WriteLine($"            {{");
@@ -1632,6 +1697,36 @@ namespace Neon.CodeGen
 
                     writer.WriteLine($"        }}");
 
+                    //-------------------------------------
+                    // Generate any entity related members.
+
+                    if (genEntity)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// Identifies the entity type.");
+                        writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        public string __EntityType {{ get; set; }} = \"{dataModel.EntityInfo.EntityType}\";");
+                        writer.WriteLine();
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// Returns a deep clone of the base object with type [{dataModel.BaseTypeName}] from the entity instance.");
+                        writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        /// <returns>The cloned instance.</returns>");
+                        writer.WriteLine($"        public T ToBase()");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            lock (__JObject)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                __Save();");
+                        writer.WriteLine();
+                        writer.WriteLine($"                var jObject = JObject)__JObject.DeepClone();");
+                        writer.WriteLine();
+                        writer.WriteLine($"                jObject.Remove(\"__EntityType\");");
+                        writer.WriteLine();
+                        writer.WriteLine($"                return GeneratedClassFactory.CreateFrom<{dataModel.BaseTypeName}>(jObject);");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine($"        }}");
+                    }
+
                     // Close the generated model class definition.
 
                     writer.WriteLine($"    }}");
@@ -1644,8 +1739,7 @@ namespace Neon.CodeGen
         /// </summary>
         /// <param name="clientTypeName">The client type name.</param>
         /// <param name="serviceModels">One or more service models to be included in the generated output.</param>
-        /// <param name="index">Zero based index of the model within the current namespace.</param>
-        private void GenerateServiceClient(string clientTypeName, IEnumerable<ServiceModel> serviceModels, int index)
+        private void GenerateServiceClient(string clientTypeName, IEnumerable<ServiceModel> serviceModels)
         {
             Covenant.Requires<ArgumentNullException>(serviceModels != null);
             Covenant.Requires<ArgumentException>(serviceModels.Any());

@@ -85,6 +85,12 @@ namespace Neon.CodeGen
         public bool RoundTrip { get; set; } = true;
 
         /// <summary>
+        /// Optionally generate an <c>Entity&lt;T&gt;</c> based class for
+        /// data models tagged with <c>[Entity]</c>.
+        /// </summary>
+        public bool Entity { get; set; } = false;
+
+        /// <summary>
         /// <para>
         /// Used to select a specific targets to be included in the
         /// generated output.

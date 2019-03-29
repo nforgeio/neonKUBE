@@ -66,6 +66,9 @@ OPTIONS:
                                   the original type namespaces as scanned
                                   from the source assembly.
 
+    --entity                    - Generate IEntity<T> based data classes in
+                                  addition to the regular data types.
+
     --no-services               - Don't generate any service clients.
 
     --targets=LIST              - Specifies the comma separated list of target 
@@ -91,7 +94,7 @@ style design conventions.  See this GitHub issue for more information:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--source-namespace", "--target-namespace", "--no-services", "--targets" }; }
+            get { return new string[] { "--source-namespace", "--target-namespace", "--entity", "--no-services", "--targets" }; }
         }
 
         /// <inheritdoc/>
@@ -127,6 +130,7 @@ style design conventions.  See this GitHub issue for more information:
             {
                 SourceNamespace  = commandLine.GetOption("--source-namespace"),
                 TargetNamespace  = commandLine.GetOption("--target-namespace"),
+                Entity           = commandLine.HasOption("--entity"),
                 NoServiceClients = commandLine.HasOption("--no-services")
             };
 

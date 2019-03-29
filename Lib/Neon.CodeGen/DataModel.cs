@@ -95,6 +95,12 @@ namespace Neon.CodeGen
         public DataModel BaseModel { get; set;}
 
         /// <summary>
+        /// Returns the entity information if the data model was tagged with <c>Entity</c>
+        /// or <c>null</c> otherwise.
+        /// </summary>
+        public EntityAttribute EntityInfo { get; set; }
+
+        /// <summary>
         /// Indicates whether the current data model is derived from another model.
         /// </summary>
         public bool IsDerived => BaseTypeName != null;
