@@ -43,8 +43,9 @@ namespace Neon.Serialization
     /// </summary>
     public static class GeneratedClassFactory
     {
-        private static Dictionary<string, MethodInfo>   nameToCreateMethod = new Dictionary<string, MethodInfo>();
-        private static Type[]                           createArgTypes     = new Type[] { typeof(JObject) };
+        private static Dictionary<string, MethodInfo>   nameToCreateMethod        = new Dictionary<string, MethodInfo>();
+        private static Type[]                           createFromJObjectArgTypes = new Type[] { typeof(JObject) };
+        private static Type[]                           createFromStreamArgTypes  = new Type[] { typeof(Stream) };
 
         /// <summary>
         /// Constructs an instance of <typeparamref name="TResult"/> from a <see cref="JObject"/>.
@@ -75,7 +76,7 @@ namespace Neon.Serialization
             {
                 if (!nameToCreateMethod.TryGetValue(resultType.FullName, out createMethod))
                 {
-                    createMethod = resultType.GetMethod("CreateFrom", BindingFlags.Public | BindingFlags.Static, null, createArgTypes, null);
+                    createMethod = resultType.GetMethod("CreateFrom", BindingFlags.Public | BindingFlags.Static, null, createFromJObjectArgTypes, null);
 #if DEBUG
                     Covenant.Assert(createMethod != null, $"Cannot locate generated [{resultType.FullName}.CreateFrom(JObject)] method.");
 #endif
@@ -84,6 +85,46 @@ namespace Neon.Serialization
             }
 
             return createMethod.Invoke(null, new object[] { jObject });
+        }
+
+        /// <summary>
+        /// Constructs an instance of <typeparamref name="TResult"/> from a UTF-8 enoded <see cref="Stream"/>.
+        /// </summary>
+        /// <typeparam name="TResult">The result type.</typeparam>
+        /// <param name="stream">The source <see cref="Stream"/>.</param>
+        /// <returns>The new <typeparamref name="TResult"/> instance.</returns>
+        public static TResult CreateFrom<TResult>(Stream stream)
+            where TResult : IGeneratedDataModel
+        {
+            return (TResult)CreateFrom(typeof(TResult), stream);
+        }
+
+        /// <summary>
+        /// Constructs an instance of <paramref name="resultType"/> from a UTF-8 enoded <see cref="Stream"/>.
+        /// </summary>
+        /// <param name="resultType">The result type.</param>
+        /// <param name="stream">The source <see cref="Stream"/>.</param>
+        /// <returns>The new instance as an <see cref="object"/>.</returns>
+        public static object CreateFrom(Type resultType, Stream stream)
+        {
+            Covenant.Requires(resultType != null);
+            Covenant.Requires(stream != null);
+
+            MethodInfo createMethod;
+
+            lock (nameToCreateMethod)
+            {
+                if (!nameToCreateMethod.TryGetValue(resultType.FullName, out createMethod))
+                {
+                    createMethod = resultType.GetMethod("CreateFrom", BindingFlags.Public | BindingFlags.Static, null, createFromStreamArgTypes, null);
+#if DEBUG
+                    Covenant.Assert(createMethod != null, $"Cannot locate generated [{resultType.FullName}.CreateFrom(Stream)] method.");
+#endif
+                    nameToCreateMethod.Add(resultType.FullName, createMethod);
+                }
+            }
+
+            return createMethod.Invoke(null, new object[] { stream });
         }
     }
 }

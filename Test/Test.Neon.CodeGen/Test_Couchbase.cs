@@ -27,9 +27,13 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
+using Couchbase;
+using Couchbase.Core;
+
 using Neon.CodeGen;
 using Neon.Common;
 using Neon.Xunit;
+using Neon.Xunit.Couchbase;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -38,7 +42,21 @@ using Xunit;
 
 namespace TestCodeGen.ServiceModel
 {
-    public class Test_Couchbase
+    public class Test_Couchbase : IClassFixture<CouchbaseFixture>
     {
+        private const string username = "Administrator";
+        private const string password = "password";
+
+        private CouchbaseFixture    couchbase;
+        private NeonBucket          bucket;
+
+        public Test_Couchbase(CouchbaseFixture couchbase)
+        {
+            this.couchbase = couchbase;
+
+            couchbase.Start();
+
+            bucket = couchbase.Bucket;
+        }
     }
 }

@@ -34,8 +34,8 @@ using Neon.Retry;
 namespace Couchbase
 {
     /// <summary>
-    /// Use this to decorate an <see cref="Entity{T}"/> implementations such that Linq2Couchbase
-    /// queries will automatically add where clause that filters on a specified document
+    /// Use this to decorate <see cref="Entity{T}"/> implementations such that Linq2Couchbase
+    /// queries will automatically add a where clause that filters on a specified document
     /// type string.
     /// </summary>
     /// <remarks>
@@ -72,7 +72,7 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Apply the filter to a LINQ query
+        /// Return the filter for a LINQ query
         /// </summary>
         public override IDocumentFilter<T> GetFilter<T>()
         {

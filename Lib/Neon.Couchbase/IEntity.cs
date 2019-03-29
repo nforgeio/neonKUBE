@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Entity.cs
+// FILE:	    IEntity.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,35 +32,31 @@ namespace Neon.Data
     public interface IEntity
     {
         /// <summary>
-        /// Can be overridden by derived entities to return the Couchbase key to be used to
-        /// persist the entity.  The base implementation throws a <see cref="NotSupportedException"/>.
+        /// <para>
+        /// Returns the Couchbase or other database key to be used to persist or retrieve the entity.
+        /// By convention for Couchbase, this key includes the entity type plus the unique key
+        /// formatted like <b>entity-type</b>::<b>unique-key</b>.  For example:
+        /// </para>
+        /// <code>
+        /// user::122330
+        /// </code>
+        /// <para>
+        /// This identifies the document as a <b>user</b> with unique ID as <b>122330</b>.  Document
+        /// IDs are formatted like this so that we'll be able to take advantage of document filtering
+        /// by type when we've enabled Couchbase cross datacenter replication.
+        /// </para>
         /// </summary>
-        /// <returns>The Couchbase key for the entity.</returns>
+        /// <returns>The database key for the entity.</returns>
         string GetKey();
-
-        /// <summary>
-        /// Can be overridden by derived entities to return the reference to be used to
-        /// link to the entity instance.  The base implementation throws a <see cref="NotSupportedException"/>.
-        /// </summary>
-        /// <returns>The Couchbase ID for the entity.</returns>
-        string GetRef();
 
         /// <summary>
         /// Identifies the entity type.
         /// </summary>
         string __EntityType { get; set; }
-
-        /// <summary>
-        /// Ensures that the entity properties are properly initialized.  The default 
-        /// <see cref="Entity{T}"/> implementation does nothing.
-        /// </summary>
-        /// <exception cref="InvalidEntityException">Thrown if any entity properties are not formatted correctly.</exception>
-        void Normalize();
     }
 
     /// <summary>
-    /// Generic interface describing an entity.  Most entity classes will will inherit a base
-    /// implementation of this interface from <see cref="Entity{T}"/>.
+    /// Generic interface describing an entity.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -80,37 +76,12 @@ namespace Neon.Data
     /// type prefix for brevity,
     /// </para>
     /// <para>
-    /// Most entities should implement instance <see cref="IEntity.GetKey()"/> to return the unique Couchbase
-    /// key for the instance and entities that can be referenced by other entities should
-    /// implement instance <see cref="IEntity.GetRef()"/>.  Note that the base <see cref="Entity{T}"/> 
-    /// implementation throws <see cref="NotSupportedException"/> for these methods.
-    /// </para>
-    /// <para>
     /// As a convention, many <see cref="IEntity{T}"/> implementations also implement <c>static</c>
-    /// <b>GetKey(...)</b> and <b>GetRef(...)</b> methods that return the Couchbase key and
-    /// reference to an entity based on parameters passed.  Singleton entities (that will have
-    /// only one global instance in Couchbase) typically implement the <c>static</c>
-    /// <b>GetSingletonKey(...)</b> and <b>GetSingletonRef(...)</b> methods instead.
-    /// </para>
-    /// <para>
-    /// Implement the <see cref="Equals(T)"/> method to compare one entity against another.
-    /// The base <see cref="Entity{T}"/> implementation serializes both entities to JSON
-    /// and compares them.
-    /// </para>
-    /// <para>
-    /// Implement the <see cref="IEntity.Normalize()"/> method to ensure that the entity properties
-    /// are properly initialized.  The default <see cref="Entity{T}"/> implementation
-    /// does nothing.
+    /// <b>GetKey(...)</b> method that returns the Couchbase key for an entity based on parameters passed.
     /// </para>
     /// </remarks>
     public interface IEntity<T> : IEntity
         where T : class, new()
     {
-        /// <summary>
-        /// Tests this instance against another for equality.
-        /// </summary>
-        /// <param name="other">The other instance.</param>
-        /// <returns><c>true</c> if the instances are equal.</returns>
-        bool Equals(T other);
     }
 }

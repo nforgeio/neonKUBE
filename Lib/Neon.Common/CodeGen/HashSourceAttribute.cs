@@ -26,6 +26,7 @@ namespace Neon.CodeGen
     /// Used to tag data model properties that should be included in the
     /// <see cref="Object.GetHashCode()"/> computation.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
     public class HashSourceAttribute : Attribute
     {
         /// <summary>

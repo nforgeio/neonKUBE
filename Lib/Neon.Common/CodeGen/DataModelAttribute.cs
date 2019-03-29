@@ -28,6 +28,7 @@ namespace Neon.CodeGen
     /// generator assumes that all types that are not specifically tagged
     /// by <see cref="ServiceModelAttribute"/> are data types.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Interface)]
     public class DataModelAttribute : Attribute
     {
         /// <summary>

@@ -64,35 +64,13 @@ namespace Neon.Web
         {
             var request = context.HttpContext.Request;
 
-            try
+            if (request.Body == null)
             {
-                using (var reader = new StreamReader(request.Body, encoding))
-                {
-                    // $todo(jeff.lill):
-                    //
-                    // I'm pretty sure that I don't need to limit the amount of data
-                    // being read here for DOS protection, because I believe that
-                    // ASP.NET handles this.
-                    //
-                    // I should follow up though to be really sure.
-
-                    // $todo(jeff.lill):
-                    //
-                    // Reading the entire string into memory is really bad from
-                    // a performance perspective.  We need to modify the generated
-                    // object code to expose the JSON.NET stream parsing capabilities:
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/471
-
-                    var jsonText = await reader.ReadToEndAsync();
-                    var jObject  = JObject.Parse(jsonText);
-
-                    return await InputFormatterResult.SuccessAsync(GeneratedClassFactory.CreateFrom(context.ModelType, jObject));
-                }
+                return await InputFormatterResult.SuccessAsync(null);
             }
-            catch
+            else
             {
-                return await InputFormatterResult.FailureAsync();
+                return await InputFormatterResult.SuccessAsync(GeneratedClassFactory.CreateFrom(context.ModelType, request.Body));
             }
         }
     }

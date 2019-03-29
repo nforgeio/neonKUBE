@@ -56,10 +56,5 @@ namespace Neon.Data
         {
             return NeonHelper.JsonEquals(this, other);
         }
-
-        /// <inheritdoc/>
-        public virtual void Normalize()
-        {
-        }
     }
 }

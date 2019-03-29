@@ -26,6 +26,7 @@ namespace Neon.CodeGen
     /// <summary>
     /// Base class for the HTTP related attributes below.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Method)]
     public abstract class HttpAttribute : Attribute
     {
         /// <summary>
