@@ -416,23 +416,15 @@ OPTIONS:
             }
             catch (ProgramExitException e)
             {
-                if (ProgramRunner.Current != null)
-                {
-                    return e.ExitCode;
-                }
-                else
-                {
-                    Environment.Exit(e.ExitCode);
-                }
+                return e.ExitCode;
             }
             catch (Exception e)
             {
                 Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
                 Console.Error.WriteLine(string.Empty);
-                Program.Exit(1, noException: true);
+                return 1;
             }
 
-            Program.Exit(0, noException: true);
             return 0;
         }
 
@@ -557,23 +549,14 @@ OPTIONS:
         /// <summary>
         /// Exits the program returning the specified process exit code.
         /// </summary>
-        /// <param name="noException">Optionally exit the program immediately rather than throwing a <see cref="ProgramExitException"/>.</param>
         /// <param name="exitCode">The exit code.</param>
-        public static void Exit(int exitCode, bool noException = false)
+        public static void Exit(int exitCode)
         {
             // Ensure that all sensitive files and folders are encrypted at rest.  We're 
             // running this after every command just to be super safe.
 
             KubeHelper.EncryptSensitiveFiles();
-
-            if (noException)
-            {
-                Environment.Exit(exitCode);
-            }
-            else
-            {
-                throw new ProgramExitException(exitCode);
-            }
+            throw new ProgramExitException(exitCode);
         }
 
         /// <summary>

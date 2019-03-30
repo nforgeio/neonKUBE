@@ -50,7 +50,9 @@ namespace TestCommon
                 // Verify that the ping times out for an IP address that's very unlikely to have
                 // anything running on it (at least in our test/dev environments).
 
-                Assert.Equal(IPStatus.TimedOut, (await pinger.SendPingAsync(IPAddress.Parse("10.227.126.253"))).Status);
+                var status = (await pinger.SendPingAsync(IPAddress.Parse("10.227.126.253"))).Status;
+
+                Assert.True(status == IPStatus.TimedOut || status == IPStatus.DestinationNetworkUnreachable);
 
                 // The [240.0.0.0/4] subnet is currently reserved and should not
                 // not be routable (and probably never will be).
