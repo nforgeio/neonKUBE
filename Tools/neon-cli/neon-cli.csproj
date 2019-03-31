@@ -169,4 +169,8 @@
     <Folder Include="Resources\Ubuntu-18.04\binary\" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; &quot;$(ConfigurationName)&quot; &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
+  </Target>
+
 </Project>
