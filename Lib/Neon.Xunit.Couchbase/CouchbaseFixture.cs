@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +23,7 @@ using Xunit;
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
+using Neon.Net;
 
 namespace Neon.Xunit.Couchbase
 {
@@ -47,8 +50,9 @@ namespace Neon.Xunit.Couchbase
     /// <threadsafety instance="true"/>
     public sealed class CouchbaseFixture : ContainerFixture
     {
-        private TimeSpan    warmupDelay = TimeSpan.FromSeconds(10);     // Time to allow Couchbase to start.
-        private bool        createPrimaryIndex;
+        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Couchbase to start.
+        private readonly TimeSpan   retryDelay  = TimeSpan.FromSeconds(0.5);    // Time to wait after a failure.
+        private bool                createPrimaryIndex;
 
         /// <summary>
         /// Constructs the fixture.
@@ -242,12 +246,6 @@ namespace Neon.Xunit.Couchbase
         /// </summary>
         private void ConnectBucket()
         {
-            // Give the Couchbase container a chance to spin up.
-
-var log = @"C:\temp\log.txt";
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 0\r\n");
-            Thread.Sleep(warmupDelay);
-
             // Dispose any existing underlying cluster and bucket.
 
             if (Bucket != null)
@@ -261,7 +259,6 @@ File.WriteAllText(log, $"*** {DateTime.UtcNow}: 0\r\n");
                     Bucket.SetInternalBucket(null);
                 }
             }
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 1\r\n");
 
             // It appears that it may take a bit of time for the Couchbase query
             // service to start in new container we started above.  We're going to
@@ -271,11 +268,20 @@ File.WriteAllText(log, $"*** {DateTime.UtcNow}: 1\r\n");
             var indexCreated = false;
             var indexReady   = false;
             var queryReady   = false;
+            var isRetry      = false;
 
             NeonBucket.ReadyRetry.InvokeAsync(
                 async () =>
                 {
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 2\r\n");
+                    if (isRetry)
+                    {
+                        Thread.Sleep(retryDelay);
+                    }
+                    else
+                    {
+                        isRetry = true;
+                    }
+
                     if (bucket == null)
                     {
                         bucket = Settings.OpenBucket(Username, Password);
@@ -283,7 +289,6 @@ File.WriteAllText(log, $"*** {DateTime.UtcNow}: 2\r\n");
 
                     try
                     {
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 3\r\n");
                         if (createPrimaryIndex)
                         {
                             // Create the primary index if requested.
@@ -293,14 +298,12 @@ File.WriteAllText(log, $"*** {DateTime.UtcNow}: 3\r\n");
                                 await bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(bucket.Name)} using gsi");
                                 indexCreated = true;
                             }
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 4\r\n");
 
                             if (!indexReady)
                             {
                                 await bucket.WaitForIndexAsync("#primary");
                                 indexReady = true;
                             }
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 5\r\n");
 
                             // Ensure that the query service is running too.
 
@@ -312,24 +315,20 @@ File.WriteAllText(log, $"*** {DateTime.UtcNow}: 5\r\n");
                                 await bucket.QuerySafeAsync<dynamic>(query);
                                 queryReady = true;
                             }
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 6\r\n");
                         }
                         else
                         {
                             // List the indexes to ensure the index service is ready when we didn't create a primary index.
 
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 7\r\n");
                             if (!queryReady)
                             {
                                 await bucket.ListIndexesAsync();
                                 queryReady = true;
                             }
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 8\r\n");
                         }
                     }
                     catch (Exception e)
                     {
-File.WriteAllText(log, $"*** {DateTime.UtcNow}: 9: {NeonHelper.ExceptionError(e)}\r\n");
                         // $hack(jeff.lill):
                         //
                         // It looks like we need to create a new bucket if the query service 
@@ -345,7 +344,6 @@ File.WriteAllText(log, $"*** {DateTime.UtcNow}: 9: {NeonHelper.ExceptionError(e)
 
                         bucket.Dispose();
                         bucket = null;
-
                         throw;
                     }
 
@@ -373,26 +371,6 @@ File.WriteAllText(log, $"*** {DateTime.UtcNow}: 9: {NeonHelper.ExceptionError(e)
         {
             CheckDisposed();
 
-            // $todo(jeff.lill):
-            //
-            // The code below was originally intended to clear the Couchbase bucket
-            // in place and this seemed to work for several months and then it just stopped
-            // working in Nov 2018 after I upgraded the CouchbaseNetClient nuget package.
-            // The weird thing is that is still didn't work after I reverted.
-            //
-            // The problem seems to be due to a timing or race condition because if I pause
-            // execution after clearing, the subsequent unit test passes.  Unfortunately, I 
-            // haven't been able to figure out how to determine when everything is ready.
-            // I even tried executing the unit test query that fails but it succeeded here
-            // but still failed in the test.  I can't really explain that: perhaps 
-            // Couchbase restarted one or more services sometime after I cleared the
-            // bucket but after I checked for health below.
-            //
-            // It seems like the first test ran against a clean container always works
-            // so I'm going to revert to simply restarting the container and come back
-            // someday and remove this section.
-
-#if DIDNT_WORK
             // Drop all of the bucket indexes.
 
             var existingIndexes = Bucket.ListIndexesAsync().Result;
@@ -418,17 +396,67 @@ File.WriteAllText(log, $"*** {DateTime.UtcNow}: 9: {NeonHelper.ExceptionError(e)
                     }).Wait();
             }
 
-            // Wait until all of the indexes are actually deleted.
+            // Wait until all of the indexes are actually deleted as well
+            // as all of the bucket items.
 
             NeonHelper.WaitFor(
                 () =>
                 {
-                    var indexes = Bucket.ListIndexesAsync().Result;
+#if DOESNT_WORK
+                    using (var cluster = Settings.OpenCluster(Username, Password))
+                    {
+                        using (var clusterManager = cluster.CreateManager(Username, Password))
+                        {
+                            var indexes     = Bucket.ListIndexesAsync().Result;
+                            var clusterInfo = clusterManager.ClusterInfoAsync().Result;
 
-                    return indexes.Count == 0;
+                            if (clusterInfo.Value == null)
+                            {
+                                return false;   // The bucket isn't ready yet.
+                            }
+
+                            var itemCount = clusterInfo.Value.BucketConfigs().First().BasicStats.ItemCount;
+
+                            return indexes.Count == 0 && itemCount == 0;
+                        }
+                    }
+#else
+                    // The code above doesn't work for some reason.  [clusterInfo.Value] always 
+                    // returns as NULL and the operation message complains:
+                    //
+                    //      "Could not bootstrap from configured servers list."
+                    //
+                    // I am able to hit the admin REST API manually at this time, so
+                    // we'll do this the hard way.
+
+                    var indexes     = Bucket.ListIndexesAsync().Result;
+                    var credentials = new NetworkCredential(Username, Password);
+                    var handler     = new HttpClientHandler() { Credentials = credentials };
+
+                    using (var client = new JsonClient(handler, disposeHandler: true))
+                    {
+                        try
+                        {
+                            client.BaseAddress = Settings.Servers.First();
+
+                            var response  = client.GetAsync<JArray>("/pools/default/buckets").Result;
+                            var item0     = response.First();
+                            var nodes     = (JArray)item0["nodes"];
+                            var node0     = nodes.First();
+                            var stats     = node0["interestingStats"];
+                            var itemCount = stats["curr_items_tot"].ToObject<long>();
+
+                            return indexes.Count == 0 && itemCount == 0;
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    }
+#endif
                 },
                 timeout: NeonBucket.ReadyTimeout,
-                pollTime: TimeSpan.FromMilliseconds(500));
+                pollTime: retryDelay);
 
             // Recreate the primary index if one was enabled when the fixture was started.
 
@@ -437,10 +465,6 @@ File.WriteAllText(log, $"*** {DateTime.UtcNow}: 9: {NeonHelper.ExceptionError(e)
                 Bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
                 Bucket.WaitForIndexAsync("#primary").Wait();
             }
-#endif
-            base.Restart();
-            Thread.Sleep(warmupDelay);
-            ConnectBucket();
         }
 
         /// <summary>
