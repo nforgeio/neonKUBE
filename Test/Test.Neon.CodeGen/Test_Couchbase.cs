@@ -96,8 +96,8 @@ namespace TestCodeGen.Couchbase
 
             // Write a [City] entity (which has a different entity type) and then
             // perform a N1QL query to list the Person entities and verify that we
-            // got only Jack and Jill back.  This verifies the the [TypeFilter] 
-            // attribute is generated correctly.
+            // get only Jack and Jill back.  This verifies the the [TypeFilter] 
+            // attribute is generated and working correctly.
 
             var cityEntity = new CityEntity()
             {
@@ -108,7 +108,7 @@ namespace TestCodeGen.Couchbase
             await bucket.InsertSafeAsync(cityEntity.GetKey(), cityEntity, persistTo: PersistTo.One);
 
             var context = new BucketContext(bucket);
-            var query   = from doc in context.Query<PersonEntity>() select doc;
+            var query   = from doc in context.Query<PersonEntity>() where doc.__EntityType == "Test.Neon.Models.Definitions.City" select doc;
             var people  = query.ToList();
 
             Assert.Equal(2, people.Count);

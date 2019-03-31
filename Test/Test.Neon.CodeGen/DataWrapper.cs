@@ -252,15 +252,15 @@ namespace TestCodeGen
         /// <summary>
         /// Serializes the data model as a <see cref="JObject"/>.
         /// </summary>
-        /// <param name="indented">Optionally format the JSON output.</param>
+        /// <param name="noClone">Optionally disable deep cloning of the backing <see cref="JObject"/>.</param>
         /// <returns>The JSON text.</returns>
-        public JObject ToJObject()
+        public JObject ToJObject(bool noClone = false)
         {
             try
             {
-                var method = instanceType.GetMethod("ToJObject", new Type[] { });
+                var method = instanceType.GetMethod("ToJObject", new Type[] { typeof(bool) });
 
-                return (JObject)method.Invoke(instance, new object[] { });
+                return (JObject)method.Invoke(instance, new object[] { noClone });
             }
             catch (TargetInvocationException e)
             {
@@ -324,8 +324,8 @@ namespace TestCodeGen
         {
             try
             {
-                var toJObjectMethod = instanceType.GetMethod("ToJObject", new Type[] { });
-                var jObject         = (JObject)toJObjectMethod.Invoke(instance, new object[] { });
+                var toJObjectMethod = instanceType.GetMethod("ToJObject", new Type[] { typeof(bool) });
+                var jObject         = (JObject)toJObjectMethod.Invoke(instance, new object[] { false });
 
                 return new DataWrapper(instanceType, jObject);
             }

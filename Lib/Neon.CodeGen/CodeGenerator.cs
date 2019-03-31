@@ -1123,6 +1123,13 @@ namespace Neon.CodeGen
 
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Static members:");
+
+                    if (genEntity)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"        private const string entityType = \"{dataModel.EntityInfo.EntityType}\";");
+                    }
+
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Deserializes an instance from JSON text.");
@@ -1270,6 +1277,9 @@ namespace Neon.CodeGen
                     if (dataModel.BaseTypeName == null)
                     {
                         writer.WriteLine();
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// The backing <see cref=\"JObject\"/> used to hold the serialized data.");
+                        writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        protected JObject __JObject {{ get; set; }}");
                     }
                 }
@@ -1288,6 +1298,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Protected constructor used internally to initialize derived classes.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"jObject\">The backing <see cref=\"JObject\"/>.</param>");
                     writer.WriteLine($"        protected {className}(JObject jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __JObject = jObject;");
@@ -1304,6 +1318,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Protected constructor.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"jObject\">The backing <see cref=\"JObject\"/>.</param>");
                     writer.WriteLine($"        protected {className}(JObject jObject) : base(jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"        }}");
@@ -1387,32 +1405,24 @@ namespace Neon.CodeGen
                     var serializedProperties = dataModel.Properties.Where(p => !p.Ignore);
 
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Loads the properties from the backing <see cref=\"JObject\"/> into this instance.");
+                    writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        protected {virtualModifier} void __Load()");
                     writer.WriteLine($"        {{");
 
                     if (serializedProperties.Count() > 0 || dataModel.IsDerived)
                     {
                         writer.WriteLine($"            JProperty property;");
-                        writer.WriteLine();
 
                         if (dataModel.IsDerived)
                         {
                             writer.WriteLine($"            base.__Load();");
-
-                            if (dataModel.Properties.Count > 0)
-                            {
-                                writer.WriteLine();
-                            }
                         }
-
-                        var propertyIndex = 0;
 
                         foreach (var property in serializedProperties.OrderBy(p => p.Order))
                         {
-                            if (propertyIndex++ > 0)
-                            {
-                                writer.WriteLine();
-                            }
+                            writer.WriteLine();
 
                             var resolvedPropertyType = ResolveTypeReference(property.Type);
 
@@ -1460,12 +1470,31 @@ namespace Neon.CodeGen
                         }
                     }
 
+                    // Database entities also need to verify thet the serialized [__EntityType] property matches the actual type.
+
+                    if (genEntity)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"            property = this.__JObject.Property(\"__EntityType\");");
+                        writer.WriteLine($"            if (property == null)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                throw new ArgumentNullException(\"[{className}.__EntityType] property is required when deserializing.\");");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine($"            else if ((string)property.Value != entityType)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                throw new InvalidOperationException($\"[{className}.__EntityType={{entityType}}] property does not match the deserialized value [{{(string)property.Value}}].\");");
+                        writer.WriteLine($"            }}");
+                    }
+
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
                     // Generate the __Save() method.
 
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Persists the properties from this instance to the backing <see cref=\"JObject\"/>.");
+                    writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        protected {virtualModifier} void __Save()");
                     writer.WriteLine($"        {{");
 
@@ -1543,6 +1572,13 @@ namespace Neon.CodeGen
                                     break;
                             }
                         }
+                    }
+
+                    // Database entities also need to serialize their [__EntityType] properties.
+
+                    if (genEntity)
+                    {
+                        writer.WriteLine($"            this.__JObject[__EntityType] = entityType;");
                     }
 
                     writer.WriteLine($"        }}");
@@ -1707,7 +1743,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Identifies the entity type.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        public string __EntityType {{ get; set; }} = \"{dataModel.EntityInfo.EntityType}\";");
+                        writer.WriteLine($"        public string __EntityType {{ get; private set; }} = entityType;");
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Returns the database key for an entity.");

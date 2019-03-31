@@ -53,7 +53,7 @@ namespace Neon.Data
         /// <summary>
         /// Identifies the entity type.
         /// </summary>
-        string __EntityType { get; set; }
+        string __EntityType { get; }
     }
 
     /// <summary>
