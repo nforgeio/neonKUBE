@@ -51,6 +51,7 @@
 
   <ItemGroup>
     <Folder Include="Csv\" />
+    <Folder Include="Serialization\" />
   </ItemGroup>
 
 </Project>

@@ -35,7 +35,7 @@ using Newtonsoft.Json.Serialization;
 
 using Neon.Diagnostics;
 
-namespace Neon.Serialization
+namespace Neon.Data
 {
     /// <summary>
     /// Used to instantiate code generated classes that implement <see cref="IGeneratedDataModel"/>

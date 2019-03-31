@@ -83,6 +83,9 @@ namespace TestCodeGen.Couchbase
                 Age = 11
             };
 
+            Assert.Equal("0", jackEntity.GetKey());
+            Assert.Equal("1", jillEntity.GetKey());
+
             await bucket.InsertSafeAsync(jackEntity.GetKey(), jackEntity, persistTo: PersistTo.One);
             await bucket.InsertSafeAsync(jillEntity.GetKey(), jillEntity, persistTo: PersistTo.One);
 
@@ -91,10 +94,13 @@ namespace TestCodeGen.Couchbase
             var jackReadEntity = await bucket.GetSafeAsync<PersonEntity>(0.ToString());
             var jillReadEntity = await bucket.GetSafeAsync<PersonEntity>(1.ToString());
 
-            Assert.True(jackEntity == jackReadEntity);
-            Assert.True(jillEntity == jillReadEntity);
+            //Assert.Equal("0", jackReadEntity.GetKey());
+            //Assert.Equal("1", jillReadEntity.GetKey());
+            //Assert.True(jackEntity == jackReadEntity);
+            //Assert.True(jillEntity == jillReadEntity);
 
-            // Write a [City] entity (which has a different entity type) and then
+            //-----------------------------------------------------------------
+            // Persist a [City] entity (which has a different entity type) and then
             // perform a N1QL query to list the Person entities and verify that we
             // get only Jack and Jill back.  This verifies the the [TypeFilter] 
             // attribute is generated and working correctly.
@@ -102,21 +108,26 @@ namespace TestCodeGen.Couchbase
             var cityEntity = new CityEntity()
             {
                 Name = "Woodinville",
-                Population = 12333
+                Population = 12345
             };
 
             await bucket.InsertSafeAsync(cityEntity.GetKey(), cityEntity, persistTo: PersistTo.One);
 
             var context = new BucketContext(bucket);
-            var query   = from doc in context.Query<PersonEntity>() where doc.__EntityType == "Test.Neon.Models.Definitions.City" select doc;
+            var query   = from doc in context.Query<PersonEntity>() where doc.__EntityType == "Test.Neon.Models.Definitions.Person" select doc;
             var people  = query.ToList();
 
             Assert.Equal(2, people.Count);
             Assert.Contains(people, p => p.Name == "Jack");
             Assert.Contains(people, p => p.Name == "Jill");
 
+#if TODO
             //-----------------------------------------------------------------
-            // Extra credit: Verify that ToBase() works.
+            // Query for the city and verify.
+
+
+            //-----------------------------------------------------------------
+            // Extra credit #1: Verify that [Entity.ToBase()] works.
 
             var jack = jackEntity.ToBase();
 
@@ -131,6 +142,11 @@ namespace TestCodeGen.Couchbase
             {
                 Assert.False(property.Name.StartsWith("__"));
             }
+
+            //-----------------------------------------------------------------
+            // Extra credit #2: Verify that [Entity.DeepClone()] works.
+
+#endif
         }
     }
 }

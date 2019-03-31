@@ -26,7 +26,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Net.Http.Headers;
 
 using Neon.Common;
-using Neon.Serialization;
+using Neon.Data;
 using Newtonsoft.Json.Linq;
 
 namespace Neon.Web

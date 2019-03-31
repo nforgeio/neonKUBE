@@ -327,7 +327,7 @@ namespace Neon.Xunit.Couchbase
                             }
                         }
                     }
-                    catch (Exception e)
+                    catch
                     {
                         // $hack(jeff.lill):
                         //

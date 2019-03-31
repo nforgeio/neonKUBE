@@ -29,7 +29,6 @@ using System.Threading.Tasks;
 
 using Neon.CodeGen;
 using Neon.Common;
-using Neon.Serialization;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

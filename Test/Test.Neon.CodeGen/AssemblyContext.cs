@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 using Neon.CodeGen;
 using Neon.Common;
-using Neon.Serialization;
+using Neon.Data;
 using Neon.Xunit;
 
 using Newtonsoft.Json;

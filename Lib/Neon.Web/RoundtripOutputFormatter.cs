@@ -25,7 +25,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Net.Http.Headers;
 
 using Neon.Common;
-using Neon.Serialization;
+using Neon.Data;
 
 namespace Neon.Web
 {

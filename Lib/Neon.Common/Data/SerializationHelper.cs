@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SerializationHelper.cs
+// FILE:	    EntitySerializationHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,13 +33,13 @@ using Newtonsoft.Json.Serialization;
 
 using Neon.Diagnostics;
 
-namespace Neon.Serialization
+namespace Neon.Data
 {
     /// <summary>
     /// Serialization related helpers used by the code generated
     /// by the <b>Neon.CodeGen</b> library.
     /// </summary>
-    public static class SerializationHelper
+    public static class EntitySerializationHelper
     {
         private static readonly JsonSerializerSettings settings;
 
@@ -54,7 +54,7 @@ namespace Neon.Serialization
         /// </summary>
         public static JsonSerializer Serializer { get; private set; }
 
-        static SerializationHelper()
+        static EntitySerializationHelper()
         {
             settings = new JsonSerializerSettings()
             {

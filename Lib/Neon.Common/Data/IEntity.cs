@@ -22,7 +22,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.Serialization;
 
 namespace Neon.Data
 {
@@ -49,6 +48,19 @@ namespace Neon.Data
         /// </summary>
         /// <returns>The database key for the entity.</returns>
         string GetKey();
+
+        /// <summary>
+        /// Loads the entity properties from the backing <see cref="JObject"/>
+        /// or from the optional <see cref="JObject"/> passed.
+        /// </summary>
+        /// <param name="source">Optional source object.</param>
+        void __Load(JObject source = null);
+
+        /// <summary>
+        /// Persists the object properties to the backing <see cref="JObject"/>.
+        /// </summary>
+        /// <returns>The backing <see cref="JObject"/>.</returns>
+        JObject __Save();
 
         /// <summary>
         /// Identifies the entity type.
