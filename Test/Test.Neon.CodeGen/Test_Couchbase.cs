@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 
 using Couchbase;
 using Couchbase.Core;
+using Couchbase.Linq;
 
 using Neon.CodeGen;
 using Neon.Common;
@@ -40,32 +41,18 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
+using Test.Models;
+
 namespace TestCodeGen.Couchbase
 {
-    public enum MyEnum1
-    {
-        One,
-        Two,
-        Three
-    }
-
-    [Entity]
-    public interface Person
-    {
-        [EntityKey]
-        string Name { get; set; }
-        int Age { get; set; }
-        MyEnum1 Enum { get; set; }
-    }
-
     [NoCodeGen]
     public class Test_Couchbase : IClassFixture<CouchbaseFixture>
     {
         private const string username = "Administrator";
         private const string password = "password";
 
-        private CouchbaseFixture couchbase;
-        private NeonBucket bucket;
+        private CouchbaseFixture    couchbase;
+        private NeonBucket          bucket;
 
         public Test_Couchbase(CouchbaseFixture couchbase)
         {
@@ -78,25 +65,71 @@ namespace TestCodeGen.Couchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void Person()
+        public async Task WriteReadList()
         {
-            // Verify that we can generate code for a simple data model.
+            // Verify that we can write generated entity models.
 
-            var settings = new CodeGeneratorSettings()
+            var jackEntity = new PersonEntity()
             {
-                SourceNamespace = typeof(Test_Couchbase).Namespace,
-                Entities        = true
+                Id = 0,
+                Name = "Jack",
+                Age = 10
             };
 
-            var generator = new CodeGenerator(settings);
-            var output    = generator.Generate(Assembly.GetExecutingAssembly());
-
-            Assert.False(output.HasErrors);
-
-            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
-
-            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            var jillEntity = new PersonEntity()
             {
+                Id = 1,
+                Name = "Jill",
+                Age = 11
+            };
+
+            await bucket.InsertSafeAsync(jackEntity.GetKey(), jackEntity, persistTo: PersistTo.One);
+            await bucket.InsertSafeAsync(jillEntity.GetKey(), jillEntity, persistTo: PersistTo.One);
+
+            // Verify that we can read them.
+
+            var jackReadEntity = await bucket.GetSafeAsync<PersonEntity>(0.ToString());
+            var jillReadEntity = await bucket.GetSafeAsync<PersonEntity>(1.ToString());
+
+            Assert.True(jackEntity == jackReadEntity);
+            Assert.True(jillEntity == jillReadEntity);
+
+            // Write a [City] entity (which has a different entity type) and then
+            // perform a N1QL query to list the Person entities and verify that we
+            // got only Jack and Jill back.  This verifies the the [TypeFilter] 
+            // attribute is generated correctly.
+
+            var cityEntity = new CityEntity()
+            {
+                Name = "Woodinville",
+                Population = 12333
+            };
+
+            await bucket.InsertSafeAsync(cityEntity.GetKey(), cityEntity, persistTo: PersistTo.One);
+
+            var context = new BucketContext(bucket);
+            var query   = from doc in context.Query<PersonEntity>() select doc;
+            var people  = query.ToList();
+
+            Assert.Equal(2, people.Count);
+            Assert.Contains(people, p => p.Name == "Jack");
+            Assert.Contains(people, p => p.Name == "Jill");
+
+            //-----------------------------------------------------------------
+            // Extra credit: Verify that ToBase() works.
+
+            var jack = jackEntity.ToBase();
+
+            Assert.Equal(jackEntity.Name, jack.Name);
+            Assert.Equal(jackEntity.Age, jack.Age);
+
+            // The underlying [JObject] shouldn't have any properties
+            // with leading underscores because ToBase() should have
+            // stripped the [__EntityType] property off.
+
+            foreach (var property in jack.ToJObject(noClone: true).Properties())
+            {
+                Assert.False(property.Name.StartsWith("__"));
             }
         }
     }

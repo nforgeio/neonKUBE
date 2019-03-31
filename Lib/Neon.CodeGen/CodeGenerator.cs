@@ -869,7 +869,12 @@ namespace Neon.CodeGen
             writer.WriteLine();
             writer.WriteLine($"using Neon.Collections;");
             writer.WriteLine($"using Neon.Common;");
-            writer.WriteLine($"using Neon.Data;");
+
+            if (Settings.Entities)
+            {
+                writer.WriteLine($"using Neon.Data;");
+            }
+
             writer.WriteLine($"using Neon.Diagnostics;");
             writer.WriteLine($"using Neon.Net;");
             writer.WriteLine($"using Neon.Retry;");
@@ -1006,8 +1011,8 @@ namespace Neon.CodeGen
         /// </param>
         private void GenerateDataModel(DataModel dataModel, bool genEntity)
         {
-            string defaultValueExpression;
-            string entityKeyProperty = null;
+            string          defaultValueExpression;
+            PropertyInfo    entityKeyProperty = null;
 
             if (genEntity && (dataModel.EntityInfo == null || dataModel.IsEnum))
             {
@@ -1027,17 +1032,17 @@ namespace Neon.CodeGen
                     {
                         if (entityKeyProperty != null)
                         {
-                            Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has two properties [{entityKeyProperty}] and [{property.Name}] that are both tagged with [EntityKey].  This is allowed for only one property per class.");
+                            Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has two properties [{entityKeyProperty.Name}] and [{property.Name}] that are both tagged with [EntityKey].  This is allowed for only one property per class.");
                             break;
                         }
 
-                        entityKeyProperty = property.Name;
+                        entityKeyProperty = property;
                     }
                 }
 
-                if (string.IsNullOrEmpty(entityKeyProperty))
+                if (entityKeyProperty == null)
                 {
-                    Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has no property tagged with [EntityKey].  Entity class must tag exactly one property.");
+                    Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has no property tagged with [EntityKey].  Entity classes must tag one property as the database key.");
                 }
             }
 
@@ -1101,6 +1106,11 @@ namespace Neon.CodeGen
                 if (genEntity)
                 {
                     className += "Entity";
+                }
+
+                if (genEntity)
+                {
+                    writer.WriteLine($"    [global::Couchbase.TypeFilter(\"{dataModel.EntityInfo.EntityType}\", JsonProperty = \"__EntityType\")]");
                 }
 
                 writer.WriteLine($"    public partial class {className}{baseTypeRef}");
@@ -1705,7 +1715,29 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the entity.</param>");
                         writer.WriteLine($"        public string GetKey()");
                         writer.WriteLine($"        {{");
-                        writer.WriteLine($"            return {entityKeyProperty};");
+
+                        if (entityKeyProperty.PropertyType.IsValueType)
+                        {
+                            writer.WriteLine($"            return {entityKeyProperty.Name}.ToString();");
+                        }
+                        else
+                        {
+                            writer.WriteLine($"            if ({entityKeyProperty.Name} == null)");
+                            writer.WriteLine($"            {{");
+                            writer.WriteLine($"                throw new InvalidOperationException(\"Entity key property [{entityKeyProperty.Name}] cannot be NULL.\");");
+                            writer.WriteLine($"            }}");
+                            writer.WriteLine();
+
+                            if (entityKeyProperty.PropertyType == typeof(string))
+                            {
+                                writer.WriteLine($"            return {entityKeyProperty.Name};");
+                            }
+                            else
+                            {
+                                writer.WriteLine($"            return {entityKeyProperty.Name}.ToString();");
+                            }
+                        }
+
                         writer.WriteLine($"        }}");
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
