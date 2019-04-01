@@ -18,18 +18,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Couchbase;
-using Couchbase.Authentication;
-using Couchbase.Configuration.Client;
 using Couchbase.Core;
 using Couchbase.IO;
 using Couchbase.N1QL;
-
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
@@ -817,6 +812,95 @@ namespace Couchbase
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query));
 
             return await QuerySafeAsync<T>(bucket, new QueryRequest(query), cancellationToken);
+        }
+
+        /// <summary>
+        /// Executes a query request after ensuring that the indexes have caught
+        /// up to the specified mutation state, throwing an exception if there were
+        /// any errors.
+        /// </summary>
+        /// <typeparam name="T">The result type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="queryRequest">The query request.</param>
+        /// <param name="mutationState">
+        /// Specifies the required index mutation state that must be satisfied before
+        /// the query will be executed.
+        /// </param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The list of results.</returns>
+        public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, IQueryRequest queryRequest, MutationState mutationState, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(queryRequest != null);
+            Covenant.Requires<ArgumentNullException>(mutationState != null);
+
+            // $todo(jeff.lill): This is a horrible hack!
+            //
+            // My [Test_AnsibleCouchbaseImport] unit tests were failing due to what
+            // looks like a transient query exception that doesn't happen for the 
+            // first test but then fails for most of the subsequent tests in any 
+            // given run.
+            //
+            // The weird thing is that I currently have the [CouchbaseFixture] perform
+            // the exect same query to ensure that the query service is ready before
+            // the test actually runs, so I'm not sure what the problem is.
+            //
+            // I've tried monkeying with timeouts and also trying very hard to ensure
+            // that I close/dispose the Couchbase client cluster and bucket between
+            // runs to no avail.
+            //
+            // This hack examines the query statement and will retry SELECT queries 
+            // which are naturally idempotent.  Other query types won't be retried.
+            //
+            // I need to move on to some other tasks now, but I do need to come back 
+            // some point and really try to nail this down.
+
+            var qr = queryRequest as QueryRequest;
+
+            qr.ConsistentWith(mutationState);
+
+            if (qr != null && qr.GetOriginalStatement().Trim().StartsWith("select ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var retry = new LinearRetryPolicy(typeof(CouchbaseQueryResponseException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
+
+                return await retry.InvokeAsync(
+                    async () =>
+                    {
+                        var result = await bucket.QueryAsync<T>(queryRequest, cancellationToken);
+
+                        VerifySuccess<T>(result);
+
+                        return result.Rows;
+                    });
+            }
+            else
+            {
+                var result = await bucket.QueryAsync<T>(queryRequest, cancellationToken);
+
+                VerifySuccess<T>(result);
+
+                return result.Rows;
+            }
+        }
+
+        /// <summary>
+        /// Executes a N1QL string query, after ensuring that the indexes have caught
+        /// up to the specified mutation state, throwing an exception if there were
+        /// any errors.
+        /// </summary>
+        /// <typeparam name="T">The result type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="query">The N1QL query string.</param>
+        /// <param name="mutationState">
+        /// Specifies the required index mutation state that must be satisfied before
+        /// the query will be executed.
+        /// </param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The list of results.</returns>
+        public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, string query, MutationState mutationState, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query));
+
+            return await QuerySafeAsync<T>(bucket, new QueryRequest(query), mutationState, cancellationToken);
         }
 
         /// <summary>

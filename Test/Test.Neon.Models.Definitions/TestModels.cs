@@ -54,6 +54,7 @@ namespace Test.Neon.Models.Definitions
         int Id { get; set; }
         string Name { get; set; }
         int Age { get; set; }
+        byte[] Data { get; set; }
     }
 
     [Entity]

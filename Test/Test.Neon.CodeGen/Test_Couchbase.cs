@@ -45,7 +45,11 @@ using Test.Models;
 
 namespace TestCodeGen.Couchbase
 {
-    [NoCodeGen]
+    public class PlainOldObject
+    {
+        public string Foo { get; set; }
+    }
+
     public class Test_Couchbase : IClassFixture<CouchbaseFixture>
     {
         private const string username = "Administrator";
@@ -73,14 +77,16 @@ namespace TestCodeGen.Couchbase
             {
                 Id = 0,
                 Name = "Jack",
-                Age = 10
+                Age = 10,
+                Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
             var jillEntity = new PersonEntity()
             {
                 Id = 1,
                 Name = "Jill",
-                Age = 11
+                Age = 11,
+                Data = new byte[] { 5, 6, 7, 8, 9 }
             };
 
             Assert.Equal("0", jackEntity.GetKey());
@@ -111,11 +117,21 @@ namespace TestCodeGen.Couchbase
                 Population = 12345
             };
 
-            await bucket.InsertSafeAsync(cityEntity.GetKey(), cityEntity, persistTo: PersistTo.One);
+            var opResult = await bucket.InsertSafeAsync(cityEntity.GetKey(), cityEntity, persistTo: PersistTo.One);
 
             var context     = new BucketContext(bucket);
             var peopleQuery = from doc in context.Query<PersonEntity>() select doc;
-            var people      = peopleQuery.ToList();
+
+            // $todo(jeff.lill):
+            //
+            // I need to figure out how to have the query honor the mutation state
+            // returned in [opResult].  I'm going to hack a delay here in the meantime.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/473
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            var people = peopleQuery.ToList();
 
             Assert.Equal(2, people.Count);
             Assert.Contains(people, p => p.Name == "Jack");
@@ -129,6 +145,17 @@ namespace TestCodeGen.Couchbase
 
             Assert.Single(cities);
             Assert.Contains(cities, p => p.Name == "Woodinville");
+
+            //-----------------------------------------------------------------
+            // Verify that plain old object serialization still works.
+
+            var poo = new PlainOldObject() { Foo = "bar" };
+
+            await bucket.InsertSafeAsync("poo", poo, persistTo: PersistTo.One);
+
+            poo = await bucket.GetSafeAsync<PlainOldObject>("poo");
+
+            Assert.Equal("bar", poo.Foo);
 
             //-----------------------------------------------------------------
             // Extra credit #1: Verify that [Entity.ToBase()] works.
@@ -149,6 +176,12 @@ namespace TestCodeGen.Couchbase
 
             //-----------------------------------------------------------------
             // Extra credit #2: Verify that [Entity.DeepClone()] works.
+
+            var clone = jackEntity.DeepClone();
+
+            Assert.Equal(jackEntity.Name, clone.Name);
+            Assert.Equal(jackEntity.Age, clone.Age);
+            Assert.NotSame(jackEntity.Data, clone.Data);
         }
     }
 }

@@ -31,6 +31,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
+using Neon.Common;
 using Neon.Diagnostics;
 
 namespace Neon.Data
@@ -145,6 +146,21 @@ namespace Neon.Data
             }
 
             return key;
+        }
+
+        /// <summary>
+        /// Returns a deep clone of a <see cref="JObject"/>.
+        /// </summary>
+        /// <param name="jObject">The <see cref="JObject"/> or <c>null</c>.</param>
+        /// <returns>The cloned instance.</returns>
+        public static JObject DeepClone(JObject jObject)
+        {
+            if (jObject == null)
+            {
+                return null;
+            }
+
+            return NeonHelper.JsonClone<JObject>(jObject);
         }
     }
 }

@@ -1681,7 +1681,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        public JObject ToJObject(bool noClone = false)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
-                        writer.WriteLine($"            return noClone ? __JObject : (JObject)__JObject.DeepClone();");
+                        writer.WriteLine($"            return noClone ? __JObject : EntitySerializationHelper.DeepClone(__JObject);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1696,7 +1696,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public {className} DeepClone()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return CreateFrom((JObject)__JObject.DeepClone());");
+                    writer.WriteLine($"            return CreateFrom(EntitySerializationHelper.DeepClone(__JObject));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1715,7 +1715,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"           where T : {className}, IGeneratedEntity");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return GeneratedEntityFactory.CreateFrom<T>(noClone ? __JObject : (JObject)__JObject.DeepClone());");
+                    writer.WriteLine($"            return GeneratedEntityFactory.CreateFrom<T>(noClone ? __JObject : EntitySerializationHelper.DeepClone(__JObject));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1842,7 +1842,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
                         writer.WriteLine();
-                        writer.WriteLine($"            var jObject = (JObject)__JObject.DeepClone();");
+                        writer.WriteLine($"            var jObject = EntitySerializationHelper.DeepClone(__JObject);");
                         writer.WriteLine();
                         writer.WriteLine($"            jObject.Remove(\"__EntityType\");");
                         writer.WriteLine();
