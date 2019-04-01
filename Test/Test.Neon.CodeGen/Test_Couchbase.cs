@@ -92,8 +92,8 @@ namespace TestCodeGen.Couchbase
             Assert.Equal("0", jackEntity.GetKey());
             Assert.Equal("1", jillEntity.GetKey());
 
-            await bucket.InsertSafeAsync(jackEntity.GetKey(), jackEntity, persistTo: PersistTo.One);
-            await bucket.InsertSafeAsync(jillEntity.GetKey(), jillEntity, persistTo: PersistTo.One);
+            await bucket.InsertSafeAsync(jackEntity, persistTo: PersistTo.One);
+            await bucket.InsertSafeAsync(jillEntity, persistTo: PersistTo.One);
 
             // Verify that we can read them.
 
@@ -117,7 +117,7 @@ namespace TestCodeGen.Couchbase
                 Population = 12345
             };
 
-            var opResult = await bucket.InsertSafeAsync(cityEntity.GetKey(), cityEntity, persistTo: PersistTo.One);
+            var opResult = await bucket.InsertSafeAsync(cityEntity, persistTo: PersistTo.One);
 
             var context     = new BucketContext(bucket);
             var peopleQuery = from doc in context.Query<PersonEntity>() select doc;
