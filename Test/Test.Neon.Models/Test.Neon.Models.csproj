@@ -20,8 +20,8 @@
   </ItemGroup>
 
   <Target Name="ModelGen" AfterTargets="BeforeCompile">
-    <Exec Command="neon version --minimum=0.3.1-alpha" />
-    <Exec Command="neon generate models --target-namespace=Test.Models --entities &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\$(OutDir)Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedEntities.cs&quot;" />
+    <Exec Command="neon version --minimum=0.3.4-alpha" />
+    <Exec Command="neon generate models --target-namespace=Test.Neon.Models --entities &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\$(OutDir)Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedEntities.cs&quot;" />
   </Target>
 
 </Project>

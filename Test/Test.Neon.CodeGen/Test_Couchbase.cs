@@ -41,7 +41,7 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
-using Test.Models;
+using Test.Neon.Models;
 
 namespace TestCodeGen.Couchbase
 {

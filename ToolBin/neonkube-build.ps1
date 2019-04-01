@@ -159,7 +159,6 @@ if (-not $nobuild)
 
 # Publish the .NET Core binaries.
 
-PublishCore "Tools\entity-gen\entity-gen.csproj"    "entity-gen"
 PublishCore "Tools\neon-cli\neon-cli.csproj"        "neon"
 PublishCore "Tools\neon-build\neon-build.csproj"    "neon-build"
 

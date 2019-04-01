@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>NeonCli</RootNamespace>
     <AssemblyName>neon</AssemblyName>
     <LangVersion>latest</LangVersion>
@@ -168,9 +168,5 @@
     <Folder Include="Commands\Login\" />
     <Folder Include="Resources\Ubuntu-18.04\binary\" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;pubcore &quot;$(ProjectPath)&quot; &quot;$(TargetName)&quot; &quot;$(ConfigurationName)&quot; &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot; win10-x64" />
-  </Target>
 
 </Project>
