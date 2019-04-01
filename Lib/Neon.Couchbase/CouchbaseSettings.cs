@@ -135,12 +135,12 @@ namespace Neon.Data
         /// <summary>
         /// Enables the use of the <see cref="ScanConsistency.AtPlus"/> and perhaps the <see cref="ScanConsistency.StatementPlus"/>
         /// index consistency options.  Both of these options are deprecated as of Couchbase 5.0 so this may no longer
-        /// matter.  This defaults to <c>false</c>.
+        /// matter.  This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "UseEnhancedDurability", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "UseEnhancedDurability", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool UseEnhancedDurability { get; set; } = false;
+        public bool UseEnhancedDurability { get; set; } = true;
 
         /// <summary>
         /// Returns <c>true</c> if the settings are valid.
