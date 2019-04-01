@@ -54,7 +54,6 @@ namespace Neon.Data
         /// <param name="jObject">The source <see cref="JObject"/>.</param>
         /// <returns>The new <typeparamref name="TResult"/> instance.</returns>
         public static TResult CreateFrom<TResult>(JObject jObject)
-            where TResult : IGeneratedEntity
         {
             return (TResult)CreateFrom(typeof(TResult), jObject);
         }
@@ -69,7 +68,9 @@ namespace Neon.Data
         {
             Covenant.Requires(resultType != null);
             Covenant.Requires(jObject != null);
-
+#if DEBUG
+            Covenant.Requires<ArgumentException>(resultType.Implements<IGeneratedEntity>());
+#endif
             MethodInfo createMethod;
 
             lock (nameToCreateMethod)
@@ -94,7 +95,6 @@ namespace Neon.Data
         /// <param name="stream">The source <see cref="Stream"/>.</param>
         /// <returns>The new <typeparamref name="TResult"/> instance.</returns>
         public static TResult CreateFrom<TResult>(Stream stream)
-            where TResult : IGeneratedEntity
         {
             return (TResult)CreateFrom(typeof(TResult), stream);
         }

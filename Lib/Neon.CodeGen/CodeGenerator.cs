@@ -860,6 +860,7 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
             writer.WriteLine($"using System.Linq;");
+            writer.WriteLine($"using System.Linq.Expressions;");
             writer.WriteLine($"using System.Net;");
             writer.WriteLine($"using System.Net.Http;");
             writer.WriteLine($"using System.Net.Http.Headers;");
@@ -1120,18 +1121,26 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        public class {className}Filter : Couchbase.Linq.Filters.IDocumentFilter<{className}>");
                     writer.WriteLine($"        {{");
+                    writer.WriteLine($"            //-----------------------------------------------------------------");
+                    writer.WriteLine($"            // Static members:");
+                    writer.WriteLine();
+                    writer.WriteLine($"            private static Expression<Func<{className}, bool>> whereExpression;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            static {className}Filter()");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                var parameter = Expression.Parameter(typeof({className}), \"p\");");
+                    writer.WriteLine();
+                    writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__EntityType\"), Expression.Constant({className}.PersistedEntityType)), parameter);");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            //-----------------------------------------------------------------");
+                    writer.WriteLine($"            // Instance members:");
+                    writer.WriteLine();
                     writer.WriteLine($"            public int Priority {{ get; set; }}");
                     writer.WriteLine();
                     writer.WriteLine($"            public IQueryable<{className}> ApplyFilter(IQueryable<{className}> source)");
                     writer.WriteLine($"            {{");
-
-                    // $todo(jeff.lill): DELETE THIS!
-                    writer.WriteLine($"                var items    = source.ToList();");
-                    writer.WriteLine($"                var filtered = items.Where(item => item.__EntityType == \"Test.Neon.Models.Definitions.Person\").ToList();");
-                    writer.WriteLine();
-                    //-------------------------------
-
-                    writer.WriteLine($"                return source.Where(item => item.__EntityType == {className}.PersistedEntityType);");
+                    writer.WriteLine($"                return source.Where(whereExpression);");
                     writer.WriteLine($"            }}");
                     writer.WriteLine($"        }}");
                     writer.WriteLine($"    }}");

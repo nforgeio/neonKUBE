@@ -33,6 +33,7 @@ using Couchbase.IO;
 using Couchbase.N1QL;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Data;
@@ -41,7 +42,7 @@ using Neon.Time;
 
 // $todo(jeff.lill):
 //
-// This code is going to generate a lot of GC activity.  In the distant
+// This code is going to generate a some GC activity.  In the distant
 // future, we should investigate this:
 //
 //      https://blog.couchbase.com/using-jil-for-custom-json-serialization-in-the-couchbase-net-sdk/
@@ -54,14 +55,41 @@ namespace Couchbase
     /// Implements a Couchbase serializer that's capable of handling <see cref="IEntity"/>
     /// based objects in addition to plain-old-objects.
     /// </summary>
-    public class EntitySerializer : ITypeSerializer
+    internal class EntitySerializer : ITypeSerializer
     {
+        private ITypeSerializer     defaultSerializer;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public EntitySerializer()
+        {
+            // We're simply going to wrap the default Couchbase serializer
+            // so we can detect generated entities and call their __Save()
+            // and __Load() methods as required.
+
+            this.defaultSerializer = new DefaultSerializer();
+        }
+
         /// <inheritdoc/>
         public T Deserialize<T>(byte[] buffer, int offset, int length)
         {
-            using (var stream = new MemoryStream(buffer, offset, length))
+            var entityType = typeof(T);
+
+            if (entityType.Implements<IGeneratedEntity>())
             {
-                return Deserialize<T>(stream);
+                var jObject = defaultSerializer.Deserialize<JObject>(buffer, offset, length);
+
+                if (jObject == null)
+                {
+                    return default(T);
+                }
+
+                return GeneratedEntityFactory.CreateFrom<T>(jObject);
+            }
+            else
+            {
+                return defaultSerializer.Deserialize<T>(buffer, offset, length);
             }
         }
 
@@ -74,23 +102,15 @@ namespace Couchbase
             {
                 // Custom IGeneratedEntity
 
-                // $todo(jeff.lill): DELETE THIS! (actually just return it).
+                var jObject = defaultSerializer.Deserialize<JObject>(stream);
 
-                var v = (T)GeneratedEntityFactory.CreateFrom(entityType, stream, System.Text.Encoding.UTF8);
-
-                return v;
+                return (T)GeneratedEntityFactory.CreateFrom<T>(jObject);
             }
             else
             {
                 // Plain old object.
 
-                using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8))
-                {
-                    using (var jsonReader = new JsonTextReader(reader))
-                    {
-                        return EntitySerializationHelper.Serializer.Deserialize<T>(jsonReader);
-                    }
-                }
+                return defaultSerializer.Deserialize<T>(stream);
             }
         }
 
@@ -99,31 +119,21 @@ namespace Couchbase
         {
             var entityType = obj.GetType();
 
-            using (var output = new MemoryStream())
+            var generatedDataModel = obj as IGeneratedEntity;
+
+            if (generatedDataModel != null)
             {
-                using (var writer = new StreamWriter(output))
-                {
-                    var generatedDataModel = obj as IGeneratedEntity;
+                // Custom IGeneratedEntity
 
-                    if (generatedDataModel != null)
-                    {
-                        // Custom IGeneratedEntity
+                var jObject = generatedDataModel.__Save();
 
-                        EntitySerializationHelper.Serializer.Serialize(writer, generatedDataModel.__Save());
-                    }
-                    else
-                    {
-                        // Plain old object.
+                return defaultSerializer.Serialize(jObject);
+            }
+            else
+            {
+                // Plain old object.
 
-                        EntitySerializationHelper.Serializer.Serialize(writer, obj);
-                    }
-
-                    writer.Flush();
-
-                    var v = output.ToArray();
-
-                    return output.ToArray();
-                }
+                return defaultSerializer.Serialize(obj);
             }
         }
     }

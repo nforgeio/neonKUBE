@@ -94,10 +94,10 @@ namespace TestCodeGen.Couchbase
             var jackReadEntity = await bucket.GetSafeAsync<PersonEntity>(0.ToString());
             var jillReadEntity = await bucket.GetSafeAsync<PersonEntity>(1.ToString());
 
-            //Assert.Equal("0", jackReadEntity.GetKey());
-            //Assert.Equal("1", jillReadEntity.GetKey());
-            //Assert.True(jackEntity == jackReadEntity);
-            //Assert.True(jillEntity == jillReadEntity);
+            Assert.Equal("0", jackReadEntity.GetKey());
+            Assert.Equal("1", jillReadEntity.GetKey());
+            Assert.True(jackEntity == jackReadEntity);
+            Assert.True(jillEntity == jillReadEntity);
 
             //-----------------------------------------------------------------
             // Persist a [City] entity (which has a different entity type) and then
@@ -113,18 +113,22 @@ namespace TestCodeGen.Couchbase
 
             await bucket.InsertSafeAsync(cityEntity.GetKey(), cityEntity, persistTo: PersistTo.One);
 
-            var context = new BucketContext(bucket);
-            var query   = from doc in context.Query<PersonEntity>() where doc.__EntityType == "Test.Neon.Models.Definitions.Person" select doc;
-            var people  = query.ToList();
+            var context     = new BucketContext(bucket);
+            var peopleQuery = from doc in context.Query<PersonEntity>() select doc;
+            var people      = peopleQuery.ToList();
 
             Assert.Equal(2, people.Count);
             Assert.Contains(people, p => p.Name == "Jack");
             Assert.Contains(people, p => p.Name == "Jill");
 
-#if TODO
             //-----------------------------------------------------------------
             // Query for the city and verify.
 
+            var cityQuery = from doc in context.Query<CityEntity>() select doc;
+            var cities    = cityQuery.ToList();
+
+            Assert.Single(cities);
+            Assert.Contains(cities, p => p.Name == "Woodinville");
 
             //-----------------------------------------------------------------
             // Extra credit #1: Verify that [Entity.ToBase()] works.
@@ -145,8 +149,6 @@ namespace TestCodeGen.Couchbase
 
             //-----------------------------------------------------------------
             // Extra credit #2: Verify that [Entity.DeepClone()] works.
-
-#endif
         }
     }
 }
