@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 using Neon.CodeGen;
 using Neon.Common;
-using Neon.Serialization;
+using Neon.Data;
 using Neon.Xunit;
 
 using Newtonsoft.Json;
@@ -71,7 +71,7 @@ namespace TestCodeGen
 
             // We need the [Neon.Common] assembly.
 
-            base.LoadFromAssemblyPath(typeof(IGeneratedDataModel).Assembly.Location);
+            base.LoadFromAssemblyPath(typeof(IGeneratedEntity).Assembly.Location);
 
             // Load the assembly passed.
 

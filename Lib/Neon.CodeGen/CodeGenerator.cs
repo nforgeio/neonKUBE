@@ -34,7 +34,8 @@ using Microsoft.CodeAnalysis.Text;
 
 using Newtonsoft.Json;
 
-using Neon.Serialization;
+using Neon.Common;
+using Neon.Data;
 
 // $todo(jeff.lill):
 //
@@ -106,7 +107,7 @@ namespace Neon.CodeGen
 
             // Add the [Neon.Common] assembly.
 
-            references.Add(typeof(IGeneratedDataModel));
+            references.Add(typeof(IGeneratedEntity));
 
             // NOTE: 
             // 
@@ -858,6 +859,8 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.ComponentModel;");
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
+            writer.WriteLine($"using System.Linq;");
+            writer.WriteLine($"using System.Linq.Expressions;");
             writer.WriteLine($"using System.Net;");
             writer.WriteLine($"using System.Net.Http;");
             writer.WriteLine($"using System.Net.Http.Headers;");
@@ -873,7 +876,6 @@ namespace Neon.CodeGen
             writer.WriteLine($"using Neon.Diagnostics;");
             writer.WriteLine($"using Neon.Net;");
             writer.WriteLine($"using Neon.Retry;");
-            writer.WriteLine($"using Neon.Serialization;");
             writer.WriteLine();
 
             if (Settings.RoundTrip)
@@ -1006,8 +1008,8 @@ namespace Neon.CodeGen
         /// </param>
         private void GenerateDataModel(DataModel dataModel, bool genEntity)
         {
-            string defaultValueExpression;
-            string entityKeyProperty = null;
+            string          defaultValueExpression;
+            PropertyInfo    entityKeyProperty = null;
 
             if (genEntity && (dataModel.EntityInfo == null || dataModel.IsEnum))
             {
@@ -1027,17 +1029,17 @@ namespace Neon.CodeGen
                     {
                         if (entityKeyProperty != null)
                         {
-                            Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has two properties [{entityKeyProperty}] and [{property.Name}] that are both tagged with [EntityKey].  This is allowed for only one property per class.");
+                            Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has two properties [{entityKeyProperty.Name}] and [{property.Name}] that are both tagged with [EntityKey].  This is allowed for only one property per class.");
                             break;
                         }
 
-                        entityKeyProperty = property.Name;
+                        entityKeyProperty = property;
                     }
                 }
 
-                if (string.IsNullOrEmpty(entityKeyProperty))
+                if (entityKeyProperty == null)
                 {
-                    Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has no property tagged with [EntityKey].  Entity class must tag exactly one property.");
+                    Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has no property tagged with [EntityKey].  Entity classes must tag one property as the database key.");
                 }
             }
 
@@ -1074,7 +1076,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                var baseTypeRef = " : IGeneratedDataModel";
+                var baseTypeRef = " : IGeneratedEntity";
 
                 if (dataModel.IsDerived)
                 {
@@ -1084,7 +1086,7 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IGeneratedDataModel";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IGeneratedEntity";
                 }
                 else if (Settings.UxFeatures)
                 {
@@ -1096,11 +1098,53 @@ namespace Neon.CodeGen
                     baseTypeRef += $", IEntity<{dataModel.SourceType.Name}>";
                 }
 
-                var className = dataModel.SourceType.Name;
+                var className                = dataModel.SourceType.Name;
+                var filterAttributeNamespace = "EntityFilters";
 
                 if (genEntity)
                 {
                     className += "Entity";
+                }
+
+                if (genEntity)
+                {
+                    // We need to generate a custom Linq2Couchbase document filter attribute
+                    // for each entity class.  We're going to put these into a sub-namespace
+                    // to avoid polluting the main namespace.
+
+                    writer.WriteLine($"    namespace {filterAttributeNamespace}");
+                    writer.WriteLine($"    {{");
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Used to tag the <see cref=\"{className}\"/> entity such that Linq2Couchbase will");
+                    writer.WriteLine($"        /// be able to transparently add a <c>where</c> clause that filters by entity type");
+                    writer.WriteLine($"        /// to all queries for this entity type.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        public class {className}Filter : Couchbase.Linq.Filters.IDocumentFilter<{className}>");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            //-----------------------------------------------------------------");
+                    writer.WriteLine($"            // Static members:");
+                    writer.WriteLine();
+                    writer.WriteLine($"            private static Expression<Func<{className}, bool>> whereExpression;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            static {className}Filter()");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                var parameter = Expression.Parameter(typeof({className}), \"p\");");
+                    writer.WriteLine();
+                    writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__ET\"), Expression.Constant({className}.PersistedEntityType)), parameter);");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            //-----------------------------------------------------------------");
+                    writer.WriteLine($"            // Instance members:");
+                    writer.WriteLine();
+                    writer.WriteLine($"            public int Priority {{ get; set; }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            public IQueryable<{className}> ApplyFilter(IQueryable<{className}> source)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                return source.Where(whereExpression);");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine($"    }}");
+                    writer.WriteLine();
                 }
 
                 writer.WriteLine($"    public partial class {className}{baseTypeRef}");
@@ -1113,6 +1157,23 @@ namespace Neon.CodeGen
 
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Static members:");
+
+                    if (genEntity)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"        public const string PersistedEntityType = \"{dataModel.EntityInfo.EntityType}\";");
+                        writer.WriteLine();
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// Static constructor.");
+                        writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        static {className}()");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            // We need to register document filters with Linq2Couchbase.");
+                        writer.WriteLine();
+                        writer.WriteLine($"            Couchbase.Linq.Filters.DocumentFilterManager.SetFilter<{className}>(new {filterAttributeNamespace}.{className}Filter());");
+                        writer.WriteLine($"        }}");
+                    }
+
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Deserializes an instance from JSON text.");
@@ -1126,7 +1187,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            var model = new {className}(SerializationHelper.Deserialize<JObject>(jsonText));");
+                    writer.WriteLine($"            var model = new {className}(EntitySerializationHelper.Deserialize<JObject>(jsonText));");
                     writer.WriteLine();
                     writer.WriteLine($"            model.__Load();");
                     writer.WriteLine($"            return model;");
@@ -1202,7 +1263,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the entity.</param>");
                         writer.WriteLine($"        public static string CreateKey(params object[] args)");
                         writer.WriteLine($"        {{");
-                        writer.WriteLine($"            return SerializationHelper.CreateEntityKey(\"{dataModel.EntityInfo.EntityType}\", args);");
+                        writer.WriteLine($"            return EntitySerializationHelper.CreateEntityKey(\"{dataModel.EntityInfo.EntityType}\", args);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1260,6 +1321,9 @@ namespace Neon.CodeGen
                     if (dataModel.BaseTypeName == null)
                     {
                         writer.WriteLine();
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// The backing <see cref=\"JObject\"/> used to hold the serialized data.");
+                        writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        protected JObject __JObject {{ get; set; }}");
                     }
                 }
@@ -1278,6 +1342,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Protected constructor used internally to initialize derived classes.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"jObject\">The backing <see cref=\"JObject\"/>.</param>");
                     writer.WriteLine($"        protected {className}(JObject jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __JObject = jObject;");
@@ -1294,6 +1362,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Protected constructor.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"jObject\">The backing <see cref=\"JObject\"/>.</param>");
                     writer.WriteLine($"        protected {className}(JObject jObject) : base(jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"        }}");
@@ -1377,32 +1449,31 @@ namespace Neon.CodeGen
                     var serializedProperties = dataModel.Properties.Where(p => !p.Ignore);
 
                     writer.WriteLine();
-                    writer.WriteLine($"        protected {virtualModifier} void __Load()");
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Loads the entity properties from the backing <see cref=\"JObject\"/>");
+                    writer.WriteLine($"        /// or from the optional <see cref=\"JObject\"/> passed.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        public {virtualModifier} void __Load(JObject source = null)");
                     writer.WriteLine($"        {{");
 
                     if (serializedProperties.Count() > 0 || dataModel.IsDerived)
                     {
                         writer.WriteLine($"            JProperty property;");
+
                         writer.WriteLine();
+                        writer.WriteLine($"            if (source != null)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                this.__JObject = source;");
+                        writer.WriteLine($"            }}");
 
                         if (dataModel.IsDerived)
                         {
                             writer.WriteLine($"            base.__Load();");
-
-                            if (dataModel.Properties.Count > 0)
-                            {
-                                writer.WriteLine();
-                            }
                         }
-
-                        var propertyIndex = 0;
 
                         foreach (var property in serializedProperties.OrderBy(p => p.Order))
                         {
-                            if (propertyIndex++ > 0)
-                            {
-                                writer.WriteLine();
-                            }
+                            writer.WriteLine();
 
                             var resolvedPropertyType = ResolveTypeReference(property.Type);
 
@@ -1412,7 +1483,7 @@ namespace Neon.CodeGen
 
                             if (property.RequiresObjectification)
                             {
-                                writer.WriteLine($"                this.{property.Name} = property.Value.ToObject<{resolvedPropertyType}>(SerializationHelper.Serializer);");
+                                writer.WriteLine($"                this.{property.Name} = property.Value.ToObject<{resolvedPropertyType}>(EntitySerializationHelper.Serializer);");
                             }
                             else
                             {
@@ -1450,13 +1521,37 @@ namespace Neon.CodeGen
                         }
                     }
 
+                    // Database entities also need to verify thet the serialized [__ET] property matches the actual type.
+
+                    if (genEntity)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"            property = this.__JObject.Property(\"__ET\");");
+                        writer.WriteLine($"            if (property == null)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                throw new ArgumentNullException(\"[{className}.__ET] property is required when deserializing.\");");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine($"            else if ((string)property.Value != PersistedEntityType)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                throw new InvalidOperationException($\"[{className}.__ET={{PersistedEntityType}}] property does not match the deserialized value [{{(string)property.Value}}].\");");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine($"            else");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                this.__ET = (string)property.Value;");
+                        writer.WriteLine($"            }}");
+                    }
+
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
                     // Generate the __Save() method.
 
                     writer.WriteLine();
-                    writer.WriteLine($"        protected {virtualModifier} void __Save()");
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Persists the properties from this instance to the backing <see cref=\"JObject\"/>.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <returns>The backing <see cref=\"JObject\"/>.</returns>");
+                    writer.WriteLine($"        public {virtualModifier} JObject __Save()");
                     writer.WriteLine($"        {{");
 
                     if (serializedProperties.Count() > 0 || dataModel.IsDerived)
@@ -1492,7 +1587,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"            this.__JObject[\"{property.SerializedName}\"] = SerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
+                                        writer.WriteLine($"            this.__JObject[\"{property.SerializedName}\"] = EntitySerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1522,7 +1617,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = SerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
+                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = EntitySerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1535,6 +1630,15 @@ namespace Neon.CodeGen
                         }
                     }
 
+                    // Database entities also need to serialize their [__ET] properties.
+
+                    if (genEntity)
+                    {
+                        writer.WriteLine($"            this.__JObject[\"__ET\"] = PersistedEntityType;");
+                    }
+
+                    writer.WriteLine();
+                    writer.WriteLine($"            return this.__JObject;");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -1548,7 +1652,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public override string ToString()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return SerializationHelper.Serialize(__JObject, Formatting.None);");
+                    writer.WriteLine($"            return EntitySerializationHelper.Serialize(__JObject, Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
@@ -1560,7 +1664,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return SerializationHelper.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
+                    writer.WriteLine($"            return EntitySerializationHelper.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -1577,7 +1681,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        public JObject ToJObject(bool noClone = false)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
-                        writer.WriteLine($"            return noClone ? __JObject : (JObject)__JObject.DeepClone();");
+                        writer.WriteLine($"            return noClone ? __JObject : EntitySerializationHelper.DeepClone(__JObject);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1592,7 +1696,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public {className} DeepClone()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return CreateFrom((JObject)__JObject.DeepClone());");
+                    writer.WriteLine($"            return CreateFrom(EntitySerializationHelper.DeepClone(__JObject));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1608,10 +1712,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </param>");
                     writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
                     writer.WriteLine($"        public T ToDerived<T>(bool noClone = false)");
-                    writer.WriteLine($"           where T : {className}, IGeneratedDataModel");
+                    writer.WriteLine($"           where T : {className}, IGeneratedEntity");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return GeneratedClassFactory.CreateFrom<T>(noClone ? __JObject : (JObject)__JObject.DeepClone());");
+                    writer.WriteLine($"            return GeneratedEntityFactory.CreateFrom<T>(noClone ? __JObject : EntitySerializationHelper.DeepClone(__JObject));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1663,7 +1767,7 @@ namespace Neon.CodeGen
 
                     if (hashedProperties.Count == 0)
                     {
-                        writer.WriteLine($"            throw new InvalidOperationException(SerializationHelper.NoHashPropertiesError);");
+                        writer.WriteLine($"            throw new InvalidOperationException(EntitySerializationHelper.NoHashPropertiesError);");
                     }
                     else
                     {
@@ -1697,7 +1801,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Identifies the entity type.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        public string __EntityType {{ get; set; }} = \"{dataModel.EntityInfo.EntityType}\";");
+                        writer.WriteLine($"        public string __ET {{ get; set; }}");
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Returns the database key for an entity.");
@@ -1705,7 +1809,29 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the entity.</param>");
                         writer.WriteLine($"        public string GetKey()");
                         writer.WriteLine($"        {{");
-                        writer.WriteLine($"            return {entityKeyProperty};");
+
+                        if (entityKeyProperty.PropertyType.IsValueType)
+                        {
+                            writer.WriteLine($"            return {entityKeyProperty.Name}.ToString();");
+                        }
+                        else
+                        {
+                            writer.WriteLine($"            if ({entityKeyProperty.Name} == null)");
+                            writer.WriteLine($"            {{");
+                            writer.WriteLine($"                throw new InvalidOperationException(\"Entity key property [{entityKeyProperty.Name}] cannot be NULL.\");");
+                            writer.WriteLine($"            }}");
+                            writer.WriteLine();
+
+                            if (entityKeyProperty.PropertyType == typeof(string))
+                            {
+                                writer.WriteLine($"            return {entityKeyProperty.Name};");
+                            }
+                            else
+                            {
+                                writer.WriteLine($"            return {entityKeyProperty.Name}.ToString();");
+                            }
+                        }
+
                         writer.WriteLine($"        }}");
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
@@ -1716,11 +1842,11 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
                         writer.WriteLine();
-                        writer.WriteLine($"            var jObject = (JObject)__JObject.DeepClone();");
+                        writer.WriteLine($"            var jObject = EntitySerializationHelper.DeepClone(__JObject);");
                         writer.WriteLine();
-                        writer.WriteLine($"            jObject.Remove(\"__EntityType\");");
+                        writer.WriteLine($"            jObject.Remove(\"__ET\");");
                         writer.WriteLine();
-                        writer.WriteLine($"            return GeneratedClassFactory.CreateFrom<{dataModel.SourceType.Name}>(jObject);");
+                        writer.WriteLine($"            return GeneratedEntityFactory.CreateFrom<{dataModel.SourceType.Name}>(jObject);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1808,11 +1934,6 @@ namespace Neon.CodeGen
             writer.WriteLine();
             writer.WriteLine($"    public partial class {clientTypeName} : IDisposable");
             writer.WriteLine($"    {{");
-
-            if (clientTypeName == "Composed")
-            {
-                // $todo(jeff.lill): DELETE THIS!
-            }
 
             if (hasNonRootMethodGroups)
             {
@@ -2164,7 +2285,7 @@ namespace Neon.CodeGen
                 }
                 else
                 {
-                    sbArguments.AppendWithSeparator($"document: SerializationHelper.Serialize({bodyParameter.Name})", argSeparator);
+                    sbArguments.AppendWithSeparator($"document: EntitySerializationHelper.Serialize({bodyParameter.Name})", argSeparator);
                 }
             }
 

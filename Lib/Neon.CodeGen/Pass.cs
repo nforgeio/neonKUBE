@@ -32,7 +32,7 @@ using Microsoft.CodeAnalysis.Text;
 
 using Newtonsoft.Json;
 
-using Neon.Serialization;
+using Neon.Common;
 
 namespace Neon.CodeGen
 {

@@ -29,7 +29,6 @@ using System.Threading.Tasks;
 
 using Neon.CodeGen;
 using Neon.Common;
-using Neon.Serialization;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -46,5 +45,23 @@ namespace Test.Neon.Models.Definitions
     {
         [HashSource]
         string ChildProperty { get; set; }
+    }
+
+    [Entity]
+    public interface Person
+    {
+        [EntityKey]
+        int Id { get; set; }
+        string Name { get; set; }
+        int Age { get; set; }
+        byte[] Data { get; set; }
+    }
+
+    [Entity]
+    public interface City
+    {
+        [EntityKey]
+        string Name { get; set; }
+        int Population { get; set; }
     }
 }

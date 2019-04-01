@@ -29,14 +29,12 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-using Neon.Serialization;
-
 namespace Neon.Common
 {
     public static partial class NeonHelper
     {
         // This table is used to cache the factory functions used to create instances of 
-        // [IGeneratedDataModel] types.  This must be locked to be threadsafe.
+        // [IGeneratedEntity] types.  This must be locked to be threadsafe.
 
         private static Dictionary<Type, Func<string, object>> typeToGeneratedObjectFactory = new Dictionary<Type, Func<string, object>>();
 
@@ -128,36 +126,7 @@ namespace Neon.Common
         {
             var type = typeof(T);
 
-            if (type.Implements<IGeneratedDataModel>())
-            {
-                // Special case generated data models (note that we ignore [strict] in this case).
-
-                Func<string, object> factory;
-
-                lock (typeToGeneratedObjectFactory)
-                {
-                    if (!typeToGeneratedObjectFactory.TryGetValue(type, out factory))
-                    {
-                        var factoryMethod = type.GetMethod("CreateFrom", new Type[] { typeof(string) });
-
-                        Covenant.Assert(factoryMethod != null && (factoryMethod.Attributes & MethodAttributes.Static) != 0, $"Generated type [{type.FullName}] does not include a [CreateFrom(string)] static method.");
-
-                        factory = new Func<string, object>(
-                            jsonText =>
-                            {
-                                return factoryMethod.Invoke(null, new object[] { jsonText });
-                            });
-
-                        typeToGeneratedObjectFactory.Add(type, factory);
-                    }
-                }
-
-                return (T)factory(json);
-            }
-            else
-            {
-                return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
-            }
+            return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
 
         /// <summary>
