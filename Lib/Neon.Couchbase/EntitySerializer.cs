@@ -39,6 +39,15 @@ using Neon.Data;
 using Neon.Retry;
 using Neon.Time;
 
+// $todo(jeff.lill):
+//
+// This code is going to generate a lot of GC activity.  In the distant
+// future, we should investigate this:
+//
+//      https://blog.couchbase.com/using-jil-for-custom-json-serialization-in-the-couchbase-net-sdk/
+//
+// or perhaps the new Microsoft serializer shipping with .NET CORE 3.0.
+
 namespace Couchbase
 {
     /// <summary>
@@ -61,11 +70,15 @@ namespace Couchbase
         {
             var entityType = typeof(T);
 
-            if (entityType.Implements<IGeneratedDataModel>())
+            if (entityType.Implements<IGeneratedEntity>())
             {
-                // Custom IGeneratedModel
+                // Custom IGeneratedEntity
 
-                return (T)GeneratedClassFactory.CreateFrom(entityType, stream);
+                // $todo(jeff.lill): DELETE THIS! (actually just return it).
+
+                var v = (T)GeneratedEntityFactory.CreateFrom(entityType, stream, System.Text.Encoding.UTF8);
+
+                return v;
             }
             else
             {
@@ -88,28 +101,29 @@ namespace Couchbase
 
             using (var output = new MemoryStream())
             {
-                using (var writer = new StreamWriter(output, System.Text.Encoding.UTF8))
+                using (var writer = new StreamWriter(output))
                 {
-                    using (var jsonWriter = new JsonTextWriter(writer))
+                    var generatedDataModel = obj as IGeneratedEntity;
+
+                    if (generatedDataModel != null)
                     {
-                        var generatedDataModel = obj as IGeneratedDataModel;
+                        // Custom IGeneratedEntity
 
-                        if (generatedDataModel != null)
-                        {
-                            // Custom IGeneratedModel
-
-                            EntitySerializationHelper.Serializer.Serialize(jsonWriter, generatedDataModel.__Save());
-                        }
-                        else
-                        {
-                            // Plain old object.
-
-                            EntitySerializationHelper.Serializer.Serialize(jsonWriter, obj);
-                        }
+                        EntitySerializationHelper.Serializer.Serialize(writer, generatedDataModel.__Save());
                     }
-                }
+                    else
+                    {
+                        // Plain old object.
 
-                return output.ToArray();
+                        EntitySerializationHelper.Serializer.Serialize(writer, obj);
+                    }
+
+                    writer.Flush();
+
+                    var v = output.ToArray();
+
+                    return output.ToArray();
+                }
             }
         }
     }

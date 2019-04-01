@@ -34,7 +34,7 @@ namespace Neon.Common
     public static partial class NeonHelper
     {
         // This table is used to cache the factory functions used to create instances of 
-        // [IGeneratedDataModel] types.  This must be locked to be threadsafe.
+        // [IGeneratedEntity] types.  This must be locked to be threadsafe.
 
         private static Dictionary<Type, Func<string, object>> typeToGeneratedObjectFactory = new Dictionary<Type, Func<string, object>>();
 

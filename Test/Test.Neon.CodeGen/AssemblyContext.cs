@@ -71,7 +71,7 @@ namespace TestCodeGen
 
             // We need the [Neon.Common] assembly.
 
-            base.LoadFromAssemblyPath(typeof(IGeneratedDataModel).Assembly.Location);
+            base.LoadFromAssemblyPath(typeof(IGeneratedEntity).Assembly.Location);
 
             // Load the assembly passed.
 

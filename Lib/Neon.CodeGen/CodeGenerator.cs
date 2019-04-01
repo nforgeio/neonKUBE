@@ -107,7 +107,7 @@ namespace Neon.CodeGen
 
             // Add the [Neon.Common] assembly.
 
-            references.Add(typeof(IGeneratedDataModel));
+            references.Add(typeof(IGeneratedEntity));
 
             // NOTE: 
             // 
@@ -1075,7 +1075,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                var baseTypeRef = " : IGeneratedDataModel";
+                var baseTypeRef = " : IGeneratedEntity";
 
                 if (dataModel.IsDerived)
                 {
@@ -1085,7 +1085,7 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IGeneratedDataModel";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IGeneratedEntity";
                 }
                 else if (Settings.UxFeatures)
                 {
@@ -1703,10 +1703,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </param>");
                     writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
                     writer.WriteLine($"        public T ToDerived<T>(bool noClone = false)");
-                    writer.WriteLine($"           where T : {className}, IGeneratedDataModel");
+                    writer.WriteLine($"           where T : {className}, IGeneratedEntity");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return GeneratedClassFactory.CreateFrom<T>(noClone ? __JObject : (JObject)__JObject.DeepClone());");
+                    writer.WriteLine($"            return GeneratedEntityFactory.CreateFrom<T>(noClone ? __JObject : (JObject)__JObject.DeepClone());");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1837,7 +1837,7 @@ namespace Neon.CodeGen
                         writer.WriteLine();
                         writer.WriteLine($"            jObject.Remove(\"__EntityType\");");
                         writer.WriteLine();
-                        writer.WriteLine($"            return GeneratedClassFactory.CreateFrom<{dataModel.SourceType.Name}>(jObject);");
+                        writer.WriteLine($"            return GeneratedEntityFactory.CreateFrom<{dataModel.SourceType.Name}>(jObject);");
                         writer.WriteLine($"        }}");
                     }
 

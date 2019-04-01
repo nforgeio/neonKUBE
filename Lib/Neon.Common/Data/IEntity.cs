@@ -94,7 +94,7 @@ namespace Neon.Data
     /// </para>
     /// </remarks>
     public interface IEntity<T> : IEntity
-        where T : class, IGeneratedDataModel, new()
+        where T : class, IGeneratedEntity, new()
     {
         /// <summary>
         /// Returns a deep clone of the base object with type <typeparamref name="T"/> from the entity instance.
