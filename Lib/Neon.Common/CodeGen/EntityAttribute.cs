@@ -31,7 +31,7 @@ namespace Neon.CodeGen
     /// <para>
     /// <see cref="EntityType"/> to specify a string that uniquely identifies 
     /// the entity type within the current database (e.g. within a Couchbase bucket) 
-    /// or other context.  This is used to  initialize the <b>__EntityType</b> 
+    /// or other context.  This is used to  initialize the <b>__ET</b> 
     /// property for generated database entity classes.  This defaults to setting
     /// will set the entity type to the fully qualified name of the data model.
     /// </para>

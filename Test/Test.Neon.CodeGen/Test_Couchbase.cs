@@ -167,7 +167,7 @@ namespace TestCodeGen.Couchbase
 
             // The underlying [JObject] shouldn't have any properties
             // with leading underscores because ToBase() should have
-            // stripped the [__EntityType] property off.
+            // stripped the [__ET] property off.
 
             foreach (var property in jack.ToJObject(noClone: true).Properties())
             {

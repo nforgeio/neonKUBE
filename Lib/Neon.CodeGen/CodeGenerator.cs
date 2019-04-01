@@ -1130,7 +1130,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            {{");
                     writer.WriteLine($"                var parameter = Expression.Parameter(typeof({className}), \"p\");");
                     writer.WriteLine();
-                    writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__EntityType\"), Expression.Constant({className}.PersistedEntityType)), parameter);");
+                    writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__ET\"), Expression.Constant({className}.PersistedEntityType)), parameter);");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
                     writer.WriteLine($"            //-----------------------------------------------------------------");
@@ -1521,23 +1521,23 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    // Database entities also need to verify thet the serialized [__EntityType] property matches the actual type.
+                    // Database entities also need to verify thet the serialized [__ET] property matches the actual type.
 
                     if (genEntity)
                     {
                         writer.WriteLine();
-                        writer.WriteLine($"            property = this.__JObject.Property(\"__EntityType\");");
+                        writer.WriteLine($"            property = this.__JObject.Property(\"__ET\");");
                         writer.WriteLine($"            if (property == null)");
                         writer.WriteLine($"            {{");
-                        writer.WriteLine($"                throw new ArgumentNullException(\"[{className}.__EntityType] property is required when deserializing.\");");
+                        writer.WriteLine($"                throw new ArgumentNullException(\"[{className}.__ET] property is required when deserializing.\");");
                         writer.WriteLine($"            }}");
                         writer.WriteLine($"            else if ((string)property.Value != PersistedEntityType)");
                         writer.WriteLine($"            {{");
-                        writer.WriteLine($"                throw new InvalidOperationException($\"[{className}.__EntityType={{PersistedEntityType}}] property does not match the deserialized value [{{(string)property.Value}}].\");");
+                        writer.WriteLine($"                throw new InvalidOperationException($\"[{className}.__ET={{PersistedEntityType}}] property does not match the deserialized value [{{(string)property.Value}}].\");");
                         writer.WriteLine($"            }}");
                         writer.WriteLine($"            else");
                         writer.WriteLine($"            {{");
-                        writer.WriteLine($"                this.__EntityType = (string)property.Value;");
+                        writer.WriteLine($"                this.__ET = (string)property.Value;");
                         writer.WriteLine($"            }}");
                     }
 
@@ -1630,11 +1630,11 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    // Database entities also need to serialize their [__EntityType] properties.
+                    // Database entities also need to serialize their [__ET] properties.
 
                     if (genEntity)
                     {
-                        writer.WriteLine($"            this.__JObject[\"__EntityType\"] = PersistedEntityType;");
+                        writer.WriteLine($"            this.__JObject[\"__ET\"] = PersistedEntityType;");
                     }
 
                     writer.WriteLine();
@@ -1801,7 +1801,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Identifies the entity type.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        public string __EntityType {{ get; set; }}");
+                        writer.WriteLine($"        public string __ET {{ get; set; }}");
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Returns the database key for an entity.");
@@ -1844,7 +1844,7 @@ namespace Neon.CodeGen
                         writer.WriteLine();
                         writer.WriteLine($"            var jObject = EntitySerializationHelper.DeepClone(__JObject);");
                         writer.WriteLine();
-                        writer.WriteLine($"            jObject.Remove(\"__EntityType\");");
+                        writer.WriteLine($"            jObject.Remove(\"__ET\");");
                         writer.WriteLine();
                         writer.WriteLine($"            return GeneratedEntityFactory.CreateFrom<{dataModel.SourceType.Name}>(jObject);");
                         writer.WriteLine($"        }}");
