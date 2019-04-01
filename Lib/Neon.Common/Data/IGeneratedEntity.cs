@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IGeneratedDataModel.cs
+// FILE:	    IGeneratedEntity.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,13 +34,13 @@ using Newtonsoft.Json.Serialization;
 
 using Neon.Diagnostics;
 
-namespace Neon.Serialization
+namespace Neon.Data
 {
     /// <summary>
     /// Used by the <b>Neon.CodeGen</b> assembly to indicate that a class
     /// was generated as a data model.
     /// </summary>
-    public interface IGeneratedDataModel
+    public interface IGeneratedEntity
     {
         /// <summary>
         /// Renders the instance as JSON text, optionally formatting the output.
@@ -54,5 +54,18 @@ namespace Neon.Serialization
         /// </summary>
         /// <returns>The cloned <see cref="JObject"/>.</returns>
         JObject ToJObject(bool noClone = false);
+
+        /// <summary>
+        /// Loads the instance properties from the backing <see cref="JObject"/> or
+        /// the optional <paramref name="source"/> parameter.
+        /// </summary>
+        /// <param name="source">The optional source <see cref="JObject"/>.</param>
+        void __Load(JObject source = null);
+
+        /// <summary>
+        /// Persists the instance properties to the backing <see cref="JObject"/>.
+        /// </summary>
+        /// <returns>The backing <see cref="JObject"/>.</returns>
+        JObject __Save();
     }
 }

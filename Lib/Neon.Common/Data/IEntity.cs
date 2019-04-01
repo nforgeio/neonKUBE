@@ -22,7 +22,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.Serialization;
 
 namespace Neon.Data
 {
@@ -51,9 +50,22 @@ namespace Neon.Data
         string GetKey();
 
         /// <summary>
+        /// Loads the entity properties from the backing <see cref="JObject"/>
+        /// or from the optional <see cref="JObject"/> passed.
+        /// </summary>
+        /// <param name="source">Optional source object.</param>
+        void __Load(JObject source = null);
+
+        /// <summary>
+        /// Persists the object properties to the backing <see cref="JObject"/>.
+        /// </summary>
+        /// <returns>The backing <see cref="JObject"/>.</returns>
+        JObject __Save();
+
+        /// <summary>
         /// Identifies the entity type.
         /// </summary>
-        string __EntityType { get; set; }
+        string __ET { get; }
     }
 
     /// <summary>
@@ -61,7 +73,7 @@ namespace Neon.Data
     /// </summary>
     /// <remarks>
     /// <para>
-    /// All entities must implement the <see cref="IEntity.__EntityType"/> property such that it returns
+    /// All entities must implement the <see cref="IEntity.__ET"/> property such that it returns
     /// the bucket unique string that identifies the entity type.  This string will be
     /// used to distinguish entity types within a Couchbase bucket.
     /// </para>
@@ -82,7 +94,7 @@ namespace Neon.Data
     /// </para>
     /// </remarks>
     public interface IEntity<T> : IEntity
-        where T : class, IGeneratedDataModel, new()
+        where T : class, IGeneratedEntity, new()
     {
         /// <summary>
         /// Returns a deep clone of the base object with type <typeparamref name="T"/> from the entity instance.

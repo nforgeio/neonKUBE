@@ -85,3 +85,4 @@ wwwroot/
 **/bin/**
 **/obj/**
 GeneratedModels.cs
+GeneratedEntities.cs

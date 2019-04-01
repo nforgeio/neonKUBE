@@ -34,7 +34,7 @@ using Xunit;
 namespace TestCouchbase
 {
     /// <summary>
-    /// Verifies that we can launch a Docker container fixture during tests.
+    /// Verifies basic <see cref="CouchbaseFixture"/> capabilities.
     /// </summary>
     public class Test_CouchbaseFixture : IClassFixture<CouchbaseFixture>
     {
@@ -66,7 +66,7 @@ namespace TestCouchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
-        public async Task Flush()
+        public async Task Clear()
         {
             var indexQuery = $"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}";
 

@@ -675,7 +675,7 @@ namespace TestCodeGen.DataModel
 
                 //-------------------------------------------------------------
                 // Verify that we can use [ToDerived<TResult>()] to create a derived instance
-                // from the base type.  This also exercises [GeneratedClassFactory] a bit.
+                // from the base type.  This also exercises [GeneratedEntityFactory] a bit.
 
                 derivedData = context.CreateDataWrapper<DerivedModel>();
 

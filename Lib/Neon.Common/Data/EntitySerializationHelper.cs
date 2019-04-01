@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SerializationHelper.cs
+// FILE:	    EntitySerializationHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,15 +31,16 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
+using Neon.Common;
 using Neon.Diagnostics;
 
-namespace Neon.Serialization
+namespace Neon.Data
 {
     /// <summary>
     /// Serialization related helpers used by the code generated
     /// by the <b>Neon.CodeGen</b> library.
     /// </summary>
-    public static class SerializationHelper
+    public static class EntitySerializationHelper
     {
         private static readonly JsonSerializerSettings settings;
 
@@ -54,7 +55,7 @@ namespace Neon.Serialization
         /// </summary>
         public static JsonSerializer Serializer { get; private set; }
 
-        static SerializationHelper()
+        static EntitySerializationHelper()
         {
             settings = new JsonSerializerSettings()
             {
@@ -145,6 +146,21 @@ namespace Neon.Serialization
             }
 
             return key;
+        }
+
+        /// <summary>
+        /// Returns a deep clone of a <see cref="JObject"/>.
+        /// </summary>
+        /// <param name="jObject">The <see cref="JObject"/> or <c>null</c>.</param>
+        /// <returns>The cloned instance.</returns>
+        public static JObject DeepClone(JObject jObject)
+        {
+            if (jObject == null)
+            {
+                return null;
+            }
+
+            return NeonHelper.JsonClone<JObject>(jObject);
         }
     }
 }

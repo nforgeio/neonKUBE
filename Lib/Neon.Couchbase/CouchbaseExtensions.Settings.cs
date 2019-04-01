@@ -126,7 +126,8 @@ namespace Couchbase
                 new ClientConfiguration()
                 {
                     QueryRequestTimeout = (uint)settings.QueryRequestTimeout,
-                    ViewRequestTimeout  = settings.ViewRequestTimeout
+                    ViewRequestTimeout  = settings.ViewRequestTimeout,
+                    Serializer          = () => new EntitySerializer()
                 };
 
             var config = settings.ToClientConfig();
@@ -266,6 +267,7 @@ namespace Couchbase
             config.Serializer               = () => new DefaultSerializer(NeonHelper.JsonRelaxedSerializerSettings.Value, NeonHelper.JsonRelaxedSerializerSettings.Value);
             config.DefaultOperationLifespan = (uint)settings.OperationTimeout;
             config.DefaultConnectionLimit   = settings.MaxPoolConnections;
+            config.Serializer               = () => new EntitySerializer();
 
             return config;
         }
