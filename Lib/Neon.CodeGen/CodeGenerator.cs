@@ -1810,7 +1810,11 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        public string GetKey()");
                         writer.WriteLine($"        {{");
 
-                        if (entityKeyProperty.PropertyType.IsValueType)
+                        if (entityKeyProperty == null)
+                        {
+                            writer.WriteLine($"            return null; // ERROR: No source data model property was tagged by [EntityKey].");
+                        }
+                        else if (entityKeyProperty.PropertyType.IsValueType)
                         {
                             writer.WriteLine($"            return {entityKeyProperty.Name}.ToString();");
                         }
