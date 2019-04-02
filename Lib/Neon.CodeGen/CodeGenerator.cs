@@ -1125,6 +1125,7 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                 }
 
+                writer.WriteLine($"    /// <threadsafety static=\"true\" instance=\"false\"/>");
                 writer.WriteLine($"    public partial class {className}{baseTypeRef}");
                 writer.WriteLine($"    {{");
 
@@ -1510,10 +1511,6 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                if (property == null)");
                     writer.WriteLine($"                {{");
                     writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__ET] property is required when deserializing.\");");
-                    writer.WriteLine($"                }}");
-                    writer.WriteLine($"                else if ((string)property.Value != EntityType)");
-                    writer.WriteLine($"                {{");
-                    writer.WriteLine($"                    throw new InvalidOperationException($\"Deserialized [__ET={{(string)property.Value}}] property value does not match the entity's [{className}.__ET={{EntityType}}] constant.\");");
                     writer.WriteLine($"                }}");
                     writer.WriteLine($"                else");
                     writer.WriteLine($"                {{");

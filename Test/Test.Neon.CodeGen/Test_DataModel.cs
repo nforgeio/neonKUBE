@@ -579,7 +579,7 @@ namespace TestCodeGen.DataModel
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void Inherit()
+        public void Derived()
         {
             // Verify that data models that inherit from other data models work.
 
