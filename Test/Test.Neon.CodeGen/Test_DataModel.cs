@@ -683,7 +683,7 @@ namespace TestCodeGen.DataModel
                 baseData    = context.CreateDataWrapperFrom<BaseModel>(derivedData.ToString());
                 derivedData = baseData.ToDerived<DerivedModel>();
 
-                //Assert.Equal("parent", derivedData["ParentProperty"]);
+                Assert.Equal("parent", derivedData["ParentProperty"]);
                 Assert.Equal("child", derivedData["ChildProperty"]);
             }
         }

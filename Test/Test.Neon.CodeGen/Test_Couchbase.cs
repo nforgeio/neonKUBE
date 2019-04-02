@@ -111,13 +111,13 @@ namespace TestCodeGen.Couchbase
             // get only Jack and Jill back.  This verifies the the [TypeFilter] 
             // attribute is generated and working correctly.
 
-            var cityEntity = new City()
+            var city = new City()
             {
                 Name = "Woodinville",
                 Population = 12345
             };
 
-            var opResult = await bucket.InsertSafeAsync(cityEntity, persistTo: PersistTo.One);
+            var opResult = await bucket.InsertSafeAsync(city, persistTo: PersistTo.One);
 
             var context     = new BucketContext(bucket);
             var peopleQuery = from doc in context.Query<Person>() select doc;
@@ -158,13 +158,20 @@ namespace TestCodeGen.Couchbase
             Assert.Equal("bar", poo.Foo);
 
             //-----------------------------------------------------------------
-            // Extra credit: Verify that [PersistedEntity.DeepClone()] works.
+            // Extra credit #1: Verify that [PersistedEntity.DeepClone()] works.
 
             var clone = jack.DeepClone();
 
             Assert.Equal(jack.Name, clone.Name);
             Assert.Equal(jack.Age, clone.Age);
             Assert.NotSame(jack.Data, clone.Data);
+
+            //-----------------------------------------------------------------
+            // Extra credit #2: Verify that [SameTypeAs()] works.
+
+            Assert.True(Person.SameTypeAs(jack));
+            Assert.False(Person.SameTypeAs(city));
+            Assert.False(Person.SameTypeAs(null));
         }
     }
 }

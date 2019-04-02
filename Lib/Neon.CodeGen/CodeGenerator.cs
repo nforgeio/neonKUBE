@@ -1230,6 +1230,24 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"            return CreateFrom(response.JsonText);");
                     writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Determines whether another entity instance has the same underlying type as this class.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"instance\">The instance to be tested or <c>null</c>.</param>");
+                    writer.WriteLine($"        /// <returns>");
+                    writer.WriteLine($"        /// <c>true</c> if the <paramref name=\"instance\"/> is not <c>null</c> and it has");
+                    writer.WriteLine($"        /// the same type as the current class.");
+                    writer.WriteLine($"        /// </returns>");
+                    writer.WriteLine($"        public static bool SameTypeAs(IGeneratedEntity instance)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            if (instance == null)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                return false;");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            return instance.__ET == {className}.EntityType;");
+                    writer.WriteLine($"        }}");
 
                     // For data models tagged with [Persisted], we need to generate the static GetKey(...) method.
 
@@ -1294,6 +1312,8 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Instance members:");
+                    writer.WriteLine();
+                    writer.WriteLine($"        private string cachedET;");
 
                     // Generate the backing __JObject property.
 
@@ -1773,7 +1793,27 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Identifies the entity type.");
                     writer.WriteLine($"        /// </summary>");
-                    writer.WriteLine($"        public string __ET {{ get; set; }}");
+                    writer.WriteLine($"        public string __ET");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            get");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                 if (cachedET != null)");
+                    writer.WriteLine($"                 {{");
+                    writer.WriteLine($"                     return cachedET;");
+                    writer.WriteLine($"                 }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"                 cachedET = (string)__JObject[\"__ET\"];");
+                    writer.WriteLine();
+                    writer.WriteLine($"                 if (cachedET != null)");
+                    writer.WriteLine($"                 {{");
+                    writer.WriteLine($"                     return cachedET;");
+                    writer.WriteLine($"                 }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"                 return EntityType;");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            set => cachedET = value;");
+                    writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
                     // Generate any entity related members.
