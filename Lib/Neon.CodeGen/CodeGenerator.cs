@@ -385,7 +385,7 @@ namespace Neon.CodeGen
 
             if (serviceRouteAttribute != null)
             {
-                Output.Errors.Add($"ERROR: [{serviceModelType.FullName}]: This data model defines method is tagged with the [Route] attribute.  This is not currently supported.");
+                Output.Error($"[{serviceModelType.FullName}]: This data model defines method is tagged with the [Route] attribute.  This is not currently supported.");
             }
 
             var serviceRoutePrefixAttribute = serviceModelType.GetCustomAttribute<RoutePrefixAttribute>();
@@ -413,7 +413,7 @@ namespace Neon.CodeGen
 
                     if (!string.IsNullOrEmpty(routeAttribute.Template) && routeConstraintRegex.IsMatch(routeAttribute.Template))
                     {
-                        Output.Errors.Add($"ERROR: [{serviceModelType.FullName}]: This data model defines method [{serviceMethod.Name}] that defines a route template with a constraint.  Constraints are not currently supported.");
+                        Output.Error($"[{serviceModelType.FullName}]: This data model defines method [{serviceMethod.Name}] that defines a route template with a constraint.  Constraints are not currently supported.");
                     }
 
                     serviceMethod.RouteTemplate = ConcatRoutes(serviceModel.RouteTemplate, routeAttribute.Template);
@@ -492,7 +492,7 @@ namespace Neon.CodeGen
 
                         // These HTTP methods are not supported.
 
-                        Output.Errors.Add($"ERROR: [{serviceModelType.FullName}]: This data model defines method [{serviceMethod.Name}] that uses the unsupported HTTP [{serviceMethod.HttpMethod}].");
+                        Output.Error($"[{serviceModelType.FullName}]: This data model defines method [{serviceMethod.Name}] that uses the unsupported HTTP [{serviceMethod.HttpMethod}].");
                         break;
                 }
 
@@ -552,14 +552,14 @@ namespace Neon.CodeGen
                     }
                     else if (fromAttributeCount > 1)
                     {
-                        Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with multiple [FromXXX] attributes.  A maximum of one is allowed.");
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with multiple [FromXXX] attributes.  A maximum of one is allowed.");
                     }
 
                     // Verify that the parameter type is valid.
 
                     if (!IsValidMethodType(methodParameter.ParameterInfo.ParameterType, methodParameter.Pass))
                     {
-                        Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with unsupported type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody].");
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with unsupported type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody].");
                     }
 
                     serviceMethod.Parameters.Add(methodParameter);
@@ -569,12 +569,12 @@ namespace Neon.CodeGen
 
                 if (asBodyParameterCount > 1)
                 {
-                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines more than one parameter tagged with [FromBody].");
+                    Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines more than one parameter tagged with [FromBody].");
                 }
 
                 if (serviceMethod.HttpMethod == "GET" && asBodyParameterCount > 0)
                 {
-                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] a parameter tagged with [FromBody].  This is not alowed for methods using the HTTP GET method.");
+                    Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] a parameter tagged with [FromBody].  This is not alowed for methods using the HTTP GET method.");
                 }
 
                 serviceModel.Methods.Add(serviceMethod);
@@ -589,7 +589,7 @@ namespace Neon.CodeGen
         {
             if (dataType.IsGenericTypeDefinition)
             {
-                Output.Errors.Add($"ERROR: Data model [{dataType.FullName}] is not currently supported because it is a generic type.");
+                Output.Error($"Data model [{dataType.FullName}] is not currently supported because it is a generic type.");
                 return;
             }
 
@@ -660,7 +660,7 @@ namespace Neon.CodeGen
                 }
                 else 
                 {
-                    Output.Errors.Add($"ERROR: [{dataType.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
+                    Output.Error($"[{dataType.FullName}]: Enumeration base type [{enumBaseType.FullName}] is not supported.");
 
                     dataModel.BaseTypeName = "int";
                 }
@@ -704,12 +704,12 @@ namespace Neon.CodeGen
                 {
                     if (!nameToDataModel.ContainsKey(implementedInterface.FullName))
                     {
-                        Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model inherits [{implementedInterface.FullName}] which is not defined as a data model.");
+                        Output.Error($"[{dataModel.SourceType.FullName}]: This data model inherits [{implementedInterface.FullName}] which is not defined as a data model.");
                     }
 
                     if (baseInterface != null)
                     {
-                        Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model inherits from multiple base types.  A maximum of one is allowed.");
+                        Output.Error($"[{dataModel.SourceType.FullName}]: This data model inherits from multiple base types.  A maximum of one is allowed.");
                     }
 
                     baseInterface = implementedInterface;
@@ -804,7 +804,7 @@ namespace Neon.CodeGen
 
                     if (!nameToDataModel.ContainsKey(propertyType.FullName))
                     {
-                        Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model references type [{propertyType.FullName}] which is not defined as a data model.");
+                        Output.Error($"[{dataModel.SourceType.FullName}]: This data model references type [{propertyType.FullName}] which is not defined as a data model.");
                     }
                 }
             }
@@ -821,14 +821,14 @@ namespace Neon.CodeGen
 
                     if (ResolveTypeReference(returnType, isResultType: true) == null)
                     {
-                        Output.Errors.Add($"ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] returns [{returnType.FullName}] which is not defined as a data model.");
+                        Output.Error($"[{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] returns [{returnType.FullName}] which is not defined as a data model.");
                     }
 
                     foreach (var parameter in method.Parameters)
                     {
                         if (!IsValidMethodType(parameter.ParameterInfo.ParameterType, parameter.Pass))
                         {
-                            Output.Errors.Add($"ERROR: [{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] has argument [{parameter.Name}:{parameter.ParameterInfo.ParameterType.FullName}] whose type is not a defined data model.");
+                            Output.Error($"[{serviceModel.SourceType.FullName}]: Service model [{method.MethodInfo.Name}] has argument [{parameter.Name}:{parameter.ParameterInfo.ParameterType.FullName}] whose type is not a defined data model.");
                         }
                     }
                 }
@@ -1012,7 +1012,7 @@ namespace Neon.CodeGen
                     {
                         if (persistedKeyProperty != null)
                         {
-                            Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has two properties [{persistedKeyProperty.Name}] and [{property.Name}] that are both tagged with [PersistedKey].  This is allowed for only one property per class.");
+                            Output.Error($"[{dataModel.SourceType.FullName}]: This data model has two properties [{persistedKeyProperty.Name}] and [{property.Name}] that are both tagged with [PersistedKey].  This is allowed for only one property per class.");
                             break;
                         }
 
@@ -1022,7 +1022,7 @@ namespace Neon.CodeGen
 
                 if (persistedKeyProperty == null)
                 {
-                    Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has no property tagged with [PersistedKey].  Entity classes must tag one property as the database key.");
+                    Output.Error($"[{dataModel.SourceType.FullName}]: This data model has no property tagged with [PersistedKey].  Entity classes must tag one property as the database key.");
                 }
             }
 
@@ -1065,7 +1065,7 @@ namespace Neon.CodeGen
                 {
                     if (!nameToDataModel.ContainsKey(dataModel.BaseTypeName))
                     {
-                        Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model inherits type [{dataModel.BaseTypeName}] which is not defined as a data model.");
+                        Output.Error($"[{dataModel.SourceType.FullName}]: This data model inherits type [{dataModel.BaseTypeName}] which is not defined as a data model.");
                         return;
                     }
 
@@ -1406,7 +1406,7 @@ namespace Neon.CodeGen
 
                             default:
 
-                                Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: Service model [{property.Name}] specifies an unsupported [{nameof(DefaultValueHandling)}] value.");
+                                Output.Error($"[{dataModel.SourceType.FullName}]: Service model [{property.Name}] specifies an unsupported [{nameof(DefaultValueHandling)}] value.");
                                 defaultValueHandling = "Include";
                                 break;
                         }
@@ -2095,7 +2095,7 @@ namespace Neon.CodeGen
 
             if (!IsValidMethodType(serviceMethod.MethodInfo.ReturnType, Pass.AsResult))
             {
-                Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] returns unsupported type [{serviceMethod.MethodInfo.ReturnType}].");
+                Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] returns unsupported type [{serviceMethod.MethodInfo.ReturnType}].");
             }
 
             var parameters    = serviceMethod.Parameters;
@@ -2202,7 +2202,7 @@ namespace Neon.CodeGen
                 {
                     if (!serviceMethod.RouteTemplate.Contains($"{{{parameter.SerializedName}}}"))
                     {
-                        Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has parameter [{parameter.Name}] that does not map to a [{{{parameter.Name}}}] in the method's [{serviceMethod.RouteTemplate}] route template.");
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has parameter [{parameter.Name}] that does not map to a [{{{parameter.Name}}}] in the method's [{serviceMethod.RouteTemplate}] route template.");
                     }
 
                     uriVerify = uriVerify.Replace($"{{{parameter.SerializedName}}}", parameter.Name);
@@ -2230,7 +2230,7 @@ namespace Neon.CodeGen
 
                 if (uriVerify.Contains('{') || uriVerify.Contains('}'))
                 {
-                    Output.Errors.Add($"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has a malformed route [{route}] that references a method parameter that doesn't exist or has extra \"{{\" or \"}}\" characters.");
+                    Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has a malformed route [{route}] that references a method parameter that doesn't exist or has extra \"{{\" or \"}}\" characters.");
                 }
 
                 uriRef = $"$\"{uri}\"";
@@ -2314,7 +2314,7 @@ namespace Neon.CodeGen
             var methodReturnsContent = true;
             var safeQueryMethod      = string.Empty;
             var unsafeQueryMethod    = string.Empty;
-            var bodyError            = $"ERROR: Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines a parameter with [FromBody] that is not compatible with the HTTP [{serviceMethod.HttpMethod}] method.";
+            var bodyError            = $"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines a parameter with [FromBody] that is not compatible with the HTTP [{serviceMethod.HttpMethod}] method.";
 
             switch (serviceMethod.HttpMethod)
             {
@@ -2325,7 +2325,7 @@ namespace Neon.CodeGen
 
                     if (bodyParameter != null)
                     {
-                        Output.Errors.Add(bodyError);
+                        Output.Error(bodyError);
                     }
                     break;
 
@@ -2336,7 +2336,7 @@ namespace Neon.CodeGen
 
                     if (bodyParameter != null)
                     {
-                        Output.Errors.Add(bodyError);
+                        Output.Error(bodyError);
                     }
                     break;
 
@@ -2349,7 +2349,7 @@ namespace Neon.CodeGen
 
                     if (bodyParameter != null)
                     {
-                        Output.Errors.Add(bodyError);
+                        Output.Error(bodyError);
                     }
                     break;
 
@@ -2360,7 +2360,7 @@ namespace Neon.CodeGen
 
                     if (bodyParameter != null)
                     {
-                        Output.Errors.Add(bodyError);
+                        Output.Error(bodyError);
                     }
                     break;
 

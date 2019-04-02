@@ -45,6 +45,20 @@ namespace Neon.CodeGen
         public List<string> Errors { get; private set; } = new List<string>();
 
         /// <summary>
+        /// Appends an error message to the output.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public void Error(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+            {
+                return;
+            }
+
+            Errors.Add($"ERROR: {message}");
+        }
+
+        /// <summary>
         /// Returns the generated source code.
         /// </summary>
         public string SourceCode { get; internal set; }
