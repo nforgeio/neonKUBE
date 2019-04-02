@@ -1081,49 +1081,7 @@ namespace Neon.CodeGen
                     baseTypeRef += $", IPersistedEntity<{dataModel.SourceType.Name}>";
                 }
 
-                var className                = dataModel.SourceType.Name;
-                var filterAttributeNamespace = "EntityFilters";
-
-                if (genEntity)
-                {
-                    // We need to generate a custom Linq2Couchbase document filter attribute for
-                    // each persisted data model.  We're going to put these into a sub-namespace
-                    // to avoid polluting the main namespace.
-
-                    writer.WriteLine($"    namespace {filterAttributeNamespace}");
-                    writer.WriteLine($"    {{");
-                    writer.WriteLine($"        /// <summary>");
-                    writer.WriteLine($"        /// Used to tag the <see cref=\"{className}\"/> entity such that Linq2Couchbase will");
-                    writer.WriteLine($"        /// be able to transparently add a <c>where</c> clause that filters by entity type");
-                    writer.WriteLine($"        /// to all queries for this entity type.");
-                    writer.WriteLine($"        /// </summary>");
-                    writer.WriteLine($"        public class {className}Filter : Couchbase.Linq.Filters.IDocumentFilter<{className}>");
-                    writer.WriteLine($"        {{");
-                    writer.WriteLine($"            //-----------------------------------------------------------------");
-                    writer.WriteLine($"            // Static members:");
-                    writer.WriteLine();
-                    writer.WriteLine($"            private static Expression<Func<{className}, bool>> whereExpression;");
-                    writer.WriteLine();
-                    writer.WriteLine($"            static {className}Filter()");
-                    writer.WriteLine($"            {{");
-                    writer.WriteLine($"                var parameter = Expression.Parameter(typeof({className}), \"p\");");
-                    writer.WriteLine();
-                    writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__ET\"), Expression.Constant({className}.EntityType)), parameter);");
-                    writer.WriteLine($"            }}");
-                    writer.WriteLine();
-                    writer.WriteLine($"            //-----------------------------------------------------------------");
-                    writer.WriteLine($"            // Instance members:");
-                    writer.WriteLine();
-                    writer.WriteLine($"            public int Priority {{ get; set; }}");
-                    writer.WriteLine();
-                    writer.WriteLine($"            public IQueryable<{className}> ApplyFilter(IQueryable<{className}> source)");
-                    writer.WriteLine($"            {{");
-                    writer.WriteLine($"                return source.Where(whereExpression);");
-                    writer.WriteLine($"            }}");
-                    writer.WriteLine($"        }}");
-                    writer.WriteLine($"    }}");
-                    writer.WriteLine();
-                }
+                var className = dataModel.SourceType.Name;
 
                 writer.WriteLine($"    /// <threadsafety static=\"true\" instance=\"false\"/>");
                 writer.WriteLine($"    public partial class {className}{baseTypeRef}");
@@ -1131,6 +1089,46 @@ namespace Neon.CodeGen
 
                 if (Settings.RoundTrip)
                 {
+                    if (genEntity)
+                    {
+                        // We need to generate a custom Linq2Couchbase document filter attribute for
+                        // each persisted data model.
+
+                        writer.WriteLine($"        //---------------------------------------------------------------------");
+                        writer.WriteLine($"        // Private types:");
+                        writer.WriteLine();
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// Used to tag the <see cref=\"{className}\"/> entity such that Linq2Couchbase will");
+                        writer.WriteLine($"        /// be able to transparently add a <c>where</c> clause that filters by entity type");
+                        writer.WriteLine($"        /// to all queries for this entity type.");
+                        writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        private class {className}Filter : Couchbase.Linq.Filters.IDocumentFilter<{className}>");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            //-----------------------------------------------------------------");
+                        writer.WriteLine($"            // Static members:");
+                        writer.WriteLine();
+                        writer.WriteLine($"            private static Expression<Func<{className}, bool>> whereExpression;");
+                        writer.WriteLine();
+                        writer.WriteLine($"            static {className}Filter()");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                var parameter = Expression.Parameter(typeof({className}), \"p\");");
+                        writer.WriteLine();
+                        writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__ET\"), Expression.Constant({className}.EntityType)), parameter);");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"            //-----------------------------------------------------------------");
+                        writer.WriteLine($"            // Instance members:");
+                        writer.WriteLine();
+                        writer.WriteLine($"            public int Priority {{ get; set; }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"            public IQueryable<{className}> ApplyFilter(IQueryable<{className}> source)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                return source.Where(whereExpression);");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine($"        }}");
+                        writer.WriteLine();
+                    }
+
                     //-------------------------------------
                     // Generate the static members
 
@@ -1149,7 +1147,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            // We need to register document filters with Linq2Couchbase.");
                         writer.WriteLine();
-                        writer.WriteLine($"            Couchbase.Linq.Filters.DocumentFilterManager.SetFilter<{className}>(new {filterAttributeNamespace}.{className}Filter());");
+                        writer.WriteLine($"            Couchbase.Linq.Filters.DocumentFilterManager.SetFilter<{className}>(new {className}Filter());");
                         writer.WriteLine($"        }}");
                     }
 
