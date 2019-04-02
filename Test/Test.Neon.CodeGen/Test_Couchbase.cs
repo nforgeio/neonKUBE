@@ -73,7 +73,7 @@ namespace TestCodeGen.Couchbase
         {
             // Verify that we can write generated entity models.
 
-            var jackEntity = new PersonEntity()
+            var jack = new Person()
             {
                 Id = 0,
                 Name = "Jack",
@@ -81,7 +81,7 @@ namespace TestCodeGen.Couchbase
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
-            var jillEntity = new PersonEntity()
+            var jill = new Person()
             {
                 Id = 1,
                 Name = "Jill",
@@ -89,21 +89,21 @@ namespace TestCodeGen.Couchbase
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             };
 
-            Assert.Equal("0", jackEntity.GetKey());
-            Assert.Equal("1", jillEntity.GetKey());
+            Assert.Equal("0", jack.GetKey());
+            Assert.Equal("1", jill.GetKey());
 
-            await bucket.InsertSafeAsync(jackEntity, persistTo: PersistTo.One);
-            await bucket.InsertSafeAsync(jillEntity, persistTo: PersistTo.One);
+            await bucket.InsertSafeAsync(jack, persistTo: PersistTo.One);
+            await bucket.InsertSafeAsync(jill, persistTo: PersistTo.One);
 
             // Verify that we can read them.
 
-            var jackReadEntity = await bucket.GetSafeAsync<PersonEntity>(0.ToString());
-            var jillReadEntity = await bucket.GetSafeAsync<PersonEntity>(1.ToString());
+            var jackRead = await bucket.GetSafeAsync<Person>(0.ToString());
+            var jillRead = await bucket.GetSafeAsync<Person>(1.ToString());
 
-            Assert.Equal("0", jackReadEntity.GetKey());
-            Assert.Equal("1", jillReadEntity.GetKey());
-            Assert.True(jackEntity == jackReadEntity);
-            Assert.True(jillEntity == jillReadEntity);
+            Assert.Equal("0", jackRead.GetKey());
+            Assert.Equal("1", jillRead.GetKey());
+            Assert.True(jack == jackRead);
+            Assert.True(jill == jillRead);
 
             //-----------------------------------------------------------------
             // Persist a [City] entity (which has a different entity type) and then
@@ -111,7 +111,7 @@ namespace TestCodeGen.Couchbase
             // get only Jack and Jill back.  This verifies the the [TypeFilter] 
             // attribute is generated and working correctly.
 
-            var cityEntity = new CityEntity()
+            var cityEntity = new City()
             {
                 Name = "Woodinville",
                 Population = 12345
@@ -120,7 +120,7 @@ namespace TestCodeGen.Couchbase
             var opResult = await bucket.InsertSafeAsync(cityEntity, persistTo: PersistTo.One);
 
             var context     = new BucketContext(bucket);
-            var peopleQuery = from doc in context.Query<PersonEntity>() select doc;
+            var peopleQuery = from doc in context.Query<Person>() select doc;
 
             // $todo(jeff.lill):
             //
@@ -140,7 +140,7 @@ namespace TestCodeGen.Couchbase
             //-----------------------------------------------------------------
             // Query for the city and verify.
 
-            var cityQuery = from doc in context.Query<CityEntity>() select doc;
+            var cityQuery = from doc in context.Query<City>() select doc;
             var cities    = cityQuery.ToList();
 
             Assert.Single(cities);
@@ -158,30 +158,13 @@ namespace TestCodeGen.Couchbase
             Assert.Equal("bar", poo.Foo);
 
             //-----------------------------------------------------------------
-            // Extra credit #1: Verify that [Entity.ToBase()] works.
+            // Extra credit: Verify that [PersistedEntity.DeepClone()] works.
 
-            var jack = jackEntity.ToBase();
+            var clone = jack.DeepClone();
 
-            Assert.Equal(jackEntity.Name, jack.Name);
-            Assert.Equal(jackEntity.Age, jack.Age);
-
-            // The underlying [JObject] shouldn't have any properties
-            // with leading underscores because ToBase() should have
-            // stripped the [__ET] property off.
-
-            foreach (var property in jack.ToJObject(noClone: true).Properties())
-            {
-                Assert.False(property.Name.StartsWith("__"));
-            }
-
-            //-----------------------------------------------------------------
-            // Extra credit #2: Verify that [Entity.DeepClone()] works.
-
-            var clone = jackEntity.DeepClone();
-
-            Assert.Equal(jackEntity.Name, clone.Name);
-            Assert.Equal(jackEntity.Age, clone.Age);
-            Assert.NotSame(jackEntity.Data, clone.Data);
+            Assert.Equal(jack.Name, clone.Name);
+            Assert.Equal(jack.Age, clone.Age);
+            Assert.NotSame(jack.Data, clone.Data);
         }
     }
 }

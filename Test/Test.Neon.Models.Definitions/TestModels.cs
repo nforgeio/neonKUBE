@@ -47,20 +47,20 @@ namespace Test.Neon.Models.Definitions
         string ChildProperty { get; set; }
     }
 
-    [Entity]
+    [Persisted]
     public interface Person
     {
-        [EntityKey]
+        [PersistedKey]
         int Id { get; set; }
         string Name { get; set; }
         int Age { get; set; }
         byte[] Data { get; set; }
     }
 
-    [Entity]
+    [Persisted]
     public interface City
     {
-        [EntityKey]
+        [PersistedKey]
         string Name { get; set; }
         int Population { get; set; }
     }

@@ -215,6 +215,56 @@ namespace TestCodeGen
         }
 
         /// <summary>
+        /// Calls the data model's <b>__Load()</b> method.
+        /// </summary>
+        /// <param name="source">The optional source <see cref="JObject"/>.</param>
+        /// <param name="isDerived">Optionally indicates that were deserializing a derived class..</param>
+        public void Load(JObject source = null, bool isDerived = false)
+        {
+            try
+            {
+                var method = instanceType.GetMethod("__Load", new Type[] { typeof(JObject), typeof(bool) });
+
+                method.Invoke(instance, new object[] { source, isDerived });
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Calls the data model's <b>__Save()</b> method.
+        /// </summary>
+        public void Save()
+        {
+            try
+            {
+                var method = instanceType.GetMethod("__Save", new Type[] { });
+
+                method.Invoke(instance, null);
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
         /// Serializes the data model as JSON.
         /// </summary>
         /// <param name="indented">Optionally format the JSON output.</param>
@@ -444,6 +494,20 @@ namespace TestCodeGen
                 {
                     throw;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns the value of the wrapped entity's <b>EntityType</b> constant.
+        /// </summary>
+        public string EntityType
+        {
+            get
+            {
+                var fields   = instanceType.GetFields(BindingFlags.Static | BindingFlags.Public);
+                var constant = fields.Single(f => f.IsLiteral && f.Name == "EntityType");
+
+                return (string)constant.GetValue(null);
             }
         }
     }

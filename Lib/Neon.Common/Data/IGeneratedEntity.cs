@@ -43,6 +43,11 @@ namespace Neon.Data
     public interface IGeneratedEntity
     {
         /// <summary>
+        /// Returns the string identifying the entity type.
+        /// </summary>
+        string __ET { get; }
+
+        /// <summary>
         /// Renders the instance as JSON text, optionally formatting the output.
         /// </summary>
         /// <param name="indented">Optionally pass <c>true</c> to format the output.</param>
@@ -60,7 +65,8 @@ namespace Neon.Data
         /// the optional <paramref name="source"/> parameter.
         /// </summary>
         /// <param name="source">The optional source <see cref="JObject"/>.</param>
-        void __Load(JObject source = null);
+        /// <param name="isDerived">Optionally indicates that were deserializing a derived class.</param>
+        void __Load(JObject source = null, bool isDerived = false);
 
         /// <summary>
         /// Persists the instance properties to the backing <see cref="JObject"/>.

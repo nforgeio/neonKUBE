@@ -610,12 +610,12 @@ namespace Neon.CodeGen
 
             if (dataModelAttribute != null)
             {
-                dataModel.TypeID = dataModelAttribute.TypeID ?? dataType.FullName;
+                dataModel.EntityType = dataModelAttribute.EntityType ?? dataType.FullName;
             }
 
-            if (string.IsNullOrEmpty(dataModel.TypeID))
+            if (string.IsNullOrEmpty(dataModel.EntityType))
             {
-                dataModel.TypeID = dataType.FullName;
+                dataModel.EntityType = dataType.FullName;
             }
 
             if (dataModel.IsEnum)
@@ -690,18 +690,13 @@ namespace Neon.CodeGen
             }
             else
             {
-                dataModel.EntityInfo = dataType.GetCustomAttribute<EntityAttribute>();
-
-                if (dataModel.EntityInfo != null && string.IsNullOrEmpty(dataModel.EntityInfo.EntityType))
-                {
-                    dataModel.EntityInfo.EntityType = dataModel.SourceType.FullName;
-                }
+                dataModel.Persisted = dataType.GetCustomAttribute<PersistedAttribute>();
 
                 // A data model interface is allowed to implement another 
                 // data model interface to specify a base class.  Note that
                 // only one of these references is allowed and it may only
                 // be a reference to another data model (not an arbtrary 
-                // type.
+                // type).
 
                 var baseInterface = (Type)null;
 
@@ -899,17 +894,7 @@ namespace Neon.CodeGen
             foreach (var dataModel in nameToDataModel.Values
                 .OrderBy(dm => dm.SourceType.Name.ToLowerInvariant()))
             {
-                // We'll generate a base class for all data models and then
-                // optionally generated an Entity<T> based class if the data
-                // model is tagged with [Entity] and entity generation is
-                // enabled.
-
-                GenerateDataModel(dataModel, genEntity: false);
-
-                if (Settings.Entities && dataModel.EntityInfo != null)
-                {
-                    GenerateDataModel(dataModel, genEntity: true);
-                }
+                GenerateDataModel(dataModel, genEntity: Settings.Persisted && dataModel.Persisted != null);
             }
 
             // Generate the service clients (if enabled).
@@ -1003,16 +988,13 @@ namespace Neon.CodeGen
         /// Generates source code for a data model.
         /// </summary>
         /// <param name="dataModel">The data model.</param>
-        /// <param name="genEntity">
-        /// Indicates whether we're generating an <c>Entity&lt;T&gt;}</c> class wrapping
-        /// a data model or just a data model.
-        /// </param>
+        /// <param name="genEntity">Optionally enables the generation of database persistence related code for this data model.</param>
         private void GenerateDataModel(DataModel dataModel, bool genEntity)
         {
             string          defaultValueExpression;
-            PropertyInfo    entityKeyProperty = null;
+            PropertyInfo    persistedKeyProperty = null;
 
-            if (genEntity && (dataModel.EntityInfo == null || dataModel.IsEnum))
+            if (genEntity && (dataModel.Persisted == null || dataModel.IsEnum))
             {
                 // Nothing needs to be generated.
 
@@ -1026,21 +1008,21 @@ namespace Neon.CodeGen
 
                 foreach (var property in dataModel.SourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
                 {
-                    if (property.GetCustomAttribute<EntityKeyAttribute>() != null)
+                    if (property.GetCustomAttribute<PersistedKeyAttribute>() != null)
                     {
-                        if (entityKeyProperty != null)
+                        if (persistedKeyProperty != null)
                         {
-                            Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has two properties [{entityKeyProperty.Name}] and [{property.Name}] that are both tagged with [EntityKey].  This is allowed for only one property per class.");
+                            Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has two properties [{persistedKeyProperty.Name}] and [{property.Name}] that are both tagged with [PersistedKey].  This is allowed for only one property per class.");
                             break;
                         }
 
-                        entityKeyProperty = property;
+                        persistedKeyProperty = property;
                     }
                 }
 
-                if (entityKeyProperty == null)
+                if (persistedKeyProperty == null)
                 {
-                    Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has no property tagged with [EntityKey].  Entity classes must tag one property as the database key.");
+                    Output.Errors.Add($"ERROR: [{dataModel.SourceType.FullName}]: This data model has no property tagged with [PersistedKey].  Entity classes must tag one property as the database key.");
                 }
             }
 
@@ -1096,7 +1078,7 @@ namespace Neon.CodeGen
 
                 if (genEntity)
                 {
-                    baseTypeRef += $", IEntity<{dataModel.SourceType.Name}>";
+                    baseTypeRef += $", IPersistedEntity<{dataModel.SourceType.Name}>";
                 }
 
                 var className                = dataModel.SourceType.Name;
@@ -1104,13 +1086,8 @@ namespace Neon.CodeGen
 
                 if (genEntity)
                 {
-                    className += "Entity";
-                }
-
-                if (genEntity)
-                {
-                    // We need to generate a custom Linq2Couchbase document filter attribute
-                    // for each entity class.  We're going to put these into a sub-namespace
+                    // We need to generate a custom Linq2Couchbase document filter attribute for
+                    // each persisted data model.  We're going to put these into a sub-namespace
                     // to avoid polluting the main namespace.
 
                     writer.WriteLine($"    namespace {filterAttributeNamespace}");
@@ -1131,7 +1108,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            {{");
                     writer.WriteLine($"                var parameter = Expression.Parameter(typeof({className}), \"p\");");
                     writer.WriteLine();
-                    writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__ET\"), Expression.Constant({className}.PersistedEntityType)), parameter);");
+                    writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__ET\"), Expression.Constant({className}.EntityType)), parameter);");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
                     writer.WriteLine($"            //-----------------------------------------------------------------");
@@ -1158,11 +1135,11 @@ namespace Neon.CodeGen
 
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Static members:");
+                    writer.WriteLine();
+                    writer.WriteLine($"        public const string EntityType = \"{dataModel.EntityType}\";");
 
                     if (genEntity)
                     {
-                        writer.WriteLine();
-                        writer.WriteLine($"        public const string PersistedEntityType = \"{dataModel.EntityInfo.EntityType}\";");
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Static constructor.");
@@ -1253,7 +1230,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            return CreateFrom(response.JsonText);");
                     writer.WriteLine($"        }}");
 
-                    // For data models tagged with [Entity], we need to generate the static GetKey(...) method.
+                    // For data models tagged with [Persisted], we need to generate the static GetKey(...) method.
 
                     if (genEntity)
                     {
@@ -1264,7 +1241,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the entity.</param>");
                         writer.WriteLine($"        public static string CreateKey(params object[] args)");
                         writer.WriteLine($"        {{");
-                        writer.WriteLine($"            return EntitySerializationHelper.CreateEntityKey(\"{dataModel.EntityInfo.EntityType}\", args);");
+                        writer.WriteLine($"            return EntitySerializationHelper.CreateEntityKey(\"{dataModel.EntityType}\", args);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1310,7 +1287,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            return !(value1 == value2);");
                     writer.WriteLine($"        }}");
 
-                    //-------------------------------------
+                    //---------------------------------------------------------
                     // Generate instance members
 
                     writer.WriteLine();
@@ -1443,7 +1420,7 @@ namespace Neon.CodeGen
 
                 if (Settings.RoundTrip)
                 {
-                    //-------------------------------------
+                    //---------------------------------------------------------
                     // Generate the __Load() method.
 
                     var virtualModifier      = dataModel.IsDerived ? "override" : "virtual";
@@ -1454,13 +1431,14 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Loads the entity properties from the backing <see cref=\"JObject\"/>");
                     writer.WriteLine($"        /// or from the optional <see cref=\"JObject\"/> passed.");
                     writer.WriteLine($"        /// </summary>");
-                    writer.WriteLine($"        public {virtualModifier} void __Load(JObject source = null)");
+                    writer.WriteLine($"        /// <param name=\"source\">The optional source <see cref=\"JObject\"/>.</param>");
+                    writer.WriteLine($"        /// <param name=\"isDerived\">Optionally indicates that were deserializing a derived class..</param>");
+                    writer.WriteLine($"        public {virtualModifier} void __Load(JObject source = null, bool isDerived = false)");
                     writer.WriteLine($"        {{");
+                    writer.WriteLine($"            JProperty property;");
 
                     if (serializedProperties.Count() > 0 || dataModel.IsDerived)
                     {
-                        writer.WriteLine($"            JProperty property;");
-
                         writer.WriteLine();
                         writer.WriteLine($"            if (source != null)");
                         writer.WriteLine($"            {{");
@@ -1469,7 +1447,8 @@ namespace Neon.CodeGen
 
                         if (dataModel.IsDerived)
                         {
-                            writer.WriteLine($"            base.__Load();");
+                            writer.WriteLine();
+                            writer.WriteLine($"            base.__Load(isDerived: true);");
                         }
 
                         foreach (var property in serializedProperties.OrderBy(p => p.Order))
@@ -1522,29 +1501,29 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    // Database entities also need to verify thet the serialized [__ET] property matches the actual type.
+                    // Load and verify the [__ET] property if we're not loading a derived class.
 
-                    if (genEntity)
-                    {
-                        writer.WriteLine();
-                        writer.WriteLine($"            property = this.__JObject.Property(\"__ET\");");
-                        writer.WriteLine($"            if (property == null)");
-                        writer.WriteLine($"            {{");
-                        writer.WriteLine($"                throw new ArgumentNullException(\"[{className}.__ET] property is required when deserializing.\");");
-                        writer.WriteLine($"            }}");
-                        writer.WriteLine($"            else if ((string)property.Value != PersistedEntityType)");
-                        writer.WriteLine($"            {{");
-                        writer.WriteLine($"                throw new InvalidOperationException($\"[{className}.__ET={{PersistedEntityType}}] property does not match the deserialized value [{{(string)property.Value}}].\");");
-                        writer.WriteLine($"            }}");
-                        writer.WriteLine($"            else");
-                        writer.WriteLine($"            {{");
-                        writer.WriteLine($"                this.__ET = (string)property.Value;");
-                        writer.WriteLine($"            }}");
-                    }
+                    writer.WriteLine();
+                    writer.WriteLine($"            if (!isDerived)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                property = this.__JObject.Property(\"__ET\");");
+                    writer.WriteLine($"                if (property == null)");
+                    writer.WriteLine($"                {{");
+                    writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__ET] property is required when deserializing.\");");
+                    writer.WriteLine($"                }}");
+                    writer.WriteLine($"                else if ((string)property.Value != EntityType)");
+                    writer.WriteLine($"                {{");
+                    writer.WriteLine($"                    throw new InvalidOperationException($\"Deserialized [__ET={{(string)property.Value}}] property value does not match the entity's [{className}.__ET={{EntityType}}] constant.\");");
+                    writer.WriteLine($"                }}");
+                    writer.WriteLine($"                else");
+                    writer.WriteLine($"                {{");
+                    writer.WriteLine($"                    this.__ET = (string)property.Value;");
+                    writer.WriteLine($"                }}");
+                    writer.WriteLine($"            }}");
 
                     writer.WriteLine($"        }}");
 
-                    //-------------------------------------
+                    //---------------------------------------------------------
                     // Generate the __Save() method.
 
                     writer.WriteLine();
@@ -1631,18 +1610,15 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    // Database entities also need to serialize their [__ET] properties.
+                    // Serialize the [__ET] property
 
-                    if (genEntity)
-                    {
-                        writer.WriteLine($"            this.__JObject[\"__ET\"] = PersistedEntityType;");
-                    }
+                    writer.WriteLine($"            this.__JObject[\"__ET\"] = EntityType;");
 
                     writer.WriteLine();
                     writer.WriteLine($"            return this.__JObject;");
                     writer.WriteLine($"        }}");
 
-                    //-------------------------------------
+                    //---------------------------------------------------------
                     // Generate the ToString() methods.
 
                     writer.WriteLine();
@@ -1686,7 +1662,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        }}");
                     }
 
-                    //-------------------------------------
+                    //---------------------------------------------------------
                     // Generate handy helper methods.
 
                     writer.WriteLine();
@@ -1793,16 +1769,20 @@ namespace Neon.CodeGen
 
                     writer.WriteLine($"        }}");
 
-                    //-------------------------------------
+                    //---------------------------------------------------------
+                    // Generate the entity type property.
+
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Identifies the entity type.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        public string __ET {{ get; set; }}");
+
+                    //---------------------------------------------------------
                     // Generate any entity related members.
 
                     if (genEntity)
                     {
-                        writer.WriteLine();
-                        writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// Identifies the entity type.");
-                        writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        public string __ET {{ get; set; }}");
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Returns the database key for an entity.");
@@ -1811,47 +1791,32 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        public string GetKey()");
                         writer.WriteLine($"        {{");
 
-                        if (entityKeyProperty == null)
+                        if (persistedKeyProperty == null)
                         {
-                            writer.WriteLine($"            return null; // ERROR: No source data model property was tagged by [EntityKey].");
+                            writer.WriteLine($"            return null; // ERROR: No source data model property was tagged by [PersistedKey].");
                         }
-                        else if (entityKeyProperty.PropertyType.IsValueType)
+                        else if (persistedKeyProperty.PropertyType.IsValueType)
                         {
-                            writer.WriteLine($"            return {entityKeyProperty.Name}.ToString();");
+                            writer.WriteLine($"            return {persistedKeyProperty.Name}.ToString();");
                         }
                         else
                         {
-                            writer.WriteLine($"            if ({entityKeyProperty.Name} == null)");
+                            writer.WriteLine($"            if ({persistedKeyProperty.Name} == null)");
                             writer.WriteLine($"            {{");
-                            writer.WriteLine($"                throw new InvalidOperationException(\"Entity key property [{entityKeyProperty.Name}] cannot be NULL.\");");
+                            writer.WriteLine($"                throw new InvalidOperationException(\"Entity key property [{persistedKeyProperty.Name}] cannot be NULL.\");");
                             writer.WriteLine($"            }}");
                             writer.WriteLine();
 
-                            if (entityKeyProperty.PropertyType == typeof(string))
+                            if (persistedKeyProperty.PropertyType == typeof(string))
                             {
-                                writer.WriteLine($"            return {entityKeyProperty.Name};");
+                                writer.WriteLine($"            return {persistedKeyProperty.Name};");
                             }
                             else
                             {
-                                writer.WriteLine($"            return {entityKeyProperty.Name}.ToString();");
+                                writer.WriteLine($"            return {persistedKeyProperty.Name}.ToString();");
                             }
                         }
 
-                        writer.WriteLine($"        }}");
-                        writer.WriteLine();
-                        writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// Returns a deep clone of the base object from the entity instance.");
-                        writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        /// <returns>The cloned base instance.</returns>");
-                        writer.WriteLine($"        public {dataModel.SourceType.Name} ToBase()");
-                        writer.WriteLine($"        {{");
-                        writer.WriteLine($"            __Save();");
-                        writer.WriteLine();
-                        writer.WriteLine($"            var jObject = EntitySerializationHelper.DeepClone(__JObject);");
-                        writer.WriteLine();
-                        writer.WriteLine($"            jObject.Remove(\"__ET\");");
-                        writer.WriteLine();
-                        writer.WriteLine($"            return GeneratedEntityFactory.CreateFrom<{dataModel.SourceType.Name}>(jObject);");
                         writer.WriteLine($"        }}");
                     }
 

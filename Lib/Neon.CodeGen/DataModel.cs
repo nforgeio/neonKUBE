@@ -28,7 +28,7 @@ namespace Neon.CodeGen
     /// </summary>
     internal class DataModel
     {
-        private string typeID;
+        private string entityType;
 
         /// <summary>
         /// Constructor.
@@ -55,19 +55,19 @@ namespace Neon.CodeGen
         /// <summary>
         /// Optional type identifier to be used for persisting the type.
         /// </summary>
-        public string TypeID
+        public string EntityType
         {
-            get => typeID;
+            get => entityType;
 
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    typeID = null;
+                    entityType = SourceType.FullName;
                 }
                 else
                 {
-                    typeID = value.Trim();
+                    entityType = value.Trim();
                 }
             }
         }
@@ -95,10 +95,10 @@ namespace Neon.CodeGen
         public DataModel BaseModel { get; set;}
 
         /// <summary>
-        /// Returns the entity information if the data model was tagged with <c>Entity</c>
+        /// Returns the entity persistence settings if the data model was tagged with <c>[Persisted]</c>
         /// or <c>null</c> otherwise.
         /// </summary>
-        public EntityAttribute EntityInfo { get; set; }
+        public PersistedAttribute Persisted { get; set; }
 
         /// <summary>
         /// Indicates whether the current data model is derived from another model.

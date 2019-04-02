@@ -42,7 +42,7 @@ namespace Neon.CodeGen
         /// <para>
         /// Optionally specifies the type identifier that will be used by
         /// generated code to identify the object type at runtime. This
-        /// will be used when deserializing the object from noSQL databases.
+        /// will be used when deserializing the object.
         /// </para>
         /// <para>
         /// This defaults to the fully qualified name of the type as it
@@ -51,6 +51,6 @@ namespace Neon.CodeGen
         /// or just to customize how your data is persistedd.
         /// </para>
         /// </summary>
-        public string TypeID { get; set; }
+        public string EntityType { get; set; }
     }
 }

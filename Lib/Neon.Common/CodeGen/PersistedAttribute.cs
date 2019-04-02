@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    EntityAttribute.cs
+// FILE:	    PersistedAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,13 +27,6 @@ namespace Neon.CodeGen
     /// <para>
     /// Used to customize the database related code generated for the tagged
     /// data model interface.
-    /// </para>
-    /// <para>
-    /// <see cref="EntityType"/> to specify a string that uniquely identifies 
-    /// the entity type within the current database (e.g. within a Couchbase bucket) 
-    /// or other context.  This is used to  initialize the <b>__ET</b> 
-    /// property for generated database entity classes.  This defaults to setting
-    /// will set the entity type to the fully qualified name of the data model.
     /// </para>
     /// <para>
     /// By default, a <c>public static string GetKey(param object[] args)</c> method
@@ -76,28 +69,8 @@ namespace Neon.CodeGen
     /// </code>
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class EntityAttribute : Attribute
+    public class PersistedAttribute : Attribute
     {
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="entityType">
-        /// The entity type string.  Note that the the fully qualified
-        /// name of the decorated data model will be used when this is 
-        /// <c>null</c> or empty.
-        /// </param>
-        public EntityAttribute(string entityType = null)
-        {
-            this.EntityType = entityType;
-        }
-
-        /// <summary>
-        /// The entity type string.  Note that the the fully qualified
-        /// name of the decorated data model will be used when this is 
-        /// <c>null</c> or empty.
-        /// </summary>
-        public string EntityType { get; set; }
-
         /// <summary>
         /// This property combined with <see cref="GetKeyString"/> is used
         /// to generate a <c>public static string GetKey(...)</c> method.

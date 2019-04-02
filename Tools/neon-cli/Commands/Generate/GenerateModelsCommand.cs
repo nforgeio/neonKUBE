@@ -66,8 +66,7 @@ OPTIONS:
                                   the original type namespaces as scanned
                                   from the source assembly.
 
-    --entities                  - Generate IEntity<T> based data classes in
-                                  addition to the regular data types.
+    --persisted                 - Generate database persistence related code.
 
     --no-services               - Don't generate any service clients.
 
@@ -94,7 +93,7 @@ style design conventions.  See this GitHub issue for more information:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--source-namespace", "--target-namespace", "--entities", "--no-services", "--targets" }; }
+            get { return new string[] { "--source-namespace", "--target-namespace", "--persisted", "--no-services", "--targets" }; }
         }
 
         /// <inheritdoc/>
@@ -130,7 +129,7 @@ style design conventions.  See this GitHub issue for more information:
             {
                 SourceNamespace  = commandLine.GetOption("--source-namespace"),
                 TargetNamespace  = commandLine.GetOption("--target-namespace"),
-                Entities         = commandLine.HasOption("--entities"),
+                Persisted        = commandLine.HasOption("--persisted"),
                 NoServiceClients = commandLine.HasOption("--no-services")
             };
 

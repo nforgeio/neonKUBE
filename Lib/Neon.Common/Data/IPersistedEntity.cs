@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IEntity.cs
+// FILE:	    IPersistedEntity.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,10 +26,10 @@ using Neon.Common;
 namespace Neon.Data
 {
     /// <summary>
-    /// Non generic interface describing an entity.  See <see cref="IEntity{T}"/>
-    /// for more information.
+    /// Non generic interface describing an entity that can be persisted to a database.
+    /// See <see cref="IPersistedEntity{T}"/> for more information.
     /// </summary>
-    public interface IEntity
+    public interface IPersistedEntity
     {
         /// <summary>
         /// <para>
@@ -54,7 +54,8 @@ namespace Neon.Data
         /// or from the optional <see cref="JObject"/> passed.
         /// </summary>
         /// <param name="source">Optional source object.</param>
-        void __Load(JObject source = null);
+        /// <param name="isDerived">Optionally indicates that were deserializing a derived class.</param>
+        void __Load(JObject source = null, bool isDerived = false);
 
         /// <summary>
         /// Persists the object properties to the backing <see cref="JObject"/>.
@@ -69,11 +70,11 @@ namespace Neon.Data
     }
 
     /// <summary>
-    /// Generic interface describing an entity.
+    /// Generic interface describing an entity that can be persisted to a database.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// All entities must implement the <see cref="IEntity.__ET"/> property such that it returns
+    /// All entities must implement the <see cref="IPersistedEntity.__ET"/> property such that it returns
     /// the bucket unique string that identifies the entity type.  This string will be
     /// used to distinguish entity types within a Couchbase bucket.
     /// </para>
@@ -89,17 +90,12 @@ namespace Neon.Data
     /// type prefix for brevity,
     /// </para>
     /// <para>
-    /// As a convention, many <see cref="IEntity{T}"/> implementations also have a <c>static</c>
+    /// As a convention, many <see cref="IPersistedEntity{T}"/> implementations also have a <c>static</c>
     /// <b>GetKey(...)</b> method that returns the Couchbase key for an entity based on parameters passed.
     /// </para>
     /// </remarks>
-    public interface IEntity<T> : IEntity
+    public interface IPersistedEntity<T> : IPersistedEntity
         where T : class, IGeneratedEntity, new()
     {
-        /// <summary>
-        /// Returns a deep clone of the base object with type <typeparamref name="T"/> from the entity instance.
-        /// </summary>
-        /// <returns>The base object instance.</returns>
-        T ToBase();
     }
 }

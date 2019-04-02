@@ -52,7 +52,7 @@ using Neon.Time;
 namespace Couchbase
 {
     /// <summary>
-    /// Implements a Couchbase serializer that's capable of handling <see cref="IEntity"/>
+    /// Implements a Couchbase serializer that's capable of handling <see cref="IPersistedEntity"/>
     /// based objects in addition to plain-old-objects.
     /// </summary>
     internal class EntitySerializer : ITypeSerializer

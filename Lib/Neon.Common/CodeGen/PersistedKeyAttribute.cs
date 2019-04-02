@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    EntityKeyAttribute.cs
+// FILE:	    PersistedKeyAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,10 +26,10 @@ using Neon.Data;
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Used to tag the property acting as the database key for an <see cref="IEntity"/>.
+    /// Used to tag the property acting as the database key for an <see cref="IGeneratedEntity"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class EntityKeyAttribute : Attribute
+    public class PersistedKeyAttribute : Attribute
     {
     }
 }

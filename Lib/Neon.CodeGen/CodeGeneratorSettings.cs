@@ -85,10 +85,10 @@ namespace Neon.CodeGen
         public bool RoundTrip { get; set; } = true;
 
         /// <summary>
-        /// Optionally generate an <c>Entity&lt;T&gt;</c> based class for
-        /// data models tagged with <c>[Entity]</c>.
+        /// Optionally generate generated database persistance related code for
+        /// data models tagged with <c>[Persisted]</c>.
         /// </summary>
-        public bool Entities { get; set; } = false;
+        public bool Persisted { get; set; } = false;
 
         /// <summary>
         /// <para>
