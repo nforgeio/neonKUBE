@@ -90,6 +90,11 @@ namespace Neon.CodeGen
         public int Order { get; set; }
 
         /// <summary>
+        /// Property presence requirements.
+        /// </summary>
+        public Required Required { get; set; } = Required.Default;
+
+        /// <summary>
         /// Returns <c>true</c> if the property type requires conversion
         /// to an object before assignment to a <see cref="JObject"/> property.
         /// </summary>

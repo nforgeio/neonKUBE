@@ -753,6 +753,7 @@ namespace Neon.CodeGen
                     {
                         property.SerializedName       = jsonPropertyAttribute.PropertyName;
                         property.Order                = jsonPropertyAttribute.Order;
+                        property.Required             = jsonPropertyAttribute.Required;
                         property.DefaultValueHandling = jsonPropertyAttribute.DefaultValueHandling;
                     }
                     else
@@ -1414,7 +1415,7 @@ namespace Neon.CodeGen
                                 break;
                         }
 
-                        writer.WriteLine($"        [JsonProperty(PropertyName = \"{property.SerializedName}\", DefaultValueHandling = DefaultValueHandling.{defaultValueHandling}, Order = {property.Order})]");
+                        writer.WriteLine($"        [JsonProperty(PropertyName = \"{property.SerializedName}\", DefaultValueHandling = DefaultValueHandling.{defaultValueHandling}, Required = Required.{property.Required}, Order = {property.Order})]");
 
                         defaultValueExpression = property.DefaultValueExpression;
 
