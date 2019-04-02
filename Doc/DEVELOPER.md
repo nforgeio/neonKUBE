@@ -60,7 +60,7 @@ Follow the steps below to configure a development or test workstation:
 
   `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
 
-7. Install **Visual Studio 2019 Preview** from [here](https://visualstudio.microsoft.com/vs/preview/)
+7. Install **Visual Studio 2019 Community** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
 
   * Select **all workloads** on the first panel
   * Select **individual components** and enable these:
