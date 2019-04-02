@@ -67,8 +67,10 @@ namespace Couchbase
             // We're simply going to wrap the default Couchbase serializer
             // so we can detect generated entities and call their __Save()
             // and __Load() methods as required.
+            //
+            // Note that we're using the common Neon serializer settings.
 
-            this.defaultSerializer = new DefaultSerializer();
+            this.defaultSerializer = new DefaultSerializer(NeonHelper.JsonRelaxedSerializerSettings.Value, NeonHelper.JsonRelaxedSerializerSettings.Value);
         }
 
         /// <inheritdoc/>
