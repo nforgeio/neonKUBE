@@ -30,6 +30,8 @@ using System.Threading.Tasks;
 using Couchbase;
 using Couchbase.Core;
 using Couchbase.Linq;
+using Couchbase.Linq.Extensions;
+using Couchbase.N1QL;
 
 using Neon.CodeGen;
 using Neon.Common;
@@ -132,21 +134,12 @@ namespace TestCodeGen.Couchbase
                 Population = 12345
             };
 
-            var opResult = await bucket.InsertSafeAsync(city, persistTo: PersistTo.One);
-
-            // $todo(jeff.lill):
-            //
-            // I need to figure out how to have the query honor the mutation state
-            // returned in [opResult].  I'm going to hack a delay here in the meantime.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/473
-
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            var opResult = await bucket.InsertAsync(city);
 
             //-----------------------------------------------------------------
             // Query for the people and verify
 
-            var peopleQuery = from doc in context.Query<Person>() select doc;
+            var peopleQuery = (from doc in context.Query<Person>() select doc).ConsistentWith(MutationState.From(opResult.Document));
             var people      = peopleQuery.ToList();
 
             Assert.Equal(2, people.Count);
@@ -253,7 +246,7 @@ namespace TestCodeGen.Couchbase
                 Population = 12345
             };
 
-            var opResult = await bucket.InsertSafeAsync(city, persistTo: PersistTo.One);
+            var opResult = await bucket.InsertAsync(city);
 
             // $todo(jeff.lill):
             //
@@ -267,7 +260,7 @@ namespace TestCodeGen.Couchbase
             //-----------------------------------------------------------------
             // Query for the people and verify
 
-            var peopleQuery = from doc in context.Query<CustomPerson>() select doc;
+            var peopleQuery = (from doc in context.Query<CustomPerson>() select doc).ConsistentWith(MutationState.From(opResult.Document));
             var people      = peopleQuery.ToList();
 
             Assert.Equal(2, people.Count);
