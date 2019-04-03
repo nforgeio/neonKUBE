@@ -148,7 +148,7 @@ namespace Neon.CodeGen
                         {
                             if (Type.IsEnum)
                             {
-                                return $"{Type.Name}.{NeonHelper.EnumToString(Type, DefaultValue)}";
+                                return $"{Type.Name}.{DefaultValue}";
                             }
                             else if (Type == typeof(bool))
                             {

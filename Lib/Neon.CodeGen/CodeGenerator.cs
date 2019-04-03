@@ -260,7 +260,36 @@ namespace Neon.CodeGen
                 return;
             }
 
-            // Load and normalize the types.
+            // Pass 1: Scan all of the data models first to populate the [nameToData] dictionary
+            //         so that we can handle forward declarations.
+
+            foreach (var type in assembly.GetTypes()
+                .Where(t => t.IsPublic)
+                .Where(t => t.IsInterface || t.IsEnum))
+            {
+                if (Settings.SourceNamespace != null && !type.FullName.StartsWith(Settings.SourceNamespace))
+                {
+                    // Ignore any types that aren't in specified source namespace.
+
+                    continue;
+                }
+
+                if (type.GetCustomAttribute<NoCodeGenAttribute>() != null)
+                {
+                    // Ignore any types tagged with [NoCodeGen].
+
+                    continue;
+                }
+
+                var serviceAttribute = type.GetCustomAttribute<ServiceModelAttribute>();
+
+                if (serviceAttribute == null)
+                {
+                    LoadDataModel(type, preload: true);
+                }
+            }
+
+            // Pass 2: Load and normalize the types.
 
             foreach (var type in assembly.GetTypes()
                 .Where(t => t.IsPublic)
@@ -585,25 +614,37 @@ namespace Neon.CodeGen
         /// Loads the required information for a data model type.
         /// </summary>
         /// <param name="dataType">The source data model type.</param>
-        private void LoadDataModel(Type dataType)
+        /// <param name="preload">Optionally just preload the data model definitions so we can handle forward references.</param>
+        private void LoadDataModel(Type dataType, bool preload = false)
         {
+            DataModel dataModel;
+
             if (dataType.IsGenericTypeDefinition)
             {
                 Output.Error($"Data model [{dataType.FullName}] is not currently supported because it is a generic type.");
                 return;
             }
 
-            var dataModel = new DataModel(dataType, this);
-
-            nameToDataModel[dataType.FullName] = dataModel;
-            dataModel.IsEnum                   = dataType.IsEnum;
-
-            foreach (var targetAttibute in dataType.GetCustomAttributes<TargetAttribute>())
+            if (preload)
             {
-                if (!dataModel.Targets.Contains(targetAttibute.Name))
+                dataModel = new DataModel(dataType, this);
+
+                nameToDataModel[dataType.FullName] = dataModel;
+                dataModel.IsEnum = dataType.IsEnum;
+
+                foreach (var targetAttibute in dataType.GetCustomAttributes<TargetAttribute>())
                 {
-                    dataModel.Targets.Add(targetAttibute.Name);
+                    if (!dataModel.Targets.Contains(targetAttibute.Name))
+                    {
+                        dataModel.Targets.Add(targetAttibute.Name);
+                    }
                 }
+
+                return;
+            }
+            else
+            {
+                dataModel = nameToDataModel[dataType.FullName];
             }
 
             var dataModelAttribute = dataType.GetCustomAttribute<DataModelAttribute>();
