@@ -51,6 +51,6 @@ namespace Neon.CodeGen
         /// or just to customize how your data is persistedd.
         /// </para>
         /// </summary>
-        public string EntityType { get; set; }
+        public string Name { get; set; }
     }
 }

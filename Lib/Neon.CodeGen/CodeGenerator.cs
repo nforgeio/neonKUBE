@@ -651,7 +651,7 @@ namespace Neon.CodeGen
 
             if (dataModelAttribute != null)
             {
-                dataModel.EntityType = dataModelAttribute.EntityType ?? dataType.FullName;
+                dataModel.EntityType = dataModelAttribute.Name ?? dataType.FullName;
             }
 
             if (string.IsNullOrEmpty(dataModel.EntityType))
