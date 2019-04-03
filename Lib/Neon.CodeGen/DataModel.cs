@@ -95,10 +95,10 @@ namespace Neon.CodeGen
         public DataModel BaseModel { get; set;}
 
         /// <summary>
-        /// Returns the entity persistence settings if the data model was tagged with <c>[Persisted]</c>
+        /// Returns the entity persistence settings if the data model was tagged with <c>[Persistedable]</c>
         /// or <c>null</c> otherwise.
         /// </summary>
-        public PersistedAttribute Persisted { get; set; }
+        public PersistableAttribute IsPersistable { get; set; }
 
         /// <summary>
         /// Indicates whether the current data model is derived from another model.

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    EntitySerializationHelper.cs
+// FILE:	    TypeSerializationHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -40,7 +40,7 @@ namespace Neon.Data
     /// Serialization related helpers used by the code generated
     /// by the <b>Neon.CodeGen</b> library.
     /// </summary>
-    public static class EntitySerializationHelper
+    public static class TypeSerializationHelper
     {
         private static readonly JsonSerializerSettings settings;
 
@@ -55,7 +55,7 @@ namespace Neon.Data
         /// </summary>
         public static JsonSerializer Serializer { get; private set; }
 
-        static EntitySerializationHelper()
+        static TypeSerializationHelper()
         {
             settings = new JsonSerializerSettings()
             {

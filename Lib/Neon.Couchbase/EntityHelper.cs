@@ -57,7 +57,7 @@ namespace Neon.Data
         // Implementation
 
         /// <summary>
-        /// Caches the entity properties defined for an <see cref="IPersistedEntity"/>.
+        /// Caches the entity properties defined for an <see cref="IPersistableType"/>.
         /// </summary>
         private static Dictionary<System.Type, EntityPropertyInfo> entityProperties = new Dictionary<System.Type, EntityPropertyInfo>();
 
@@ -237,7 +237,7 @@ namespace Neon.Data
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <returns>The <see cref="EntityPropertyInfo"/>.</returns>
         private static EntityPropertyInfo GetEntityPropertyInfo<TEntity>()
-            where TEntity : IPersistedEntity
+            where TEntity : IPersistableType
         {
             EntityPropertyInfo info;
 
@@ -343,7 +343,7 @@ namespace Neon.Data
         /// </note>
         /// </remarks>
         public static IEnumerable<string> GetEntityProperties<TEntity>()
-            where TEntity : IPersistedEntity
+            where TEntity : IPersistableType
         {
             return GetEntityPropertyInfo<TEntity>().Properties;
         }
@@ -369,7 +369,7 @@ namespace Neon.Data
         /// </note>
         /// </remarks>
         public static string GetEntitySelectProperties<TEntity>()
-            where TEntity : IPersistedEntity
+            where TEntity : IPersistableType
         {
             return GetEntityPropertyInfo<TEntity>().Select;
         }

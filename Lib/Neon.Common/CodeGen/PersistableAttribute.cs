@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PersistedAttribute.cs
+// FILE:	    PersistableAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -69,7 +69,7 @@ namespace Neon.CodeGen
     /// </code>
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class PersistedAttribute : Attribute
+    public class PersistableAttribute : Attribute
     {
         /// <summary>
         /// This property combined with <see cref="GetKeyString"/> is used

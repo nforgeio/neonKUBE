@@ -47,37 +47,37 @@ namespace Test.Neon.Models.Definitions
         string ChildProperty { get; set; }
     }
 
-    [Persisted]
+    [Persistable]
     public interface Person
     {
-        [PersistedKey]
+        [PersistableKey]
         int Id { get; set; }
         string Name { get; set; }
         int Age { get; set; }
         byte[] Data { get; set; }
     }
 
-    [Persisted]
+    [Persistable]
     public interface City
     {
-        [PersistedKey]
+        [PersistableKey]
         string Name { get; set; }
         int Population { get; set; }
     }
 
-    [Persisted]
+    [Persistable]
     public interface Country
     {
-        [PersistedKey]
+        [PersistableKey]
         string Name { get; set; }
         int Population { get; set; }
     }
 
-    [Persisted]
+    [Persistable]
     [DataModel(Name = "custom-person")]
     public interface CustomPerson
     {
-        [PersistedKey]
+        [PersistableKey]
         [JsonProperty(PropertyName = "my-id")]
         int Id { get; set; }
         [JsonProperty(PropertyName = "my-name")]

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IGeneratedEntity.cs
+// FILE:	     IGeneratedType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -40,7 +40,7 @@ namespace Neon.Data
     /// Used by the <b>Neon.CodeGen</b> assembly to indicate that a class
     /// was generated as a data model.
     /// </summary>
-    public interface IGeneratedEntity
+    public interface  IGeneratedType
     {
         /// <summary>
         /// Returns the string identifying the entity type.

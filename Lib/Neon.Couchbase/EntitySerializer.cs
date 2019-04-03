@@ -52,7 +52,7 @@ using Neon.Time;
 namespace Couchbase
 {
     /// <summary>
-    /// Implements a Couchbase serializer that's capable of handling <see cref="IPersistedEntity"/>
+    /// Implements a Couchbase serializer that's capable of handling <see cref="IPersistableType"/>
     /// based objects in addition to plain-old-objects.
     /// </summary>
     internal class EntitySerializer : ITypeSerializer
@@ -78,7 +78,7 @@ namespace Couchbase
         {
             var entityType = typeof(T);
 
-            if (entityType.Implements<IGeneratedEntity>())
+            if (entityType.Implements< IGeneratedType>())
             {
                 var jObject = defaultSerializer.Deserialize<JObject>(buffer, offset, length);
 
@@ -87,7 +87,7 @@ namespace Couchbase
                     return default(T);
                 }
 
-                return GeneratedEntityFactory.CreateFrom<T>(jObject);
+                return GeneratedTypeFactory.CreateFrom<T>(jObject);
             }
             else
             {
@@ -100,13 +100,13 @@ namespace Couchbase
         {
             var entityType = typeof(T);
 
-            if (entityType.Implements<IGeneratedEntity>())
+            if (entityType.Implements< IGeneratedType>())
             {
-                // Custom IGeneratedEntity
+                // Custom  IGeneratedType
 
                 var jObject = defaultSerializer.Deserialize<JObject>(stream);
 
-                return (T)GeneratedEntityFactory.CreateFrom<T>(jObject);
+                return (T)GeneratedTypeFactory.CreateFrom<T>(jObject);
             }
             else
             {
@@ -121,11 +121,11 @@ namespace Couchbase
         {
             var entityType = obj.GetType();
 
-            var generatedDataModel = obj as IGeneratedEntity;
+            var generatedDataModel = obj as  IGeneratedType;
 
             if (generatedDataModel != null)
             {
-                // Custom IGeneratedEntity
+                // Custom  IGeneratedType
 
                 var jObject = generatedDataModel.__Save();
 

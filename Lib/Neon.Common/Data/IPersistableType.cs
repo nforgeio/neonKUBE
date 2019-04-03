@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IPersistedEntity.cs
+// FILE:	    IPersistableType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,9 +27,9 @@ namespace Neon.Data
 {
     /// <summary>
     /// Non generic interface describing an entity that can be persisted to a database.
-    /// See <see cref="IPersistedEntity{T}"/> for more information.
+    /// See <see cref="IPersistableType{T}"/> for more information.
     /// </summary>
-    public interface IPersistedEntity
+    public interface IPersistableType
     {
         /// <summary>
         /// <para>
@@ -74,7 +74,7 @@ namespace Neon.Data
     /// </summary>
     /// <remarks>
     /// <para>
-    /// All entities must implement the <see cref="IPersistedEntity.__ET"/> property such that it returns
+    /// All entities must implement the <see cref="IPersistableType.__ET"/> property such that it returns
     /// the bucket unique string that identifies the entity type.  This string will be
     /// used to distinguish entity types within a Couchbase bucket.
     /// </para>
@@ -90,12 +90,12 @@ namespace Neon.Data
     /// type prefix for brevity,
     /// </para>
     /// <para>
-    /// As a convention, many <see cref="IPersistedEntity{T}"/> implementations also have a <c>static</c>
+    /// As a convention, many <see cref="IPersistableType{T}"/> implementations also have a <c>static</c>
     /// <b>GetKey(...)</b> method that returns the Couchbase key for an entity based on parameters passed.
     /// </para>
     /// </remarks>
-    public interface IPersistedEntity<T> : IPersistedEntity
-        where T : class, IGeneratedEntity, new()
+    public interface IPersistableType<T> : IPersistableType
+        where T : class,  IGeneratedType, new()
     {
     }
 }

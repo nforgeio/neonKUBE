@@ -86,7 +86,7 @@ namespace Neon.CodeGen
 
         /// <summary>
         /// Optionally generate generated database persistance related code for
-        /// data models tagged with <c>[Persisted]</c>.
+        /// data models tagged with <c>[Persistable]</c>.
         /// </summary>
         public bool Persisted { get; set; } = false;
 

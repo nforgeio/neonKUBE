@@ -134,12 +134,12 @@ namespace TestCodeGen.Couchbase
                 Population = 12345
             };
 
-            var opResult = await bucket.InsertAsync(city);
+            var result = await bucket.InsertAsync(city.GetKey(), city);
 
             //-----------------------------------------------------------------
             // Query for the people and verify
 
-            var peopleQuery = (from doc in context.Query<Person>() select doc).ConsistentWith(MutationState.From(opResult.Document));
+            var peopleQuery = (from doc in context.Query<Person>() select doc); // .ConsistentWith(MutationState.From(result.Document));
             var people      = peopleQuery.ToList();
 
             Assert.Equal(2, people.Count);
@@ -176,7 +176,7 @@ namespace TestCodeGen.Couchbase
             Assert.Equal("bar", poo.Foo);
 
             //-----------------------------------------------------------------
-            // Extra credit #1: Verify that [PersistedEntity.DeepClone()] works.
+            // Extra credit #1: Verify that [DeepClone()] works.
 
             var clone = jack.DeepClone();
 
@@ -246,7 +246,7 @@ namespace TestCodeGen.Couchbase
                 Population = 12345
             };
 
-            var opResult = await bucket.InsertAsync(city);
+            var result = await bucket.InsertAsync(city.GetKey(), city);
 
             // $todo(jeff.lill):
             //
@@ -260,7 +260,7 @@ namespace TestCodeGen.Couchbase
             //-----------------------------------------------------------------
             // Query for the people and verify
 
-            var peopleQuery = (from doc in context.Query<CustomPerson>() select doc).ConsistentWith(MutationState.From(opResult.Document));
+            var peopleQuery = (from doc in context.Query<CustomPerson>() select doc); //.ConsistentWith(MutationState.From(result.Document));
             var people      = peopleQuery.ToList();
 
             Assert.Equal(2, people.Count);
@@ -297,7 +297,7 @@ namespace TestCodeGen.Couchbase
             Assert.Equal("bar", poo.Foo);
 
             //-----------------------------------------------------------------
-            // Extra credit #1: Verify that [PersistedEntity.DeepClone()] works.
+            // Extra credit #1: Verify that [DeepClone()] works.
 
             var clone = jack.DeepClone();
 
