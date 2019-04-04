@@ -161,6 +161,7 @@ if (-not $nobuild)
 
 PublishCore "Tools\neon-cli\neon-cli.csproj"        "neon"
 PublishCore "Tools\neon-build\neon-build.csproj"    "neon-build"
+PublishCore "Tools\unix-text\unix-text.csproj"      "unix-text"
 
 if ($installer)
 {
