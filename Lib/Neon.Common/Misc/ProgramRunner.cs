@@ -279,9 +279,9 @@ namespace Neon.Common
 
                         return new ExecuteResponse()
                         {
-                            ExitCode = exitCode,
+                            ExitCode   = exitCode,
                             OutputText = sbOut.ToString(),
-                            ErrorText = sbErr.ToString()
+                            ErrorText  = sbErr.ToString()
                         };
                     }
                 }

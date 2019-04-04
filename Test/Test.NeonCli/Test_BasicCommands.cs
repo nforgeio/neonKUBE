@@ -42,14 +42,20 @@ namespace Test.NeonCli
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Base()
         {
-            // Verify that base command returns some help.
-
             using (var runner = new ProgramRunner())
             {
+                // Verify that base command returns some help.
+
                 var result = runner.Execute(Program.Main);
 
                 Assert.Equal(0, result.ExitCode);
                 Assert.Contains("neonKUBE Management Tool: neon", result.OutputText);
+
+                // Verify that we see an error for an unrecognized command.,
+
+                result = runner.Execute(Program.Main, "invalid-command");
+
+                Assert.NotEqual(0, result.ExitCode);
             }
         }
 

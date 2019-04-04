@@ -77,6 +77,7 @@ COMMAND SUMMARY:
     neon help               COMMAND
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster setup      [CLUSTER-DEF]
+    neon couchbase          COMMNAND
     neon generate models    [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
     neon login              COMMAND
     neon logout
@@ -209,6 +210,9 @@ OPTIONS:
                     new ClusterPrepareCommand(),
                     new ClusterSetupCommand(),
                     new ClusterVerifyCommand(),
+                    new CouchbaseCommand(),
+                    new CouchbaseQueryCommand(),
+                    new CouchbaseUpsertCommand(),
                     new GenerateCommand(),
                     new GenerateModelsCommand(),
                     new LoginCommand(),

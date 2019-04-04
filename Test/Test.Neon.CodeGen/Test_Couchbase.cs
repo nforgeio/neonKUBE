@@ -72,12 +72,6 @@ namespace TestCodeGen.Couchbase
 
             bucket  = couchbase.Bucket;
             context = new BucketContext(bucket);
-
-            // $todo(jeff.lill):
-            //
-            //  https://github.com/nforgeio/neonKUBE/issues/475
-
-            // bucket.Query<object>($"create index t on `{bucket.Name}`(__T);");
         }
 
         [Fact]
