@@ -499,14 +499,14 @@ namespace TestCodeGen
         }
 
         /// <summary>
-        /// Returns the value of the wrapped entity's <b>EntityType</b> constant.
+        /// Returns the value of the wrapped entity's <b>Persisted</b> constant.
         /// </summary>
-        public string EntityType
+        public string PersistedType
         {
             get
             {
                 var fields   = instanceType.GetFields(BindingFlags.Static | BindingFlags.Public);
-                var constant = fields.Single(f => f.IsLiteral && f.Name == "EntityType");
+                var constant = fields.Single(f => f.IsLiteral && f.Name == "PersistedType");
 
                 return (string)constant.GetValue(null);
             }

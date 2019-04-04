@@ -66,7 +66,7 @@ namespace Neon.Data
         /// <summary>
         /// Identifies the entity type.
         /// </summary>
-        string __ET { get; }
+        string __T { get; }
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ namespace Neon.Data
     /// </summary>
     /// <remarks>
     /// <para>
-    /// All entities must implement the <see cref="IPersistableType.__ET"/> property such that it returns
+    /// All entities must implement the <see cref="IPersistableType.__T"/> property such that it returns
     /// the bucket unique string that identifies the entity type.  This string will be
     /// used to distinguish entity types within a Couchbase bucket.
     /// </para>

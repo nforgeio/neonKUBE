@@ -28,7 +28,7 @@ namespace Neon.CodeGen
     /// </summary>
     internal class DataModel
     {
-        private string entityType;
+        private string persistedType;
 
         /// <summary>
         /// Constructor.
@@ -55,19 +55,19 @@ namespace Neon.CodeGen
         /// <summary>
         /// Optional type identifier to be used for persisting the type.
         /// </summary>
-        public string EntityType
+        public string PersistedType
         {
-            get => entityType;
+            get => persistedType;
 
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    entityType = SourceType.FullName;
+                    persistedType = SourceType.FullName;
                 }
                 else
                 {
-                    entityType = value.Trim();
+                    persistedType = value.Trim();
                 }
             }
         }

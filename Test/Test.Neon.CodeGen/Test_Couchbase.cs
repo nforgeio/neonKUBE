@@ -167,7 +167,7 @@ namespace TestCodeGen.Couchbase
             //-----------------------------------------------------------------
             // Query for documents that don't exist and verify.
 
-            var rawResults   = await bucket.QueryAsync<object>($"select * from `{bucket.Name}` where __ET=\"Test.Neon.Models.Definitions.Country\";");
+            var rawResults   = await bucket.QueryAsync<object>($"select * from `{bucket.Name}` where __T=\"Test.Neon.Models.Definitions.Country\";");
             var countryQuery = from doc in context.Query<Country>() select doc;
 
             Assert.Empty(rawResults.ToList());
@@ -288,7 +288,7 @@ namespace TestCodeGen.Couchbase
             //-----------------------------------------------------------------
             // Query for documents that don't exist and verify.
 
-            var rawResults   = await bucket.QueryAsync<object>($"select * from `{bucket.Name}` where __ET=\"Test.Neon.Models.Definitions.Country\";");
+            var rawResults   = await bucket.QueryAsync<object>($"select * from `{bucket.Name}` where __T=\"Test.Neon.Models.Definitions.Country\";");
             var countryQuery = from doc in context.Query<Country>() select doc;
 
             Assert.Empty(rawResults.ToList());

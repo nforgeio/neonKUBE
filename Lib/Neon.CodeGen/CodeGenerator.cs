@@ -651,12 +651,12 @@ namespace Neon.CodeGen
 
             if (dataModelAttribute != null)
             {
-                dataModel.EntityType = dataModelAttribute.Name ?? dataType.FullName;
+                dataModel.PersistedType = dataModelAttribute.Name ?? dataType.FullName;
             }
 
-            if (string.IsNullOrEmpty(dataModel.EntityType))
+            if (string.IsNullOrEmpty(dataModel.PersistedType))
             {
-                dataModel.EntityType = dataType.FullName;
+                dataModel.PersistedType = dataType.FullName;
             }
 
             if (dataModel.IsEnum)
@@ -1154,7 +1154,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"            {{");
                         writer.WriteLine($"                var parameter = Expression.Parameter(typeof({className}), \"p\");");
                         writer.WriteLine();
-                        writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__ET\"), Expression.Constant({className}.EntityType)), parameter);");
+                        writer.WriteLine($"                whereExpression = Expression.Lambda<Func<{className}, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, \"__T\"), Expression.Constant({className}.PersistedType)), parameter);");
                         writer.WriteLine($"            }}");
                         writer.WriteLine();
                         writer.WriteLine($"            //-----------------------------------------------------------------");
@@ -1176,7 +1176,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Static members:");
                     writer.WriteLine();
-                    writer.WriteLine($"        public const string EntityType = \"{dataModel.EntityType}\";");
+                    writer.WriteLine($"        public const string PersistedType = \"{dataModel.PersistedType}\";");
 
                     if (genEntity)
                     {
@@ -1285,7 +1285,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                return false;");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            return instance.__ET == {className}.EntityType;");
+                    writer.WriteLine($"            return instance.__T == {className}.PersistedType;");
                     writer.WriteLine($"        }}");
 
                     // For data models tagged with [Persistable], we need to generate the static GetKey(...) method.
@@ -1299,7 +1299,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the entity.</param>");
                         writer.WriteLine($"        public static string CreateKey(params object[] args)");
                         writer.WriteLine($"        {{");
-                        writer.WriteLine($"            return TypeSerializationHelper.CreateEntityKey(\"{dataModel.EntityType}\", args);");
+                        writer.WriteLine($"            return TypeSerializationHelper.CreateEntityKey(\"{dataModel.PersistedType}\", args);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1561,19 +1561,19 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    // Load and verify the [__ET] property if we're not loading a derived class.
+                    // Load and verify the [__T] property if we're not loading a derived class.
 
                     writer.WriteLine();
                     writer.WriteLine($"            if (!isDerived)");
                     writer.WriteLine($"            {{");
-                    writer.WriteLine($"                property = this.__JObject.Property(\"__ET\");");
+                    writer.WriteLine($"                property = this.__JObject.Property(\"__T\");");
                     writer.WriteLine($"                if (property == null)");
                     writer.WriteLine($"                {{");
-                    writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__ET] property is required when deserializing.\");");
+                    writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__T] property is required when deserializing.\");");
                     writer.WriteLine($"                }}");
                     writer.WriteLine($"                else");
                     writer.WriteLine($"                {{");
-                    writer.WriteLine($"                    this.__ET = (string)property.Value;");
+                    writer.WriteLine($"                    this.__T = (string)property.Value;");
                     writer.WriteLine($"                }}");
                     writer.WriteLine($"            }}");
 
@@ -1666,9 +1666,9 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    // Serialize the [__ET] property
+                    // Serialize the [__T] property
 
-                    writer.WriteLine($"            this.__JObject[\"__ET\"] = EntityType;");
+                    writer.WriteLine($"            this.__JObject[\"__T\"] = PersistedType;");
 
                     writer.WriteLine();
                     writer.WriteLine($"            return this.__JObject;");
@@ -1832,7 +1832,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Identifies the entity type.");
                     writer.WriteLine($"        /// </summary>");
-                    writer.WriteLine($"        public string __ET");
+                    writer.WriteLine($"        public string __T");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            get");
                     writer.WriteLine($"            {{");
@@ -1841,14 +1841,14 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                     return cachedET;");
                     writer.WriteLine($"                 }}");
                     writer.WriteLine();
-                    writer.WriteLine($"                 cachedET = (string)__JObject[\"__ET\"];");
+                    writer.WriteLine($"                 cachedET = (string)__JObject[\"__T\"];");
                     writer.WriteLine();
                     writer.WriteLine($"                 if (cachedET != null)");
                     writer.WriteLine($"                 {{");
                     writer.WriteLine($"                     return cachedET;");
                     writer.WriteLine($"                 }}");
                     writer.WriteLine();
-                    writer.WriteLine($"                 return EntityType;");
+                    writer.WriteLine($"                 return PersistedType;");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
                     writer.WriteLine($"            set => cachedET = value;");

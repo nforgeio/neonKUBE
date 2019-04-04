@@ -45,7 +45,7 @@ namespace Neon.Data
         /// <summary>
         /// Returns the string identifying the entity type.
         /// </summary>
-        string __ET { get; }
+        string __T { get; }
 
         /// <summary>
         /// Renders the instance as JSON text, optionally formatting the output.

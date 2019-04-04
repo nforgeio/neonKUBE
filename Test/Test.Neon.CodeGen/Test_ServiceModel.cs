@@ -1177,7 +1177,7 @@ namespace TestCodeGen.ServiceModel
                         Assert.Equal("/api/v1/frombody/Test1", requestPath);
                         Assert.Equal("", requestQueryString);
                         Assert.Equal("application/json; charset=utf-8", requestContentType);
-                        Assert.Equal("{\"Name\":\"Joe Bloe\",\"Age\":45,\"Enum\":\"Two\",\"__ET\":\"TestCodeGen.ServiceModel.SimpleData\"}", requestBody);
+                        Assert.Equal("{\"Name\":\"Joe Bloe\",\"Age\":45,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.ServiceModel.SimpleData\"}", requestBody);
 
                         // Call: Test2()
 
@@ -1186,7 +1186,7 @@ namespace TestCodeGen.ServiceModel
                         Assert.Equal("/api/v1/frombody/Test2", requestPath);
                         Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
                         Assert.Equal("application/json; charset=utf-8", requestContentType);
-                        Assert.Equal("{\"Name\":\"Joe Bloe\",\"Age\":45,\"Enum\":\"Two\",\"__ET\":\"TestCodeGen.ServiceModel.SimpleData\"}", requestBody);
+                        Assert.Equal("{\"Name\":\"Joe Bloe\",\"Age\":45,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.ServiceModel.SimpleData\"}", requestBody);
 
                         // Call: Test3()
 
