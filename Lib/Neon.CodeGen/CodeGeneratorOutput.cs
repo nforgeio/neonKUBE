@@ -48,7 +48,7 @@ namespace Neon.CodeGen
         /// Appends an error message to the output.
         /// </summary>
         /// <param name="message">The message.</param>
-        public void Error(string message)
+        internal void Error(string message)
         {
             if (string.IsNullOrEmpty(message))
             {

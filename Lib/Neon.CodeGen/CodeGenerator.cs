@@ -311,13 +311,37 @@ namespace Neon.CodeGen
 
                 var serviceAttribute = type.GetCustomAttribute<ServiceModelAttribute>();
 
+                if (serviceAttribute == null)
+                {
+                    LoadDataModel(type);
+                }
+            }
+
+            // Pass 3: Scan the service models.
+
+            foreach (var type in assembly.GetTypes()
+                .Where(t => t.IsPublic)
+                .Where(t => t.IsInterface || t.IsEnum))
+            {
+                if (Settings.SourceNamespace != null && !type.FullName.StartsWith(Settings.SourceNamespace))
+                {
+                    // Ignore any types that aren't in specified source namespace.
+
+                    continue;
+                }
+
+                if (type.GetCustomAttribute<NoCodeGenAttribute>() != null)
+                {
+                    // Ignore any types tagged with [NoCodeGen].
+
+                    continue;
+                }
+
+                var serviceAttribute = type.GetCustomAttribute<ServiceModelAttribute>();
+
                 if (serviceAttribute != null)
                 {
                     LoadServiceModel(type);
-                }
-                else
-                {
-                    LoadDataModel(type);
                 }
             }
         }
@@ -588,7 +612,7 @@ namespace Neon.CodeGen
 
                     if (!IsValidMethodType(methodParameter.ParameterInfo.ParameterType, methodParameter.Pass))
                     {
-                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with unsupported type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody].");
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with complex type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody].");
                     }
 
                     serviceMethod.Parameters.Add(methodParameter);
