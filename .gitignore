@@ -86,3 +86,4 @@ wwwroot/
 **/obj/**
 GeneratedModels.cs
 GeneratedEntities.cs
+GeneratedTypes.cs
