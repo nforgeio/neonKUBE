@@ -137,6 +137,16 @@ style design conventions.  See this GitHub issue for more information:
             var codeGenerator = new CodeGenerator(settings);
             var output        = codeGenerator.Generate(assembly);
 
+            if (output.HasErrors)
+            {
+                foreach (var error in output.Errors)
+                {
+                    Console.Error.WriteLine(error);
+                }
+
+                Program.Exit(1);
+            }
+
             if (!string.IsNullOrEmpty(outputPath))
             {
                 // Don't write the output file if its contents are already
