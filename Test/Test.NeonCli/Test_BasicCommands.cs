@@ -40,13 +40,16 @@ namespace Test.NeonCli
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void None()
+        public void Base()
         {
+            // Verify that base command returns some help.
+
             using (var runner = new ProgramRunner())
             {
                 var result = runner.Execute(Program.Main);
 
                 Assert.Equal(0, result.ExitCode);
+                Assert.Contains("neonKUBE Management Tool: neon", result.OutputText);
             }
         }
 
@@ -56,35 +59,35 @@ namespace Test.NeonCli
         {
             using (var runner = new ProgramRunner())
             {
-                //var result = runner.Execute(Program.Main, "version");
-                //Assert.Equal(0, result.ExitCode);
-                //Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
+                var result = runner.Execute(Program.Main, "version");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
 
-                //result = runner.Execute(Program.Main, "version", "-n");
-                //Assert.Equal(0, result.ExitCode);
-                //Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
-                //Assert.DoesNotContain('\n', result.OutputText);
+                result = runner.Execute(Program.Main, "version", "-n");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
+                Assert.DoesNotContain('\n', result.OutputText);
 
-                //result = runner.Execute(Program.Main, "version", "-n", "--git");
-                //Assert.Equal(0, result.ExitCode);
-                //Assert.Equal($"{Build.ProductVersion}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
-                //Assert.DoesNotContain('\n', result.OutputText);
+                result = runner.Execute(Program.Main, "version", "-n", "--git");
+                Assert.Equal(0, result.ExitCode);
+                Assert.Equal($"{Build.ProductVersion}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
+                Assert.DoesNotContain('\n', result.OutputText);
 
-                //result = runner.Execute(Program.Main, "version", $"--minimum={Program.Version}");
-                //Assert.Equal(0, result.ExitCode);
+                result = runner.Execute(Program.Main, "version", $"--minimum={Program.Version}");
+                Assert.Equal(0, result.ExitCode);
 
-                //result = runner.Execute(Program.Main, "version", $"--minimum=0");
-                //Assert.Equal(0, result.ExitCode);
+                result = runner.Execute(Program.Main, "version", $"--minimum=0");
+                Assert.Equal(0, result.ExitCode);
 
-                //result = runner.Execute(Program.Main, "version", $"--minimum=64000.0.0");
-                //Assert.NotEqual(0, result.ExitCode);
+                result = runner.Execute(Program.Main, "version", $"--minimum=64000.0.0");
+                Assert.NotEqual(0, result.ExitCode);
 
                 var curVersion   = SemanticVersion.Parse(Program.Version);
                 var newerVersion = SemanticVersion.Create(curVersion.Major, curVersion.Minor, curVersion.Patch + 1, curVersion.Build, curVersion.Prerelease);
 
                 Assert.True(newerVersion > curVersion);
 
-                var result = runner.Execute(Program.Main, "version", $"--minimum={newerVersion}");
+                result = runner.Execute(Program.Main, "version", $"--minimum={newerVersion}");
                 Assert.NotEqual(0, result.ExitCode);
             }
         }
