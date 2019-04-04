@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CouchbaseExtensions.Bucket.cs
+// FILE:	    CouchbaseExtensions.Bucket.Safe.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -156,7 +156,7 @@ namespace Couchbase
         /// <summary>
         /// Throws an exception if a document operation was not successful.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="result">The operation result.</param>
         /// <param name="replicateOrPersist">Indicates whether the operation has replication or persistance constraints.</param>
         public static void VerifySuccess<T>(IDocumentResult<T> result, bool replicateOrPersist)
@@ -182,7 +182,7 @@ namespace Couchbase
         /// <summary>
         /// Throws an exception if a query operation was not successful.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="result">The operation result.</param>
         /// <exception cref="CouchbaseResponseException">Thrown for errors.</exception>
         /// <exception cref="TransientException">Thrown if the error is potentially transient and the operation should be retried.</exception>
@@ -411,7 +411,7 @@ namespace Couchbase
         /// Attempts to retrieve a key value, returning <c>null</c> if it doesn't exist rather
         /// than throwing an exception.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <returns>The value or <c>null</c>.</returns>
@@ -434,7 +434,7 @@ namespace Couchbase
         /// Attemps to retrieve a document, returning <c>null</c> if it doesn't exist rather
         /// than throwing an exception.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <returns>The value or <c>null</c>.</returns>
@@ -456,7 +456,7 @@ namespace Couchbase
         /// <summary>
         /// Gets a key and locks it for a specified time period.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="expiration">The interval after which the document will be locked.  This defaults to 15 seconds and the maximum supported by the server is 30 seconds.</param>
@@ -478,7 +478,7 @@ namespace Couchbase
         /// <summary>
         /// Gets a key and updates its expiry with a new value.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="expiration">The optional new expiry timespan.</param>
@@ -495,7 +495,7 @@ namespace Couchbase
         /// <summary>
         /// Gets a document and updates its expiry with a new value.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="expiration">The optional new expiry timespan.</param>
@@ -513,7 +513,7 @@ namespace Couchbase
         /// Gets a key value from the database, throwing an exception if the key does not exist
         /// or there was another error.  
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <returns>The value.</returns>
@@ -530,7 +530,7 @@ namespace Couchbase
         /// Gets a document, throwing an exception if the document does not exist or there
         /// was another error.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="keys">The key.</param>
         /// <param name="expiration">The optional new expiry timespan.</param>
@@ -548,7 +548,7 @@ namespace Couchbase
         /// Gets a set of documents, throwing an exception if any document does not exist or there
         /// was another error.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="keys">The keys.</param>
         /// <returns>The documents.</returns>
@@ -575,7 +575,7 @@ namespace Couchbase
         /// Gets a key value from a Couchbase replica node, throwing an exception if the key does
         /// not exist or there was another error.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <returns>The value.</returns>
@@ -620,7 +620,7 @@ namespace Couchbase
         /// Inserts a key, throwing an exception if the key already exists or there
         /// was another error.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
@@ -640,7 +640,7 @@ namespace Couchbase
         /// was another error.  Note that 30 seconds is the maximum expiration TTL supported by the
         /// server.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
@@ -660,7 +660,7 @@ namespace Couchbase
         /// Inserts a document, throwing an exception if the document already exists or there
         /// was another error.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="document">The document.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
@@ -678,7 +678,7 @@ namespace Couchbase
         /// Inserts multiple documents, throwing an exception if any of the documents already exists or there
         /// was another error.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="documents">The documents.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
@@ -697,44 +697,40 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Inserts an entity, throwing an exception if the entity already exists or there
+        /// Inserts an <see cref="IPersistableType"/> document, throwing an exception if the document already exists or there
         /// was another error.
         /// </summary>
-        /// <typeparam name="T">The entity type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The entity.</param>
+        /// <param name="persistable">The document.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The operation result</returns>
-        public static async Task<IOperationResult<T>> InsertSafeAsync<T>(this IBucket bucket, T entity, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        public static async Task<IOperationResult<T>> InsertSafeAsync<T>(this IBucket bucket, T persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T: class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(entity != null);
-
-            var result = await bucket.InsertAsync<T>(entity.GetKey(), entity, replicateTo, persistTo);
+            var result = await bucket.InsertAsync<T>(persistable.GetKey(), persistable, replicateTo, persistTo);
 
             VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             return result;
         }
 
         /// <summary>
-        /// Inserts an entity with an expiration TTL, throwing an exception if the key already exists or there
+        /// Inserts an <see cref="IPersistableType"/> document, with an expiration TTL, throwing an exception if the key already exists or there
         /// was another error.  Note that 30 seconds is the maximum expiration TTL supported by the
         /// server.
         /// </summary>
-        /// <typeparam name="T">The entity type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The entity.</param>
+        /// <param name="persistable">The document.</param>
         /// <param name="expiration">The expiration TTL.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult<T>> InsertSafeAsync<T>(this IBucket bucket, T entity, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        public static async Task<IOperationResult<T>> InsertSafeAsync<T>(this IBucket bucket, T persistable, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T: class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(entity != null);
-
-            var result = await bucket.InsertAsync<T>(entity.GetKey(), entity, expiration, replicateTo, persistTo);
+            var result = await bucket.InsertAsync<T>(persistable.GetKey(), persistable, expiration, replicateTo, persistTo);
 
             VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             return result;
@@ -956,18 +952,18 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Removes an entity, throwning an exception if there were any errors.
+        /// Removes an <see cref="IPersistableType"/> document,  throwning an exception if there were any errors.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The entity to be deleted.</param>
+        /// <param name="persistable">The document to be deleted.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult> RemoveSafeAsync(this IBucket bucket, IPersistableType entity, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        public static async Task<IOperationResult> RemoveSafeAsync(this IBucket bucket, IPersistableType persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
-            Covenant.Requires<ArgumentNullException>(entity != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null);
 
-            var result = await bucket.RemoveAsync(entity.GetKey(), replicateTo, persistTo);
+            var result = await bucket.RemoveAsync(persistable.GetKey(), replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             return result;
@@ -976,7 +972,7 @@ namespace Couchbase
         /// <summary>
         /// Replaces an existing document, throwing an exception if there were any errors.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="document">The replacement document.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
@@ -993,7 +989,7 @@ namespace Couchbase
         /// <summary>
         /// Replaces multiple documents, throwing an exception if there were any errors.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="documents">The replacement documents.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
@@ -1015,7 +1011,7 @@ namespace Couchbase
         /// <summary>
         /// Replaces a key value, throwing an exception if there were any errors.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The replacement value.</param>
@@ -1034,7 +1030,7 @@ namespace Couchbase
         /// Replaces a key value, optionally specifying a CAS value and throwing an exception
         /// if there were any errors.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The replacement value.</param>
@@ -1083,54 +1079,54 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Replaces an entity, throwing an exception if there were any errors.
+        /// Removes an <see cref="IPersistableType"/> document, throwing an exception if there were any errors.
         /// </summary>
-        /// <typeparam name="T">The entity type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The replacement entity.</param>
+        /// <param name="persistable">The replacement document.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult<T>> ReplaceSafeAsync<T>(this IBucket bucket, T entity, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        public static async Task<IOperationResult<T>> ReplaceSafeAsync<T>(this IBucket bucket, T persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(entity != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null);
 
-            var result = await bucket.ReplaceAsync<T>(entity.GetKey(), entity, replicateTo, persistTo);
+            var result = await bucket.ReplaceAsync<T>(persistable.GetKey(), persistable, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             return result;
         }
 
         /// <summary>
-        /// Replaces an entity, optionally specifying a CAS value and throwing an exception
+        /// Removes an <see cref="IPersistableType"/> document, optionally specifying a CAS value and throwing an exception
         /// if there were any errors.
         /// </summary>
-        /// <typeparam name="T">The entity type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The replacement entity.</param>
+        /// <param name="persistable">The replacement document.</param>
         /// <param name="cas">The optional CAS value.</param>
         /// <param name="expiration">Optional expiration TTL.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, T entity, ulong? cas = null, TimeSpan? expiration = null, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, T persistable, ulong? cas = null, TimeSpan? expiration = null, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(entity != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null);
 
             IOperationResult<T> result;
 
             var replicateOrPersist = replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero;
-            var key                = entity.GetKey();
+            var key                = persistable.GetKey();
 
             if (cas.HasValue && expiration.HasValue)
             {
-                result = await bucket.ReplaceAsync<T>(key, entity, cas.Value, expiration.Value, replicateTo, persistTo);
+                result = await bucket.ReplaceAsync<T>(key, persistable, cas.Value, expiration.Value, replicateTo, persistTo);
             }
             else if (cas.HasValue)
             {
-                result = await bucket.ReplaceAsync<T>(key, entity, cas.Value, replicateTo, persistTo);
+                result = await bucket.ReplaceAsync<T>(key, persistable, cas.Value, replicateTo, persistTo);
             }
             else if (expiration.HasValue)
             {
@@ -1141,7 +1137,7 @@ namespace Couchbase
                 // whether it's possible to pass something like 0 or -1 as the CAS to
                 // disable CAS behavior.
 
-                var result1 = await bucket.ReplaceAsync<T>(key, entity, replicateTo, persistTo);
+                var result1 = await bucket.ReplaceAsync<T>(key, persistable, replicateTo, persistTo);
 
                 VerifySuccess<T>(result1, replicateOrPersist);
 
@@ -1152,7 +1148,7 @@ namespace Couchbase
             }
             else
             {
-                result = await bucket.ReplaceAsync<T>(key, entity, replicateTo, persistTo);
+                result = await bucket.ReplaceAsync<T>(key, persistable, replicateTo, persistTo);
             }
 
             VerifySuccess<T>(result, replicateOrPersist);
@@ -1174,17 +1170,17 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Touches an entity and updates its expiry, throwing an exception if there were errors.
+        /// Touches an <see cref="IPersistableType"/> document and updates its expiry, throwing an exception if there were errors.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The entity.</param>
+        /// <param name="persistable">The document.</param>
         /// <param name="expiration"></param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult> TouchSafeAsync(this IBucket bucket, IPersistableType entity, TimeSpan expiration)
+        public static async Task<IOperationResult> TouchSafeAsync(this IBucket bucket, IPersistableType persistable, TimeSpan expiration)
         {
-            Covenant.Requires<ArgumentNullException>(entity != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null);
 
-            var result = await bucket.TouchAsync(entity.GetKey(), expiration);
+            var result = await bucket.TouchAsync(persistable.GetKey(), expiration);
 
             VerifySuccess(result, replicateOrPersist: false);
             return result;
@@ -1206,17 +1202,17 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Unlocks an entity, throwing an exception if there were errors.
+        /// Unlocks an <see cref="IPersistableType"/> document, throwing an exception if there were errors.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The entity.</param>
+        /// <param name="persistable">The document.</param>
         /// <param name="cas">The CAS value.</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult> UnlockSafeAsync(this IBucket bucket, IPersistableType entity, ulong cas)
+        public static async Task<IOperationResult> UnlockSafeAsync(this IBucket bucket, IPersistableType persistable, ulong cas)
         {
-            Covenant.Requires<ArgumentNullException>(entity != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null);
 
-            var result = await bucket.UnlockAsync(entity.GetKey(), cas);
+            var result = await bucket.UnlockAsync(persistable.GetKey(), cas);
 
             VerifySuccess(result, replicateOrPersist: false);
             return result;
@@ -1225,7 +1221,7 @@ namespace Couchbase
         /// <summary>
         /// Inserts or updates a document, throwing an exception if there are errors.
         /// </summary>
-        /// <typeparam name="T">The document content type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="document">The document.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
@@ -1242,7 +1238,7 @@ namespace Couchbase
         /// <summary>
         /// Inserts or updates a key, throwing an exception if there are errors.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
@@ -1258,20 +1254,20 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Inserts or updates an entity, throwing an exception if there are errors.
+        /// Inserts or updates an <see cref="IPersistableType"/> document, throwing an exception if there are errors.
         /// </summary>
-        /// <typeparam name="T">The entity type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The entity.</param>
+        /// <param name="persistable">The document.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T entity, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T: class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(entity != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null);
 
-            var result = await bucket.UpsertAsync<T>(entity.GetKey(), entity, replicateTo, persistTo);
+            var result = await bucket.UpsertAsync<T>(persistable.GetKey(), persistable, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             return result;
@@ -1280,7 +1276,7 @@ namespace Couchbase
         /// <summary>
         /// Inserts or updates a key using a CAS, throwing an exception if there are errors.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
@@ -1301,23 +1297,23 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Inserts or updates an entity using a CAS, throwing an exception if there are errors.
+        /// Upserts an <see cref="IPersistableType"/> document, using a CAS, throwing an exception if there are errors.
         /// </summary>
-        /// <typeparam name="T">The entity type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The entity.</param>
+        /// <param name="persistable">The document.</param>
         /// <param name="cas">The CAS.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T entity, ulong cas, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, ulong cas, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
             // $todo(jeff.lill):
             //
             // Not so sure about setting [uint.MaxValue] as the expiration here.
 
-            var result = await bucket.UpsertAsync<T>(entity.GetKey(), entity, cas, uint.MaxValue, replicateTo, persistTo);
+            var result = await bucket.UpsertAsync<T>(persistable.GetKey(), persistable, cas, uint.MaxValue, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             return result;
@@ -1326,7 +1322,7 @@ namespace Couchbase
         /// <summary>
         /// Inserts or updates a key setting an expiration, throwing an exception if there are errors.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
@@ -1347,25 +1343,25 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Inserts or updates an entity setting an expiration, throwing an exception if there are errors.
+        /// Inserts or updates an <see cref="IPersistableType"/> document, setting an expiration and throwing an exception if there are errors.
         /// </summary>
-        /// <typeparam name="T">The entity type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The entity.</param>
+        /// <param name="persistable">The document.</param>
         /// <param name="expiration">The expiration.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T entity, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(entity != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null);
 
             // $todo(jeff.lill):
             //
             // Not so sure about setting [uint.MaxValue] as the expiration here.
 
-            var result = await bucket.UpsertAsync<T>(entity.GetKey(), entity, expiration, replicateTo, persistTo);
+            var result = await bucket.UpsertAsync<T>(persistable.GetKey(), persistable, expiration, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             return result;
@@ -1374,7 +1370,7 @@ namespace Couchbase
         /// <summary>
         /// Inserts or updates a key using a CAS and setting an expiration, throwing an exception if there are errors.
         /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
@@ -1392,20 +1388,20 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Inserts or updates an entity using a CAS and setting an expiration, throwing an exception if there are errors.
+        /// Inserts or updates an <see cref="IPersistableType"/> document, using a CAS and setting an expiration, throwing an exception if there are errors.
         /// </summary>
-        /// <typeparam name="T">The entity type.</typeparam>
+        /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="entity">The entity.</param>
+        /// <param name="persistable">The document.</param>
         /// <param name="cas">The CAS.</param>
         /// <param name="expiration">The expiration.</param>
         /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T entity, ulong cas, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, ulong cas, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
-            var result = await bucket.UpsertAsync<T>(entity.GetKey(), entity, cas, expiration, replicateTo, persistTo);
+            var result = await bucket.UpsertAsync<T>(persistable.GetKey(), persistable, cas, expiration, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             return result;

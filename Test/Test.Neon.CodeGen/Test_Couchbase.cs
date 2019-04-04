@@ -134,7 +134,16 @@ namespace TestCodeGen.Couchbase
                 Population = 12345
             };
 
-            var result = await bucket.InsertAsync(city.GetKey(), city);
+            var result = await bucket.InsertAsync(city);
+
+            // $todo(jeff.lill):
+            //
+            // I need to figure out how to have the query honor the mutation state
+            // returned in [opResult].  I'm going to hack a delay here in the meantime.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/479
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
 
             //-----------------------------------------------------------------
             // Query for the people and verify
@@ -246,14 +255,14 @@ namespace TestCodeGen.Couchbase
                 Population = 12345
             };
 
-            var result = await bucket.InsertAsync(city.GetKey(), city);
+            var result = await bucket.InsertAsync(city);
 
             // $todo(jeff.lill):
             //
             // I need to figure out how to have the query honor the mutation state
             // returned in [opResult].  I'm going to hack a delay here in the meantime.
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/473
+            //      https://github.com/nforgeio/neonKUBE/issues/479
 
             await Task.Delay(TimeSpan.FromSeconds(2));
 
