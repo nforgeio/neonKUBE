@@ -21,11 +21,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 
 using Neon.Net;
 
@@ -36,8 +33,6 @@ namespace Neon.Xunit
     /// </summary>
     public class AspNetCoreFixture : TestFixture 
     {
-        private Action initializeAction;
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -65,9 +60,9 @@ namespace Neon.Xunit
         public Uri BaseAddress => JsonClient.BaseAddress;
 
         /// <summary>
-        /// Returns the service's <see cref="IHostBuilder"/>.
+        /// Returns the service's <see cref="IWebHost"/>.
         /// </summary>
-        public IHostBuilder WebHost { get; private set; }
+        public IWebHost WebHost { get; private set; }
 
         /// <summary>
         /// Constructor.
@@ -89,12 +84,12 @@ namespace Neon.Xunit
 
             prestartAction?.Invoke();
 
-            WebHost = new Host.CreateDefaultBuilder()
+            WebHost = new WebHostBuilder()
                 .UseStartup<TStartup>()
                 .UseKestrel(
                     options =>
                     {
-                        // Pass port=0 to have the OS to select a free port.
+                        // Pass [port=0] to have the OS to select a free port.
 
                         options.Listen(IPAddress.Loopback, 0);
                     })

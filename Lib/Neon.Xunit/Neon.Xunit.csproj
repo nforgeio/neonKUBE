@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -32,6 +32,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="YamlDotNet" Version="6.0.0" />
@@ -42,6 +43,12 @@
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.Docker\Neon.Docker.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.Hosting.Abstractions">
+      <HintPath>..\..\..\..\Program Files\dotnet\packs\Microsoft.AspNetCore.App.Ref\3.0.0-preview3-19153-02\ref\netcoreapp3.0\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

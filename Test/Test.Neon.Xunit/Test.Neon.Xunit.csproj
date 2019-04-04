@@ -13,6 +13,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="3.0.0-preview3-19153-02" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0-preview3.19153.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
@@ -21,8 +24,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Web\Neon.Web.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+    <ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj" />
   </ItemGroup>
 
 </Project>
