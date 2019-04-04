@@ -47,7 +47,7 @@ namespace Neon.Xunit
     /// <para>
     /// Test fixtures that modify global machine or other environmental state must
     /// implement a <c>public static void EnsureReset()</c> method resets the state
-    /// to a reasonable default.  These will be reflected and called when the first
+    /// to reasonable defaults.  These will be reflected and called when the first
     /// <see cref="TestFixture"/> is created by the test runner for every test class.
     /// </para>
     /// </remarks>

@@ -60,7 +60,7 @@ namespace Neon.Xunit
         private IEnumerable<string>     env;
 
         /// <summary>
-        /// Constructs the fixture.
+        /// Constructor.
         /// </summary>
         public ContainerFixture()
         {
