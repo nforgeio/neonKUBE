@@ -199,7 +199,7 @@ namespace TestCodeGen
                 clientTypeName = clientTypeName.Substring(0, clientTypeName.Length - controllerSuffix.Length);
             }
 
-            var targetType = LoadedAssembly.GetType($"{DefaultNamespace}.{clientTypeName}");
+            var targetType = LoadedAssembly.GetType($"{DefaultNamespace}.{clientTypeName}Client");
 
             if (targetType == null)
             {

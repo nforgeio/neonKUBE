@@ -986,7 +986,7 @@ namespace Neon.CodeGen
 
                 foreach (var item in clientNameToServiceModels)
                 {
-                    GenerateServiceClient(item.Key, item.Value);
+                    GenerateServiceClient(item.Key + "Client", item.Value);
                 }
             }
 
