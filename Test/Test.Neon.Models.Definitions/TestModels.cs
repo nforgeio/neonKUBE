@@ -87,4 +87,19 @@ namespace Test.Neon.Models.Definitions
         [JsonProperty(PropertyName = "my-data")]
         byte[] Data { get; set; }
     }
+
+    [ServiceModel]
+    [RoutePrefix("/TestAspCoreFixture")]
+    public interface TestAspCoreFixtureController
+    {
+        [HttpGet]
+        string Hello();
+
+        [HttpGet]
+        [Route("person/{id}/{name}/{age}")]
+        Person CreatePerson(int id, string name, int age);
+
+        [HttpPut]
+        Person IncrementAge([FromBody] Person person);
+    }
 }
