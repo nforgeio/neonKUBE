@@ -75,7 +75,6 @@ namespace TestCodeGen.Couchbase
             context = new BucketContext(bucket);
         }
 
-#if FALSE
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task WriteReadList()
@@ -102,19 +101,19 @@ namespace TestCodeGen.Couchbase
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             };
 
-            Assert.Equal("0", jack.GetKey());
-            Assert.Equal("1", jill.GetKey());
+            Assert.Equal("Test.Neon.Models.Definitions.Person::0", jack.GetKey());
+            Assert.Equal("Test.Neon.Models.Definitions.Person::1", jill.GetKey());
 
             await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
             await bucket.UpsertSafeAsync(jill, persistTo: PersistTo.One);
 
             // Verify that we can read them.
 
-            var jackRead = await bucket.GetSafeAsync<Person>(0.ToString());
-            var jillRead = await bucket.GetSafeAsync<Person>(1.ToString());
+            var jackRead = await bucket.GetSafeAsync<Person>(Person.CreateKey(0));
+            var jillRead = await bucket.GetSafeAsync<Person>(Person.CreateKey(1));
 
-            Assert.Equal("0", jackRead.GetKey());
-            Assert.Equal("1", jillRead.GetKey());
+            Assert.Equal("Test.Neon.Models.Definitions.Person::0", jackRead.GetKey());
+            Assert.Equal("Test.Neon.Models.Definitions.Person::1", jillRead.GetKey());
             Assert.True(jack == jackRead);
             Assert.True(jill == jillRead);
 
@@ -196,7 +195,6 @@ namespace TestCodeGen.Couchbase
             Assert.False(Person.SameTypeAs(city));
             Assert.False(Person.SameTypeAs(null));
         }
-#endif
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
@@ -204,7 +202,7 @@ namespace TestCodeGen.Couchbase
         {
             // Ensure that the database starts out empty.
 
-            //Assert.Empty(from doc in context.Query<object>() select doc);
+            Assert.Empty(from doc in context.Query<object>() select doc);
 
             // Verify that we can write generated entity models.
 
@@ -317,27 +315,6 @@ namespace TestCodeGen.Couchbase
             Assert.True(CustomPerson.SameTypeAs(jack));
             Assert.False(CustomPerson.SameTypeAs(city));
             Assert.False(CustomPerson.SameTypeAs(null));
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public async Task CustomNames2()
-        {
-            await CustomNames();
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public async Task CustomNames3()
-        {
-            await CustomNames();
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public async Task CustomNames4()
-        {
-            await CustomNames();
         }
     }
 }

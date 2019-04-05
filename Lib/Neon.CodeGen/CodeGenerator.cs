@@ -1206,11 +1206,12 @@ namespace Neon.CodeGen
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// Static constructor.");
+                        writer.WriteLine($"        /// Performs any persistence related initialization including registering the Linq2Couchbase type");
+                        writer.WriteLine($"        /// filter.  This is typically called via <see cref=\"TypeSerializationHelper.PersistableInitialize()\"/>.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        static {className}()");
+                        writer.WriteLine($"        public static void PersistableInitialize()");
                         writer.WriteLine($"        {{");
-                        writer.WriteLine($"            // We need to register document filters with Linq2Couchbase.");
+                        writer.WriteLine($"            // Register the document filter with Linq2Couchbase.");
                         writer.WriteLine();
                         writer.WriteLine($"            Couchbase.Linq.Filters.DocumentFilterManager.SetFilter<{className}>(new {className}Filter());");
                         writer.WriteLine($"        }}");

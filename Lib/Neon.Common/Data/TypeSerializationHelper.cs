@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -42,7 +43,8 @@ namespace Neon.Data
     /// </summary>
     public static class TypeSerializationHelper
     {
-        private static readonly JsonSerializerSettings settings;
+        private static readonly JsonSerializerSettings  settings;
+        private static bool                             persistablesInitialzed;
 
         /// <summary>
         /// Error message used when <see cref="object.GetHashCode()"/> is called on
@@ -67,6 +69,43 @@ namespace Neon.Data
             settings.Converters.Add(new StringEnumConverter(new DefaultNamingStrategy(), allowIntegerValues: false));
 
             Serializer = JsonSerializer.Create(settings);
+        }
+
+        /// <summary>
+        /// <para>
+        /// This examines all loaded assemblies, looking for classes that implement <see cref="IPersistableType"/>
+        /// and then calling each matching type's <c>static PersistableInitialize()</c>  method to ensure that
+        /// the class' type filter is registered with <b>Linq2Couchbase</b>.
+        /// </para>
+        /// <note>
+        /// This method scans the assemblies only the first time the method is called.  Subsequent calls will
+        /// jsut return without doing anything.
+        /// </note>
+        /// </summary>
+        public static void PersistableInitialize()
+        {
+            if (persistablesInitialzed)
+            {
+                return;
+            }
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (type.IsClass && type.Implements<IPersistableType>())
+                    {
+                        var method = type.GetMethod("PersistableInitialize", new Type[] { });
+
+                        if (method != null)
+                        {
+                            method.Invoke(null, new object[] { });
+                        }
+                    }
+                }
+            }
+
+            persistablesInitialzed = true;
         }
 
         /// <summary>

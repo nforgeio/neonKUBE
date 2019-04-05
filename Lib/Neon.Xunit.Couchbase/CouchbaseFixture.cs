@@ -47,11 +47,16 @@ namespace Neon.Xunit.Couchbase
     /// (potentially conflicting) containers are removed before the Couchbase
     /// fixture is started.
     /// </para>
+    /// <note>
+    /// This fixture calls <see cref="TypeSerializationHelper.PersistableInitialize()"/> to ensure
+    /// that any type filters for generated <see cref="IPersistableType"/> classes are automatically
+    /// registered with <b>Linq2Couchbase</b>.
+    /// </note>
     /// </remarks>
     /// <threadsafety instance="true"/>
     public sealed class CouchbaseFixture : ContainerFixture
     {
-        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(5);      // Time to allow Couchbase to start.
+        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Couchbase to start.
         private readonly TimeSpan   retryDelay  = TimeSpan.FromSeconds(0.5);    // Time to wait after a failure.
         private bool                createPrimaryIndex;
 
@@ -60,6 +65,10 @@ namespace Neon.Xunit.Couchbase
         /// </summary>
         public CouchbaseFixture()
         {
+            // Ensure that any type filters for [IPersistableType] classes are
+            // registered with Linq2Couchbase.
+
+            TypeSerializationHelper.PersistableInitialize();
         }
 
         /// <summary>
