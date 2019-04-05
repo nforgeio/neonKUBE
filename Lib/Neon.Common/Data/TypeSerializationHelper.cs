@@ -118,11 +118,11 @@ namespace Neon.Data
         }
 
         /// <summary>
-        /// Generates an entity database key.
+        /// Generates an database key for a persisted entity.
         /// </summary>
         /// <param name="persistedType">The entity type string.</param>
         /// <param name="args">Arguments identifying the entity.</param>
-        public static string CreateEntityKey(string persistedType, params object[] args)
+        public static string GetPersistedKey(string persistedType, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(persistedType));
 

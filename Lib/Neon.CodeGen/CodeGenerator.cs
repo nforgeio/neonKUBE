@@ -1323,7 +1323,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the entity.</param>");
                         writer.WriteLine($"        public static string CreateKey(params object[] args)");
                         writer.WriteLine($"        {{");
-                        writer.WriteLine($"            return TypeSerializationHelper.CreateEntityKey(\"{dataModel.PersistedType}\", args);");
+                        writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(\"{dataModel.PersistedType}\", args);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1897,7 +1897,7 @@ namespace Neon.CodeGen
                         }
                         else if (persistedKeyProperty.PropertyType.IsValueType)
                         {
-                            writer.WriteLine($"            return {persistedKeyProperty.Name}.ToString();");
+                            writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name}.ToString());");
                         }
                         else
                         {
@@ -1909,11 +1909,11 @@ namespace Neon.CodeGen
 
                             if (persistedKeyProperty.PropertyType == typeof(string))
                             {
-                                writer.WriteLine($"            return {persistedKeyProperty.Name};");
+                                writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name});");
                             }
                             else
                             {
-                                writer.WriteLine($"            return {persistedKeyProperty.Name}.ToString();");
+                                writer.WriteLine($"            return GetPersistedKey(PersistedType, {persistedKeyProperty.Name}.ToString());");
                             }
                         }
 
