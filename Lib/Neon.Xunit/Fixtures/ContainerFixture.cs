@@ -58,6 +58,7 @@ namespace Neon.Xunit
         private string[]                dockerArgs;
         private IEnumerable<string>     containerArgs;
         private IEnumerable<string>     env;
+        private bool                    noRemove;
 
         /// <summary>
         /// Constructor.
@@ -95,6 +96,7 @@ namespace Neon.Xunit
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker run ...</b> command.</param>
         /// <param name="containerArgs">Optional arguments to be passed to the container.</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="noRemove">Optionally indicates that the <b>--rm</b> option should not be included when creating the container.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this is not called from  within the <see cref="Action"/> method 
         /// passed <see cref="ITestFixture.Initialize(Action)"/>
@@ -107,7 +109,7 @@ namespace Neon.Xunit
         /// debugging before ensuring that the container is stopped.
         /// </note>
         /// </remarks>
-        public void RunContainer(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null)
+        public void RunContainer(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -124,6 +126,7 @@ namespace Neon.Xunit
             this.dockerArgs    = dockerArgs;
             this.containerArgs = containerArgs;
             this.env           = env;
+            this.noRemove      = noRemove;
 
             StartContainer();
         }
@@ -167,7 +170,7 @@ namespace Neon.Xunit
 
                 if (!string.IsNullOrEmpty(existingId))
                 {
-                    NeonHelper.Execute("docker", new object[] { "rm", "--force", existingId });
+                    NeonHelper.Execute("docker", new object[] { "rm", "--force", "-v", existingId });
                 }
             }
 
@@ -208,6 +211,11 @@ namespace Neon.Xunit
                 }
             }
 
+            if (!noRemove)
+            {
+                extraArgs.Add("--rm");
+            }
+
             argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, extraArgs.ToArray(), image, containerArgs);
 
             result = NeonHelper.ExecuteCapture($"docker", argsString);
@@ -232,7 +240,7 @@ namespace Neon.Xunit
             {
                 try
                 {
-                    var args   = new string[] { "rm", "--force", ContainerId };
+                    var args   = new string[] { "rm", "--force", "-v", ContainerId };
                     var result = NeonHelper.ExecuteCapture($"docker", args);
 
                     if (result.ExitCode != 0)
