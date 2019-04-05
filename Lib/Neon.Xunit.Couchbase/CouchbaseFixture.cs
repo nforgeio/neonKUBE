@@ -378,16 +378,13 @@ namespace Neon.Xunit.Couchbase
         {
             CheckDisposed();
 
-            // Drop all bucket indexes.
+            // Drop all bucket indexes except for the primary index (if present).
 
             var existingIndexes = Bucket.ListIndexesAsync().Result;
 
-            if (existingIndexes.Count > 0)
+            foreach (var index in existingIndexes.Where(i => i.Name != "#primary"))
             {
-                foreach (var index in existingIndexes)
-                {
-                    Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(index.Name)} using {index.Type}").Wait();
-                }
+                Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(index.Name)} using {index.Type}").Wait();
             }
 
             // Flush the bucket data.
@@ -409,69 +406,15 @@ namespace Neon.Xunit.Couchbase
             NeonHelper.WaitFor(
                 () =>
                 {
-#if DOESNT_WORK
-                    using (var cluster = Settings.OpenCluster(Username, Password))
-                    {
-                        using (var clusterManager = cluster.CreateManager(Username, Password))
-                        {
-                            var indexes     = Bucket.ListIndexesAsync().Result;
-                            var clusterInfo = clusterManager.ClusterInfoAsync().Result;
+                    var indexes       = Bucket.ListIndexesAsync().Result;
+                    var expectedCount = createPrimaryIndex ? 1 : 0;
+                    var countResult   = Bucket.QuerySafeAsync<JObject>($"select count(*) from `{Bucket.Name}`;").Result.First();
+                    var docCount      = (long)countResult["$1"];
 
-                            if (clusterInfo.Value == null)
-                            {
-                                return false;   // The bucket isn't ready yet.
-                            }
-
-                            var itemCount = clusterInfo.Value.BucketConfigs().First().BasicStats.ItemCount;
-
-                            return indexes.Count == 0 && itemCount == 0;
-                        }
-                    }
-#else
-                    // The code above doesn't work for some reason.  [clusterInfo.Value] always 
-                    // returns as NULL and the operation message complains:
-                    //
-                    //      "Could not bootstrap from configured servers list."
-                    //
-                    // I am able to hit the admin REST API manually at this time, so
-                    // we'll do this the hard way.
-
-                    var indexes     = Bucket.ListIndexesAsync().Result;
-                    var credentials = new NetworkCredential(Username, Password);
-                    var handler     = new HttpClientHandler() { Credentials = credentials };
-
-                    using (var client = new JsonClient(handler, disposeHandler: true))
-                    {
-                        try
-                        {
-                            client.BaseAddress = Settings.Servers.First();
-
-                            var response  = client.GetAsync<JArray>("/pools/default/buckets").Result;
-                            var item0     = response.First();
-                            var nodes     = (JArray)item0["nodes"];
-                            var node0     = nodes.First();
-                            var stats     = node0["interestingStats"];
-                            var itemCount = stats["curr_items_tot"].ToObject<long>();
-
-                            return indexes.Count == 0 && itemCount == 0;
-                        }
-                        catch
-                        {
-                            return false;
-                        }
-                    }
-#endif
+                    return indexes.Count == expectedCount && docCount == 0;
                 },
                 timeout: NeonBucket.ReadyTimeout,
                 pollTime: retryDelay);
-
-            // Recreate the primary index if one was enabled when the fixture was started.
-
-            if (createPrimaryIndex)
-            {
-                Bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
-                Bucket.WaitForIndexAsync("#primary").Wait();
-            }
         }
 
         /// <summary>

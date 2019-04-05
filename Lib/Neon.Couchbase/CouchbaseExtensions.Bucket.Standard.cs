@@ -325,7 +325,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <returns>The operation result.</returns>
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas)
             where T : class, IPersistableType
@@ -340,7 +340,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <returns>The operation result.</returns>
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, uint expiration)
@@ -356,7 +356,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -373,7 +373,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <returns>The operation result.</returns>
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration)
@@ -389,7 +389,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -437,7 +437,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <returns>The operation result.</returns>
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo)
@@ -453,7 +453,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -503,7 +503,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
         /// <returns>The operation result.</returns>
@@ -520,7 +520,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
@@ -538,7 +538,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -556,7 +556,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -575,7 +575,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -593,7 +593,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -688,7 +688,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <returns>The operation result.</returns>
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas)
             where T : class, IPersistableType
@@ -703,7 +703,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <returns>The operation result.</returns>
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration)
@@ -719,7 +719,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -736,7 +736,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <returns>The operation result.</returns>
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration)
@@ -752,7 +752,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -800,7 +800,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <returns>The operation result.</returns>
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo)
@@ -816,7 +816,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -866,7 +866,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
         /// <returns>The operation result.</returns>
@@ -883,7 +883,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
@@ -901,7 +901,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -919,7 +919,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -938,7 +938,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -956,7 +956,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -1051,7 +1051,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <returns>The operation result.</returns>
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas)
             where T : class, IPersistableType
@@ -1066,7 +1066,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <returns>The operation result.</returns>
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, uint expiration)
@@ -1082,7 +1082,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -1099,7 +1099,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <returns>The operation result.</returns>
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration)
@@ -1115,7 +1115,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -1214,7 +1214,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -1232,7 +1232,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -1286,7 +1286,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -1304,7 +1304,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -1399,7 +1399,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <returns>The operation result.</returns>
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas)
             where T : class, IPersistableType
@@ -1414,7 +1414,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <returns>The operation result.</returns>
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration)
@@ -1430,7 +1430,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -1447,7 +1447,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <returns>The operation result.</returns>
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration)
@@ -1463,7 +1463,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="timeout">Specifies the operation timeout.</param>
         /// <returns>The operation result.</returns>
@@ -1578,7 +1578,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -1596,7 +1596,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -1650,7 +1650,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>
@@ -1668,7 +1668,7 @@ namespace Couchbase
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="value">The document.</param>
-        /// <param name="cas">The check and set value.</param>
+        /// <param name="cas">The compare and swap value.</param>
         /// <param name="expiration">Specifies the document lifetime.</param>
         /// <param name="replicateTo">Specifies the replication constraint.</param>
         /// <param name="persistTo">Specifies the persistence constraint.</param>

@@ -138,7 +138,7 @@ namespace TestCodeGen.Couchbase
             //
             //      https://github.com/nforgeio/neonKUBE/issues/479
 
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            await Task.Delay(TimeSpan.FromSeconds(4));
 
             //-----------------------------------------------------------------
             // Query for the people and verify
