@@ -261,8 +261,8 @@ namespace Neon.Xunit.Couchbase
             }
 
             // It appears that it may take a bit of time for the Couchbase query
-            // service to start in new container we started above.  We're going to
-            // retry creating the primary index (or a dummy index) until it works.
+            // service to start in the new container we started above.  We're going
+            // to retry creating the primary index (or a dummy index) until it works.
 
             var bucket       = (NeonBucket)null;
             var indexCreated = false;
@@ -352,6 +352,15 @@ namespace Neon.Xunit.Couchbase
             // Use the new bucket if this is the first Couchbase container created or
             // else substitute the new underlying bucket into the existing bucket so
             // that unit tests don't need to be aware of the change.
+
+            //bucket.Dispose();
+
+            //if (this.Bucket == null)
+            //{
+            //    Thread.Sleep(10000);
+            //}
+
+            //bucket = Settings.OpenBucket(Username, Password);
 
             if (this.Bucket == null)
             {
