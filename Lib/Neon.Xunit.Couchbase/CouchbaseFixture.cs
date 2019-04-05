@@ -66,7 +66,7 @@ namespace Neon.Xunit.Couchbase
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Initialize(Action)"/>.
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
-        /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>nhive/couchbase-test:latest</b>).</param>
+        /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
@@ -153,7 +153,7 @@ namespace Neon.Xunit.Couchbase
         /// but this method is used internally or for special situations.
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
-        /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>nhive/couchbase-test:latest</b>).</param>
+        /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
@@ -166,7 +166,7 @@ namespace Neon.Xunit.Couchbase
         /// </returns>
         public void StartInAction(
             CouchbaseSettings   settings  = null,
-            string              image     = "nhive/couchbase-test:latest",
+            string              image     = "nkubeio/couchbase-test:latest",
             string              name      = "cb-test",
             string[]            env       = null,
             string              username  = "Administrator",

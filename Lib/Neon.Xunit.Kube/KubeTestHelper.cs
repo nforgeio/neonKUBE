@@ -39,17 +39,17 @@ namespace Neon.Xunit.Kube
     public static class KubeTestHelper
     {
         /// <summary>
-        /// <b>nhive/test</b> image test user name.
+        /// <b>nkubeio/test</b> image test user name.
         /// </summary>
         public const string TestUsername = "test";
 
         /// <summary>
-        /// <b>nhive/test</b> image test user ID.
+        /// <b>nkubeio/test</b> image test user ID.
         /// </summary>
         public const string TestUID = "5555";
 
         /// <summary>
-        /// <b>nhive/test</b> image test group ID.
+        /// <b>nkubeio/test</b> image test group ID.
         /// </summary>
         public const string TestGID = "6666";
 
