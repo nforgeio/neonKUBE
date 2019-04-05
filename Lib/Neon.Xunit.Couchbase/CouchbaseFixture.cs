@@ -50,7 +50,7 @@ namespace Neon.Xunit.Couchbase
     /// <threadsafety instance="true"/>
     public sealed class CouchbaseFixture : ContainerFixture
     {
-        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Couchbase to start.
+        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(5);      // Time to allow Couchbase to start.
         private readonly TimeSpan   retryDelay  = TimeSpan.FromSeconds(0.5);    // Time to wait after a failure.
         private bool                createPrimaryIndex;
 
@@ -138,8 +138,6 @@ namespace Neon.Xunit.Couchbase
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
-            createPrimaryIndex = !noPrimary;
-
             return base.Initialize(
                 () =>
                 {
@@ -177,45 +175,45 @@ namespace Neon.Xunit.Couchbase
 
             base.CheckWithinAction();
 
-            if (IsInitialized)
-            {
-                return;
-            }
+            createPrimaryIndex = !noPrimary;
 
-            RunContainer(name, image, 
-                new string[] 
+            if (!IsInitialized)
+            {
+                RunContainer(name, image,
+                    new string[]
+                    {
+                        "--detach",
+                        "--mount", "type=volume,target=/opt/couchbase/var",
+                        "-p", "4369:4369",
+                        "-p", "8091-8096:8091-8096",
+                        "-p", "9100-9105:9100-9105",
+                        "-p", "9110-9118:9110-9118",
+                        "-p", "9120-9122:9120-9122",
+                        "-p", "9999:9999",
+                        "-p", "11207:11207",
+                        "-p", "11209-11211:11209-11211",
+                        "-p", "18091-18096:18091-18096",
+                        "-p", "21100-21299:21100-21299"
+                    },
+                    env: env);
+
+                Thread.Sleep(warmupDelay);
+
+                settings = settings ?? new CouchbaseSettings();
+
+                settings.Servers.Clear();
+                settings.Servers.Add(new Uri("http://localhost:8091"));
+
+                if (settings.Bucket == null)
                 {
-                    "--detach",
-                    "--mount", "type=volume,target=/opt/couchbase/var",
-                    "-p", "4369:4369",
-                    "-p", "8091-8096:8091-8096",
-                    "-p", "9100-9105:9100-9105",
-                    "-p", "9110-9118:9110-9118",
-                    "-p", "9120-9122:9120-9122",
-                    "-p", "9999:9999",
-                    "-p", "11207:11207",
-                    "-p", "11209-11211:11209-11211",
-                    "-p", "18091-18096:18091-18096",
-                    "-p", "21100-21299:21100-21299"
-                }, 
-                env: env);
+                    settings.Bucket = "test";
+                }
 
-            Thread.Sleep(warmupDelay);
-
-            settings = settings ?? new CouchbaseSettings();
-
-            settings.Servers.Clear();
-            settings.Servers.Add(new Uri("http://localhost:8091"));
-
-            if (settings.Bucket == null)
-            {
-                settings.Bucket = "test";
+                Bucket   = null;
+                Settings = settings;
+                Username = username;
+                Password = password;
             }
-
-            Bucket   = null;
-            Settings = settings;
-            Username = username;
-            Password = password;
 
             ConnectBucket();
         }
@@ -268,18 +266,18 @@ namespace Neon.Xunit.Couchbase
             var indexCreated = false;
             var indexReady   = false;
             var queryReady   = false;
-            var isRetry      = false;
+            var doRetry      = false;
 
             NeonBucket.ReadyRetry.InvokeAsync(
                 async () =>
                 {
-                    if (isRetry)
+                    if (doRetry)
                     {
                         Thread.Sleep(retryDelay);
                     }
                     else
                     {
-                        isRetry = true;
+                        doRetry = true;
                     }
 
                     if (bucket == null)
@@ -309,8 +307,7 @@ namespace Neon.Xunit.Couchbase
 
                             if (!queryReady)
                             {
-                                var query = new QueryRequest($"select meta({bucket.Name}).id, {bucket.Name}.* from {bucket.Name}")
-                                    .ScanConsistency(ScanConsistency.RequestPlus);
+                                var query = new QueryRequest($"select meta({bucket.Name}).id, {bucket.Name}.* from {bucket.Name}");
 
                                 await bucket.QuerySafeAsync<dynamic>(query);
                                 queryReady = true;
@@ -349,18 +346,9 @@ namespace Neon.Xunit.Couchbase
 
                 }).Wait();
 
-            // Use the new bucket if this is the first Couchbase container created or
-            // else substitute the new underlying bucket into the existing bucket so
+            // Use the new bucket if this is the first Couchbase container initialization
+            // or else substitute the new underlying bucket into the existing bucket so
             // that unit tests don't need to be aware of the change.
-
-            //bucket.Dispose();
-
-            //if (this.Bucket == null)
-            //{
-            //    Thread.Sleep(10000);
-            //}
-
-            //bucket = Settings.OpenBucket(Username, Password);
 
             if (this.Bucket == null)
             {
@@ -380,7 +368,7 @@ namespace Neon.Xunit.Couchbase
         {
             CheckDisposed();
 
-            // Drop all of the bucket indexes.
+            // Drop all bucket indexes.
 
             var existingIndexes = Bucket.ListIndexesAsync().Result;
 
