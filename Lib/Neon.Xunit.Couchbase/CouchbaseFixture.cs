@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Couchbase;
 using Couchbase.Linq;
 using Couchbase.N1QL;
+
 using Newtonsoft.Json.Linq;
 using Xunit;
 

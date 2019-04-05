@@ -25,6 +25,7 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Couchbase;
@@ -74,6 +75,7 @@ namespace TestCodeGen.Couchbase
             context = new BucketContext(bucket);
         }
 
+#if FALSE
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task WriteReadList()
@@ -86,25 +88,25 @@ namespace TestCodeGen.Couchbase
 
             var jack = new Person()
             {
-                Id = 0,
+                Id   = 0,
                 Name = "Jack",
-                Age = 10,
+                Age  = 10,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
             var jill = new Person()
             {
-                Id = 1,
+                Id   = 1,
                 Name = "Jill",
-                Age = 11,
+                Age  = 11,
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             };
 
             Assert.Equal("0", jack.GetKey());
             Assert.Equal("1", jill.GetKey());
 
-            await bucket.InsertSafeAsync(jack, persistTo: PersistTo.One);
-            await bucket.InsertSafeAsync(jill, persistTo: PersistTo.One);
+            await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
+            await bucket.UpsertSafeAsync(jill, persistTo: PersistTo.One);
 
             // Verify that we can read them.
 
@@ -124,11 +126,11 @@ namespace TestCodeGen.Couchbase
 
             var city = new City()
             {
-                Name = "Woodinville",
+                Name       = "Woodinville",
                 Population = 12345
             };
 
-            var result = await bucket.InsertAsync(city);
+            var result = await bucket.UpsertAsync(city);
 
             // $todo(jeff.lill):
             //
@@ -165,14 +167,14 @@ namespace TestCodeGen.Couchbase
             var countryQuery = from doc in context.Query<Country>() select doc;
 
             Assert.Empty(rawResults.ToList());
-            //Assert.Empty(countryQuery.ToList());  // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/475
+            Assert.Empty(countryQuery.ToList());  // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/475
 
             //-----------------------------------------------------------------
             // Verify that plain old object serialization still works.
 
             var poo = new PlainOldObject() { Foo = "bar" };
 
-            await bucket.InsertSafeAsync("poo", poo, persistTo: PersistTo.One);
+            await bucket.UpsertSafeAsync("poo", poo, persistTo: PersistTo.One);
 
             poo = await bucket.GetSafeAsync<PlainOldObject>("poo");
 
@@ -194,6 +196,7 @@ namespace TestCodeGen.Couchbase
             Assert.False(Person.SameTypeAs(city));
             Assert.False(Person.SameTypeAs(null));
         }
+#endif
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
@@ -201,55 +204,55 @@ namespace TestCodeGen.Couchbase
         {
             // Ensure that the database starts out empty.
 
-            Assert.Empty(from doc in context.Query<object>() select doc);
+            //Assert.Empty(from doc in context.Query<object>() select doc);
 
             // Verify that we can write generated entity models.
 
             var jack = new CustomPerson()
             {
-                Id = 0,
+                Id   = 0,
                 Name = "Jack",
-                Age = 10,
+                Age  = 10,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
             var jill = new CustomPerson()
             {
-                Id = 1,
+                Id   = 1,
                 Name = "Jill",
-                Age = 11,
+                Age  = 11,
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             };
 
-            Assert.Equal("0", jack.GetKey());
-            Assert.Equal("1", jill.GetKey());
+            Assert.Equal("custom-person::0", jack.GetKey());
+            Assert.Equal("custom-person::1", jill.GetKey());
 
-            await bucket.InsertSafeAsync(jack, persistTo: PersistTo.One);
-            await bucket.InsertSafeAsync(jill, persistTo: PersistTo.One);
+            await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
+            await bucket.UpsertSafeAsync(jill, persistTo: PersistTo.One);
 
             // Verify that we can read them.
 
-            var jackRead = await bucket.GetSafeAsync<CustomPerson>(0.ToString());
-            var jillRead = await bucket.GetSafeAsync<CustomPerson>(1.ToString());
+            var jackRead = await bucket.GetSafeAsync<CustomPerson>(CustomPerson.CreateKey(0));
+            var jillRead = await bucket.GetSafeAsync<CustomPerson>(CustomPerson.CreateKey(1));
 
-            Assert.Equal("0", jackRead.GetKey());
-            Assert.Equal("1", jillRead.GetKey());
+            Assert.Equal("custom-person::0", jackRead.GetKey());
+            Assert.Equal("custom-person::1", jillRead.GetKey());
             Assert.True(jack == jackRead);
             Assert.True(jill == jillRead);
 
             //-----------------------------------------------------------------
             // Persist a [City] entity (which has a different entity type) and then
-            // perform a N1QL query to list the CustomPerson entities and verify that we
-            // get only Jack and Jill back.  This verifies the the [TypeFilter] 
+            // perform a N1QL query to list the [CustomPerson] entities and verify that
+            // we get only Jack and Jill back.  This verifies the the [TypeFilter] 
             // attribute is generated and working correctly.
 
             var city = new City()
             {
-                Name = "Woodinville",
+                Name       = "Woodinville",
                 Population = 12345
             };
 
-            var result = await bucket.InsertAsync(city);
+            var result = await bucket.UpsertAsync(city);
 
             // $todo(jeff.lill):
             //
@@ -286,14 +289,14 @@ namespace TestCodeGen.Couchbase
             var countryQuery = from doc in context.Query<Country>() select doc;
 
             Assert.Empty(rawResults.ToList());
-            //Assert.Empty(countryQuery.ToList());  // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/475
+            Assert.Empty(countryQuery.ToList());
 
             //-----------------------------------------------------------------
             // Verify that plain old object serialization still works.
 
             var poo = new PlainOldObject() { Foo = "bar" };
 
-            await bucket.InsertSafeAsync("poo", poo, persistTo: PersistTo.One);
+            await bucket.UpsertSafeAsync("poo", poo, persistTo: PersistTo.One);
 
             poo = await bucket.GetSafeAsync<PlainOldObject>("poo");
 
@@ -314,6 +317,27 @@ namespace TestCodeGen.Couchbase
             Assert.True(CustomPerson.SameTypeAs(jack));
             Assert.False(CustomPerson.SameTypeAs(city));
             Assert.False(CustomPerson.SameTypeAs(null));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task CustomNames2()
+        {
+            await CustomNames();
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task CustomNames3()
+        {
+            await CustomNames();
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task CustomNames4()
+        {
+            await CustomNames();
         }
     }
 }
