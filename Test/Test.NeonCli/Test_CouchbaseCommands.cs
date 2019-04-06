@@ -111,15 +111,9 @@ namespace Test.NeonCli
 
             await bucket.InsertSafeAsync(jack, persistTo: PersistTo.One);
             await bucket.InsertSafeAsync(jill, persistTo: PersistTo.One);
+            await bucket.WaitForIndexerAsync();
 
-            // $todo(jeff.lill):
-            //
-            // I need to figure out how to have the query honor the mutation state
-            // returned in [opResult].  I'm going to hack a delay here in the meantime.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/479
-
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            bucket.Query<dynamic>($"select count(*) from `{bucket.Name}`;");
 
             using (var runner = new ProgramRunner())
             {
@@ -233,14 +227,7 @@ namespace Test.NeonCli
 
                     Assert.Equal(0, result.ExitCode);
 
-                    // $todo(jeff.lill):
-                    //
-                    // I need to figure out how to have the query honor the mutation state
-                    // returned in [opResult].  I'm going to hack a delay here in the meantime.
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/479
-
-                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    await bucket.WaitForIndexerAsync();
 
                     // Verify that the documents were written.
 
@@ -284,14 +271,7 @@ namespace Test.NeonCli
                     $"couchbase://{endpoint.Address}:{endpoint.Port}@{username}:{password}:{bucketName}",
                     "-");
 
-                // $todo(jeff.lill):
-                //
-                // I need to figure out how to have the query honor the mutation state
-                // returned in [opResult].  I'm going to hack a delay here in the meantime.
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/479
-
-                await Task.Delay(TimeSpan.FromSeconds(2));
+                await bucket.WaitForIndexerAsync();
 
                 Assert.Equal(0, result.ExitCode);
 

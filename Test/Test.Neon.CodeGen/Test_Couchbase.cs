@@ -131,19 +131,12 @@ namespace TestCodeGen.Couchbase
 
             var result = await bucket.UpsertAsync(city);
 
-            // $todo(jeff.lill):
-            //
-            // I need to figure out how to have the query honor the mutation state
-            // returned in [opResult].  I'm going to hack a delay here in the meantime.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/479
-
-            await Task.Delay(TimeSpan.FromSeconds(4));
+            await bucket.WaitForIndexerAsync();
 
             //-----------------------------------------------------------------
             // Query for the people and verify
 
-            var peopleQuery = (from doc in context.Query<Person>() select doc); // .ConsistentWith(MutationState.From(result.Document));
+            var peopleQuery = (from doc in context.Query<Person>() select doc);
             var people      = peopleQuery.ToList();
 
             Assert.Equal(2, people.Count);
@@ -252,19 +245,12 @@ namespace TestCodeGen.Couchbase
 
             var result = await bucket.UpsertAsync(city);
 
-            // $todo(jeff.lill):
-            //
-            // I need to figure out how to have the query honor the mutation state
-            // returned in [opResult].  I'm going to hack a delay here in the meantime.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/479
-
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            bucket.WaitForIndexer();
 
             //-----------------------------------------------------------------
             // Query for the people and verify
 
-            var peopleQuery = (from doc in context.Query<CustomPerson>() select doc); //.ConsistentWith(MutationState.From(result.Document));
+            var peopleQuery = (from doc in context.Query<CustomPerson>() select doc);
             var people      = peopleQuery.ToList();
 
             Assert.Equal(2, people.Count);

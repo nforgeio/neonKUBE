@@ -133,9 +133,9 @@ namespace Neon.Data
         public int MinPoolConnections { get; set; } = 2;
 
         /// <summary>
-        /// Enables the use of the <see cref="ScanConsistency.AtPlus"/> and perhaps the <see cref="ScanConsistency.StatementPlus"/>
-        /// index consistency options.  Both of these options are deprecated as of Couchbase 5.0 so this may no longer
-        /// matter.  This defaults to <c>true</c>.
+        /// Enables the use of the <see cref="ScanConsistency.RequestPlus"/> index consistency option.  
+        /// Both of these options are deprecated as of Couchbase 5.0 so this may no longer matter.  
+        /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "UseEnhancedDurability", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "UseEnhancedDurability", ApplyNamingConventions = false)]

@@ -24,7 +24,10 @@ using System.Threading.Tasks;
 
 using Couchbase.Core;
 using Couchbase.IO;
+using Couchbase.Linq;
+using Couchbase.Linq.Extensions;
 using Couchbase.N1QL;
+
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
@@ -330,6 +333,45 @@ namespace Couchbase
             }
 
             throw new TimeoutException($"Timeout waiting for [bucket={bucket.Name}] to become ready within [{timeout}].", exception);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Waits for any pending database updates to be indexed.  This can be used to
+        /// implement <b>read your own writes.</b>.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> This is intended for use only for databases with a
+        /// <b>#primary</b> index.
+        /// </note>
+        /// </summary>
+        /// <param name="bucket">The bucket.</param>
+        public static void WaitForIndexer(this IBucket bucket)
+        {
+            var queryRequest = QueryRequest.Create($"select * from `{bucket.Name}` limit 0")
+                .ScanConsistency(ScanConsistency.RequestPlus);
+
+            bucket.Query<dynamic>(queryRequest);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Waits for any pending database updates to be indexed.  This can be used to
+        /// implement <b>read your own writes.</b>.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> This is intended for use only for databases with a
+        /// <b>#primary</b> index.
+        /// </note>
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <param name="bucket">The bucket.</param>
+        public static async Task WaitForIndexerAsync(this IBucket bucket)
+        {
+            var queryRequest = QueryRequest.Create($"select * from `{bucket.Name}` limit 0")
+                .ScanConsistency(ScanConsistency.RequestPlus);
+
+            await bucket.QueryAsync<dynamic>(queryRequest);
         }
 
         /// <summary>
