@@ -81,8 +81,6 @@ namespace Neon.Xunit
         public void Start<TStartup>(Action prestartAction = null)
             where TStartup : class
         {
-            base.CheckWithinAction();
-
             if (IsRunning)
             {
                 return;

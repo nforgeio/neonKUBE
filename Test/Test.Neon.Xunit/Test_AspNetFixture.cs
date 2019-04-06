@@ -118,10 +118,6 @@ namespace TestXunit.AspNet
 
         private TestAspNetFixtureClient client;
 
-        public Test_AspNetFixture()
-        {
-        }
-
         public Test_AspNetFixture(AspNetFixture fixture)
         {
             fixture.Start<Startup>();
