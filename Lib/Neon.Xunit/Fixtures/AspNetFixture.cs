@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -74,11 +75,8 @@ namespace Neon.Xunit
         /// Constructor.
         /// </summary>
         /// <typeparam name="TStartup">The startup class for the service.</typeparam>
-        /// <param name="prestartAction">
-        /// Optional action that will be called before the service is started to do things
-        /// like initializing a <see cref="TestContext"/>.
-        /// </param>
-        public void Start<TStartup>(Action prestartAction = null)
+        /// <param name="port">The port where the server will listen or zero to allow the operating system to select a free port.</param>
+        public void Start<TStartup>(int port = 0)
             where TStartup : class
         {
             if (IsRunning)
@@ -86,20 +84,7 @@ namespace Neon.Xunit
                 return;
             }
 
-            prestartAction?.Invoke();
-
-            WebHost = new WebHostBuilder()
-                .UseStartup<TStartup>()
-                .UseKestrel(
-                    options =>
-                    {
-                        // Pass [port=0] to have the OS to select a free port.
-
-                        options.Listen(IPAddress.Loopback, 0);
-                    })
-                .Build();
-
-            WebHost.Start();
+            StartServer<TStartup>();
 
             // Get the address where the server is listening and create the client.
 
@@ -107,6 +92,27 @@ namespace Neon.Xunit
             {
                 BaseAddress = new Uri(WebHost.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault())
             };
+
+            IsRunning = true;
+        }
+
+        /// <summary>
+        /// Starts the web service.
+        /// </summary>
+        /// <param name="port">The port where the server will listen or zero to allow the operating system to select a free port.</param>
+        private void StartServer<TStartup>(int port = 0)
+            where TStartup : class
+        {
+            WebHost = new WebHostBuilder()
+                .UseStartup<TStartup>()
+                .UseKestrel(
+                    options =>
+                    {
+                        options.Listen(IPAddress.Loopback, port);
+                    })
+                .Build();
+
+            WebHost.Start();
         }
 
         /// <inheritdoc/>
@@ -121,6 +127,18 @@ namespace Neon.Xunit
 
                 GC.SuppressFinalize(this);
             }
+        }
+
+        /// <summary>
+        /// Restarts the web service.
+        /// </summary>
+        public void Restart<TStartup>()
+            where TStartup : class
+        {
+            Covenant.Requires<InvalidOperationException>(IsRunning);
+
+            WebHost.StopAsync().Wait();
+            StartServer<TStartup>(BaseAddress.Port);
         }
 
         /// <inheritdoc/>

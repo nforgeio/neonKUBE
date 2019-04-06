@@ -52,6 +52,8 @@ namespace TestXunit.AspNet
 
         public class Startup
         {
+            public static string Answer { get; set; }
+
             public Startup(IConfiguration configuration)
             {
                 Configuration = configuration;
@@ -65,12 +67,12 @@ namespace TestXunit.AspNet
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             {
-                // This is a simple test that replies to all reqiests with: "World!"
+                // This is a simple test that replies to all requests with: [Answer].
 
                 app.Run(
                     async context =>
                     {
-                        await context.Response.WriteAsync("World!");
+                        await context.Response.WriteAsync(Answer);
                     });
             }
         }
@@ -78,10 +80,14 @@ namespace TestXunit.AspNet
         //---------------------------------------------------------------------
         // Implementation
 
-        private HttpClient client;
+        private AspNetFixture   fixture;
+        private HttpClient      client;
 
         public Test_AspNetFixture(AspNetFixture fixture)
         {
+            this.fixture   = fixture;
+            Startup.Answer = "World!";
+
             fixture.Start<Startup>();
 
             client = new HttpClient()
@@ -92,9 +98,19 @@ namespace TestXunit.AspNet
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public async Task Query()
+        public async Task Test()
         {
+            // Verify that we can communicate with the service.
+
             Assert.Equal("World!", await client.GetStringAsync("Hello"));
+
+            // Restart the service and verify that we actually see
+            // a new service instance by changing the answer.
+
+            Startup.Answer = "FooBar!";
+            fixture.Restart<Startup>();
+
+            Assert.Equal("FooBar!", await client.GetStringAsync("Hello"));
         }
     }
 }
