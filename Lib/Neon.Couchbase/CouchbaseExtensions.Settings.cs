@@ -102,10 +102,10 @@ namespace Couchbase
         /// </para>
         /// </remarks>
         public static NeonBucket OpenBucket(this CouchbaseSettings settings, 
-            string username, 
-            string password, 
-            TimeSpan timeout = default(TimeSpan), 
-            bool? ignoreDurability = null)
+            string      username, 
+            string      password, 
+            TimeSpan    timeout = default(TimeSpan), 
+            bool?       ignoreDurability = null)
         {
             var bucketConfig =
                 new BucketConfiguration()

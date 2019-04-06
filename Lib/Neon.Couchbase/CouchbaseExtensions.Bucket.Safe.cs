@@ -305,7 +305,19 @@ namespace Couchbase
                 try
                 {
                     await bucket.CheckAsync();
-                    return;     // No exception thrown, so we must be good.
+
+                    // It also appears to take some more time for the bucket/cluster
+                    // to be able to honor durability constraints.  We'll wait a
+                    // bit longer if these constraints aren't disabled.
+
+                    var neonBucket = bucket as NeonBucket;
+
+                    if (neonBucket == null || !neonBucket.IgnoreDurability)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                    }
+
+                    return;
                 }
                 catch (CouchbaseResponseException e)
                 {

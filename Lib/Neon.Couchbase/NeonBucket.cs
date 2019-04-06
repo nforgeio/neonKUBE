@@ -84,7 +84,6 @@ namespace Couchbase
 
         private IBucket             bucket;
         private CouchbaseSettings   settings;
-        private bool                ignoreDurability;
 
         /// <summary>
         /// Constructor.
@@ -112,13 +111,20 @@ namespace Couchbase
 
             if (ignoreDurability.HasValue)
             {
-                this.ignoreDurability = ignoreDurability.Value;
+                this.IgnoreDurability = ignoreDurability.Value;
             }
             else
             {
-                this.ignoreDurability = Environment.GetEnvironmentVariable("DEV_WORKSTATION") != null;
+                this.IgnoreDurability = Environment.GetEnvironmentVariable("DEV_WORKSTATION") != null;
             }
         }
+
+        /// <summary>
+        /// Indicates whether this bucket is ignoring any <see cref="ReplicateTo"/> and/or <see cref="PersistTo"/>
+        /// durability constraints.  This is useful for unit testing where it'll be likely that there won't be
+        /// enough Couchbase cluster nodes to satisfy durability constraints for production code.
+        /// </summary>
+        public bool IgnoreDurability { get; private set; }
 
         /// <summary>
         /// Adjusts a <see cref="ReplicateTo"/> parameter based on the bucket's
@@ -128,7 +134,7 @@ namespace Couchbase
         /// <returns>The value to actually use.</returns>
         private ReplicateTo Adjust(ReplicateTo replicateTo)
         {
-            return ignoreDurability ? ReplicateTo.Zero : replicateTo;
+            return IgnoreDurability ? ReplicateTo.Zero : replicateTo;
         }
 
         /// <summary>
@@ -139,7 +145,7 @@ namespace Couchbase
         /// <returns>The value to actually use.</returns>
         private PersistTo Adjust(PersistTo persistTo)
         {
-            return ignoreDurability ? PersistTo.Zero : persistTo;
+            return IgnoreDurability ? PersistTo.Zero : persistTo;
         }
 
         /// <summary>

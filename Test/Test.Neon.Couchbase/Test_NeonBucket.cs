@@ -104,7 +104,7 @@ namespace TestCouchbase
             // Verify that the NeonBucket durability overrides work.  We're going
             // to be modifying the DEV_WORKSTATION environment variable so we
             // need to take care to restore its original value before the test
-            // exist, to ensure that it will be correct for subsequent tests
+            // exits, to ensure that it will be correct for subsequent tests
             // running in the test runner process.
 
             var orgDevWorkstation = Environment.GetEnvironmentVariable("DEV_WORKSTATION");
@@ -121,12 +121,12 @@ namespace TestCouchbase
 
                 using (var bucket = couchbase.Settings.OpenBucket(username, password, ignoreDurability: false))
                 {
-                    // Verify that we can ensure durability to one node.
+                    // Verify that we can ensure persistence to one node.
 
                     await bucket.UpsertSafeAsync("test", "zero", ReplicateTo.Zero, PersistTo.One);
 
                     // Verify that we see failures when we try to ensure
-                    // durability to more nodes than we have.
+                    // durability to more nodes than we actually have.
 
                     await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.UpsertSafeAsync("test", "one", ReplicateTo.One, PersistTo.One));
                     await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.UpsertSafeAsync("test", "two", ReplicateTo.One, PersistTo.Two));
