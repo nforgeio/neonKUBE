@@ -303,7 +303,7 @@ namespace Neon.Xunit.Couchbase
 
                             if (!indexCreated)
                             {
-                                await bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(bucket.Name)} using gsi");
+                                await bucket.QuerySafeAsync<dynamic>($"create primary index on {CouchbaseHelper.LiteralName(bucket.Name)} using gsi");
                                 indexCreated = true;
                             }
 
@@ -384,7 +384,7 @@ namespace Neon.Xunit.Couchbase
 
             foreach (var index in existingIndexes.Where(i => i.Name != "#primary"))
             {
-                Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(index.Name)} using {index.Type}").Wait();
+                Bucket.QuerySafeAsync<dynamic>($"drop index {CouchbaseHelper.LiteralName(Bucket.Name)}.{CouchbaseHelper.LiteralName(index.Name)} using {index.Type}").Wait();
             }
 
             // Flush the bucket data.

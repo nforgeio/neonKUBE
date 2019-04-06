@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CbHelper.cs
+// FILE:	    CouchbaseHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -40,7 +40,7 @@ namespace Couchbase
     /// <summary>
     /// Couchbase helper utilities.
     /// </summary>
-    public static class CbHelper
+    public static class CouchbaseHelper
     {
         /// <summary>
         /// Converts a <c>string</c> into a Couchbase literal suitable

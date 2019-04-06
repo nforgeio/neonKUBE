@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_CbHelper.cs
+// FILE:	    Test_CouchbaseHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,33 +32,33 @@ using Xunit;
 
 namespace TestCouchbase
 {
-    public class Test_CbHelper
+    public class Test_CouchbaseHelper
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Literal_String()
         {
-            Assert.Equal("NULL", CbHelper.Literal(null));
-            Assert.Equal("\"Hello World!\"", CbHelper.Literal("Hello World!"));
-            Assert.Equal("\"'\"", CbHelper.Literal("'"));
-            Assert.Equal("\"\\\"\"", CbHelper.Literal("\""));
-            Assert.Equal("\"\\\\\"", CbHelper.Literal("\\"));
-            Assert.Equal("\"\\b\"", CbHelper.Literal("\b"));
-            Assert.Equal("\"\\f\"", CbHelper.Literal("\f"));
-            Assert.Equal("\"\\n\"", CbHelper.Literal("\n"));
-            Assert.Equal("\"\\r\"", CbHelper.Literal("\r"));
-            Assert.Equal("\"\\t\"", CbHelper.Literal("\t"));
+            Assert.Equal("NULL", CouchbaseHelper.Literal(null));
+            Assert.Equal("\"Hello World!\"", CouchbaseHelper.Literal("Hello World!"));
+            Assert.Equal("\"'\"", CouchbaseHelper.Literal("'"));
+            Assert.Equal("\"\\\"\"", CouchbaseHelper.Literal("\""));
+            Assert.Equal("\"\\\\\"", CouchbaseHelper.Literal("\\"));
+            Assert.Equal("\"\\b\"", CouchbaseHelper.Literal("\b"));
+            Assert.Equal("\"\\f\"", CouchbaseHelper.Literal("\f"));
+            Assert.Equal("\"\\n\"", CouchbaseHelper.Literal("\n"));
+            Assert.Equal("\"\\r\"", CouchbaseHelper.Literal("\r"));
+            Assert.Equal("\"\\t\"", CouchbaseHelper.Literal("\t"));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Literal_Name()
         {
-            Assert.Throws<ArgumentNullException>(() => CbHelper.LiteralName(null));
-            Assert.Throws<ArgumentNullException>(() => CbHelper.LiteralName(string.Empty));
+            Assert.Throws<ArgumentNullException>(() => CouchbaseHelper.LiteralName(null));
+            Assert.Throws<ArgumentNullException>(() => CouchbaseHelper.LiteralName(string.Empty));
 
-            Assert.Equal("`test`", CbHelper.LiteralName("test"));
-            Assert.Equal("`test\\\\foo`", CbHelper.LiteralName("test\\foo"));
+            Assert.Equal("`test`", CouchbaseHelper.LiteralName("test"));
+            Assert.Equal("`test\\\\foo`", CouchbaseHelper.LiteralName("test\\foo"));
         }
     }
 }

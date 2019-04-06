@@ -1469,7 +1469,7 @@ namespace Couchbase
         public static async Task<List<CouchbaseIndex>> ListIndexesAsync(this IBucket bucket)
         {
             var list    = new List<CouchbaseIndex>();
-            var indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}"));
+            var indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CouchbaseHelper.Literal(bucket.Name)}"));
 
             foreach (var index in indexes)
             {

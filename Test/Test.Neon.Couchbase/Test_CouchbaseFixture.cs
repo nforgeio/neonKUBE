@@ -68,7 +68,7 @@ namespace TestCouchbase
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task Clear()
         {
-            var indexQuery = $"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}";
+            var indexQuery = $"select * from system:indexes where keyspace_id={CouchbaseHelper.Literal(bucket.Name)}";
 
             // Flush and verify that the primary index was created by default.
 
@@ -94,7 +94,7 @@ namespace TestCouchbase
 
             // Create a secondary index and verify.
 
-            await bucket.QuerySafeAsync<dynamic>($"create index idx_foo on {CbHelper.LiteralName(bucket.Name)} ( {CbHelper.LiteralName("Test")} )");
+            await bucket.QuerySafeAsync<dynamic>($"create index idx_foo on {CouchbaseHelper.LiteralName(bucket.Name)} ( {CouchbaseHelper.LiteralName("Test")} )");
 
             indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
 
