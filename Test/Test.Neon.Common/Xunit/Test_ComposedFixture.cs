@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_DockerContainerFixture.cs
+// FILE:	    Test_ComposedFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,7 +33,7 @@ namespace TestCommon
     /// <summary>
     /// Verify that a test fixture composed of other fixtures works.
     /// </summary>
-    public class Test_FixtureSet : IClassFixture<TestFixtureSet>
+    public class Test_ComposedFixture : IClassFixture<ComposedFixture>
     {
         //---------------------------------------------------------------------
         // Private types
@@ -53,13 +53,13 @@ namespace TestCommon
         //---------------------------------------------------------------------
         // Implementation
 
-        private TestFixtureSet  fixture;
+        private ComposedFixture  fixture;
         private ITestFixture    fixture0;
         private ITestFixture    fixture1;
         private bool            fixture0Initialized;
         private bool            fixture1Initialized;
 
-        public Test_FixtureSet(TestFixtureSet fixture)
+        public Test_ComposedFixture(ComposedFixture fixture)
         {
             this.fixture = fixture;
 

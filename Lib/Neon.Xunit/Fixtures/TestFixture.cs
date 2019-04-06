@@ -96,7 +96,7 @@ namespace Neon.Xunit
 
                         if (typeInfo.ImplementedInterfaces.Contains(typeof(ITestFixture)))
                         {
-                            var methodInfo = typeInfo.GetMethod(nameof(TestFixtureSet.EnsureReset), BindingFlags.Public | BindingFlags.Static);
+                            var methodInfo = typeInfo.GetMethod(nameof(ComposedFixture.EnsureReset), BindingFlags.Public | BindingFlags.Static);
 
                             if (methodInfo == null)
                             {

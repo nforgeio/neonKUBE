@@ -174,8 +174,8 @@ namespace Neon.Xunit
     /// </item>
     /// </list>
     /// <note>
-    /// <see cref="DockerFixture"/> derives from <see cref="TestFixtureSet"/> so you can
-    /// use <see cref="TestFixtureSet.AddFixture{TFixture}(string, TFixture, Action{TFixture})"/>
+    /// <see cref="DockerFixture"/> derives from <see cref="ComposedFixture"/> so you can
+    /// use <see cref="ComposedFixture.AddFixture{TFixture}(string, TFixture, Action{TFixture})"/>
     /// to add additional fixtures within your custom initialization action for advanced scenarios.
     /// </note>
     /// <para>
@@ -212,7 +212,7 @@ namespace Neon.Xunit
     /// </list>
     /// </remarks>
     /// <threadsafety instance="true"/>
-    public class DockerFixture : TestFixtureSet
+    public class DockerFixture : ComposedFixture
     {
         //---------------------------------------------------------------------
         // Local types

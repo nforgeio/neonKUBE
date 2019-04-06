@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TestFixtureSet.cs
+// FILE:	    ComposedFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,9 +26,8 @@ using Neon.Common;
 namespace Neon.Xunit
 {
     /// <summary>
-    /// Implements an <see cref="ITestFixture"/> that is a list of other test
-    /// fixtures, providing an easy way to compose multiple separate fixtures
-    /// into a single combined fixture.
+    /// Implements an <see cref="ITestFixture"/> that is composed of other test
+    /// fixtures.
     /// </summary>
     /// <remarks>
     /// <note>
@@ -47,14 +46,14 @@ namespace Neon.Xunit
     /// </para>
     /// </note>
     /// <para>
-    /// Serrived test fixtures that modify global machine or other environmental state
+    /// Derived test fixtures that modify global machine or other environmental state
     /// must implement a <c>public static void EnsureReset()</c> method resets the state
     /// to a reasonable default.  These will be reflected and called when the first
     /// <see cref="TestFixture"/> is created by the test runner for every test class.
     /// </para>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public class TestFixtureSet : TestFixture, IEnumerable<KeyValuePair<string, ITestFixture>>
+    public class ComposedFixture : TestFixture, IEnumerable<KeyValuePair<string, ITestFixture>>
     {
         private Dictionary<string, ITestFixture>    nameToFixture;
         private List<ITestFixture>                  fixtureList;
@@ -62,7 +61,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Constructor.
         /// </summary>
-        public TestFixtureSet()
+        public ComposedFixture()
         {
             nameToFixture = new Dictionary<string, ITestFixture>(StringComparer.InvariantCultureIgnoreCase);
             fixtureList   = new List<ITestFixture>();
@@ -71,7 +70,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~TestFixtureSet()
+        ~ComposedFixture()
         {
             Dispose(false);
         }
