@@ -89,8 +89,8 @@ namespace Test.Neon.Models.Definitions
     }
 
     [ServiceModel]
-    [RoutePrefix("/TestAspCoreFixture")]
-    public interface TestAspCoreFixtureController
+    [RoutePrefix("/TestAspNetFixture")]
+    public interface TestAspNetFixtureController
     {
         [HttpGet]
         string Hello();

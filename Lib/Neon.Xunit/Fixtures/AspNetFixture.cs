@@ -24,6 +24,8 @@ using System.Net.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 
+using Neon.Common;
+using Neon.Data;
 using Neon.Net;
 
 namespace Neon.Xunit
@@ -31,17 +33,21 @@ namespace Neon.Xunit
     /// <summary>
     /// Fixture for testing ASP.NET Core based websites and services.
     /// </summary>
-    public class AspNetFixture : TestFixture 
+    public class AspNetFixture : TestFixture
     {
         /// <summary>
-        /// Constructor.
+        /// Constructs the fixture.
         /// </summary>
-        /// <param name="initializeAction">
-        /// Optional action that will be called before the server is started to handle things
-        /// like initializing the <see cref="TestContext"/>.
-        /// </param>
-        public AspNetFixture(Action initializeAction = null)
+        public AspNetFixture()
         {
+        }
+
+        /// <summary>
+        /// Finalizer.
+        /// </summary>
+        ~AspNetFixture()
+        {
+            Dispose(false);
         }
 
         /// <summary>

@@ -44,79 +44,89 @@ using Xunit;
 
 using Test.Neon.Models;
 
-namespace TestXunit.AspNetFixture
+namespace TestXunit.AspNet
 {
-    public class Startup
+    public class Test_AspNetFixture : IClassFixture<AspNetFixture>
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+        //---------------------------------------------------------------------
+        // Private types
 
-        public IConfiguration Configuration { get; }
-
-        public void ConfigureServices(IServiceCollection services)
+        public class Startup
         {
-            services.AddMvc();
-        }
-
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.EnvironmentName.Equals("Development"))
+            public Startup(IConfiguration configuration)
             {
-                app.UseDeveloperExceptionPage();
+                Configuration = configuration;
             }
 
-            app.UseRouting(routes =>
-            {
-                routes.MapControllers();
-            });
-        }
-    }
+            public IConfiguration Configuration { get; }
 
-    [Route("/TestAspNetFixture")]
-    public class TestAspNetFixtureController : NeonController
-    {
-        [HttpGet]
-        public string Hello()
-        {
-            return "World!";
-        }
-
-        [HttpGet]
-        [Route("person/{id}/{name}/{age}")]
-        public Person Create(int id, string name, int age)
-        {
-            return new Person()
+            public void ConfigureServices(IServiceCollection services)
             {
-                 Id   = id,
-                 Name = name,
-                 Age  = age
-            };
+                services.AddMvc();
+            }
+
+            public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+            {
+                if (env.EnvironmentName.Equals("Development"))
+                {
+                    app.UseDeveloperExceptionPage();
+                }
+
+                app.UseRouting(routes =>
+                {
+                    routes.MapControllers();
+                });
+            }
         }
 
-        [HttpPut]
-        public Person IncrementAge([FromBody] Person person)
+        [Route("/TestAspNetFixture")]
+        public class TestAspNetFixtureController : NeonController
         {
-            if (person == null)
+            [HttpGet]
+            public string Hello()
             {
+                return "World!";
+            }
+
+            [HttpGet]
+            [Route("person/{id}/{name}/{age}")]
+            public Person Create(int id, string name, int age)
+            {
+                return new Person()
+                {
+                    Id   = id,
+                    Name = name,
+                    Age  = age
+                };
+            }
+
+            [HttpPut]
+            public Person IncrementAge([FromBody] Person person)
+            {
+                if (person == null)
+                {
+                    return person;
+                }
+
+                person.Age++;
                 return person;
             }
-
-            person.Age++;
-            return person;
         }
-    }
 
-    public class Test_AspNetCoreFixture : Neon.Xunit.AspNetFixture
-    {
-        private TestAspCoreFixtureClient client;
+        //---------------------------------------------------------------------
+        // Implementation
 
-        public Test_AspNetCoreFixture(Neon.Xunit.AspNetFixture fixture)
+        private TestAspNetFixtureClient client;
+
+        public Test_AspNetFixture()
+        {
+        }
+
+        public Test_AspNetFixture(AspNetFixture fixture)
         {
             fixture.Start<Startup>();
 
-            client = new TestAspCoreFixtureClient()
+            client = new TestAspNetFixtureClient()
             {
                 BaseAddress = fixture.BaseAddress
             };
