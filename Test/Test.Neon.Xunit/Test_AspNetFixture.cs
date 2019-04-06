@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,8 +43,6 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-using Test.Neon.Models;
-
 namespace TestXunit.AspNet
 {
     public class Test_AspNetFixture : IClassFixture<AspNetFixture>
@@ -62,67 +61,30 @@ namespace TestXunit.AspNet
 
             public void ConfigureServices(IServiceCollection services)
             {
-                services.AddMvc();
             }
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             {
-                if (env.EnvironmentName.Equals("Development"))
-                {
-                    app.UseDeveloperExceptionPage();
-                }
+                // This is a simple test that replys to all reqiests with: "World!"
 
-                app.UseRouting(routes =>
-                {
-                    routes.MapControllers();
-                });
-            }
-        }
-
-        [Route("/TestAspNetFixture")]
-        public class TestAspNetFixtureController : NeonController
-        {
-            [HttpGet]
-            public string Hello()
-            {
-                return "World!";
-            }
-
-            [HttpGet]
-            [Route("person/{id}/{name}/{age}")]
-            public Person Create(int id, string name, int age)
-            {
-                return new Person()
-                {
-                    Id   = id,
-                    Name = name,
-                    Age  = age
-                };
-            }
-
-            [HttpPut]
-            public Person IncrementAge([FromBody] Person person)
-            {
-                if (person == null)
-                {
-                    return person;
-                }
-
-                person.Age++;
-                return person;
+                app.Run(
+                    async context =>
+                    {
+                        await context.Response.WriteAsync("World!");
+                    });
             }
         }
 
         //---------------------------------------------------------------------
         // Implementation
 
-        private TestAspNetFixtureClient client;
+        private HttpClient client;
 
         public Test_AspNetFixture(AspNetFixture fixture)
         {
             fixture.Start<Startup>();
 
-            client = new TestAspNetFixtureClient()
+            client = new HttpClient()
             {
                 BaseAddress = fixture.BaseAddress
             };
@@ -130,11 +92,9 @@ namespace TestXunit.AspNet
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public async Task Client()
+        public async Task Query()
         {
-            // Verify that a simple GET request works.
-
-            Assert.Equal("World!", await client.HelloAsync());
+            Assert.Equal("World!", await client.GetStringAsync("Hello"));
         }
     }
 }
